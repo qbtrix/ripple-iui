@@ -74,61 +74,62 @@
 
 <style>
   .rterm {
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid hsl(var(--border));
     background: hsl(var(--card));
     overflow: hidden;
     font-family: "JetBrains Mono Variable", "SF Mono", ui-monospace, monospace;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .rterm-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 5px 8px;
     background: hsl(var(--muted));
     border-bottom: 1px solid hsl(var(--border));
   }
   .rterm-dots {
     display: flex;
-    gap: 5px;
+    gap: 4px;
   }
   .rterm-dots span {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: hsl(var(--muted-foreground) / 0.3);
+    background: hsl(var(--muted-foreground) / 0.25);
   }
   .rterm-title {
-    font-size: 11px;
+    font-size: 10px;
     color: hsl(var(--muted-foreground));
     font-weight: 500;
   }
 
   .rterm-output {
-    padding: 10px 12px;
+    padding: 6px 8px;
     overflow-y: auto;
     scrollbar-width: thin;
   }
 
   .rterm-line {
     display: flex;
-    gap: 8px;
-    line-height: 1.6;
+    gap: 6px;
+    line-height: 1.45;
     white-space: pre-wrap;
     word-break: break-all;
+    padding: 1px 0;
   }
-  .rterm-line--stdout { color: hsl(var(--foreground)); }
+  .rterm-line--stdout { color: hsl(var(--foreground) / 0.85); }
   .rterm-line--stderr { color: hsl(var(--destructive)); }
   .rterm-line--info { color: hsl(var(--muted-foreground)); }
-  .rterm-line--command { color: hsl(var(--primary)); }
+  .rterm-line--command { color: hsl(var(--primary)); font-weight: 500; }
 
   .rterm-ts {
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--muted-foreground) / 0.6);
     flex-shrink: 0;
-    font-size: 10px;
-    min-width: 50px;
+    font-size: 9px;
+    min-width: 32px;
   }
   .rterm-prompt {
     color: hsl(var(--primary));
@@ -139,8 +140,8 @@
   .rterm-input {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 5px 8px;
     border-top: 1px solid hsl(var(--border));
     background: hsl(var(--muted) / 0.5);
   }
@@ -154,6 +155,6 @@
     font-size: inherit;
   }
   .rterm-input-field::placeholder {
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--muted-foreground) / 0.5);
   }
 </style>
