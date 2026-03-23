@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import * as Card from '../../components/ui/card/index.js';
 interface Props {
     id?: string;
     class?: string;

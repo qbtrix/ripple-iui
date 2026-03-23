@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import { Button } from '../../components/ui/button/index.js';
 interface Props {
     id?: string;
     class?: string;

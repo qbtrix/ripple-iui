@@ -1,3 +1,4 @@
+import { Badge } from '../../components/ui/badge/index.js';
 interface Props {
     text?: string;
     variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';

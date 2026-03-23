@@ -1,6 +1,8 @@
+import * as Select from '../../components/ui/select/index.js';
 interface Props {
     id?: string;
     class?: string;
+    style?: Record<string, string>;
     value?: string;
     placeholder?: string;
     options?: (string | {

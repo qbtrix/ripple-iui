@@ -1,31 +1,58 @@
 <script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+
   interface Props {
     id?: string;
     class?: string;
+    style?: Record<string, string>;
     checked?: boolean;
     disabled?: boolean;
     label?: string;
     onchange?: (value?: unknown) => void;
   }
 
-  let { id, class: className, checked = false, disabled = false, label, onchange }: Props = $props();
+  let {
+    id, class: className, style, checked = false,
+    disabled = false, label, onchange
+  }: Props = $props();
+
+  // Local state that syncs with prop
+  let localChecked = $state(checked);
+
+  $effect(() => {
+    localChecked = checked;
+  });
+
+  const styleString = $derived(
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
+  );
+
+  function handleChange(value: boolean) {
+    localChecked = value;
+    onchange?.(value);
+  }
 </script>
 
-<label class="rc-wrap {className ?? ''}">
-  <input {id} type="checkbox" {checked} {disabled} class="rc"
-    onchange={(e) => onchange?.(e.currentTarget.checked)} />
-  {#if label}<span class="rc-label">{label}</span>{/if}
-</label>
-
-<style>
-  .rc-wrap {
-    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
-    font-size: 11px; color: var(--ripple-text-secondary);
-  }
-  .rc {
-    width: 14px; height: 14px; border-radius: 3px;
-    accent-color: var(--ripple-info);
-    cursor: pointer;
-  }
-  .rc-label { user-select: none; }
-</style>
+{#if label}
+  <div class={cn('flex items-center gap-2', className)} style={styleString}>
+    <Checkbox
+      {id}
+      checked={localChecked}
+      {disabled}
+      onCheckedChange={handleChange}
+    />
+    <label for={id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+      {label}
+    </label>
+  </div>
+{:else}
+  <Checkbox
+    {id}
+    checked={localChecked}
+    {disabled}
+    class={cn(className)}
+    style={styleString}
+    onCheckedChange={handleChange}
+  />
+{/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { cn } from '../../utils.js';
+  import { cn } from '$lib/utils.js';
+  import * as Tabs from '$lib/components/ui/tabs/index.js';
 
   interface Tab {
     value: string;
@@ -22,29 +23,37 @@
     children, onchange
   }: Props = $props();
 
-  let activeTab = $derived(externalValue ?? defaultValue ?? tabs[0]?.value ?? '');
+  let activeTab = $state(externalValue ?? defaultValue ?? tabs[0]?.value ?? '');
 
-  function selectTab(val: string) {
-    activeTab = val;
-    onchange?.(val);
+  // Sync when external value changes
+  $effect(() => {
+    if (externalValue !== undefined) {
+      activeTab = externalValue;
+    }
+  });
+
+  function handleValueChange(newValue: string) {
+    activeTab = newValue;
+    onchange?.(newValue);
   }
 </script>
 
-<div {id} class={cn('ripple-tabs', className)}>
-  <div class="ripple-tabs-list" role="tablist">
-    {#each tabs as tab}
-      <button
-        role="tab"
-        aria-selected={activeTab === tab.value}
-        data-state={activeTab === tab.value ? 'active' : 'inactive'}
-        class="ripple-tabs-trigger"
-        onclick={() => selectTab(tab.value)}
-      >
-        {tab.label}
-      </button>
+<Tabs.Root
+  {id}
+  bind:value={activeTab}
+  onValueChange={handleValueChange}
+  class={cn('w-full', className)}
+>
+  <Tabs.List class="grid w-full" style="grid-template-columns: repeat({tabs.length || 1}, 1fr)">
+    {#each tabs as tab (tab.value)}
+      <Tabs.Trigger value={tab.value}>{tab.label}</Tabs.Trigger>
     {/each}
-  </div>
-  <div class="ripple-tabs-content" data-value={activeTab}>
-    {@render children?.()}
-  </div>
-</div>
+  </Tabs.List>
+  {#each tabs as tab (tab.value)}
+    <Tabs.Content value={tab.value}>
+      {#if activeTab === tab.value}
+        {@render children?.()}
+      {/if}
+    </Tabs.Content>
+  {/each}
+</Tabs.Root>

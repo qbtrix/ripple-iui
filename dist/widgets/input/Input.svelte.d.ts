@@ -1,6 +1,8 @@
+import { Input } from '../../components/ui/input/index.js';
 interface Props {
     id?: string;
     class?: string;
+    style?: Record<string, string>;
     value?: string | number;
     placeholder?: string;
     type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';

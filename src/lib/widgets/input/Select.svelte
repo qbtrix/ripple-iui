@@ -1,7 +1,11 @@
 <script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import * as Select from '$lib/components/ui/select/index.js';
+
   interface Props {
     id?: string;
     class?: string;
+    style?: Record<string, string>;
     value?: string;
     placeholder?: string;
     options?: (string | { value: string; label: string })[];
@@ -11,38 +15,50 @@
   }
 
   let {
-    id, class: className, value = '', placeholder = 'Select...',
+    id, class: className, style, value = '', placeholder = 'Select...',
     options = [], label, disabled = false, onchange
   }: Props = $props();
 
   const normalizedOptions = $derived(
     options.map(o => typeof o === 'string' ? { value: o, label: o } : o)
   );
+
+  const selectedLabel = $derived(
+    normalizedOptions.find(o => o.value === value)?.label ?? placeholder
+  );
+
+  const styleString = $derived(
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
+  );
+
+  function handleChange(newValue: string | undefined) {
+    if (newValue !== undefined) {
+      onchange?.(newValue);
+    }
+  }
 </script>
 
-<div class="rs-wrap {className ?? ''}">
-  {#if label}<label class="rs-label" for={id}>{label}</label>{/if}
-  <select {id} {disabled} class="rs" onchange={(e) => onchange?.(e.currentTarget.value)}>
-    {#if placeholder}<option value="" disabled selected={!value}>{placeholder}</option>{/if}
-    {#each normalizedOptions as opt}
-      <option value={opt.value} selected={value === opt.value}>{opt.label}</option>
-    {/each}
-  </select>
+<div class="space-y-2">
+  {#if label}
+    <span class="text-sm font-medium leading-none">
+      {label}
+    </span>
+  {/if}
+  <Select.Root
+    type="single"
+    {value}
+    onValueChange={handleChange}
+    {disabled}
+  >
+    <Select.Trigger {id} class={cn('w-full', className)} style={styleString}>
+      {selectedLabel}
+    </Select.Trigger>
+    <Select.Content>
+      {#each normalizedOptions as option}
+        <Select.Item value={option.value}>
+          {option.label}
+        </Select.Item>
+      {/each}
+    </Select.Content>
+  </Select.Root>
 </div>
-
-<style>
-  .rs-wrap { width: 100%; }
-  .rs-label {
-    display: block; font-size: 10px; font-weight: 500;
-    color: var(--ripple-text-muted); margin-bottom: 4px;
-  }
-  .rs {
-    width: 100%; padding: 6px 8px; border-radius: 6px;
-    border: 1px solid var(--ripple-border);
-    background: var(--ripple-surface);
-    color: var(--ripple-text); font-size: 11px;
-    outline: none; transition: border-color 0.12s;
-    appearance: auto;
-  }
-  .rs:focus { border-color: var(--ripple-ring); }
-</style>

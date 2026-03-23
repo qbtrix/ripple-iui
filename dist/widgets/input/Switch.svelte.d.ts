@@ -1,6 +1,8 @@
+import { Switch } from '../../components/ui/switch/index.js';
 interface Props {
     id?: string;
     class?: string;
+    style?: Record<string, string>;
     checked?: boolean;
     disabled?: boolean;
     label?: string;

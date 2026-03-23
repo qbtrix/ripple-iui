@@ -1,3 +1,4 @@
+import { Progress } from '../../components/ui/progress/index.js';
 interface Props {
     value?: number;
     max?: number;

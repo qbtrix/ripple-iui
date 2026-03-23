@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import * as Tabs from '../../components/ui/tabs/index.js';
 interface Tab {
     value: string;
     label: string;

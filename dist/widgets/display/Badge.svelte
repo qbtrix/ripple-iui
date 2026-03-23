@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { cn } from '../../utils.js';
+  import { Badge } from '../../components/ui/badge/index.js';
+
   interface Props {
     text?: string;
     variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
@@ -6,26 +9,22 @@
   }
 
   let { text = '', variant = 'default', class: className }: Props = $props();
+
+  // Map Ripple-specific variants to shadcn badge variants, with custom classes for success/warning
+  const variantMap: Record<string, string> = {
+    success: 'bg-green-500/10 text-green-500 border-green-500/20',
+    warning: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+  };
+
+  const shadcnVariant = $derived(
+    ['default', 'secondary', 'destructive', 'outline'].includes(variant)
+      ? variant as 'default' | 'secondary' | 'destructive' | 'outline'
+      : 'outline'
+  );
+
+  const extraClass = $derived(variantMap[variant] ?? '');
 </script>
 
-<span class="rb rb--{variant} {className ?? ''}">{text}</span>
-
-<style>
-  .rb {
-    display: inline-flex;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 500;
-    padding: 1px 6px;
-    border-radius: 4px;
-    line-height: 1.5;
-    font-family: var(--ripple-font-mono);
-    white-space: nowrap;
-  }
-  .rb--default   { color: var(--ripple-success); background: var(--ripple-success-bg); }
-  .rb--success   { color: var(--ripple-success); background: var(--ripple-success-bg); }
-  .rb--destructive { color: var(--ripple-danger); background: var(--ripple-danger-bg); }
-  .rb--warning   { color: var(--ripple-warning); background: var(--ripple-warning-bg); }
-  .rb--secondary { color: var(--ripple-text-secondary); background: var(--ripple-surface-hover); }
-  .rb--outline   { color: var(--ripple-text-secondary); background: none; border: 1px solid var(--ripple-border); }
-</style>
+<Badge variant={shadcnVariant} class={cn(extraClass, className)}>
+  {text}
+</Badge>

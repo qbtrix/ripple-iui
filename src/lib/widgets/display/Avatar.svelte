@@ -1,30 +1,27 @@
 <script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import * as Avatar from '$lib/components/ui/avatar/index.js';
+
   interface Props {
+    id?: string;
+    class?: string;
+    style?: Record<string, string>;
     src?: string;
     alt?: string;
     fallback?: string;
-    class?: string;
   }
 
-  let { src, alt = '', fallback = '?', class: className }: Props = $props();
-  let imgError = $state(false);
+  let {
+    id, class: className, style, src, alt = '',
+    fallback = '?'
+  }: Props = $props();
+
+  const styleString = $derived(
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
+  );
 </script>
 
-<div class="ra {className ?? ''}">
-  {#if src && !imgError}
-    <img {src} {alt} class="ra-img" onerror={() => { imgError = true; }} />
-  {:else}
-    <span class="ra-fb">{fallback}</span>
-  {/if}
-</div>
-
-<style>
-  .ra {
-    width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
-    background: var(--ripple-surface-hover);
-    display: inline-flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .ra-img { width: 100%; height: 100%; object-fit: cover; }
-  .ra-fb { font-size: 10px; font-weight: 500; color: var(--ripple-text-muted); }
-</style>
+<Avatar.Root {id} class={cn(className)} style={styleString}>
+  <Avatar.Image {src} {alt} />
+  <Avatar.Fallback>{fallback}</Avatar.Fallback>
+</Avatar.Root>

@@ -1,7 +1,11 @@
 <script lang="ts">
+  import { cn } from '../../utils.js';
+  import { Input } from '../../components/ui/input/index.js';
+
   interface Props {
     id?: string;
     class?: string;
+    style?: Record<string, string>;
     value?: string | number;
     placeholder?: string;
     type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
@@ -11,30 +15,34 @@
   }
 
   let {
-    id, class: className, value = '', placeholder = '', type = 'text',
+    id, class: className, style, value = '', placeholder = '', type = 'text',
     disabled = false, label, onchange
   }: Props = $props();
+
+  const styleString = $derived(
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
+  );
+
+  function handleInput(e: Event) {
+    const target = e.target as HTMLInputElement;
+    onchange?.(target.value);
+  }
 </script>
 
-<div class="ri-wrap {className ?? ''}">
-  {#if label}<label class="ri-label" for={id}>{label}</label>{/if}
-  <input {id} {type} {placeholder} {disabled} value={value ?? ''}
-    class="ri" oninput={(e) => onchange?.(e.currentTarget.value)} />
+<div class="space-y-2">
+  {#if label}
+    <label for={id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+      {label}
+    </label>
+  {/if}
+  <Input
+    {id}
+    {type}
+    value={value ?? ''}
+    {placeholder}
+    {disabled}
+    class={cn(className)}
+    style={styleString}
+    oninput={handleInput}
+  />
 </div>
-
-<style>
-  .ri-wrap { width: 100%; }
-  .ri-label {
-    display: block; font-size: 10px; font-weight: 500;
-    color: var(--ripple-text-muted); margin-bottom: 4px;
-  }
-  .ri {
-    width: 100%; padding: 6px 8px; border-radius: 6px;
-    border: 1px solid var(--ripple-border);
-    background: var(--ripple-surface);
-    color: var(--ripple-text); font-size: 11px;
-    outline: none; transition: border-color 0.12s;
-  }
-  .ri:focus { border-color: var(--ripple-ring); }
-  .ri:disabled { opacity: 0.4; }
-</style>
