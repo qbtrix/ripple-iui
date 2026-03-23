@@ -1,97 +1,81 @@
-<!--
-  @file Flex.svelte
-  @description Flexbox container widget for flexible layouts.
-  @created 2024-12-XX
-  @changes
-    - Initial creation with flex direction, justify, align, gap, wrap props
--->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { cn } from '../../utils.js';
 
 	interface Props {
 		id?: string;
 		class?: string;
 		style?: Record<string, string>;
 		children?: Snippet;
-		/** Flex direction */
 		direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
-		/** Justify content */
 		justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly';
-		/** Align items */
 		align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch';
-		/** Gap between items */
 		gap?: number | string;
-		/** Flex wrap */
 		wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
-		/** Click handler */
+		/** Layout variant */
+		variant?: 'default' | 'divided' | 'compact';
 		onclick?: (e?: unknown) => void;
 	}
 
 	let {
-		id,
-		class: className,
-		style,
-		children,
-		direction = 'row',
-		justify = 'start',
-		align = 'stretch',
-		gap,
-		wrap = false,
-		onclick
+		id, class: className, style, children,
+		direction = 'row', justify = 'start', align = 'stretch',
+		gap, wrap = false, variant = 'default', onclick
 	}: Props = $props();
 
-	const directionClass = $derived({
-		'row': 'flex-row',
-		'column': 'flex-col',
-		'row-reverse': 'flex-row-reverse',
-		'column-reverse': 'flex-col-reverse'
-	}[direction]);
+	const justifyMap: Record<string, string> = {
+		start: 'flex-start', end: 'flex-end', center: 'center',
+		between: 'space-between', around: 'space-around', evenly: 'space-evenly'
+	};
 
-	const justifyClass = $derived({
-		'start': 'justify-start',
-		'end': 'justify-end',
-		'center': 'justify-center',
-		'between': 'justify-between',
-		'around': 'justify-around',
-		'evenly': 'justify-evenly'
-	}[justify]);
+	const alignMap: Record<string, string> = {
+		start: 'flex-start', end: 'flex-end', center: 'center',
+		baseline: 'baseline', stretch: 'stretch'
+	};
 
-	const alignClass = $derived({
-		'start': 'items-start',
-		'end': 'items-end',
-		'center': 'items-center',
-		'baseline': 'items-baseline',
-		'stretch': 'items-stretch'
-	}[align]);
+	const wrapValue = $derived(
+		wrap === true || wrap === 'wrap' ? 'wrap' : wrap === 'wrap-reverse' ? 'wrap-reverse' : 'nowrap'
+	);
 
-	const wrapClass = $derived(() => {
-		if (wrap === true || wrap === 'wrap') return 'flex-wrap';
-		if (wrap === 'wrap-reverse') return 'flex-wrap-reverse';
-		return 'flex-nowrap';
-	});
+	const gapValue = $derived(
+		gap == null ? undefined : typeof gap === 'number' ? `${gap * 4}px` : gap
+	);
 
-	const gapClass = $derived(() => {
-		if (!gap) return '';
-		if (typeof gap === 'number') return `gap-${gap}`;
-		return `gap-[${gap}]`;
-	});
-
-	const combinedStyle = $derived(() => {
-		const styles: string[] = [];
-		if (style) {
-			styles.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));
-		}
-		return styles.length > 0 ? styles.join(';') : undefined;
+	const combinedStyle = $derived.by(() => {
+		const s: string[] = [
+			'display:flex',
+			`flex-direction:${direction}`,
+			`justify-content:${justifyMap[justify] ?? 'flex-start'}`,
+			`align-items:${alignMap[align] ?? 'stretch'}`,
+			`flex-wrap:${wrapValue}`,
+		];
+		if (gapValue) s.push(`gap:${gapValue}`);
+		if (style) s.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));
+		return s.join(';');
 	});
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
 	{id}
-	class={cn('flex', directionClass, justifyClass, alignClass, wrapClass(), gapClass(), typeof className === 'string' ? className : '')}
-	style={combinedStyle()}
+	class="rflex {variant !== 'default' ? `rflex--${variant}` : ''} {className ?? ''}"
+	style={combinedStyle}
 	{onclick}
 >
 	{@render children?.()}
 </div>
+
+<style>
+	.rflex { min-width: 0; }
+
+	/* Divided: separators between children */
+	.rflex--divided { gap: 0 !important; }
+	.rflex--divided > :global(*) {
+		padding: 5px 0;
+		border-bottom: 1px solid var(--ripple-border-subtle, rgba(255,255,255,0.04));
+	}
+	.rflex--divided > :global(*:last-child) { border-bottom: none; }
+
+	/* Compact: tighter spacing */
+	.rflex--compact { gap: 0 !important; }
+	.rflex--compact > :global(*) { padding: 3px 0; }
+</style>

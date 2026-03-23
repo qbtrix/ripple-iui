@@ -6,6 +6,10 @@ interface TableColumn {
 interface Props {
     data?: any[];
     columns?: TableColumn[];
+    /** Visual variant */
+    variant?: 'default' | 'compact' | 'striped' | 'minimal';
+    /** Column key for status dot color (e.g. "_status") */
+    statusKey?: string;
     onRowClick?: EventHandlerOrArray;
     class?: string;
 }

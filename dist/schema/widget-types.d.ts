@@ -5,7 +5,6 @@ export declare const WidgetType: z.ZodEnum<{
     select: "select";
     grid: "grid";
     container: "container";
-    flex: "flex";
     tabs: "tabs";
     button: "button";
     text: "text";
@@ -13,6 +12,7 @@ export declare const WidgetType: z.ZodEnum<{
     switch: "switch";
     table: "table";
     heading: "heading";
+    flex: "flex";
     image: "image";
     badge: "badge";
     progress: "progress";

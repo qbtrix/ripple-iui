@@ -4,17 +4,13 @@ interface Props {
     class?: string;
     style?: Record<string, string>;
     children?: Snippet;
-    /** Flex direction */
     direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
-    /** Justify content */
     justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly';
-    /** Align items */
     align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch';
-    /** Gap between items */
     gap?: number | string;
-    /** Flex wrap */
     wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
-    /** Click handler */
+    /** Layout variant */
+    variant?: 'default' | 'divided' | 'compact';
     onclick?: (e?: unknown) => void;
 }
 declare const Flex: import("svelte").Component<Props, {}, "">;
