@@ -17,6 +17,8 @@
 		title?: string;
 		height?: number;
 		colors?: string[];
+		/** Show tooltip on hover (disable for compact/dashboard charts) */
+		tooltip?: boolean;
 		class?: string;
 		/** Escape hatch: render your own chart */
 		chartSlot?: Snippet<[{ data: DataPoint[]; type: string }]>;
@@ -28,6 +30,7 @@
 		title,
 		height = 200,
 		colors = [],
+		tooltip = true,
 		class: className = '',
 		chartSlot
 	}: Props = $props();
@@ -60,7 +63,7 @@
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
 	{:else if type === 'bar'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full">
+		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full" style={tooltip ? '' : 'pointer-events:none'}>
 			<BarChart
 				{data}
 				xScale={scaleBand().padding(0.25)}
@@ -72,14 +75,16 @@
 					xAxis: { format: (d) => d.length > 10 ? d.slice(0, 10) + '…' : d }
 				}}
 			>
-				{#snippet tooltip()}
-					<Chart.Tooltip />
-				{/snippet}
+				{#if tooltip}
+					{#snippet tooltip()}
+						<Chart.Tooltip />
+					{/snippet}
+				{/if}
 			</BarChart>
 		</Chart.Container>
 
 	{:else if type === 'line'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full">
+		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full" style={tooltip ? '' : 'pointer-events:none'}>
 			<LineChart
 				{data} x="label" y="value" c="label"
 				cRange={colorRange} axis="x"
@@ -87,14 +92,16 @@
 					xAxis: { format: (d) => d.length > 10 ? d.slice(0, 10) + '…' : d }
 				}}
 			>
-				{#snippet tooltip()}
-					<Chart.Tooltip />
-				{/snippet}
+				{#if tooltip}
+					{#snippet tooltip()}
+						<Chart.Tooltip />
+					{/snippet}
+				{/if}
 			</LineChart>
 		</Chart.Container>
 
 	{:else if type === 'area'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full">
+		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full" style={tooltip ? '' : 'pointer-events:none'}>
 			<AreaChart
 				{data} x="label" y="value" c="label"
 				cRange={colorRange} axis="x"
@@ -102,23 +109,27 @@
 					xAxis: { format: (d) => d.length > 10 ? d.slice(0, 10) + '…' : d }
 				}}
 			>
-				{#snippet tooltip()}
-					<Chart.Tooltip />
-				{/snippet}
+				{#if tooltip}
+					{#snippet tooltip()}
+						<Chart.Tooltip />
+					{/snippet}
+				{/if}
 			</AreaChart>
 		</Chart.Container>
 
 	{:else if type === 'pie' || type === 'donut'}
 		<div class="flex items-center gap-6">
-			<Chart.Container config={chartConfig} class="flex-1 min-h-[{height}px]">
+			<Chart.Container config={chartConfig} class="flex-1 min-h-[{height}px]" style={tooltip ? '' : 'pointer-events:none'}>
 				<PieChart
 					{data} key="label" value="value" label="label" c="label"
 					cRange={colorRange}
 					innerRadius={type === 'donut' ? 0.5 : 0}
 				>
-					{#snippet tooltip()}
-						<Chart.Tooltip />
-					{/snippet}
+					{#if tooltip}
+						{#snippet tooltip()}
+							<Chart.Tooltip />
+						{/snippet}
+					{/if}
 				</PieChart>
 			</Chart.Container>
 

@@ -11,6 +11,8 @@ interface Props {
     title?: string;
     height?: number;
     colors?: string[];
+    /** Show tooltip on hover (disable for compact/dashboard charts) */
+    tooltip?: boolean;
     class?: string;
     /** Escape hatch: render your own chart */
     chartSlot?: Snippet<[{
