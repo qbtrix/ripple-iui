@@ -16,8 +16,8 @@ export declare const WidgetType: z.ZodEnum<{
     switch: "switch";
     table: "table";
     heading: "heading";
-    flex: "flex";
     chart: "chart";
+    flex: "flex";
     if: "if";
     each: "each";
 }>;

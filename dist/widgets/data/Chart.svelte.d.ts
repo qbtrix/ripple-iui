@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import * as Chart from '../../components/ui/chart/index.js';
 interface DataPoint {
     label: string;
     value: number;
@@ -11,6 +12,7 @@ interface Props {
     height?: number;
     colors?: string[];
     class?: string;
+    /** Escape hatch: render your own chart */
     chartSlot?: Snippet<[{
         data: DataPoint[];
         type: string;
