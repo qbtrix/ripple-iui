@@ -128,7 +128,7 @@ export function determineLayout(spec: IntentSpec): LayoutType {
 	}
 
 	// Auto-determine based on intent and data
-	switch (intent) {
+	switch (intent as string) {
 		case 'browse':
 			return determineBrowseLayout(spec, itemCount, availableFields);
 

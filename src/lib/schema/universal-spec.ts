@@ -74,7 +74,7 @@ export const DisplayHints = z.object({
 /**
  * The Universal Spec - One type to rule them all.
  */
-export const UniversalSpec = z.object({
+export const UniversalSpec: z.ZodType<UniversalSpecType> = z.object({
   // Core Identity
   id: z.string().optional(),
   version: z.literal('2.0').default('2.0'),
@@ -114,7 +114,26 @@ export const UniversalSpec = z.object({
   chain: z.lazy(() => UniversalSpec).optional()
 });
 
-export type UniversalSpec = z.infer<typeof UniversalSpec>;
+// Type defined before the schema to break circular inference
+type UniversalSpecType = {
+  id?: string;
+  version: '2.0';
+  intent: z.infer<typeof IntentType>;
+  lifecycle?: z.infer<typeof LifecycleConfig>;
+  title?: string;
+  description?: string;
+  theme?: z.infer<typeof ThemeOverrides>;
+  data?: Record<string, any> | z.infer<typeof DataFetcher>;
+  fields?: Record<string, string>;
+  display?: z.infer<typeof DisplayHints>;
+  ui?: z.infer<typeof UINode>;
+  selection?: 'single' | 'multiple' | 'none';
+  on_select?: any;
+  on_complete?: any;
+  chain?: UniversalSpecType;
+};
+
+export type UniversalSpec = UniversalSpecType;
 
 /**
  * Helper to parse a Universal Spec

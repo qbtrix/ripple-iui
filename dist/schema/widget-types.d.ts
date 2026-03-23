@@ -1,0 +1,31 @@
+import { z } from 'zod';
+export declare const WidgetType: z.ZodEnum<{
+    input: "input";
+    card: "card";
+    select: "select";
+    grid: "grid";
+    container: "container";
+    flex: "flex";
+    tabs: "tabs";
+    button: "button";
+    text: "text";
+    checkbox: "checkbox";
+    switch: "switch";
+    table: "table";
+    heading: "heading";
+    image: "image";
+    badge: "badge";
+    progress: "progress";
+    avatar: "avatar";
+    chart: "chart";
+    if: "if";
+    each: "each";
+}>;
+export type WidgetType = z.infer<typeof WidgetType>;
+export declare const WIDGET_CATEGORIES: {
+    readonly layout: readonly ["container", "flex", "grid", "card", "tabs"];
+    readonly display: readonly ["text", "heading", "image", "badge", "progress", "avatar"];
+    readonly input: readonly ["button", "input", "select", "checkbox", "switch"];
+    readonly data: readonly ["table", "chart"];
+    readonly control: readonly ["if", "each"];
+};
