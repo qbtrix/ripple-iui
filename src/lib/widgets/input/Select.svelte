@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { cn } from '../../utils.js';
-
   interface Props {
     id?: string;
     class?: string;
@@ -22,13 +20,29 @@
   );
 </script>
 
-<div class={cn('ripple-select-wrapper', className)}>
-  {#if label}<label class="ripple-select-label" for={id}>{label}</label>{/if}
-  <select {id} {disabled} class="ripple-select"
-    onchange={(e) => onchange?.(e.currentTarget.value)}>
+<div class="rs-wrap {className ?? ''}">
+  {#if label}<label class="rs-label" for={id}>{label}</label>{/if}
+  <select {id} {disabled} class="rs" onchange={(e) => onchange?.(e.currentTarget.value)}>
     {#if placeholder}<option value="" disabled selected={!value}>{placeholder}</option>{/if}
     {#each normalizedOptions as opt}
       <option value={opt.value} selected={value === opt.value}>{opt.label}</option>
     {/each}
   </select>
 </div>
+
+<style>
+  .rs-wrap { width: 100%; }
+  .rs-label {
+    display: block; font-size: 10px; font-weight: 500;
+    color: var(--ripple-text-muted); margin-bottom: 4px;
+  }
+  .rs {
+    width: 100%; padding: 6px 8px; border-radius: 6px;
+    border: 1px solid var(--ripple-border);
+    background: var(--ripple-surface);
+    color: var(--ripple-text); font-size: 11px;
+    outline: none; transition: border-color 0.12s;
+    appearance: auto;
+  }
+  .rs:focus { border-color: var(--ripple-ring); }
+</style>

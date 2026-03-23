@@ -3,7 +3,6 @@
   import type { EventHandlerOrArray } from '../../schema/event-handler.js';
   import type { EventDispatcher } from '../../core/event-dispatcher.js';
   import type { StateManager } from '../../core/state-manager.svelte.js';
-  import { cn } from '../../utils.js';
 
   interface TableColumn {
     header: string;
@@ -32,23 +31,46 @@
   }
 </script>
 
-<div class={cn('ripple-table-wrapper', className)}>
-  <table class="ripple-table">
+<div class="rtbl {className ?? ''}">
+  <table class="rtbl-table">
     <thead>
-      <tr>{#each columns as col}<th>{col.header}</th>{/each}</tr>
+      <tr>{#each columns as col}<th class="rtbl-th">{col.header}</th>{/each}</tr>
     </thead>
     <tbody>
       {#if data && data.length > 0}
         {#each data as row, i}
           <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <tr class={onRowClick ? 'ripple-table-row--clickable' : ''}
-            onclick={() => handleRowClick(row, i)}>
-            {#each columns as col}<td>{row[col.accessorKey] ?? ''}</td>{/each}
+          <tr class="rtbl-row" class:rtbl-row--click={!!onRowClick} onclick={() => handleRowClick(row, i)}>
+            {#each columns as col, ci}
+              <td class="rtbl-td" class:rtbl-td--first={ci === 0}>{row[col.accessorKey] ?? ''}</td>
+            {/each}
           </tr>
         {/each}
       {:else}
-        <tr><td colspan={columns.length}>No results.</td></tr>
+        <tr><td class="rtbl-empty" colspan={columns.length}>No results.</td></tr>
       {/if}
     </tbody>
   </table>
 </div>
+
+<style>
+  .rtbl { width: 100%; overflow: hidden; }
+  .rtbl-table { width: 100%; border-collapse: collapse; }
+  .rtbl-th {
+    text-align: left; padding: 0 4px 6px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--ripple-text-dim);
+    border-bottom: 1px solid var(--ripple-border);
+  }
+  .rtbl-td {
+    padding: 5px 4px; font-size: 11px;
+    color: var(--ripple-text-secondary);
+    border-bottom: 1px solid var(--ripple-border-subtle);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rtbl-td--first { font-weight: 500; color: var(--ripple-text); }
+  .rtbl-row:last-child .rtbl-td { border-bottom: none; }
+  .rtbl-row--click { cursor: pointer; }
+  .rtbl-row--click:hover .rtbl-td { background: var(--ripple-surface); }
+  .rtbl-empty { padding: 12px 4px; text-align: center; color: var(--ripple-text-muted); }
+</style>

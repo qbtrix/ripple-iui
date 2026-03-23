@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { cn } from '../../utils.js';
-
   interface Props {
     src?: string;
     alt?: string;
@@ -12,10 +10,21 @@
   let imgError = $state(false);
 </script>
 
-<div class={cn('ripple-avatar', className)}>
+<div class="ra {className ?? ''}">
   {#if src && !imgError}
-    <img {src} {alt} class="ripple-avatar-image" onerror={() => { imgError = true; }} />
+    <img {src} {alt} class="ra-img" onerror={() => { imgError = true; }} />
   {:else}
-    <span class="ripple-avatar-fallback">{fallback}</span>
+    <span class="ra-fb">{fallback}</span>
   {/if}
 </div>
+
+<style>
+  .ra {
+    width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
+    background: var(--ripple-surface-hover);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ra-img { width: 100%; height: 100%; object-fit: cover; }
+  .ra-fb { font-size: 10px; font-weight: 500; color: var(--ripple-text-muted); }
+</style>
