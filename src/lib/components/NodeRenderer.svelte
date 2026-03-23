@@ -57,10 +57,15 @@
 	 * Evaluate the 'show' condition if present.
 	 * Force state tracking via JSON.stringify for reactivity.
 	 */
+	// Check once if this node uses any expressions (avoid JSON.stringify for static nodes)
+	const nodeHasExpressions = node.show ? true
+		: node.bind ? true
+		: node.props ? Object.values(node.props).some(v => typeof v === 'string' && hasExpressions(v))
+		: false;
+
 	const shouldShow = $derived.by(() => {
 		if (!node.show) return true;
-		// Force reactivity tracking
-		const _forceTrack = JSON.stringify(stateManager.state);
+		if (nodeHasExpressions) { const _ = stateManager.state; }
 		return evaluateCondition(node.show, getResolverContext());
 	});
 
@@ -69,8 +74,8 @@
 	 * For checkbox/switch, filter out 'checked' to avoid conflicts with bound value.
 	 */
 	const resolvedProps = $derived.by(() => {
-		// Force reactivity tracking for props with expressions
-		const _forceTrack = JSON.stringify(stateManager.state);
+		// Only track state reactivity if this node actually uses expressions
+		if (nodeHasExpressions) { const _ = stateManager.state; }
 		const ctx = getResolverContext();
 		const props = node.props ?? {};
 
@@ -141,12 +146,9 @@
 	const resolvedClass = $derived.by(() => {
 		if (!node.class) return undefined;
 		if (hasExpressions(node.class)) {
-			// Force reactivity by serializing state - this tracks ALL state changes
-			// This is a workaround for Svelte 5's fine-grained reactivity
-			const _forceTrack = JSON.stringify(stateManager.state);
+			if (nodeHasExpressions) { const _ = stateManager.state; }
 			try {
 				const result = resolveString(node.class, getResolverContext());
-				// Ensure we return a string or undefined
 				return typeof result === 'string' ? result : String(result ?? '');
 			} catch (e) {
 				console.warn('Failed to resolve class expression:', node.class, e);
