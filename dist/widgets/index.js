@@ -1,20 +1,25 @@
-import { Container, Flex, Grid, Card, Tabs } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar } from './display/index.js';
+import { Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
+import { Terminal } from './composite/index.js';
 const defaultRegistry = {
     container: Container,
     flex: Flex,
     grid: Grid,
     card: Card,
     tabs: Tabs,
+    dashboard: Dashboard,
+    'dashboard-slot': DashboardSlot,
     text: Text,
     heading: Heading,
     image: Image,
     badge: Badge,
     progress: Progress,
     avatar: Avatar,
+    metric: Metric,
+    feed: Feed,
     button: Button,
     input: Input,
     select: Select,
@@ -22,6 +27,7 @@ const defaultRegistry = {
     switch: Switch,
     table: Table,
     chart: Chart,
+    terminal: Terminal,
     if: If,
     each: Each,
     // Aliases
@@ -46,4 +52,4 @@ export function getWidgetTypes() {
 export function resetRegistry() {
     registry = { ...defaultRegistry };
 }
-export { Container, Flex, Grid, Card, Tabs, Text, Heading, Image, Badge, Progress, Avatar, Button, Input, Select, Checkbox, Switch, Table, Chart, If, Each };
+export { Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot, Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, Button, Input, Select, Checkbox, Switch, Table, Chart, Terminal, If, Each };

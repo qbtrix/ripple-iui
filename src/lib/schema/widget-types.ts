@@ -16,9 +16,10 @@ export const WidgetType = z.enum([
 export type WidgetType = z.infer<typeof WidgetType>;
 
 export const WIDGET_CATEGORIES = {
-  layout: ['container', 'flex', 'grid', 'card', 'tabs'],
-  display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar'],
+  layout: ['container', 'flex', 'grid', 'card', 'tabs', 'dashboard', 'dashboard-slot'],
+  display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'feed'],
   input: ['button', 'input', 'select', 'checkbox', 'switch'],
   data: ['table', 'chart'],
-  control: ['if', 'each']
+  control: ['if', 'each'],
+  composite: ['terminal']
 } as const;

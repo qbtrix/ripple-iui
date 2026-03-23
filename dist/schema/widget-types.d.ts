@@ -23,9 +23,10 @@ export declare const WidgetType: z.ZodEnum<{
 }>;
 export type WidgetType = z.infer<typeof WidgetType>;
 export declare const WIDGET_CATEGORIES: {
-    readonly layout: readonly ["container", "flex", "grid", "card", "tabs"];
-    readonly display: readonly ["text", "heading", "image", "badge", "progress", "avatar"];
+    readonly layout: readonly ["container", "flex", "grid", "card", "tabs", "dashboard", "dashboard-slot"];
+    readonly display: readonly ["text", "heading", "image", "badge", "progress", "avatar", "metric", "feed"];
     readonly input: readonly ["button", "input", "select", "checkbox", "switch"];
     readonly data: readonly ["table", "chart"];
     readonly control: readonly ["if", "each"];
+    readonly composite: readonly ["terminal"];
 };

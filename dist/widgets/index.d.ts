@@ -1,9 +1,10 @@
 import type { Component } from 'svelte';
-import { Container, Flex, Grid, Card, Tabs } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar } from './display/index.js';
+import { Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
+import { Terminal } from './composite/index.js';
 export type WidgetRegistry = Record<string, Component<any>>;
 export declare function getWidget(type: string): Component<any> | undefined;
 export declare function registerWidget(type: string, component: Component<any>): void;
@@ -11,4 +12,4 @@ export declare function unregisterWidget(type: string): void;
 export declare function hasWidget(type: string): boolean;
 export declare function getWidgetTypes(): string[];
 export declare function resetRegistry(): void;
-export { Container, Flex, Grid, Card, Tabs, Text, Heading, Image, Badge, Progress, Avatar, Button, Input, Select, Checkbox, Switch, Table, Chart, If, Each };
+export { Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot, Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, Button, Input, Select, Checkbox, Switch, Table, Chart, Terminal, If, Each };
