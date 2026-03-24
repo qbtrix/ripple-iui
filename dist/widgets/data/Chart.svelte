@@ -63,7 +63,7 @@
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
 	{:else if type === 'bar'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full" style={tooltip ? '' : 'pointer-events:none'}>
+		<Chart.Container config={chartConfig} class="w-full" style="min-height:{height}px;{tooltip ? '' : 'pointer-events:none'}">
 			<BarChart
 				{data}
 				xScale={scaleBand().padding(0.25)}
@@ -84,7 +84,7 @@
 		</Chart.Container>
 
 	{:else if type === 'line'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full" style={tooltip ? '' : 'pointer-events:none'}>
+		<Chart.Container config={chartConfig} class="w-full" style="min-height:{height}px;{tooltip ? '' : 'pointer-events:none'}">
 			<LineChart
 				{data} x="label" y="value" c="label"
 				cRange={colorRange} axis="x"
@@ -101,7 +101,7 @@
 		</Chart.Container>
 
 	{:else if type === 'area'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full" style={tooltip ? '' : 'pointer-events:none'}>
+		<Chart.Container config={chartConfig} class="w-full" style="min-height:{height}px;{tooltip ? '' : 'pointer-events:none'}">
 			<AreaChart
 				{data} x="label" y="value" c="label"
 				cRange={colorRange} axis="x"
