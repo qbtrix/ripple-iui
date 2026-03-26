@@ -1,6 +1,7 @@
+// Updated: Added GlassCard import and registry entry (Phase 4 — glass design system)
 import type { Component } from 'svelte';
 
-import { Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
+import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch } from './input/index.js';
 import { Table, Chart } from './data/index.js';
@@ -17,6 +18,7 @@ const defaultRegistry: WidgetRegistry = {
   tabs: Tabs,
   dashboard: Dashboard,
   'dashboard-slot': DashboardSlot,
+  'glass-card': GlassCard,
   text: Text,
   heading: Heading,
   image: Image,
@@ -66,7 +68,7 @@ export function resetRegistry(): void {
 }
 
 export {
-  Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot,
+  Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed,
   Button, Input, Select, Checkbox, Switch,
   Table, Chart, Terminal, If, Each
