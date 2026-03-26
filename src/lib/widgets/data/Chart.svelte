@@ -1,9 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { cn } from '$lib/utils.js';
-	import * as Chart from '$lib/components/ui/chart/index.js';
-	import { BarChart, AreaChart, PieChart, LineChart } from 'layerchart';
-	import { scaleBand } from 'd3-scale';
 
 	interface DataPoint {
 		label: string;
@@ -17,8 +15,8 @@
 		title?: string;
 		height?: number;
 		colors?: string[];
+		tooltip?: boolean;
 		class?: string;
-		/** Escape hatch: render your own chart */
 		chartSlot?: Snippet<[{ data: DataPoint[]; type: string }]>;
 	}
 
@@ -28,113 +26,152 @@
 		title,
 		height = 200,
 		colors = [],
+		tooltip = true,
 		class: className = '',
 		chartSlot
 	}: Props = $props();
 
-	function getColor(index: number): string {
-		if (colors[index]) return colors[index];
-		return `var(--chart-${(index % 5) + 1})`;
+	const defaultColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+	function getColor(i: number): string {
+		return colors[i] || defaultColors[i % defaultColors.length];
 	}
 
-	const chartConfig = $derived.by(() => {
-		const config: Chart.ChartConfig = {};
-		data.forEach((item, idx) => {
-			config[item.label] = {
-				label: item.label,
-				color: getColor(idx)
+	let chartEl: HTMLDivElement;
+	let chart: any = null;
+
+	function buildOption() {
+		const labels = data.map(d => d.label);
+		const values = data.map(d => d.value);
+		const itemColors = data.map((_, i) => getColor(i));
+
+		const base: any = {
+			animation: true,
+			animationDuration: 400,
+			backgroundColor: 'transparent',
+			grid: { left: 4, right: 4, top: title ? 30 : 8, bottom: 24, containLabel: true },
+			tooltip: tooltip ? {
+				trigger: type === 'pie' || type === 'donut' ? 'item' : 'axis',
+				backgroundColor: 'rgba(0,0,0,0.8)',
+				borderColor: 'rgba(255,255,255,0.1)',
+				textStyle: { color: '#fff', fontSize: 11 },
+			} : false,
+		};
+
+		if (title) {
+			base.title = {
+				text: title,
+				left: 0, top: 0,
+				textStyle: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 600 },
 			};
-		});
-		return config;
+		}
+
+		if (type === 'bar') {
+			return {
+				...base,
+				xAxis: {
+					type: 'category', data: labels,
+					axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
+					axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+					axisTick: { show: false },
+				},
+				yAxis: {
+					type: 'value',
+					axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
+					splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+				},
+				series: [{
+					type: 'bar', data: values,
+					itemStyle: { borderRadius: [3, 3, 0, 0], color: (p: any) => itemColors[p.dataIndex] },
+					barMaxWidth: 32,
+				}],
+			};
+		}
+
+		if (type === 'line' || type === 'area') {
+			return {
+				...base,
+				xAxis: {
+					type: 'category', data: labels, boundaryGap: false,
+					axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
+					axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+					axisTick: { show: false },
+				},
+				yAxis: {
+					type: 'value',
+					axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
+					splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+				},
+				series: [{
+					type: 'line', data: values,
+					smooth: true,
+					lineStyle: { color: itemColors[0], width: 2 },
+					itemStyle: { color: itemColors[0] },
+					areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+						{ offset: 0, color: itemColors[0] + '40' },
+						{ offset: 1, color: itemColors[0] + '05' },
+					]}} : undefined,
+					symbol: 'circle', symbolSize: 4,
+				}],
+			};
+		}
+
+		if (type === 'pie' || type === 'donut') {
+			return {
+				...base,
+				grid: undefined,
+				series: [{
+					type: 'pie',
+					radius: type === 'donut' ? ['40%', '70%'] : ['0%', '70%'],
+					center: ['40%', '50%'],
+					data: data.map((d, i) => ({ name: d.label, value: d.value, itemStyle: { color: getColor(i) } })),
+					label: { show: false },
+					emphasis: { label: { show: true, fontSize: 12, color: '#fff' } },
+				}],
+				legend: {
+					orient: 'vertical', right: 0, top: 'center',
+					textStyle: { color: 'rgba(255,255,255,0.65)', fontSize: 11 },
+					icon: 'roundRect', itemWidth: 10, itemHeight: 10,
+				},
+			};
+		}
+
+		return base;
+	}
+
+	async function initChart() {
+		if (!chartEl) return;
+		const echarts = await import('echarts');
+		chart = echarts.init(chartEl, undefined, { renderer: 'canvas' });
+		chart.setOption(buildOption());
+	}
+
+	function resizeChart() {
+		chart?.resize();
+	}
+
+	onMount(() => {
+		initChart();
+		window.addEventListener('resize', resizeChart);
 	});
 
-	const colorRange = $derived(data.map((_, i) => getColor(i)));
-	const total = $derived(data.reduce((sum, d) => sum + d.value, 0));
+	onDestroy(() => {
+		window.removeEventListener('resize', resizeChart);
+		chart?.dispose();
+	});
+
+	// Update chart when data changes
+	$effect(() => {
+		if (chart && data) {
+			chart.setOption(buildOption(), true);
+		}
+	});
 </script>
 
 <div class={cn('w-full', className)}>
-	{#if title}
-		<h3 class="text-sm font-semibold mb-3 text-foreground">{title}</h3>
-	{/if}
-
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
-	{:else if type === 'bar'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full">
-			<BarChart
-				{data}
-				xScale={scaleBand().padding(0.25)}
-				x="label" y="value" c="label"
-				cRange={colorRange}
-				axis="x"
-				props={{
-					bars: { stroke: 'none', strokeWidth: 0, rounded: 'all' },
-					xAxis: { format: (d) => d.length > 10 ? d.slice(0, 10) + '…' : d }
-				}}
-			>
-				{#snippet tooltip()}
-					<Chart.Tooltip />
-				{/snippet}
-			</BarChart>
-		</Chart.Container>
-
-	{:else if type === 'line'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full">
-			<LineChart
-				{data} x="label" y="value" c="label"
-				cRange={colorRange} axis="x"
-				props={{
-					xAxis: { format: (d) => d.length > 10 ? d.slice(0, 10) + '…' : d }
-				}}
-			>
-				{#snippet tooltip()}
-					<Chart.Tooltip />
-				{/snippet}
-			</LineChart>
-		</Chart.Container>
-
-	{:else if type === 'area'}
-		<Chart.Container config={chartConfig} class="min-h-[{height}px] w-full">
-			<AreaChart
-				{data} x="label" y="value" c="label"
-				cRange={colorRange} axis="x"
-				props={{
-					xAxis: { format: (d) => d.length > 10 ? d.slice(0, 10) + '…' : d }
-				}}
-			>
-				{#snippet tooltip()}
-					<Chart.Tooltip />
-				{/snippet}
-			</AreaChart>
-		</Chart.Container>
-
-	{:else if type === 'pie' || type === 'donut'}
-		<div class="flex items-center gap-6">
-			<Chart.Container config={chartConfig} class="flex-1 min-h-[{height}px]">
-				<PieChart
-					{data} key="label" value="value" label="label" c="label"
-					cRange={colorRange}
-					innerRadius={type === 'donut' ? 0.5 : 0}
-				>
-					{#snippet tooltip()}
-						<Chart.Tooltip />
-					{/snippet}
-				</PieChart>
-			</Chart.Container>
-
-			<div class="space-y-1.5 min-w-28">
-				{#each data as item, i}
-					{@const percent = total > 0 ? (item.value / total) * 100 : 0}
-					<div class="flex items-center gap-2">
-						<div
-							class="size-2.5 rounded-sm shrink-0"
-							style="background-color: {getColor(i)}"
-						></div>
-						<span class="text-xs text-foreground truncate flex-1">{item.label}</span>
-						<span class="text-xs text-muted-foreground font-mono">{percent.toFixed(0)}%</span>
-					</div>
-				{/each}
-			</div>
-		</div>
+	{:else}
+		<div bind:this={chartEl} style="width:100%;height:{height}px"></div>
 	{/if}
 </div>
