@@ -1,4 +1,4 @@
-// Updated: Added 'glass-card' to WIDGET_CATEGORIES.layout (Phase 4 — glass design system)
+// Updated: Added 'glass-card' and 'soul-status' to WIDGET_CATEGORIES (integration merge)
 import { z } from 'zod';
 
 export const WidgetType = z.enum([
@@ -18,7 +18,7 @@ export type WidgetType = z.infer<typeof WidgetType>;
 
 export const WIDGET_CATEGORIES = {
   layout: ['container', 'flex', 'grid', 'card', 'tabs', 'dashboard', 'dashboard-slot', 'glass-card'],
-  display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'feed'],
+  display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'feed', 'soul-status'],
   input: ['button', 'input', 'select', 'checkbox', 'switch'],
   data: ['table', 'chart'],
   control: ['if', 'each'],
