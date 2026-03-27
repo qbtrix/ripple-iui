@@ -1,14 +1,12 @@
 <!--
-  DashboardRenderer.svelte — Renders intent='dashboard' specs via GridStack.
+  DashboardRenderer.svelte — Renders intent='dashboard' specs via Muuri.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — GridStack.js for layout. Debug logging on all events.
-  GridStack owns layout (drag/resize/arrange), Svelte owns widget content rendering.
-  DO NOT sync GridStack changes back to Svelte state — causes DOM destruction.
+  Updated: 2026-03-27 — Swapped GridStack for Muuri (~23KB gzip vs ~33KB).
+  Muuri owns layout/drag/animations. Svelte owns widget content. No cross-write.
 -->
 <script lang="ts">
   import { setContext, onMount, onDestroy, tick } from 'svelte';
-  import { GridStack } from 'gridstack';
-  import 'gridstack/dist/gridstack.min.css';
+  import Muuri from 'muuri';
   import type { UniversalSpec } from '../schema/universal-spec.js';
   import { createDashboardManager, type DashboardSpec, type DashboardWidget } from './dashboard-manager.svelte.js';
   import NodeRenderer from '../components/NodeRenderer.svelte';
@@ -50,31 +48,6 @@
   });
 
   setContext('dashboard-manager', manager);
-
-  /** Map widget size to GridStack w (column span). */
-  function getW(widget: DashboardWidget): number {
-    if (widget.span) return widget.span;
-    switch (widget.size) {
-      case 'sm': return 1;
-      case 'md': return 2;
-      case 'lg': return 3;
-      case 'xl': case 'full': return dashboardSpec.layout?.columns ?? 3;
-      default: return 1;
-    }
-  }
-
-  /** Map widget type to a reasonable default height. */
-  function getH(widget: DashboardWidget): number {
-    switch (widget.type) {
-      case 'chart': return 3;
-      case 'table': return 3;
-      case 'feed': return 3;
-      case 'terminal': return 3;
-      case 'metric': return 1;
-      case 'flex': return 2;
-      default: return 2;
-    }
-  }
 
   function widgetToNode(widget: DashboardWidget): any {
     if (widget.children && widget.children.length > 0) {
@@ -136,60 +109,89 @@
     return node;
   }
 
-  // --- GridStack ---
+  /** Map widget size to a CSS width class. */
+  function sizeClass(widget: DashboardWidget): string {
+    const s = widget.size ?? 'sm';
+    if (widget.span) {
+      const cols = dashboardSpec.layout?.columns ?? 3;
+      if (widget.span >= cols) return 'muuri-w-full';
+      if (widget.span >= 2) return 'muuri-w-md';
+    }
+    switch (s) {
+      case 'lg': case 'xl': case 'full': return 'muuri-w-full';
+      case 'md': return 'muuri-w-md';
+      default: return 'muuri-w-sm';
+    }
+  }
+
+  /** Map widget type to a height class. */
+  function heightClass(widget: DashboardWidget): string {
+    switch (widget.type) {
+      case 'chart': case 'table': case 'feed': case 'terminal': return 'muuri-h-lg';
+      case 'metric': return 'muuri-h-sm';
+      default: return 'muuri-h-md';
+    }
+  }
+
+  // --- Muuri ---
   let gridEl: HTMLDivElement;
-  let grid: GridStack | null = null;
+  let muuriGrid: any = null;
   let mounted = $state(false);
 
-  const DBG = '[DashboardRenderer]';
+  const DBG = '[Dashboard/Muuri]';
 
   onMount(async () => {
     await tick();
-    const cols = dashboardSpec.layout?.columns ?? 3;
-    const gap = dashboardSpec.layout?.gap ?? 10;
-    console.log(DBG, 'mount — widgets:', manager.spec.widgets.length, 'cols:', cols, 'gap:', gap);
+    console.log(DBG, 'mount —', manager.spec.widgets.length, 'widgets');
 
-    grid = GridStack.init({
-      column: cols,
-      cellHeight: 80,
-      margin: gap,
-      animate: true,
-      float: false,
-      removable: false,
-      disableOneColumnMode: false,
-      handle: '.gs-grip-handle',
-      resizable: { handles: 'e,se,s,sw,w' },
-    }, gridEl);
+    muuriGrid = new Muuri(gridEl, {
+      items: '.muuri-item',
+      dragEnabled: true,
+      dragHandle: '.muuri-grip',
+      dragSort: true,
+      dragStartPredicate: { distance: 5 },
+      dragPlaceholder: {
+        enabled: true,
+        createElement: (_item: any) => {
+          const el = document.createElement('div');
+          el.classList.add('muuri-placeholder');
+          return el;
+        },
+      },
+      dragRelease: {
+        duration: 250,
+        easing: 'ease-out',
+      },
+      dragSortHeuristics: {
+        sortInterval: 50,
+      },
+      layout: {
+        fillGaps: true,
+        rounding: false,
+      },
+      layoutDuration: 300,
+      layoutEasing: 'cubic-bezier(0.2, 0, 0, 1)',
+      layoutOnResize: 150,
+    });
 
-    const itemCount = gridEl.querySelectorAll('.grid-stack-item').length;
-    console.log(DBG, 'GridStack init done — DOM items:', itemCount, 'grid engine nodes:', grid.getGridItems().length);
+    console.log(DBG, 'Muuri init — items:', muuriGrid.getItems().length);
 
-    // Debug: log all GridStack events
-    grid.on('dragstart', (_e: Event, el: any) => {
-      console.log(DBG, 'dragstart —', el?.getAttribute?.('gs-id') ?? 'unknown');
+    // Debug events
+    muuriGrid.on('dragInit', (item: any) => {
+      console.log(DBG, 'dragInit —', item.getElement()?.dataset?.widgetId);
     });
-    grid.on('dragstop', (_e: Event, el: any) => {
-      console.log(DBG, 'dragstop —', el?.getAttribute?.('gs-id') ?? 'unknown');
-      // Log final layout
-      const saved = grid?.save(false);
-      console.log(DBG, 'layout after drag:', saved);
+    muuriGrid.on('dragStart', (item: any) => {
+      console.log(DBG, 'dragStart —', item.getElement()?.dataset?.widgetId);
     });
-    grid.on('resizestart', (_e: Event, el: any) => {
-      console.log(DBG, 'resizestart —', el?.getAttribute?.('gs-id') ?? 'unknown');
+    muuriGrid.on('dragEnd', (item: any) => {
+      console.log(DBG, 'dragEnd —', item.getElement()?.dataset?.widgetId);
     });
-    grid.on('resizestop', (_e: Event, el: any) => {
-      console.log(DBG, 'resizestop —', el?.getAttribute?.('gs-id') ?? 'unknown');
-      const saved = grid?.save(false);
-      console.log(DBG, 'layout after resize:', saved);
+    muuriGrid.on('move', (data: any) => {
+      const id = data.item.getElement()?.dataset?.widgetId;
+      console.log(DBG, 'move —', id, 'from', data.fromIndex, '→', data.toIndex);
     });
-    grid.on('change', (_e: Event, items: any) => {
-      // DO NOT sync back to manager — GridStack owns layout, Svelte owns content.
-      // Syncing causes Svelte to re-render → destroys GridStack's DOM → blank screen.
-      console.log(DBG, 'change — items affected:', items?.length ?? 0,
-        items?.map?.((i: any) => `${i.id}[${i.x},${i.y} ${i.w}x${i.h}]`) ?? []);
-    });
-    grid.on('removed', (_e: Event, items: any) => {
-      console.warn(DBG, '⚠ removed event fired!', items?.length, 'items — this should NOT happen');
+    muuriGrid.on('layoutEnd', (items: any) => {
+      console.log(DBG, 'layoutEnd —', items.length, 'items positioned');
     });
 
     requestAnimationFrame(() => { mounted = true; });
@@ -197,23 +199,8 @@
 
   onDestroy(() => {
     console.log(DBG, 'destroy');
-    grid?.destroy(false);
-    grid = null;
-  });
-
-  // Debug: watch for Svelte re-renders wiping the grid
-  $effect(() => {
-    const widgetIds = manager.spec.widgets.map(w => w.id);
-    console.log(DBG, '$effect — manager.spec.widgets changed:', widgetIds.length, 'widgets', widgetIds);
-    // If grid already exists and Svelte re-rendered, GridStack needs to know
-    if (grid && gridEl) {
-      const domItems = gridEl.querySelectorAll('.grid-stack-item').length;
-      const engineItems = grid.getGridItems().length;
-      console.log(DBG, '$effect — DOM items:', domItems, 'engine items:', engineItems);
-      if (domItems !== engineItems) {
-        console.warn(DBG, '⚠ DOM/engine mismatch! Svelte re-render likely wiped GridStack layout');
-      }
-    }
+    muuriGrid?.destroy();
+    muuriGrid = null;
   });
 </script>
 
@@ -227,15 +214,15 @@
     </div>
   {/if}
 
-  <div bind:this={gridEl} class="grid-stack">
+  <div bind:this={gridEl} class="muuri-grid">
     {#each manager.spec.widgets as widget (widget.id)}
       {@const node = widgetToNode(widget)}
       {@const widgetColor = widget.props?.color}
-      <div class="grid-stack-item" gs-id={widget.id} gs-w={getW(widget)} gs-h={getH(widget)}>
-        <div class="grid-stack-item-content ripple-widget-card">
+      <div class="muuri-item {sizeClass(widget)} {heightClass(widget)}" data-widget-id={widget.id}>
+        <div class="muuri-item-content ripple-widget-card">
           {#if widget.title}
             <div class="ripple-widget-header" style={widgetColor ? `border-left: 3px solid ${widgetColor}; padding-left: 9px;` : ''}>
-              <button class="gs-grip-handle" aria-label="Drag to reorder">
+              <button class="muuri-grip" aria-label="Drag to reorder">
                 <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" opacity="0.35">
                   <circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/>
                   <circle cx="2" cy="6" r="1.2"/><circle cx="8" cy="6" r="1.2"/>
@@ -283,17 +270,64 @@
     margin: 4px 0 0;
   }
 
-  /* ========== GridStack Overrides (dark theme) ========== */
-  :global(.grid-stack) {
+  /* ========== Muuri Grid ========== */
+  .muuri-grid {
+    position: relative;
+    width: 100%;
     min-height: 200px;
   }
-  :global(.grid-stack-item) {
-    /* Override gridstack default border */
+
+  /* ========== Muuri Items ========== */
+  :global(.muuri-item) {
+    position: absolute;
+    display: block;
+    z-index: 1;
+    padding: 5px;
+    box-sizing: border-box;
   }
-  :global(.grid-stack-placeholder > .placeholder-content) {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px dashed rgba(255,255,255,0.20) !important;
-    border-radius: 10px !important;
+  :global(.muuri-item.muuri-item-dragging) {
+    z-index: 10;
+  }
+  :global(.muuri-item.muuri-item-releasing) {
+    z-index: 2;
+  }
+  :global(.muuri-item.muuri-item-hidden) {
+    z-index: 0;
+  }
+
+  /* Item sizing — column fractions based on container width */
+  :global(.muuri-w-sm) { width: 33.333%; }
+  :global(.muuri-w-md) { width: 50%; }
+  :global(.muuri-w-full) { width: 100%; }
+
+  /* Height presets */
+  :global(.muuri-h-sm) { height: 100px; }
+  :global(.muuri-h-md) { height: 180px; }
+  :global(.muuri-h-lg) { height: 280px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    :global(.muuri-w-sm),
+    :global(.muuri-w-md),
+    :global(.muuri-w-full) { width: 100%; }
+  }
+  @media (min-width: 601px) and (max-width: 900px) {
+    :global(.muuri-w-sm) { width: 50%; }
+    :global(.muuri-w-md) { width: 50%; }
+  }
+
+  :global(.muuri-item-content) {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Drag placeholder */
+  :global(.muuri-placeholder) {
+    background: rgba(255,255,255,0.06);
+    border: 1px dashed rgba(255,255,255,0.20);
+    border-radius: 10px;
+    width: 100%;
+    height: 100%;
   }
 
   /* ========== Widget Card ========== */
@@ -313,7 +347,6 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
 
-  /* ========== Widget Header ========== */
   .ripple-widget-header {
     display: flex;
     align-items: center;
@@ -331,7 +364,7 @@
   }
 
   /* ========== Grip Handle ========== */
-  :global(.gs-grip-handle) {
+  :global(.muuri-grip) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -346,11 +379,11 @@
     border-radius: 3px;
     transition: color 0.12s, background 0.12s;
   }
-  :global(.gs-grip-handle:hover) {
+  :global(.muuri-grip:hover) {
     color: rgba(255,255,255,0.60);
     background: rgba(255,255,255,0.06);
   }
-  :global(.gs-grip-handle:active) { cursor: grabbing; }
+  :global(.muuri-grip:active) { cursor: grabbing; }
 
   .ripple-widget-body {
     flex: 1;
@@ -367,22 +400,5 @@
     border-radius: 12px;
     color: rgba(255,255,255,0.30);
     font-size: 13px;
-  }
-
-  /* GridStack resize handle styling */
-  :global(.grid-stack-item > .ui-resizable-handle) {
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  :global(.grid-stack-item:hover > .ui-resizable-handle) {
-    opacity: 0.5;
-  }
-  :global(.ui-resizable-se) {
-    width: 12px !important;
-    height: 12px !important;
-    border-right: 2px solid rgba(255,255,255,0.3) !important;
-    border-bottom: 2px solid rgba(255,255,255,0.3) !important;
-    border-radius: 0 0 4px 0;
-    background: none !important;
   }
 </style>

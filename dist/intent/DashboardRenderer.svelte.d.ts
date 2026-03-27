@@ -1,4 +1,3 @@
-import 'gridstack/dist/gridstack.min.css';
 import type { UniversalSpec } from '../schema/universal-spec.js';
 import { type DashboardSpec } from './dashboard-manager.svelte.js';
 interface Props {
