@@ -1,11 +1,13 @@
 <!--
   DashboardRenderer.svelte — Renders intent='dashboard' specs as a mutable widget grid.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — Replaced Swapy with zero-dep reorderable action (Pointer Events + FLIP).
-  Masonry layout mode, grip handle, responsive breakpoints. Grid mode remains the default.
+  Updated: 2026-03-27 — Replaced Swapy with zero-dep reorderable action. Uses Svelte
+  animate:flip for reorder animation, in:fly for entrance. No manual FLIP.
 -->
 <script lang="ts">
   import { setContext, onMount } from 'svelte';
+  import { flip } from 'svelte/animate';
+  import { fly } from 'svelte/transition';
   import type { UniversalSpec } from '../schema/universal-spec.js';
   import { createDashboardManager, type DashboardSpec, type DashboardWidget } from './dashboard-manager.svelte.js';
   import { reorderable } from '../actions/reorderable.js';
@@ -18,7 +20,6 @@
 
   let { spec, onSpecChanged }: Props = $props();
 
-  // Extract dashboard config from the UniversalSpec
   let dashboardSpec = $derived.by((): DashboardSpec => {
     const widgets: DashboardWidget[] = (spec as any).widgets ?? [];
     const layout = (spec as any).dashboard_layout ?? {
@@ -31,25 +32,20 @@
 
   let isMasonry = $derived(dashboardSpec.layout?.type === 'masonry');
 
-  // Create the dashboard manager for mutations
   const manager = createDashboardManager();
 
-  // Sync manager when spec changes externally
   $effect(() => {
     manager.load(dashboardSpec);
   });
 
-  // Emit changes to parent
   $effect(() => {
     if (onSpecChanged) {
       manager.onChange(onSpecChanged);
     }
   });
 
-  // Expose manager via context so child components can mutate
   setContext('dashboard-manager', manager);
 
-  // Get grid-column span as a number for inline style
   function getSpan(widget: DashboardWidget): number {
     if (widget.span) return Math.min(widget.span, dashboardSpec.layout?.columns ?? 3);
     const cols = dashboardSpec.layout?.columns ?? 3;
@@ -62,7 +58,6 @@
     }
   }
 
-  /** Convert a DashboardWidget to a UINode for NodeRenderer. */
   function widgetToNode(widget: DashboardWidget): any {
     if (widget.children && widget.children.length > 0) {
       return { type: 'container', children: widget.children };
@@ -123,18 +118,18 @@
     return node;
   }
 
-  // Reorderable action options — reactive via $derived
   let reorderItems = $derived(manager.spec.widgets.map(w => ({ id: w.id })));
 
   function handleReorder(ids: string[]) {
     manager.reorder(ids);
   }
 
-  let visible = $state(false);
-  onMount(() => { requestAnimationFrame(() => { visible = true; }); });
+  // Gate entrance animation — only on first mount, not on reorder
+  let mounted = $state(false);
+  onMount(() => { requestAnimationFrame(() => { mounted = true; }); });
 </script>
 
-<div class="ripple-dashboard" class:ripple-dashboard-visible={visible}>
+<div class="ripple-dashboard" class:ripple-dashboard--mounted={mounted}>
   {#if spec.title}
     <div class="ripple-dashboard-header">
       <h2 class="ripple-dashboard-title">{spec.title}</h2>
@@ -144,7 +139,6 @@
     </div>
   {/if}
 
-  <!-- Widget Layout — use:reorderable for drag-to-reorder -->
   <div
     class="ripple-dashboard-layout"
     class:ripple-masonry={isMasonry}
@@ -162,7 +156,9 @@
         class="ripple-dashboard-cell"
         class:ripple-grid-cell={!isMasonry}
         data-reorder-id={widget.id}
-        style={!isMasonry ? `grid-column: span ${getSpan(widget)};animation-delay:${wi * 60}ms` : `animation-delay:${wi * 60}ms`}
+        style={!isMasonry ? `grid-column: span ${getSpan(widget)}` : ''}
+        in:fly={{ y: 12, duration: 300, delay: wi * 50 }}
+        animate:flip={{ duration: 250 }}
       >
         <div class="ripple-widget-card">
           {#if widget.title}
@@ -200,7 +196,7 @@
     opacity: 0;
     transition: opacity 200ms ease;
   }
-  .ripple-dashboard-visible { opacity: 1; }
+  .ripple-dashboard--mounted { opacity: 1; }
 
   .ripple-dashboard-header { margin-bottom: 16px; }
   .ripple-dashboard-title {
@@ -241,20 +237,9 @@
   }
 
   /* ========== Cells ========== */
-  .ripple-dashboard-cell {
-    animation: widget-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
   .ripple-masonry > .ripple-dashboard-cell {
     break-inside: avoid;
     margin-bottom: var(--masonry-gap, 10px);
-  }
-  .ripple-grid-cell {
-    /* grid-column set via inline style */
-  }
-
-  @keyframes widget-enter {
-    from { opacity: 0; transform: translateY(12px) scale(0.97); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   /* ========== Widget Card ========== */
@@ -311,10 +296,8 @@
   }
   .ripple-grip-handle:active { cursor: grabbing; }
 
-  /* ========== Widget Body ========== */
   .ripple-widget-body { flex: 1; min-height: 0; }
 
-  /* ========== Empty State ========== */
   .ripple-dashboard-empty {
     display: flex;
     align-items: center;
@@ -324,14 +307,5 @@
     border-radius: 12px;
     color: rgba(255,255,255,0.30);
     font-size: 13px;
-  }
-
-  /* Responsive col-span classes (grid mode) */
-  @media (min-width: 640px) {
-    :global(.ripple-grid-cell.sm\:col-span-2) { grid-column: span 2; }
-  }
-  @media (min-width: 1024px) {
-    :global(.ripple-grid-cell.lg\:col-span-2) { grid-column: span 2; }
-    :global(.ripple-grid-cell.lg\:col-span-3) { grid-column: span 3; }
   }
 </style>
