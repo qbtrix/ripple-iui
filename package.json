@@ -39,6 +39,7 @@
     "clsx": "^2.1.1",
     "d3-scale": "^4.0.0",
     "echarts": "^6.0.0",
+    "gridstack": "^12.4.2",
     "layerchart": "2.0.0-next.43",
     "zod": "^4.0.0"
   },
