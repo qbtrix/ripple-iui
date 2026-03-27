@@ -34,6 +34,8 @@ type SpecChangeHandler = (spec: DashboardSpec) => void;
 export class DashboardManager {
   spec = $state<DashboardSpec>({ widgets: [], layout: { type: 'grid', columns: 3, gap: 10 } });
   private changeHandlers: Set<SpecChangeHandler> = new Set();
+  /** Increments on every internal mutation. Consumers can compare to skip redundant loads. */
+  revision = $state(0);
 
   constructor(initial?: DashboardSpec) {
     if (initial) {
@@ -122,6 +124,7 @@ export class DashboardManager {
   }
 
   private emitChange() {
+    this.revision++;
     for (const handler of this.changeHandlers) {
       handler(this.spec);
     }

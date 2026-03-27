@@ -9,6 +9,8 @@
 export class DashboardManager {
     spec = $state({ widgets: [], layout: { type: 'grid', columns: 3, gap: 10 } });
     changeHandlers = new Set();
+    /** Increments on every internal mutation. Consumers can compare to skip redundant loads. */
+    revision = $state(0);
     constructor(initial) {
         if (initial) {
             this.spec = { ...initial };
@@ -83,6 +85,7 @@ export class DashboardManager {
         return () => this.changeHandlers.delete(handler);
     }
     emitChange() {
+        this.revision++;
         for (const handler of this.changeHandlers) {
             handler(this.spec);
         }

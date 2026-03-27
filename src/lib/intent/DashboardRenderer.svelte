@@ -3,6 +3,8 @@
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
   Updated: 2026-03-27 — Reorderable action with debug logging, Svelte animate:flip,
   expand/collapse toggle (column-span:all in masonry, full-row in grid).
+  Fixed reactive loop: guard manager.load() with revision counter to prevent
+  internal mutations from triggering a full re-render.
 -->
 <script lang="ts">
   import { setContext, onMount } from 'svelte';
@@ -34,8 +36,19 @@
 
   const manager = createDashboardManager();
 
+  // Track last revision we loaded from to skip redundant loads from our own mutations
+  let lastLoadedRevision = 0;
+
   $effect(() => {
-    manager.load(dashboardSpec);
+    // Read dashboardSpec to subscribe to prop changes
+    const ds = dashboardSpec;
+    // Skip if this re-derive was triggered by our own mutation (reorder, etc.)
+    if (manager.revision > lastLoadedRevision) {
+      lastLoadedRevision = manager.revision;
+      return;
+    }
+    manager.load(ds);
+    lastLoadedRevision = manager.revision;
   });
 
   $effect(() => {
