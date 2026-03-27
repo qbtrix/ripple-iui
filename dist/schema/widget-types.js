@@ -1,3 +1,4 @@
+// Updated: Added 'glass-card' and 'soul-status' to WIDGET_CATEGORIES (integration merge)
 import { z } from 'zod';
 export const WidgetType = z.enum([
     // Layout
@@ -12,8 +13,8 @@ export const WidgetType = z.enum([
     'if', 'each'
 ]);
 export const WIDGET_CATEGORIES = {
-    layout: ['container', 'flex', 'grid', 'card', 'tabs', 'dashboard', 'dashboard-slot'],
-    display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'feed'],
+    layout: ['container', 'flex', 'grid', 'card', 'tabs', 'dashboard', 'dashboard-slot', 'glass-card'],
+    display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'feed', 'soul-status'],
     input: ['button', 'input', 'select', 'checkbox', 'switch'],
     data: ['table', 'chart'],
     control: ['if', 'each'],

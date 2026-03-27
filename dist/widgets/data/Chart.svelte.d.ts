@@ -6,11 +6,13 @@ interface DataPoint {
 }
 interface Props {
     data: DataPoint[];
-    type?: 'bar' | 'line' | 'pie' | 'area' | 'donut';
+    type?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'heatmap' | 'gauge' | 'radar';
     title?: string;
     height?: number;
     colors?: string[];
     tooltip?: boolean;
+    iosTheme?: boolean;
+    themeOverrides?: Record<string, unknown>;
     class?: string;
     chartSlot?: Snippet<[{
         data: DataPoint[];
