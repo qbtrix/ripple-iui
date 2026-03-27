@@ -159,7 +159,7 @@
   let muuriGrid: any = null;
   let mounted = $state(false);
 
-  /** Reset all custom sizes and re-pack the layout. Callable from parent via context. */
+  /** Reset all custom sizes, sort by area (biggest first), and re-pack. */
   function autoArrange() {
     if (!muuriGrid || !gridEl) return;
     // Clear any manually-set inline widths/heights from resize
@@ -167,7 +167,16 @@
       el.style.width = '';
       el.style.height = '';
     });
-    muuriGrid.refreshItems().layout();
+    // Refresh dimensions first
+    muuriGrid.refreshItems();
+    // Sort biggest items first for optimal bin-packing
+    muuriGrid.sort((a: any, b: any) => {
+      const aEl = a.getElement();
+      const bEl = b.getElement();
+      const aArea = aEl.offsetWidth * aEl.offsetHeight;
+      const bArea = bEl.offsetWidth * bEl.offsetHeight;
+      return bArea - aArea;
+    });
   }
 
   // Expose autoArrange via context and DOM event listener
@@ -224,15 +233,6 @@
 </script>
 
 <div class="ripple-dashboard" class:ripple-dashboard--mounted={mounted}>
-  {#if spec.title}
-    <div class="ripple-dashboard-header">
-      <h2 class="ripple-dashboard-title">{spec.title}</h2>
-      {#if spec.description}
-        <p class="ripple-dashboard-desc">{spec.description}</p>
-      {/if}
-    </div>
-  {/if}
-
   <div bind:this={gridEl} class="muuri-grid">
     {#each manager.spec.widgets as widget (widget.id)}
       {@const node = widgetToNode(widget)}
@@ -284,19 +284,6 @@
     transition: opacity 200ms ease;
   }
   .ripple-dashboard--mounted { opacity: 1; }
-
-  .ripple-dashboard-header { margin-bottom: 16px; }
-  .ripple-dashboard-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: rgba(255,255,255,0.90);
-    margin: 0;
-  }
-  .ripple-dashboard-desc {
-    font-size: 12px;
-    color: rgba(255,255,255,0.45);
-    margin: 4px 0 0;
-  }
 
   /* ========== Muuri Grid ========== */
   .muuri-grid {
