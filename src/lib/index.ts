@@ -31,6 +31,9 @@ export { UniversalSpec, IntentType, LifecycleType, parseUniversalSpec, safeParse
 export { EventHandler, EventAction, EventHandlerOrArray } from './schema/event-handler.js';
 export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 
+// Actions
+export { reorderable, type ReorderableOptions } from './actions/reorderable.js';
+
 // Types
 export type { RippleEvent } from './types.js';
 export type { OnEventCallback } from './core/event-dispatcher.js';

@@ -40,7 +40,6 @@
     "d3-scale": "^4.0.0",
     "echarts": "^6.0.0",
     "layerchart": "2.0.0-next.43",
-    "swapy": "^1.0.5",
     "zod": "^4.0.0"
   },
   "devDependencies": {
