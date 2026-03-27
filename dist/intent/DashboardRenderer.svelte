@@ -1,8 +1,8 @@
 <!--
   DashboardRenderer.svelte — Renders intent='dashboard' specs as a mutable widget grid.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — Replaced Swapy with zero-dep reorderable action. Uses Svelte
-  animate:flip for reorder animation, in:fly for entrance. No manual FLIP.
+  Updated: 2026-03-27 — Reorderable action with debug logging, Svelte animate:flip,
+  expand/collapse toggle (column-span:all in masonry, full-row in grid).
 -->
 <script lang="ts">
   import { setContext, onMount } from 'svelte';
@@ -46,7 +46,23 @@
 
   setContext('dashboard-manager', manager);
 
+  // --- Expand/collapse state ---
+  let expandedIds = $state<Set<string>>(new Set());
+
+  function toggleExpand(id: string) {
+    const next = new Set(expandedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    expandedIds = next;
+  }
+
+  function isExpanded(id: string): boolean {
+    return expandedIds.has(id);
+  }
+
   function getSpan(widget: DashboardWidget): number {
+    // Expanded widgets always span full row
+    if (isExpanded(widget.id)) return dashboardSpec.layout?.columns ?? 3;
     if (widget.span) return Math.min(widget.span, dashboardSpec.layout?.columns ?? 3);
     const cols = dashboardSpec.layout?.columns ?? 3;
     switch (widget.size) {
@@ -124,7 +140,6 @@
     manager.reorder(ids);
   }
 
-  // Gate entrance animation — only on first mount, not on reorder
   let mounted = $state(false);
   onMount(() => { requestAnimationFrame(() => { mounted = true; }); });
 </script>
@@ -147,22 +162,25 @@
       ? `--masonry-gap:${dashboardSpec.layout?.gap ?? 10}px`
       : `--dashboard-columns:${dashboardSpec.layout?.columns ?? 3};--dashboard-gap:${dashboardSpec.layout?.gap ?? 10}px`
     }
-    use:reorderable={{ items: reorderItems, onReorder: handleReorder, handle: '[data-grip]' }}
+    use:reorderable={{ items: reorderItems, onReorder: handleReorder, handle: '[data-grip]', debug: true }}
   >
     {#each manager.spec.widgets as widget, wi (widget.id)}
       {@const node = widgetToNode(widget)}
       {@const widgetColor = widget.props?.color}
+      {@const expanded = isExpanded(widget.id)}
       <div
         class="ripple-dashboard-cell"
         class:ripple-grid-cell={!isMasonry}
+        class:ripple-cell--expanded={expanded}
         data-reorder-id={widget.id}
         style={!isMasonry ? `grid-column: span ${getSpan(widget)}` : ''}
         in:fly={{ y: 12, duration: 300, delay: wi * 50 }}
         animate:flip={{ duration: 250 }}
       >
-        <div class="ripple-widget-card">
+        <div class="ripple-widget-card" class:ripple-widget-card--expanded={expanded}>
           {#if widget.title}
             <div class="ripple-widget-header" style={widgetColor ? `border-left: 3px solid ${widgetColor}; padding-left: 9px;` : ''}>
+              <!-- Grip handle -->
               <button class="ripple-grip-handle" data-grip aria-label="Drag to reorder">
                 <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" opacity="0.35">
                   <circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/>
@@ -172,6 +190,22 @@
                 </svg>
               </button>
               <span class="ripple-widget-title">{widget.title}</span>
+              <!-- Expand/collapse toggle -->
+              <button
+                class="ripple-expand-btn"
+                aria-label={expanded ? 'Collapse widget' : 'Expand widget'}
+                onclick={() => toggleExpand(widget.id)}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                  {#if expanded}
+                    <!-- Collapse icon (arrows inward) -->
+                    <path d="M9 1v4h4"/><path d="M5 13V9H1"/><path d="M13 5l-4-4"/><path d="M1 9l4 4"/>
+                  {:else}
+                    <!-- Expand icon (arrows outward) -->
+                    <path d="M9 5V1h4"/><path d="M5 9v4H1"/><path d="M13 1l-4 4"/><path d="M1 13l4-4"/>
+                  {/if}
+                </svg>
+              </button>
             </div>
           {/if}
           <div class="ripple-widget-body">
@@ -242,6 +276,11 @@
     margin-bottom: var(--masonry-gap, 10px);
   }
 
+  /* Expanded cell spans all columns in masonry */
+  .ripple-masonry > .ripple-cell--expanded {
+    column-span: all;
+  }
+
   /* ========== Widget Card ========== */
   .ripple-widget-card {
     background: rgba(255,255,255,0.04);
@@ -250,12 +289,16 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    transition: border-color 0.12s, box-shadow 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s, max-height 0.3s ease;
     height: 100%;
   }
   .ripple-widget-card:hover {
     border-color: rgba(255,255,255,0.14);
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .ripple-widget-card--expanded {
+    border-color: rgba(255,255,255,0.16);
+    box-shadow: 0 6px 30px rgba(0,0,0,0.2);
   }
 
   /* ========== Widget Header ========== */
@@ -295,6 +338,27 @@
     background: rgba(255,255,255,0.06);
   }
   .ripple-grip-handle:active { cursor: grabbing; }
+
+  /* ========== Expand Button ========== */
+  .ripple-expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: rgba(255,255,255,0.30);
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 4px;
+    transition: color 0.12s, background 0.12s;
+  }
+  .ripple-expand-btn:hover {
+    color: rgba(255,255,255,0.70);
+    background: rgba(255,255,255,0.08);
+  }
 
   .ripple-widget-body { flex: 1; min-height: 0; }
 

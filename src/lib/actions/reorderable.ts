@@ -1,27 +1,24 @@
 /**
  * reorderable.ts — Svelte action for drag-to-reorder in any layout (grid, masonry, flex).
  * Created: 2026-03-27 — Zero-dep Pointer Events drag action.
- * Updated: 2026-03-27 — Stripped manual FLIP (Svelte animate:flip owns animation).
- *   Added dead zone, improved drop detection for free-flow masonry positioning.
+ * Updated: 2026-03-27 — Added debug logging, dead zone, nearest-edge drop detection.
  *
  * Usage:
- *   <div use:reorderable={{ items, onReorder, handle: '[data-grip]' }}>
+ *   <div use:reorderable={{ items, onReorder, handle: '[data-grip]', debug: true }}>
  *     {#each items as item (item.id)}
  *       <div data-reorder-id={item.id} animate:flip>
  *         <button data-grip>⠿</button>
- *         ...content...
  *       </div>
  *     {/each}
  *   </div>
  */
 
 export interface ReorderableOptions {
-  /** Current ordered list of items (need `.id` on each). */
   items: { id: string }[];
-  /** Called with new ID order after a successful reorder. */
   onReorder: (ids: string[]) => void;
-  /** CSS selector for the drag handle inside each item. If omitted, entire item is draggable. */
   handle?: string;
+  /** Log drag events to console for debugging. */
+  debug?: boolean;
 }
 
 interface Rect {
@@ -35,12 +32,17 @@ interface Rect {
   centerX: number;
 }
 
-const DEAD_ZONE = 5; // px before drag activates
+const DEAD_ZONE = 5;
+const MAX_DROP_DISTANCE = 150;
+
+function log(opts: ReorderableOptions, ...args: any[]) {
+  if (opts.debug) console.log('[reorderable]', ...args);
+}
 
 export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
   let options = opts;
 
-  let pending = false; // pointer is down but hasn't moved past dead zone
+  let pending = false;
   let dragging = false;
   let ghost: HTMLElement | null = null;
   let sourceEl: HTMLElement | null = null;
@@ -51,12 +53,14 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
   let offsetY = 0;
   let rects: Rect[] = [];
   let currentOverId: string | null = null;
-  let pointerId: number | null = null;
+  let ptrId: number | null = null;
 
   function snapshotRects(): Rect[] {
-    return Array.from(
+    const items = Array.from(
       container.querySelectorAll<HTMLElement>('[data-reorder-id]'),
-    ).map((el) => {
+    );
+    log(options, 'snapshot', items.length, 'items');
+    return items.map((el) => {
       const r = el.getBoundingClientRect();
       return {
         id: el.dataset.reorderId!,
@@ -88,8 +92,8 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
       will-change: top, left;
     `;
     document.body.appendChild(ghost);
-
     sourceEl!.style.opacity = '0.2';
+    log(options, 'ghost created for', sourceId, 'at', Math.round(rect.left), Math.round(rect.top));
   }
 
   function removeGhost() {
@@ -114,41 +118,44 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
     }
   }
 
-  /** Find the closest widget to the pointer, considering position in the flow. */
   function findDropTarget(px: number, py: number): string | null {
     let closest: string | null = null;
     let closestDist = Infinity;
 
     for (const r of rects) {
       if (r.id === sourceId) continue;
-
-      // Use distance to nearest edge, not center — feels more natural for free drag
       const dx = Math.max(r.left - px, 0, px - (r.left + r.width));
       const dy = Math.max(r.top - py, 0, py - (r.top + r.height));
-      const dist = dx * dx + dy * dy;
-
+      const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < closestDist) {
         closestDist = dist;
         closest = r.id;
       }
     }
 
-    // If pointer is very far from any widget, don't snap
-    if (closestDist > 150 * 150) return null;
+    if (closestDist > MAX_DROP_DISTANCE) {
+      log(options, 'drop target too far:', Math.round(closestDist), 'px');
+      return null;
+    }
 
     return closest;
   }
 
   function onPointerDown(e: PointerEvent) {
-    if (e.button !== 0) return; // left click only
+    if (e.button !== 0) return;
     const target = e.target as HTMLElement;
 
     if (options.handle) {
-      if (!target.closest(options.handle)) return;
+      const handleEl = target.closest(options.handle);
+      if (!handleEl) return;
+      log(options, 'handle hit');
     }
 
     const itemEl = target.closest<HTMLElement>('[data-reorder-id]');
-    if (!itemEl || !container.contains(itemEl)) return;
+    if (!itemEl || !container.contains(itemEl)) {
+      log(options, 'no [data-reorder-id] found on target');
+      return;
+    }
 
     e.preventDefault();
     sourceEl = itemEl;
@@ -161,33 +168,31 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
     offsetY = e.clientY - rect.top;
 
     pending = true;
-    pointerId = e.pointerId;
+    ptrId = e.pointerId;
     container.setPointerCapture(e.pointerId);
+    log(options, 'pointerdown on', sourceId);
   }
 
   function onPointerMove(e: PointerEvent) {
     if (!pending && !dragging) return;
 
-    // Dead zone — don't activate drag until pointer moves enough
     if (pending && !dragging) {
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
       if (dx * dx + dy * dy < DEAD_ZONE * DEAD_ZONE) return;
 
-      // Activate drag
       pending = false;
       dragging = true;
       rects = snapshotRects();
       createGhost(sourceEl!, sourceEl!.getBoundingClientRect());
+      log(options, 'drag started —', rects.length, 'targets');
     }
 
     if (!dragging || !ghost) return;
 
-    // Move ghost
     ghost.style.top = `${e.clientY - offsetY}px`;
     ghost.style.left = `${e.clientX - offsetX}px`;
 
-    // Find drop target
     const targetId = findDropTarget(e.clientX, e.clientY);
 
     if (targetId !== currentOverId) {
@@ -196,6 +201,7 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
         const el = rects.find((r) => r.id === targetId)?.el;
         if (el) el.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.25)';
         currentOverId = targetId;
+        log(options, 'hover target:', targetId);
       }
     }
   }
@@ -206,24 +212,27 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
     const wasDragging = dragging;
     const dropTarget = currentOverId;
 
-    // Clean up
     clearIndicator();
     removeGhost();
     pending = false;
     dragging = false;
-    pointerId = null;
+    ptrId = null;
 
-    // Reorder if we had a valid drop
     if (wasDragging && sourceId && dropTarget && sourceId !== dropTarget) {
       const ids = options.items.map((i) => i.id);
       const fromIdx = ids.indexOf(sourceId);
       const toIdx = ids.indexOf(dropTarget);
 
+      log(options, 'drop:', sourceId, 'from', fromIdx, '→ to', toIdx, `(${dropTarget})`);
+
       if (fromIdx !== -1 && toIdx !== -1) {
         ids.splice(fromIdx, 1);
         ids.splice(toIdx, 0, sourceId);
+        log(options, 'new order:', ids);
         options.onReorder(ids);
       }
+    } else {
+      log(options, 'drop cancelled — wasDragging:', wasDragging, 'source:', sourceId, 'target:', dropTarget);
     }
 
     sourceEl = null;
@@ -233,17 +242,18 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
 
   function onKeyDown(e: KeyboardEvent) {
     if ((pending || dragging) && e.key === 'Escape') {
+      log(options, 'cancelled via Escape');
       clearIndicator();
       removeGhost();
-      if (pointerId != null) {
-        try { container.releasePointerCapture(pointerId); } catch {}
+      if (ptrId != null) {
+        try { container.releasePointerCapture(ptrId); } catch {}
       }
       pending = false;
       dragging = false;
       sourceEl = null;
       sourceId = null;
       currentOverId = null;
-      pointerId = null;
+      ptrId = null;
       rects = [];
     }
   }
@@ -253,9 +263,12 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
   container.addEventListener('pointerup', onPointerUp);
   document.addEventListener('keydown', onKeyDown);
 
+  log(options, 'mounted —', options.items.length, 'items, handle:', options.handle ?? 'none');
+
   return {
     update(newOpts: ReorderableOptions) {
       options = newOpts;
+      log(options, 'updated —', options.items.length, 'items');
     },
     destroy() {
       container.removeEventListener('pointerdown', onPointerDown);
@@ -263,6 +276,7 @@ export function reorderable(container: HTMLElement, opts: ReorderableOptions) {
       container.removeEventListener('pointerup', onPointerUp);
       document.removeEventListener('keydown', onKeyDown);
       if (ghost) ghost.remove();
+      log(options, 'destroyed');
     },
   };
 }
