@@ -123,12 +123,23 @@
     }
   }
 
-  function heightClass(widget: DashboardWidget): string {
-    switch (widget.type) {
-      case 'chart': case 'table': case 'feed': case 'terminal': return 'muuri-h-lg';
-      case 'metric': return 'muuri-h-sm';
-      default: return 'muuri-h-md';
-    }
+  /** Fit each .muuri-item height to its content's actual rendered height. */
+  function fitItemsToContent() {
+    if (!gridEl) return;
+    gridEl.querySelectorAll<HTMLElement>('.muuri-item').forEach((item) => {
+      // Only auto-fit if no manual resize (no inline height set)
+      if (item.style.height) return;
+      const content = item.querySelector<HTMLElement>('.muuri-item-content');
+      if (!content) return;
+      // Temporarily remove height constraint to measure natural height
+      const prevMinH = item.style.minHeight;
+      item.style.minHeight = '0';
+      item.style.height = 'auto';
+      const naturalH = content.scrollHeight + 10; // 10 = padding from .muuri-item
+      const minH = 80;
+      item.style.height = `${Math.max(naturalH, minH)}px`;
+      item.style.minHeight = prevMinH;
+    });
   }
 
   function initResize(e: PointerEvent, itemEl: HTMLElement) {
@@ -159,7 +170,7 @@
   let muuriGrid: any = null;
   let mounted = $state(false);
 
-  /** Reset all custom sizes, sort by area (biggest first), and re-pack. */
+  /** Reset all custom sizes, fit to content, sort by area, and re-pack. */
   function autoArrange() {
     if (!muuriGrid || !gridEl) return;
     // Clear any manually-set inline widths/heights from resize
@@ -167,9 +178,10 @@
       el.style.width = '';
       el.style.height = '';
     });
-    // Refresh dimensions first
+    // Fit each item to its actual content height
+    fitItemsToContent();
+    // Refresh dimensions then sort biggest-first for optimal packing
     muuriGrid.refreshItems();
-    // Sort biggest items first for optimal bin-packing
     muuriGrid.sort((a: any, b: any) => {
       const aEl = a.getElement();
       const bEl = b.getElement();
@@ -218,8 +230,9 @@
     // Listen for auto-arrange events from parent
     gridEl.closest('.widget-canvas')?.addEventListener('dashboard:auto-arrange', autoArrange);
 
-    // Re-measure after content renders so Muuri knows actual heights
+    // After content renders: fit items to content, then let Muuri layout
     requestAnimationFrame(() => {
+      fitItemsToContent();
       muuriGrid.refreshItems().layout();
       mounted = true;
     });
@@ -237,7 +250,7 @@
     {#each manager.spec.widgets as widget (widget.id)}
       {@const node = widgetToNode(widget)}
       {@const widgetColor = widget.props?.color}
-      <div class="muuri-item {sizeClass(widget)} {heightClass(widget)}" data-widget-id={widget.id}>
+      <div class="muuri-item {sizeClass(widget)}" data-widget-id={widget.id}>
         <div class="muuri-item-content ripple-widget-card">
           {#if widget.title}
             <div class="ripple-widget-header" style={widgetColor ? `border-left: 3px solid ${widgetColor}; padding-left: 9px;` : ''}>
@@ -307,11 +320,6 @@
   :global(.muuri-w-sm) { width: 33.333%; }
   :global(.muuri-w-md) { width: 50%; }
   :global(.muuri-w-full) { width: 100%; }
-
-  /* Min-height presets */
-  :global(.muuri-h-sm) { min-height: 120px; }
-  :global(.muuri-h-md) { min-height: 200px; }
-  :global(.muuri-h-lg) { min-height: 300px; }
 
   /* Responsive */
   @media (max-width: 600px) {
