@@ -1,8 +1,9 @@
 <!--
   DashboardRenderer.svelte — Renders intent='dashboard' specs via GridStack.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — Replaced custom masonry + reorderable action with GridStack.js.
-  GridStack handles drag, resize, auto-arrange, animations. Zero custom layout code.
+  Updated: 2026-03-27 — GridStack.js for layout. Debug logging on all events.
+  GridStack owns layout (drag/resize/arrange), Svelte owns widget content rendering.
+  DO NOT sync GridStack changes back to Svelte state — causes DOM destruction.
 -->
 <script lang="ts">
   import { setContext, onMount, onDestroy, tick } from 'svelte';
@@ -140,12 +141,18 @@
   let grid: GridStack | null = null;
   let mounted = $state(false);
 
+  const DBG = '[DashboardRenderer]';
+
   onMount(async () => {
     await tick();
+    const cols = dashboardSpec.layout?.columns ?? 3;
+    const gap = dashboardSpec.layout?.gap ?? 10;
+    console.log(DBG, 'mount — widgets:', manager.spec.widgets.length, 'cols:', cols, 'gap:', gap);
+
     grid = GridStack.init({
-      column: dashboardSpec.layout?.columns ?? 3,
+      column: cols,
       cellHeight: 80,
-      margin: dashboardSpec.layout?.gap ?? 10,
+      margin: gap,
       animate: true,
       float: false,
       removable: false,
@@ -154,27 +161,59 @@
       resizable: { handles: 'e,se,s,sw,w' },
     }, gridEl);
 
-    // Sync reorder back to manager
-    grid.on('change', (_event: Event, items: any) => {
-      if (!items || !Array.isArray(items)) return;
-      // Get current order from DOM
-      const els = gridEl.querySelectorAll('.grid-stack-item');
-      const ids: string[] = [];
-      els.forEach((el) => {
-        const id = el.getAttribute('gs-id');
-        if (id) ids.push(id);
-      });
-      if (ids.length > 0) {
-        manager.reorder(ids);
-      }
+    const itemCount = gridEl.querySelectorAll('.grid-stack-item').length;
+    console.log(DBG, 'GridStack init done — DOM items:', itemCount, 'grid engine nodes:', grid.getGridItems().length);
+
+    // Debug: log all GridStack events
+    grid.on('dragstart', (_e: Event, el: any) => {
+      console.log(DBG, 'dragstart —', el?.getAttribute?.('gs-id') ?? 'unknown');
+    });
+    grid.on('dragstop', (_e: Event, el: any) => {
+      console.log(DBG, 'dragstop —', el?.getAttribute?.('gs-id') ?? 'unknown');
+      // Log final layout
+      const saved = grid?.save(false);
+      console.log(DBG, 'layout after drag:', saved);
+    });
+    grid.on('resizestart', (_e: Event, el: any) => {
+      console.log(DBG, 'resizestart —', el?.getAttribute?.('gs-id') ?? 'unknown');
+    });
+    grid.on('resizestop', (_e: Event, el: any) => {
+      console.log(DBG, 'resizestop —', el?.getAttribute?.('gs-id') ?? 'unknown');
+      const saved = grid?.save(false);
+      console.log(DBG, 'layout after resize:', saved);
+    });
+    grid.on('change', (_e: Event, items: any) => {
+      // DO NOT sync back to manager — GridStack owns layout, Svelte owns content.
+      // Syncing causes Svelte to re-render → destroys GridStack's DOM → blank screen.
+      console.log(DBG, 'change — items affected:', items?.length ?? 0,
+        items?.map?.((i: any) => `${i.id}[${i.x},${i.y} ${i.w}x${i.h}]`) ?? []);
+    });
+    grid.on('removed', (_e: Event, items: any) => {
+      console.warn(DBG, '⚠ removed event fired!', items?.length, 'items — this should NOT happen');
     });
 
     requestAnimationFrame(() => { mounted = true; });
   });
 
   onDestroy(() => {
+    console.log(DBG, 'destroy');
     grid?.destroy(false);
     grid = null;
+  });
+
+  // Debug: watch for Svelte re-renders wiping the grid
+  $effect(() => {
+    const widgetIds = manager.spec.widgets.map(w => w.id);
+    console.log(DBG, '$effect — manager.spec.widgets changed:', widgetIds.length, 'widgets', widgetIds);
+    // If grid already exists and Svelte re-rendered, GridStack needs to know
+    if (grid && gridEl) {
+      const domItems = gridEl.querySelectorAll('.grid-stack-item').length;
+      const engineItems = grid.getGridItems().length;
+      console.log(DBG, '$effect — DOM items:', domItems, 'engine items:', engineItems);
+      if (domItems !== engineItems) {
+        console.warn(DBG, '⚠ DOM/engine mismatch! Svelte re-render likely wiped GridStack layout');
+      }
+    }
   });
 </script>
 
