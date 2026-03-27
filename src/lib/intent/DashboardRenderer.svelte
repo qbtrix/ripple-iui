@@ -124,13 +124,40 @@
     }
   }
 
-  /** Map widget type to a height class. */
+  /** Map widget type to a minimum height class. */
   function heightClass(widget: DashboardWidget): string {
     switch (widget.type) {
       case 'chart': case 'table': case 'feed': case 'terminal': return 'muuri-h-lg';
       case 'metric': return 'muuri-h-sm';
       default: return 'muuri-h-md';
     }
+  }
+
+  /** Pointer-based resize on the SE corner handle. */
+  function initResize(e: PointerEvent, itemEl: HTMLElement) {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = itemEl.offsetWidth;
+    const startH = itemEl.offsetHeight;
+
+    const onMove = (ev: PointerEvent) => {
+      const newW = Math.max(160, startW + ev.clientX - startX);
+      const newH = Math.max(80, startH + ev.clientY - startY);
+      itemEl.style.width = `${newW}px`;
+      itemEl.style.height = `${newH}px`;
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      // Tell Muuri to recalculate layout with new dimensions
+      muuriGrid?.refreshItems().layout();
+      console.log(DBG, 'resized', itemEl.dataset.widgetId,
+        'to', itemEl.offsetWidth, '×', itemEl.offsetHeight);
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
   }
 
   // --- Muuri ---
@@ -194,7 +221,12 @@
       console.log(DBG, 'layoutEnd —', items.length, 'items positioned');
     });
 
-    requestAnimationFrame(() => { mounted = true; });
+    // Let content render, then re-measure items so Muuri knows actual heights
+    requestAnimationFrame(() => {
+      muuriGrid.refreshItems().layout();
+      mounted = true;
+      console.log(DBG, 'layout refreshed after content render');
+    });
   });
 
   onDestroy(() => {
@@ -236,6 +268,16 @@
           <div class="ripple-widget-body">
             <NodeRenderer node={node} />
           </div>
+          <!-- Resize handle (SE corner) -->
+          <div
+            class="muuri-resize-handle"
+            role="separator"
+            aria-label="Resize widget"
+            onpointerdown={(e) => {
+              const item = (e.currentTarget as HTMLElement).closest('.muuri-item') as HTMLElement;
+              if (item) initResize(e, item);
+            }}
+          ></div>
         </div>
       </div>
     {/each}
@@ -300,10 +342,10 @@
   :global(.muuri-w-md) { width: 50%; }
   :global(.muuri-w-full) { width: 100%; }
 
-  /* Height presets */
-  :global(.muuri-h-sm) { height: 100px; }
-  :global(.muuri-h-md) { height: 180px; }
-  :global(.muuri-h-lg) { height: 280px; }
+  /* Min-height presets — content can grow beyond these */
+  :global(.muuri-h-sm) { min-height: 120px; }
+  :global(.muuri-h-md) { min-height: 200px; }
+  :global(.muuri-h-lg) { min-height: 300px; }
 
   /* Responsive */
   @media (max-width: 600px) {
@@ -332,6 +374,7 @@
 
   /* ========== Widget Card ========== */
   .ripple-widget-card {
+    position: relative;
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
@@ -389,6 +432,33 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
+  }
+
+  /* ========== Resize Handle ========== */
+  .muuri-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 5;
+  }
+  .muuri-resize-handle::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid rgba(255,255,255,0.3);
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    border-radius: 0 0 2px 0;
+  }
+  :global(.muuri-item:hover) .muuri-resize-handle {
+    opacity: 1;
   }
 
   .ripple-dashboard-empty {
