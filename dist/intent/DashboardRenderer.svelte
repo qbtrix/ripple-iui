@@ -1,8 +1,8 @@
 <!--
   DashboardRenderer.svelte — Renders intent='dashboard' specs via Muuri.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — Swapped GridStack for Muuri (~23KB gzip vs ~33KB).
-  Muuri owns layout/drag/animations. Svelte owns widget content. No cross-write.
+  Updated: 2026-03-27 — Muuri for layout/drag/resize. Exposes autoArrange() via context
+  for parent components to trigger re-layout (e.g. "Rearrange layout" button).
 -->
 <script lang="ts">
   import { setContext, onMount, onDestroy, tick } from 'svelte';
@@ -109,7 +109,6 @@
     return node;
   }
 
-  /** Map widget size to a CSS width class. */
   function sizeClass(widget: DashboardWidget): string {
     const s = widget.size ?? 'sm';
     if (widget.span) {
@@ -124,7 +123,6 @@
     }
   }
 
-  /** Map widget type to a minimum height class. */
   function heightClass(widget: DashboardWidget): string {
     switch (widget.type) {
       case 'chart': case 'table': case 'feed': case 'terminal': return 'muuri-h-lg';
@@ -133,7 +131,6 @@
     }
   }
 
-  /** Pointer-based resize on the SE corner handle. */
   function initResize(e: PointerEvent, itemEl: HTMLElement) {
     e.preventDefault();
     e.stopPropagation();
@@ -151,10 +148,7 @@
     const onUp = () => {
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
-      // Tell Muuri to recalculate layout with new dimensions
       muuriGrid?.refreshItems().layout();
-      console.log(DBG, 'resized', itemEl.dataset.widgetId,
-        'to', itemEl.offsetWidth, '×', itemEl.offsetHeight);
     };
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
@@ -165,11 +159,22 @@
   let muuriGrid: any = null;
   let mounted = $state(false);
 
-  const DBG = '[Dashboard/Muuri]';
+  /** Reset all custom sizes and re-pack the layout. Callable from parent via context. */
+  function autoArrange() {
+    if (!muuriGrid || !gridEl) return;
+    // Clear any manually-set inline widths/heights from resize
+    gridEl.querySelectorAll<HTMLElement>('.muuri-item').forEach((el) => {
+      el.style.width = '';
+      el.style.height = '';
+    });
+    muuriGrid.refreshItems().layout();
+  }
+
+  // Expose autoArrange via context and DOM event listener
+  setContext('dashboard-actions', { autoArrange });
 
   onMount(async () => {
     await tick();
-    console.log(DBG, 'mount —', manager.spec.widgets.length, 'widgets');
 
     muuriGrid = new Muuri(gridEl, {
       items: '.muuri-item',
@@ -179,7 +184,7 @@
       dragStartPredicate: { distance: 5 },
       dragPlaceholder: {
         enabled: true,
-        createElement: (_item: any) => {
+        createElement: () => {
           const el = document.createElement('div');
           el.classList.add('muuri-placeholder');
           return el;
@@ -201,36 +206,18 @@
       layoutOnResize: 150,
     });
 
-    console.log(DBG, 'Muuri init — items:', muuriGrid.getItems().length);
+    // Listen for auto-arrange events from parent
+    gridEl.closest('.widget-canvas')?.addEventListener('dashboard:auto-arrange', autoArrange);
 
-    // Debug events
-    muuriGrid.on('dragInit', (item: any) => {
-      console.log(DBG, 'dragInit —', item.getElement()?.dataset?.widgetId);
-    });
-    muuriGrid.on('dragStart', (item: any) => {
-      console.log(DBG, 'dragStart —', item.getElement()?.dataset?.widgetId);
-    });
-    muuriGrid.on('dragEnd', (item: any) => {
-      console.log(DBG, 'dragEnd —', item.getElement()?.dataset?.widgetId);
-    });
-    muuriGrid.on('move', (data: any) => {
-      const id = data.item.getElement()?.dataset?.widgetId;
-      console.log(DBG, 'move —', id, 'from', data.fromIndex, '→', data.toIndex);
-    });
-    muuriGrid.on('layoutEnd', (items: any) => {
-      console.log(DBG, 'layoutEnd —', items.length, 'items positioned');
-    });
-
-    // Let content render, then re-measure items so Muuri knows actual heights
+    // Re-measure after content renders so Muuri knows actual heights
     requestAnimationFrame(() => {
       muuriGrid.refreshItems().layout();
       mounted = true;
-      console.log(DBG, 'layout refreshed after content render');
     });
   });
 
   onDestroy(() => {
-    console.log(DBG, 'destroy');
+    gridEl?.closest('.widget-canvas')?.removeEventListener('dashboard:auto-arrange', autoArrange);
     muuriGrid?.destroy();
     muuriGrid = null;
   });
@@ -268,7 +255,6 @@
           <div class="ripple-widget-body">
             <NodeRenderer node={node} />
           </div>
-          <!-- Resize handle (SE corner) -->
           <div
             class="muuri-resize-handle"
             role="separator"
@@ -319,7 +305,6 @@
     min-height: 200px;
   }
 
-  /* ========== Muuri Items ========== */
   :global(.muuri-item) {
     position: absolute;
     display: block;
@@ -327,22 +312,16 @@
     padding: 5px;
     box-sizing: border-box;
   }
-  :global(.muuri-item.muuri-item-dragging) {
-    z-index: 10;
-  }
-  :global(.muuri-item.muuri-item-releasing) {
-    z-index: 2;
-  }
-  :global(.muuri-item.muuri-item-hidden) {
-    z-index: 0;
-  }
+  :global(.muuri-item.muuri-item-dragging) { z-index: 10; }
+  :global(.muuri-item.muuri-item-releasing) { z-index: 2; }
+  :global(.muuri-item.muuri-item-hidden) { z-index: 0; }
 
-  /* Item sizing — column fractions based on container width */
+  /* Width presets */
   :global(.muuri-w-sm) { width: 33.333%; }
   :global(.muuri-w-md) { width: 50%; }
   :global(.muuri-w-full) { width: 100%; }
 
-  /* Min-height presets — content can grow beyond these */
+  /* Min-height presets */
   :global(.muuri-h-sm) { min-height: 120px; }
   :global(.muuri-h-md) { min-height: 200px; }
   :global(.muuri-h-lg) { min-height: 300px; }
@@ -363,7 +342,6 @@
     height: 100%;
   }
 
-  /* Drag placeholder */
   :global(.muuri-placeholder) {
     background: rgba(255,255,255,0.06);
     border: 1px dashed rgba(255,255,255,0.20);
@@ -406,7 +384,6 @@
     flex: 1;
   }
 
-  /* ========== Grip Handle ========== */
   :global(.muuri-grip) {
     display: flex;
     align-items: center;
