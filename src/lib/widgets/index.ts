@@ -7,6 +7,11 @@ import { Button, Input, Select, Checkbox, Switch } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
+import {
+  SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
+  CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
+  AnalystBar, RangeBar
+} from './research/index.js';
 
 export type WidgetRegistry = Record<string, Component<any>>;
 
@@ -38,6 +43,19 @@ const defaultRegistry: WidgetRegistry = {
   terminal: Terminal,
   if: If,
   each: Each,
+  'source-card': SourceCard,
+  citation: Citation,
+  'sources-bar': SourcesBar,
+  'discover-card': DiscoverCard,
+  'follow-up': FollowUp,
+  'company-header': CompanyHeader,
+  ticker: Ticker,
+  'kv-table': KvTable,
+  timeline: Timeline,
+  callout: Callout,
+  'news-card': NewsCard,
+  'analyst-bar': AnalystBar,
+  'range-bar': RangeBar,
   // Aliases
   label: Text,
 };
@@ -72,5 +90,8 @@ export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, SoulStatus,
   Button, Input, Select, Checkbox, Switch,
-  Table, Chart, Terminal, If, Each
+  Table, Chart, Terminal, If, Each,
+  SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
+  CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
+  AnalystBar, RangeBar
 };

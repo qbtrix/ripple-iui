@@ -7,12 +7,15 @@
   import * as Table from '$lib/components/ui/table/index.js';
 
   interface TableColumn {
-    header: string;
-    accessorKey: string;
+    header?: string;
+    label?: string;
+    accessorKey?: string;
+    key?: string;
   }
 
   interface Props {
     data?: any[];
+    rows?: any[];
     columns?: TableColumn[];
     /** Visual variant */
     variant?: 'default' | 'compact' | 'striped' | 'minimal';
@@ -23,9 +26,20 @@
   }
 
   let {
-    data = [], columns = [], variant = 'default',
+    data, rows, columns: rawColumns = [], variant = 'default',
     statusKey, onRowClick, class: className
   }: Props = $props();
+
+  // Normalize: accept both {key,label} and {accessorKey,header}
+  const columns = $derived(
+    rawColumns.map(c => ({
+      accessorKey: c.accessorKey ?? c.key ?? '',
+      header: c.header ?? c.label ?? '',
+    }))
+  );
+
+  // Accept both `data` and `rows`
+  const tableData = $derived(data ?? rows ?? []);
 
   const eventDispatcher = getContext<EventDispatcher>('ui-events');
   const stateManager = getContext<StateManager>('ui-state');
@@ -57,8 +71,8 @@
       </Table.Row>
     </Table.Header>
     <Table.Body>
-      {#if data && data.length > 0}
-        {#each data as row, i}
+      {#if tableData.length > 0}
+        {#each tableData as row, i}
           <Table.Row
             class={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
             onclick={() => handleRowClick(row, i)}

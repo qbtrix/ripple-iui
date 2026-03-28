@@ -1,0 +1,105 @@
+<script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import { faviconUrl } from './favicon.js';
+
+  interface Props {
+    /** Source/publisher name */
+    source: string;
+    /** Headline or title text */
+    title: string;
+    /** Dot/accent color (CSS color value) — used only if favicon fails */
+    color?: string;
+    /** Override favicon URL (auto-derived from source name if omitted) */
+    favicon?: string;
+    /** Link URL */
+    url?: string;
+    class?: string;
+    onclick?: (e?: unknown) => void;
+  }
+
+  let {
+    source, title, color = 'hsl(var(--primary))',
+    favicon, url, class: className, onclick
+  }: Props = $props();
+
+  const iconSrc = $derived(favicon ?? faviconUrl(source));
+  let iconError = $state(false);
+</script>
+
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+<div
+  class={cn('rsrc-card', className)}
+  onclick={onclick ?? (url ? () => window.open(url, '_blank') : undefined)}
+  role={onclick || url ? 'button' : undefined}
+  tabindex={onclick || url ? 0 : undefined}
+>
+  <div class="rsrc-card-head">
+    {#if !iconError}
+      <img src={iconSrc} alt="" class="rsrc-card-favicon" onerror={() => iconError = true} />
+    {:else}
+      <span class="rsrc-card-dot" style="background:{color}"></span>
+    {/if}
+    <span class="rsrc-card-source">{source}</span>
+  </div>
+  <p class="rsrc-card-title">{title}</p>
+</div>
+
+<style>
+  .rsrc-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 10px;
+    background: hsl(var(--card));
+    min-width: 160px;
+    max-width: 200px;
+    flex-shrink: 0;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .rsrc-card[role='button'] {
+    cursor: pointer;
+  }
+  .rsrc-card[role='button']:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: 0 1px 4px hsl(var(--primary) / 0.08);
+  }
+  .rsrc-card-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rsrc-card-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .rsrc-card-favicon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+  .rsrc-card-source {
+    font-size: 11px;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rsrc-card-title {
+    font-size: 13px;
+    line-height: 1.4;
+    color: hsl(var(--foreground));
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+  }
+</style>
