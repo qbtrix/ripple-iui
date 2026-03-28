@@ -1,11 +1,14 @@
 import type { EventHandlerOrArray } from '../../schema/event-handler.js';
 import * as Table from '../../components/ui/table/index.js';
 interface TableColumn {
-    header: string;
-    accessorKey: string;
+    header?: string;
+    label?: string;
+    accessorKey?: string;
+    key?: string;
 }
 interface Props {
     data?: any[];
+    rows?: any[];
     columns?: TableColumn[];
     /** Visual variant */
     variant?: 'default' | 'compact' | 'striped' | 'minimal';

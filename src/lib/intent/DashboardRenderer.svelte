@@ -64,20 +64,47 @@
         case 'chart':
           node.props.data = widget.data;
           break;
-        case 'table':
-          node.props.data = widget.data;
+        case 'table': {
+          const td = widget.data;
+          // Handle AI spec format: { columns: ["Name", ...], data: [["Alice", ...]] }
+          if (td && typeof td === 'object' && !Array.isArray(td) && td.columns && td.data) {
+            const cols: string[] = td.columns;
+            node.props.columns = cols.map((c: string) => ({ key: c, label: c }));
+            node.props.data = (td.data || []).map((row: any[]) => {
+              const obj: Record<string, any> = {};
+              cols.forEach((c: string, ci: number) => { obj[c] = row?.[ci] ?? ''; });
+              return obj;
+            });
+          } else {
+            node.props.data = td;
+          }
           break;
+        }
         case 'metric':
           if (typeof widget.data === 'object' && !Array.isArray(widget.data)) {
             node.props = { ...node.props, ...widget.data };
           }
           break;
-        case 'feed':
-          node.props.items = widget.data;
+        case 'feed': {
+          const fd = widget.data;
+          // Handle AI spec format: { items: [{text, time, type}] }
+          if (fd && typeof fd === 'object' && !Array.isArray(fd) && fd.items) {
+            node.props.items = fd.items;
+          } else {
+            node.props.items = fd;
+          }
           break;
-        case 'text':
-          node.props.text = typeof widget.data === 'string' ? widget.data : JSON.stringify(widget.data);
+        }
+        case 'text': {
+          const txt = widget.data;
+          // Handle AI spec format: { content: "markdown string" }
+          if (txt && typeof txt === 'object' && txt.content) {
+            node.props.text = String(txt.content);
+          } else {
+            node.props.text = typeof txt === 'string' ? txt : JSON.stringify(txt);
+          }
           break;
+        }
         case 'flex':
           if (Array.isArray(widget.data)) {
             node.props = { ...node.props, direction: 'column', ...widget.props };

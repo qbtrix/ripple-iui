@@ -31,7 +31,7 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<Card.Root {id} class={cn(variantClass, className)} style={styleString} onclick={onclick}>
+<Card.Root {id} class={cn('rcard', variantClass, className)} style={styleString} onclick={onclick}>
   {#if title || description}
     <Card.Header>
       {#if title}
@@ -46,3 +46,11 @@
     {@render children?.()}
   </Card.Content>
 </Card.Root>
+
+<style>
+  :global(.rcard) {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+  }
+</style>
