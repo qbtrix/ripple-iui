@@ -29,6 +29,8 @@ type SpecChangeHandler = (spec: DashboardSpec) => void;
 export declare class DashboardManager {
     spec: DashboardSpec;
     private changeHandlers;
+    /** Increments on every internal mutation. Consumers can compare to skip redundant loads. */
+    revision: number;
     constructor(initial?: DashboardSpec);
     /** Replace the entire spec (e.g., on load). */
     load(spec: DashboardSpec): void;

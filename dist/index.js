@@ -12,3 +12,5 @@ export { UISpec, UINode, DataFetcher, ThemeOverrides, parseUISpec, safeParseUISp
 export { UniversalSpec, IntentType, LifecycleType, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
 export { EventHandler, EventAction, EventHandlerOrArray } from './schema/event-handler.js';
 export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
+// Actions
+export { reorderable } from './actions/reorderable.js';

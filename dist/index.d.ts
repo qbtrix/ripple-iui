@@ -8,5 +8,6 @@ export { UISpec, UINode, DataFetcher, ThemeOverrides, parseUISpec, safeParseUISp
 export { UniversalSpec, IntentType, LifecycleType, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
 export { EventHandler, EventAction, EventHandlerOrArray } from './schema/event-handler.js';
 export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
+export { reorderable, type ReorderableOptions } from './actions/reorderable.js';
 export type { RippleEvent } from './types.js';
 export type { OnEventCallback } from './core/event-dispatcher.js';
