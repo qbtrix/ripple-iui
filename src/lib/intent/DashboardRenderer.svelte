@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
   import { setContext, onMount, onDestroy, tick } from 'svelte';
-  import Muuri from 'muuri';
+  import type MuuriType from 'muuri';
   import type { UniversalSpec } from '../schema/universal-spec.js';
   import { createDashboardManager, type DashboardSpec, type DashboardWidget } from './dashboard-manager.svelte.js';
   import NodeRenderer from '../components/NodeRenderer.svelte';
@@ -197,6 +197,7 @@
   onMount(async () => {
     await tick();
 
+    const { default: Muuri } = await import('muuri');
     muuriGrid = new Muuri(gridEl, {
       items: '.muuri-item',
       dragEnabled: true,
