@@ -41,6 +41,52 @@
     lastLoadedRevision = manager.revision;
   });
 
+  // Sync Muuri grid items whenever the widget list changes.
+  // After Svelte updates the DOM from the {#each}, new .muuri-item
+  // elements need to be added to Muuri and removed items cleaned up.
+  // We wait for tick() (Svelte DOM flush) then requestAnimationFrame
+  // (browser paint) before touching Muuri to avoid layout thrashing.
+  $effect(() => {
+    const _ids = manager.spec.widgets.map((w) => w.id);
+    if (!muuriGrid || !gridEl) return;
+
+    tick().then(() => {
+      requestAnimationFrame(() => {
+        if (!muuriGrid || !gridEl) return;
+
+        // Find DOM elements that Muuri doesn't know about yet
+        const trackedEls = new Set(
+          muuriGrid.getItems().map((item: any) => item.getElement()),
+        );
+        const allItemEls = gridEl.querySelectorAll<HTMLElement>(':scope > .muuri-item');
+        const toAdd: HTMLElement[] = [];
+        for (const el of allItemEls) {
+          if (!trackedEls.has(el)) toAdd.push(el);
+        }
+
+        // Find Muuri items whose elements are no longer in the DOM
+        const domEls = new Set(allItemEls);
+        const toRemove = muuriGrid
+          .getItems()
+          .filter((item: any) => !domEls.has(item.getElement()));
+
+        let changed = false;
+        if (toRemove.length > 0) {
+          muuriGrid.remove(toRemove, { removeElements: false, layout: false });
+          changed = true;
+        }
+        if (toAdd.length > 0) {
+          muuriGrid.add(toAdd, { layout: false });
+          changed = true;
+        }
+        if (changed) {
+          fitItemsToContent();
+          muuriGrid.refreshItems().layout();
+        }
+      });
+    });
+  });
+
   $effect(() => {
     if (onSpecChanged) {
       manager.onChange(onSpecChanged);
