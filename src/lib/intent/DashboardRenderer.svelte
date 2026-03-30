@@ -110,9 +110,56 @@
         case 'chart':
           node.props.data = widget.data;
           break;
-        case 'table':
-          node.props.data = widget.data;
+        case 'table': {
+          // Handle multiple table data formats:
+          // 1. Standard: data=[...rows], props.columns=[...]
+          // 2. Nested:   data={ columns:[...], data:[...rows] }
+          // 3. Top-level columns: widget.columns=[...]
+          let tableData = widget.data;
+          let tableColumns = node.props.columns;
+
+          // Format 2: data is an object with nested columns/data
+          if (tableData && !Array.isArray(tableData) && typeof tableData === 'object') {
+            if (!tableColumns && tableData.columns) {
+              tableColumns = tableData.columns;
+            }
+            if (Array.isArray(tableData.data)) {
+              tableData = tableData.data;
+            } else if (Array.isArray(tableData.rows)) {
+              tableData = tableData.rows;
+            }
+          }
+
+          // Format 3: columns at widget top level
+          if (!tableColumns && (widget as any).columns) {
+            tableColumns = (widget as any).columns;
+          }
+
+          // Auto-derive columns from data keys if still missing
+          if ((!tableColumns || tableColumns.length === 0) && Array.isArray(tableData) && tableData.length > 0) {
+            const firstRow = tableData[0];
+            if (firstRow && typeof firstRow === 'object') {
+              tableColumns = Object.keys(firstRow)
+                .filter(k => !k.startsWith('_'))
+                .map(k => ({
+                  header: k.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                  accessorKey: k,
+                }));
+            }
+          }
+
+          // Normalize column format: {key,label} → {accessorKey,header}
+          if (Array.isArray(tableColumns)) {
+            tableColumns = tableColumns.map((c: any) => ({
+              header: c.header ?? c.label ?? c.key ?? '',
+              accessorKey: c.accessorKey ?? c.key ?? c.header ?? '',
+            }));
+          }
+
+          node.props.data = tableData;
+          if (tableColumns) node.props.columns = tableColumns;
           break;
+        }
         case 'metric':
           if (typeof widget.data === 'object' && !Array.isArray(widget.data)) {
             node.props = { ...node.props, ...widget.data };

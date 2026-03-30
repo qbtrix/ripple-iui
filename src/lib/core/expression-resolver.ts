@@ -38,10 +38,11 @@ const SINGLE_EXPRESSION_REGEX = /^\{([^}]+)\}$/;
 
 /**
  * Check if a string contains any expressions.
+ * Uses a fresh regex to avoid lastIndex issues with the global EXPRESSION_REGEX.
  */
 export function hasExpressions(value: unknown): boolean {
 	if (typeof value !== 'string') return false;
-	return EXPRESSION_REGEX.test(value);
+	return /\{([^}]+)\}/.test(value);
 }
 
 /**
