@@ -1,8 +1,8 @@
 <!--
   DashboardRenderer.svelte — Renders intent='dashboard' specs via Muuri.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — Muuri for layout/drag/resize. Exposes autoArrange() via context
-  for parent components to trigger re-layout (e.g. "Rearrange layout" button).
+  Updated: 2026-03-27 — Muuri for layout/drag/resize. Exposes autoArrange() via context.
+  Updated: 2026-03-30 — Added remove (×) button on widget headers. Appears on hover, calls manager.removeWidget().
 -->
 <script lang="ts">
   import { setContext, onMount, onDestroy, tick } from 'svelte';
@@ -19,7 +19,15 @@
   let { spec, onSpecChanged }: Props = $props();
 
   let dashboardSpec = $derived.by((): DashboardSpec => {
-    const widgets: DashboardWidget[] = (spec as any).widgets ?? [];
+    const rawWidgets: DashboardWidget[] = (spec as any).widgets ?? [];
+    // Deduplicate widget IDs — AI-generated specs can have collisions
+    const seen = new Set<string>();
+    const widgets = rawWidgets.map((w, i) => {
+      let id = w.id ?? `w-${i}`;
+      if (seen.has(id)) id = `${id}-${i}`;
+      seen.add(id);
+      return { ...w, id };
+    });
     const layout = (spec as any).dashboard_layout ?? {
       type: 'grid' as const,
       columns: (spec.display?.columns ?? 3),
@@ -192,6 +200,15 @@
     document.addEventListener('pointerup', onUp);
   }
 
+  // --- Widget menu ---
+  let openMenuId = $state<string | null>(null);
+
+  function closeMenu(e: MouseEvent) {
+    if (openMenuId && !(e.target as HTMLElement)?.closest('.ripple-widget-menu-wrap')) {
+      openMenuId = null;
+    }
+  }
+
   // --- Muuri ---
   let gridEl: HTMLDivElement;
   let muuriGrid: any = null;
@@ -266,6 +283,37 @@
     });
   });
 
+  // Sync Muuri when widgets are added/removed
+  $effect(() => {
+    const _rev = manager.revision; // track changes
+    if (!muuriGrid || !gridEl) return;
+    // Let Svelte update the DOM first, then sync Muuri
+    tick().then(() => {
+      if (!muuriGrid || !gridEl) return;
+      const currentIds = new Set(manager.spec.widgets.map(w => w.id));
+      // Remove Muuri items that no longer exist in spec
+      const muuriItems = muuriGrid.getItems();
+      const toRemove = muuriItems.filter((item: any) => {
+        const el = item.getElement();
+        const id = el?.getAttribute('data-widget-id');
+        return id && !currentIds.has(id);
+      });
+      if (toRemove.length > 0) {
+        muuriGrid.remove(toRemove, { removeElements: false });
+      }
+      // Add new DOM elements that Muuri doesn't know about
+      const knownEls = new Set(muuriItems.map((item: any) => item.getElement()));
+      const newEls = Array.from(gridEl.querySelectorAll('.muuri-item')).filter(
+        (el) => !knownEls.has(el)
+      );
+      if (newEls.length > 0) {
+        muuriGrid.add(newEls as HTMLElement[]);
+      }
+      fitItemsToContent();
+      muuriGrid.refreshItems().layout();
+    });
+  });
+
   onDestroy(() => {
     gridEl?.closest('.widget-canvas')?.removeEventListener('dashboard:auto-arrange', autoArrange);
     muuriGrid?.destroy();
@@ -273,7 +321,8 @@
   });
 </script>
 
-<div class="ripple-dashboard" class:ripple-dashboard--mounted={mounted}>
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+<div class="ripple-dashboard" class:ripple-dashboard--mounted={mounted} onclick={closeMenu}>
   <div bind:this={gridEl} class="muuri-grid">
     {#each manager.spec.widgets as widget (widget.id)}
       {@const node = widgetToNode(widget)}
@@ -291,6 +340,53 @@
                 </svg>
               </button>
               <span class="ripple-widget-title">{widget.title}</span>
+              <div class="ripple-widget-menu-wrap">
+                <button
+                  class="ripple-widget-menu-btn"
+                  aria-label="Widget options"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    openMenuId = openMenuId === widget.id ? null : widget.id;
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <circle cx="6" cy="2.5" r="1.2"/><circle cx="6" cy="6" r="1.2"/><circle cx="6" cy="9.5" r="1.2"/>
+                  </svg>
+                </button>
+                {#if openMenuId === widget.id}
+                  <div class="ripple-widget-dropdown">
+                    <button class="ripple-widget-dropdown-item" onclick={(e) => {
+                      e.stopPropagation();
+                      const item = (e.currentTarget as HTMLElement).closest('.muuri-item') as HTMLElement;
+                      if (item) initResize(e as any, item);
+                      openMenuId = null;
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M10 4.5L7.5 2M2 10l2.5-2.5M5 2H2v3M10 7v3H7"/></svg>
+                      Resize
+                    </button>
+                    <button class="ripple-widget-dropdown-item" onclick={(e) => {
+                      e.stopPropagation();
+                      // Cycle size: sm → md → lg → sm
+                      const cur = widget.size ?? 'sm';
+                      const next = cur === 'sm' ? 'md' : cur === 'md' ? 'lg' : 'sm';
+                      manager.updateWidget(widget.id, { size: next });
+                      openMenuId = null;
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="1" y="1" width="10" height="10" rx="2"/><path d="M1 6h10"/></svg>
+                      {widget.size === 'sm' ? 'Make wider' : widget.size === 'lg' ? 'Make smaller' : 'Make full'}
+                    </button>
+                    <div class="ripple-widget-dropdown-sep"></div>
+                    <button class="ripple-widget-dropdown-item ripple-widget-dropdown-danger" onclick={(e) => {
+                      e.stopPropagation();
+                      manager.removeWidget(widget.id);
+                      openMenuId = null;
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 3h8M4.5 3V2h3v1M3 3v7a1 1 0 001 1h4a1 1 0 001-1V3"/></svg>
+                      Remove
+                    </button>
+                  </div>
+                {/if}
+              </div>
             </div>
           {/if}
           <div class="ripple-widget-body">
@@ -405,6 +501,59 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     flex: 1;
+  }
+
+  /* Widget 3-dot menu */
+  .ripple-widget-menu-wrap {
+    position: relative;
+  }
+  .ripple-widget-menu-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 5px;
+    border: none; background: none;
+    color: rgba(255,255,255,0.20);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s, color 0.12s, background 0.12s;
+  }
+  .ripple-widget-card:hover .ripple-widget-menu-btn { opacity: 1; }
+  .ripple-widget-menu-btn:hover {
+    color: rgba(255,255,255,0.60);
+    background: rgba(255,255,255,0.08);
+  }
+  .ripple-widget-dropdown {
+    position: absolute; top: calc(100% + 4px); right: 0; z-index: 50;
+    min-width: 160px;
+    background: rgba(30,30,28,0.97);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 9px;
+    box-shadow: 0 10px 36px rgba(0,0,0,0.50);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 3px;
+    display: flex; flex-direction: column;
+  }
+  .ripple-widget-dropdown-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 11.5px; font-weight: 500; font-family: inherit;
+    color: rgba(255,255,255,0.70);
+    background: none; border: none;
+    cursor: pointer; text-align: left; white-space: nowrap;
+    transition: background 0.1s, color 0.1s;
+  }
+  .ripple-widget-dropdown-item:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.90);
+  }
+  .ripple-widget-dropdown-sep {
+    height: 1px; background: rgba(255,255,255,0.06);
+    margin: 2px 6px;
+  }
+  .ripple-widget-dropdown-danger { color: rgba(255,69,58,0.70); }
+  .ripple-widget-dropdown-danger:hover {
+    color: #FF453A;
+    background: rgba(255,69,58,0.10);
   }
 
   :global(.muuri-grip) {
