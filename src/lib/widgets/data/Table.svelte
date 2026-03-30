@@ -30,16 +30,25 @@
     statusKey, onRowClick, class: className
   }: Props = $props();
 
-  // Normalize: accept both {key,label} and {accessorKey,header}
-  const columns = $derived(
-    rawColumns.map(c => ({
-      accessorKey: c.accessorKey ?? c.key ?? '',
-      header: c.header ?? c.label ?? '',
-    }))
-  );
-
   // Accept both `data` and `rows`
   const tableData = $derived(data ?? rows ?? []);
+
+
+  // Normalize columns: accept {key,label}, {accessorKey,header}, or auto-detect from data
+  const columns = $derived.by(() => {
+    if (rawColumns.length > 0) {
+      return rawColumns.map(c => ({
+        accessorKey: c.accessorKey ?? c.key ?? '',
+        header: c.header ?? c.label ?? '',
+      }));
+    }
+    // Auto-detect columns from first row's keys
+    const first = tableData[0];
+    if (first && typeof first === 'object' && !Array.isArray(first)) {
+      return Object.keys(first).map(k => ({ accessorKey: k, header: k }));
+    }
+    return [];
+  });
 
   const eventDispatcher = getContext<EventDispatcher>('ui-events');
   const stateManager = getContext<StateManager>('ui-state');
@@ -85,7 +94,11 @@
                     style="background:{row[statusKey]}"
                   ></span>
                 {/if}
-                {row[col.accessorKey] ?? ''}
+                {#if col.accessorKey && row[col.accessorKey] !== undefined}
+                  {row[col.accessorKey]}
+                {:else}
+                  {Object.values(row)[ci] ?? ''}
+                {/if}
               </Table.Cell>
             {/each}
           </Table.Row>
