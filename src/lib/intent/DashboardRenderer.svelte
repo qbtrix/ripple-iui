@@ -272,7 +272,7 @@
         return id && !currentIds.has(id);
       });
       if (toRemove.length > 0) {
-        muuriGrid.remove(toRemove, { removeElements: true });
+        muuriGrid.remove(toRemove, { removeElements: false });
       }
       // Add new DOM elements that Muuri doesn't know about
       const knownEls = new Set(muuriItems.map((item: any) => item.getElement()));

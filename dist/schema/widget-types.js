@@ -10,7 +10,10 @@ export const WidgetType = z.enum([
     // Data
     'table', 'chart',
     // Control
-    'if', 'each'
+    'if', 'each',
+    // Research
+    'source-card', 'citation', 'sources-bar', 'discover-card', 'follow-up',
+    'company-header', 'ticker', 'kv-table', 'timeline', 'callout', 'news-card'
 ]);
 export const WIDGET_CATEGORIES = {
     layout: ['container', 'flex', 'grid', 'card', 'tabs', 'dashboard', 'dashboard-slot', 'glass-card'],
@@ -18,5 +21,8 @@ export const WIDGET_CATEGORIES = {
     input: ['button', 'input', 'select', 'checkbox', 'switch'],
     data: ['table', 'chart'],
     control: ['if', 'each'],
-    composite: ['terminal']
+    composite: ['terminal'],
+    research: ['source-card', 'citation', 'sources-bar', 'discover-card', 'follow-up',
+        'company-header', 'ticker', 'kv-table', 'timeline', 'callout', 'news-card',
+        'analyst-bar', 'range-bar']
 };
