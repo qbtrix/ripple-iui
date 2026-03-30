@@ -19,7 +19,15 @@
   let { spec, onSpecChanged }: Props = $props();
 
   let dashboardSpec = $derived.by((): DashboardSpec => {
-    const widgets: DashboardWidget[] = (spec as any).widgets ?? [];
+    const rawWidgets: DashboardWidget[] = (spec as any).widgets ?? [];
+    // Deduplicate widget IDs — AI-generated specs can have collisions
+    const seen = new Set<string>();
+    const widgets = rawWidgets.map((w, i) => {
+      let id = w.id ?? `w-${i}`;
+      if (seen.has(id)) id = `${id}-${i}`;
+      seen.add(id);
+      return { ...w, id };
+    });
     const layout = (spec as any).dashboard_layout ?? {
       type: 'grid' as const,
       columns: (spec.display?.columns ?? 3),
