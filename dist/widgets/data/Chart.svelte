@@ -81,28 +81,44 @@
 	let echartsMod: any = null;
 
 	function themeColors() {
-		if (!chartEl) return { fg: '#888', fgSoft: 'rgba(136,136,136,0.5)', fgMuted: 'rgba(136,136,136,0.35)', line: 'rgba(136,136,136,0.1)', split: 'rgba(136,136,136,0.07)' };
+		if (!chartEl) return { fg: '#888', fgSoft: 'rgba(136,136,136,0.5)', fgMuted: 'rgba(136,136,136,0.35)', line: 'rgba(136,136,136,0.06)', split: 'rgba(136,136,136,0.04)' };
 		const s = getComputedStyle(chartEl);
 		const fg = s.getPropertyValue('color').trim() || '#888';
 		return {
 			fg,
 			fgSoft: applyAlpha(fg, 0.5),
 			fgMuted: applyAlpha(fg, 0.35),
-			line: applyAlpha(fg, 0.1),
-			split: applyAlpha(fg, 0.07),
+			line: applyAlpha(fg, 0.06),
+			split: applyAlpha(fg, 0.04),
 		};
 	}
 
 	function applyAlpha(color: string, alpha: number): string {
-		const m = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+		// comma-separated: rgb(255, 255, 255)
+		const m = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
 		if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha})`;
+		// space-separated (modern browsers): rgb(255 255 255) or rgb(255 255 255 / 1)
+		const m2 = color.match(/^rgba?\((\d+)\s+(\d+)\s+(\d+)/);
+		if (m2) return `rgba(${m2[1]},${m2[2]},${m2[3]},${alpha})`;
+		// hex
 		if (color.startsWith('#') && color.length >= 7) {
 			const r = parseInt(color.slice(1, 3), 16);
 			const g = parseInt(color.slice(3, 5), 16);
 			const b = parseInt(color.slice(5, 7), 16);
 			return `rgba(${r},${g},${b},${alpha})`;
 		}
-		return color;
+		// oklch/hsl/color() — resolve via canvas
+		try {
+			const cv = document.createElement('canvas');
+			cv.width = cv.height = 1;
+			const ctx = cv.getContext('2d')!;
+			ctx.fillStyle = color;
+			ctx.fillRect(0, 0, 1, 1);
+			const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+			return `rgba(${r},${g},${b},${alpha})`;
+		} catch {
+			return color;
+		}
 	}
 
 	function buildOption() {
@@ -138,6 +154,7 @@
 			axisLabel: { color: tc.fgSoft, fontSize: 10 },
 			axisLine: { lineStyle: { color: tc.line } },
 			axisTick: { show: false },
+			splitLine: { show: false },
 		};
 
 		const yAxisBase = {
@@ -295,7 +312,7 @@
 					type: 'gauge',
 					startAngle: 200, endAngle: -20, min: 0, max: 100,
 					progress: { show: true, width: 12, itemStyle: { color: itemColors[0] } },
-					axisLine: { lineStyle: { width: 12, color: [[1, 'rgba(255,255,255,0.08)']] } },
+					axisLine: { lineStyle: { width: 12, color: [[1, 'rgba(255,255,255,0.04)']] } },
 					axisTick: { show: false },
 					splitLine: { show: false },
 					axisLabel: { show: false },
