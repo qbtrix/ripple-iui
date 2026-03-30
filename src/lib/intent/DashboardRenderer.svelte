@@ -1,8 +1,8 @@
 <!--
   DashboardRenderer.svelte — Renders intent='dashboard' specs via Muuri.
   Created: 2026-03-27 — Ported from ocean-flow DashboardRenderer with Ripple widget system.
-  Updated: 2026-03-27 — Muuri for layout/drag/resize. Exposes autoArrange() via context
-  for parent components to trigger re-layout (e.g. "Rearrange layout" button).
+  Updated: 2026-03-27 — Muuri for layout/drag/resize. Exposes autoArrange() via context.
+  Updated: 2026-03-30 — Added remove (×) button on widget headers. Appears on hover, calls manager.removeWidget().
 -->
 <script lang="ts">
   import { setContext, onMount, onDestroy, tick } from 'svelte';
@@ -239,6 +239,37 @@
     });
   });
 
+  // Sync Muuri when widgets are added/removed
+  $effect(() => {
+    const _rev = manager.revision; // track changes
+    if (!muuriGrid || !gridEl) return;
+    // Let Svelte update the DOM first, then sync Muuri
+    tick().then(() => {
+      if (!muuriGrid || !gridEl) return;
+      const currentIds = new Set(manager.spec.widgets.map(w => w.id));
+      // Remove Muuri items that no longer exist in spec
+      const muuriItems = muuriGrid.getItems();
+      const toRemove = muuriItems.filter((item: any) => {
+        const el = item.getElement();
+        const id = el?.getAttribute('data-widget-id');
+        return id && !currentIds.has(id);
+      });
+      if (toRemove.length > 0) {
+        muuriGrid.remove(toRemove, { removeElements: true });
+      }
+      // Add new DOM elements that Muuri doesn't know about
+      const knownEls = new Set(muuriItems.map((item: any) => item.getElement()));
+      const newEls = Array.from(gridEl.querySelectorAll('.muuri-item')).filter(
+        (el) => !knownEls.has(el)
+      );
+      if (newEls.length > 0) {
+        muuriGrid.add(newEls as HTMLElement[]);
+      }
+      fitItemsToContent();
+      muuriGrid.refreshItems().layout();
+    });
+  });
+
   onDestroy(() => {
     gridEl?.closest('.widget-canvas')?.removeEventListener('dashboard:auto-arrange', autoArrange);
     muuriGrid?.destroy();
@@ -264,6 +295,19 @@
                 </svg>
               </button>
               <span class="ripple-widget-title">{widget.title}</span>
+              <button
+                class="ripple-widget-remove"
+                aria-label="Remove widget"
+                title="Remove widget"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  manager.removeWidget(widget.id);
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                  <line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/>
+                </svg>
+              </button>
             </div>
           {/if}
           <div class="ripple-widget-body">
@@ -378,6 +422,21 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     flex: 1;
+  }
+
+  .ripple-widget-remove {
+    display: flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 5px;
+    border: none; background: none;
+    color: rgba(255,255,255,0.20);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s, color 0.12s, background 0.12s;
+  }
+  .ripple-widget-card:hover .ripple-widget-remove { opacity: 1; }
+  .ripple-widget-remove:hover {
+    color: #FF453A;
+    background: rgba(255,69,58,0.12);
   }
 
   :global(.muuri-grip) {
