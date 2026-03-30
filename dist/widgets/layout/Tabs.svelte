@@ -11,7 +11,7 @@
   interface Props {
     id?: string;
     class?: string;
-    tabs?: Tab[];
+    tabs?: (Tab | string)[];
     defaultValue?: string;
     value?: string;
     children?: Snippet;
@@ -19,11 +19,23 @@
   }
 
   let {
-    id, class: className, tabs = [], defaultValue, value: externalValue,
+    id, class: className, tabs: rawTabs = [], defaultValue, value: externalValue,
     children, onchange
   }: Props = $props();
 
-  let activeTab = $state(externalValue ?? defaultValue ?? tabs[0]?.value ?? '');
+  const tabs: Tab[] = $derived(
+    rawTabs.map((t) =>
+      typeof t === 'string' ? { value: t, label: t } : t
+    )
+  );
+
+  let activeTab = $state(externalValue ?? defaultValue ?? '');
+
+  $effect(() => {
+    if (!activeTab && tabs.length > 0) {
+      activeTab = tabs[0].value;
+    }
+  });
 
   // Sync when external value changes
   $effect(() => {

@@ -15,11 +15,22 @@ export declare const WidgetType: z.ZodEnum<{
     image: "image";
     switch: "switch";
     table: "table";
+    "follow-up": "follow-up";
+    ticker: "ticker";
     flex: "flex";
     heading: "heading";
     chart: "chart";
     if: "if";
     each: "each";
+    "source-card": "source-card";
+    citation: "citation";
+    "sources-bar": "sources-bar";
+    "discover-card": "discover-card";
+    "company-header": "company-header";
+    "kv-table": "kv-table";
+    timeline: "timeline";
+    callout: "callout";
+    "news-card": "news-card";
 }>;
 export type WidgetType = z.infer<typeof WidgetType>;
 export declare const WIDGET_CATEGORIES: {
@@ -29,4 +40,5 @@ export declare const WIDGET_CATEGORIES: {
     readonly data: readonly ["table", "chart"];
     readonly control: readonly ["if", "each"];
     readonly composite: readonly ["terminal"];
+    readonly research: readonly ["source-card", "citation", "sources-bar", "discover-card", "follow-up", "company-header", "ticker", "kv-table", "timeline", "callout", "news-card", "analyst-bar", "range-bar"];
 };

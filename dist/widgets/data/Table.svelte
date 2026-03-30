@@ -7,12 +7,15 @@
   import * as Table from '../../components/ui/table/index.js';
 
   interface TableColumn {
-    header: string;
-    accessorKey: string;
+    header?: string;
+    label?: string;
+    accessorKey?: string;
+    key?: string;
   }
 
   interface Props {
     data?: any[];
+    rows?: any[];
     columns?: TableColumn[];
     /** Visual variant */
     variant?: 'default' | 'compact' | 'striped' | 'minimal';
@@ -23,9 +26,29 @@
   }
 
   let {
-    data = [], columns = [], variant = 'default',
+    data, rows, columns: rawColumns = [], variant = 'default',
     statusKey, onRowClick, class: className
   }: Props = $props();
+
+  // Accept both `data` and `rows`
+  const tableData = $derived(data ?? rows ?? []);
+
+
+  // Normalize columns: accept {key,label}, {accessorKey,header}, or auto-detect from data
+  const columns = $derived.by(() => {
+    if (rawColumns.length > 0) {
+      return rawColumns.map(c => ({
+        accessorKey: c.accessorKey ?? c.key ?? '',
+        header: c.header ?? c.label ?? '',
+      }));
+    }
+    // Auto-detect columns from first row's keys
+    const first = tableData[0];
+    if (first && typeof first === 'object' && !Array.isArray(first)) {
+      return Object.keys(first).map(k => ({ accessorKey: k, header: k }));
+    }
+    return [];
+  });
 
   const eventDispatcher = getContext<EventDispatcher>('ui-events');
   const stateManager = getContext<StateManager>('ui-state');
@@ -57,8 +80,8 @@
       </Table.Row>
     </Table.Header>
     <Table.Body>
-      {#if data && data.length > 0}
-        {#each data as row, i}
+      {#if tableData.length > 0}
+        {#each tableData as row, i}
           <Table.Row
             class={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
             onclick={() => handleRowClick(row, i)}
@@ -71,7 +94,11 @@
                     style="background:{row[statusKey]}"
                   ></span>
                 {/if}
-                {row[col.accessorKey] ?? ''}
+                {#if col.accessorKey && row[col.accessorKey] !== undefined}
+                  {row[col.accessorKey]}
+                {:else}
+                  {Object.values(row)[ci] ?? ''}
+                {/if}
               </Table.Cell>
             {/each}
           </Table.Row>

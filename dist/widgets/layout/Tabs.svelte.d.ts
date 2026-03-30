@@ -7,7 +7,7 @@ interface Tab {
 interface Props {
     id?: string;
     class?: string;
-    tabs?: Tab[];
+    tabs?: (Tab | string)[];
     defaultValue?: string;
     value?: string;
     children?: Snippet;

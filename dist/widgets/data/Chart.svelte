@@ -1,32 +1,33 @@
 <!--
-  Chart.svelte — Changes:
-  - Added iosTheme boolean prop (default false) and themeOverrides prop
-  - Added IOS_THEME constant ported from paw-os-ui EChart.svelte
-  - Deep-merge IOS_THEME into chart options when iosTheme is enabled
-  - iOS theme applies: 600ms animation with cubicOut easing, rounded bars, smooth curves
-  - Added 3 new chart types: heatmap, gauge, radar
-  - Replaced window resize listener with ResizeObserver for better performance
+  Chart.svelte — 10 chart types: bar, line, area, pie, donut,
+  candlestick, sparkline, heatmap, gauge, radar.
+  ResizeObserver init, theme-aware colors, themeOverrides deep merge.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { cn } from '../../utils.js';
 
 	interface DataPoint {
 		label: string;
 		value: number;
+		open?: number;
+		close?: number;
+		high?: number;
+		low?: number;
 		[key: string]: unknown;
 	}
 
 	interface Props {
 		data: DataPoint[];
-		type?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'heatmap' | 'gauge' | 'radar';
+		type?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'candlestick' | 'sparkline' | 'heatmap' | 'gauge' | 'radar';
 		title?: string;
 		height?: number;
 		colors?: string[];
 		tooltip?: boolean;
-		iosTheme?: boolean;
 		themeOverrides?: Record<string, unknown>;
+		bullColor?: string;
+		bearColor?: string;
 		class?: string;
 		chartSlot?: Snippet<[{ data: DataPoint[]; type: string }]>;
 	}
@@ -38,49 +39,15 @@
 		height = 200,
 		colors = [],
 		tooltip = true,
-		iosTheme = false,
 		themeOverrides = {},
+		bullColor = '#22c55e',
+		bearColor = '#ef4444',
 		class: className = '',
 		chartSlot
 	}: Props = $props();
 
 	const defaultColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
-	const IOS_THEME = {
-		backgroundColor: 'transparent',
-		textStyle: {
-			color: 'rgba(255,255,255,0.50)',
-			fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
-			fontSize: 10,
-		},
-		grid: {
-			left: 4, right: 4, top: 8, bottom: 4,
-			containLabel: false,
-		},
-		xAxis: {
-			show: false,
-			axisLine: { show: false },
-			axisTick: { show: false },
-			splitLine: { show: false },
-		},
-		yAxis: {
-			show: false,
-			axisLine: { show: false },
-			axisTick: { show: false },
-			splitLine: { show: false },
-		},
-		tooltip: {
-			backgroundColor: 'rgba(30,30,28,0.92)',
-			borderColor: 'rgba(255,255,255,0.10)',
-			textStyle: { color: '#fff', fontSize: 11 },
-			padding: [6, 10],
-		},
-	};
-
-	/**
-	 * Simple deep merge utility. Merges source into target recursively.
-	 * Arrays are replaced, not concatenated. Primitives from source win.
-	 */
 	function deepMerge<T extends Record<string, any>>(target: T, ...sources: Record<string, any>[]): T {
 		const result = { ...target };
 		for (const source of sources) {
@@ -111,17 +78,42 @@
 
 	let chartEl: HTMLDivElement;
 	let chart: any = null;
-	let resizeObserver: ResizeObserver | null = null;
+	let echartsMod: any = null;
+
+	function themeColors() {
+		if (!chartEl) return { fg: '#888', fgSoft: 'rgba(136,136,136,0.5)', fgMuted: 'rgba(136,136,136,0.35)', line: 'rgba(136,136,136,0.1)', split: 'rgba(136,136,136,0.07)' };
+		const s = getComputedStyle(chartEl);
+		const fg = s.getPropertyValue('color').trim() || '#888';
+		return {
+			fg,
+			fgSoft: applyAlpha(fg, 0.5),
+			fgMuted: applyAlpha(fg, 0.35),
+			line: applyAlpha(fg, 0.1),
+			split: applyAlpha(fg, 0.07),
+		};
+	}
+
+	function applyAlpha(color: string, alpha: number): string {
+		const m = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+		if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha})`;
+		if (color.startsWith('#') && color.length >= 7) {
+			const r = parseInt(color.slice(1, 3), 16);
+			const g = parseInt(color.slice(3, 5), 16);
+			const b = parseInt(color.slice(5, 7), 16);
+			return `rgba(${r},${g},${b},${alpha})`;
+		}
+		return color;
+	}
 
 	function buildOption() {
+		const tc = themeColors();
 		const labels = data.map(d => d.label);
 		const values = data.map(d => d.value);
 		const itemColors = data.map((_, i) => getColor(i));
 
 		const base: any = {
 			animation: true,
-			animationDuration: iosTheme ? 600 : 400,
-			animationEasing: iosTheme ? 'cubicOut' : 'cubicInOut',
+			animationDuration: 400,
 			backgroundColor: 'transparent',
 			grid: { left: 4, right: 4, top: title ? 30 : 8, bottom: 24, containLabel: true },
 			tooltip: tooltip ? {
@@ -136,30 +128,35 @@
 			base.title = {
 				text: title,
 				left: 0, top: 0,
-				textStyle: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 600 },
+				textStyle: { color: tc.fg, fontSize: 13, fontWeight: 600 },
 			};
 		}
+
+		const xAxisBase = {
+			type: 'category' as const,
+			data: labels,
+			axisLabel: { color: tc.fgSoft, fontSize: 10 },
+			axisLine: { lineStyle: { color: tc.line } },
+			axisTick: { show: false },
+		};
+
+		const yAxisBase = {
+			type: 'value' as const,
+			axisLabel: { color: tc.fgMuted, fontSize: 10 },
+			splitLine: { lineStyle: { color: tc.split } },
+		};
 
 		let option: any;
 
 		if (type === 'bar') {
 			option = {
 				...base,
-				xAxis: {
-					type: 'category', data: labels,
-					axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
-					axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
-					axisTick: { show: false },
-				},
-				yAxis: {
-					type: 'value',
-					axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
-					splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-				},
+				xAxis: xAxisBase,
+				yAxis: yAxisBase,
 				series: [{
 					type: 'bar', data: values,
 					itemStyle: {
-						borderRadius: iosTheme ? [4, 4, 0, 0] : [3, 3, 0, 0],
+						borderRadius: [3, 3, 0, 0],
 						color: (p: any) => itemColors[p.dataIndex],
 					},
 					barMaxWidth: 32,
@@ -168,20 +165,11 @@
 		} else if (type === 'line' || type === 'area') {
 			option = {
 				...base,
-				xAxis: {
-					type: 'category', data: labels, boundaryGap: false,
-					axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
-					axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
-					axisTick: { show: false },
-				},
-				yAxis: {
-					type: 'value',
-					axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
-					splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-				},
+				xAxis: { ...xAxisBase, boundaryGap: false },
+				yAxis: yAxisBase,
 				series: [{
 					type: 'line', data: values,
-					smooth: iosTheme ? 0.4 : true,
+					smooth: true,
 					lineStyle: { color: itemColors[0], width: 2 },
 					itemStyle: { color: itemColors[0] },
 					areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
@@ -201,16 +189,62 @@
 					center: ['40%', '50%'],
 					data: data.map((d, i) => ({ name: d.label, value: d.value, itemStyle: { color: getColor(i) } })),
 					label: { show: false },
-					emphasis: { label: { show: true, fontSize: 12, color: '#fff' } },
+					emphasis: { label: { show: true, fontSize: 12, color: tc.fg } },
 				}],
 				legend: {
 					orient: 'vertical', right: 0, top: 'center',
-					textStyle: { color: 'rgba(255,255,255,0.65)', fontSize: 11 },
+					textStyle: { color: tc.fgSoft, fontSize: 11 },
 					icon: 'roundRect', itemWidth: 10, itemHeight: 10,
 				},
 			};
+		} else if (type === 'candlestick') {
+			const ohlc = data.map(d => [d.open ?? d.value, d.close ?? d.value, d.low ?? d.value, d.high ?? d.value]);
+			option = {
+				...base,
+				xAxis: xAxisBase,
+				yAxis: { ...yAxisBase, scale: true },
+				series: [{
+					type: 'candlestick',
+					data: ohlc,
+					itemStyle: {
+						color: bullColor,
+						color0: bearColor,
+						borderColor: bullColor,
+						borderColor0: bearColor,
+					},
+				}],
+			};
+		} else if (type === 'sparkline') {
+			const trend = values.length >= 2 ? values[values.length - 1] - values[0] : 0;
+			const lineColor = trend >= 0 ? bullColor : bearColor;
+			option = {
+				animation: true,
+				animationDuration: 400,
+				backgroundColor: 'transparent',
+				grid: { left: 0, right: 0, top: 2, bottom: 2 },
+				xAxis: { type: 'category', data: labels, show: false },
+				yAxis: { type: 'value', show: false, scale: true },
+				tooltip: tooltip ? {
+					trigger: 'axis',
+					backgroundColor: 'rgba(0,0,0,0.8)',
+					borderColor: 'rgba(255,255,255,0.1)',
+					textStyle: { color: '#fff', fontSize: 11 },
+				} : false,
+				series: [{
+					type: 'line',
+					data: values,
+					smooth: true,
+					symbol: 'none',
+					lineStyle: { color: lineColor, width: 1.5 },
+					areaStyle: {
+						color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+							{ offset: 0, color: lineColor + '30' },
+							{ offset: 1, color: lineColor + '05' },
+						]}
+					},
+				}],
+			};
 		} else if (type === 'heatmap') {
-			// Each DataPoint: label (x category), value (y category index or numeric), heat (z value)
 			const xCategories = [...new Set(data.map(d => d.label))];
 			const yCategories = [...new Set(data.map(d => String(d.value)))];
 			const heatData = data.map(d => [
@@ -226,39 +260,31 @@
 				...base,
 				xAxis: {
 					type: 'category', data: xCategories,
-					axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
-					axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+					axisLabel: { color: tc.fgSoft, fontSize: 10 },
+					axisLine: { lineStyle: { color: tc.line } },
 					axisTick: { show: false },
 					splitArea: { show: false },
 				},
 				yAxis: {
 					type: 'category', data: yCategories,
-					axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
-					axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+					axisLabel: { color: tc.fgMuted, fontSize: 10 },
+					axisLine: { lineStyle: { color: tc.line } },
 					axisTick: { show: false },
 					splitArea: { show: false },
 				},
 				visualMap: {
-					min: minHeat,
-					max: maxHeat,
-					calculable: true,
-					orient: 'horizontal',
-					left: 'center',
-					bottom: 0,
+					min: minHeat, max: maxHeat,
+					calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
 					inRange: { color: [itemColors[0] + '20', itemColors[0]] },
-					textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 10 },
+					textStyle: { color: tc.fgSoft, fontSize: 10 },
 				},
 				series: [{
-					type: 'heatmap',
-					data: heatData,
+					type: 'heatmap', data: heatData,
 					label: { show: false },
-					emphasis: {
-						itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' },
-					},
+					emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } },
 				}],
 			};
 		} else if (type === 'gauge') {
-			// Uses first data point's value as the gauge value (0-100)
 			const gaugeValue = data.length > 0 ? data[0].value : 0;
 			const gaugeLabel = data.length > 0 ? data[0].label : '';
 
@@ -267,42 +293,26 @@
 				grid: undefined,
 				series: [{
 					type: 'gauge',
-					startAngle: 200,
-					endAngle: -20,
-					min: 0,
-					max: 100,
-					progress: {
-						show: true,
-						width: 12,
-						itemStyle: { color: itemColors[0] },
-					},
-					axisLine: {
-						lineStyle: { width: 12, color: [[1, 'rgba(255,255,255,0.08)']] },
-					},
+					startAngle: 200, endAngle: -20, min: 0, max: 100,
+					progress: { show: true, width: 12, itemStyle: { color: itemColors[0] } },
+					axisLine: { lineStyle: { width: 12, color: [[1, 'rgba(255,255,255,0.08)']] } },
 					axisTick: { show: false },
 					splitLine: { show: false },
 					axisLabel: { show: false },
 					anchor: { show: false },
 					pointer: { show: false },
 					title: {
-						show: !!gaugeLabel,
-						offsetCenter: [0, '70%'],
-						fontSize: 11,
-						color: 'rgba(255,255,255,0.6)',
+						show: !!gaugeLabel, offsetCenter: [0, '70%'],
+						fontSize: 11, color: tc.fgSoft,
 					},
 					detail: {
-						valueAnimation: true,
-						fontSize: 24,
-						fontWeight: 600,
-						offsetCenter: [0, '0%'],
-						color: 'rgba(255,255,255,0.85)',
-						formatter: '{value}%',
+						valueAnimation: true, fontSize: 24, fontWeight: 600,
+						offsetCenter: [0, '0%'], color: tc.fg, formatter: '{value}%',
 					},
 					data: [{ value: gaugeValue, name: gaugeLabel }],
 				}],
 			};
 		} else if (type === 'radar') {
-			// Each DataPoint: label = indicator name, value = indicator value
 			const maxValue = Math.max(...values, 100);
 			const indicators = data.map(d => ({ name: d.label, max: maxValue }));
 
@@ -310,42 +320,25 @@
 				...base,
 				grid: undefined,
 				radar: {
-					indicator: indicators,
-					shape: 'polygon',
-					axisName: {
-						color: 'rgba(255,255,255,0.5)',
-						fontSize: 10,
-					},
-					splitArea: {
-						areaStyle: { color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.04)'] },
-					},
-					splitLine: {
-						lineStyle: { color: 'rgba(255,255,255,0.08)' },
-					},
-					axisLine: {
-						lineStyle: { color: 'rgba(255,255,255,0.08)' },
-					},
+					indicator: indicators, shape: 'polygon',
+					axisName: { color: tc.fgSoft, fontSize: 10 },
+					splitArea: { areaStyle: { color: [applyAlpha(tc.fg, 0.02), applyAlpha(tc.fg, 0.04)] } },
+					splitLine: { lineStyle: { color: tc.line } },
+					axisLine: { lineStyle: { color: tc.line } },
 				},
 				series: [{
 					type: 'radar',
 					data: [{
-						value: values,
-						name: title || '',
+						value: values, name: title || '',
 						areaStyle: { color: itemColors[0] + '30' },
 						lineStyle: { color: itemColors[0], width: 2 },
 						itemStyle: { color: itemColors[0] },
-						symbol: 'circle',
-						symbolSize: 4,
+						symbol: 'circle', symbolSize: 4,
 					}],
 				}],
 			};
 		} else {
 			option = base;
-		}
-
-		// Apply iOS theme deep merge when enabled
-		if (iosTheme) {
-			option = deepMerge(option, IOS_THEME);
 		}
 
 		// Apply user theme overrides last
@@ -358,31 +351,50 @@
 
 	async function initChart() {
 		if (!chartEl) return;
-		const echarts = await import('echarts');
-		chart = echarts.init(chartEl, undefined, { renderer: 'canvas' });
+		if (!echartsMod) echartsMod = await import('echarts');
+		if (chart) {
+			chart.dispose();
+			chart = null;
+		}
+		chart = echartsMod.init(chartEl, undefined, { renderer: 'canvas' });
 		chart.setOption(buildOption());
 	}
 
 	onMount(() => {
-		initChart();
-		resizeObserver = new ResizeObserver(() => { chart?.resize(); });
-		if (chartEl) resizeObserver.observe(chartEl);
+		const observer = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				const { width, height: h } = entry.contentRect;
+				if (width > 0 && h > 0) {
+					if (!chart) {
+						initChart();
+					} else {
+						chart.resize();
+					}
+				}
+			}
+		});
+
+		if (chartEl) observer.observe(chartEl);
+
+		const onResize = () => chart?.resize();
+		window.addEventListener('resize', onResize);
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('resize', onResize);
+			chart?.dispose();
+		};
 	});
 
-	onDestroy(() => {
-		resizeObserver?.disconnect();
-		chart?.dispose();
-	});
-
-	// Update chart when data changes
+	// Re-render when data or type changes
 	$effect(() => {
-		if (chart && data) {
+		if (chart && data && type) {
 			chart.setOption(buildOption(), true);
 		}
 	});
 </script>
 
-<div class={cn('w-full', className)}>
+<div class={cn('w-full', className)} style="color: hsl(var(--foreground))">
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
 	{:else}
