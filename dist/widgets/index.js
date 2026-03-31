@@ -5,6 +5,7 @@ import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
 import { SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp, CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard, AnalystBar, RangeBar } from './research/index.js';
+import Workflow from './Workflow.svelte';
 const defaultRegistry = {
     container: Container,
     flex: Flex,
@@ -46,6 +47,7 @@ const defaultRegistry = {
     'news-card': NewsCard,
     'analyst-bar': AnalystBar,
     'range-bar': RangeBar,
+    workflow: Workflow,
     // Aliases
     label: Text,
 };
@@ -68,4 +70,4 @@ export function getWidgetTypes() {
 export function resetRegistry() {
     registry = { ...defaultRegistry };
 }
-export { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, SoulStatus, Button, Input, Select, Checkbox, Switch, Table, Chart, Terminal, If, Each, SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp, CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard, AnalystBar, RangeBar };
+export { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, SoulStatus, Button, Input, Select, Checkbox, Switch, Table, Chart, Terminal, If, Each, SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp, CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard, AnalystBar, RangeBar, Workflow };
