@@ -2,7 +2,9 @@
   import type { Snippet } from 'svelte';
   import { onMount, onDestroy } from 'svelte';
   import { cn } from '$lib/utils.js';
-  import { createSwapy } from 'swapy';
+  // Swapy removed — this legacy Dashboard widget is replaced by DashboardRenderer (Muuri)
+  // Dynamic import so it doesn't break when swapy isn't installed
+  let createSwapyFn: any = null;
 
   interface Props {
     id?: string;
@@ -24,15 +26,21 @@
   }: Props = $props();
 
   let containerEl: HTMLDivElement;
-  let swapyInstance: ReturnType<typeof createSwapy> | null = null;
+  let swapyInstance: any = null;
 
-  onMount(() => {
+  onMount(async () => {
     if (swappable && containerEl) {
-      swapyInstance = createSwapy(containerEl, { animation: 'dynamic' });
-      if (onswap) {
-        swapyInstance.onSwap((event) => {
-          onswap(event);
-        });
+      try {
+        const mod = await import('swapy');
+        createSwapyFn = mod.createSwapy;
+        swapyInstance = createSwapyFn(containerEl, { animation: 'dynamic' });
+        if (onswap) {
+          swapyInstance.onSwap((event: any) => {
+            onswap(event);
+          });
+        }
+      } catch {
+        // swapy not installed — drag-to-swap disabled
       }
     }
   });
