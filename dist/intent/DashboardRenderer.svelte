@@ -178,6 +178,14 @@
             }));
           }
           break;
+        case 'workflow': {
+          const wd = widget.data;
+          if (wd && typeof wd === 'object') {
+            node.props.nodes = wd.nodes ?? [];
+            node.props.edges = wd.edges ?? [];
+          }
+          break;
+        }
         default:
           node.props.data = widget.data;
       }
