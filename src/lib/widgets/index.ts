@@ -1,4 +1,4 @@
-// Updated: Added GlassCard + SoulStatus imports and registry entries (integration merge)
+// Updated: Added Workflow widget type (workflow node diagram via @xyflow/svelte)
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
@@ -12,6 +12,7 @@ import {
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
   AnalystBar, RangeBar
 } from './research/index.js';
+import Workflow from './Workflow.svelte';
 
 export type WidgetRegistry = Record<string, Component<any>>;
 
@@ -56,6 +57,7 @@ const defaultRegistry: WidgetRegistry = {
   'news-card': NewsCard,
   'analyst-bar': AnalystBar,
   'range-bar': RangeBar,
+  workflow: Workflow,
   // Aliases
   label: Text,
 };
@@ -93,5 +95,6 @@ export {
   Table, Chart, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
-  AnalystBar, RangeBar
+  AnalystBar, RangeBar,
+  Workflow
 };

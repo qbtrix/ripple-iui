@@ -20,7 +20,10 @@
       "default": "./dist/schema/index.js"
     }
   },
-  "files": ["dist", "!dist/**/*.test.*"],
+  "files": [
+    "dist",
+    "!dist/**/*.test.*"
+  ],
   "scripts": {
     "dev": "vite dev",
     "build": "svelte-package",
@@ -36,6 +39,7 @@
   },
   "dependencies": {
     "@lucide/svelte": "^1.0.1",
+    "@xyflow/svelte": "^1.5.1",
     "clsx": "^2.1.1",
     "d3-scale": "^4.0.0",
     "echarts": "^6.0.0",
