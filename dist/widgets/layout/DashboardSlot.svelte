@@ -18,8 +18,8 @@
   );
 </script>
 
-<div data-swapy-slot={slotId} class={cn('rdash-slot', className)} style={spanStyle}>
-  <div data-swapy-item={itemId}>
+<div class={cn('rdash-slot', className)} style={spanStyle}>
+  <div>
     {@render children?.()}
   </div>
 </div>
