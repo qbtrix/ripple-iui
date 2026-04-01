@@ -1068,11 +1068,154 @@
     }
   };
 
+  // ── Pocket: CI/CD Pipeline (Workflow) ────────────────────────
+
+  const cicdWorkflowPocket = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '16px' },
+      children: [
+        { type: 'heading', props: { text: 'CI/CD Pipeline', level: 3 } },
+        { type: 'text', props: { text: 'Automated build, test, and deploy pipeline with approval gate for production releases.', size: 'sm' } },
+        { type: 'workflow', props: {
+          title: 'deploy/main',
+          minimap: true,
+          nodes: [
+            { id: 'push', type: 'trigger', label: 'Git Push', status: 'success' },
+            { id: 'lint', type: 'action', label: 'Lint & Format', status: 'success' },
+            { id: 'test', type: 'action', label: 'Run Tests', status: 'success' },
+            { id: 'build', type: 'action', label: 'Build Image', status: 'running' },
+            { id: 'scan', type: 'action', label: 'Security Scan', status: 'idle' },
+            { id: 'gate', type: 'condition', label: 'Tests Pass?', status: 'idle' },
+            { id: 'approve', type: 'approval', label: 'Prod Approval', status: 'idle' },
+            { id: 'staging', type: 'action', label: 'Deploy Staging', status: 'idle' },
+            { id: 'prod', type: 'output', label: 'Deploy Prod', status: 'idle' },
+            { id: 'notify-fail', type: 'output', label: 'Notify Failure', status: 'idle' },
+          ],
+          edges: [
+            { from: 'push', to: 'lint', animated: true },
+            { from: 'lint', to: 'test', animated: true },
+            { from: 'test', to: 'build', animated: true },
+            { from: 'build', to: 'scan' },
+            { from: 'scan', to: 'gate' },
+            { from: 'gate', to: 'staging', label: 'Yes' },
+            { from: 'gate', to: 'notify-fail', label: 'No' },
+            { from: 'staging', to: 'approve' },
+            { from: 'approve', to: 'prod' },
+          ],
+        }},
+        { type: 'flex', props: { gap: '8px', wrap: 'wrap' }, children: [
+          { type: 'badge', props: { text: 'main', variant: 'default' } },
+          { type: 'badge', props: { text: 'commit abc1234', variant: 'secondary' } },
+          { type: 'badge', props: { text: '3/10 steps done', variant: 'success' } },
+        ]},
+      ]
+    }
+  };
+
+  // ── Pocket: Customer Onboarding (Workflow) ─────────────────
+
+  const onboardingWorkflowPocket = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '16px' },
+      children: [
+        { type: 'heading', props: { text: 'Customer Onboarding', level: 3 } },
+        { type: 'text', props: { text: 'Automated onboarding flow with KYC verification, risk assessment, and welcome sequence.', size: 'sm' } },
+        { type: 'workflow', props: {
+          title: 'New Signup → Active Customer',
+          nodes: [
+            { id: 'signup', type: 'trigger', label: 'User Signs Up', status: 'success' },
+            { id: 'verify-email', type: 'action', label: 'Verify Email', status: 'success' },
+            { id: 'kyc', type: 'action', label: 'KYC Check', status: 'success' },
+            { id: 'kyc-ok', type: 'condition', label: 'KYC Passed?', status: 'success' },
+            { id: 'risk', type: 'action', label: 'Risk Score', status: 'running' },
+            { id: 'manual-review', type: 'approval', label: 'Manual Review', status: 'idle' },
+            { id: 'risk-check', type: 'condition', label: 'Low Risk?', status: 'idle' },
+            { id: 'provision', type: 'action', label: 'Provision Account', status: 'idle' },
+            { id: 'welcome', type: 'connector', label: 'Welcome Sequence', status: 'idle' },
+            { id: 'active', type: 'output', label: 'Active Customer', status: 'idle' },
+            { id: 'rejected', type: 'output', label: 'Application Declined', status: 'idle' },
+          ],
+          edges: [
+            { from: 'signup', to: 'verify-email', animated: true },
+            { from: 'verify-email', to: 'kyc', animated: true },
+            { from: 'kyc', to: 'kyc-ok', animated: true },
+            { from: 'kyc-ok', to: 'risk', label: 'Yes' },
+            { from: 'kyc-ok', to: 'manual-review', label: 'No' },
+            { from: 'manual-review', to: 'risk' },
+            { from: 'risk', to: 'risk-check' },
+            { from: 'risk-check', to: 'provision', label: 'Yes' },
+            { from: 'risk-check', to: 'rejected', label: 'No' },
+            { from: 'provision', to: 'welcome' },
+            { from: 'welcome', to: 'active' },
+          ],
+        }},
+        { type: 'grid', props: { columns: 3, gap: '8px' }, children: [
+          { type: 'metric', props: { label: 'Avg. Time', value: '4.2 min', variant: 'compact' } },
+          { type: 'metric', props: { label: 'Pass Rate', value: '94.3%', variant: 'compact' } },
+          { type: 'metric', props: { label: 'Today', value: '1,284', variant: 'compact' } },
+        ]},
+      ]
+    }
+  };
+
+  // ── Pocket: Content Publishing (Workflow) ──────────────────
+
+  const contentWorkflowPocket = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '16px' },
+      children: [
+        { type: 'heading', props: { text: 'Content Publishing Pipeline', level: 3 } },
+        { type: 'text', props: { text: 'AI-assisted content creation workflow from draft to multi-channel distribution.', size: 'sm' } },
+        { type: 'workflow', props: {
+          title: 'Draft → Publish',
+          nodes: [
+            { id: 'draft', type: 'trigger', label: 'New Draft', status: 'success' },
+            { id: 'ai-review', type: 'action', label: 'AI Review', status: 'success' },
+            { id: 'seo', type: 'action', label: 'SEO Optimization', status: 'success' },
+            { id: 'quality', type: 'condition', label: 'Quality Score > 80?', status: 'success' },
+            { id: 'editor', type: 'approval', label: 'Editor Approval', status: 'waiting' },
+            { id: 'revise', type: 'action', label: 'Revise Draft', status: 'idle' },
+            { id: 'schedule', type: 'action', label: 'Schedule Publish', status: 'idle' },
+            { id: 'blog', type: 'output', label: 'Blog', status: 'idle' },
+            { id: 'social', type: 'output', label: 'Social Media', status: 'idle' },
+            { id: 'newsletter', type: 'output', label: 'Newsletter', status: 'idle' },
+          ],
+          edges: [
+            { from: 'draft', to: 'ai-review', animated: true },
+            { from: 'ai-review', to: 'seo', animated: true },
+            { from: 'seo', to: 'quality', animated: true },
+            { from: 'quality', to: 'editor', label: 'Yes' },
+            { from: 'quality', to: 'revise', label: 'No' },
+            { from: 'revise', to: 'ai-review' },
+            { from: 'editor', to: 'schedule' },
+            { from: 'schedule', to: 'blog' },
+            { from: 'schedule', to: 'social' },
+            { from: 'schedule', to: 'newsletter' },
+          ],
+        }},
+        { type: 'flex', props: { gap: '8px', wrap: 'wrap' }, children: [
+          { type: 'badge', props: { text: 'AI-assisted', variant: 'default' } },
+          { type: 'badge', props: { text: 'Multi-channel', variant: 'secondary' } },
+          { type: 'badge', props: { text: 'Awaiting editor', variant: 'warning' } },
+        ]},
+      ]
+    }
+  };
+
   // ── Pocket definitions for the gallery ────────────────────────
 
   const pockets = [
     { id: 'research', label: 'Research Article', tag: 'Perplexity-style', spec: researchPocket },
     { id: 'market', label: 'Market Watch', tag: 'Finance', spec: marketPocket },
+    { id: 'cicd', label: 'CI/CD Pipeline', tag: 'Workflow', spec: cicdWorkflowPocket },
+    { id: 'onboarding', label: 'Customer Onboarding', tag: 'Workflow', spec: onboardingWorkflowPocket },
+    { id: 'content', label: 'Content Publishing', tag: 'Workflow', spec: contentWorkflowPocket },
     { id: 'weather', label: 'Weather', tag: 'Utility', spec: weatherPocket },
     { id: 'analytics', label: 'Analytics', tag: 'Dashboard', spec: analyticsPocket },
     { id: 'comparison', label: 'Comparison', tag: 'Research', spec: comparisonPocket },
