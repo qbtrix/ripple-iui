@@ -1,4 +1,5 @@
 // Auto-layout utility for workflow nodes — BFS-based left-to-right positioning
+// Fixed: cycle detection via per-node visit cap to prevent infinite BFS loops
 
 import type { WorkflowNodeData, WorkflowEdgeData } from './types.js';
 
@@ -47,16 +48,24 @@ export function autoLayout(
     depth.set(r, 0);
   }
 
+  // Track visits per node to cap re-processing and prevent infinite loops from cycles
+  const visits = new Map<string, number>();
+  const MAX_VISITS = nodes.length;
+
   while (queue.length > 0) {
     const current = queue.shift()!;
     const currentDepth = depth.get(current)!;
     const kids = children.get(current) ?? [];
 
     for (const kid of kids) {
+      const kidVisits = visits.get(kid) ?? 0;
+      if (kidVisits >= MAX_VISITS) continue; // cycle detected — stop re-processing
+
       const existingDepth = depth.get(kid);
       // Always take the maximum depth (longest path) for better layout
       if (existingDepth === undefined || currentDepth + 1 > existingDepth) {
         depth.set(kid, currentDepth + 1);
+        visits.set(kid, kidVisits + 1);
         queue.push(kid);
       }
     }
