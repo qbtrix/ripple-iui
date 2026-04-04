@@ -32,7 +32,8 @@
     share = true, copy = true, class: className, onclick
   }: Props = $props();
 
-  const displayCount = $derived(count ?? sources.length);
+  const validSources = $derived(sources.filter(s => s?.name));
+  const displayCount = $derived(count ?? validSources.length);
   const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
   const stateManager = getContext<StateManager | undefined>('ui-state');
 
@@ -67,7 +68,7 @@
 <div class={cn('rsbar', className)} onclick={onclick}>
   <div class="rsbar-left">
     <div class="rsbar-dots">
-      {#each sources.slice(0, 4) as src, i}
+      {#each validSources.slice(0, 4) as src, i}
         <img
           src={src.favicon ?? faviconUrl(src.name)}
           alt=""

@@ -39,7 +39,8 @@ const DOMAIN_MAP: Record<string, string> = {
  * Derive a favicon URL from a source name.
  * Uses Google's favicon service for reliable, cached icons.
  */
-export function faviconUrl(source: string): string {
+export function faviconUrl(source: string | undefined | null): string {
+  if (!source) return `https://www.google.com/s2/favicons?sz=32&domain=example.com`;
   const domain = DOMAIN_MAP[source]
     ?? (source.includes('.') ? source : `${source.toLowerCase().replace(/\s+/g, '')}.com`);
   return `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
