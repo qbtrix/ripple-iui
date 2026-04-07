@@ -1,11 +1,12 @@
 // C4 Model diagram widget types — data model for all 4 C4 levels
-// Created: C4 diagram widget for Ripple UI library
+// Modified: 2026-04-07 — Extended with kb_article, tags fields; added SvelteFlow-compatible node data types
 
 export interface C4Person {
   id: string;
   name: string;
   description?: string;
   external?: boolean;
+  tags?: string[];
 }
 
 export interface C4System {
@@ -15,6 +16,7 @@ export interface C4System {
   technology?: string;
   external?: boolean;
   containers?: C4Container[];
+  tags?: string[];
 }
 
 export interface C4Container {
@@ -24,6 +26,8 @@ export interface C4Container {
   technology?: string;
   type?: 'webapp' | 'api' | 'database' | 'queue' | 'filesystem' | 'mobile' | 'desktop';
   components?: C4Component[];
+  kb_article?: string;
+  tags?: string[];
 }
 
 export interface C4Component {
@@ -32,6 +36,8 @@ export interface C4Component {
   description?: string;
   technology?: string;
   type?: 'service' | 'controller' | 'repository' | 'model' | 'middleware';
+  kb_article?: string;
+  tags?: string[];
 }
 
 export interface C4Relationship {
@@ -59,4 +65,35 @@ export interface LayoutNode {
   y: number;
   width: number;
   height: number;
+}
+
+/**
+ * Node data payload passed into each SvelteFlow custom node component.
+ * These are set on node.data when converting C4Diagram → SvelteFlow nodes.
+ */
+export interface C4NodeData {
+  /** Display name */
+  name: string;
+  /** Subtitle / description text */
+  description?: string;
+  /** Technology badge text, e.g. "PostgreSQL" */
+  technology?: string;
+  /** Whether the element is an external actor/system */
+  external?: boolean;
+  /** Container/component sub-type (database, queue, webapp, …) */
+  subtype?: string;
+  /** True when element has drillable children */
+  drillable?: boolean;
+  /** Link to wiki / KB article */
+  kb_article?: string;
+  /** Tags for filtering */
+  tags?: string[];
+  /** Original C4 element for click handlers */
+  element: C4Element;
+  /** Callback when element is clicked */
+  onclick?: (element: C4Element) => void;
+  /** Callback when drilldown is triggered */
+  ondrilldown?: (element: C4Element, level: string) => void;
+  /** Current diagram level — used to compute next level on drilldown */
+  diagramLevel: 'context' | 'container' | 'component' | 'code';
 }
