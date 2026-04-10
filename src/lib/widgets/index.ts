@@ -1,4 +1,4 @@
-// Updated: Added C4 Model diagram widget (SVG-based, interactive C4 architecture diagrams)
+// Updated: Added C4 diagram widget (SvelteFlow + ELK.js interactive architecture diagrams)
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot } from './layout/index.js';

@@ -33,6 +33,7 @@ const DOMAIN_MAP: Record<string, string> = {
   BSE: 'bseindia.com',
   'japan-guide.com': 'japan-guide.com',
   madhyamam: 'madhyamam.com',
+  'nvidia.com': 'nvidia.com'
 };
 
 /**
@@ -42,6 +43,6 @@ const DOMAIN_MAP: Record<string, string> = {
 export function faviconUrl(source: string | undefined | null): string {
   if (!source) return `https://www.google.com/s2/favicons?sz=32&domain=example.com`;
   const domain = DOMAIN_MAP[source]
-    ?? (source.includes('.') ? source : `${source.toLowerCase().replace(/\s+/g, '')}.com`);
+    ?? (source?.includes('.') ? source : `${source?.toLowerCase()?.replace(/\s+/g, '')}.com`);
   return `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
 }
