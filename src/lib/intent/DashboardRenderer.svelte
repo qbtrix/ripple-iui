@@ -119,19 +119,68 @@
           node.props.data = widget.data;
           break;
         case 'table': {
-          const td = widget.data;
-          // Handle AI spec format: { columns: ["Name", ...], data: [["Alice", ...]] }
-          if (td && typeof td === 'object' && !Array.isArray(td) && td.columns && td.data) {
-            const cols: string[] = td.columns;
-            node.props.columns = cols.map((c: string) => ({ key: c, label: c }));
-            node.props.data = (td.data || []).map((row: any[]) => {
+          // Handle multiple table data formats:
+          // 1. Standard: data=[...rows], props.columns=[...]
+          // 2. Nested:   data={ columns:[...], data:[...rows] }
+          // 3. Nested:   data={ columns:[...], rows:[...rows] }
+          // 4. Top-level columns: widget.columns=[...]
+          let tableData = widget.data;
+          let tableColumns = node.props.columns;
+
+          // Format 2/3: data is an object with nested columns/data/rows
+          if (tableData && !Array.isArray(tableData) && typeof tableData === 'object') {
+            if (!tableColumns && tableData.columns) {
+              tableColumns = tableData.columns;
+            }
+            if (Array.isArray(tableData.data)) {
+              tableData = tableData.data;
+            } else if (Array.isArray(tableData.rows)) {
+              tableData = tableData.rows;
+            }
+          }
+
+          // Format 4: columns at widget top level
+          if (!tableColumns && (widget as any).columns) {
+            tableColumns = (widget as any).columns;
+          }
+
+          // Auto-derive columns from data keys if still missing
+          if ((!tableColumns || tableColumns.length === 0) && Array.isArray(tableData) && tableData.length > 0) {
+            const firstRow = tableData[0];
+            if (firstRow && typeof firstRow === 'object') {
+              tableColumns = Object.keys(firstRow)
+                .filter(k => !k.startsWith('_'))
+                .map(k => ({
+                  header: k.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                  accessorKey: k,
+                }));
+            }
+          }
+
+          // Normalize column format: string[] or {key,label} → {accessorKey,header}
+          if (Array.isArray(tableColumns)) {
+            tableColumns = tableColumns.map((c: any) => {
+              if (typeof c === 'string') return { header: c, accessorKey: c };
+              return {
+                header: c.header ?? c.label ?? c.key ?? '',
+                accessorKey: c.accessorKey ?? c.key ?? c.header ?? '',
+              };
+            });
+          }
+
+          // Convert positional arrays to keyed objects if columns available
+          if (Array.isArray(tableData) && tableData.length > 0 && Array.isArray(tableData[0]) && Array.isArray(tableColumns)) {
+            tableData = tableData.map((row: any[]) => {
               const obj: Record<string, any> = {};
-              cols.forEach((c: string, ci: number) => { obj[c] = row?.[ci] ?? ''; });
+              tableColumns.forEach((c: any, ci: number) => {
+                obj[c.accessorKey || c.header || `col${ci}`] = row?.[ci] ?? '';
+              });
               return obj;
             });
-          } else {
-            node.props.data = td;
           }
+
+          node.props.data = tableData;
+          if (tableColumns) node.props.columns = tableColumns;
           break;
         }
         case 'metric':
