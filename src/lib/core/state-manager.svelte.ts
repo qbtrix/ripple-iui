@@ -27,7 +27,12 @@ export class StateManager {
 	private _state = $state<Record<string, unknown>>({});
 
 	constructor(initialState: Record<string, unknown> = {}) {
-		this._state = structuredClone(initialState);
+		try {
+			this._state = structuredClone(initialState);
+		} catch {
+			// Fallback for non-cloneable values (functions, proxies, etc.)
+			this._state = JSON.parse(JSON.stringify(initialState));
+		}
 	}
 
 	/**

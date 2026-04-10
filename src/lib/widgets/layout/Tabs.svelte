@@ -24,8 +24,10 @@
   }: Props = $props();
 
   const tabs: Tab[] = $derived(
-    rawTabs.map((t) =>
-      typeof t === 'string' ? { value: t, label: t } : t
+    rawTabs.map((t, i) =>
+      typeof t === 'string'
+        ? { value: t, label: t }
+        : { value: t.value ?? t.label ?? `tab-${i}`, label: t.label ?? t.value ?? `Tab ${i + 1}` }
     )
   );
 

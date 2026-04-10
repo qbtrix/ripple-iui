@@ -26,9 +26,10 @@ export function normalizeSpec(input: any): UniversalSpec {
     return {
       version: '2.0',
       intent: 'custom',
-      lifecycle: { type: 'ephemeral' },
+      lifecycle: input.lifecycle ?? { type: 'ephemeral' },
       ui: input.ui,
       data: input.data,
+      state: input.state,
       theme: input.theme,
       selection: 'none'
     } as UniversalSpec;
