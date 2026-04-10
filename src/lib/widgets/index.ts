@@ -1,4 +1,4 @@
-// Updated: Added Workflow widget type (workflow node diagram via @xyflow/svelte)
+// Updated: Added C4 diagram widget (SvelteFlow + ELK.js interactive architecture diagrams)
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
@@ -13,6 +13,7 @@ import {
   AnalystBar, RangeBar
 } from './research/index.js';
 import Workflow from './Workflow.svelte';
+import { C4Diagram } from './c4/index.js';
 
 export type WidgetRegistry = Record<string, Component<any>>;
 
@@ -58,6 +59,7 @@ const defaultRegistry: WidgetRegistry = {
   'analyst-bar': AnalystBar,
   'range-bar': RangeBar,
   workflow: Workflow,
+  c4: C4Diagram,
   // Aliases
   label: Text,
 };
@@ -96,5 +98,6 @@ export {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
   AnalystBar, RangeBar,
-  Workflow
+  Workflow,
+  C4Diagram
 };

@@ -1,4 +1,4 @@
-// Updated: Added 'glass-card' and 'soul-status' to WIDGET_CATEGORIES (integration merge)
+// Modified: 2026-04-07 — Added c4, workflow to WidgetType enum and diagram category
 import { z } from 'zod';
 
 export const WidgetType = z.enum([
@@ -12,6 +12,8 @@ export const WidgetType = z.enum([
   'table', 'chart',
   // Control
   'if', 'each',
+  // Diagram
+  'c4', 'workflow',
   // Research
   'source-card', 'citation', 'sources-bar', 'discover-card', 'follow-up',
   'company-header', 'ticker', 'kv-table', 'timeline', 'callout', 'news-card'
@@ -26,6 +28,7 @@ export const WIDGET_CATEGORIES = {
   data: ['table', 'chart'],
   control: ['if', 'each'],
   composite: ['terminal'],
+  diagram: ['c4', 'workflow'],
   research: ['source-card', 'citation', 'sources-bar', 'discover-card', 'follow-up',
     'company-header', 'ticker', 'kv-table', 'timeline', 'callout', 'news-card',
     'analyst-bar', 'range-bar']
