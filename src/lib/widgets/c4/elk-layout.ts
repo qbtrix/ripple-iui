@@ -1,10 +1,10 @@
 // elk-layout.ts — ELK.js-based auto-layout for C4 diagrams
 // Created: 2026-04-07 — Replaces grid-based layout.ts with professional ELK layered layout
+// Modified: 2026-04-10 — Move ELK instantiation from module-level singleton to per-call to fix race condition.
 
 import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
 import type { C4Diagram, C4Element, C4System, C4Container } from './types.js';
 
-const elk = new ELK();
 
 // Default node dimensions by element shape
 const DIMENSIONS = {
@@ -60,6 +60,7 @@ export async function computeElkLayout(
     layerSpacing = 80,
   } = options;
 
+  const elk = new ELK();
   const positions = new Map<string, LayoutPosition>();
 
   if (diagram.elements.length === 0) return positions;

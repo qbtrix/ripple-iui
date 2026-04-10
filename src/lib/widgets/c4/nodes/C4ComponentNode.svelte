@@ -1,10 +1,12 @@
 <!--
   C4ComponentNode.svelte — SvelteFlow custom node for C4 Component elements.
   Created: 2026-04-07 — Smaller blue-500 box with component type label and KB link support.
+  Modified: 2026-04-10 — Sanitize kb_article URL to prevent XSS via javascript:/data: schemes.
 -->
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '../types.js';
+  import { safeKbUrl } from '../url-sanitizer.js';
 
   let { data }: { data: C4NodeData } = $props();
 
@@ -53,9 +55,9 @@
     </div>
   {/if}
 
-  {#if data.kb_article}
+  {#if safeKbUrl(data.kb_article)}
     <a
-      href={data.kb_article}
+      href={safeKbUrl(data.kb_article)}
       target="_blank"
       rel="noopener noreferrer"
       class="kb-link"

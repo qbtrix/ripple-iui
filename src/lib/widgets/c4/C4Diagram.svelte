@@ -3,6 +3,7 @@
   Modified: 2026-04-07 — Complete rewrite from SVG-based to SvelteFlow/ELK for
   professional-grade layout, interactive pan/zoom, minimap, and group node nesting.
   Supports all 4 C4 levels (Context, Container, Component, Code) with drill-down.
+  Modified: 2026-04-10 — Add cancellation to $effect layout call to prevent stale results from race conditions.
 -->
 <script lang="ts">
   import { SvelteFlow, Background, Controls, MiniMap, Position } from '@xyflow/svelte';
@@ -243,22 +244,26 @@
 
   // Run ELK layout whenever the diagram input changes
   $effect(() => {
-    // Capture reactivity dependency on diagram
     const currentDiagram = diagram;
+    let cancelled = false;
     layoutReady = false;
     layoutError = null;
 
     buildFlowGraph(currentDiagram)
       .then(({ nodes, edges }) => {
+        if (cancelled) return;
         flowNodes = nodes;
         flowEdges = edges;
         layoutReady = true;
       })
       .catch((err) => {
+        if (cancelled) return;
         console.error('[C4Diagram] Layout failed:', err);
         layoutError = 'Diagram layout failed. Please check your data.';
         layoutReady = true; // Show error state
       });
+
+    return () => { cancelled = true; };
   });
 </script>
 
