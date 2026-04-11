@@ -46,6 +46,19 @@
   const eventDispatcher = createEventDispatcher(stateManager, onEvent);
   let dataStore = $state<Record<string, unknown>>({});
 
+  // Sync external state prop changes into the stateManager reactively.
+  // This allows data_sources and other async state updates to flow in
+  // after the initial render.
+  $effect(() => {
+    if (initialStateOverride) {
+      for (const [key, value] of Object.entries(initialStateOverride)) {
+        if (value !== undefined && value !== stateManager.get(key)) {
+          stateManager.set(key, value);
+        }
+      }
+    }
+  });
+
   setContext('ui-state', stateManager);
   setContext('ui-events', eventDispatcher);
   setContext('ui-data', dataStore);

@@ -10,7 +10,7 @@
     children?: Snippet;
     title?: string;
     description?: string;
-    variant?: 'default' | 'selected' | 'muted';
+    variant?: 'default' | 'selected' | 'muted' | 'glass';
     onclick?: (e?: unknown) => void;
   }
 
@@ -22,7 +22,8 @@
   const variantClass = $derived({
     'default': '',
     'selected': 'ring-2 ring-primary',
-    'muted': 'bg-muted'
+    'muted': 'bg-muted',
+    'glass': 'rcard--glass'
   }[variant]);
 
   const styleString = $derived(
@@ -52,5 +53,17 @@
     flex: 1 1 0%;
     min-width: 0;
     overflow: hidden;
+  }
+  :global(.rcard--glass) {
+    background: color-mix(in srgb, #000 38%, transparent) !important;
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, #fff 10%, transparent),
+      inset 2px 1px 0px -1px color-mix(in srgb, #fff 30%, transparent),
+      inset -1.5px -1px 0px -1px color-mix(in srgb, #fff 20%, transparent),
+      0px 3px 10px 0px color-mix(in srgb, #000 12%, transparent);
+    ring: none !important;
   }
 </style>
