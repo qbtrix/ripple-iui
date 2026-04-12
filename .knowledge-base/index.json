@@ -1,0 +1,975 @@
+{
+  "scope": "ripple",
+  "articles": {
+    "ripple-composite-widgets-terminal-workflow-and-c4-diagrams": {
+      "summary": "Advanced widget components for specialized use cases including CLI output display, visual workflow diagrams, and C4 architecture modeling. These composite widgets extend Ripple's capabilities for technical visualization and interactive process flows.",
+      "title": "Ripple Composite Widgets: Terminal, Workflow, and C4 Diagrams"
+    },
+    "ripple-control-flow-conditional-rendering-and-loops": {
+      "summary": "Control flow widgets in Ripple manage conditional rendering and list iteration. Use `if` for conditional blocks, `show` for inline visibility, and `each` for rendering arrays with context variables.",
+      "title": "Ripple Control Flow — Conditional Rendering and Loops"
+    },
+    "ripple-data-widgets-tables-and-charts": {
+      "summary": "Data widgets are complex components for displaying structured data in tables and charts. Tables support auto-column detection, status indicators, and row interactions, while charts visualize data across multiple formats including bar, line, pie, candlestick, and gauge types.",
+      "title": "Ripple Data Widgets — Tables and Charts"
+    },
+    "ripple-display-widgets-read-only-content-components": {
+      "summary": "Display widgets are read-only components that render content without accepting user input. They support dynamic values through expressions and include text, heading, image, badge, progress, avatar, metric, and feed widgets.",
+      "title": "Ripple Display Widgets — Read-Only Content Components"
+    },
+    "ripple-event-system-event-handlers-actions-and-chaining": {
+      "summary": "The Ripple event system enables widgets to trigger behavior through event handlers like on_click, on_change, on_submit, on_focus, and on_blur. Events execute actions such as state mutations, API calls, navigation, toasts, and custom emissions, which can be chained together in sequence for complex workflows.",
+      "title": "Ripple Event System — Event Handlers, Actions, and Chaining"
+    },
+    "ripple-input-widgets-button-input-select-checkbox-switch": {
+      "summary": "Input widgets in Ripple accept user interaction and support two-way state binding via `bind` and event handlers for actions. This guide covers five core widgets: button, input, select, checkbox, and switch, with their props, events, and usage examples.",
+      "title": "Ripple Input Widgets: button, input, select, checkbox, switch"
+    },
+    "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb": {
+      "summary": "Layout widgets in Ripple control how child widgets are arranged on screen, with support for flexbox, CSS grid, tabbed content, and specialized dashboard layouts. Each widget accepts children and provides flexible configuration options for alignment, spacing, and visual styling.",
+      "title": "Ripple Layout Widgets: Comprehensive Guide to flex, grid, card, tabs, container, dashboard, and glass-card"
+    },
+    "ripple-research-domain-widgets": {
+      "summary": "A comprehensive collection of specialized UI widgets designed for research interfaces, financial data visualization, and content-heavy layouts. Includes 15+ reusable components for displaying sources, citations, financial information, timelines, and news content.",
+      "title": "Ripple Research \u0026 Domain Widgets"
+    },
+    "ripple-uispec-v10-json-format-reference": {
+      "summary": "Ripple UISpec v1.0 is a JSON-based format for declaring interactive user interfaces with state management, data binding, and event handling. The specification defines a hierarchical structure using UINodes that supports components, conditional rendering, loops, and expression evaluation.",
+      "title": "Ripple UISpec v1.0 — JSON Format Reference"
+    },
+    "ripple-universalspec-v20-intent-based-ui-generation": {
+      "summary": "UniversalSpec is a higher-level UI format where developers declare intent (what the UI should do) rather than exact layout, allowing Ripple to automatically generate appropriate layouts. It supports 11 intent types including browse, form, dashboard, and search, with optional multi-step flow chaining for wizard-like interactions.",
+      "title": "Ripple UniversalSpec v2.0 — Intent-Based UI Generation"
+    }
+  },
+  "concepts": {
+    "action handlers": {
+      "name": "action handlers",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "activity timeline": {
+      "name": "activity timeline",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "align": {
+      "name": "align",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "analyst-bar": {
+      "name": "analyst-bar",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "api calls": {
+      "name": "API calls",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "approval chains": {
+      "name": "approval chains",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "architecture diagram": {
+      "name": "architecture diagram",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "area chart": {
+      "name": "area chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "auto layout generation": {
+      "name": "auto layout generation",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "auto-column detection": {
+      "name": "auto-column detection",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "auto-fill": {
+      "name": "auto-fill",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "automation pipelines": {
+      "name": "automation pipelines",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "avatar": {
+      "name": "avatar",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "badge": {
+      "name": "badge",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "bar chart": {
+      "name": "bar chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "branching flows": {
+      "name": "branching flows",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "button widget": {
+      "name": "button widget",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "c4 model": {
+      "name": "C4 model",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "callout": {
+      "name": "callout",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "candlestick chart": {
+      "name": "candlestick chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "card": {
+      "name": "card",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "chart": {
+      "name": "chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "checkbox widget": {
+      "name": "checkbox widget",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "children": {
+      "name": "children",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "citation": {
+      "name": "citation",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "cli output": {
+      "name": "CLI output",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "code level": {
+      "name": "code level",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "column definition": {
+      "name": "column definition",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "columns": {
+      "name": "columns",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "company-header": {
+      "name": "company-header",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "component level": {
+      "name": "component level",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "component props": {
+      "name": "component props",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "conditional rendering": {
+      "name": "conditional rendering",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "confirmation patterns": {
+      "name": "confirmation patterns",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "container": {
+      "name": "container",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "container level": {
+      "name": "container level",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "context level": {
+      "name": "context level",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "context variables": {
+      "name": "context variables",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "css grid": {
+      "name": "CSS grid",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "custom events": {
+      "name": "custom events",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "dashboard": {
+      "name": "dashboard",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components",
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb",
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "dashboard-slot": {
+      "name": "dashboard-slot",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "data point": {
+      "name": "data point",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "data widget": {
+      "name": "data widget",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "direction": {
+      "name": "direction",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "discover-card": {
+      "name": "discover-card",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "display hints": {
+      "name": "display hints",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "display widgets": {
+      "name": "display widgets",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "each widget": {
+      "name": "each widget",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "elk.js": {
+      "name": "ELK.js",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "event chaining": {
+      "name": "event chaining",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "event handlers": {
+      "name": "event handlers",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining",
+        "ripple-input-widgets-button-input-select-checkbox-switch",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "expressions": {
+      "name": "expressions",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components",
+        "ripple-event-system-event-handlers-actions-and-chaining",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "feed": {
+      "name": "feed",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "financial data": {
+      "name": "financial data",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "flex": {
+      "name": "flex",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "flexbox": {
+      "name": "flexbox",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "follow-up": {
+      "name": "follow-up",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "form fields": {
+      "name": "form fields",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "form generation": {
+      "name": "form generation",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "gap": {
+      "name": "gap",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "gauge chart": {
+      "name": "gauge chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "glass morphism": {
+      "name": "glass morphism",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "glass-card": {
+      "name": "glass-card",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "grid": {
+      "name": "grid",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "heading": {
+      "name": "heading",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "heatmap": {
+      "name": "heatmap",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "if widget": {
+      "name": "if widget",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "image": {
+      "name": "image",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "index_as": {
+      "name": "index_as",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "input widget": {
+      "name": "input widget",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "intent-based ui": {
+      "name": "intent-based UI",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "interactive visualization": {
+      "name": "interactive visualization",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "item_as": {
+      "name": "item_as",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "json format": {
+      "name": "JSON format",
+      "articles": [
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "justify": {
+      "name": "justify",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "kpi": {
+      "name": "KPI",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "kv-table": {
+      "name": "kv-table",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "layout widgets": {
+      "name": "layout widgets",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "lifecycle management": {
+      "name": "lifecycle management",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "line chart": {
+      "name": "line chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "list rendering": {
+      "name": "list rendering",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "loops": {
+      "name": "loops",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "metric": {
+      "name": "metric",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "multi-series data": {
+      "name": "multi-series data",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "multi-step flows": {
+      "name": "multi-step flows",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "navigation": {
+      "name": "navigation",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "nested conditions": {
+      "name": "nested conditions",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "news-card": {
+      "name": "news-card",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "on_blur": {
+      "name": "on_blur",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "on_change": {
+      "name": "on_change",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining",
+        "ripple-input-widgets-button-input-select-checkbox-switch",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "on_click": {
+      "name": "on_click",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining",
+        "ripple-input-widgets-button-input-select-checkbox-switch",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "on_focus": {
+      "name": "on_focus",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "on_submit": {
+      "name": "on_submit",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "optional chaining": {
+      "name": "optional chaining",
+      "articles": [
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "pie chart": {
+      "name": "pie chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "process flows": {
+      "name": "process flows",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "progress": {
+      "name": "progress",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "radar chart": {
+      "name": "radar chart",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "range-bar": {
+      "name": "range-bar",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "read-only components": {
+      "name": "read-only components",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "research widgets": {
+      "name": "research widgets",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "row click event": {
+      "name": "row click event",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "rows": {
+      "name": "rows",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "select widget": {
+      "name": "select widget",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "show field": {
+      "name": "show field",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "source-card": {
+      "name": "source-card",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "sources-bar": {
+      "name": "sources-bar",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "span": {
+      "name": "span",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "sparkline": {
+      "name": "sparkline",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "spec chaining": {
+      "name": "spec chaining",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "state binding": {
+      "name": "state binding",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "state expressions": {
+      "name": "state expressions",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "state mutation": {
+      "name": "state mutation",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "status indicator": {
+      "name": "status indicator",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "status indicators": {
+      "name": "status indicators",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "svelteflow": {
+      "name": "SvelteFlow",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "switch widget": {
+      "name": "switch widget",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "system architecture": {
+      "name": "system architecture",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "tabbed content": {
+      "name": "tabbed content",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "table": {
+      "name": "table",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "tabs": {
+      "name": "tabs",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "template expressions": {
+      "name": "template expressions",
+      "articles": [
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "template rendering": {
+      "name": "template rendering",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops"
+      ]
+    },
+    "terminal widget": {
+      "name": "terminal widget",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    },
+    "text": {
+      "name": "text",
+      "articles": [
+        "ripple-display-widgets-read-only-content-components"
+      ]
+    },
+    "theme": {
+      "name": "theme",
+      "articles": [
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "ticker": {
+      "name": "ticker",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "timeline": {
+      "name": "timeline",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "toast notifications": {
+      "name": "toast notifications",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "tooltip": {
+      "name": "tooltip",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "two-way binding": {
+      "name": "two-way binding",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "ui components": {
+      "name": "UI components",
+      "articles": [
+        "ripple-research-domain-widgets"
+      ]
+    },
+    "ui interactions": {
+      "name": "UI interactions",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "uinode": {
+      "name": "UINode",
+      "articles": [
+        "ripple-control-flow-conditional-rendering-and-loops",
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "uispec v1.0": {
+      "name": "UISpec v1.0",
+      "articles": [
+        "ripple-uispec-v10-json-format-reference"
+      ]
+    },
+    "universalspec v2.0": {
+      "name": "UniversalSpec v2.0",
+      "articles": [
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "user interaction": {
+      "name": "user interaction",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "variant": {
+      "name": "variant",
+      "articles": [
+        "ripple-layout-widgets-comprehensive-guide-to-flex-grid-card-tabs-container-dashb"
+      ]
+    },
+    "variant styling": {
+      "name": "variant styling",
+      "articles": [
+        "ripple-data-widgets-tables-and-charts"
+      ]
+    },
+    "widget actions": {
+      "name": "widget actions",
+      "articles": [
+        "ripple-event-system-event-handlers-actions-and-chaining"
+      ]
+    },
+    "widget composition": {
+      "name": "widget composition",
+      "articles": [
+        "ripple-uispec-v10-json-format-reference",
+        "ripple-universalspec-v20-intent-based-ui-generation"
+      ]
+    },
+    "widget props": {
+      "name": "widget props",
+      "articles": [
+        "ripple-input-widgets-button-input-select-checkbox-switch"
+      ]
+    },
+    "workflow diagram": {
+      "name": "workflow diagram",
+      "articles": [
+        "ripple-composite-widgets-terminal-workflow-and-c4-diagrams"
+      ]
+    }
+  },
+  "categories": [
+    "API integration",
+    "Conditional Logic",
+    "Configuration",
+    "Container Widgets",
+    "Content Display",
+    "Content Rendering",
+    "Control Flow",
+    "Dashboard Components",
+    "Data Binding",
+    "Data Visualization",
+    "Declarative UI",
+    "Display Widgets",
+    "Financial Data Visualization",
+    "Flexbox Layouts",
+    "Form Building",
+    "Frontend Development",
+    "Grid Layouts",
+    "Input Widgets",
+    "Intent Declarations",
+    "JSON Schema",
+    "Layout Automation",
+    "Layout Widgets",
+    "List Management",
+    "Research Tools",
+    "Ripple Framework",
+    "Specification Format",
+    "State Management",
+    "UI Components",
+    "UI Framework",
+    "UI Generation",
+    "UI components",
+    "UI patterns",
+    "Visual Effects",
+    "Widget Documentation",
+    "Widgets",
+    "architecture",
+    "event system",
+    "state management",
+    "system design",
+    "technical documentation",
+    "user interface",
+    "visualization",
+    "widget interactions",
+    "widgets",
+    "workflow management"
+  ]
+}
