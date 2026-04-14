@@ -1,69 +1,124 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { tv } from 'tailwind-variants';
   import { cn } from '$lib/utils.js';
-  import * as Card from '$lib/components/ui/card/index.js';
 
   interface Props {
     id?: string;
     class?: string;
     style?: Record<string, string>;
-    children?: Snippet;
     title?: string;
     description?: string;
-    variant?: 'default' | 'selected' | 'muted' | 'glass';
+    header?: Snippet;
+    footer?: Snippet;
+    children?: Snippet;
+    hasChildren?: boolean;
+    variant?: 'default' | 'muted' | 'outlined' | 'selected';
+    density?: 'comfortable' | 'compact';
+    interactive?: boolean;
     onclick?: (e?: unknown) => void;
   }
 
   let {
-    id, class: className, style, children, title, description,
-    variant = 'default', onclick
+    id,
+    class: className,
+    style,
+    title,
+    description,
+    header,
+    footer,
+    children,
+    hasChildren = false,
+    variant = 'default',
+    density = 'compact',
+    interactive = false,
+    onclick,
   }: Props = $props();
 
-  const variantClass = $derived({
-    'default': '',
-    'selected': 'ring-2 ring-primary',
-    'muted': 'bg-muted',
-    'glass': 'rcard--glass'
-  }[variant]);
+  const card = tv({
+    base: 'relative flex flex-col rounded-[8px] bg-card text-card-foreground transition-colors',
+    variants: {
+      variant: {
+        default: 'border border-border',
+        muted: 'border border-border bg-muted',
+        outlined: 'border border-foreground/15',
+        selected: 'border border-border ring-1 ring-inset ring-primary',
+      },
+      density: {
+        compact: 'gap-2 p-4',
+        comfortable: 'gap-3 p-5',
+      },
+      interactive: {
+        true: 'cursor-pointer hover:border-foreground/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+        false: '',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      density: 'compact',
+      interactive: false,
+    },
+  });
 
   const styleString = $derived(
-    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined,
   );
+
+  const isInteractive = $derived(interactive && typeof onclick === 'function');
+  const showHeader = $derived(Boolean(title || description || header));
+
+  function onKeydown(e: KeyboardEvent) {
+    if (!isInteractive) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onclick?.(e);
+    }
+  }
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<Card.Root {id} class={cn('rcard', variantClass, className)} style={styleString} onclick={onclick}>
-  {#if title || description}
-    <Card.Header>
-      {#if title}
-        <Card.Title>{title}</Card.Title>
+<svelte:element
+  this={isInteractive ? 'button' : 'div'}
+  type={isInteractive ? 'button' : undefined}
+  {id}
+  class={cn(card({ variant, density, interactive: isInteractive }), className)}
+  style={styleString}
+  data-variant={variant}
+  data-density={density}
+  role={isInteractive ? 'button' : undefined}
+  tabindex={isInteractive ? 0 : undefined}
+  aria-pressed={isInteractive && variant === 'selected' ? 'true' : undefined}
+  onclick={isInteractive ? onclick : undefined}
+  onkeydown={isInteractive ? onKeydown : undefined}
+>
+  {#if showHeader}
+    <div data-slot="card-header" class="flex items-start justify-between gap-4">
+      {#if title || description}
+        <div class="flex flex-col gap-[2px] min-w-0">
+          {#if title}
+            <div class="text-[14px] font-semibold leading-tight truncate">{title}</div>
+          {/if}
+          {#if description}
+            <div class="text-[13px] font-normal text-muted-foreground leading-snug">
+              {description}
+            </div>
+          {/if}
+        </div>
       {/if}
-      {#if description}
-        <Card.Description>{description}</Card.Description>
+      {#if header}
+        <div class="shrink-0">{@render header()}</div>
       {/if}
-    </Card.Header>
+    </div>
   {/if}
-  <Card.Content>
-    {@render children?.()}
-  </Card.Content>
-</Card.Root>
 
-<style>
-  :global(.rcard) {
-    flex: 1 1 0%;
-    min-width: 0;
-    overflow: hidden;
-  }
-  :global(.rcard--glass) {
-    background: color-mix(in srgb, #000 38%, transparent) !important;
-    backdrop-filter: blur(8px) saturate(150%);
-    -webkit-backdrop-filter: blur(8px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, #fff 10%, transparent),
-      inset 2px 1px 0px -1px color-mix(in srgb, #fff 30%, transparent),
-      inset -1.5px -1px 0px -1px color-mix(in srgb, #fff 20%, transparent),
-      0px 3px 10px 0px color-mix(in srgb, #000 12%, transparent);
-    ring: none !important;
-  }
-</style>
+  {#if hasChildren || children}
+    <div data-slot="card-body" class="min-w-0">
+      {@render children?.()}
+    </div>
+  {/if}
+
+  {#if footer}
+    <div data-slot="card-footer" class="mt-auto pt-2 border-t border-border/60">
+      {@render footer()}
+    </div>
+  {/if}
+</svelte:element>
