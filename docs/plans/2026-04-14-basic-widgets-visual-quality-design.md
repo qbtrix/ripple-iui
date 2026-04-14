@@ -135,7 +135,7 @@ Renders: muted label → large tabular-nums value → delta chip with ▲ / ▼ 
 - **Sparkline rendering:** inline SVG (zero deps, ~30 lines). Keep `layerchart` for real charts. *(Proposed — confirm if different.)*
 - **JSON-spec side for header/footer slots:** nested nodes with `slot="header"` lowered to Svelte snippets at the NodeRenderer layer. *(Proposed — confirm.)*
 
-### Card visual treatment — locked: A (Hairline)
+### Card visual treatment — locked: A (Hairline) — implemented 2026-04-14
 
 - **Radius:** `8px` (token: `--radius-card`)
 - **Border:** `1px` solid `--border` (hairline neutral)
@@ -161,6 +161,8 @@ Dropped `elevated` — treatment A is flat by definition; use `outlined` or stru
 ### Card density default
 
 **Compact** (16px padding). Paw OS dashboards are information-dense; comfortable adds whitespace that isn't earned. Consumers can opt into `density="comfortable"` per card.
+
+Implementation: `src/lib/widgets/layout/Card.svelte`. Tests: `src/lib/widgets/layout/Card.test.ts` (8/8 passing). Showcase: `/showcase/card`. Plan: `docs/plans/2026-04-14-card-widget-rebuild.md`.
 
 ### Still blocked on
 
