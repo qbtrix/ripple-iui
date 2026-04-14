@@ -1,5 +1,6 @@
 <script lang="ts">
   import Card from '$lib/widgets/layout/Card.svelte';
+  import Stat from '$lib/widgets/display/Stat.svelte';
 </script>
 
 <div class="showcase">
@@ -111,7 +112,7 @@
       <div class="showcase-item-demo">
         <Card title="Monthly revenue" description="Last 30 days">
           {#snippet header()}
-            <span class="text-xs font-mono tabular-nums text-muted-foreground">$12,450 ▲3.4%</span>
+            <Stat value={12450.32} format="currency" deltaPercent={3.4} direction="up-good" size="sm" align="right" />
           {/snippet}
           <div class="h-16 rounded bg-muted/50" aria-hidden="true"></div>
         </Card>
@@ -143,7 +144,7 @@
       <div class="showcase-item-demo">
         <Card title="Monthly revenue" description="Last 30 days">
           {#snippet header()}
-            <span class="text-xs font-mono tabular-nums text-muted-foreground">$12,450 ▲3.4%</span>
+            <Stat value={12450.32} format="currency" deltaPercent={-2.1} direction="up-good" size="sm" align="right" />
           {/snippet}
           <div class="h-16 rounded bg-muted/50" aria-hidden="true"></div>
           {#snippet footer()}
