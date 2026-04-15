@@ -2,7 +2,7 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, SoulStatus } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
@@ -33,6 +33,7 @@ const defaultRegistry: WidgetRegistry = {
   progress: Progress,
   avatar: Avatar,
   metric: Metric,
+  stat: Stat,
   feed: Feed,
   'soul-status': SoulStatus,
   button: Button,
@@ -92,7 +93,7 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot,
-  Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, SoulStatus,
+  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus,
   Button, Input, Select, Checkbox, Switch,
   Table, Chart, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
