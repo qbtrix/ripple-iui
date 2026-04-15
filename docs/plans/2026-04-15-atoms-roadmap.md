@@ -34,8 +34,8 @@ No new dependencies beyond what's already in `package.json` (`bits-ui`, `tailwin
 | 0 | **Card** | `2026-04-14-card-widget-rebuild.md` | ✅ done | Container for everything else |
 | 0 | **Stat** | `2026-04-15-stat-widget.md` | ✅ done | KPI pattern (replaces Metric) |
 | 0 | **JSON slots + stat registry** | `2026-04-15-json-schema-slots.md` | ✅ done | Unblocks agent-authored pockets |
-| 1 | **Button** | `2026-04-15-button-rebuild.md` | 🟡 next | Every action surface. Highest frequency. |
-| 2 | **Input** | TBD | ⏳ | Every form field |
+| 1 | **Button** | `2026-04-15-button-rebuild.md` | ✅ done | Every action surface. Highest frequency. |
+| 2 | **Input** | TBD | 🟡 next | Every form field |
 | 3 | **Badge** | TBD | ⏳ | Used by Stat, Feed, Table — visual vocabulary |
 | 4 | **Tabs** | TBD | ⏳ | Pocket navigation |
 | 5 | **Avatar** | TBD | ⏳ | Pairs with Feed |
