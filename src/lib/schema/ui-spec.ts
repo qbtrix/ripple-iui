@@ -65,6 +65,10 @@ const UINodeBase = z.object({
 	/** Inline styles */
 	style: z.record(z.string(), z.string()).optional(),
 
+	/** Named snippet slot to route this child into on its parent widget
+	 *  (e.g., 'header' or 'footer' on a Card). Ignored for parents without that slot. */
+	slot: z.string().optional(),
+
 	// Event handlers
 	on_click: EventHandlerOrArray.optional(),
 	on_change: EventHandlerOrArray.optional(),
