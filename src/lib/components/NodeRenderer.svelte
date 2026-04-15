@@ -198,6 +198,22 @@
 
 		return Array.isArray(items) ? items : [];
 	});
+
+	/**
+	 * Partition node.children by the optional slot field.
+	 * Children without `slot` go to the default bucket (the body children snippet).
+	 * Named-slot children are forwarded to the widget via matching snippet props.
+	 */
+	const childBuckets = $derived.by<Record<string, UINode[]>>(() => {
+		const buckets: Record<string, UINode[]> = { default: [] };
+		if (!node.children) return buckets;
+		for (const child of node.children) {
+			const key = child.slot ?? 'default';
+			if (!buckets[key]) buckets[key] = [];
+			buckets[key].push(child);
+		}
+		return buckets;
+	});
 </script>
 
 <!-- Don't render if show condition is false -->
@@ -233,6 +249,9 @@
 		{/each}
 	{:else if WidgetComponent}
 		<!-- Regular widget rendering -->
+		{@const defaultKids = childBuckets.default ?? []}
+		{@const headerKids = childBuckets.header ?? []}
+		{@const footerKids = childBuckets.footer ?? []}
 		{@const widgetProps = {
 			id: node.id,
 			...(resolvedClass !== undefined && { class: resolvedClass }),
@@ -245,15 +264,27 @@
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),
-			...(node.children?.length && { hasChildren: true })
+			...(defaultKids.length > 0 && { hasChildren: true })
 		}}
-		<WidgetComponent {...widgetProps}>
+		{#snippet headerSnippet()}
+			{#each headerKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet footerSnippet()}
+			{#each footerKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		<WidgetComponent
+			{...widgetProps}
+			header={headerKids.length > 0 ? headerSnippet : undefined}
+			footer={footerKids.length > 0 ? footerSnippet : undefined}
+		>
 			{#snippet children()}
-				{#if node.children}
-					{#each node.children as child, i (child.id ?? i)}
-						<Self node={child} {loopContext} />
-					{/each}
-				{/if}
+				{#each defaultKids as child, i (child.id ?? i)}
+					<Self node={child} {loopContext} />
+				{/each}
 			{/snippet}
 		</WidgetComponent>
 	{:else}
