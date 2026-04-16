@@ -1,8 +1,8 @@
-// Updated: Added C4 diagram widget (SvelteFlow + ELK.js interactive architecture diagrams); added textarea and modal widgets
+// Updated: C4 diagram (SvelteFlow + ELK.js), textarea + modal widgets (#20), Skeleton widget for streaming placeholder (#15)
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
@@ -38,6 +38,7 @@ const defaultRegistry: WidgetRegistry = {
   stat: Stat,
   feed: Feed,
   'soul-status': SoulStatus,
+  skeleton: Skeleton,
   button: Button,
   input: Input,
   select: Select,
@@ -95,9 +96,9 @@ export function resetRegistry(): void {
 }
 
 export {
-  Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot,
-  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus,
-  Button, Input, Select, Checkbox, Switch,
+  Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
+  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton,
+  Button, Input, Select, Checkbox, Switch, Textarea,
   Table, Chart, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
