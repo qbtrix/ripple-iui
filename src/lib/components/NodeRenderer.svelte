@@ -8,6 +8,7 @@
     - Event handler integration
     - Control flow support (if, each)
     - Fixed: Use self-import instead of deprecated svelte:self
+    - Wired on_focus and on_blur handlers through widget props
 -->
 <script lang="ts">
 	import { getContext } from 'svelte';
@@ -118,6 +119,8 @@
 	const onclick = createEventHandler(node.on_click);
 	const onchange = createEventHandler(node.on_change);
 	const onsubmit = createEventHandler(node.on_submit);
+	const onfocus = createEventHandler(node.on_focus);
+	const onblur = createEventHandler(node.on_blur);
 
 	/**
 	 * Get bound value if 'bind' is specified.
@@ -240,6 +243,8 @@
 			...(onclick !== undefined && { onclick }),
 			...(onchange !== undefined && { onchange }),
 			...(onsubmit !== undefined && { onsubmit }),
+			...(onfocus !== undefined && { onfocus }),
+			...(onblur !== undefined && { onblur }),
 			...(node.children?.length && { hasChildren: true })
 		}}
 		<WidgetComponent {...widgetProps}>
