@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "state": { "name": "", "email": "", "submitted": false },
+  "ui": {
+    "type": "card",
+    "props": { "title": "Contact us", "description": "We'll reply within a day." },
+    "children": [
+      {
+        "type": "flex",
+        "props": { "direction": "column", "gap": 3 },
+        "children": [
+          {
+            "type": "input",
+            "props": { "placeholder": "Your name", "label": "Name" },
+            "bind": "{state.name}"
+          },
+          {
+            "type": "input",
+            "props": { "placeholder": "you@example.com", "label": "Email" },
+            "bind": "{state.email}"
+          },
+          {
+            "type": "button",
+            "props": { "label": "Send", "variant": "default" },
+            "on_click": { "action": "set", "target": "submitted", "value": true }
+          }
+        ]
+      }
+    ]
+  }
+}
