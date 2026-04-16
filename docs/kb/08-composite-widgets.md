@@ -15,7 +15,7 @@ CLI-style output display with optional interactive command input. Use for showin
 - `maxHeight`: string (default: "300px")
 - `title`: string (shown in title bar)
 
-**Events:** `oncommand` (when user types a command in interactive mode)
+**Events:** none wired for specs. Interactive mode's command callback is a Svelte-only prop and cannot be set from JSON.
 
 **Example:**
 ```json

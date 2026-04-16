@@ -121,7 +121,7 @@ Bordered container with optional title and description. Use for grouping related
 **Props:**
 - `title`: string (optional header)
 - `description`: string (optional subtitle below title)
-- `variant`: "default" | "selected" (blue ring) | "muted" (muted background) | "glass" (glass effect)
+- `variant`: "default" | "selected" (blue ring) | "muted" (muted background)
 
 **Supports:** children, on_click
 

@@ -32,27 +32,29 @@ fi
 # Ensure the repo .knowledge-base dir exists
 mkdir -p "$REPO_KB_DIR"
 
-# Set up symlink: ~/.knowledge-base/ripple → repo/.knowledge-base/
-# This lets kb-go read/write directly into the repo.
-if [ -L "$SYSTEM_KB_DIR" ]; then
-  # Already a symlink — verify it points to our repo
-  current_target="$(readlink "$SYSTEM_KB_DIR")"
-  if [ "$current_target" != "$REPO_KB_DIR" ]; then
-    echo "Updating symlink: $SYSTEM_KB_DIR → $REPO_KB_DIR"
-    rm "$SYSTEM_KB_DIR"
+# Sets up the symlink: ~/.knowledge-base/ripple → repo/.knowledge-base/.
+# Idempotent and safe to call multiple times. kb clear destroys the symlink
+# (RemoveAll + MkdirAll), so we re-run this after the clear below.
+setup_symlink() {
+  if [ -L "$SYSTEM_KB_DIR" ]; then
+    current_target="$(readlink "$SYSTEM_KB_DIR")"
+    if [ "$current_target" != "$REPO_KB_DIR" ]; then
+      echo "Updating symlink: $SYSTEM_KB_DIR → $REPO_KB_DIR"
+      rm "$SYSTEM_KB_DIR"
+      ln -s "$REPO_KB_DIR" "$SYSTEM_KB_DIR"
+    fi
+  elif [ -d "$SYSTEM_KB_DIR" ]; then
+    # kb clear (or a first-time user) left a real directory — migrate + replace
+    cp -r "$SYSTEM_KB_DIR"/* "$REPO_KB_DIR/" 2>/dev/null || true
+    rm -rf "$SYSTEM_KB_DIR"
+    ln -s "$REPO_KB_DIR" "$SYSTEM_KB_DIR"
+  else
+    mkdir -p "$(dirname "$SYSTEM_KB_DIR")"
     ln -s "$REPO_KB_DIR" "$SYSTEM_KB_DIR"
   fi
-elif [ -d "$SYSTEM_KB_DIR" ]; then
-  # Real directory exists — move contents to repo, replace with symlink
-  echo "Moving existing kb data into repo..."
-  cp -r "$SYSTEM_KB_DIR"/* "$REPO_KB_DIR/" 2>/dev/null || true
-  rm -rf "$SYSTEM_KB_DIR"
-  ln -s "$REPO_KB_DIR" "$SYSTEM_KB_DIR"
-else
-  # Nothing exists — create symlink
-  mkdir -p "$(dirname "$SYSTEM_KB_DIR")"
-  ln -s "$REPO_KB_DIR" "$SYSTEM_KB_DIR"
-fi
+}
+
+setup_symlink
 
 echo "Using kb binary: $KB"
 echo "Scope: $SCOPE"
@@ -60,9 +62,12 @@ echo "Docs dir: $DOCS_DIR"
 echo "KB data: $REPO_KB_DIR (symlinked from $SYSTEM_KB_DIR)"
 echo ""
 
-# Clear existing articles for clean rebuild
+# Clear existing articles for a clean rebuild. This RemoveAll's the symlink
+# target and creates a real directory in its place, so we re-establish the
+# symlink immediately after.
 echo "Clearing existing $SCOPE scope..."
 "$KB" clear --scope "$SCOPE" 2>/dev/null || true
+setup_symlink
 echo ""
 
 # Ingest each markdown file

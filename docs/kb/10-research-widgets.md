@@ -13,7 +13,7 @@ Displays a research source with title, origin, and optional link. Use for search
 - `favicon`: string (icon URL)
 - `url`: string (link to source)
 
-**Events:** `onclick`
+**Events:** `on_click`
 
 ## citation
 
@@ -26,7 +26,7 @@ Inline citation reference with numbered badge. Use for footnotes, references wit
 - `favicon`: string (icon URL)
 - `url`: string (link)
 
-**Events:** `onclick`
+**Events:** `on_click`
 
 ## sources-bar
 
@@ -39,7 +39,7 @@ Horizontal bar showing source references with copy/share actions. Use at top or 
 - `share`: boolean (default: true) — show share button
 - `copy`: boolean (default: true) — show copy button
 
-**Events:** `onclick`
+**Events:** `on_click`
 
 ## discover-card
 
@@ -52,7 +52,7 @@ Content discovery card with image, title, description. Use for recommendations, 
 - `source`: string (origin name)
 - `url`: string (link)
 
-**Events:** `onclick`
+**Events:** `on_click`
 
 ## follow-up
 
@@ -63,7 +63,7 @@ Text input for follow-up questions. Use at the end of research results or chat r
 - `submitLabel`: string (default: "Send")
 - `event`: string (default: "follow-up") — event name emitted on submit
 
-**Events:** `onsubmit` (fires with the typed text)
+**Events:** `on_submit` (fires with the typed text)
 
 **Example:**
 ```json
@@ -214,7 +214,7 @@ News article card with headline, source, time, and sentiment. Use for news feeds
 - `image`: string (URL)
 - `url`: string (article link)
 
-**Events:** `onclick`
+**Events:** `on_click`
 
 **Example:**
 ```json
