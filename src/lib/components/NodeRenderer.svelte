@@ -9,6 +9,7 @@
     - Control flow support (if, each)
     - Fixed: Use self-import instead of deprecated svelte:self
     - Wired on_focus and on_blur handlers through widget props
+    - Warn on unknown slot names (non-blocking, aids spec debugging)
 -->
 <script lang="ts">
 	import { getContext } from 'svelte';
@@ -209,6 +210,9 @@
 		if (!node.children) return buckets;
 		for (const child of node.children) {
 			const key = child.slot ?? 'default';
+			if (key !== 'default' && key !== 'header' && key !== 'footer') {
+				console.warn(`[Ripple] Unknown slot name: ${key}`);
+			}
 			if (!buckets[key]) buckets[key] = [];
 			buckets[key].push(child);
 		}

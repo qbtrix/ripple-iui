@@ -13,7 +13,7 @@
     footer?: Snippet;
     children?: Snippet;
     hasChildren?: boolean;
-    variant?: 'default' | 'muted' | 'outlined' | 'selected';
+    variant?: 'default' | 'muted' | 'outlined' | 'selected' | 'glass';
     density?: 'comfortable' | 'compact';
     interactive?: boolean;
     onclick?: (e?: unknown) => void;
@@ -43,6 +43,7 @@
         muted: 'border border-border bg-muted',
         outlined: 'border border-foreground/15',
         selected: 'border border-border ring-1 ring-inset ring-primary',
+        glass: 'border border-white/10 bg-black/40 backdrop-blur-md backdrop-saturate-150',
       },
       density: {
         compact: 'gap-2 p-4',
