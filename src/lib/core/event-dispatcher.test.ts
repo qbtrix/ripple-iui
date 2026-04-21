@@ -313,20 +313,19 @@ describe('EventDispatcher — api async chaining', () => {
 		expect(state.get('errorShown')).toBe(true);
 	});
 
-	it('legacy host returning void is treated as silent success (no chains run)', async () => {
+	it('legacy host returning void: on_success fires, response_key is skipped (no data)', async () => {
 		const onEvent = vi.fn<OnEventCallback>(() => undefined);
 		const { state, dispatcher, ctx } = setup({}, onEvent);
 		await dispatcher.dispatch(
 			{
 				action: 'api',
 				url: '/api/items',
-				response_key: 'list', // no data → skipped
+				response_key: 'list',
 				on_success: [{ action: 'set', target: 'loaded', value: true }]
 			},
 			ctx()
 		);
 		expect(state.get('list')).toBeUndefined();
-		// on_success still fires when ok is true (no data context), which matches spec
 		expect(state.get('loaded')).toBe(true);
 	});
 

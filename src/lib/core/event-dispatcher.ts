@@ -54,8 +54,9 @@ export class FlowAbortError extends Error {
 /**
  * Host callback invoked for the 6 externally-handled action types. Legacy
  * callers returning `void` continue to work unchanged — the dispatcher
- * treats that as a silent success. Hosts that want to chain `on_success` /
- * `on_error` return a `RippleEventResult`.
+ * treats that as a silent success: no error branch fires, no `response_key`
+ * is populated (no data), but `on_success` continuations still run. Hosts
+ * that want data-aware chaining return a `RippleEventResult`.
  */
 export type OnEventCallback = (
 	event: RippleEvent
