@@ -73,7 +73,10 @@
   setContext('ui-data', dataStore);
   setContext('ui-widget-resolver', getWidget);
 
-  let renderMode = $derived.by((): 'dashboard' | 'node' | 'empty' | 'skeleton' => {
+  let renderMode = $derived.by((): 'dashboard' | 'node' | 'empty' | 'skeleton' | 'stream-error' => {
+    if (streaming && streaming.done && streaming.error && streaming.current == null) {
+      return 'stream-error';
+    }
     if (streaming && streaming.current == null && !streaming.done) return 'skeleton';
     if (spec.intent === 'dashboard') return 'dashboard';
     if (spec.ui) return 'node';
@@ -92,6 +95,8 @@
 >
   {#if renderMode === 'skeleton'}
     <Skeleton variant={skeleton} />
+  {:else if renderMode === 'stream-error'}
+    <!-- streamingError banner below carries the message; nothing else to render -->
   {:else if renderMode === 'dashboard'}
     <DashboardRenderer {spec} {onSpecChanged} />
   {:else if renderMode === 'node' && spec.ui}

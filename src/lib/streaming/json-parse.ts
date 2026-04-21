@@ -59,14 +59,42 @@ function stripTruncatedEnums(value: unknown, buffer: string): unknown {
 }
 
 /**
- * A string value is "closed" if the buffer contains the value wrapped in
- * matching quotes somewhere. If the same raw text appears both truncated
- * and complete in the buffer (rare), we err on the side of keeping it —
- * finding any closed occurrence is enough.
+ * A string value is "closed" if the buffer contains the escaped value
+ * wrapped in matching quotes AND followed by a valid JSON structural
+ * character (comma, close-brace, close-bracket, whitespace, or EOF).
+ *
+ * The structural-char check matters when a parent carries the same
+ * string value that's still being typed out in a nested child. Example
+ * buffer:
+ *   `{"type":"flex","children":[{"type":"flex`
+ *
+ * A naive `includes('"flex"')` returns true (the parent closed it), so
+ * the still-open child `type` would be kept instead of stripped. Verifying
+ * the closing quote is followed by a JSON separator fixes the false
+ * positive.
  */
 function isStringClosed(value: string, buffer: string): boolean {
   const escaped = escapeForJsonString(value);
-  return buffer.includes(`"${escaped}"`);
+  const pattern = `"${escaped}"`;
+  let from = 0;
+  while (true) {
+    const idx = buffer.indexOf(pattern, from);
+    if (idx === -1) return false;
+    const after = buffer[idx + pattern.length];
+    if (
+      after === undefined ||
+      after === ',' ||
+      after === '}' ||
+      after === ']' ||
+      after === ' ' ||
+      after === '\n' ||
+      after === '\r' ||
+      after === '\t'
+    ) {
+      return true;
+    }
+    from = idx + 1;
+  }
 }
 
 function escapeForJsonString(value: string): string {
