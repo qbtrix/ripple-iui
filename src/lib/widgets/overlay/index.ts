@@ -1,0 +1,7 @@
+/**
+ * @file overlay/index.ts
+ * @description Barrel export for overlay widgets (confirm dialogs, etc.).
+ * @changes
+ *   - Initial creation alongside ConfirmDialog for Phase B flow-actions
+ */
+export { default as ConfirmDialog } from './ConfirmDialog.svelte';
