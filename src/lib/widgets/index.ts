@@ -1,4 +1,4 @@
-// Updated: C4 diagram (SvelteFlow + ELK.js), textarea + modal widgets (#20), Skeleton widget for streaming placeholder (#15)
+// Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
@@ -7,6 +7,7 @@ import { Button, Input, Select, Checkbox, Switch, Textarea } from './input/index
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
+import { ConfirmDialog } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -15,9 +16,10 @@ import {
 import Workflow from './Workflow.svelte';
 import { C4Diagram } from './c4/index.js';
 
-export type WidgetRegistry = Record<string, Component<any>>;
+/** Map of widget type name → Svelte component. Internal registry format. */
+export type WidgetMap = Record<string, Component<any>>;
 
-const defaultRegistry: WidgetRegistry = {
+const defaultRegistry: WidgetMap = {
   container: Container,
   flex: Flex,
   grid: Grid,
@@ -65,11 +67,12 @@ const defaultRegistry: WidgetRegistry = {
   'range-bar': RangeBar,
   workflow: Workflow,
   c4: C4Diagram,
+  'confirm-dialog': ConfirmDialog,
   // Aliases
   label: Text,
 };
 
-let registry: WidgetRegistry = { ...defaultRegistry };
+let registry: WidgetMap = { ...defaultRegistry };
 
 export function getWidget(type: string): Component<any> | undefined {
   return registry[type];
