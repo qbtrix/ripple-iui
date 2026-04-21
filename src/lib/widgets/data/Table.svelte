@@ -16,7 +16,7 @@
   interface Props {
     data?: any[];
     rows?: any[];
-    columns?: TableColumn[];
+    columns?: Array<TableColumn | string>;
     /** Visual variant */
     variant?: 'default' | 'compact' | 'striped' | 'minimal';
     /** Column key for status dot color (e.g. "_status") */
@@ -37,10 +37,13 @@
   // Normalize columns: accept {key,label}, {accessorKey,header}, or auto-detect from data
   const columns = $derived.by(() => {
     if (rawColumns.length > 0) {
-      return rawColumns.map(c => ({
-        accessorKey: c.accessorKey ?? c.key ?? '',
-        header: c.header ?? c.label ?? '',
-      }));
+      return rawColumns.map(c => {
+        if (typeof c === 'string') return { accessorKey: c, header: c };
+        return {
+          accessorKey: c.accessorKey ?? c.key ?? c.header ?? c.label ?? '',
+          header: c.header ?? c.label ?? c.accessorKey ?? c.key ?? '',
+        };
+      });
     }
     // Auto-detect columns from first row's keys
     const first = tableData[0];
