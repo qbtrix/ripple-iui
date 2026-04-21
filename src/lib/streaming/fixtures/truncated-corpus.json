@@ -1,0 +1,53 @@
+{
+  "description": "Known-bad chunk boundaries. Each entry is a raw buffer snapshot mid-stream. The parser must not surface invalid enum keys (type/intent/version/action/variant) from any of these.",
+  "cases": [
+    {
+      "name": "mid-type-string",
+      "buffer": "{\"version\":\"1.0\",\"ui\":{\"type\":\"fl"
+    },
+    {
+      "name": "mid-intent-string",
+      "buffer": "{\"version\":\"1.0\",\"intent\":\"dashbo"
+    },
+    {
+      "name": "mid-action-string",
+      "buffer": "{\"on_click\":{\"action\":\"se"
+    },
+    {
+      "name": "mid-variant-string",
+      "buffer": "{\"type\":\"badge\",\"props\":{\"variant\":\"succ"
+    },
+    {
+      "name": "mid-key",
+      "buffer": "{\"version\":\"1.0\",\"u"
+    },
+    {
+      "name": "mid-number",
+      "buffer": "{\"props\":{\"count\":12"
+    },
+    {
+      "name": "mid-unicode-char",
+      "buffer": "{\"props\":{\"text\":\"caf\\u00e"
+    },
+    {
+      "name": "mid-boolean",
+      "buffer": "{\"props\":{\"active\":tr"
+    },
+    {
+      "name": "mid-null",
+      "buffer": "{\"props\":{\"value\":nu"
+    },
+    {
+      "name": "unclosed-array",
+      "buffer": "{\"ui\":{\"type\":\"flex\",\"children\":[{\"type\":\"text\""
+    },
+    {
+      "name": "legitimate-type-followed-by-truncation",
+      "buffer": "{\"ui\":{\"type\":\"flex\",\"children\":[{\"type\":\"fl"
+    },
+    {
+      "name": "partial-expression-in-prop",
+      "buffer": "{\"ui\":{\"type\":\"text\",\"props\":{\"text\":\"{state.count"
+    }
+  ]
+}

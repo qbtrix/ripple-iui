@@ -1,0 +1,75 @@
+{
+  "version": "1.0",
+  "state": {
+    "showDetails": true,
+    "items": [
+      { "id": "a", "label": "First", "active": true },
+      { "id": "b", "label": "Second", "active": false },
+      { "id": "c", "label": "Third", "active": true }
+    ]
+  },
+  "ui": {
+    "type": "container",
+    "children": [
+      {
+        "type": "tabs",
+        "props": { "tabs": ["Overview", "Details", "Activity"] },
+        "children": [
+          {
+            "type": "flex",
+            "props": { "direction": "column", "gap": 2 },
+            "children": [
+              {
+                "type": "heading",
+                "props": { "text": "Overview", "level": 2 }
+              },
+              {
+                "type": "each",
+                "props": { "items": "{state.items}", "item_as": "entry" },
+                "children": [
+                  {
+                    "type": "card",
+                    "props": { "title": "{entry.label}" },
+                    "children": [
+                      {
+                        "type": "if",
+                        "props": { "condition": "{entry.active}" },
+                        "children": [
+                          {
+                            "type": "badge",
+                            "props": { "text": "active", "variant": "success" }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "props": { "text": "ID: {entry.id}" }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "if",
+            "props": { "condition": "{state.showDetails}" },
+            "children": [
+              {
+                "type": "card",
+                "props": { "title": "Details" },
+                "children": [
+                  { "type": "text", "props": { "text": "Deep content" } }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "props": { "text": "Activity feed will appear here." }
+          }
+        ]
+      }
+    ]
+  }
+}

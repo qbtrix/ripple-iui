@@ -1,0 +1,55 @@
+{
+  "version": "2.0",
+  "intent": "custom",
+  "ui": {
+    "type": "flex",
+    "props": { "direction": "column", "gap": 4 },
+    "children": [
+      {
+        "type": "heading",
+        "props": { "text": "How does partial-json handle malformed input?", "level": 3 }
+      },
+      {
+        "type": "text",
+        "props": {
+          "text": "partial-json walks the incomplete JSON string and returns the deepest valid subtree it can reconstruct. When a string value is cut mid-token, the library surfaces what it has so far. When an object has an open brace with no content yet, it returns an empty object. The behavior is tunable through Allow flags that let callers decide whether truncated strings, numbers, arrays, and objects should be surfaced."
+        }
+      },
+      {
+        "type": "sources-bar",
+        "props": {
+          "sources": [
+            { "name": "GitHub – promplate/partial-json", "url": "https://github.com/promplate/partial-json-parser-js" },
+            { "name": "npm – partial-json", "url": "https://www.npmjs.com/package/partial-json" }
+          ]
+        }
+      },
+      {
+        "type": "flex",
+        "props": { "direction": "column", "gap": 2 },
+        "children": [
+          {
+            "type": "source-card",
+            "props": {
+              "title": "Allow flags reference",
+              "source": "partial-json docs",
+              "url": "https://github.com/promplate/partial-json-parser-js#flags"
+            }
+          },
+          {
+            "type": "source-card",
+            "props": {
+              "title": "Streaming JSON best practices",
+              "source": "Engineering blog",
+              "url": "https://example.com/streaming-json"
+            }
+          }
+        ]
+      },
+      {
+        "type": "follow-up",
+        "props": { "placeholder": "Ask a follow-up...", "submitLabel": "Ask" }
+      }
+    ]
+  }
+}
