@@ -36,6 +36,8 @@ The root component that:
    - `ui-events` — `EventDispatcher` instance
    - `ui-data` — Reactive data store for fetched data
    - `ui-widget-resolver` — `getWidget()` function from the registry
+   - `ui-widget-registry` — per-instance `WidgetRegistry` that backs the
+     `invoke` flow action (see [flow-actions.md](./flow-actions.md))
 
 ### 3. NodeRenderer (`src/lib/components/NodeRenderer.svelte`)
 
