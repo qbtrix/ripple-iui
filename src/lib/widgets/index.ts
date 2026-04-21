@@ -1,9 +1,9 @@
-// Updated: Added C4 diagram widget (SvelteFlow + ELK.js interactive architecture diagrams)
+// Updated: Added C4 diagram widget (SvelteFlow + ELK.js interactive architecture diagrams); added textarea and modal widgets
 import type { Component } from 'svelte';
 
-import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot } from './layout/index.js';
+import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Feed, SoulStatus } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch } from './input/index.js';
+import { Button, Input, Select, Checkbox, Switch, Textarea } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
@@ -26,6 +26,8 @@ const defaultRegistry: WidgetRegistry = {
   dashboard: Dashboard,
   'dashboard-slot': DashboardSlot,
   'glass-card': GlassCard,
+  modal: Modal,
+  dialog: Modal,
   text: Text,
   heading: Heading,
   image: Image,
@@ -40,6 +42,7 @@ const defaultRegistry: WidgetRegistry = {
   select: Select,
   checkbox: Checkbox,
   switch: Switch,
+  textarea: Textarea,
   table: Table,
   chart: Chart,
   terminal: Terminal,
