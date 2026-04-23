@@ -10,7 +10,8 @@
 
 	interface DataPoint {
 		label: string;
-		value: number;
+		value?: number;
+		series?: Record<string, number>;
 		open?: number;
 		close?: number;
 		high?: number;
@@ -124,8 +125,20 @@
 	function buildOption() {
 		const tc = themeColors();
 		const labels = data.map(d => d.label);
-		const values = data.map(d => d.value);
+		const values = data.map(d => d.value ?? 0);
 		const itemColors = data.map((_, i) => getColor(i));
+
+		// Detect multi-series: any point carries a `series` map → one ECharts series per key.
+		const seriesKeys: string[] = (() => {
+			const seen = new Set<string>();
+			for (const d of data) {
+				if (d.series && typeof d.series === 'object') {
+					for (const k of Object.keys(d.series)) seen.add(k);
+				}
+			}
+			return [...seen];
+		})();
+		const isMulti = seriesKeys.length > 0;
 
 		const base: any = {
 			animation: true,
@@ -166,36 +179,89 @@
 		let option: any;
 
 		if (type === 'bar') {
-			option = {
-				...base,
-				xAxis: xAxisBase,
-				yAxis: yAxisBase,
-				series: [{
-					type: 'bar', data: values,
-					itemStyle: {
-						borderRadius: [3, 3, 0, 0],
-						color: (p: any) => itemColors[p.dataIndex],
-					},
+			if (isMulti) {
+				const series = seriesKeys.map((key, i) => ({
+					name: key,
+					type: 'bar',
+					data: data.map(d => d.series?.[key] ?? 0),
+					itemStyle: { borderRadius: [3, 3, 0, 0], color: getColor(i) },
 					barMaxWidth: 32,
-				}],
-			};
+				}));
+				option = {
+					...base,
+					grid: { ...base.grid, top: title ? 48 : 28 },
+					legend: {
+						data: seriesKeys, top: title ? 22 : 2, left: 0,
+						textStyle: { color: tc.fgSoft, fontSize: 11 },
+						icon: 'roundRect', itemWidth: 10, itemHeight: 10,
+					},
+					xAxis: xAxisBase,
+					yAxis: yAxisBase,
+					series,
+				};
+			} else {
+				option = {
+					...base,
+					xAxis: xAxisBase,
+					yAxis: yAxisBase,
+					series: [{
+						type: 'bar', data: values,
+						itemStyle: {
+							borderRadius: [3, 3, 0, 0],
+							color: (p: any) => itemColors[p.dataIndex],
+						},
+						barMaxWidth: 32,
+					}],
+				};
+			}
 		} else if (type === 'line' || type === 'area') {
-			option = {
-				...base,
-				xAxis: { ...xAxisBase, boundaryGap: false },
-				yAxis: yAxisBase,
-				series: [{
-					type: 'line', data: values,
-					smooth: true,
-					lineStyle: { color: itemColors[0], width: 2 },
-					itemStyle: { color: itemColors[0] },
-					areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-						{ offset: 0, color: itemColors[0] + '40' },
-						{ offset: 1, color: itemColors[0] + '05' },
-					]}} : undefined,
-					symbol: 'circle', symbolSize: 4,
-				}],
-			};
+			if (isMulti) {
+				const series = seriesKeys.map((key, i) => {
+					const color = getColor(i);
+					return {
+						name: key,
+						type: 'line',
+						data: data.map(d => d.series?.[key] ?? 0),
+						smooth: true,
+						lineStyle: { color, width: 2 },
+						itemStyle: { color },
+						areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+							{ offset: 0, color: color + '40' },
+							{ offset: 1, color: color + '05' },
+						]}} : undefined,
+						symbol: 'circle', symbolSize: 4,
+					};
+				});
+				option = {
+					...base,
+					grid: { ...base.grid, top: title ? 48 : 28 },
+					legend: {
+						data: seriesKeys, top: title ? 22 : 2, left: 0,
+						textStyle: { color: tc.fgSoft, fontSize: 11 },
+						icon: 'roundRect', itemWidth: 10, itemHeight: 10,
+					},
+					xAxis: { ...xAxisBase, boundaryGap: false },
+					yAxis: yAxisBase,
+					series,
+				};
+			} else {
+				option = {
+					...base,
+					xAxis: { ...xAxisBase, boundaryGap: false },
+					yAxis: yAxisBase,
+					series: [{
+						type: 'line', data: values,
+						smooth: true,
+						lineStyle: { color: itemColors[0], width: 2 },
+						itemStyle: { color: itemColors[0] },
+						areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+							{ offset: 0, color: itemColors[0] + '40' },
+							{ offset: 1, color: itemColors[0] + '05' },
+						]}} : undefined,
+						symbol: 'circle', symbolSize: 4,
+					}],
+				};
+			}
 		} else if (type === 'pie' || type === 'donut') {
 			option = {
 				...base,
