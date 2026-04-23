@@ -18,6 +18,11 @@
     "./schema": {
       "types": "./dist/schema/index.d.ts",
       "default": "./dist/schema/index.js"
+    },
+    "./streaming": {
+      "types": "./dist/streaming/index.d.ts",
+      "svelte": "./dist/streaming/index.js",
+      "default": "./dist/streaming/index.js"
     }
   },
   "files": [
@@ -46,6 +51,7 @@
     "elkjs": "^0.11.1",
     "layerchart": "2.0.0-next.43",
     "muuri": "^0.9.5",
+    "partial-json": "0.1.7",
     "zod": "^4.0.0"
   },
   "devDependencies": {

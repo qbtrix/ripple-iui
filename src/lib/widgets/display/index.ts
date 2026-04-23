@@ -8,3 +8,4 @@ export { default as Metric } from './Metric.svelte';
 export { default as Feed } from './Feed.svelte';
 export { default as SoulStatus } from './SoulStatus.svelte';
 export { default as Stat } from './Stat.svelte';
+export { default as Skeleton } from './Skeleton.svelte';

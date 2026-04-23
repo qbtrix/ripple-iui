@@ -1,5 +1,7 @@
 // vitest.config.ts — Vitest configuration for Ripple component library.
 // Created: 2026-03-27 — Initial test setup with Svelte 5 rune support.
+// Updated: 2026-04-16 — Added $lib alias so tests that reach into the widget
+// registry (which fans out to shadcn components using $lib/utils.js) resolve.
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
@@ -14,7 +16,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      $lib: resolve('./src/lib'),
+      $lib: resolve(__dirname, 'src/lib'),
     },
     conditions: ['browser'],
   },

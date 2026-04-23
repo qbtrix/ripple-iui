@@ -1,7 +1,11 @@
 <script lang="ts">
+  // Updated: 2026-04-21 — opts into the WidgetRegistry when `id` is set so
+  // the `invoke` flow action can call `focus` remotely.
   import type { Snippet } from 'svelte';
+  import { getContext } from 'svelte';
   import { tv } from 'tailwind-variants';
   import { cn } from '$lib/utils.js';
+  import type { WidgetRegistry } from '$lib/core/widget-registry.js';
 
   interface Props {
     id?: string;
@@ -94,6 +98,19 @@
     const v = (e.target as HTMLInputElement).value;
     onchange?.(v);
   }
+
+  // Bound on the real <input> below so the registry can focus it remotely.
+  // The variable is a plain mutable ref — `bind:this` writes into it
+  // synchronously on mount, so we don't need $state reactivity here.
+  let inputEl: HTMLInputElement | null = null;
+
+  const widgetRegistry = getContext<WidgetRegistry | undefined>('ui-widget-registry');
+  $effect(() => {
+    if (!id || !widgetRegistry) return;
+    return widgetRegistry.register(id, 'focus', () => {
+      inputEl?.focus();
+    });
+  });
 </script>
 
 <div
@@ -119,6 +136,7 @@
       </span>
     {/if}
     <input
+      bind:this={inputEl}
       id={resolvedId}
       {type}
       {name}

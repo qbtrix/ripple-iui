@@ -1,0 +1,73 @@
+{
+  "version": "2.0",
+  "intent": "dashboard",
+  "title": "Q1 Sales Overview",
+  "ui": {
+    "type": "grid",
+    "props": { "columns": 3, "gap": 3 },
+    "children": [
+      {
+        "type": "metric",
+        "props": { "label": "Revenue", "value": "$124,320", "trend": "+18%" }
+      },
+      {
+        "type": "metric",
+        "props": { "label": "Orders", "value": "2,104", "trend": "+12%" }
+      },
+      {
+        "type": "metric",
+        "props": { "label": "Avg. order", "value": "$59.12", "trend": "+4%" }
+      },
+      {
+        "type": "card",
+        "props": { "title": "Revenue over time" },
+        "children": [
+          {
+            "type": "chart",
+            "props": {
+              "type": "line",
+              "data": [
+                { "x": "Jan", "y": 38000 },
+                { "x": "Feb", "y": 42500 },
+                { "x": "Mar", "y": 43820 }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "props": { "title": "Top products" },
+        "children": [
+          {
+            "type": "table",
+            "props": {
+              "columns": ["Product", "Units", "Revenue"],
+              "rows": [
+                ["Widget Pro", 412, "$24,720"],
+                ["Bundle Plus", 298, "$18,725"],
+                ["Starter Kit", 187, "$9,350"]
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "props": { "title": "Recent activity" },
+        "children": [
+          {
+            "type": "feed",
+            "props": {
+              "items": [
+                { "title": "New order #1204", "timestamp": "2m ago" },
+                { "title": "Refund processed", "timestamp": "14m ago" },
+                { "title": "Inventory low: Widget Pro", "timestamp": "1h ago" }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

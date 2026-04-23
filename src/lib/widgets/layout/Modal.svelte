@@ -1,11 +1,15 @@
 <!-- Created: 2026-04-16 — Modal widget wrapping shadcn Dialog primitive.
+     Updated: 2026-04-21 — opts into the WidgetRegistry when `id` is set so
+     the `invoke` flow action can call `open` / `close` remotely.
      Opens/closes via state-bound `value` prop (maps to dialog `open`).
      Props: title, description, size ("sm"|"md"|"lg"). Supports children.
      Dismissal (overlay click / Esc) emits onchange(false) to sync state. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
+  import type { WidgetRegistry } from '$lib/core/widget-registry.js';
 
   interface Props {
     id?: string;
@@ -34,6 +38,24 @@
 
   $effect(() => {
     isOpen = value ?? false;
+  });
+
+  // Opt in to the widget registry so flow `invoke` can open/close this modal.
+  const widgetRegistry = getContext<WidgetRegistry | undefined>('ui-widget-registry');
+  $effect(() => {
+    if (!id || !widgetRegistry) return;
+    const offOpen = widgetRegistry.register(id, 'open', () => {
+      isOpen = true;
+      onchange?.(true);
+    });
+    const offClose = widgetRegistry.register(id, 'close', () => {
+      isOpen = false;
+      onchange?.(false);
+    });
+    return () => {
+      offOpen();
+      offClose();
+    };
   });
 
   const sizeClass = $derived({

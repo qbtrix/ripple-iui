@@ -1,12 +1,13 @@
-// Updated: Added C4 diagram widget (SvelteFlow + ELK.js interactive architecture diagrams); added textarea and modal widgets
+// Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
+import { ConfirmDialog } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -15,9 +16,10 @@ import {
 import Workflow from './Workflow.svelte';
 import { C4Diagram } from './c4/index.js';
 
-export type WidgetRegistry = Record<string, Component<any>>;
+/** Map of widget type name → Svelte component. Internal registry format. */
+export type WidgetMap = Record<string, Component<any>>;
 
-const defaultRegistry: WidgetRegistry = {
+const defaultRegistry: WidgetMap = {
   container: Container,
   flex: Flex,
   grid: Grid,
@@ -38,6 +40,7 @@ const defaultRegistry: WidgetRegistry = {
   stat: Stat,
   feed: Feed,
   'soul-status': SoulStatus,
+  skeleton: Skeleton,
   button: Button,
   input: Input,
   select: Select,
@@ -64,11 +67,12 @@ const defaultRegistry: WidgetRegistry = {
   'range-bar': RangeBar,
   workflow: Workflow,
   c4: C4Diagram,
+  'confirm-dialog': ConfirmDialog,
   // Aliases
   label: Text,
 };
 
-let registry: WidgetRegistry = { ...defaultRegistry };
+let registry: WidgetMap = { ...defaultRegistry };
 
 export function getWidget(type: string): Component<any> | undefined {
   return registry[type];
@@ -96,7 +100,7 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
-  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus,
+  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton,
   Button, Input, Select, Checkbox, Switch, Textarea,
   Table, Chart, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,

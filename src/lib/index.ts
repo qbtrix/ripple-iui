@@ -3,7 +3,16 @@ export { default as Ripple } from './Ripple.svelte';
 
 // Core engine
 export { StateManager, createStateManager } from './core/state-manager.svelte.js';
-export { EventDispatcher, createEventDispatcher } from './core/event-dispatcher.js';
+export {
+  EventDispatcher,
+  createEventDispatcher,
+  FlowAbortError,
+  MAX_FLOW_DEPTH,
+  CONFIRM_STATE_KEY,
+  FLOW_ERROR_STATE_KEY,
+  type PendingConfirm
+} from './core/event-dispatcher.js';
+export { WidgetRegistry, createWidgetRegistry, type WidgetMethod } from './core/widget-registry.js';
 export {
   evaluateExpression,
   resolveString,
@@ -35,5 +44,5 @@ export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 export { reorderable, type ReorderableOptions } from './actions/reorderable.js';
 
 // Types
-export type { RippleEvent } from './types.js';
+export type { RippleEvent, RippleEventResult } from './types.js';
 export type { OnEventCallback } from './core/event-dispatcher.js';
