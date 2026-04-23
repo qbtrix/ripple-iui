@@ -44,7 +44,7 @@ The recursive renderer that processes each `UINode`:
 1. **Visibility**: Evaluates the `show` expression to determine if the node should render
 2. **Props resolution**: Resolves all expression bindings in `props` via `resolveValue()`
 3. **Widget lookup**: Gets the Svelte component from the widget registry
-4. **Event binding**: Creates handler functions for `on_click`, `on_change`, `on_submit`
+4. **Event binding**: Creates handler functions for `on_click`, `on_change`, `on_submit`, `on_focus`, `on_blur`
 5. **State binding**: Resolves `bind` to get the current value from state
 6. **Control flow**: Special handling for `if` (conditional) and `each` (loop) node types
 7. **Recursion**: Renders children via self-import (`import Self from './NodeRenderer.svelte'`)
