@@ -84,15 +84,15 @@
   .rab-consensus {
     font-size: 14px;
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
   .rab-target {
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-variant-numeric: tabular-nums;
   }
   .rab-target strong {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-weight: 600;
   }
   .rab-bar {
@@ -127,11 +127,11 @@
   .rab-count {
     font-size: 12px;
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-variant-numeric: tabular-nums;
   }
   .rab-ltext {
     font-size: 11px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
   }
 </style>

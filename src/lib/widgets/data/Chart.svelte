@@ -477,7 +477,7 @@
 	});
 </script>
 
-<div class={cn('w-full', className)} style="color: hsl(var(--foreground))">
+<div class={cn('w-full', className)} style="color: var(--foreground)">
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
 	{:else}

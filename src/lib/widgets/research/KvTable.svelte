@@ -43,7 +43,7 @@
   .rkv {
     display: flex;
     gap: 0;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
   }
@@ -51,7 +51,7 @@
     gap: 0;
   }
   .rkv-2col .rkv-col:first-child {
-    border-right: 1px solid hsl(var(--border));
+    border-right: 1px solid var(--border);
   }
   .rkv-col {
     flex: 1;
@@ -65,20 +65,20 @@
     gap: 12px;
   }
   .rkv-striped {
-    background: hsl(var(--muted) / 0.2);
+    background: color-mix(in oklab, var(--muted) 20%, transparent);
   }
   .rkv-row:not(:last-child) {
-    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
   }
   .rkv-key {
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     flex-shrink: 0;
   }
   .rkv-val {
     font-size: 12px;
     font-weight: 600;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     text-align: right;
     font-variant-numeric: tabular-nums;
     min-width: 0;

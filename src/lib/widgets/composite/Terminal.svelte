@@ -75,8 +75,8 @@
 <style>
   .rterm {
     border-radius: 6px;
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--card));
+    border: 1px solid var(--border);
+    background: var(--card);
     overflow: hidden;
     font-family: "JetBrains Mono Variable", "SF Mono", ui-monospace, monospace;
     font-size: 11px;
@@ -87,8 +87,8 @@
     align-items: center;
     gap: 6px;
     padding: 5px 8px;
-    background: hsl(var(--muted));
-    border-bottom: 1px solid hsl(var(--border));
+    background: var(--muted);
+    border-bottom: 1px solid var(--border);
   }
   .rterm-dots {
     display: flex;
@@ -98,11 +98,11 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: hsl(var(--muted-foreground) / 0.25);
+    background: color-mix(in oklab, var(--muted-foreground) 25%, transparent);
   }
   .rterm-title {
     font-size: 10px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-weight: 500;
   }
 
@@ -120,19 +120,19 @@
     word-break: break-all;
     padding: 1px 0;
   }
-  .rterm-line--stdout { color: hsl(var(--foreground) / 0.85); }
-  .rterm-line--stderr { color: hsl(var(--destructive)); }
-  .rterm-line--info { color: hsl(var(--muted-foreground)); }
-  .rterm-line--command { color: hsl(var(--primary)); font-weight: 500; }
+  .rterm-line--stdout { color: color-mix(in oklab, var(--foreground) 85%, transparent); }
+  .rterm-line--stderr { color: var(--destructive); }
+  .rterm-line--info { color: var(--muted-foreground); }
+  .rterm-line--command { color: var(--primary); font-weight: 500; }
 
   .rterm-ts {
-    color: hsl(var(--muted-foreground) / 0.6);
+    color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
     flex-shrink: 0;
     font-size: 9px;
     min-width: 32px;
   }
   .rterm-prompt {
-    color: hsl(var(--primary));
+    color: var(--primary);
     flex-shrink: 0;
     user-select: none;
   }
@@ -142,19 +142,19 @@
     align-items: center;
     gap: 6px;
     padding: 5px 8px;
-    border-top: 1px solid hsl(var(--border));
-    background: hsl(var(--muted) / 0.5);
+    border-top: 1px solid var(--border);
+    background: color-mix(in oklab, var(--muted) 50%, transparent);
   }
   .rterm-input-field {
     flex: 1;
     background: none;
     border: none;
     outline: none;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-family: inherit;
     font-size: inherit;
   }
   .rterm-input-field::placeholder {
-    color: hsl(var(--muted-foreground) / 0.5);
+    color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
   }
 </style>
