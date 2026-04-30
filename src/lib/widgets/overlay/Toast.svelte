@@ -28,7 +28,10 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  const visible = $derived((bus?.toasts ?? []).slice(-max));
+  const visible = $derived.by(() => {
+    const recent = (bus?.toasts ?? []).slice(-max);
+    return position.startsWith('top') ? [...recent].reverse() : recent;
+  });
 
   const positionClass = $derived(
     position === 'top-left' ? 'top-4 left-4 items-start'
@@ -55,17 +58,18 @@
 </script>
 
 {#if bus}
+  <!-- z-[100] intentionally exceeds the z-50 used by dialogs so toasts stay visible while a modal is open. -->
   <div
     {id}
     class={cn('fixed z-[100] flex flex-col gap-2 pointer-events-none', positionClass, className)}
     style={styleString}
     aria-live="polite"
-    aria-atomic="true"
   >
     {#each visible as toast (toast.id)}
       {@const Icon = variantIcon(toast.variant)}
       <div
         class="pointer-events-auto flex items-start gap-2 rounded-md border border-border bg-background px-3 py-2 shadow-lg min-w-[220px] max-w-[360px]"
+        aria-atomic="true"
         in:fly={{ y: flyOffset, duration: 200 }}
         out:fade={{ duration: 150 }}
       >
