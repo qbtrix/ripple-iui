@@ -226,12 +226,14 @@
 	 * Children without `slot` go to the default bucket (the body children snippet).
 	 * Named-slot children are forwarded to the widget via matching snippet props.
 	 */
+	const KNOWN_SLOTS = new Set(['default', 'header', 'footer', 'sidebar', 'topbar', 'actions']);
+
 	const childBuckets = $derived.by<Record<string, UINode[]>>(() => {
 		const buckets: Record<string, UINode[]> = { default: [] };
 		if (!node.children) return buckets;
 		for (const child of node.children) {
 			const key = child.slot ?? 'default';
-			if (key !== 'default' && key !== 'header' && key !== 'footer') {
+			if (!KNOWN_SLOTS.has(key)) {
 				console.warn(`[Ripple] Unknown slot name: ${key}`);
 			}
 			if (!buckets[key]) buckets[key] = [];
@@ -277,6 +279,9 @@
 		{@const defaultKids = childBuckets.default ?? []}
 		{@const headerKids = childBuckets.header ?? []}
 		{@const footerKids = childBuckets.footer ?? []}
+		{@const sidebarKids = childBuckets.sidebar ?? []}
+		{@const topbarKids = childBuckets.topbar ?? []}
+		{@const actionsKids = childBuckets.actions ?? []}
 		{@const widgetProps = {
 			id: node.id,
 			...(resolvedClass !== undefined && { class: resolvedClass }),
@@ -303,10 +308,28 @@
 				<Self node={child} {loopContext} />
 			{/each}
 		{/snippet}
+		{#snippet sidebarSnippet()}
+			{#each sidebarKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet topbarSnippet()}
+			{#each topbarKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet actionsSnippet()}
+			{#each actionsKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
 		<WidgetComponent
 			{...widgetProps}
 			header={headerKids.length > 0 ? headerSnippet : undefined}
 			footer={footerKids.length > 0 ? footerSnippet : undefined}
+			sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
+			topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
+			actions={actionsKids.length > 0 ? actionsSnippet : undefined}
 		>
 			{#snippet children()}
 				{#each defaultKids as child, i (child.id ?? i)}

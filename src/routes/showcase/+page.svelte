@@ -216,6 +216,162 @@
     }
   };
 
+  const sidebarSpec = {
+    version: '1.0' as const,
+    state: { route: 'dashboard' },
+    ui: {
+      type: 'flex',
+      props: { gap: '0' },
+      style: { height: '320px', border: '1px solid hsl(var(--border))', 'border-radius': '8px', overflow: 'hidden' },
+      children: [
+        {
+          type: 'sidebar',
+          props: {
+            title: 'Acme',
+            items: [
+              { label: 'Dashboard', icon: 'home', value: 'dashboard', group: 'Workspace' },
+              { label: 'Projects', icon: 'folder', value: 'projects', group: 'Workspace', badge: '4' },
+              { label: 'Team', icon: 'users', value: 'team', group: 'Workspace' },
+              { label: 'Settings', icon: 'settings', value: 'settings', group: 'Account' },
+              { label: 'Billing', icon: 'credit-card', value: 'billing', group: 'Account' }
+            ]
+          },
+          bind: 'route'
+        },
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '8px' },
+          style: { padding: '16px', flex: '1' },
+          children: [
+            { type: 'text', props: { text: 'Active route → {state.route}', size: 'sm', weight: 'medium' } },
+            { type: 'text', props: { text: 'Click a sidebar item to update state.route.', size: 'xs' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const appShellSpec = {
+    version: '1.0' as const,
+    state: { route: 'dashboard' },
+    ui: {
+      type: 'app-shell',
+      children: [
+        {
+          slot: 'topbar',
+          type: 'flex',
+          props: { align: 'center', gap: '12px' },
+          children: [
+            { type: 'text', props: { text: 'Acme', weight: 'semibold' } },
+            { type: 'badge', props: { text: 'Pro', variant: 'secondary' } }
+          ]
+        },
+        {
+          slot: 'sidebar',
+          type: 'sidebar',
+          props: {
+            items: [
+              { label: 'Dashboard', icon: 'home', value: 'dashboard' },
+              { label: 'Projects', icon: 'folder', value: 'projects' },
+              { label: 'Team', icon: 'users', value: 'team' }
+            ]
+          },
+          bind: 'route'
+        },
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '12px' },
+          children: [
+            {
+              type: 'page-header',
+              props: { title: '{state.route}', subtitle: 'Application shell composes sidebar + topbar + content slots.' }
+            },
+            {
+              type: 'grid',
+              props: { columns: 3, gap: '12px' },
+              children: [
+                { type: 'metric', props: { label: 'Open', value: 12 } },
+                { type: 'metric', props: { label: 'In review', value: 4 } },
+                { type: 'metric', props: { label: 'Closed', value: 38 } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const masterDetailSpec = {
+    version: '1.0' as const,
+    state: {
+      selected: 1,
+      issues: [
+        { id: 1, title: 'Login broken on Safari', body: 'Users on iOS 17 see a blank screen after submitting the form.', status: 'Open' },
+        { id: 2, title: 'Search returns stale results', body: 'After deleting an item, it still appears in search until the index rebuilds.', status: 'Triaged' },
+        { id: 3, title: 'Add Slack integration', body: 'Customers want notifications when a thread is updated.', status: 'Open' }
+      ]
+    },
+    ui: {
+      type: 'grid',
+      props: { columns: 2, gap: '12px' },
+      style: { 'grid-template-columns': '220px 1fr' },
+      children: [
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '4px' },
+          style: { 'border-right': '1px solid hsl(var(--border))', 'padding-right': '12px' },
+          children: [
+            {
+              type: 'each',
+              items: 'issues',
+              item_as: 'issue',
+              children: [
+                {
+                  type: 'button',
+                  props: {
+                    label: '{issue.title}',
+                    variant: '{state.selected == issue.id ? "default" : "ghost"}',
+                    size: 'sm',
+                    class: 'justify-start'
+                  },
+                  on_click: { action: 'set', target: 'selected', value: '{issue.id}' }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'each',
+          items: 'issues',
+          item_as: 'issue',
+          children: [
+            {
+              type: 'if',
+              condition: '{state.selected == issue.id}',
+              children: [
+                {
+                  type: 'flex',
+                  props: { direction: 'column', gap: '8px' },
+                  children: [
+                    {
+                      type: 'flex',
+                      props: { align: 'center', gap: '8px' },
+                      children: [
+                        { type: 'heading', props: { text: '{issue.title}', level: 3 } },
+                        { type: 'badge', props: { text: '{issue.status}', variant: 'secondary' } }
+                      ]
+                    },
+                    { type: 'text', props: { text: '{issue.body}', size: 'sm' } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
   // ── Display Widgets ─────────────────────────────────────────
 
   const textSpec = {
@@ -1327,6 +1483,9 @@
       { label: 'Hero', spec: heroSpec },
       { label: 'Section', spec: sectionSpec },
       { label: 'Empty State', spec: emptyStateSpec },
+      { label: 'Sidebar', spec: sidebarSpec },
+      { label: 'App Shell', spec: appShellSpec },
+      { label: 'Master / Detail', spec: masterDetailSpec },
     ]},
     { id: 'display', title: 'Display', items: [
       { label: 'Text', spec: textSpec },

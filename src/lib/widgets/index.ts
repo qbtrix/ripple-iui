@@ -1,7 +1,7 @@
 // Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 import type { Component } from 'svelte';
 
-import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section } from './layout/index.js';
+import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
@@ -42,6 +42,10 @@ const defaultRegistry: WidgetMap = {
   section: Section,
   'empty-state': EmptyState,
   empty: EmptyState,
+  sidebar: Sidebar,
+  nav: Sidebar,
+  'app-shell': AppShell,
+  shell: AppShell,
   text: Text,
   heading: Heading,
   image: Image,
@@ -121,7 +125,7 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
-  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState,
+  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,
   Table, Chart, Terminal, If, Each,

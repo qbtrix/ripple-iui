@@ -14,3 +14,5 @@ export { default as Separator } from './Separator.svelte';
 export { default as PageHeader } from './PageHeader.svelte';
 export { default as Hero } from './Hero.svelte';
 export { default as Section } from './Section.svelte';
+export { default as Sidebar } from './Sidebar.svelte';
+export { default as AppShell } from './AppShell.svelte';
