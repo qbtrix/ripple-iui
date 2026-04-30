@@ -118,10 +118,31 @@
 
 	// Event handlers are computed once but context is fresh on each call
 	const onclick = createEventHandler(node.on_click);
-	const onchange = createEventHandler(node.on_change);
 	const onsubmit = createEventHandler(node.on_submit);
 	const onfocus = createEventHandler(node.on_focus);
 	const onblur = createEventHandler(node.on_blur);
+	const oninputUser = createEventHandler(node.on_input);
+
+	const boundPath = $derived.by(() => {
+		if (!node.bind) return null;
+		const stripped = node.bind.replace(/^\{|\}$/g, '').trim();
+		return stripped.replace(/^state\./, '');
+	});
+
+	const onchangeUser = createEventHandler(node.on_change);
+	const onchange = (eventValue?: unknown) => {
+		if (boundPath) {
+			stateManager.set(boundPath, eventValue);
+		}
+		return onchangeUser?.(eventValue);
+	};
+
+	const oninput = (eventValue?: unknown) => {
+		if (boundPath) {
+			stateManager.set(boundPath, eventValue);
+		}
+		return oninputUser?.(eventValue);
+	};
 
 	/**
 	 * Get bound value if 'bind' is specified.
@@ -264,7 +285,8 @@
 			...(boundValue !== undefined && { value: boundValue }),
 			...((node.type === 'checkbox' || node.type === 'switch') && boundValue !== undefined && { checked: boundValue }),
 			...(onclick !== undefined && { onclick }),
-			...(onchange !== undefined && { onchange }),
+			...((boundPath || onchangeUser) && { onchange }),
+			...((boundPath || oninputUser) && { oninput }),
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),
