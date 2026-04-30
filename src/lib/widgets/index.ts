@@ -6,7 +6,7 @@ import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, Soul
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
-import { Terminal } from './composite/index.js';
+import { Terminal, RippleFrame } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
@@ -94,6 +94,9 @@ const defaultRegistry: WidgetMap = {
   datatable: Table,
   chart: Chart,
   terminal: Terminal,
+  'ripple-frame': RippleFrame,
+  frame: RippleFrame,
+  'nested-spec': RippleFrame,
   if: If,
   each: Each,
   'source-card': SourceCard,

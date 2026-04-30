@@ -2479,277 +2479,150 @@
     ]},
   ];
 
-  // ── Showcase navigation state ───────────────────────────────
+  // ── Showcase as a Ripple spec — eat our own dog food ──────────────────────
+  // The shell (sidebar, filter, item grid) is rendered by Ripple itself.
+  // Each demo card uses the new `ripple-frame` widget to mount an isolated
+  // <Ripple> instance with its own state, so demos don't share their state.
 
-  let activeId = $state('flows');
-
-  function readHash() {
-    if (typeof window === 'undefined') return;
-    const id = window.location.hash.replace('#', '').trim();
-    if (id && sections.some((s) => s.id === id)) activeId = id;
-  }
-
-  $effect(() => {
-    readHash();
-    const onHash = () => readHash();
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  });
-
-  const active = $derived(sections.find((s) => s.id === activeId) ?? sections[0]);
-
-  let filter = $state('');
-
-  function pickCategory(id: string) {
-    activeId = id;
-    if (typeof window !== 'undefined') {
-      history.replaceState(null, '', `#${id}`);
-    }
-    filter = '';
-  }
-
-  const visibleItems = $derived(
-    filter.trim() === ''
-      ? active.items
-      : active.items.filter((i) => i.label.toLowerCase().includes(filter.toLowerCase()))
+  // Flatten all items so a single each-loop drives the visible grid.
+  const allItems = sections.flatMap((s) =>
+    s.items.map((it) => ({ section: s.id, label: it.label, spec: it.spec }))
   );
+
+  const sidebarItems = sections.map((s) => ({
+    label: s.title,
+    value: s.id,
+    badge: String(s.items.length)
+  }));
+
+  const showcaseSpec = {
+    version: '1.0' as const,
+    state: {
+      activeId: 'flows',
+      filter: '',
+      items: allItems
+    },
+    ui: {
+      type: 'flex',
+      props: { gap: '0' },
+      class: 'showcase-shell',
+      children: [
+        // ── Sidebar
+        {
+          type: 'sidebar',
+          class: 'showcase-aside',
+          props: {
+            title: 'Ripple Showcase',
+            items: sidebarItems
+          },
+          bind: 'activeId'
+        },
+
+        // ── Main pane
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '16px' },
+          class: 'showcase-main',
+          children: [
+            {
+              type: 'flex',
+              props: { gap: '12px', align: 'end', justify: 'between', wrap: 'wrap' },
+              children: [
+                {
+                  type: 'page-header',
+                  props: {
+                    eyebrow: '@ripple-ui/svelte',
+                    title: 'Showcase',
+                    subtitle: 'Every panel below is a Ripple spec rendered inside this page — which is also a spec.'
+                  },
+                  class: 'flex-1 min-w-0'
+                },
+                {
+                  type: 'input',
+                  props: { placeholder: 'Filter demos...', type: 'search' },
+                  class: 'w-60',
+                  bind: 'filter'
+                }
+              ]
+            },
+
+            // ── Item grid
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '16px' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'items',
+                  item_as: 'item',
+                  children: [
+                    {
+                      type: 'if',
+                      condition: '{item.section == state.activeId && (state.filter == "" || item.label.toLowerCase().includes(state.filter.toLowerCase()))}',
+                      children: [
+                        {
+                          type: 'card',
+                          props: { title: '{item.label}' },
+                          children: [
+                            { type: 'ripple-frame', props: { spec: '{item.spec}' } }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  // Sync activeId with URL hash so deep links land on the right category.
+  let initialOverride = $state<{ activeId?: string }>({});
+  if (typeof window !== 'undefined') {
+    const id = window.location.hash.replace('#', '').trim();
+    if (id && sections.some((s) => s.id === id)) initialOverride = { activeId: id };
+  }
+  // Listen for state changes to push the active id back to the URL.
+  function onStateChange(path: string, value: unknown) {
+    if (path === 'activeId' && typeof value === 'string' && typeof window !== 'undefined') {
+      history.replaceState(null, '', `#${value}`);
+    }
+  }
 </script>
 
-<div class="showcase-layout">
-  <aside class="showcase-aside">
-    <div class="aside-head">
-      <h1 class="aside-title">Ripple</h1>
-      <p class="aside-sub">Showcase</p>
-    </div>
-    <nav class="aside-nav">
-      {#each sections as s}
-        <button
-          class="nav-btn"
-          class:active={s.id === activeId}
-          onclick={() => pickCategory(s.id)}
-        >
-          <span class="nav-label">{s.title}</span>
-          <span class="nav-count">{s.items.length}</span>
-        </button>
-      {/each}
-    </nav>
-    <div class="aside-foot">
-      <code>@ripple-ui/svelte</code>
-    </div>
-  </aside>
-
-  <main class="showcase-main">
-    <header class="main-head">
-      <div>
-        <h2 class="main-title">{active.title}</h2>
-        <p class="main-sub">{active.items.length} {active.items.length === 1 ? 'demo' : 'demos'} — every interaction is wired through the spec.</p>
-      </div>
-      <input
-        class="filter"
-        type="search"
-        placeholder="Filter {active.title.toLowerCase()}..."
-        bind:value={filter}
-      />
-    </header>
-
-    <div class="showcase-grid">
-      {#each visibleItems as item (item.label)}
-        <div class="showcase-item">
-          <h3 class="showcase-item-title">{item.label}</h3>
-          <div class="showcase-item-demo">
-            <Ripple spec={item.spec} onEvent={handleEvent} />
-          </div>
-        </div>
-      {/each}
-      {#if visibleItems.length === 0}
-        <div class="empty">No demos match "{filter}".</div>
-      {/if}
-    </div>
-  </main>
-</div>
+<Ripple spec={showcaseSpec} state={initialOverride} {onStateChange} onEvent={handleEvent} />
 
 <style>
-  .showcase-layout {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
+  /* Layout-only glue. Widget visuals come from their own components. */
+  :global(.showcase-shell) {
     min-height: calc(100vh - 60px);
-    color: hsl(var(--foreground));
   }
-  .showcase-aside {
-    border-right: 1px solid hsl(var(--border));
-    background: hsl(var(--card) / 0.4);
-    display: flex;
-    flex-direction: column;
+  :global(.showcase-aside) {
     position: sticky;
     top: 60px;
     height: calc(100vh - 60px);
     overflow-y: auto;
   }
-  .aside-head {
-    padding: 1.25rem 1rem 0.75rem;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-  .aside-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -0.01em;
-  }
-  .aside-sub {
-    font-size: 0.75rem;
-    color: hsl(var(--muted-foreground));
-    margin: 0.1rem 0 0;
-  }
-  .aside-nav {
+  :global(.showcase-main) {
     flex: 1;
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .nav-btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.12s, color 0.12s;
-  }
-  .nav-btn:hover {
-    background: hsl(var(--muted) / 0.6);
-    color: hsl(var(--foreground));
-  }
-  .nav-btn.active {
-    background: hsl(var(--muted));
-    color: hsl(var(--foreground));
-    font-weight: 600;
-  }
-  .nav-count {
-    font-size: 0.7rem;
-    color: hsl(var(--muted-foreground));
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
-    border-radius: 999px;
-    padding: 1px 7px;
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-  }
-  .nav-btn.active .nav-count {
-    border-color: hsl(var(--primary) / 0.4);
-    color: hsl(var(--foreground));
-  }
-  .aside-foot {
-    padding: 0.75rem 1rem;
-    border-top: 1px solid hsl(var(--border));
-    font-size: 0.7rem;
-    color: hsl(var(--muted-foreground));
-  }
-  .aside-foot code {
-    background: hsl(var(--muted) / 0.5);
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-  }
-  .showcase-main {
+    min-width: 0;
     padding: 2rem 2rem 4rem;
     max-width: 1100px;
     width: 100%;
     margin: 0 auto;
   }
-  .main-head {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid hsl(var(--border));
-  }
-  .main-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 0.15rem;
-    letter-spacing: -0.01em;
-  }
-  .main-sub {
-    font-size: 0.85rem;
-    color: hsl(var(--muted-foreground));
-    margin: 0;
-  }
-  .filter {
-    height: 32px;
-    padding: 0 10px;
-    width: 240px;
-    max-width: 100%;
-    border: 1px solid hsl(var(--border));
-    border-radius: 7px;
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .filter:focus {
-    border-color: hsl(var(--ring));
-    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2);
-  }
-  .showcase-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-  .showcase-item {
-    border: 1px solid hsl(var(--border));
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .showcase-item-title {
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 8px 14px;
-    margin: 0;
-    background: hsl(var(--muted) / 0.25);
-    border-bottom: 1px solid hsl(var(--border));
-    color: hsl(var(--muted-foreground));
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .showcase-item-demo {
-    padding: 16px;
-  }
-  .empty {
-    padding: 2rem;
-    text-align: center;
-    font-size: 0.85rem;
-    color: hsl(var(--muted-foreground));
-    border: 1px dashed hsl(var(--border));
-    border-radius: 10px;
-  }
   @media (max-width: 720px) {
-    .showcase-layout {
-      grid-template-columns: 1fr;
-    }
-    .showcase-aside {
+    :global(.showcase-aside) {
       position: static;
       height: auto;
-      border-right: none;
-      border-bottom: 1px solid hsl(var(--border));
+      width: 100%;
     }
-    .aside-nav {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-    .showcase-main {
+    :global(.showcase-main) {
       padding: 1.5rem 1rem 3rem;
     }
   }
 </style>
+
