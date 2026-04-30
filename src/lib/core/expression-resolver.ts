@@ -165,8 +165,97 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 		}
 	}
 
+	// Arithmetic: + and - (lowest precedence). String concat for + when either side is a string.
+	const additive = splitArithmetic(trimmed, ['+', '-']);
+	if (additive) {
+		let result = evaluateExpression(additive.parts[0], context);
+		for (let i = 0; i < additive.ops.length; i++) {
+			const right = evaluateExpression(additive.parts[i + 1], context);
+			if (additive.ops[i] === '+') {
+				if (typeof result === 'string' || typeof right === 'string') {
+					result = String(result ?? '') + String(right ?? '');
+				} else {
+					result = toNumber(result) + toNumber(right);
+				}
+			} else {
+				result = toNumber(result) - toNumber(right);
+			}
+		}
+		return result;
+	}
+
+	// Arithmetic: *, /, % (higher precedence)
+	const multiplicative = splitArithmetic(trimmed, ['*', '/', '%']);
+	if (multiplicative) {
+		let result = toNumber(evaluateExpression(multiplicative.parts[0], context));
+		for (let i = 0; i < multiplicative.ops.length; i++) {
+			const right = toNumber(evaluateExpression(multiplicative.parts[i + 1], context));
+			const op = multiplicative.ops[i];
+			if (op === '*') result *= right;
+			else if (op === '/') result = right === 0 ? 0 : result / right;
+			else result = right === 0 ? 0 : result % right;
+		}
+		return result;
+	}
+
 	// Fallback: try to parse as value (literal or path)
 	return parseValue(trimmed, context);
+}
+
+/** Coerce any value to a finite number (NaN/non-numeric → 0). */
+function toNumber(v: unknown): number {
+	const n = Number(v);
+	return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Split an expression on top-level binary arithmetic operators, respecting
+ * parentheses and treating leading `-`/`+` as unary (sign of a literal).
+ * Returns null if the expression has no binary operator from the set.
+ */
+function splitArithmetic(
+	expr: string,
+	operators: string[]
+): { ops: string[]; parts: string[] } | null {
+	const parts: string[] = [];
+	const ops: string[] = [];
+	let depth = 0;
+	let current = '';
+	let prevNonSpace = '';
+
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (ch === '(') {
+			depth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === ')') {
+			depth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (depth === 0 && operators.includes(ch)) {
+			// Binary op only when preceded by a value-ending character.
+			// Otherwise it's a unary sign (e.g. leading `-1`).
+			const isBinary = /[a-zA-Z0-9_)\]'"]/.test(prevNonSpace);
+			if (isBinary) {
+				parts.push(current.trim());
+				ops.push(ch);
+				current = '';
+				prevNonSpace = '';
+				continue;
+			}
+		}
+		current += ch;
+		if (ch !== ' ') prevNonSpace = ch;
+	}
+
+	if (parts.length === 0) return null;
+	parts.push(current.trim());
+	return { ops, parts };
 }
 
 /**
