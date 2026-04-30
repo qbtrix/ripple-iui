@@ -13,6 +13,7 @@
     rows?: number;
     disabled?: boolean;
     label?: string;
+    oninput?: (value?: unknown) => void;
     onchange?: (value?: unknown) => void;
     onfocus?: (value?: unknown) => void;
     onblur?: (value?: unknown) => void;
@@ -20,7 +21,7 @@
 
   let {
     id, class: className, style, value = '', placeholder = '',
-    rows = 3, disabled = false, label, onchange, onfocus, onblur
+    rows = 3, disabled = false, label, oninput, onchange, onfocus, onblur
   }: Props = $props();
 
   // Local state that syncs with incoming prop (matches Switch pattern)
@@ -37,6 +38,7 @@
   function handleInput(e: Event) {
     const target = e.target as HTMLTextAreaElement;
     localValue = target.value;
+    oninput?.(target.value);
     onchange?.(target.value);
   }
 
