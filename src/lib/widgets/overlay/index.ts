@@ -9,3 +9,4 @@ export { default as Alert } from './Alert.svelte';
 export { default as DropdownMenu } from './DropdownMenu.svelte';
 export { default as Toast } from './Toast.svelte';
 export { default as Tooltip } from './Tooltip.svelte';
+export { default as Popover } from './Popover.svelte';
