@@ -1,8 +1,12 @@
 // src/lib/core/toast-bus.test.ts
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createToastBus } from './toast-bus.svelte.js';
 
 describe('ToastBus', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('push adds an entry with a generated id and returns the id', () => {
     const bus = createToastBus();
     const id = bus.push({ message: 'hi', variant: 'info' });
@@ -37,5 +41,13 @@ describe('ToastBus', () => {
     vi.advanceTimersByTime(60_000);
     expect(bus.toasts).toHaveLength(1);
     vi.useRealTimers();
+  });
+
+  it('clear empties all entries', () => {
+    const bus = createToastBus();
+    bus.push({ message: 'a', variant: 'info' });
+    bus.push({ message: 'b', variant: 'info' });
+    bus.clear();
+    expect(bus.toasts).toHaveLength(0);
   });
 });

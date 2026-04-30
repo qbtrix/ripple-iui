@@ -16,7 +16,7 @@
   import { createStateManager } from './core/state-manager.svelte.js';
   import { createEventDispatcher, type OnEventCallback } from './core/event-dispatcher.js';
   import { createWidgetRegistry } from './core/widget-registry.js';
-  import { createToastBus } from './core/toast-bus.svelte.js';
+  import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
@@ -64,15 +64,22 @@
 
   // Chain: forward toast events into the in-process bus AND to any host onEvent.
   // Hosts that already render toasts continue to work; specs that mount a
-  // `<toast />` widget get rendering for free.
-  const chainedOnEvent = (event: any) => {
-    if (event && event.type === 'toast') {
+  // `<toast />` widget get rendering for free. The host's return value is
+  // preserved so `api` action chaining (on_success/on_error/response_key) works.
+  const chainedOnEvent: OnEventCallback = (event: RippleEvent) => {
+    if (event.type === 'toast') {
+      const rawVariant = (event as { variant?: string }).variant;
+      const variant: ToastVariant =
+        rawVariant === 'success' || rawVariant === 'warning' || rawVariant === 'error'
+          ? rawVariant
+          : 'info';
+      const rawMessage = (event as { message?: unknown }).message;
       toastBus.push({
-        message: typeof event.message === 'string' ? event.message : String(event.message ?? ''),
-        variant: event.variant
+        message: typeof rawMessage === 'string' ? rawMessage : String(rawMessage ?? ''),
+        variant
       });
     }
-    onEvent?.(event);
+    return onEvent?.(event);
   };
 
   const eventDispatcher = createEventDispatcher(stateManager, chainedOnEvent, widgetRegistry);
