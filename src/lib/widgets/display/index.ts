@@ -21,3 +21,4 @@ export { default as DefinitionList } from './DefinitionList.svelte';
 export { default as ArticleMeta } from './ArticleMeta.svelte';
 export { default as Icon } from './Icon.svelte';
 export { default as Loading } from './Loading.svelte';
+export { default as Chip } from './Chip.svelte';
