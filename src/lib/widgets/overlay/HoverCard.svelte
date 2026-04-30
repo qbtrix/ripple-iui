@@ -34,18 +34,24 @@
   );
 
   function isString(v: unknown): v is string { return typeof v === 'string'; }
-  function isSpec(v: unknown): boolean { return v != null && typeof v === 'object'; }
+  function isSpec(v: unknown): boolean {
+    return v != null && typeof v === 'object' && !Array.isArray(v);
+  }
 </script>
 
 <HoverCard.Root {openDelay} {closeDelay}>
-  <HoverCard.Trigger {id} class={cn(className)} style={styleString}>
-    {#if hasChildren && children}
-      {@render children()}
-    {:else if isString(trigger)}
-      {trigger}
-    {:else if isSpec(trigger)}
-      <NodeRenderer node={trigger} />
-    {/if}
+  <HoverCard.Trigger>
+    {#snippet child({ props: triggerProps })}
+      <span {...triggerProps} {id} class={cn(className)} style={styleString}>
+        {#if hasChildren && children}
+          {@render children()}
+        {:else if isString(trigger)}
+          {trigger}
+        {:else if isSpec(trigger)}
+          <NodeRenderer node={trigger} />
+        {/if}
+      </span>
+    {/snippet}
   </HoverCard.Trigger>
   <HoverCard.Content {side} {align}>
     {#if isString(content)}
