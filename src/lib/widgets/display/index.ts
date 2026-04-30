@@ -19,3 +19,4 @@ export { default as Quote } from './Quote.svelte';
 export { default as Highlight } from './Highlight.svelte';
 export { default as DefinitionList } from './DefinitionList.svelte';
 export { default as ArticleMeta } from './ArticleMeta.svelte';
+export { default as Icon } from './Icon.svelte';
