@@ -26,3 +26,4 @@ export { default as Kbd } from './Kbd.svelte';
 export { default as StatusDot } from './StatusDot.svelte';
 export { default as Trend } from './Trend.svelte';
 export { default as Copy } from './Copy.svelte';
+export { default as Code } from './Code.svelte';
