@@ -290,7 +290,8 @@
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),
-			...(defaultKids.length > 0 && { hasChildren: true })
+			...(defaultKids.length > 0 && { hasChildren: true }),
+			...(node.type === 'tabs' && defaultKids.length > 0 && { panels: defaultKids, panelLoopContext: loopContext })
 		}}
 		{#snippet headerSnippet()}
 			{#each headerKids as child, i (child.id ?? i)}
