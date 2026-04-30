@@ -3,7 +3,7 @@ import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup } from './input/index.js';
+import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
@@ -50,6 +50,8 @@ const defaultRegistry: WidgetMap = {
   slider: Slider,
   'radio-group': RadioGroup,
   radio: RadioGroup,
+  rating: Rating,
+  stars: Rating,
   table: Table,
   chart: Chart,
   terminal: Terminal,
@@ -104,7 +106,7 @@ export function resetRegistry(): void {
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton,
-  Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup,
+  Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,
   Table, Chart, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,

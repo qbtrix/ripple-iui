@@ -313,6 +313,19 @@
     }
   };
 
+  const ratingSpec = {
+    version: '1.0' as const,
+    state: { stars: 3 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'rating', props: { label: 'Rate this UI', max: 5, showValue: true }, bind: 'stars' },
+        { type: 'text', props: { text: 'rating → {state.stars} of 5', size: 'xs' } }
+      ]
+    }
+  };
+
   const togglesSpec = {
     version: '1.0' as const,
     state: { agreed: false, dark: true },
@@ -1010,6 +1023,7 @@
       { label: 'Select', spec: selectSpec },
       { label: 'Slider', spec: sliderSpec },
       { label: 'Radio Group', spec: radioSpec },
+      { label: 'Rating', spec: ratingSpec },
       { label: 'Checkbox & Switch', spec: togglesSpec },
     ]},
     { id: 'data', title: 'Data', items: [
