@@ -5,3 +5,4 @@
  *   - Initial creation alongside ConfirmDialog for Phase B flow-actions
  */
 export { default as ConfirmDialog } from './ConfirmDialog.svelte';
+export { default as Alert } from './Alert.svelte';

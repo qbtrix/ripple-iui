@@ -11,3 +11,4 @@ export { default as Stat } from './Stat.svelte';
 export { default as Skeleton } from './Skeleton.svelte';
 export { default as Markdown } from './Markdown.svelte';
 export { default as CodeBlock } from './CodeBlock.svelte';
+export { default as EmptyState } from './EmptyState.svelte';

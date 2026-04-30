@@ -80,6 +80,142 @@
     }
   };
 
+  // ── Layout extras ───────────────────────────────────────────
+
+  const accordionSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'accordion',
+      props: {
+        items: [
+          { value: 'q1', title: 'Is bind two-way?', content: 'Yes — typing into any input updates the bound state path immediately.' },
+          { value: 'q2', title: 'Can I run a flow on click?', content: 'Yes — on_click accepts a single action or an array; flow + branch + confirm + validate are all supported.' },
+          { value: 'q3', title: 'How do I filter a list?', content: 'Use each + an inner if condition with a string method like .toLowerCase().includes(state.query).' }
+        ]
+      }
+    }
+  };
+
+  const separatorSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'text', props: { text: 'Above the line', size: 'sm' } },
+        { type: 'separator' },
+        { type: 'text', props: { text: 'Below the line', size: 'sm' } }
+      ]
+    }
+  };
+
+  const alertSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'alert', props: { variant: 'info', title: 'Heads up', description: 'A new version is available — refresh to update.' } },
+        { type: 'alert', props: { variant: 'success', title: 'Saved', description: 'Your changes were saved successfully.' } },
+        { type: 'alert', props: { variant: 'warning', title: 'Quota nearing', description: 'You have used 92% of your monthly quota.' } },
+        { type: 'alert', props: { variant: 'destructive', title: 'Action failed', description: 'The deletion did not complete. No data was lost.' } }
+      ]
+    }
+  };
+
+  const sheetSpec = {
+    version: '1.0' as const,
+    state: { open: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px', align: 'start' },
+      children: [
+        {
+          type: 'button',
+          props: { label: 'Open sheet' },
+          on_click: { action: 'set', target: 'open', value: true }
+        },
+        {
+          type: 'sheet',
+          bind: 'open',
+          props: { side: 'right', title: 'Filters', description: 'Tune the dataset.' },
+          children: [
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '12px' },
+              children: [
+                { type: 'input', props: { label: 'Search' } },
+                { type: 'select', props: { label: 'Status', options: ['Active', 'Paused', 'Done'] } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const pageHeaderSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'page-header',
+      props: { eyebrow: 'BILLING', title: 'Invoices', subtitle: 'View, download, and dispute invoices.' },
+      children: [
+        { type: 'button', props: { label: 'Export', variant: 'outline', size: 'sm' }, slot: 'actions' },
+        { type: 'button', props: { label: 'New invoice', size: 'sm' }, slot: 'actions' }
+      ]
+    }
+  };
+
+  const heroSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'hero',
+      props: {
+        eyebrow: 'INTRODUCING',
+        title: 'UI you describe, not draw',
+        subtitle: 'Ripple turns JSON specs into fully interactive Svelte UI — with state, expressions, and event flows built in.',
+        align: 'center'
+      },
+      children: [
+        { type: 'button', props: { label: 'Get started' } },
+        { type: 'button', props: { label: 'View on GitHub', variant: 'outline' } }
+      ]
+    }
+  };
+
+  const sectionSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '6px' },
+      children: [
+        {
+          type: 'section',
+          props: { title: 'Notifications', description: 'How and when we ping you.' },
+          children: [
+            { type: 'switch', props: { label: 'Email digests' } },
+            { type: 'switch', props: { label: 'Real-time alerts' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const emptyStateSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'empty-state',
+      props: {
+        icon: 'search',
+        title: 'No results',
+        description: 'Try a different query or clear filters.'
+      },
+      children: [
+        { type: 'button', props: { label: 'Clear filters', variant: 'outline', size: 'sm' } }
+      ]
+    }
+  };
+
   // ── Display Widgets ─────────────────────────────────────────
 
   const textSpec = {
@@ -1183,6 +1319,14 @@
       { label: 'Grid', spec: gridSpec },
       { label: 'Card', spec: cardSpec },
       { label: 'Tabs', spec: tabsSpec },
+      { label: 'Accordion', spec: accordionSpec },
+      { label: 'Separator', spec: separatorSpec },
+      { label: 'Alert', spec: alertSpec },
+      { label: 'Sheet / Drawer', spec: sheetSpec },
+      { label: 'Page Header', spec: pageHeaderSpec },
+      { label: 'Hero', spec: heroSpec },
+      { label: 'Section', spec: sectionSpec },
+      { label: 'Empty State', spec: emptyStateSpec },
     ]},
     { id: 'display', title: 'Display', items: [
       { label: 'Text', spec: textSpec },

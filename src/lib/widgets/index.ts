@@ -1,13 +1,13 @@
 // Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 import type { Component } from 'svelte';
 
-import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock } from './display/index.js';
+import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section } from './layout/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
-import { ConfirmDialog } from './overlay/index.js';
+import { ConfirmDialog, Alert } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -30,6 +30,18 @@ const defaultRegistry: WidgetMap = {
   'glass-card': GlassCard,
   modal: Modal,
   dialog: Modal,
+  accordion: Accordion,
+  sheet: Sheet,
+  drawer: Sheet,
+  separator: Separator,
+  divider: Separator,
+  alert: Alert,
+  banner: Alert,
+  'page-header': PageHeader,
+  hero: Hero,
+  section: Section,
+  'empty-state': EmptyState,
+  empty: EmptyState,
   text: Text,
   heading: Heading,
   image: Image,
@@ -109,6 +121,7 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
+  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,
   Table, Chart, Terminal, If, Each,
