@@ -159,6 +159,9 @@ export class EventDispatcher {
 			case 'set':
 				this.handleSet(handler, context, eventValue);
 				return;
+			case 'toggle':
+				this.handleToggle(handler, context, eventValue);
+				return;
 			case 'open':
 				this.handleOpen(handler);
 				return;
@@ -216,6 +219,45 @@ export class EventDispatcher {
 	private handleOpen(handler: Extract<EventHandler, { action: 'open' }>): void {
 		if (!handler.target) return;
 		this.stateManager.set(handler.target, true);
+	}
+
+	/**
+	 * `toggle` — semantics depend on the target's current type:
+	 *  - boolean (or undefined): flip to !current
+	 *  - array: toggle membership of `value` (add if absent, remove if present)
+	 *  - other: warn and noop
+	 */
+	private handleToggle(
+		handler: Extract<EventHandler, { action: 'toggle' }>,
+		context: ResolverContext,
+		eventValue?: unknown
+	): void {
+		if (!handler.target) return;
+
+		let value = handler.value !== undefined ? handler.value : eventValue;
+		if (typeof value === 'string') value = resolveString(value, context);
+
+		const current = this.stateManager.get(handler.target);
+
+		if (Array.isArray(current)) {
+			if (value === undefined) {
+				console.warn(`EventDispatcher: toggle on array target "${handler.target}" requires a value.`);
+				return;
+			}
+			const idx = current.indexOf(value);
+			const next = idx >= 0 ? current.filter((_, i) => i !== idx) : [...current, value];
+			this.stateManager.set(handler.target, next);
+			return;
+		}
+
+		if (typeof current === 'boolean' || current === undefined || current === null) {
+			this.stateManager.set(handler.target, !current);
+			return;
+		}
+
+		console.warn(
+			`EventDispatcher: toggle on non-boolean / non-array target "${handler.target}" (was ${typeof current}) — no-op.`
+		);
 	}
 
 	private emitExternal(

@@ -811,6 +811,45 @@
     }
   };
 
+  // Multi-select chips — toggle action adds/removes values from an array
+  const multiSelectFlow = {
+    version: '1.0' as const,
+    state: {
+      selected: ['svelte'],
+      tags: ['svelte', 'react', 'vue', 'solid', 'qwik', 'angular']
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'text', props: { text: 'Pick your stack:', size: 'sm' } },
+        {
+          type: 'flex',
+          props: { gap: '6px', wrap: 'wrap' },
+          children: [
+            {
+              type: 'each',
+              items: 'tags',
+              item_as: 'tag',
+              children: [
+                {
+                  type: 'button',
+                  props: {
+                    label: '{tag}',
+                    variant: '{state.selected.includes(tag) ? "default" : "outline"}',
+                    size: 'sm'
+                  },
+                  on_click: { action: 'toggle', target: 'selected', value: '{tag}' }
+                }
+              ]
+            }
+          ]
+        },
+        { type: 'text', props: { text: 'selected: {state.selected.join(", ")}', size: 'xs' } }
+      ]
+    }
+  };
+
   // Live Filter — input + each + if condition with case-insensitive substring match
   const filterFlow = {
     version: '1.0' as const,
@@ -991,6 +1030,7 @@
       { label: 'Counter', spec: counterFlow },
       { label: 'Live Calculator', spec: calculatorFlow },
       { label: 'Live Filter', spec: filterFlow },
+      { label: 'Multi-select Chips', spec: multiSelectFlow },
       { label: 'Stepper Wizard', spec: wizardFlow },
       { label: 'Delete with Confirmation', spec: confirmFlow },
       { label: 'Form with Validation', spec: formFlow },

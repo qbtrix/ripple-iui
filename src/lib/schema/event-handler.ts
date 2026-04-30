@@ -35,6 +35,7 @@ import { z } from 'zod';
  */
 export const EventAction = z.enum([
 	'set',
+	'toggle',
 	'api',
 	'navigate',
 	'toast',
@@ -58,6 +59,16 @@ const ToastVariant = z.enum(['default', 'success', 'error', 'warning', 'info']);
 /** `set` — assign a value to a state path. */
 export const SetHandler = z.object({
 	action: z.literal('set'),
+	target: z.string(),
+	value: z.any().optional()
+});
+
+/**
+ * `toggle` — flip a boolean target, or toggle membership of `value` in an array
+ * target. With no `value`, the target must be a boolean and is inverted.
+ */
+export const ToggleHandler = z.object({
+	action: z.literal('toggle'),
 	target: z.string(),
 	value: z.any().optional()
 });
@@ -224,6 +235,7 @@ type ConfirmHandlerType = {
  */
 export const EventHandler = z.union([
 	SetHandler,
+	ToggleHandler,
 	OpenHandler,
 	NavigateHandler,
 	ToastHandler,
@@ -241,6 +253,7 @@ export const EventHandler = z.union([
 
 export type EventHandler =
 	| z.infer<typeof SetHandler>
+	| z.infer<typeof ToggleHandler>
 	| z.infer<typeof OpenHandler>
 	| z.infer<typeof NavigateHandler>
 	| z.infer<typeof ToastHandler>
