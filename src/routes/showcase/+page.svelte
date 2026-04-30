@@ -336,6 +336,20 @@
     }
   };
 
+  const datePickerSpec = {
+    version: '1.0' as const,
+    state: { departure: '2026-05-15', returnDate: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'input', props: { label: 'Departure', type: 'date' }, bind: 'departure' },
+        { type: 'input', props: { label: 'Return', type: 'date' }, bind: 'returnDate' },
+        { type: 'text', props: { text: 'departure → {state.departure}  ·  return → {state.returnDate}', size: 'xs' } }
+      ]
+    }
+  };
+
   const sliderSpec = {
     version: '1.0' as const,
     state: { volume: 40 },
@@ -1186,6 +1200,7 @@
       { label: 'Button', spec: buttonSpec },
       { label: 'Input', spec: inputSpec },
       { label: 'Textarea', spec: textareaSpec },
+      { label: 'Date Picker', spec: datePickerSpec },
       { label: 'Select', spec: selectSpec },
       { label: 'Slider', spec: sliderSpec },
       { label: 'Radio Group', spec: radioSpec },

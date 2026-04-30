@@ -14,7 +14,7 @@
     label?: string;
     value?: string | number;
     placeholder?: string;
-    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search';
+    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color';
     size?: 'sm' | 'md' | 'lg';
     disabled?: boolean;
     readOnly?: boolean;
