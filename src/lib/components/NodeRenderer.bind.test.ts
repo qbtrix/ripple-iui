@@ -80,15 +80,11 @@ test('on_input fires on every keystroke', async () => {
   render(Ripple, {
     props: {
       spec: {
-        state: { keystrokes: 0 },
+        state: { lastInput: '' },
         ui: {
           type: 'input',
           props: { placeholder: 'name' },
-          on_input: {
-            action: 'set',
-            target: 'keystrokes',
-            value: '{state.keystrokes + 1}',
-          },
+          on_input: { action: 'set', target: 'lastInput' },
         },
       },
       onStateChange,
@@ -97,7 +93,7 @@ test('on_input fires on every keystroke', async () => {
 
   await userEvent.type(screen.getByPlaceholderText('name'), 'abc');
 
-  const writes = onStateChange.mock.calls.filter((c) => c[0] === 'keystrokes');
+  const writes = onStateChange.mock.calls.filter((c) => c[0] === 'lastInput');
   expect(writes.length).toBe(3);
-  expect(writes.at(-1)![1]).toBe(3);
+  expect(writes.at(-1)![1]).toBe('abc');
 });
