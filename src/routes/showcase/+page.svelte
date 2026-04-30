@@ -1845,13 +1845,13 @@
                                 {
                                   type: 'select',
                                   props: {
+                                    value: '{issue.status}',
                                     options: [
                                       { value: 'open', label: 'Open' },
                                       { value: 'in_progress', label: 'In progress' },
                                       { value: 'closed', label: 'Closed' }
                                     ]
                                   },
-                                  value: '{issue.status}',
                                   on_change: { action: 'set', target: 'issues.{i}.status' }
                                 }
                               ]
@@ -1864,13 +1864,13 @@
                                 {
                                   type: 'select',
                                   props: {
+                                    value: '{issue.priority}',
                                     options: [
                                       { value: 'low', label: 'Low' },
                                       { value: 'medium', label: 'Medium' },
                                       { value: 'high', label: 'High' }
                                     ]
                                   },
-                                  value: '{issue.priority}',
                                   on_change: { action: 'set', target: 'issues.{i}.priority' }
                                 }
                               ]
