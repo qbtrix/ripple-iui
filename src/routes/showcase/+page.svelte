@@ -400,6 +400,120 @@
     }
   };
 
+  const tooltipSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '12px', wrap: 'wrap' },
+      children: [
+        {
+          type: 'tooltip',
+          props: { content: 'Saves your changes', side: 'top' },
+          hasChildren: true,
+          children: [
+            { type: 'button', props: { label: 'Save', variant: 'outline' } }
+          ]
+        },
+        {
+          type: 'tooltip',
+          props: { content: 'Discards everything', side: 'right' },
+          hasChildren: true,
+          children: [
+            { type: 'button', props: { label: 'Reset', variant: 'ghost' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const popoverSpec = {
+    version: '1.0' as const,
+    state: { popName: '' },
+    ui: {
+      type: 'flex',
+      props: { gap: '12px', align: 'start' },
+      children: [
+        {
+          type: 'popover',
+          props: {
+            side: 'bottom',
+            content: {
+              type: 'flex',
+              props: { direction: 'column', gap: '8px' },
+              children: [
+                { type: 'heading', props: { text: 'Quick edit', level: 5 } },
+                { type: 'input', props: { label: 'Display name' }, bind: 'popName' },
+                { type: 'text', props: { text: 'Hello, {state.popName || "stranger"}!', size: 'xs' } }
+              ]
+            }
+          },
+          hasChildren: true,
+          children: [
+            { type: 'button', props: { label: 'Open popover', variant: 'outline' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const hoverCardSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '12px' },
+      children: [
+        {
+          type: 'hover-card',
+          props: {
+            side: 'bottom',
+            content: {
+              type: 'flex',
+              props: { gap: '12px', align: 'center' },
+              children: [
+                { type: 'avatar-group', props: { users: [{ fallback: 'JD' }], size: 'lg' } },
+                {
+                  type: 'flex',
+                  props: { direction: 'column', gap: '2px' },
+                  children: [
+                    { type: 'text', props: { text: 'Jane Doe', weight: 'semibold' } },
+                    { type: 'text', props: { text: 'Software engineer', size: 'sm' }, class: 'text-muted-foreground' },
+                    { type: 'text', props: { text: '@jdoe · Joined Mar 2024', size: 'xs' }, class: 'text-muted-foreground mt-1' }
+                  ]
+                }
+              ]
+            }
+          },
+          hasChildren: true,
+          children: [
+            { type: 'button', props: { label: '@jdoe', variant: 'link' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const toastSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', wrap: 'wrap' },
+          children: [
+            { type: 'button', props: { label: 'Info' }, on_click: { action: 'toast', message: 'Just so you know.', variant: 'info' } },
+            { type: 'button', props: { label: 'Success', variant: 'outline' }, on_click: { action: 'toast', message: 'All done!', variant: 'success' } },
+            { type: 'button', props: { label: 'Warning', variant: 'outline' }, on_click: { action: 'toast', message: 'Heads up.', variant: 'warning' } },
+            { type: 'button', props: { label: 'Error', variant: 'destructive' }, on_click: { action: 'toast', message: 'Something failed.', variant: 'error' } }
+          ]
+        },
+        { type: 'text', props: { text: 'Toasts appear bottom-right and auto-dismiss after 4s.', size: 'xs' }, class: 'text-muted-foreground' },
+        { type: 'toast', props: { position: 'bottom-right' } }
+      ]
+    }
+  };
+
   // ── Static info widgets ─────────────────────────────────────
 
   const prosConsSpec = {
@@ -709,6 +823,208 @@
       children: [
         { type: 'code-block', props: { language: 'svelte', code: codeBlockSvelte } },
         { type: 'code-block', props: { language: 'json', code: codeBlockJson } }
+      ]
+    }
+  };
+
+  const loadingSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '24px', align: 'center', wrap: 'wrap' },
+      children: [
+        { type: 'loading', props: { inline: true, showLabel: true, label: 'Loading…' } },
+        { type: 'loading', props: { size: 24, inline: true } },
+        { type: 'loading', props: { size: 32, inline: true } }
+      ]
+    }
+  };
+
+  const avatarGroupSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'avatar-group',
+          props: {
+            size: 'sm',
+            users: [{ fallback: 'AB' }, { fallback: 'CD' }, { fallback: 'EF' }, { fallback: 'GH' }, { fallback: 'IJ' }]
+          }
+        },
+        {
+          type: 'avatar-group',
+          props: {
+            size: 'md',
+            max: 3,
+            users: [{ fallback: 'AB' }, { fallback: 'CD' }, { fallback: 'EF' }, { fallback: 'GH' }, { fallback: 'IJ' }]
+          }
+        },
+        {
+          type: 'avatar-group',
+          props: {
+            size: 'lg',
+            users: [{ fallback: 'AB' }, { fallback: 'CD' }, { fallback: 'EF' }]
+          }
+        }
+      ]
+    }
+  };
+
+  const chipSpec = {
+    version: '1.0' as const,
+    state: { chips: ['svelte', 'tailwind', 'typescript'] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', wrap: 'wrap', align: 'center' },
+          children: [
+            { type: 'chip', props: { label: 'default' } },
+            { type: 'chip', props: { label: 'primary', variant: 'primary' } },
+            { type: 'chip', props: { label: 'success', variant: 'success' } },
+            { type: 'chip', props: { label: 'warning', variant: 'warning' } },
+            { type: 'chip', props: { label: 'destructive', variant: 'destructive' } }
+          ]
+        },
+        {
+          type: 'flex',
+          props: { gap: '8px', wrap: 'wrap' },
+          children: [
+            {
+              type: 'each',
+              items: 'chips',
+              item_as: 'tag',
+              children: [
+                {
+                  type: 'chip',
+                  props: { label: '{tag}', variant: 'primary', closable: true },
+                  on_close: { action: 'remove', target: 'chips', value: '{tag}' }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const kbdSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'text', props: { text: 'Open command palette', size: 'sm' } },
+            { type: 'kbd', props: { keys: ['⌘', 'K'] } }
+          ]
+        },
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'text', props: { text: 'Submit form', size: 'sm' } },
+            { type: 'kbd', props: { keys: ['⌘', 'Enter'] } }
+          ]
+        },
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'text', props: { text: 'Confirm', size: 'sm' } },
+            { type: 'kbd', props: { keys: 'Enter' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const statusDotSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'status-dot', props: { variant: 'online', label: 'Online — pulsing', pulse: true } },
+        { type: 'status-dot', props: { variant: 'busy', label: 'Busy' } },
+        { type: 'status-dot', props: { variant: 'away', label: 'Away' } },
+        { type: 'status-dot', props: { variant: 'offline', label: 'Offline' } },
+        { type: 'status-dot', props: { variant: 'custom', color: '#a855f7', label: 'Custom (purple)' } }
+      ]
+    }
+  };
+
+  const trendSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '24px', wrap: 'wrap', align: 'center' },
+      children: [
+        { type: 'trend', props: { value: 12.4 } },
+        { type: 'trend', props: { value: -3.2 } },
+        { type: 'trend', props: { value: 0 } },
+        { type: 'trend', props: { value: 1500, format: 'currency' } },
+        { type: 'trend', props: { value: -250, format: 'currency' } },
+        { type: 'trend', props: { value: 42, format: 'number', precision: 0 } }
+      ]
+    }
+  };
+
+  const iconSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '16px', wrap: 'wrap', align: 'center' },
+      children: [
+        { type: 'icon', props: { name: 'sparkles', size: 20 } },
+        { type: 'icon', props: { name: 'zap', size: 20 } },
+        { type: 'icon', props: { name: 'rocket', size: 20 } },
+        { type: 'icon', props: { name: 'heart', size: 20, color: '#ef4444' } },
+        { type: 'icon', props: { name: 'star', size: 20, color: '#f59e0b' } },
+        { type: 'icon', props: { name: 'check-circle', size: 20, color: '#10b981' } }
+      ]
+    }
+  };
+
+  const copySpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px', align: 'start' },
+      children: [
+        { type: 'copy', props: { value: 'sk_test_abc123def456', label: 'API key' } },
+        { type: 'copy', props: { value: 'a1b2c3d4-e5f6', size: 'sm' } }
+      ]
+    }
+  };
+
+  const inlineCodeSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'text',
+          props: { text: 'Inline code is rendered with a subtle pill background.', size: 'sm' }
+        },
+        {
+          type: 'flex',
+          props: { gap: '6px', align: 'center', wrap: 'wrap' },
+          children: [
+            { type: 'text', props: { text: 'Try', size: 'sm' } },
+            { type: 'code', props: { value: 'const sum = a + b' } },
+            { type: 'text', props: { text: 'or just', size: 'sm' } },
+            { type: 'code', props: { value: 'npm install' } }
+          ]
+        }
       ]
     }
   };
@@ -2394,6 +2710,50 @@
     }
   };
 
+  // ── C4 diagram ──────────────────────────────────────────────
+
+  const c4Spec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'c4',
+      props: {
+        diagram: {
+          level: 'container',
+          title: 'Internet Banking — Containers',
+          description: 'How the customer-facing system is composed.',
+          elements: [
+            { id: 'customer', name: 'Personal Banking Customer', description: 'A retail customer of the bank.', external: true },
+            {
+              id: 'banking-system',
+              name: 'Internet Banking System',
+              description: 'Allows customers to view account info and make payments.',
+              containers: [
+                { id: 'web-app', name: 'Web Application', technology: 'Java + Spring MVC', type: 'webapp', description: 'Delivers static content and the SPA.' },
+                { id: 'spa', name: 'Single-Page App', technology: 'JavaScript + Angular', type: 'webapp', description: 'Banking features via the browser.' },
+                { id: 'mobile-app', name: 'Mobile App', technology: 'Xamarin', type: 'mobile', description: 'Banking features for mobile.' },
+                { id: 'api', name: 'API Application', technology: 'Java + Spring MVC', type: 'api', description: 'Provides banking functionality via JSON/HTTPS.' },
+                { id: 'db', name: 'Database', technology: 'Oracle', type: 'database', description: 'Stores user, account and audit data.' },
+              ],
+            },
+            { id: 'mainframe', name: 'Mainframe Banking System', description: 'Stores all core banking information.', external: true },
+            { id: 'email', name: 'E-mail System', description: 'Microsoft Exchange.', external: true },
+          ],
+          relationships: [
+            { from: 'customer', to: 'web-app', label: 'Visits bigbank.com', technology: 'HTTPS' },
+            { from: 'customer', to: 'spa', label: 'Uses' },
+            { from: 'customer', to: 'mobile-app', label: 'Uses' },
+            { from: 'web-app', to: 'spa', label: 'Delivers to browser' },
+            { from: 'spa', to: 'api', label: 'Calls', technology: 'JSON/HTTPS' },
+            { from: 'mobile-app', to: 'api', label: 'Calls', technology: 'JSON/HTTPS' },
+            { from: 'api', to: 'db', label: 'Reads/writes', technology: 'JDBC' },
+            { from: 'api', to: 'mainframe', label: 'Calls', technology: 'XML/HTTPS' },
+            { from: 'api', to: 'email', label: 'Sends e-mail', style: 'async' },
+          ],
+        }
+      }
+    }
+  };
+
   // ── Section data ────────────────────────────────────────────
 
   const sections = [
@@ -2415,6 +2775,10 @@
       { label: 'Sidebar', spec: sidebarSpec },
       { label: 'App Shell', spec: appShellSpec },
       { label: 'Master / Detail', spec: masterDetailSpec },
+      { label: 'Tooltip', spec: tooltipSpec },
+      { label: 'Popover', spec: popoverSpec },
+      { label: 'Hover Card', spec: hoverCardSpec },
+      { label: 'Toast', spec: toastSpec },
     ]},
     { id: 'display', title: 'Display', items: [
       { label: 'Text', spec: textSpec },
@@ -2435,6 +2799,15 @@
       { label: 'Definition List', spec: definitionListSpec },
       { label: 'Article Meta', spec: articleMetaSpec },
       { label: 'FAQ (accordion)', spec: faqSpec },
+      { label: 'Loading', spec: loadingSpec },
+      { label: 'Avatar Group', spec: avatarGroupSpec },
+      { label: 'Chip / Tag', spec: chipSpec },
+      { label: 'Kbd', spec: kbdSpec },
+      { label: 'Status Dot', spec: statusDotSpec },
+      { label: 'Trend / Delta', spec: trendSpec },
+      { label: 'Icon', spec: iconSpec },
+      { label: 'Copy', spec: copySpec },
+      { label: 'Inline Code', spec: inlineCodeSpec },
     ]},
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },
@@ -2450,6 +2823,7 @@
     { id: 'data', title: 'Data', items: [
       { label: 'Table', spec: tableSpec },
       { label: 'Chart', spec: chartSpec },
+      { label: 'C4 Diagram', spec: c4Spec },
     ]},
     { id: 'control', title: 'Control Flow', items: [
       { label: 'If / Each', spec: controlSpec },
