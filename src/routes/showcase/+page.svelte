@@ -195,6 +195,66 @@
     }
   };
 
+  const markdownSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'markdown',
+      props: {
+        content: [
+          '## Heading 2',
+          '',
+          'A short paragraph with **bold**, *italic*, ~~strikethrough~~, and `inline code`.',
+          'Visit [Anthropic](https://anthropic.com) for more.',
+          '',
+          '- list item one',
+          '- list item two',
+          '  - nested',
+          '',
+          '> Block quote with a hint of italic.',
+          '',
+          '| col a | col b |',
+          '| --- | --- |',
+          '| alpha | beta |',
+          '| gamma | delta |',
+          '',
+          '```ts',
+          'const greeting = (name: string) => `Hello, ${name}!`;',
+          '```'
+        ].join('\n')
+      }
+    }
+  };
+
+  const codeBlockSvelte = [
+    '<' + 'script>',
+    '  let count = $state(0);',
+    '</' + 'script>',
+    '',
+    '<button onclick={() => count++}>',
+    '  clicks: {count}',
+    '</button>'
+  ].join('\n');
+
+  const codeBlockJson = [
+    '{',
+    '  "type": "input",',
+    '  "bind": "username",',
+    '  "props": { "placeholder": "Your name" }',
+    '}'
+  ].join('\n');
+
+  const codeBlockSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'code-block', props: { language: 'svelte', code: codeBlockSvelte } },
+        { type: 'code-block', props: { language: 'json', code: codeBlockJson } }
+      ]
+    }
+  };
+
   // ── Input Widgets ───────────────────────────────────────────
 
   const buttonSpec = {
@@ -1015,6 +1075,8 @@
       { label: 'Avatar', spec: avatarSpec },
       { label: 'Metric', spec: metricSpec },
       { label: 'Feed', spec: feedSpec },
+      { label: 'Markdown', spec: markdownSpec },
+      { label: 'Code Block', spec: codeBlockSpec },
     ]},
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },

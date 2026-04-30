@@ -2,7 +2,7 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
@@ -41,6 +41,10 @@ const defaultRegistry: WidgetMap = {
   feed: Feed,
   'soul-status': SoulStatus,
   skeleton: Skeleton,
+  markdown: Markdown,
+  md: Markdown,
+  'code-block': CodeBlock,
+  code: CodeBlock,
   button: Button,
   input: Input,
   select: Select,
@@ -105,7 +109,7 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
-  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton,
+  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,
   Table, Chart, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,

@@ -50,6 +50,7 @@
     "echarts": "^6.0.0",
     "elkjs": "^0.11.1",
     "layerchart": "2.0.0-next.43",
+    "marked": "^18.0.2",
     "muuri": "^0.9.5",
     "partial-json": "0.1.7",
     "zod": "^4.0.0"
