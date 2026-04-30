@@ -92,6 +92,7 @@
   function handleInput(e: Event) {
     const v = (e.target as HTMLInputElement).value;
     oninput?.(v);
+    onchange?.(v);
   }
 
   function handleChange(e: Event) {
