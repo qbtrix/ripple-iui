@@ -332,6 +332,11 @@ function evaluateSimplePath(path: string, context: ResolverContext): unknown {
 		if (current === null || current === undefined) {
 			return undefined;
 		}
+		// Strings and arrays expose `length`; allow built-in indexed access too.
+		if (typeof current === 'string' || Array.isArray(current)) {
+			current = (current as unknown as Record<string, unknown>)[part];
+			continue;
+		}
 		if (typeof current !== 'object') {
 			return undefined;
 		}

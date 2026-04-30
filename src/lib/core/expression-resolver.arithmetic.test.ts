@@ -54,4 +54,13 @@ describe('expression-resolver arithmetic', () => {
 	test('arithmetic inside template via resolveString', () => {
 		expect(resolveString('Count: {state.count + 1}', ctx({ count: 5 }))).toBe('Count: 6');
 	});
+
+	test('.length on a string', () => {
+		expect(evaluateExpression('state.bio.length', ctx({ bio: 'hello' }))).toBe(5);
+	});
+
+	test('.length on an array, plus indexed access', () => {
+		expect(evaluateExpression('state.items.length', ctx({ items: [1, 2, 3] }))).toBe(3);
+		expect(evaluateExpression('state.items.0', ctx({ items: ['a', 'b'] }))).toBe('a');
+	});
 });

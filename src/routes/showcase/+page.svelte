@@ -60,13 +60,22 @@
 
   const tabsSpec = {
     version: '1.0' as const,
+    state: { currentTab: 'Overview' },
     ui: {
-      type: 'tabs',
-      props: { tabs: ['Overview', 'Details', 'Settings'] },
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
       children: [
-        { type: 'text', props: { text: 'Overview content goes here.', size: 'sm' } },
-        { type: 'text', props: { text: 'Detailed information panel.', size: 'sm' } },
-        { type: 'text', props: { text: 'Settings and configuration.', size: 'sm' } },
+        {
+          type: 'tabs',
+          props: { tabs: ['Overview', 'Details', 'Settings'] },
+          bind: 'currentTab',
+          children: [
+            { type: 'text', props: { text: 'Overview content goes here.', size: 'sm' } },
+            { type: 'text', props: { text: 'Detailed information panel.', size: 'sm' } },
+            { type: 'text', props: { text: 'Settings and configuration.', size: 'sm' } },
+          ]
+        },
+        { type: 'text', props: { text: 'Active tab → {state.currentTab}', size: 'xs' } }
       ]
     }
   };
@@ -208,14 +217,37 @@
 
   const inputSpec = {
     version: '1.0' as const,
-    state: { name: '', email: '' },
+    state: { name: '', email: '', keystrokes: '' },
     ui: {
       type: 'flex',
       props: { direction: 'column', gap: '10px' },
       children: [
         { type: 'input', props: { placeholder: 'Your name', label: 'Name', type: 'text' }, bind: 'name' },
         { type: 'input', props: { placeholder: 'you@example.com', label: 'Email', type: 'email' }, bind: 'email' },
+        {
+          type: 'input',
+          props: { placeholder: 'Type to fire on_input', label: 'Live (on_input)', type: 'text' },
+          on_input: { action: 'set', target: 'keystrokes' }
+        },
         { type: 'input', props: { placeholder: 'Disabled field', disabled: true } },
+        { type: 'text', props: { text: 'name → {state.name}  ·  email → {state.email}  ·  on_input → {state.keystrokes}', size: 'xs' } },
+      ]
+    }
+  };
+
+  const textareaSpec = {
+    version: '1.0' as const,
+    state: { bio: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'textarea',
+          props: { label: 'Bio', placeholder: 'A few sentences...', rows: 3 },
+          bind: 'bio'
+        },
+        { type: 'text', props: { text: 'Length: {state.bio.length}', size: 'xs' } },
       ]
     }
   };
@@ -224,16 +256,23 @@
     version: '1.0' as const,
     state: { color: '' },
     ui: {
-      type: 'select',
-      props: {
-        placeholder: 'Pick a color',
-        options: [
-          { value: 'red', label: 'Red' },
-          { value: 'green', label: 'Green' },
-          { value: 'blue', label: 'Blue' },
-        ]
-      },
-      bind: 'color'
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'select',
+          props: {
+            placeholder: 'Pick a color',
+            options: [
+              { value: 'red', label: 'Red' },
+              { value: 'green', label: 'Green' },
+              { value: 'blue', label: 'Blue' },
+            ]
+          },
+          bind: 'color'
+        },
+        { type: 'text', props: { text: 'Selected → {state.color}', size: 'xs' } },
+      ]
     }
   };
 
@@ -246,6 +285,7 @@
       children: [
         { type: 'checkbox', props: { label: 'I agree to the terms' }, bind: 'agreed' },
         { type: 'switch', props: { label: 'Dark mode' }, bind: 'dark' },
+        { type: 'text', props: { text: 'agreed → {state.agreed}  ·  dark → {state.dark}', size: 'xs' } },
       ]
     }
   };
@@ -680,6 +720,7 @@
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },
       { label: 'Input', spec: inputSpec },
+      { label: 'Textarea', spec: textareaSpec },
       { label: 'Select', spec: selectSpec },
       { label: 'Checkbox & Switch', spec: togglesSpec },
     ]},
