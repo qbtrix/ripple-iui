@@ -21,13 +21,11 @@
   );
 
   let IconComponent = $state<Component | null>(null);
-  let resolvedName = $state<string | null>(null);
 
   $effect(() => {
     let cancelled = false;
     const target = name;
     IconComponent = null;
-    resolvedName = null;
     if (!target) return;
     // Vite analyzes this template literal at build-time and code-splits each
     // icon module — tree-shaking is preserved.
@@ -35,12 +33,10 @@
       .then((m) => {
         if (cancelled) return;
         IconComponent = m.default ?? null;
-        resolvedName = target;
       })
       .catch(() => {
         if (cancelled) return;
         IconComponent = null;
-        resolvedName = null;
       });
     return () => { cancelled = true; };
   });
