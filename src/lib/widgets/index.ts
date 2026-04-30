@@ -7,7 +7,7 @@ import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, 
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal } from './composite/index.js';
-import { ConfirmDialog, Alert } from './overlay/index.js';
+import { ConfirmDialog, Alert, DropdownMenu } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -37,6 +37,9 @@ const defaultRegistry: WidgetMap = {
   divider: Separator,
   alert: Alert,
   banner: Alert,
+  'dropdown-menu': DropdownMenu,
+  dropdown: DropdownMenu,
+  menu: DropdownMenu,
   'page-header': PageHeader,
   hero: Hero,
   section: Section,
@@ -141,7 +144,7 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
-  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell,
+  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, DropdownMenu,
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,

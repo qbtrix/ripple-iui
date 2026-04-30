@@ -6,3 +6,4 @@
  */
 export { default as ConfirmDialog } from './ConfirmDialog.svelte';
 export { default as Alert } from './Alert.svelte';
+export { default as DropdownMenu } from './DropdownMenu.svelte';

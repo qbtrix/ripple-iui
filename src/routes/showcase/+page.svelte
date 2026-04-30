@@ -123,6 +123,34 @@
     }
   };
 
+  const dropdownMenuSpec = {
+    version: '1.0' as const,
+    state: { lastAction: '—' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px', align: 'start' },
+      children: [
+        {
+          type: 'dropdown-menu',
+          props: {
+            label: 'Actions',
+            triggerVariant: 'outline',
+            items: [
+              { label: 'Edit', icon: 'pencil', value: 'edit', shortcut: '⌘E' },
+              { label: 'Duplicate', icon: 'copy', value: 'duplicate', shortcut: '⌘D' },
+              { label: 'Share', icon: 'share', value: 'share' },
+              { type: 'separator' },
+              { label: 'Archive', icon: 'archive', value: 'archive' },
+              { label: 'Delete', icon: 'trash-2', value: 'delete', variant: 'destructive', shortcut: '⌫' }
+            ]
+          },
+          on_change: { action: 'set', target: 'lastAction' }
+        },
+        { type: 'text', props: { text: 'Last action → {state.lastAction}', size: 'xs' } }
+      ]
+    }
+  };
+
   const sheetSpec = {
     version: '1.0' as const,
     state: { open: false },
@@ -1648,6 +1676,7 @@
       { label: 'Accordion', spec: accordionSpec },
       { label: 'Separator', spec: separatorSpec },
       { label: 'Alert', spec: alertSpec },
+      { label: 'Dropdown Menu', spec: dropdownMenuSpec },
       { label: 'Sheet / Drawer', spec: sheetSpec },
       { label: 'Page Header', spec: pageHeaderSpec },
       { label: 'Hero', spec: heroSpec },
