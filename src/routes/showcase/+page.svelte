@@ -372,6 +372,144 @@
     }
   };
 
+  // ── Static info widgets ─────────────────────────────────────
+
+  const prosConsSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'pros-cons',
+      props: {
+        prosLabel: 'Why JSON-spec UI',
+        consLabel: 'When to skip',
+        pros: [
+          'LLM authors UI without writing Svelte',
+          'Two-way bind covers 90% of forms with no boilerplate',
+          'Deterministic — same spec renders the same DOM',
+          'Hot-swappable for streaming responses'
+        ],
+        cons: [
+          'Custom interactions still need a real component',
+          'Bundle is heavier than hand-written HTML',
+          'Not the right tool for animation-heavy art direction'
+        ]
+      }
+    }
+  };
+
+  const comparisonTableSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'comparison-table',
+      props: {
+        label: 'Feature',
+        columns: [
+          { key: 'free', label: 'Free' },
+          { key: 'pro', label: 'Pro', highlight: true },
+          { key: 'ent', label: 'Enterprise' }
+        ],
+        rows: [
+          { feature: 'Workspace members', free: '1', pro: '10', ent: 'Unlimited' },
+          { feature: 'API requests / mo', free: '1k', pro: '100k', ent: 'Custom' },
+          { feature: 'Audit log', free: false, pro: true, ent: true },
+          { feature: 'Priority support', free: false, pro: true, ent: true },
+          { feature: 'SSO / SAML', free: false, pro: false, ent: true },
+          { feature: 'Custom contract', free: false, pro: false, ent: true }
+        ]
+      }
+    }
+  };
+
+  const stepsSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'steps',
+      props: {
+        steps: [
+          { title: 'Install', description: 'bun add @ripple-ui/svelte' },
+          { title: 'Mount the renderer', description: 'Import <Ripple/> and pass it a JSON spec.' },
+          { title: 'Wire onEvent', description: 'Forward navigate / api / toast actions to your host code.' },
+          { title: 'Stream specs', description: 'Use a StreamSpecStore to render LLM-generated UI as it arrives.' }
+        ]
+      }
+    }
+  };
+
+  const quoteSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'quote',
+      props: {
+        text: 'The most surprising thing about LLM-rendered UI is how often the spec is shorter than the answer it represents.',
+        author: 'Ada Lovelace',
+        role: 'Co-founder, Acme Labs',
+        avatar: 'https://i.pravatar.cc/64?img=47'
+      }
+    }
+  };
+
+  const highlightSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'grid',
+      props: { columns: 3, gap: '12px' },
+      children: [
+        { type: 'highlight', props: { value: '$1.2M', label: 'Annual recurring revenue', delta: '+12.4%', description: 'Trailing 12 months' } },
+        { type: 'highlight', props: { value: '94%', label: 'Customer retention', delta: '-1.1%', description: 'Quarterly cohort' } },
+        { type: 'highlight', props: { value: '142ms', label: 'p95 response time', tone: 'neutral', description: 'Last 7 days' } }
+      ]
+    }
+  };
+
+  const definitionListSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'definition-list',
+      props: {
+        items: [
+          { term: 'Spec', definition: 'A JSON object that describes a UI tree, state, and event flows.' },
+          { term: 'Bind', definition: 'A two-way reactive link between a widget value and a state path.' },
+          { term: 'Flow', definition: 'A composite event handler with sequential steps and on_error fallback.' },
+          { term: 'Intent', definition: 'A high-level UI goal (browse, form, dashboard) that the layout engine renders.' }
+        ]
+      }
+    }
+  };
+
+  const articleMetaSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'heading', props: { text: 'Why interactive UI belongs in your AI responses', level: 3 } },
+        {
+          type: 'article-meta',
+          props: {
+            author: 'Ada Lovelace',
+            role: 'Founding engineer',
+            avatar: 'https://i.pravatar.cc/64?img=47',
+            date: 'April 30, 2026',
+            readTime: '6 min read'
+          }
+        }
+      ]
+    }
+  };
+
+  const faqSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'accordion',
+      props: {
+        items: [
+          { value: 'q1', title: 'How is this different from a templating engine?', content: 'Specs include reactive state, expressions, and event flows — not just static substitution. Bind is two-way; on_change runs flows.' },
+          { value: 'q2', title: 'Can the LLM see what the user typed?', content: 'Yes. Use the onStateChange callback on <Ripple> to receive every state write, or the emit / api actions for explicit notification.' },
+          { value: 'q3', title: 'Is the markdown widget safe for untrusted input?', content: 'It renders raw HTML in markdown source via {@html}. Sanitize untrusted markdown on the host before passing it to Ripple.' }
+        ]
+      }
+    }
+  };
+
   // ── Display Widgets ─────────────────────────────────────────
 
   const textSpec = {
@@ -1507,6 +1645,14 @@
       { label: 'Feed', spec: feedSpec },
       { label: 'Markdown', spec: markdownSpec },
       { label: 'Code Block', spec: codeBlockSpec },
+      { label: 'Pros / Cons', spec: prosConsSpec },
+      { label: 'Comparison Table', spec: comparisonTableSpec },
+      { label: 'Steps', spec: stepsSpec },
+      { label: 'Quote', spec: quoteSpec },
+      { label: 'Highlight', spec: highlightSpec },
+      { label: 'Definition List', spec: definitionListSpec },
+      { label: 'Article Meta', spec: articleMetaSpec },
+      { label: 'FAQ (accordion)', spec: faqSpec },
     ]},
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },

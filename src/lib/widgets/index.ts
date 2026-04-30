@@ -2,7 +2,7 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
@@ -42,6 +42,20 @@ const defaultRegistry: WidgetMap = {
   section: Section,
   'empty-state': EmptyState,
   empty: EmptyState,
+  'pros-cons': ProsCons,
+  'comparison-table': ComparisonTable,
+  comparison: ComparisonTable,
+  steps: Steps,
+  stepper: Steps,
+  quote: Quote,
+  pullquote: Quote,
+  highlight: Highlight,
+  'big-stat': Highlight,
+  'definition-list': DefinitionList,
+  dl: DefinitionList,
+  glossary: DefinitionList,
+  'article-meta': ArticleMeta,
+  byline: ArticleMeta,
   sidebar: Sidebar,
   nav: Sidebar,
   'app-shell': AppShell,
@@ -128,6 +142,7 @@ export function resetRegistry(): void {
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
   Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell,
+  ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,
   Table, Chart, Terminal, If, Each,
