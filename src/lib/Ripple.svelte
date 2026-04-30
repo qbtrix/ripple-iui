@@ -16,6 +16,7 @@
   import { createStateManager } from './core/state-manager.svelte.js';
   import { createEventDispatcher, type OnEventCallback } from './core/event-dispatcher.js';
   import { createWidgetRegistry } from './core/widget-registry.js';
+  import { createToastBus } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
@@ -59,7 +60,22 @@
 
   const stateManager = createStateManager(mergedInitialState);
   const widgetRegistry = createWidgetRegistry();
-  const eventDispatcher = createEventDispatcher(stateManager, onEvent, widgetRegistry);
+  const toastBus = createToastBus();
+
+  // Chain: forward toast events into the in-process bus AND to any host onEvent.
+  // Hosts that already render toasts continue to work; specs that mount a
+  // `<toast />` widget get rendering for free.
+  const chainedOnEvent = (event: any) => {
+    if (event && event.type === 'toast') {
+      toastBus.push({
+        message: typeof event.message === 'string' ? event.message : String(event.message ?? ''),
+        variant: event.variant
+      });
+    }
+    onEvent?.(event);
+  };
+
+  const eventDispatcher = createEventDispatcher(stateManager, chainedOnEvent, widgetRegistry);
   let dataStore = $state<Record<string, unknown>>({});
 
   // Sync external state prop changes into the stateManager reactively.
@@ -99,6 +115,7 @@
   // Expose the host onEvent so nested ripple-frame instances can forward
   // their inner events back up to the outermost host.
   setContext('ui-host-event', onEvent);
+  setContext('ui-toasts', toastBus);
 
   $effect(() => {
     if (!onStateChange) return;
