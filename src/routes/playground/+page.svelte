@@ -11,61 +11,22 @@
         props: { direction: 'column', gap: '16px' },
         children: [
           { type: 'heading', props: { text: 'Hello, Ripple!', level: 2 } },
-          {
-            type: 'text',
-            props: {
-              text: 'Edit the JSON on the left to render a different UI.',
-              size: 'sm'
-            }
-          },
+          { type: 'text', props: { text: 'Edit the JSON on the left to render a different UI.', size: 'sm' } },
           {
             type: 'grid',
             props: { columns: 3, gap: 3 },
             children: [
-              {
-                type: 'stat',
-                props: {
-                  label: 'Revenue',
-                  value: 12450,
-                  format: 'currency',
-                  deltaPercent: 3.4,
-                  direction: 'up-good'
-                }
-              },
-              {
-                type: 'stat',
-                props: {
-                  label: 'Signups',
-                  value: 247,
-                  deltaPercent: 18.2,
-                  direction: 'up-good'
-                }
-              },
-              {
-                type: 'stat',
-                props: {
-                  label: 'Churn',
-                  value: 0.034,
-                  format: 'percent',
-                  deltaPercent: -0.8,
-                  direction: 'down-good'
-                }
-              }
+              { type: 'stat', props: { label: 'Revenue', value: 12450, format: 'currency', deltaPercent: 3.4, direction: 'up-good' } },
+              { type: 'stat', props: { label: 'Signups', value: 247, deltaPercent: 18.2, direction: 'up-good' } },
+              { type: 'stat', props: { label: 'Churn', value: 0.034, format: 'percent', deltaPercent: -0.8, direction: 'down-good' } }
             ]
           },
           {
             type: 'flex',
             props: { direction: 'column', gap: '8px' },
             children: [
-              {
-                type: 'input',
-                bind: '{state.username}',
-                props: { label: 'Your name', placeholder: 'Type something' }
-              },
-              {
-                type: 'text',
-                props: { text: 'Hello, {state.username}!', size: 'sm' }
-              }
+              { type: 'input', bind: '{state.username}', props: { label: 'Your name', placeholder: 'Type something' } },
+              { type: 'text', props: { text: 'Hello, {state.username}!', size: 'sm' } }
             ]
           },
           {
@@ -80,11 +41,13 @@
     2
   );
 
+  // ── Truth lives in Svelte; the spec mirrors it via state override ──────
   let source = $state(EXAMPLE);
   let autoRender = $state(true);
   let committedSource = $state(EXAMPLE);
+  let events = $state<RippleEvent[]>([]);
 
-  const parsed = $derived.by<{ spec: any | null; error: string | null }>(() => {
+  const parsed = $derived.by<{ spec: unknown | null; error: string | null }>(() => {
     const text = autoRender ? source : committedSource;
     if (!text.trim()) return { spec: null, error: 'Spec is empty' };
     try {
@@ -94,102 +57,202 @@
     }
   });
 
-  const events = $state<RippleEvent[]>([]);
-
+  // Inner ripple-frame events bubble out via the host-controlled onEvent on
+  // the OUTER Ripple — but the inner frame has its own onEvent, so we forward.
   function handleEvent(event: RippleEvent) {
-    events.unshift(event);
-    if (events.length > 50) events.length = 50;
-  }
-
-  function format() {
-    try {
-      source = JSON.stringify(JSON.parse(source), null, 2);
-    } catch {
-      // leave as-is if invalid
+    // Custom 'pg' actions are emitted from the spec's toolbar buttons.
+    if (event.type === 'emit' && typeof event.target === 'string') {
+      if (event.target === 'pg-format') {
+        try {
+          source = JSON.stringify(JSON.parse(source), null, 2);
+        } catch { /* invalid — leave as is */ }
+        return;
+      }
+      if (event.target === 'pg-render') {
+        committedSource = source;
+        return;
+      }
+      if (event.target === 'pg-reset') {
+        source = EXAMPLE;
+        committedSource = EXAMPLE;
+        events = [];
+        return;
+      }
+      if (event.target === 'pg-clear-events') {
+        events = [];
+        return;
+      }
     }
+    // Anything else: log to events panel.
+    events = [event, ...events].slice(0, 50);
   }
 
-  function render() {
-    committedSource = source;
+  // The state override is recomputed reactively and pushed into the outer
+  // Ripple. The Ripple component's own $effect diffs and only re-applies
+  // values that actually changed, so the textarea keeps its caret position
+  // while typing.
+  const stateOverride = $derived({
+    source,
+    autoRender,
+    parsedSpec: parsed.spec,
+    error: parsed.error,
+    eventsJson: events.map((e) => JSON.stringify(e, null, 2))
+  });
+
+  function handleStateChange(path: string, value: unknown) {
+    if (path === 'source' && typeof value === 'string') source = value;
+    if (path === 'autoRender' && typeof value === 'boolean') autoRender = value;
   }
 
-  function reset() {
-    source = EXAMPLE;
-    committedSource = EXAMPLE;
-    events.length = 0;
-  }
+  // ── Playground shell as a Ripple spec ────────────────────────────────────
+  const playgroundSpec = {
+    version: '1.0' as const,
+    state: {
+      source: '',
+      autoRender: true,
+      parsedSpec: null,
+      error: null,
+      eventsJson: [] as string[]
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '16px' },
+      class: 'playground-page',
+      children: [
+        // Header + toolbar
+        {
+          type: 'flex',
+          props: { justify: 'between', align: 'end', wrap: 'wrap', gap: '12px' },
+          children: [
+            {
+              type: 'page-header',
+              props: { eyebrow: 'PLAYGROUND', title: 'Spec Playground', subtitle: 'Paste or edit a Ripple JSON spec and render it live.' },
+              class: 'flex-1 min-w-0'
+            },
+            {
+              type: 'flex',
+              props: { gap: '8px', align: 'center' },
+              children: [
+                { type: 'checkbox', props: { label: 'Auto-render' }, bind: 'autoRender' },
+                { type: 'button', props: { label: 'Format', variant: 'outline', size: 'sm' }, on_click: { action: 'emit', target: 'pg-format' } },
+                {
+                  type: 'if',
+                  condition: '{!state.autoRender}',
+                  children: [
+                    { type: 'button', props: { label: 'Render', size: 'sm' }, on_click: { action: 'emit', target: 'pg-render' } }
+                  ]
+                },
+                { type: 'button', props: { label: 'Reset', variant: 'ghost', size: 'sm' }, on_click: { action: 'emit', target: 'pg-reset' } }
+              ]
+            }
+          ]
+        },
 
-  function clearEvents() {
-    events.length = 0;
-  }
+        // Two-pane split
+        {
+          type: 'grid',
+          props: { columns: 2, gap: '16px' },
+          class: 'playground-split',
+          children: [
+            // Left: textarea
+            {
+              type: 'card',
+              children: [
+                {
+                  type: 'flex',
+                  props: { justify: 'between', align: 'center' },
+                  children: [
+                    { type: 'text', props: { text: 'JSON spec', size: 'xs', weight: 'semibold' }, class: 'uppercase tracking-wide' },
+                    {
+                      type: 'if',
+                      condition: '{state.error == null}',
+                      children: [{ type: 'badge', props: { text: 'valid', variant: 'secondary' } }],
+                      else_children: [{ type: 'badge', props: { text: 'invalid', variant: 'destructive' } }]
+                    }
+                  ]
+                },
+                {
+                  type: 'textarea',
+                  props: { rows: 18, class: 'font-mono text-xs leading-relaxed' },
+                  bind: 'source'
+                },
+                {
+                  type: 'if',
+                  condition: '{state.error != null}',
+                  children: [
+                    { type: 'alert', props: { variant: 'destructive', title: 'Parse error', description: '{state.error}' } }
+                  ]
+                }
+              ]
+            },
+
+            // Right: preview + events
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '12px' },
+              children: [
+                {
+                  type: 'card',
+                  children: [
+                    { type: 'text', props: { text: 'Preview', size: 'xs', weight: 'semibold' }, class: 'uppercase tracking-wide mb-2' },
+                    {
+                      type: 'if',
+                      condition: '{state.parsedSpec != null}',
+                      children: [
+                        { type: 'ripple-frame', props: { spec: '{state.parsedSpec}' } }
+                      ],
+                      else_children: [
+                        { type: 'empty-state', props: { icon: 'error', title: 'Fix the JSON to see a preview', description: 'The editor is showing a parse error.' } }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  type: 'card',
+                  children: [
+                    {
+                      type: 'flex',
+                      props: { justify: 'between', align: 'center' },
+                      children: [
+                        { type: 'text', props: { text: 'Events ({state.eventsJson.length})', size: 'xs', weight: 'semibold' }, class: 'uppercase tracking-wide' },
+                        { type: 'button', props: { label: 'clear', variant: 'ghost', size: 'sm' }, on_click: { action: 'emit', target: 'pg-clear-events' } }
+                      ]
+                    },
+                    {
+                      type: 'if',
+                      condition: '{state.eventsJson.length == 0}',
+                      children: [
+                        { type: 'text', props: { text: 'No events yet. Interact with the preview to see them here.', size: 'xs' }, class: 'text-muted-foreground' }
+                      ],
+                      else_children: [
+                        {
+                          type: 'each',
+                          items: 'eventsJson',
+                          item_as: 'evJson',
+                          children: [
+                            { type: 'code-block', props: { code: '{evJson}', hideCopy: true, hideLanguage: true } }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
 </script>
 
 <div class="page">
-  <header class="header">
-    <div>
-      <h1>Spec Playground</h1>
-      <p>Paste or edit a Ripple JSON spec and render it live.</p>
-    </div>
-    <div class="toolbar">
-      <label class="toggle">
-        <input type="checkbox" bind:checked={autoRender} />
-        Auto-render
-      </label>
-      <button class="btn" onclick={format}>Format</button>
-      <button class="btn" onclick={render} disabled={autoRender}>Render</button>
-      <button class="btn" onclick={reset}>Reset</button>
-    </div>
-  </header>
-
-  <div class="split">
-    <section class="pane">
-      <div class="pane-head">
-        <span>JSON spec</span>
-        {#if parsed.error}
-          <span class="err">invalid</span>
-        {:else}
-          <span class="ok">valid</span>
-        {/if}
-      </div>
-      <textarea
-        class="editor"
-        spellcheck="false"
-        bind:value={source}
-      ></textarea>
-      {#if parsed.error}
-        <pre class="error">{parsed.error}</pre>
-      {/if}
-    </section>
-
-    <section class="pane">
-      <div class="pane-head">
-        <span>Preview</span>
-      </div>
-      <div class="preview">
-        {#if parsed.spec}
-          {#key parsed.spec}
-            <Ripple spec={parsed.spec} onEvent={handleEvent} />
-          {/key}
-        {:else}
-          <div class="empty">Fix the JSON to see a preview.</div>
-        {/if}
-      </div>
-
-      <div class="pane-head events-head">
-        <span>Events ({events.length})</span>
-        <button class="link" onclick={clearEvents} disabled={events.length === 0}>clear</button>
-      </div>
-      <div class="events">
-        {#if events.length === 0}
-          <div class="empty">No events yet. Interact with the preview to see them here.</div>
-        {:else}
-          {#each events as ev, i (i)}
-            <pre class="event">{JSON.stringify(ev, null, 2)}</pre>
-          {/each}
-        {/if}
-      </div>
-    </section>
-  </div>
+  <Ripple
+    spec={playgroundSpec}
+    state={stateOverride}
+    onStateChange={handleStateChange}
+    onEvent={handleEvent}
+  />
 </div>
 
 <style>
@@ -197,160 +260,11 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px 24px 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
   }
-  .header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .header h1 {
-    margin: 0 0 4px;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-  .header p {
-    margin: 0;
-    font-size: 13px;
-    color: hsl(var(--muted-foreground));
-  }
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: hsl(var(--muted-foreground));
-    user-select: none;
-  }
-  .btn {
-    padding: 6px 12px;
-    font-size: 13px;
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--card));
-    color: hsl(var(--foreground));
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn:hover:not(:disabled) {
-    background: hsl(var(--muted) / 0.6);
-  }
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .split {
-    display: grid;
+  :global(.playground-split) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 16px;
-    min-height: 70vh;
   }
   @media (max-width: 900px) {
-    .split { grid-template-columns: 1fr; }
-  }
-  .pane {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid hsl(var(--border));
-    border-radius: 10px;
-    background: hsl(var(--card));
-    overflow: hidden;
-    min-height: 0;
-  }
-  .pane-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid hsl(var(--border));
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: hsl(var(--muted-foreground));
-    background: hsl(var(--muted) / 0.3);
-  }
-  .events-head {
-    border-top: 1px solid hsl(var(--border));
-  }
-  .ok { color: hsl(142 70% 40%); text-transform: none; letter-spacing: 0; }
-  .err { color: hsl(var(--destructive)); text-transform: none; letter-spacing: 0; }
-  .link {
-    background: none;
-    border: none;
-    font: inherit;
-    color: hsl(var(--muted-foreground));
-    cursor: pointer;
-    padding: 0;
-    text-transform: none;
-    letter-spacing: 0;
-    text-decoration: underline;
-  }
-  .link:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
-  .editor {
-    flex: 1;
-    min-height: 400px;
-    padding: 12px 14px;
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 12.5px;
-    line-height: 1.5;
-    border: 0;
-    outline: none;
-    resize: none;
-    background: transparent;
-    color: hsl(var(--foreground));
-    white-space: pre;
-    tab-size: 2;
-  }
-  .error {
-    margin: 0;
-    padding: 10px 14px;
-    border-top: 1px solid hsl(var(--border));
-    background: hsl(var(--destructive) / 0.08);
-    color: hsl(var(--destructive));
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 12px;
-    white-space: pre-wrap;
-  }
-  .preview {
-    padding: 16px;
-    flex: 1;
-    overflow: auto;
-    min-height: 300px;
-  }
-  .events {
-    max-height: 240px;
-    overflow: auto;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .event {
-    margin: 0;
-    padding: 8px 10px;
-    background: hsl(var(--muted) / 0.4);
-    border-radius: 6px;
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 11.5px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .empty {
-    padding: 16px;
-    text-align: center;
-    font-size: 13px;
-    color: hsl(var(--muted-foreground));
+    :global(.playground-split) { grid-template-columns: 1fr; }
   }
 </style>

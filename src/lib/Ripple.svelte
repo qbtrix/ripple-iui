@@ -65,12 +65,28 @@
   // Sync external state prop changes into the stateManager reactively.
   // This allows data_sources and other async state updates to flow in
   // after the initial render.
+  //
+  // We deep-compare via JSON because $state wraps arrays/objects in proxies —
+  // a simple `value !== stateManager.get(key)` comparison would always be true
+  // for non-primitive values (proxy !== plain object), causing infinite loops
+  // when callers pass arrays / objects through this prop.
+  function shallowDifferent(a: unknown, b: unknown): boolean {
+    if (a === b) return false;
+    if (a == null || b == null) return a !== b;
+    if (typeof a !== 'object' || typeof b !== 'object') return a !== b;
+    try {
+      return JSON.stringify(a) !== JSON.stringify(b);
+    } catch {
+      return true;
+    }
+  }
+
   $effect(() => {
-    if (initialStateOverride) {
-      for (const [key, value] of Object.entries(initialStateOverride)) {
-        if (value !== undefined && value !== stateManager.get(key)) {
-          stateManager.set(key, value);
-        }
+    if (!initialStateOverride) return;
+    for (const [key, value] of Object.entries(initialStateOverride)) {
+      if (value === undefined) continue;
+      if (shallowDifferent(value, stateManager.get(key))) {
+        stateManager.set(key, value);
       }
     }
   });
