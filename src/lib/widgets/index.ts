@@ -73,6 +73,8 @@ const defaultRegistry: WidgetMap = {
   rating: Rating,
   stars: Rating,
   table: Table,
+  'data-table': Table,
+  datatable: Table,
   chart: Chart,
   terminal: Terminal,
   if: If,

@@ -711,17 +711,26 @@
   const tableSpec = {
     version: '1.0' as const,
     ui: {
-      type: 'table',
+      type: 'data-table',
       props: {
+        sortable: true,
+        searchable: true,
+        pageSize: 5,
         columns: [
-          { key: 'name', label: 'Name' },
-          { key: 'role', label: 'Role' },
+          { key: 'name', label: 'Name', sortable: true },
+          { key: 'role', label: 'Role', sortable: true },
           { key: 'status', label: 'Status' },
+          { key: 'tickets', label: 'Tickets', sortable: true }
         ],
         rows: [
-          { name: 'Alice Chen', role: 'Engineer', status: 'Active' },
-          { name: 'Bob Kumar', role: 'Designer', status: 'Away' },
-          { name: 'Carol Smith', role: 'PM', status: 'Active' },
+          { name: 'Alice Chen', role: 'Engineer', status: 'Active', tickets: 12 },
+          { name: 'Bob Kumar', role: 'Designer', status: 'Away', tickets: 3 },
+          { name: 'Carol Smith', role: 'PM', status: 'Active', tickets: 19 },
+          { name: 'Dana Singh', role: 'Engineer', status: 'Active', tickets: 7 },
+          { name: 'Eve Park', role: 'Researcher', status: 'Away', tickets: 1 },
+          { name: 'Frank Tan', role: 'Engineer', status: 'Active', tickets: 22 },
+          { name: 'Greta Olsen', role: 'Designer', status: 'Active', tickets: 5 },
+          { name: 'Hugo Reyes', role: 'PM', status: 'Away', tickets: 14 }
         ],
         variant: 'striped'
       }
