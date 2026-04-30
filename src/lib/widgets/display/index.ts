@@ -23,3 +23,4 @@ export { default as Icon } from './Icon.svelte';
 export { default as Loading } from './Loading.svelte';
 export { default as Chip } from './Chip.svelte';
 export { default as Kbd } from './Kbd.svelte';
+export { default as StatusDot } from './StatusDot.svelte';
