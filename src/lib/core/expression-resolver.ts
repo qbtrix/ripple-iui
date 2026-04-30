@@ -240,11 +240,27 @@ function splitArithmetic(
 	const parts: string[] = [];
 	const ops: string[] = [];
 	let depth = 0;
+	let inStr: '"' | "'" | null = null;
 	let current = '';
 	let prevNonSpace = '';
 
 	for (let i = 0; i < expr.length; i++) {
 		const ch = expr[i];
+
+		// Inside a quoted string — pass everything through, only watch for the closing quote.
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+
 		if (ch === '(') {
 			depth++;
 			current += ch;
@@ -258,8 +274,6 @@ function splitArithmetic(
 			continue;
 		}
 		if (depth === 0 && operators.includes(ch)) {
-			// Binary op only when preceded by a value-ending character.
-			// Otherwise it's a unary sign (e.g. leading `-1`).
 			const isBinary = /[a-zA-Z0-9_)\]'"]/.test(prevNonSpace);
 			if (isBinary) {
 				parts.push(current.trim());

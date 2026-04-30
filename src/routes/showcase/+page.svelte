@@ -1606,6 +1606,299 @@
     }
   };
 
+  // Issue Tracker — comprehensive E2E flow where every interaction is wired
+  const issueTrackerFlow = {
+    version: '1.0' as const,
+    state: {
+      issues: [
+        { id: 1, title: 'Login broken on Safari', body: 'Users on iOS 17 see a blank screen after submitting the form.', status: 'open', priority: 'high', assignee: 'Ada' },
+        { id: 2, title: 'Search returns stale results', body: 'After deleting an item, it still appears in search until the index rebuilds.', status: 'in_progress', priority: 'medium', assignee: 'Bob' },
+        { id: 3, title: 'Add Slack integration', body: 'Customers want notifications when a thread is updated.', status: 'open', priority: 'low', assignee: 'Carol' },
+        { id: 4, title: 'p99 latency regression', body: 'Last deploy bumped p99 from 280ms to 410ms on the search endpoint.', status: 'in_progress', priority: 'high', assignee: 'Dana' },
+        { id: 5, title: 'Update onboarding copy', body: 'Marketing requested fresh copy on the welcome step.', status: 'closed', priority: 'low', assignee: 'Eve' }
+      ],
+      query: '',
+      statusFilter: 'all',
+      selected: 1,
+      draftTitle: '',
+      nextId: 6
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        // Header
+        {
+          type: 'page-header',
+          props: { eyebrow: 'PROJECT', title: 'Issues', subtitle: 'A complete spec where every button, dropdown, and filter is wired.' }
+        },
+
+        // Filter row
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'input', props: { placeholder: 'Search title or assignee...', class: 'flex-1' }, bind: 'query' },
+            {
+              type: 'select',
+              props: {
+                placeholder: 'All statuses',
+                options: [
+                  { value: 'all', label: 'All' },
+                  { value: 'open', label: 'Open' },
+                  { value: 'in_progress', label: 'In progress' },
+                  { value: 'closed', label: 'Closed' }
+                ]
+              },
+              bind: 'statusFilter'
+            }
+          ]
+        },
+
+        // Two-pane: list + detail
+        {
+          type: 'grid',
+          props: { columns: 2, gap: '12px' },
+          style: { 'grid-template-columns': '1fr 1.4fr' },
+          children: [
+            // ── master list
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '6px' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'issues',
+                  item_as: 'issue',
+                  index_as: 'i',
+                  children: [
+                    {
+                      type: 'if',
+                      condition: '{(state.statusFilter == "all" || issue.status == state.statusFilter) && (state.query.trim() == "" || issue.title.toLowerCase().includes(state.query.toLowerCase()) || issue.assignee.toLowerCase().includes(state.query.toLowerCase()))}',
+                      children: [
+                        {
+                          type: 'flex',
+                          props: { gap: '8px', align: 'center' },
+                          class: '{state.selected == issue.id ? "rounded-md bg-muted/60 border border-border p-2" : "rounded-md border border-transparent p-2 hover:bg-muted/30"}',
+                          children: [
+                            {
+                              type: 'flex',
+                              props: { direction: 'column', gap: '2px' },
+                              class: 'flex-1 min-w-0 cursor-pointer',
+                              children: [
+                                {
+                                  type: 'flex',
+                                  props: { gap: '6px', align: 'center' },
+                                  children: [
+                                    { type: 'text', props: { text: '{issue.title}', size: 'sm', weight: 'medium' } },
+                                    { type: 'badge', props: { text: '{issue.priority}', variant: '{issue.priority == "high" ? "destructive" : issue.priority == "medium" ? "default" : "secondary"}' } }
+                                  ]
+                                },
+                                { type: 'text', props: { text: '@{issue.assignee} · {issue.status}', size: 'xs' } }
+                              ],
+                              on_click: { action: 'set', target: 'selected', value: '{issue.id}' }
+                            },
+                            {
+                              type: 'dropdown-menu',
+                              props: {
+                                label: '⋯',
+                                triggerVariant: 'ghost',
+                                hideChevron: true,
+                                align: 'end',
+                                items: [
+                                  { label: 'Mark in progress', icon: 'play', value: 'progress-{i}' },
+                                  { label: 'Mark closed', icon: 'check', value: 'close-{i}' },
+                                  { label: 'Reopen', icon: 'rotate-ccw', value: 'reopen-{i}' },
+                                  { type: 'separator' },
+                                  { label: 'Delete', icon: 'trash-2', value: 'delete-{issue.id}', variant: 'destructive' }
+                                ]
+                              },
+                              on_change: {
+                                action: 'flow',
+                                steps: [
+                                  // Stash the dropdown value into state so the branches can read it.
+                                  { action: 'set', target: '_row_action' },
+                                  {
+                                    action: 'branch',
+                                    if: '{state._row_action.startsWith("progress-")}',
+                                    then: [
+                                      { action: 'set', target: 'issues.{i}.status', value: 'in_progress' },
+                                      { action: 'toast', message: 'Moved to in progress.' }
+                                    ]
+                                  },
+                                  {
+                                    action: 'branch',
+                                    if: '{state._row_action.startsWith("close-")}',
+                                    then: [
+                                      { action: 'set', target: 'issues.{i}.status', value: 'closed' },
+                                      { action: 'toast', message: 'Closed issue.', variant: 'success' }
+                                    ]
+                                  },
+                                  {
+                                    action: 'branch',
+                                    if: '{state._row_action.startsWith("reopen-")}',
+                                    then: [
+                                      { action: 'set', target: 'issues.{i}.status', value: 'open' },
+                                      { action: 'toast', message: 'Reopened.' }
+                                    ]
+                                  },
+                                  {
+                                    action: 'branch',
+                                    if: '{state._row_action.startsWith("delete-")}',
+                                    then: [
+                                      {
+                                        action: 'confirm',
+                                        title: 'Delete this issue?',
+                                        message: 'This cannot be undone.',
+                                        confirm_label: 'Delete',
+                                        on_confirm: [
+                                          { action: 'remove', target: 'issues', value: '{issue}' },
+                                          { action: 'toast', message: 'Deleted.', variant: 'success' }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+
+                // Empty state
+                {
+                  type: 'if',
+                  condition: '{state.issues.length == 0}',
+                  children: [
+                    {
+                      type: 'empty-state',
+                      props: { icon: 'inbox', title: 'No issues yet', description: 'Add the first one below.' }
+                    }
+                  ]
+                },
+
+                // Add new
+                {
+                  type: 'flex',
+                  props: { gap: '6px' },
+                  children: [
+                    { type: 'input', bind: 'draftTitle', props: { placeholder: 'New issue title...', class: 'flex-1' } },
+                    {
+                      type: 'button',
+                      props: { label: 'Add' },
+                      on_click: {
+                        action: 'flow',
+                        steps: [
+                          { action: 'validate', condition: '{state.draftTitle.trim() != ""}', message: 'Type a title first.' },
+                          { action: 'push', target: 'issues', value: { id: '{state.nextId}', title: '{state.draftTitle.trim()}', body: '', status: 'open', priority: 'medium', assignee: 'You' } },
+                          { action: 'set', target: 'nextId', value: '{state.nextId + 1}' },
+                          { action: 'set', target: 'selected', value: '{state.nextId - 1}' },
+                          { action: 'set', target: 'draftTitle', value: '' },
+                          { action: 'toast', message: 'Issue created.', variant: 'success' }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+
+            // ── detail
+            {
+              type: 'card',
+              props: { title: 'Detail' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'issues',
+                  item_as: 'issue',
+                  index_as: 'i',
+                  children: [
+                    {
+                      type: 'if',
+                      condition: '{state.selected == issue.id}',
+                      children: [
+                        {
+                          type: 'flex',
+                          props: { direction: 'column', gap: '10px' },
+                          children: [
+                            { type: 'heading', props: { text: '{issue.title}', level: 4 } },
+                            {
+                              type: 'flex',
+                              props: { gap: '8px', wrap: 'wrap' },
+                              children: [
+                                { type: 'badge', props: { text: '{issue.status}' } },
+                                { type: 'badge', props: { text: '{issue.priority}', variant: '{issue.priority == "high" ? "destructive" : "secondary"}' } },
+                                { type: 'badge', props: { text: '@{issue.assignee}', variant: 'outline' } }
+                              ]
+                            },
+                            { type: 'text', props: { text: '{issue.body}', size: 'sm' } },
+                            { type: 'separator' },
+                            {
+                              type: 'flex',
+                              props: { direction: 'column', gap: '6px' },
+                              children: [
+                                { type: 'text', props: { text: 'Status', size: 'xs', weight: 'medium' } },
+                                {
+                                  type: 'select',
+                                  props: {
+                                    options: [
+                                      { value: 'open', label: 'Open' },
+                                      { value: 'in_progress', label: 'In progress' },
+                                      { value: 'closed', label: 'Closed' }
+                                    ]
+                                  },
+                                  value: '{issue.status}',
+                                  on_change: { action: 'set', target: 'issues.{i}.status' }
+                                }
+                              ]
+                            },
+                            {
+                              type: 'flex',
+                              props: { direction: 'column', gap: '6px' },
+                              children: [
+                                { type: 'text', props: { text: 'Priority', size: 'xs', weight: 'medium' } },
+                                {
+                                  type: 'select',
+                                  props: {
+                                    options: [
+                                      { value: 'low', label: 'Low' },
+                                      { value: 'medium', label: 'Medium' },
+                                      { value: 'high', label: 'High' }
+                                    ]
+                                  },
+                                  value: '{issue.priority}',
+                                  on_change: { action: 'set', target: 'issues.{i}.priority' }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+
+        // Stats footer
+        {
+          type: 'flex',
+          props: { gap: '16px' },
+          children: [
+            { type: 'text', props: { text: 'Total: {state.issues.length}', size: 'xs' } },
+            { type: 'text', props: { text: 'Selected: {state.selected}', size: 'xs' } }
+          ]
+        }
+      ]
+    }
+  };
+
   const researchFlow = {
     version: '1.0' as const,
     state: {},
@@ -1732,6 +2025,7 @@
       { label: 'Follow-up', spec: followUpSpec },
     ]},
     { id: 'flows', title: 'Interactive Flows', items: [
+      { label: 'Issue Tracker (full E2E)', spec: issueTrackerFlow },
       { label: 'Counter', spec: counterFlow },
       { label: 'Live Calculator', spec: calculatorFlow },
       { label: 'Live Filter', spec: filterFlow },

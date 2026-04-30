@@ -20,6 +20,7 @@ import type {
 import type { StateManager } from './state-manager.svelte.js';
 import {
 	resolveString,
+	resolveValue,
 	evaluateCondition,
 	type ResolverContext
 } from './expression-resolver.js';
@@ -182,10 +183,10 @@ export class EventDispatcher {
 				await this.handleApi(handler, context, depth);
 				return;
 			case 'flow':
-				await this.handleFlow(handler, context, depth);
+				await this.handleFlow(handler, context, depth, eventValue);
 				return;
 			case 'branch':
-				await this.handleBranch(handler, context, depth);
+				await this.handleBranch(handler, context, depth, eventValue);
 				return;
 			case 'confirm':
 				await this.handleConfirm(handler, context, depth);
@@ -209,17 +210,27 @@ export class EventDispatcher {
 
 	// -- primitive actions ---------------------------------------------------
 
+	/**
+	 * Resolve `{...}` placeholders in a target path. Lets specs do
+	 * `target: 'issues.{i}.status'` to mutate the i-th item in a loop.
+	 */
+	private resolveTarget(target: string, context: ResolverContext): string {
+		if (!target.includes('{')) return target;
+		const result = resolveString(target, context);
+		return typeof result === 'string' ? result : String(result ?? '');
+	}
+
 	private handleSet(
 		handler: Extract<EventHandler, { action: 'set' }>,
 		context: ResolverContext,
 		eventValue?: unknown
 	): void {
 		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
 		let value = handler.value !== undefined ? handler.value : eventValue;
-		if (typeof value === 'string') {
-			value = resolveString(value, context);
-		}
-		this.stateManager.set(handler.target, value);
+		// Resolve `{...}` expressions inside strings, arrays, and object values.
+		value = resolveValue(value, context);
+		this.stateManager.set(target, value);
 	}
 
 	private handleOpen(handler: Extract<EventHandler, { action: 'open' }>): void {
@@ -239,30 +250,31 @@ export class EventDispatcher {
 		eventValue?: unknown
 	): void {
 		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
 
 		let value = handler.value !== undefined ? handler.value : eventValue;
-		if (typeof value === 'string') value = resolveString(value, context);
+		value = resolveValue(value, context);
 
-		const current = this.stateManager.get(handler.target);
+		const current = this.stateManager.get(target);
 
 		if (Array.isArray(current)) {
 			if (value === undefined) {
-				console.warn(`EventDispatcher: toggle on array target "${handler.target}" requires a value.`);
+				console.warn(`EventDispatcher: toggle on array target "${target}" requires a value.`);
 				return;
 			}
 			const idx = current.indexOf(value);
 			const next = idx >= 0 ? current.filter((_, i) => i !== idx) : [...current, value];
-			this.stateManager.set(handler.target, next);
+			this.stateManager.set(target, next);
 			return;
 		}
 
 		if (typeof current === 'boolean' || current === undefined || current === null) {
-			this.stateManager.set(handler.target, !current);
+			this.stateManager.set(target, !current);
 			return;
 		}
 
 		console.warn(
-			`EventDispatcher: toggle on non-boolean / non-array target "${handler.target}" (was ${typeof current}) — no-op.`
+			`EventDispatcher: toggle on non-boolean / non-array target "${target}" (was ${typeof current}) — no-op.`
 		);
 	}
 
@@ -273,23 +285,24 @@ export class EventDispatcher {
 		eventValue?: unknown
 	): void {
 		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
 
 		let value = handler.value !== undefined ? handler.value : eventValue;
-		if (typeof value === 'string') value = resolveString(value, context);
+		value = resolveValue(value, context);
 		if (value === undefined) return;
 
-		const current = this.stateManager.get(handler.target);
+		const current = this.stateManager.get(target);
 		if (current === undefined || current === null) {
-			this.stateManager.set(handler.target, [value]);
+			this.stateManager.set(target, [value]);
 			return;
 		}
 		if (!Array.isArray(current)) {
 			console.warn(
-				`EventDispatcher: push on non-array target "${handler.target}" (was ${typeof current}) — no-op.`
+				`EventDispatcher: push on non-array target "${target}" (was ${typeof current}) — no-op.`
 			);
 			return;
 		}
-		this.stateManager.set(handler.target, [...current, value]);
+		this.stateManager.set(target, [...current, value]);
 	}
 
 	/** `remove` — remove an array item by `index` or by equality match on `value`. */
@@ -299,28 +312,39 @@ export class EventDispatcher {
 		eventValue?: unknown
 	): void {
 		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
 
-		const current = this.stateManager.get(handler.target);
+		const current = this.stateManager.get(target);
 		if (!Array.isArray(current)) {
 			console.warn(
-				`EventDispatcher: remove on non-array target "${handler.target}" (was ${typeof current}) — no-op.`
+				`EventDispatcher: remove on non-array target "${target}" (was ${typeof current}) — no-op.`
 			);
 			return;
 		}
 
 		if (typeof handler.index === 'number') {
 			const next = current.filter((_, i) => i !== handler.index);
-			this.stateManager.set(handler.target, next);
+			this.stateManager.set(target, next);
 			return;
 		}
 
 		let value = handler.value !== undefined ? handler.value : eventValue;
-		if (typeof value === 'string') value = resolveString(value, context);
+		value = resolveValue(value, context);
 		if (value === undefined) return;
 
-		const idx = current.indexOf(value);
+		// Primitive values: indexOf is fine. Objects: match by deep equality
+		// (JSON-stringify compare) so `value: '{loopItem}'` works.
+		let idx: number;
+		if (typeof value === 'object' && value !== null) {
+			const target_ = JSON.stringify(value);
+			idx = current.findIndex((item) => {
+				try { return JSON.stringify(item) === target_; } catch { return false; }
+			});
+		} else {
+			idx = current.indexOf(value);
+		}
 		if (idx < 0) return;
-		this.stateManager.set(handler.target, current.filter((_, i) => i !== idx));
+		this.stateManager.set(target, current.filter((_, i) => i !== idx));
 	}
 
 	private emitExternal(
@@ -440,7 +464,8 @@ export class EventDispatcher {
 	private async handleFlow(
 		handler: Extract<EventHandler, { action: 'flow' }>,
 		context: ResolverContext,
-		depth: number
+		depth: number,
+		eventValue?: unknown
 	): Promise<void> {
 		const nextDepth = depth + 1;
 		if (nextDepth > MAX_FLOW_DEPTH) {
@@ -451,7 +476,7 @@ export class EventDispatcher {
 
 		try {
 			for (const step of handler.steps) {
-				await this.dispatchSingle(step, context, undefined, nextDepth);
+				await this.dispatchSingle(step, context, eventValue, nextDepth);
 			}
 		} catch (err) {
 			if (err instanceof FlowAbortError) {
@@ -480,12 +505,13 @@ export class EventDispatcher {
 	private async handleBranch(
 		handler: Extract<EventHandler, { action: 'branch' }>,
 		context: ResolverContext,
-		depth: number
+		depth: number,
+		eventValue?: unknown
 	): Promise<void> {
 		const condition = evaluateCondition(handler.if, this.freshContext(context));
 		const branch = condition ? handler.then : handler.else;
 		if (!branch || branch.length === 0) return;
-		await this.runHandlers(branch, this.freshContext(context), undefined, depth);
+		await this.runHandlers(branch, this.freshContext(context), eventValue, depth);
 	}
 
 	private async handleConfirm(
