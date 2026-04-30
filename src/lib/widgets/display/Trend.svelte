@@ -49,10 +49,10 @@
           maximumFractionDigits: precision
         }).format(numeric);
       } catch {
-        return `${numeric > 0 ? '+' : ''}${numeric.toFixed(precision)}`;
+        return `${numeric > 0 ? '+' : numeric < 0 ? '-' : ''}${abs.toFixed(precision)}`;
       }
     }
-    return `${numeric > 0 ? '+' : ''}${numeric.toFixed(precision)}`;
+    return `${numeric > 0 ? '+' : numeric < 0 ? '-' : ''}${abs.toFixed(precision)}`;
   });
 </script>
 

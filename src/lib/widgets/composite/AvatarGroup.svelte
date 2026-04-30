@@ -26,10 +26,9 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  const sizeClass = $derived(
-    size === 'sm' ? 'size-6 text-[10px]'
-    : size === 'lg' ? 'size-10 text-sm'
-    : 'size-8 text-xs'
+  // Map widget size to shadcn Avatar.Root size prop
+  const rootSize = $derived(
+    size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'default'
   );
 
   const visible = $derived((users ?? []).slice(0, max));
@@ -47,7 +46,7 @@
 
 <Avatar.Group {id} class={cn(className)} style={styleString}>
   {#each visible as user, i (i)}
-    <Avatar.Root class={sizeClass}>
+    <Avatar.Root size={rootSize}>
       {#if user.src}
         <Avatar.Image src={user.src} alt={user.alt ?? ''} />
       {/if}
@@ -55,6 +54,6 @@
     </Avatar.Root>
   {/each}
   {#if overflow > 0}
-    <Avatar.GroupCount class={sizeClass}>+{overflow}</Avatar.GroupCount>
+    <Avatar.GroupCount>+{overflow}</Avatar.GroupCount>
   {/if}
 </Avatar.Group>

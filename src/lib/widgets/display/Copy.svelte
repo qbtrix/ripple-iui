@@ -24,6 +24,12 @@
   let copied = $state(false);
   let timer: ReturnType<typeof setTimeout> | null = null;
 
+  $effect(() => {
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  });
+
   async function copy() {
     if (!value) return;
     try {
