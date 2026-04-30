@@ -1606,6 +1606,443 @@
     }
   };
 
+  // ── Settings Page — fat form with all input types + dirty tracking ───────
+  const settingsFlow = {
+    version: '1.0' as const,
+    state: {
+      saved: { name: 'Ada Lovelace', email: 'ada@example.com', role: 'engineer', bio: 'Founding engineer.', dark: true, emailDigests: true, dailySummary: false, language: 'en', fontSize: 14, notify: 'email', dob: '1990-12-10', rating: 4 },
+      draft: { name: 'Ada Lovelace', email: 'ada@example.com', role: 'engineer', bio: 'Founding engineer.', dark: true, emailDigests: true, dailySummary: false, language: 'en', fontSize: 14, notify: 'email', dob: '1990-12-10', rating: 4 },
+      _toast: ''
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '16px' },
+      children: [
+        { type: 'page-header', props: { eyebrow: 'ACCOUNT', title: 'Settings', subtitle: 'Edit and save — every input is bound to draft state.' } },
+
+        // Profile section
+        {
+          type: 'section',
+          props: { title: 'Profile', description: 'Your public information.' },
+          children: [
+            {
+              type: 'grid',
+              props: { columns: 2, gap: '12px' },
+              children: [
+                { type: 'input', props: { label: 'Name' }, bind: 'draft.name' },
+                { type: 'input', props: { label: 'Email', type: 'email' }, bind: 'draft.email' }
+              ]
+            },
+            {
+              type: 'select',
+              props: {
+                label: 'Role',
+                options: [
+                  { value: 'engineer', label: 'Engineer' },
+                  { value: 'designer', label: 'Designer' },
+                  { value: 'pm', label: 'Product Manager' },
+                  { value: 'researcher', label: 'Researcher' }
+                ]
+              },
+              bind: 'draft.role'
+            },
+            { type: 'textarea', props: { label: 'Bio', rows: 2 }, bind: 'draft.bio' },
+            { type: 'input', props: { label: 'Date of birth', type: 'date' }, bind: 'draft.dob' }
+          ]
+        },
+
+        { type: 'separator' },
+
+        // Preferences section
+        {
+          type: 'section',
+          props: { title: 'Preferences', description: 'How the app feels.' },
+          children: [
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '8px' },
+              children: [
+                { type: 'switch', props: { label: 'Dark mode' }, bind: 'draft.dark' },
+                { type: 'checkbox', props: { label: 'Email me weekly digests' }, bind: 'draft.emailDigests' },
+                { type: 'checkbox', props: { label: 'Daily summary at 9am' }, bind: 'draft.dailySummary' }
+              ]
+            },
+            {
+              type: 'select',
+              props: {
+                label: 'Language',
+                options: [
+                  { value: 'en', label: 'English' },
+                  { value: 'es', label: 'Español' },
+                  { value: 'fr', label: 'Français' },
+                  { value: 'de', label: 'Deutsch' }
+                ]
+              },
+              bind: 'draft.language'
+            },
+            { type: 'slider', props: { label: 'Font size', min: 12, max: 22, step: 1 }, bind: 'draft.fontSize' }
+          ]
+        },
+
+        { type: 'separator' },
+
+        // Notifications
+        {
+          type: 'section',
+          props: { title: 'Notifications', description: 'Where to reach you.' },
+          children: [
+            {
+              type: 'radio-group',
+              props: {
+                options: [
+                  { value: 'email', label: 'Email only' },
+                  { value: 'push', label: 'Push notifications' },
+                  { value: 'sms', label: 'SMS' },
+                  { value: 'none', label: 'None' }
+                ]
+              },
+              bind: 'draft.notify'
+            }
+          ]
+        },
+
+        { type: 'separator' },
+
+        // Feedback
+        {
+          type: 'section',
+          props: { title: 'Feedback', description: 'How are we doing?' },
+          children: [
+            { type: 'rating', props: { label: 'Rate this product', max: 5, showValue: true }, bind: 'draft.rating' }
+          ]
+        },
+
+        { type: 'separator' },
+
+        // Save / Reset
+        {
+          type: 'flex',
+          props: { gap: '8px', justify: 'end' },
+          children: [
+            {
+              type: 'button',
+              props: { label: 'Reset', variant: 'outline' },
+              on_click: [
+                { action: 'set', target: 'draft', value: '{state.saved}' },
+                { action: 'toast', message: 'Reverted to last saved.' }
+              ]
+            },
+            {
+              type: 'button',
+              props: { label: 'Save changes' },
+              on_click: [
+                { action: 'set', target: 'saved', value: '{state.draft}' },
+                { action: 'toast', message: 'Settings saved.', variant: 'success' }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  // ── Mini Inbox — master/detail with multi-select + bulk actions ──────────
+  const inboxFlow = {
+    version: '1.0' as const,
+    state: {
+      messages: [
+        { id: 1, from: 'Ada Lovelace', subject: 'Re: API design review', preview: "I've left comments inline. Most things are nits, but the auth flow needs another pass.", read: false, starred: true, body: "I've left comments inline. Most things are nits, but the auth flow needs another pass — the refresh token semantics aren't obvious from the docstring." },
+        { id: 2, from: 'Bob Kumar', subject: 'Friday demo prep', preview: 'Slides outline attached. Can we slot 30m on Thursday?', read: false, starred: false, body: 'Slides outline attached. Can we slot 30m on Thursday for a dry run? Also — should we record? I think it would help the GTM team.' },
+        { id: 3, from: 'Carol Smith', subject: 'New onboarding copy', preview: 'Marketing wants to land the new hero by EOM.', read: true, starred: false, body: 'Marketing wants to land the new hero by EOM. Pushed first draft to Figma, link inside. Want a quick read before they ship?' },
+        { id: 4, from: 'Dana Singh', subject: 'p99 latency dashboard', preview: 'Spotted a regression after yesterday\'s deploy.', read: true, starred: true, body: 'Spotted a regression after yesterday\'s deploy. p99 from 280ms to 410ms on /search. Created an issue, but heads-up.' },
+        { id: 5, from: 'Eve Park', subject: 'Welcome aboard 🎉', preview: 'Looking forward to meeting on Monday — here\'s your reading list.', read: true, starred: false, body: 'Looking forward to meeting on Monday — here\'s your reading list. The first three are required; the rest are useful when you find time.' }
+      ],
+      selectedIds: [],
+      openId: 1
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        // Toolbar — appears differently when there's a selection
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'heading', props: { text: 'Inbox', level: 4 } },
+            { type: 'badge', props: { text: '{state.selectedIds.length} selected', variant: 'secondary' }, show: '{state.selectedIds.length > 0}' },
+            { type: 'text', props: { text: '{state.messages.length} total · {state.messages.length - state.selectedIds.length} unselected', size: 'xs' } },
+            // Bulk actions when there's a selection
+            {
+              type: 'if',
+              condition: '{state.selectedIds.length > 0}',
+              children: [
+                {
+                  type: 'flex',
+                  props: { gap: '6px' },
+                  class: 'ml-auto',
+                  children: [
+                    {
+                      type: 'button',
+                      props: { label: 'Mark read', size: 'sm', variant: 'outline' },
+                      on_click: [
+                        // Iterate via each pattern is overkill; we just clear selection and rely on per-row toggle
+                        { action: 'toast', message: 'Marked {state.selectedIds.length} as read (demo: per-row toggle below).' }
+                      ]
+                    },
+                    {
+                      type: 'button',
+                      props: { label: 'Clear', size: 'sm', variant: 'ghost' },
+                      on_click: { action: 'set', target: 'selectedIds', value: [] }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+
+        {
+          type: 'grid',
+          props: { columns: 2, gap: '12px' },
+          style: { 'grid-template-columns': '1fr 1.4fr' },
+          children: [
+            // List
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '4px' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'messages',
+                  item_as: 'msg',
+                  index_as: 'i',
+                  children: [
+                    {
+                      type: 'flex',
+                      props: { gap: '8px', align: 'start' },
+                      class: '{state.openId == msg.id ? "rounded-md bg-muted/60 border border-border p-2" : "rounded-md border border-transparent p-2 hover:bg-muted/30"}',
+                      children: [
+                        {
+                          type: 'checkbox',
+                          props: { },
+                          value: '{state.selectedIds.includes(msg.id)}',
+                          on_change: { action: 'toggle', target: 'selectedIds', value: '{msg.id}' }
+                        },
+                        {
+                          type: 'flex',
+                          props: { direction: 'column', gap: '2px' },
+                          class: 'flex-1 min-w-0 cursor-pointer',
+                          children: [
+                            {
+                              type: 'flex',
+                              props: { gap: '6px', align: 'center' },
+                              children: [
+                                { type: 'text', props: { text: '{msg.from}', size: 'sm', weight: '{msg.read ? "normal" : "semibold"}' } },
+                                { type: 'badge', props: { text: 'Unread', variant: 'default' }, show: '{!msg.read}' },
+                                { type: 'text', props: { text: '★', size: 'xs' }, show: '{msg.starred}' }
+                              ]
+                            },
+                            { type: 'text', props: { text: '{msg.subject}', size: 'sm', weight: '{msg.read ? "normal" : "medium"}' } },
+                            { type: 'text', props: { text: '{msg.preview}', size: 'xs', class: 'truncate' } }
+                          ],
+                          on_click: [
+                            { action: 'set', target: 'openId', value: '{msg.id}' },
+                            { action: 'set', target: 'messages.{i}.read', value: true }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+
+            // Detail
+            {
+              type: 'card',
+              props: { title: 'Message' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'messages',
+                  item_as: 'msg',
+                  index_as: 'i',
+                  children: [
+                    {
+                      type: 'if',
+                      condition: '{state.openId == msg.id}',
+                      children: [
+                        {
+                          type: 'flex',
+                          props: { direction: 'column', gap: '10px' },
+                          children: [
+                            { type: 'heading', props: { text: '{msg.subject}', level: 4 } },
+                            {
+                              type: 'flex',
+                              props: { gap: '8px', align: 'center' },
+                              children: [
+                                { type: 'avatar', props: { name: '{msg.from}', size: 'sm' } },
+                                { type: 'text', props: { text: '{msg.from}', weight: 'medium' } }
+                              ]
+                            },
+                            { type: 'separator' },
+                            { type: 'text', props: { text: '{msg.body}' } },
+                            { type: 'separator' },
+                            {
+                              type: 'flex',
+                              props: { gap: '6px' },
+                              children: [
+                                {
+                                  type: 'button',
+                                  props: { label: '{msg.starred ? "Unstar" : "Star"}', size: 'sm', variant: 'outline' },
+                                  on_click: { action: 'set', target: 'messages.{i}.starred', value: '{!msg.starred}' }
+                                },
+                                {
+                                  type: 'button',
+                                  props: { label: '{msg.read ? "Mark unread" : "Mark read"}', size: 'sm', variant: 'ghost' },
+                                  on_click: { action: 'set', target: 'messages.{i}.read', value: '{!msg.read}' }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  // ── Invoice Builder — array CRUD with per-line totals + sum ──────────────
+  const invoiceFlow = {
+    version: '1.0' as const,
+    state: {
+      lines: [
+        { description: 'Initial design pass', qty: 1, price: 1200, total: 1200 },
+        { description: 'Frontend implementation', qty: 8, price: 150, total: 1200 },
+        { description: 'QA + handoff', qty: 4, price: 90, total: 360 }
+      ],
+      taxRate: 8,
+      discount: 100
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'page-header', props: { eyebrow: 'BILLING', title: 'New invoice', subtitle: 'Add line items; line totals and grand total update live.' } },
+
+        // Line items
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '6px' },
+          children: [
+            {
+              type: 'each',
+              items: 'lines',
+              item_as: 'line',
+              index_as: 'i',
+              children: [
+                {
+                  type: 'flex',
+                  props: { gap: '8px', align: 'end' },
+                  children: [
+                    {
+                      type: 'input',
+                      props: { label: '{i == 0 ? "Description" : ""}', class: 'flex-1' },
+                      bind: 'lines.{i}.description'
+                    },
+                    {
+                      type: 'input',
+                      props: { label: '{i == 0 ? "Qty" : ""}', type: 'number', class: 'w-20' },
+                      bind: 'lines.{i}.qty',
+                      on_change: { action: 'set', target: 'lines.{i}.total', value: '{line.qty * line.price}' }
+                    },
+                    {
+                      type: 'input',
+                      props: { label: '{i == 0 ? "Unit price" : ""}', type: 'number', class: 'w-28' },
+                      bind: 'lines.{i}.price',
+                      on_change: { action: 'set', target: 'lines.{i}.total', value: '{line.qty * line.price}' }
+                    },
+                    { type: 'text', props: { text: '${line.total}', size: 'sm', class: 'w-20 text-right tabular-nums font-medium' } },
+                    {
+                      type: 'button',
+                      props: { label: '✕', size: 'sm', variant: 'ghost' },
+                      on_click: { action: 'remove', target: 'lines', value: '{line}' }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              type: 'button',
+              props: { label: '+ Add line', variant: 'outline', size: 'sm' },
+              on_click: { action: 'push', target: 'lines', value: { description: '', qty: 1, price: 0, total: 0 } }
+            }
+          ]
+        },
+
+        { type: 'separator' },
+
+        // Tax + discount
+        {
+          type: 'grid',
+          props: { columns: 2, gap: '12px' },
+          children: [
+            { type: 'slider', props: { label: 'Tax rate (%)', min: 0, max: 25, step: 0.5 }, bind: 'taxRate' },
+            { type: 'input', props: { label: 'Discount ($)', type: 'number' }, bind: 'discount' }
+          ]
+        },
+
+        { type: 'separator' },
+
+        // Totals
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '4px', align: 'end' },
+          children: [
+            {
+              type: 'definition-list',
+              props: {
+                items: [
+                  { term: 'Subtotal', definition: '${state.lines.sum("total")}' },
+                  { term: 'Tax', definition: '{state.taxRate}%' },
+                  { term: 'Discount', definition: '-${state.discount}' }
+                ]
+              }
+            }
+          ]
+        },
+
+        // Issue button with confirm
+        {
+          type: 'flex',
+          props: { gap: '8px', justify: 'end' },
+          children: [
+            {
+              type: 'button',
+              props: { label: 'Issue invoice' },
+              on_click: {
+                action: 'confirm',
+                title: 'Issue this invoice?',
+                message: 'Issuing locks the line items and emails the recipient.',
+                confirm_label: 'Issue',
+                on_confirm: [
+                  { action: 'toast', message: 'Invoice issued.', variant: 'success' }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  };
+
   // Issue Tracker — comprehensive E2E flow where every interaction is wired
   const issueTrackerFlow = {
     version: '1.0' as const,
@@ -2026,6 +2463,9 @@
     ]},
     { id: 'flows', title: 'Interactive Flows', items: [
       { label: 'Issue Tracker (full E2E)', spec: issueTrackerFlow },
+      { label: 'Settings Page', spec: settingsFlow },
+      { label: 'Mini Inbox', spec: inboxFlow },
+      { label: 'Invoice Builder', spec: invoiceFlow },
       { label: 'Counter', spec: counterFlow },
       { label: 'Live Calculator', spec: calculatorFlow },
       { label: 'Live Filter', spec: filterFlow },

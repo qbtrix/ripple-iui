@@ -123,24 +123,34 @@
 	const onblur = createEventHandler(node.on_blur);
 	const oninputUser = createEventHandler(node.on_input);
 
-	const boundPath = $derived.by(() => {
+	// `bind` may itself contain `{...}` placeholders (e.g. `lines.{i}.qty`)
+	// that reference loop-local variables. This template is resolved per
+	// invocation of onchange / oninput so the path picks up the current
+	// loop context.
+	const boundPathTemplate = $derived.by(() => {
 		if (!node.bind) return null;
 		const stripped = node.bind.replace(/^\{|\}$/g, '').trim();
 		return stripped.replace(/^state\./, '');
 	});
 
+	function resolveBoundPath(): string | null {
+		const tpl = boundPathTemplate;
+		if (!tpl) return null;
+		if (!tpl.includes('{')) return tpl;
+		const result = resolveString(tpl, getResolverContext());
+		return typeof result === 'string' ? result : String(result ?? '');
+	}
+
 	const onchangeUser = createEventHandler(node.on_change);
 	const onchange = (eventValue?: unknown) => {
-		if (boundPath) {
-			stateManager.set(boundPath, eventValue);
-		}
+		const path = resolveBoundPath();
+		if (path) stateManager.set(path, eventValue);
 		return onchangeUser?.(eventValue);
 	};
 
 	const oninput = (eventValue?: unknown) => {
-		if (boundPath) {
-			stateManager.set(boundPath, eventValue);
-		}
+		const path = resolveBoundPath();
+		if (path) stateManager.set(path, eventValue);
 		return oninputUser?.(eventValue);
 	};
 
@@ -150,17 +160,19 @@
 	 */
 	const boundValue = $derived.by(() => {
 		if (!node.bind) return undefined;
-		// Remove curly braces if present
-		const path = node.bind.replace(/^\{|\}$/g, '').trim();
-		const statePath = path.replace(/^state\./, '');
+		const tpl = boundPathTemplate;
+		if (!tpl) return undefined;
+		// Resolve `{...}` placeholders against current loop context.
+		const statePath = tpl.includes('{')
+			? (() => {
+					const r = resolveString(tpl, getResolverContext());
+					return typeof r === 'string' ? r : String(r ?? '');
+			  })()
+			: tpl;
 
-		// For simple keys (no dots), access state directly for proper reactivity tracking
-		// The $state proxy will track this property access
 		if (!statePath.includes('.')) {
 			return stateManager.state[statePath];
 		}
-
-		// For nested paths, use the get method (less reactive but works for reads)
 		return stateManager.get(statePath);
 	});
 
@@ -290,8 +302,8 @@
 			...(boundValue !== undefined && { value: boundValue }),
 			...((node.type === 'checkbox' || node.type === 'switch') && boundValue !== undefined && { checked: boundValue }),
 			...(onclick !== undefined && { onclick }),
-			...((boundPath || onchangeUser) && { onchange }),
-			...((boundPath || oninputUser) && { oninput }),
+			...((boundPathTemplate ||onchangeUser) && { onchange }),
+			...((boundPathTemplate ||oninputUser) && { oninput }),
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),

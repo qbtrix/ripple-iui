@@ -388,6 +388,21 @@ function applyMethod(receiver: unknown, method: string, args: unknown[]): unknow
 				return receiver.includes(args[0]);
 			case 'join':
 				return receiver.join(String(args[0] ?? ','));
+			case 'sum': {
+				const field = typeof args[0] === 'string' ? (args[0] as string) : null;
+				return receiver.reduce((a: number, v: unknown) => {
+					const n = field
+						? Number((v as Record<string, unknown> | null | undefined)?.[field])
+						: Number(v);
+					return a + (Number.isFinite(n) ? n : 0);
+				}, 0);
+			}
+			case 'count':
+				return receiver.length;
+			case 'first':
+				return receiver[0];
+			case 'last':
+				return receiver[receiver.length - 1];
 		}
 	}
 	if (typeof receiver === 'number') {
