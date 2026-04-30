@@ -2,12 +2,12 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
 import { Table, Chart } from './data/index.js';
 import { If, Each } from './control/index.js';
-import { Terminal, RippleFrame } from './composite/index.js';
-import { ConfirmDialog, Alert, DropdownMenu } from './overlay/index.js';
+import { Terminal, RippleFrame, AvatarGroup } from './composite/index.js';
+import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -77,7 +77,7 @@ const defaultRegistry: WidgetMap = {
   markdown: Markdown,
   md: Markdown,
   'code-block': CodeBlock,
-  code: CodeBlock,
+  code: Code,                         // CHANGED — inline; use 'code-block' for fenced
   button: Button,
   input: Input,
   select: Select,
@@ -115,6 +115,24 @@ const defaultRegistry: WidgetMap = {
   workflow: Workflow,
   c4: C4Diagram,
   'confirm-dialog': ConfirmDialog,
+  // Wave 1 additions
+  tooltip: Tooltip,
+  popover: Popover,
+  'hover-card': HoverCard,
+  hovercard: HoverCard,
+  toast: Toast,
+  loading: Loading,
+  spinner: Loading,
+  chip: Chip,
+  tag: Chip,
+  kbd: Kbd,
+  'status-dot': StatusDot,
+  status: StatusDot,
+  trend: Trend,
+  delta: Trend,
+  icon: Icon,
+  copy: Copy,
+  'avatar-group': AvatarGroup,
   // Aliases
   label: Text,
 };
@@ -156,5 +174,8 @@ export {
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
   AnalystBar, RangeBar,
   Workflow,
-  C4Diagram
+  C4Diagram,
+  Toast, Tooltip, Popover, HoverCard,
+  Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
+  AvatarGroup
 };
