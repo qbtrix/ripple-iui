@@ -774,6 +774,50 @@
     }
   };
 
+  // Live Filter — input + each + if condition with case-insensitive substring match
+  const filterFlow = {
+    version: '1.0' as const,
+    state: {
+      query: '',
+      people: [
+        { name: 'Alice Chen', role: 'Engineer' },
+        { name: 'Bob Kumar', role: 'Designer' },
+        { name: 'Carol Smith', role: 'PM' },
+        { name: 'Dana Singh', role: 'Engineer' },
+        { name: 'Eve Park', role: 'Researcher' }
+      ]
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'input', props: { placeholder: 'Filter by name or role...' }, bind: 'query' },
+        {
+          type: 'each',
+          items: 'people',
+          item_as: 'p',
+          children: [
+            {
+              type: 'if',
+              condition: '{p.name.toLowerCase().includes(state.query.toLowerCase()) || p.role.toLowerCase().includes(state.query.toLowerCase())}',
+              children: [
+                {
+                  type: 'flex',
+                  props: { gap: '8px', align: 'center' },
+                  children: [
+                    { type: 'avatar', props: { name: '{p.name}', size: 'sm' } },
+                    { type: 'text', props: { text: '{p.name}', weight: 'medium' } },
+                    { type: 'badge', props: { text: '{p.role}', variant: 'secondary' } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
   // Delete with Confirmation — confirm action → toast on confirm
   const confirmFlow = {
     version: '1.0' as const,
@@ -907,6 +951,7 @@
     { id: 'flows', title: 'Interactive Flows', items: [
       { label: 'Counter', spec: counterFlow },
       { label: 'Live Calculator', spec: calculatorFlow },
+      { label: 'Live Filter', spec: filterFlow },
       { label: 'Stepper Wizard', spec: wizardFlow },
       { label: 'Delete with Confirmation', spec: confirmFlow },
       { label: 'Form with Validation', spec: formFlow },
