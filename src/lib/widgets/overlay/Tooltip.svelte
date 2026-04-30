@@ -36,7 +36,9 @@
   );
 
   const triggerIsString = $derived(typeof trigger === 'string');
-  const triggerIsSpec = $derived(trigger != null && typeof trigger === 'object');
+  const triggerIsSpec = $derived(
+    trigger != null && typeof trigger === 'object' && !Array.isArray(trigger)
+  );
 </script>
 
 <Tooltip.Provider delayDuration={delay}>

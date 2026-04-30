@@ -36,7 +36,7 @@
     return typeof v === 'string';
   }
   function isSpec(v: unknown): boolean {
-    return v != null && typeof v === 'object';
+    return v != null && typeof v === 'object' && !Array.isArray(v);
   }
 </script>
 
