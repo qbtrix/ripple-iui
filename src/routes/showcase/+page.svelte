@@ -882,41 +882,43 @@
       props: { direction: 'column', gap: '16px' },
       children: [
         {
-          type: 'flex',
-          props: { gap: '16px' },
+          type: 'grid',
+          props: { columns: 2, gap: '16px' },
           children: [
             {
               type: 'card',
-              props: { title: 'Bar Chart' },
+              props: { title: 'Bar Chart', class: 'h-full' },
               children: [{
                 type: 'chart',
                 props: {
                   type: 'bar',
+                  height: 200,
                   data: [
                     { label: 'Mon', value: 35 },
                     { label: 'Tue', value: 52 },
                     { label: 'Wed', value: 41 },
                     { label: 'Thu', value: 68 },
-                    { label: 'Fri', value: 59 },
+                    { label: 'Fri', value: 59 }
                   ]
                 }
               }]
             },
             {
               type: 'card',
-              props: { title: 'Pie Chart' },
+              props: { title: 'Pie Chart', class: 'h-full' },
               children: [{
                 type: 'chart',
                 props: {
                   type: 'pie',
+                  height: 200,
                   data: [
                     { label: 'Desktop', value: 62 },
                     { label: 'Mobile', value: 30 },
-                    { label: 'Tablet', value: 8 },
+                    { label: 'Tablet', value: 8 }
                   ]
                 }
               }]
-            },
+            }
           ]
         },
         {
@@ -926,29 +928,29 @@
             type: 'chart',
             props: {
               type: 'candlestick',
-              height: 220,
+              height: 240,
               data: [
                 { label: 'Mar 24', value: 0, open: 218.55, close: 220.73, high: 221.48, low: 217.10 },
                 { label: 'Mar 25', value: 0, open: 220.73, close: 223.85, high: 224.20, low: 219.90 },
                 { label: 'Mar 26', value: 0, open: 224.10, close: 221.53, high: 225.61, low: 220.80 },
                 { label: 'Mar 27', value: 0, open: 221.30, close: 224.37, high: 225.15, low: 220.68 },
-                { label: 'Mar 28', value: 0, open: 224.50, close: 226.90, high: 227.34, low: 223.75 },
+                { label: 'Mar 28', value: 0, open: 224.50, close: 226.90, high: 227.34, low: 223.75 }
               ]
             }
           }]
         },
         {
-          type: 'flex',
-          props: { gap: '16px' },
+          type: 'grid',
+          props: { columns: 2, gap: '16px' },
           children: [
             {
               type: 'card',
-              props: { title: 'NIFTY 50 — Area' },
+              props: { title: 'NIFTY 50 — Area', class: 'h-full' },
               children: [{
                 type: 'chart',
                 props: {
                   type: 'area',
-                  height: 160,
+                  height: 200,
                   colors: ['#22c55e'],
                   data: [
                     { label: '9:30', value: 23420 },
@@ -963,30 +965,30 @@
                     { label: '14:00', value: 23640 },
                     { label: '14:30', value: 23680 },
                     { label: '15:00', value: 23710 },
-                    { label: '15:30', value: 23695 },
+                    { label: '15:30', value: 23695 }
                   ]
                 }
               }]
             },
             {
               type: 'card',
-              props: { title: 'Line — Weekly Trend' },
+              props: { title: 'Line — Weekly Trend', class: 'h-full' },
               children: [{
                 type: 'chart',
                 props: {
                   type: 'line',
-                  height: 160,
+                  height: 200,
                   data: [
                     { label: 'W1', value: 42 },
                     { label: 'W2', value: 38 },
                     { label: 'W3', value: 55 },
                     { label: 'W4', value: 48 },
                     { label: 'W5', value: 63 },
-                    { label: 'W6', value: 71 },
+                    { label: 'W6', value: 71 }
                   ]
                 }
               }]
-            },
+            }
           ]
         },
         {
@@ -998,43 +1000,64 @@
             children: [
               {
                 type: 'flex',
-                props: { direction: 'column', gap: '4px' },
+                props: { direction: 'column', gap: '6px' },
                 children: [
-                  { type: 'text', props: { text: 'AAPL', size: 'xs', weight: 'bold' } },
-                  { type: 'chart', props: { type: 'sparkline', height: 40, data: [
+                  {
+                    type: 'flex',
+                    props: { justify: 'between', align: 'center' },
+                    children: [
+                      { type: 'text', props: { text: 'AAPL', size: 'sm', weight: 'semibold' } },
+                      { type: 'badge', props: { text: '+3.8%', variant: 'secondary' } }
+                    ]
+                  },
+                  { type: 'chart', props: { type: 'sparkline', height: 48, data: [
                     { label: '1', value: 218 }, { label: '2', value: 220 }, { label: '3', value: 219 },
-                    { label: '4', value: 222 }, { label: '5', value: 224 }, { label: '6', value: 226 },
-                  ]}},
-                  { type: 'text', props: { text: '$226.90 (+3.8%)', size: 'xs' } },
+                    { label: '4', value: 222 }, { label: '5', value: 224 }, { label: '6', value: 226 }
+                  ] } },
+                  { type: 'text', props: { text: '$226.90', size: 'xs' } }
                 ]
               },
               {
                 type: 'flex',
-                props: { direction: 'column', gap: '4px' },
+                props: { direction: 'column', gap: '6px' },
                 children: [
-                  { type: 'text', props: { text: 'TSLA', size: 'xs', weight: 'bold' } },
-                  { type: 'chart', props: { type: 'sparkline', height: 40, data: [
+                  {
+                    type: 'flex',
+                    props: { justify: 'between', align: 'center' },
+                    children: [
+                      { type: 'text', props: { text: 'TSLA', size: 'sm', weight: 'semibold' } },
+                      { type: 'badge', props: { text: '-5.4%', variant: 'destructive' } }
+                    ]
+                  },
+                  { type: 'chart', props: { type: 'sparkline', height: 48, data: [
                     { label: '1', value: 280 }, { label: '2', value: 275 }, { label: '3', value: 272 },
-                    { label: '4', value: 268 }, { label: '5', value: 270 }, { label: '6', value: 265 },
-                  ]}},
-                  { type: 'text', props: { text: '$265.10 (-5.4%)', size: 'xs' } },
+                    { label: '4', value: 268 }, { label: '5', value: 270 }, { label: '6', value: 265 }
+                  ] } },
+                  { type: 'text', props: { text: '$265.10', size: 'xs' } }
                 ]
               },
               {
                 type: 'flex',
-                props: { direction: 'column', gap: '4px' },
+                props: { direction: 'column', gap: '6px' },
                 children: [
-                  { type: 'text', props: { text: 'NVDA', size: 'xs', weight: 'bold' } },
-                  { type: 'chart', props: { type: 'sparkline', height: 40, data: [
+                  {
+                    type: 'flex',
+                    props: { justify: 'between', align: 'center' },
+                    children: [
+                      { type: 'text', props: { text: 'NVDA', size: 'sm', weight: 'semibold' } },
+                      { type: 'badge', props: { text: '+6.3%', variant: 'secondary' } }
+                    ]
+                  },
+                  { type: 'chart', props: { type: 'sparkline', height: 48, data: [
                     { label: '1', value: 880 }, { label: '2', value: 895 }, { label: '3', value: 910 },
-                    { label: '4', value: 905 }, { label: '5', value: 920 }, { label: '6', value: 935 },
-                  ]}},
-                  { type: 'text', props: { text: '$935.20 (+6.3%)', size: 'xs' } },
+                    { label: '4', value: 905 }, { label: '5', value: 920 }, { label: '6', value: 935 }
+                  ] } },
+                  { type: 'text', props: { text: '$935.20', size: 'xs' } }
                 ]
-              },
+              }
             ]
           }]
-        },
+        }
       ]
     }
   };
