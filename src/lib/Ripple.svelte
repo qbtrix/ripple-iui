@@ -32,6 +32,7 @@
     state?: Record<string, any>;
     onEvent?: OnEventCallback;
     onSpecChanged?: (spec: DashboardSpec) => void;
+    onStateChange?: (path: string, value: unknown, state: Record<string, unknown>) => void;
     class?: string;
     style?: string;
   }
@@ -43,6 +44,7 @@
     state: initialStateOverride,
     onEvent,
     onSpecChanged,
+    onStateChange,
     class: className = '',
     style
   }: Props = $props();
@@ -78,6 +80,11 @@
   setContext('ui-data', dataStore);
   setContext('ui-widget-resolver', getWidget);
   setContext('ui-widget-registry', widgetRegistry);
+
+  $effect(() => {
+    if (!onStateChange) return;
+    return stateManager.subscribe(onStateChange);
+  });
 
   let renderMode = $derived.by((): 'dashboard' | 'node' | 'empty' | 'skeleton' | 'stream-error' => {
     if (streaming && streaming.done && streaming.error && streaming.current == null) {
