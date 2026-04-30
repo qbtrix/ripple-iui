@@ -96,6 +96,9 @@
   setContext('ui-data', dataStore);
   setContext('ui-widget-resolver', getWidget);
   setContext('ui-widget-registry', widgetRegistry);
+  // Expose the host onEvent so nested ripple-frame instances can forward
+  // their inner events back up to the outermost host.
+  setContext('ui-host-event', onEvent);
 
   $effect(() => {
     if (!onStateChange) return;
