@@ -276,6 +276,43 @@
     }
   };
 
+  const sliderSpec = {
+    version: '1.0' as const,
+    state: { volume: 40 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'slider', props: { label: 'Volume', min: 0, max: 100, step: 1 }, bind: 'volume' },
+        { type: 'text', props: { text: 'volume → {state.volume}%', size: 'xs' } }
+      ]
+    }
+  };
+
+  const radioSpec = {
+    version: '1.0' as const,
+    state: { plan: 'pro' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'radio-group',
+          props: {
+            label: 'Plan',
+            options: [
+              { value: 'free', label: 'Free' },
+              { value: 'pro', label: 'Pro' },
+              { value: 'enterprise', label: 'Enterprise' }
+            ]
+          },
+          bind: 'plan'
+        },
+        { type: 'text', props: { text: 'plan → {state.plan}', size: 'xs' } }
+      ]
+    }
+  };
+
   const togglesSpec = {
     version: '1.0' as const,
     state: { agreed: false, dark: true },
@@ -932,6 +969,8 @@
       { label: 'Input', spec: inputSpec },
       { label: 'Textarea', spec: textareaSpec },
       { label: 'Select', spec: selectSpec },
+      { label: 'Slider', spec: sliderSpec },
+      { label: 'Radio Group', spec: radioSpec },
       { label: 'Checkbox & Switch', spec: togglesSpec },
     ]},
     { id: 'data', title: 'Data', items: [
