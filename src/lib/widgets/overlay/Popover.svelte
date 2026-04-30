@@ -24,7 +24,7 @@
 
   let {
     id, class: className, style, trigger, content,
-    side = 'bottom', align = 'center', open = $bindable(), onopenchange,
+    side = 'bottom', align = 'center', open = $bindable(false), onopenchange,
     children, hasChildren = false
   }: Props = $props();
 
