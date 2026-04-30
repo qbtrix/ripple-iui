@@ -24,3 +24,4 @@ export { default as Loading } from './Loading.svelte';
 export { default as Chip } from './Chip.svelte';
 export { default as Kbd } from './Kbd.svelte';
 export { default as StatusDot } from './StatusDot.svelte';
+export { default as Trend } from './Trend.svelte';
