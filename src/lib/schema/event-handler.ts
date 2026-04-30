@@ -36,6 +36,8 @@ import { z } from 'zod';
 export const EventAction = z.enum([
 	'set',
 	'toggle',
+	'push',
+	'remove',
 	'api',
 	'navigate',
 	'toast',
@@ -71,6 +73,27 @@ export const ToggleHandler = z.object({
 	action: z.literal('toggle'),
 	target: z.string(),
 	value: z.any().optional()
+});
+
+/**
+ * `push` — append a value to an array target. If the target is undefined,
+ * a new array is created. No-op on non-array targets (with a warning).
+ */
+export const PushHandler = z.object({
+	action: z.literal('push'),
+	target: z.string(),
+	value: z.any().optional()
+});
+
+/**
+ * `remove` — remove an item from an array target. With `value`, removes by
+ * equality match (first occurrence). With `index`, removes by position.
+ */
+export const RemoveHandler = z.object({
+	action: z.literal('remove'),
+	target: z.string(),
+	value: z.any().optional(),
+	index: z.number().optional()
 });
 
 /** `open` — set the target state path to true (opens modals and dialogs). */
@@ -236,6 +259,8 @@ type ConfirmHandlerType = {
 export const EventHandler = z.union([
 	SetHandler,
 	ToggleHandler,
+	PushHandler,
+	RemoveHandler,
 	OpenHandler,
 	NavigateHandler,
 	ToastHandler,
@@ -254,6 +279,8 @@ export const EventHandler = z.union([
 export type EventHandler =
 	| z.infer<typeof SetHandler>
 	| z.infer<typeof ToggleHandler>
+	| z.infer<typeof PushHandler>
+	| z.infer<typeof RemoveHandler>
 	| z.infer<typeof OpenHandler>
 	| z.infer<typeof NavigateHandler>
 	| z.infer<typeof ToastHandler>

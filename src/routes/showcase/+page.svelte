@@ -884,6 +884,110 @@
     }
   };
 
+  // Dynamic todo list — push/remove array actions; clear input after add via flow
+  const todoFlow = {
+    version: '1.0' as const,
+    state: { items: ['Buy milk', 'Read changelog'], draft: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '6px' },
+          children: [
+            {
+              type: 'input',
+              bind: 'draft',
+              props: { placeholder: 'New item...', class: 'flex-1' }
+            },
+            {
+              type: 'button',
+              props: { label: 'Add' },
+              on_click: {
+                action: 'flow',
+                steps: [
+                  { action: 'validate', condition: '{state.draft.trim() != ""}', message: 'Type something first.' },
+                  { action: 'push', target: 'items', value: '{state.draft.trim()}' },
+                  { action: 'set', target: 'draft', value: '' }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          type: 'each',
+          items: 'items',
+          item_as: 'item',
+          index_as: 'i',
+          children: [
+            {
+              type: 'flex',
+              props: { gap: '6px', align: 'center' },
+              children: [
+                { type: 'text', props: { text: '• {item}' }, class: 'flex-1' },
+                {
+                  type: 'button',
+                  props: { label: '✕', variant: 'ghost', size: 'sm' },
+                  on_click: { action: 'remove', target: 'items', value: '{item}' }
+                }
+              ]
+            }
+          ]
+        },
+        { type: 'text', props: { text: '{state.items.length} items', size: 'xs' } }
+      ]
+    }
+  };
+
+  // Side-by-side comparison — two cards in a grid driven by the same state
+  const compareFlow = {
+    version: '1.0' as const,
+    state: { plan: 'pro' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'radio-group',
+          props: {
+            label: 'Choose your plan',
+            options: [
+              { value: 'free', label: 'Free' },
+              { value: 'pro', label: 'Pro' },
+              { value: 'enterprise', label: 'Enterprise' }
+            ]
+          },
+          bind: 'plan'
+        },
+        {
+          type: 'grid',
+          props: { columns: 2, gap: '12px' },
+          children: [
+            {
+              type: 'card',
+              props: { title: 'Free', variant: '{state.plan == "free" ? "selected" : "default"}' },
+              children: [
+                { type: 'text', props: { text: '$0 / month', size: 'lg', weight: 'semibold' } },
+                { type: 'text', props: { text: '• 1 user' } },
+                { type: 'text', props: { text: '• Community support' } }
+              ]
+            },
+            {
+              type: 'card',
+              props: { title: 'Pro', variant: '{state.plan == "pro" ? "selected" : "default"}' },
+              children: [
+                { type: 'text', props: { text: '$19 / month', size: 'lg', weight: 'semibold' } },
+                { type: 'text', props: { text: '• Up to 10 users' } },
+                { type: 'text', props: { text: '• Priority support' } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
   // Multi-select chips — toggle action adds/removes values from an array
   const multiSelectFlow = {
     version: '1.0' as const,
@@ -1107,6 +1211,8 @@
       { label: 'Live Calculator', spec: calculatorFlow },
       { label: 'Live Filter', spec: filterFlow },
       { label: 'Multi-select Chips', spec: multiSelectFlow },
+      { label: 'Dynamic Todo List', spec: todoFlow },
+      { label: 'Plan Comparison', spec: compareFlow },
       { label: 'Stepper Wizard', spec: wizardFlow },
       { label: 'Delete with Confirmation', spec: confirmFlow },
       { label: 'Form with Validation', spec: formFlow },

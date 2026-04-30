@@ -162,6 +162,12 @@ export class EventDispatcher {
 			case 'toggle':
 				this.handleToggle(handler, context, eventValue);
 				return;
+			case 'push':
+				this.handlePush(handler, context, eventValue);
+				return;
+			case 'remove':
+				this.handleRemove(handler, context, eventValue);
+				return;
 			case 'open':
 				this.handleOpen(handler);
 				return;
@@ -258,6 +264,63 @@ export class EventDispatcher {
 		console.warn(
 			`EventDispatcher: toggle on non-boolean / non-array target "${handler.target}" (was ${typeof current}) — no-op.`
 		);
+	}
+
+	/** `push` — append `value` to the array at `target`. Creates an array if missing. */
+	private handlePush(
+		handler: Extract<EventHandler, { action: 'push' }>,
+		context: ResolverContext,
+		eventValue?: unknown
+	): void {
+		if (!handler.target) return;
+
+		let value = handler.value !== undefined ? handler.value : eventValue;
+		if (typeof value === 'string') value = resolveString(value, context);
+		if (value === undefined) return;
+
+		const current = this.stateManager.get(handler.target);
+		if (current === undefined || current === null) {
+			this.stateManager.set(handler.target, [value]);
+			return;
+		}
+		if (!Array.isArray(current)) {
+			console.warn(
+				`EventDispatcher: push on non-array target "${handler.target}" (was ${typeof current}) — no-op.`
+			);
+			return;
+		}
+		this.stateManager.set(handler.target, [...current, value]);
+	}
+
+	/** `remove` — remove an array item by `index` or by equality match on `value`. */
+	private handleRemove(
+		handler: Extract<EventHandler, { action: 'remove' }>,
+		context: ResolverContext,
+		eventValue?: unknown
+	): void {
+		if (!handler.target) return;
+
+		const current = this.stateManager.get(handler.target);
+		if (!Array.isArray(current)) {
+			console.warn(
+				`EventDispatcher: remove on non-array target "${handler.target}" (was ${typeof current}) — no-op.`
+			);
+			return;
+		}
+
+		if (typeof handler.index === 'number') {
+			const next = current.filter((_, i) => i !== handler.index);
+			this.stateManager.set(handler.target, next);
+			return;
+		}
+
+		let value = handler.value !== undefined ? handler.value : eventValue;
+		if (typeof value === 'string') value = resolveString(value, context);
+		if (value === undefined) return;
+
+		const idx = current.indexOf(value);
+		if (idx < 0) return;
+		this.stateManager.set(handler.target, current.filter((_, i) => i !== idx));
 	}
 
 	private emitExternal(
