@@ -639,6 +639,172 @@
     }
   };
 
+  // Live Calculator — bind on number inputs, arithmetic in expressions
+  const calculatorFlow = {
+    version: '1.0' as const,
+    state: { a: 5, b: 3, op: '+' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '10px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'end' },
+          children: [
+            { type: 'input', props: { label: 'A', type: 'number' }, bind: 'a', class: 'flex-1' },
+            {
+              type: 'select',
+              props: { options: ['+', '-', '*', '/'] },
+              bind: 'op',
+              class: 'w-20'
+            },
+            { type: 'input', props: { label: 'B', type: 'number' }, bind: 'b', class: 'flex-1' }
+          ]
+        },
+        {
+          type: 'if',
+          condition: '{state.op == "+"}',
+          children: [{ type: 'text', props: { text: '{state.a} + {state.b} = {state.a + state.b}', size: 'lg', weight: 'semibold' } }]
+        },
+        {
+          type: 'if',
+          condition: '{state.op == "-"}',
+          children: [{ type: 'text', props: { text: '{state.a} − {state.b} = {state.a - state.b}', size: 'lg', weight: 'semibold' } }]
+        },
+        {
+          type: 'if',
+          condition: '{state.op == "*"}',
+          children: [{ type: 'text', props: { text: '{state.a} × {state.b} = {state.a * state.b}', size: 'lg', weight: 'semibold' } }]
+        },
+        {
+          type: 'if',
+          condition: '{state.op == "/"}',
+          children: [{ type: 'text', props: { text: '{state.a} ÷ {state.b} = {state.a / state.b}', size: 'lg', weight: 'semibold' } }]
+        }
+      ]
+    }
+  };
+
+  // Stepper Wizard — current step drives which content + buttons appear
+  const wizardFlow = {
+    version: '1.0' as const,
+    state: { step: 1, account: '', plan: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'text', props: { text: 'Step {state.step} of 3', size: 'xs' } },
+        { type: 'progress', props: { max: 3 }, bind: 'step' },
+
+        {
+          type: 'if',
+          condition: '{state.step == 1}',
+          children: [
+            { type: 'heading', props: { text: 'Create your account', level: 4 } },
+            { type: 'input', props: { label: 'Email', placeholder: 'you@company.com' }, bind: 'account' }
+          ]
+        },
+        {
+          type: 'if',
+          condition: '{state.step == 2}',
+          children: [
+            { type: 'heading', props: { text: 'Pick a plan', level: 4 } },
+            {
+              type: 'select',
+              props: { placeholder: 'Choose…', options: ['Free', 'Pro', 'Enterprise'] },
+              bind: 'plan'
+            }
+          ]
+        },
+        {
+          type: 'if',
+          condition: '{state.step == 3}',
+          children: [
+            { type: 'heading', props: { text: 'Confirm', level: 4 } },
+            { type: 'text', props: { text: 'Account: {state.account}', size: 'sm' } },
+            { type: 'text', props: { text: 'Plan: {state.plan}', size: 'sm' } }
+          ]
+        },
+
+        {
+          type: 'flex',
+          props: { gap: '8px' },
+          children: [
+            {
+              type: 'if',
+              condition: '{state.step > 1}',
+              children: [
+                {
+                  type: 'button',
+                  props: { label: 'Back', variant: 'outline' },
+                  on_click: { action: 'set', target: 'step', value: '{state.step - 1}' }
+                }
+              ]
+            },
+            {
+              type: 'if',
+              condition: '{state.step < 3}',
+              children: [
+                {
+                  type: 'button',
+                  props: { label: 'Next' },
+                  on_click: { action: 'set', target: 'step', value: '{state.step + 1}' }
+                }
+              ]
+            },
+            {
+              type: 'if',
+              condition: '{state.step == 3}',
+              children: [
+                {
+                  type: 'button',
+                  props: { label: 'Submit' },
+                  on_click: [
+                    { action: 'toast', message: 'Account created for {state.account} on the {state.plan} plan!', variant: 'success' },
+                    { action: 'set', target: 'step', value: 1 },
+                    { action: 'set', target: 'account', value: '' },
+                    { action: 'set', target: 'plan', value: '' }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  // Delete with Confirmation — confirm action → toast on confirm
+  const confirmFlow = {
+    version: '1.0' as const,
+    state: { item: 'project-alpha' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '10px' },
+      children: [
+        { type: 'text', props: { text: 'Item: {state.item}', size: 'sm' } },
+        {
+          type: 'button',
+          props: { label: 'Delete', variant: 'destructive' },
+          on_click: {
+            action: 'confirm',
+            title: 'Delete {state.item}?',
+            message: 'This cannot be undone. Type the name in your head and click Confirm.',
+            confirm_label: 'Delete',
+            cancel_label: 'Keep',
+            on_confirm: [
+              { action: 'set', target: 'item', value: '(deleted)' },
+              { action: 'toast', message: 'Deleted.', variant: 'success' }
+            ],
+            on_cancel: [
+              { action: 'toast', message: 'Cancelled — nothing was deleted.' }
+            ]
+          }
+        }
+      ]
+    }
+  };
+
   const researchFlow = {
     version: '1.0' as const,
     state: {},
@@ -740,6 +906,9 @@
     ]},
     { id: 'flows', title: 'Interactive Flows', items: [
       { label: 'Counter', spec: counterFlow },
+      { label: 'Live Calculator', spec: calculatorFlow },
+      { label: 'Stepper Wizard', spec: wizardFlow },
+      { label: 'Delete with Confirmation', spec: confirmFlow },
       { label: 'Form with Validation', spec: formFlow },
       { label: 'Research Article', spec: researchFlow },
     ]},

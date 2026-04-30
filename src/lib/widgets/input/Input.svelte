@@ -89,14 +89,21 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  function readValue(target: HTMLInputElement): string | number {
+    if (type !== 'number') return target.value;
+    if (target.value === '') return '';
+    const n = target.valueAsNumber;
+    return Number.isFinite(n) ? n : target.value;
+  }
+
   function handleInput(e: Event) {
-    const v = (e.target as HTMLInputElement).value;
+    const v = readValue(e.target as HTMLInputElement);
     oninput?.(v);
     onchange?.(v);
   }
 
   function handleChange(e: Event) {
-    const v = (e.target as HTMLInputElement).value;
+    const v = readValue(e.target as HTMLInputElement);
     onchange?.(v);
   }
 
