@@ -56,6 +56,8 @@
     "clsx": "^2.1.1",
     "codemirror": "^6.0.2",
     "d3-scale": "^4.0.0",
+    "diff": "^9.0.0",
+    "driver.js": "^1.4.0",
     "echarts": "^6.0.0",
     "elkjs": "^0.11.1",
     "frappe-gantt": "^1.2.2",
@@ -63,6 +65,7 @@
     "marked": "^18.0.2",
     "muuri": "^0.9.5",
     "partial-json": "0.1.7",
+    "qrcode-svg": "^1.1.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {

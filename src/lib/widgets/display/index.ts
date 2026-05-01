@@ -30,3 +30,5 @@ export { default as Code } from './Code.svelte';
 export { default as ProgressRing } from './ProgressRing.svelte';
 export { default as Mention } from './Mention.svelte';
 export { default as LinkPreview } from './LinkPreview.svelte';
+export { default as Qr } from './Qr.svelte';
+export { default as Diff } from './Diff.svelte';

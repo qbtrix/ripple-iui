@@ -2,12 +2,12 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search } from './input/index.js';
 import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal, RippleFrame, AvatarGroup } from './composite/index.js';
-import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState } from './overlay/index.js';
+import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -173,6 +173,12 @@ const defaultRegistry: WidgetMap = {
   mention: Mention,
   'link-preview': LinkPreview,
   linkpreview: LinkPreview,
+  qr: Qr,
+  qrcode: Qr,
+  'qr-code': Qr,
+  diff: Diff,
+  coachmark: Coachmark,
+  tour: Coachmark,
   // Enterprise verticals
   'pricing-table': PricingTable,
   pricing: PricingTable,
@@ -278,13 +284,13 @@ export {
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
   NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search,
   Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar,
-  ProgressRing, Mention, LinkPreview, Terminal, If, Each,
+  ProgressRing, Mention, LinkPreview, Qr, Diff, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
   AnalystBar, RangeBar,
   Workflow,
   C4Diagram,
-  Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState,
+  Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark,
   PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
   BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines,
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,

@@ -15,3 +15,4 @@ export { default as CommandPalette } from './CommandPalette.svelte';
 export { default as ContextMenu } from './ContextMenu.svelte';
 export { default as NotificationCenter } from './NotificationCenter.svelte';
 export { default as ErrorState } from './ErrorState.svelte';
+export { default as Coachmark } from './Coachmark.svelte';

@@ -1752,6 +1752,100 @@
     }
   };
 
+  const qrSpec = {
+    version: '1.0' as const,
+    state: { qrText: 'https://ripple-ui.dev' },
+    ui: {
+      type: 'flex',
+      props: { gap: '24px', align: 'start', wrap: 'wrap' },
+      children: [
+        { type: 'qr', props: { value: '{state.qrText}', size: 160, caption: 'Scan me' } },
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '8px' },
+          style: { 'min-width': '240px' },
+          children: [
+            { type: 'input', props: { label: 'Encode', placeholder: 'URL or text' }, bind: 'qrText' },
+            { type: 'text', props: { text: 'Live update — type above to regenerate.', size: 'xs', muted: true } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const diffSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'diff',
+          props: {
+            title: 'src/utils.ts',
+            mode: 'lines',
+            layout: 'unified',
+            before: 'export function add(a, b) {\n  return a + b;\n}\n\nexport function sub(a, b) {\n  return a - b;\n}\n',
+            after: 'export function add(a: number, b: number): number {\n  return a + b;\n}\n\nexport function sub(a: number, b: number): number {\n  return a - b;\n}\n\nexport function mul(a: number, b: number): number {\n  return a * b;\n}\n'
+          }
+        },
+        {
+          type: 'diff',
+          props: {
+            title: 'inline word diff',
+            mode: 'words',
+            before: 'The quick brown fox jumps over the lazy dog.',
+            after: 'The fast brown fox leaps over the sleeping dog.'
+          }
+        }
+      ]
+    }
+  };
+
+  const coachmarkSpec = {
+    version: '1.0' as const,
+    state: { tourActive: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            {
+              type: 'button',
+              id: 'tour-target-1',
+              props: { label: 'Start tour', variant: 'default' },
+              on_click: { action: 'set', target: 'tourActive', value: true }
+            },
+            {
+              type: 'button',
+              id: 'tour-target-2',
+              props: { label: 'Some action', variant: 'outline' }
+            },
+            {
+              type: 'badge',
+              id: 'tour-target-3',
+              props: { text: 'New', variant: 'default' }
+            }
+          ]
+        },
+        {
+          type: 'coachmark',
+          bind: 'tourActive',
+          props: {
+            steps: [
+              { target: '#tour-target-1', title: 'Welcome', description: 'This is the start button — click it to launch the onboarding flow.' },
+              { target: '#tour-target-2', title: 'Take action', description: 'From here you can perform the primary task. Try it after the tour.' },
+              { target: '#tour-target-3', title: 'New stuff', description: 'Look out for these badges to discover features as we ship them.' }
+            ]
+          }
+        }
+      ]
+    }
+  };
+
   const richTextSpec = {
     version: '1.0' as const,
     state: { note: '<h2>Welcome</h2><p>Try <strong>bold</strong>, <em>italic</em>, lists, and more.</p>' },
@@ -4080,6 +4174,7 @@
       { label: 'Context Menu', spec: contextMenuSpec },
       { label: 'Notification Center', spec: notificationCenterSpec },
       { label: 'Error State', spec: errorStateSpec },
+      { label: 'Coachmark / Tour', spec: coachmarkSpec },
     ]},
     { id: 'display', title: 'Display', items: [
       { label: 'Text', spec: textSpec },
@@ -4112,6 +4207,8 @@
       { label: 'Progress Ring', spec: progressRingSpec },
       { label: 'Mention', spec: mentionSpec },
       { label: 'Link Preview', spec: linkPreviewSpec },
+      { label: 'QR', spec: qrSpec },
+      { label: 'Diff', spec: diffSpec },
     ]},
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },
