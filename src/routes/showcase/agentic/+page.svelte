@@ -1,235 +1,165 @@
 <script lang="ts">
+  import { onMount, tick } from 'svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '$lib/types.js';
 
-  type ChatMsg = { role: 'user' | 'assistant'; text: string };
-
-  // ── Mock LLM specs ─────────────────────────────────────────────
-  // Each spec emits `emit → chat.send` on user actions, so the simulator
-  // can decide the next turn purely from the message text.
-
-  const productListSpec = {
-    version: '1.0' as const,
-    state: {
-      products: [
-        { id: 'aero', name: 'AeroPress', price: '$39', desc: 'Compact immersion brewer.', emoji: '🫙' },
-        { id: 'v60', name: 'Hario V60', price: '$25', desc: 'Spiral pour-over dripper.', emoji: '⏬' },
-        { id: 'kalita', name: 'Kalita Wave', price: '$45', desc: 'Flat-bottom wave brewer.', emoji: '🌊' }
-      ]
-    },
-    ui: {
-      type: 'flex',
-      props: { direction: 'column', gap: '12px' },
-      children: [
-        { type: 'text', props: { text: 'Here are three popular options:', size: 'sm' } },
-        {
-          type: 'grid',
-          props: { columns: 3, gap: '12px' },
-          children: [
-            {
-              type: 'each',
-              items: 'products',
-              item_as: 'product',
-              children: [
-                {
-                  type: 'card',
-                  props: { title: '{product.emoji} {product.name}' },
-                  children: [
-                    { type: 'text', props: { text: '{product.desc}', size: 'xs' } },
-                    { type: 'metric', props: { label: 'Price', value: '{product.price}' } },
-                    {
-                      type: 'flex',
-                      props: { gap: '6px' },
-                      children: [
-                        {
-                          type: 'button',
-                          props: { label: 'Buy', size: 'sm' },
-                          on_click: { action: 'emit', target: 'chat.send', value: 'I want to buy the {product.name}' }
-                        },
-                        {
-                          type: 'button',
-                          props: { label: 'Compare', variant: 'outline', size: 'sm' },
-                          on_click: { action: 'emit', target: 'chat.send', value: 'Compare the {product.name} to the others' }
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          type: 'flex',
-          props: { gap: '6px', wrap: 'wrap' },
-          children: [
-            { type: 'chip', props: { label: 'Show me espresso machines instead', variant: 'primary' }, on_click: { action: 'emit', target: 'chat.send', value: 'Show me espresso machines instead' } },
-            { type: 'chip', props: { label: 'Sort by price', variant: 'default' }, on_click: { action: 'emit', target: 'chat.send', value: 'Sort by price' } }
-          ]
-        }
-      ]
-    }
+  type ChatMsg = {
+    role: 'user' | 'assistant';
+    text: string;
+    spec?: any;
+    pending?: boolean;
   };
 
-  function checkoutSpec(productName: string) {
-    return {
-      version: '1.0' as const,
-      state: { qty: 1, address: '' },
-      ui: {
-        type: 'flex',
-        props: { direction: 'column', gap: '10px' },
-        children: [
-          { type: 'heading', props: { text: 'Checkout — ' + productName, level: 4 } },
-          { type: 'number-input', props: { label: 'Quantity', min: 1, max: 99 }, bind: 'qty' },
-          { type: 'input', props: { label: 'Shipping address', placeholder: '123 Main St' }, bind: 'address' },
-          {
-            type: 'flex',
-            props: { gap: '8px' },
-            children: [
-              {
-                type: 'button',
-                props: { label: 'Confirm purchase' },
-                on_click: { action: 'emit', target: 'chat.send', value: 'Confirm purchase: ' + productName + ' x{state.qty} to {state.address}' }
-              },
-              {
-                type: 'button',
-                props: { label: 'Cancel', variant: 'ghost' },
-                on_click: { action: 'emit', target: 'chat.send', value: 'Cancel checkout' }
-              }
-            ]
-          }
-        ]
-      }
-    };
-  }
+  // ── State ──────────────────────────────────────────────────────────
 
-  const espressoSpec = {
-    version: '1.0' as const,
-    state: {
-      machines: [
-        { id: 'gaggia', name: 'Gaggia Classic Pro', price: '$499', emoji: '☕' },
-        { id: 'breville', name: 'Breville Bambino', price: '$309', emoji: '🛠️' }
-      ]
-    },
-    ui: {
-      type: 'flex',
-      props: { direction: 'column', gap: '10px' },
-      children: [
-        { type: 'text', props: { text: "Here are two beginner-friendly espresso machines:", size: 'sm' } },
-        {
-          type: 'each',
-          items: 'machines',
-          item_as: 'm',
-          children: [
-            {
-              type: 'card',
-              props: { title: '{m.emoji} {m.name}' },
-              children: [
-                { type: 'metric', props: { label: 'Price', value: '{m.price}' } },
-                {
-                  type: 'button',
-                  props: { label: 'Buy', size: 'sm' },
-                  on_click: { action: 'emit', target: 'chat.send', value: 'I want to buy the {m.name}' }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  };
-
-  const confirmSpec = {
-    version: '1.0' as const,
-    ui: {
-      type: 'flex',
-      props: { direction: 'column', gap: '8px' },
-      children: [
-        { type: 'alert', props: { variant: 'success', title: 'Order placed', description: 'Confirmation #C-4F3B-9C72.' } },
-        {
-          type: 'button',
-          props: { label: 'Start over', variant: 'outline' },
-          on_click: { action: 'emit', target: 'chat.send', value: 'show me products' }
-        }
-      ]
-    }
-  };
-
-  const helpSpec = {
-    version: '1.0' as const,
-    ui: {
-      type: 'flex',
-      props: { direction: 'column', gap: '10px' },
-      children: [
-        { type: 'text', props: { text: "Try one of these to see the loop in action:", size: 'sm' } },
-        {
-          type: 'flex',
-          props: { gap: '6px', wrap: 'wrap' },
-          children: [
-            { type: 'chip', props: { label: 'show me products', variant: 'primary' }, on_click: { action: 'emit', target: 'chat.send', value: 'show me products' } },
-            { type: 'chip', props: { label: 'show me espresso machines', variant: 'primary' }, on_click: { action: 'emit', target: 'chat.send', value: 'show me espresso machines' } },
-            { type: 'chip', props: { label: 'help', variant: 'default' }, on_click: { action: 'emit', target: 'chat.send', value: 'help' } }
-          ]
-        }
-      ]
-    }
-  };
-
-  // ── Mock LLM router — picks a reply spec from a user message ────
-
-  function fakeLlm(userText: string): { reply: string; spec: any } {
-    const t = userText.toLowerCase();
-    if (t.includes('confirm purchase')) {
-      return { reply: 'Order placed. Anything else I can help with?', spec: confirmSpec };
-    }
-    if (t.startsWith('cancel')) {
-      return { reply: 'No problem — back to the catalog.', spec: productListSpec };
-    }
-    if (t.includes('buy ') || t.includes('buy the')) {
-      const match = userText.match(/buy(?: the)?\s+(.+?)$/i);
-      const name = match ? match[1] : 'item';
-      return { reply: `Great choice! Let's get the ${name} on its way.`, spec: checkoutSpec(name) };
-    }
-    if (t.includes('espresso')) {
-      return { reply: 'Switching to espresso machines:', spec: espressoSpec };
-    }
-    if (t.includes('compare')) {
-      return { reply: "Side-by-side coming up — pick any product to start a comparison flow (this demo doesn't go further).", spec: productListSpec };
-    }
-    if (t.includes('sort')) {
-      return { reply: 'Sorted by price (mock):', spec: productListSpec };
-    }
-    if (t.includes('product')) {
-      return { reply: 'Here are some popular brewers:', spec: productListSpec };
-    }
-    return { reply: "I can show products, run checkout, or restart. Try a chip below.", spec: helpSpec };
-  }
-
-  // ── Reactive state ──────────────────────────────────────────────
-
-  let messages = $state<ChatMsg[]>([
-    { role: 'assistant', text: 'Hi! Try asking "show me products" — every button you click sends a real message back to me.' }
-  ]);
-  let currentSpec = $state<any>(helpSpec);
-  let currentState = $state<Record<string, unknown>>({});
+  let messages = $state<ChatMsg[]>([]);
   let inputValue = $state('');
+  let busy = $state(false);
+  let apiKey = $state('');
+  let showKeyDialog = $state(false);
+  let usage = $state<{ input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number } | null>(null);
+  let scrollEl = $state<HTMLElement | null>(null);
+  let specVersion = $state(0);
 
-  // Each spec change brings its own initial state (LLM resets state per turn).
-  // Bumping a key forces <Ripple> to remount with the new initial state.
-  let specKey = $state(0);
+  onMount(() => {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('rk') : null;
+    if (stored) apiKey = stored;
+    messages = [
+      {
+        role: 'assistant',
+        text: "Hi! I'm Claude (Opus 4.7). Ask me anything — I'll respond with a real chat reply, and when it makes sense I'll render an interactive UI you can click. Try \"show me some coffee gear\" or \"build me a settings panel\"."
+      }
+    ];
+  });
 
-  function send(text: string) {
-    if (!text.trim()) return;
-    messages = [...messages, { role: 'user', text }];
+  function saveKey() {
+    if (typeof localStorage !== 'undefined') {
+      if (apiKey) localStorage.setItem('rk', apiKey);
+      else localStorage.removeItem('rk');
+    }
+    showKeyDialog = false;
+  }
+
+  // ── Send + stream ──────────────────────────────────────────────────
+
+  async function send(text: string) {
+    if (!text.trim() || busy) return;
     inputValue = '';
-    // Simulate a brief LLM "thinking" pause for realism.
-    setTimeout(() => {
-      const { reply, spec } = fakeLlm(text);
-      messages = [...messages, { role: 'assistant', text: reply }];
-      currentSpec = spec;
-      currentState = (spec.state as Record<string, unknown>) ?? {};
-      specKey++;
-    }, 300);
+    messages = [...messages, { role: 'user', text }];
+    messages = [...messages, { role: 'assistant', text: '', pending: true }];
+    busy = true;
+    await tick();
+    scrollToBottom();
+
+    const history: { role: 'user' | 'assistant'; content: string }[] = messages
+      .filter((m) => !m.pending)
+      .map((m) => ({
+        role: m.role,
+        content: m.role === 'assistant' && m.spec
+          ? `${m.text}\n<ripple-spec>${JSON.stringify(m.spec)}</ripple-spec>`
+          : m.text
+      }));
+
+    let buffer = '';
+    let extracted = false;
+
+    try {
+      const res = await fetch('/showcase/agentic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history, apiKey: apiKey || undefined })
+      });
+
+      if (!res.ok || !res.body) {
+        const err = await res.text();
+        throw new Error(`${res.status}: ${err.slice(0, 200)}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let pending = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        pending += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = pending.indexOf('\n\n')) !== -1) {
+          const frame = pending.slice(0, idx);
+          pending = pending.slice(idx + 2);
+          handleFrame(frame);
+        }
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      patchLast({ text: `**Error:** ${msg}`, pending: false });
+    } finally {
+      busy = false;
+    }
+
+    function handleFrame(raw: string) {
+      const lines = raw.split('\n');
+      let event = 'message';
+      let data = '';
+      for (const line of lines) {
+        if (line.startsWith('event:')) event = line.slice(6).trim();
+        else if (line.startsWith('data:')) data += line.slice(5).trim();
+      }
+      if (!data) return;
+      let parsed: any;
+      try { parsed = JSON.parse(data); } catch { return; }
+
+      if (event === 'text') {
+        buffer += parsed.delta;
+
+        if (!extracted && buffer.includes('</ripple-spec>')) {
+          extracted = true;
+          const match = buffer.match(/<ripple-spec>([\s\S]*?)<\/ripple-spec>/);
+          if (match && match.index !== undefined) {
+            const before = buffer.slice(0, match.index).trim();
+            const after = buffer.slice(match.index + match[0].length).trim();
+            const text = (before + (after ? '\n' + after : '')).trim();
+            try {
+              const spec = JSON.parse(match[1].trim());
+              patchLast({ text, spec, pending: true });
+              specVersion++;
+              return;
+            } catch {
+              // Fall through to plain-text update.
+            }
+          }
+        }
+
+        const visible = stripPartialSpec(buffer);
+        patchLast({ text: visible, pending: true });
+      } else if (event === 'done') {
+        usage = parsed.usage ?? null;
+        patchLast({ pending: false });
+      } else if (event === 'error') {
+        patchLast({ text: `**Error:** ${parsed.message}`, pending: false });
+      }
+    }
+  }
+
+  function stripPartialSpec(raw: string): string {
+    const open = raw.indexOf('<ripple-spec>');
+    if (open === -1) return raw.trim();
+    const close = raw.indexOf('</ripple-spec>', open);
+    if (close === -1) return raw.slice(0, open).trim();
+    return (raw.slice(0, open) + raw.slice(close + '</ripple-spec>'.length)).trim();
+  }
+
+  function patchLast(patch: Partial<ChatMsg>) {
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.role !== 'assistant') return;
+    messages = [...messages.slice(0, -1), { ...last, ...patch }];
+    requestAnimationFrame(scrollToBottom);
+  }
+
+  function scrollToBottom() {
+    if (!scrollEl) return;
+    scrollEl.scrollTop = scrollEl.scrollHeight;
   }
 
   function handleRippleEvent(event: RippleEvent) {
@@ -244,88 +174,439 @@
   }
 
   function reset() {
-    messages = [{ role: 'assistant', text: 'Reset. Try a chip to begin.' }];
-    currentSpec = helpSpec;
-    currentState = {};
-    specKey++;
+    messages = [{ role: 'assistant', text: 'Cleared. What should we build?' }];
+    usage = null;
+    specVersion++;
   }
+
+  const samplePrompts = [
+    'Show me some coffee gear',
+    'Build me a settings panel for notifications',
+    "I'm planning a trip to Tokyo — pick a date",
+    'Compare the Pro and Team plans'
+  ];
 </script>
 
 <svelte:head>
-  <title>Ripple — Agentic Chat Loop</title>
+  <title>Ripple — Agentic Chat (Claude Opus 4.7)</title>
 </svelte:head>
 
-<main class="mx-auto max-w-3xl p-6 flex flex-col gap-4">
-  <header class="flex items-baseline justify-between">
+<main class="agentic-shell">
+  <header class="agentic-header">
     <div>
-      <div class="text-xs uppercase tracking-wider text-muted-foreground">@ripple-ui/svelte</div>
-      <h1 class="text-2xl font-bold">Agentic Chat Loop</h1>
-      <p class="text-sm text-muted-foreground mt-1">
-        Every interactive widget below emits <code>emit → chat.send</code>. The page hosts a fake LLM
-        that picks the next spec from the message text. Buttons drive the conversation.
+      <div class="eyebrow">@ripple-ui/svelte</div>
+      <h1>Agentic Chat</h1>
+      <p class="muted">
+        Real Claude Opus 4.7 with adaptive thinking. Replies stream in; clicks on the rendered UI
+        round-trip back as user messages. Same contract as <code>docs/agentic-ui.md</code>.
       </p>
     </div>
-    <button
-      type="button"
-      onclick={reset}
-      class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted/60"
-    >
-      Reset
-    </button>
+    <div class="header-actions">
+      {#if usage}
+        <div class="usage" title="Token usage from the last turn">
+          <span>in {usage.input_tokens ?? 0}</span>
+          {#if usage.cache_read_input_tokens}<span>· cache {usage.cache_read_input_tokens}</span>{/if}
+          <span>· out {usage.output_tokens ?? 0}</span>
+        </div>
+      {/if}
+      <button type="button" class="ghost" onclick={() => (showKeyDialog = true)}>
+        {apiKey ? '🔑 Key set' : '🔑 Set API key'}
+      </button>
+      <button type="button" class="ghost" onclick={reset}>Reset</button>
+    </div>
   </header>
 
-  <section class="rounded-lg border border-border bg-card overflow-hidden flex flex-col">
-    <ol class="flex flex-col gap-2 m-0 p-3 list-none max-h-[280px] overflow-y-auto">
-      {#each messages as m, i (i)}
-        <li class={m.role === 'user' ? 'self-end max-w-[80%]' : 'self-start max-w-[90%]'}>
-          <div
-            class={m.role === 'user'
-              ? 'rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-3 py-1.5 text-sm'
-              : 'rounded-2xl rounded-tl-sm bg-muted px-3 py-1.5 text-sm'}
-          >
-            {m.text}
-          </div>
-        </li>
-      {/each}
-    </ol>
+  <section class="thread" bind:this={scrollEl}>
+    {#each messages as m, i (i)}
+      <article class={m.role === 'user' ? 'msg user' : 'msg assistant'}>
+        {#if m.role === 'assistant'}
+          <div class="avatar" aria-hidden="true"></div>
+        {/if}
+        <div class="bubble-stack">
+          {#if m.text || m.pending}
+            <div class="bubble" class:pending={m.pending && !m.text}>
+              {#if m.pending && !m.text}
+                <span class="dots"><span></span><span></span><span></span></span>
+              {:else}
+                {m.text}
+              {/if}
+            </div>
+          {/if}
+          {#if m.spec}
+            <div class="spec-frame">
+              {#key i + ':' + specVersion}
+                <Ripple spec={m.spec} state={m.spec.state ?? {}} onEvent={handleRippleEvent} />
+              {/key}
+            </div>
+          {/if}
+        </div>
+        {#if m.role === 'user'}
+          <div class="avatar user" aria-hidden="true"></div>
+        {/if}
+      </article>
+    {/each}
 
-    <div class="border-t border-border p-3">
-      {#key specKey}
-        <Ripple spec={currentSpec} state={currentState} onEvent={handleRippleEvent} />
-      {/key}
-    </div>
+    {#if messages.length <= 1}
+      <div class="suggestions">
+        {#each samplePrompts as p (p)}
+          <button type="button" onclick={() => send(p)} disabled={busy}>{p}</button>
+        {/each}
+      </div>
+    {/if}
+  </section>
 
-    <form
-      class="flex items-center gap-2 border-t border-border p-2 bg-muted/20"
-      onsubmit={onSubmit}
+  <form class="composer" onsubmit={onSubmit}>
+    <input
+      type="text"
+      placeholder={busy ? 'Claude is thinking…' : 'Send a message — try "show me products" or "build a settings page"'}
+      bind:value={inputValue}
+      disabled={busy}
+    />
+    <button type="submit" disabled={busy || !inputValue.trim()}>Send</button>
+  </form>
+
+  {#if showKeyDialog}
+    <div
+      class="key-overlay"
+      role="presentation"
+      onclick={() => (showKeyDialog = false)}
     >
-      <input
-        type="text"
-        placeholder="Type a message... e.g. 'show me products'"
-        bind:value={inputValue}
-        class="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-      />
-      <button
-        type="submit"
-        disabled={!inputValue.trim()}
-        class="rounded-md bg-primary text-primary-foreground px-3 h-9 text-sm font-medium disabled:opacity-50"
+      <div
+        class="key-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="key-dialog-title"
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.stopPropagation()}
       >
-        Send
-      </button>
-    </form>
-  </section>
-
-  <section class="rounded-lg border border-border bg-card/30 p-4 text-xs text-muted-foreground">
-    <div class="font-semibold text-foreground mb-1">How this works</div>
-    <ol class="list-decimal pl-4 space-y-0.5">
-      <li>Every button / chip uses <code>{`{ action: 'emit', target: 'chat.send', value: '...' }`}</code></li>
-      <li>This page passes <code>onEvent</code> to <code>&lt;Ripple&gt;</code> and routes <code>chat.send</code> events to <code>send()</code></li>
-      <li><code>send()</code> appends to the message log and asks the (mock) LLM for the next spec</li>
-      <li>The new spec replaces the current one — no client-side branching, no per-product handlers</li>
-    </ol>
-    <p class="mt-2">
-      In a real app, replace <code>fakeLlm</code> with a streaming call to your model. The contract on the
-      Ripple side is identical — see <code>docs/agentic-ui.md</code>.
-    </p>
-  </section>
+        <h2 id="key-dialog-title">Anthropic API key</h2>
+        <p class="muted">
+          Used only by your browser to call <code>/showcase/agentic</code>. Stored in
+          <code>localStorage</code>; never leaves your machine except to the SvelteKit endpoint
+          (which forwards directly to Anthropic). If <code>ANTHROPIC_API_KEY</code> is set in
+          <code>.env</code>, you can leave this empty.
+        </p>
+        <input
+          type="password"
+          placeholder="sk-ant-..."
+          bind:value={apiKey}
+          autocomplete="off"
+        />
+        <div class="actions">
+          <button type="button" class="ghost" onclick={() => (showKeyDialog = false)}>Cancel</button>
+          <button type="button" onclick={saveKey}>Save</button>
+        </div>
+      </div>
+    </div>
+  {/if}
 </main>
+
+<style>
+  .agentic-shell {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 0;
+    height: calc(100vh - 60px);
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 1.25rem 1.25rem 0;
+  }
+
+  .agentic-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  :global(html:not(.dark)) .agentic-header { border-bottom-color: rgba(0, 0, 0, 0.08); }
+  .agentic-header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0.35rem;
+  }
+  .agentic-header p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+    max-width: 56ch;
+  }
+  .eyebrow {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: hsl(var(--muted-foreground));
+    font-weight: 600;
+  }
+  .muted { color: hsl(var(--muted-foreground)); }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .usage {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--muted) / 0.5);
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  button {
+    appearance: none;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border: none;
+    border-radius: 8px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+  button:hover:not(:disabled) { background: hsl(var(--primary) / 0.9); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.ghost {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+  }
+  button.ghost:hover:not(:disabled) { background: hsl(var(--muted) / 0.6); }
+
+  .thread {
+    overflow-y: auto;
+    padding: 1.25rem 0.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    scroll-behavior: smooth;
+  }
+
+  .msg {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    max-width: 100%;
+  }
+  .msg.user {
+    flex-direction: row-reverse;
+    align-self: flex-end;
+    max-width: 80%;
+  }
+  .msg.assistant { align-self: flex-start; max-width: 100%; width: 100%; }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff8a5b 0%, #d33e7c 50%, #6e3aff 100%);
+    display: grid;
+    place-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    box-shadow: 0 2px 6px rgba(110, 58, 255, 0.25);
+  }
+  .avatar::after {
+    content: '✦';
+    font-size: 0.9rem;
+  }
+  .avatar.user {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: none;
+  }
+  .avatar.user::after {
+    content: 'You';
+    font-size: 0.6rem;
+    font-weight: 600;
+  }
+
+  .bubble-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+  }
+  .bubble {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.7rem 1rem;
+    border-radius: 16px;
+    border-top-left-radius: 4px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    width: fit-content;
+    max-width: 100%;
+  }
+  :global(html.light) .bubble,
+  :global(html:not(.dark)) .bubble {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  .bubble.pending { padding: 0.85rem 1rem; }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, #6e3aff 0%, #9355ff 100%);
+    color: white;
+    border-color: transparent;
+    border-radius: 16px;
+    border-top-right-radius: 4px;
+    align-self: flex-end;
+    box-shadow: 0 2px 8px rgba(110, 58, 255, 0.25);
+  }
+
+  .dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: hsl(var(--muted-foreground));
+    animation: blink 1.2s infinite both;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.18s; }
+  .dots span:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-2px); }
+  }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    margin-top: 0.5rem;
+  }
+  .suggestions button {
+    background: rgba(255, 255, 255, 0.03);
+    color: hsl(var(--foreground));
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 0.45rem 0.95rem;
+    font-size: 0.8rem;
+  }
+  :global(html:not(.dark)) .suggestions button {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.18);
+  }
+  .suggestions button:hover:not(:disabled) {
+    background: rgba(110, 58, 255, 0.08);
+    border-color: rgba(110, 58, 255, 0.4);
+    border-style: solid;
+    color: hsl(var(--foreground));
+  }
+  .spec-frame {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+    width: 100%;
+    overflow-x: auto;
+  }
+  :global(html:not(.dark)) .spec-frame {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .composer {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.85rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    align-items: center;
+  }
+  :global(html:not(.dark)) .composer { border-top-color: rgba(0, 0, 0, 0.08); }
+  .composer input {
+    flex: 1;
+    height: 42px;
+    padding: 0 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.04);
+    color: hsl(var(--foreground));
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  :global(html:not(.dark)) .composer input {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.12);
+  }
+  .composer input:focus {
+    border-color: rgba(110, 58, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(110, 58, 255, 0.18);
+  }
+
+  .key-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: grid;
+    place-items: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+  .key-dialog {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .key-dialog h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .key-dialog p {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+  .key-dialog input {
+    height: 38px;
+    padding: 0 0.75rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-monospace, monospace;
+    font-size: 0.82rem;
+    outline: none;
+  }
+  .key-dialog .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  code {
+    font-family: ui-monospace, monospace;
+    font-size: 0.82em;
+    background: hsl(var(--muted) / 0.5);
+    padding: 0.05em 0.3em;
+    border-radius: 4px;
+  }
+</style>
