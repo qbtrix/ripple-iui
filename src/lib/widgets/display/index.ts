@@ -27,3 +27,4 @@ export { default as StatusDot } from './StatusDot.svelte';
 export { default as Trend } from './Trend.svelte';
 export { default as Copy } from './Copy.svelte';
 export { default as Code } from './Code.svelte';
+export { default as ProgressRing } from './ProgressRing.svelte';

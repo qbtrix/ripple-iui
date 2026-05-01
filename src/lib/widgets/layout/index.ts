@@ -16,3 +16,7 @@ export { default as Hero } from './Hero.svelte';
 export { default as Section } from './Section.svelte';
 export { default as Sidebar } from './Sidebar.svelte';
 export { default as AppShell } from './AppShell.svelte';
+export { default as Breadcrumb } from './Breadcrumb.svelte';
+export { default as Split } from './Split.svelte';
+export { default as MasterDetail } from './MasterDetail.svelte';
+export { default as Collapsible } from './Collapsible.svelte';

@@ -1,13 +1,13 @@
 // Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 import type { Component } from 'svelte';
 
-import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating } from './input/index.js';
-import { Table, Chart } from './data/index.js';
+import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing } from './display/index.js';
+import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor } from './input/index.js';
+import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal, RippleFrame, AvatarGroup } from './composite/index.js';
-import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard } from './overlay/index.js';
+import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -15,6 +15,10 @@ import {
 } from './research/index.js';
 import Workflow from './Workflow.svelte';
 import { C4Diagram } from './c4/index.js';
+import {
+  PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
+  BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines
+} from './vertical/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -63,6 +67,12 @@ const defaultRegistry: WidgetMap = {
   nav: Sidebar,
   'app-shell': AppShell,
   shell: AppShell,
+  breadcrumb: Breadcrumb,
+  breadcrumbs: Breadcrumb,
+  split: Split,
+  resizable: Split,
+  'master-detail': MasterDetail,
+  'list-detail': MasterDetail,
   text: Text,
   heading: Heading,
   image: Image,
@@ -89,10 +99,87 @@ const defaultRegistry: WidgetMap = {
   radio: RadioGroup,
   rating: Rating,
   stars: Rating,
+  'filter-bar': FilterBar,
+  filters: FilterBar,
+  combobox: Combobox,
+  autocomplete: Combobox,
+  'multi-select': MultiSelect,
+  multiselect: MultiSelect,
+  'tag-input': MultiSelect,
+  'date-picker': DatePicker,
+  datepicker: DatePicker,
+  date: DatePicker,
+  'time-picker': TimePicker,
+  timepicker: TimePicker,
+  time: TimePicker,
+  'file-upload': FileUpload,
+  fileupload: FileUpload,
+  dropzone: FileUpload,
+  form: Form,
   table: Table,
   'data-table': Table,
   datatable: Table,
   chart: Chart,
+  'virtual-list': VirtualList,
+  vlist: VirtualList,
+  list: VirtualList,
+  tree: Tree,
+  treeview: Tree,
+  kanban: Kanban,
+  board: Kanban,
+  'data-grid': DataGrid,
+  datagrid: DataGrid,
+  grid_table: DataGrid,
+  sparkline: Sparkline,
+  gauge: Gauge,
+  funnel: Funnel,
+  heatmap: Heatmap,
+  sankey: Sankey,
+  treemap: Treemap,
+  'progress-ring': ProgressRing,
+  ring: ProgressRing,
+  'number-input': NumberInput,
+  numberinput: NumberInput,
+  number: NumberInput,
+  'otp-input': OtpInput,
+  otp: OtpInput,
+  segmented: Segmented,
+  'toggle-group': Segmented,
+  collapsible: Collapsible,
+  'color-picker': ColorPicker,
+  color: ColorPicker,
+  'rich-text': RichText,
+  richtext: RichText,
+  wysiwyg: RichText,
+  'code-editor': CodeEditor,
+  codeeditor: CodeEditor,
+  editor: CodeEditor,
+  gantt: GanttChart,
+  'gantt-chart': GanttChart,
+  // Enterprise verticals
+  'pricing-table': PricingTable,
+  pricing: PricingTable,
+  'settings-list': SettingsList,
+  settings: SettingsList,
+  'comment-thread': CommentThread,
+  comments: CommentThread,
+  'audit-log': AuditLog,
+  audit: AuditLog,
+  'api-key': ApiKey,
+  'secret-reveal': ApiKey,
+  secret: ApiKey,
+  'bulk-action-bar': BulkActionBar,
+  bulk: BulkActionBar,
+  'saved-views': SavedViews,
+  views: SavedViews,
+  'people-picker': PeoplePicker,
+  people: PeoplePicker,
+  'permission-matrix': PermissionMatrix,
+  permissions: PermissionMatrix,
+  'org-chart': OrgChart,
+  orgchart: OrgChart,
+  'invoice-lines': InvoiceLines,
+  invoice: InvoiceLines,
   terminal: Terminal,
   'ripple-frame': RippleFrame,
   frame: RippleFrame,
@@ -121,6 +208,9 @@ const defaultRegistry: WidgetMap = {
   'hover-card': HoverCard,
   hovercard: HoverCard,
   toast: Toast,
+  'command-palette': CommandPalette,
+  cmdk: CommandPalette,
+  command: CommandPalette,
   loading: Loading,
   spinner: Loading,
   chip: Chip,
@@ -165,17 +255,20 @@ export function resetRegistry(): void {
 
 export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
-  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, DropdownMenu,
+  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible, DropdownMenu,
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
-  Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating,
-  Table, Chart, Terminal, If, Each,
+  Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
+  NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor,
+  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, ProgressRing, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
   AnalystBar, RangeBar,
   Workflow,
   C4Diagram,
-  Toast, Tooltip, Popover, HoverCard,
+  Toast, Tooltip, Popover, HoverCard, CommandPalette,
+  PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
+  BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines,
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
   AvatarGroup
 };

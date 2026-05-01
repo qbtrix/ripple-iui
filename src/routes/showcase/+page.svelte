@@ -329,74 +329,118 @@
     }
   };
 
+  const breadcrumbSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'breadcrumb',
+          props: {
+            items: [
+              { label: 'Home', href: '/', icon: 'home' },
+              { label: 'Library', href: '/library' },
+              { label: 'Books', href: '/library/books' },
+              { label: 'The Pragmatic Programmer' }
+            ]
+          }
+        },
+        {
+          type: 'breadcrumb',
+          props: {
+            separator: 'slash',
+            items: [
+              { label: 'Settings', href: '/settings' },
+              { label: 'Billing', href: '/settings/billing' },
+              { label: 'Invoices' }
+            ]
+          }
+        },
+        {
+          type: 'breadcrumb',
+          props: {
+            separator: '·',
+            items: [
+              { label: 'Projects' },
+              { label: 'Ripple' },
+              { label: 'Wave 2' }
+            ]
+          }
+        }
+      ]
+    }
+  };
+
+  const splitSpec = {
+    version: '1.0' as const,
+    state: { paneSize: 35 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'split',
+          style: { height: '220px', border: '1px solid hsl(var(--border))', 'border-radius': '8px' },
+          props: { direction: 'horizontal', defaultSize: 35, minSize: 15, maxSize: 70 },
+          start: {
+            type: 'flex',
+            props: { direction: 'column', gap: '4px' },
+            style: { padding: '12px' },
+            children: [
+              { type: 'heading', props: { text: 'Left pane', level: 4 } },
+              { type: 'text', props: { text: 'Drag the divider →', size: 'sm', muted: true } }
+            ]
+          },
+          end: {
+            type: 'flex',
+            props: { direction: 'column', gap: '4px' },
+            style: { padding: '12px' },
+            children: [
+              { type: 'heading', props: { text: 'Right pane', level: 4 } },
+              { type: 'text', props: { text: 'Pane content scrolls independently.', size: 'sm', muted: true } }
+            ]
+          },
+          on_resize: { action: 'set', target: 'paneSize', value: '{event}' }
+        },
+        { type: 'text', props: { text: 'Pane size: {state.paneSize}%', size: 'xs' } }
+      ]
+    }
+  };
+
   const masterDetailSpec = {
     version: '1.0' as const,
     state: {
       selected: 1,
       issues: [
-        { id: 1, title: 'Login broken on Safari', body: 'Users on iOS 17 see a blank screen after submitting the form.', status: 'Open' },
-        { id: 2, title: 'Search returns stale results', body: 'After deleting an item, it still appears in search until the index rebuilds.', status: 'Triaged' },
-        { id: 3, title: 'Add Slack integration', body: 'Customers want notifications when a thread is updated.', status: 'Open' }
+        { id: 1, label: 'Login broken on Safari', description: 'Users on iOS 17 see a blank screen.', body: 'Users on iOS 17 see a blank screen after submitting the form.', badge: 'Open' },
+        { id: 2, label: 'Search returns stale results', description: 'Deleted items linger in the index.', body: 'After deleting an item, it still appears in search until the index rebuilds.', badge: 'Triaged' },
+        { id: 3, label: 'Add Slack integration', description: 'Notifications on thread updates.', body: 'Customers want notifications when a thread is updated.', badge: 'Open' }
       ]
     },
     ui: {
-      type: 'grid',
-      props: { columns: 2, gap: '12px' },
-      style: { 'grid-template-columns': '220px 1fr' },
-      children: [
-        {
+      type: 'master-detail',
+      bind: 'selected',
+      props: {
+        items: '{state.issues}',
+        width: '240px',
+        emptyText: 'Pick an issue from the list',
+        detail: {
           type: 'flex',
-          props: { direction: 'column', gap: '4px' },
-          style: { 'border-right': '1px solid hsl(var(--border))', 'padding-right': '12px' },
+          props: { direction: 'column', gap: '8px' },
           children: [
             {
-              type: 'each',
-              items: 'issues',
-              item_as: 'issue',
+              type: 'flex',
+              props: { align: 'center', gap: '8px' },
               children: [
-                {
-                  type: 'button',
-                  props: {
-                    label: '{issue.title}',
-                    variant: '{state.selected == issue.id ? "default" : "ghost"}',
-                    size: 'sm',
-                    class: 'justify-start'
-                  },
-                  on_click: { action: 'set', target: 'selected', value: '{issue.id}' }
-                }
+                { type: 'heading', props: { text: '{item.label}', level: 3 } },
+                { type: 'badge', props: { text: '{item.badge}', variant: 'secondary' } }
               ]
-            }
-          ]
-        },
-        {
-          type: 'each',
-          items: 'issues',
-          item_as: 'issue',
-          children: [
-            {
-              type: 'if',
-              condition: '{state.selected == issue.id}',
-              children: [
-                {
-                  type: 'flex',
-                  props: { direction: 'column', gap: '8px' },
-                  children: [
-                    {
-                      type: 'flex',
-                      props: { align: 'center', gap: '8px' },
-                      children: [
-                        { type: 'heading', props: { text: '{issue.title}', level: 3 } },
-                        { type: 'badge', props: { text: '{issue.status}', variant: 'secondary' } }
-                      ]
-                    },
-                    { type: 'text', props: { text: '{issue.body}', size: 'sm' } }
-                  ]
-                }
-              ]
-            }
+            },
+            { type: 'text', props: { text: '{item.body}', size: 'sm' } }
           ]
         }
-      ]
+      }
     }
   };
 
@@ -1110,6 +1154,1010 @@
     }
   };
 
+  const comboboxSpec = {
+    version: '1.0' as const,
+    state: { country: 'us' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'combobox',
+          bind: 'country',
+          props: {
+            label: 'Country',
+            placeholder: 'Pick a country',
+            searchPlaceholder: 'Type to search…',
+            options: [
+              { value: 'us', label: 'United States', description: 'North America' },
+              { value: 'ca', label: 'Canada', description: 'North America' },
+              { value: 'mx', label: 'Mexico', description: 'North America' },
+              { value: 'gb', label: 'United Kingdom', description: 'Europe' },
+              { value: 'fr', label: 'France', description: 'Europe' },
+              { value: 'de', label: 'Germany', description: 'Europe' },
+              { value: 'jp', label: 'Japan', description: 'Asia' },
+              { value: 'kr', label: 'South Korea', description: 'Asia' },
+              { value: 'in', label: 'India', description: 'Asia' },
+              { value: 'br', label: 'Brazil', description: 'South America' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Selected → {state.country}', size: 'xs' } }
+      ]
+    }
+  };
+
+  // ── Enterprise verticals (Wave 3b) ──────────────────────────
+
+  const pricingTableSpec = {
+    version: '1.0' as const,
+    state: { plan: '' },
+    ui: {
+      type: 'pricing-table',
+      on_select: { action: 'set', target: 'plan', value: '{event}' },
+      props: {
+        tiers: [
+          {
+            id: 'free',
+            name: 'Free',
+            price: 0,
+            period: 'forever',
+            description: 'Tinker with the platform — no card needed.',
+            cta: 'Get started',
+            features: ['100 API calls/day', 'Community support', { label: 'SLA', included: false }]
+          },
+          {
+            id: 'pro',
+            name: 'Pro',
+            price: 19,
+            period: 'mo',
+            description: 'For serious builders.',
+            popular: true,
+            cta: 'Start trial',
+            features: ['10K API calls/day', 'Email support', '99.9% SLA', 'Audit log']
+          },
+          {
+            id: 'team',
+            name: 'Team',
+            price: 49,
+            period: 'mo',
+            description: 'Collaborative workspaces.',
+            cta: 'Contact sales',
+            features: ['Unlimited calls', 'Priority support', '99.99% SLA', 'SSO + RBAC']
+          }
+        ]
+      }
+    }
+  };
+
+  const settingsListSpec = {
+    version: '1.0' as const,
+    state: { darkMode: false, notify: true, twoFactor: false, lang: 'en' },
+    ui: {
+      type: 'settings-list',
+      props: {
+        items: [
+          {
+            group: 'Appearance',
+            label: 'Dark mode',
+            description: 'Use the dark theme across the app.',
+            control: { type: 'switch', bind: 'darkMode' }
+          },
+          {
+            group: 'Appearance',
+            label: 'Language',
+            description: 'Display language for the UI.',
+            control: {
+              type: 'select',
+              props: { options: [{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }, { value: 'ja', label: '日本語' }] },
+              bind: 'lang'
+            }
+          },
+          {
+            group: 'Account',
+            label: 'Email notifications',
+            description: 'Send weekly summaries to your inbox.',
+            control: { type: 'switch', bind: 'notify' }
+          },
+          {
+            group: 'Security',
+            label: 'Two-factor authentication',
+            description: 'Require an authenticator app on sign in.',
+            control: { type: 'switch', bind: 'twoFactor' }
+          }
+        ]
+      }
+    }
+  };
+
+  const commentThreadSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'comment-thread',
+      props: {
+        comments: [
+          {
+            id: 1,
+            author: 'Ada Lovelace',
+            timestamp: '2 hours ago',
+            body: "I left inline comments. Most are nits, but the auth flow needs another pass — refresh-token semantics aren't obvious from the docstring.",
+            replies: [
+              { id: 11, author: 'Bob Kumar', timestamp: '1 hour ago', body: "Good catch. I'll add a worked example to the README." },
+              {
+                id: 12, author: 'Carol Smith', timestamp: '40 minutes ago',
+                body: "Same here — the renewal window confused me too.",
+                replies: [
+                  { id: 121, author: 'Ada Lovelace', timestamp: '20 minutes ago', body: 'Filed a follow-up issue.' }
+                ]
+              }
+            ]
+          },
+          { id: 2, author: 'Dana Singh', timestamp: '15 minutes ago', body: 'p99 looks healthier today. Nice work all around.' }
+        ]
+      }
+    }
+  };
+
+  const auditLogSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'audit-log',
+      props: {
+        entries: [
+          { id: 1, actor: 'Ada Lovelace', actorIcon: 'user', action: 'created project', target: 'paw/ripple', timestamp: '2026-04-30 09:14', severity: 'success' },
+          { id: 2, actor: 'Bob Kumar', actorIcon: 'user', action: 'invited', target: 'carol@example.com', timestamp: '2026-04-30 10:02', severity: 'info', details: { role: 'editor', expiresAt: '2026-05-30' } },
+          { id: 3, actor: 'system', actorIcon: 'cog', action: 'rotated API key', target: 'pk_live_xxx', timestamp: '2026-04-30 12:00', severity: 'warning' },
+          { id: 4, actor: 'Carol Smith', actorIcon: 'user', action: 'deleted', target: 'old-staging-bucket', timestamp: '2026-04-30 16:30', severity: 'destructive', details: { confirmed: true, byPolicy: 'retention/30d' } }
+        ]
+      }
+    }
+  };
+
+  const apiKeySpec = {
+    version: '1.0' as const,
+    state: { rotated: 0 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'api-key',
+          props: {
+            label: 'Server API key',
+            description: 'Used by your backend.',
+            value: 'pk_live_4f3b9c72ad5e8f1c33ab998207'
+          },
+          on_rotate: { action: 'set', target: 'rotated', value: '{state.rotated + 1}' }
+        },
+        { type: 'text', props: { text: 'Rotate clicks: {state.rotated}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const bulkActionBarSpec = {
+    version: '1.0' as const,
+    state: { selectedCount: 3 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'text', props: { text: 'Select count:', size: 'sm' } },
+            { type: 'button', props: { label: '0', variant: 'outline', size: 'sm' }, on_click: { action: 'set', target: 'selectedCount', value: 0 } },
+            { type: 'button', props: { label: '1', variant: 'outline', size: 'sm' }, on_click: { action: 'set', target: 'selectedCount', value: 1 } },
+            { type: 'button', props: { label: '3', variant: 'outline', size: 'sm' }, on_click: { action: 'set', target: 'selectedCount', value: 3 } },
+            { type: 'button', props: { label: '12', variant: 'outline', size: 'sm' }, on_click: { action: 'set', target: 'selectedCount', value: 12 } }
+          ]
+        },
+        {
+          type: 'bulk-action-bar',
+          props: {
+            selectedCount: '{state.selectedCount}',
+            noun: 'issue',
+            actions: [
+              { id: 'archive', label: 'Archive', icon: 'archive' },
+              { id: 'tag', label: 'Tag', icon: 'tag' },
+              { id: 'assign', label: 'Assign', icon: 'user-plus' },
+              { id: 'delete', label: 'Delete', icon: 'trash-2', variant: 'destructive' }
+            ]
+          },
+          on_clear: { action: 'set', target: 'selectedCount', value: 0 }
+        }
+      ]
+    }
+  };
+
+  const savedViewsSpec = {
+    version: '1.0' as const,
+    state: { activeView: 'open' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'saved-views',
+          bind: 'activeView',
+          props: {
+            canCreate: true,
+            views: [
+              { id: 'open', label: 'Open issues', count: 24, pinned: true },
+              { id: 'mine', label: 'Assigned to me', count: 7 },
+              { id: 'recent', label: 'Recently updated', count: 12 },
+              { id: 'archived', label: 'Archived', count: 41 }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Active view → {state.activeView}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const peoplePickerSpec = {
+    version: '1.0' as const,
+    state: { reviewers: ['ada', 'carol'] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'people-picker',
+          bind: 'reviewers',
+          props: {
+            label: 'Reviewers',
+            multiple: true,
+            people: [
+              { id: 'ada', name: 'Ada Lovelace', email: 'ada@example.com', role: 'Eng' },
+              { id: 'bob', name: 'Bob Kumar', email: 'bob@example.com', role: 'Design' },
+              { id: 'carol', name: 'Carol Smith', email: 'carol@example.com', role: 'PM' },
+              { id: 'dana', name: 'Dana Singh', email: 'dana@example.com', role: 'Eng' },
+              { id: 'eve', name: 'Eve Park', email: 'eve@example.com', role: 'Mkt' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Reviewers → {state.reviewers.length} selected', size: 'xs' } }
+      ]
+    }
+  };
+
+  const permissionMatrixSpec = {
+    version: '1.0' as const,
+    state: {
+      acl: {
+        admin__read: true, admin__write: true, admin__delete: true, admin__invite: true,
+        editor__read: true, editor__write: true, editor__delete: false, editor__invite: false,
+        viewer__read: true, viewer__write: false, viewer__delete: false, viewer__invite: false
+      }
+    },
+    ui: {
+      type: 'permission-matrix',
+      bind: 'acl',
+      props: {
+        roles: [
+          { id: 'admin', label: 'Admin', description: 'Full control' },
+          { id: 'editor', label: 'Editor', description: 'Read + write' },
+          { id: 'viewer', label: 'Viewer', description: 'Read-only' }
+        ],
+        permissions: [
+          { id: 'read', label: 'Read', description: 'View resources' },
+          { id: 'write', label: 'Write', description: 'Create / update' },
+          { id: 'delete', label: 'Delete', description: 'Remove resources' },
+          { id: 'invite', label: 'Invite', description: 'Add new members' }
+        ]
+      }
+    }
+  };
+
+  const orgChartSpec = {
+    version: '1.0' as const,
+    state: { selectedEmployee: 'cto' },
+    ui: {
+      type: 'org-chart',
+      bind: 'selectedEmployee',
+      props: {
+        root: {
+          id: 'ceo',
+          name: 'Ada Lovelace',
+          title: 'CEO',
+          children: [
+            {
+              id: 'cto',
+              name: 'Bob Kumar',
+              title: 'CTO',
+              children: [
+                { id: 'eng-lead', name: 'Carol Smith', title: 'Eng Lead' },
+                { id: 'qa-lead', name: 'Dana Singh', title: 'QA Lead' }
+              ]
+            },
+            {
+              id: 'cfo',
+              name: 'Eve Park',
+              title: 'CFO',
+              children: [
+                { id: 'fin-lead', name: 'Frank Diaz', title: 'Finance Lead' }
+              ]
+            },
+            { id: 'cmo', name: 'Grace Hu', title: 'CMO' }
+          ]
+        }
+      }
+    }
+  };
+
+  const invoiceLinesSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'invoice-lines',
+      props: {
+        currency: '$',
+        lines: [
+          { id: 1, description: 'Pro plan', note: 'Annual subscription', quantity: 1, unitPrice: 228 },
+          { id: 2, description: 'Additional seats', quantity: 4, unitPrice: 12 },
+          { id: 3, description: 'Implementation services', quantity: 6, unitPrice: 150 }
+        ],
+        summary: [
+          { label: 'Discount (LAUNCH20)', value: 50, isNegative: true },
+          { label: 'Tax (8.875%)', value: 105.45 }
+        ]
+      }
+    }
+  };
+
+  const richTextSpec = {
+    version: '1.0' as const,
+    state: { note: '<h2>Welcome</h2><p>Try <strong>bold</strong>, <em>italic</em>, lists, and more.</p>' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'rich-text', props: { label: 'Note', minHeight: '160px' }, bind: 'note' },
+        { type: 'text', props: { text: 'Length: {state.note.length} chars', size: 'xs' } }
+      ]
+    }
+  };
+
+  const codeEditorSpec = {
+    version: '1.0' as const,
+    state: {
+      code: '{\n  "version": "1.0",\n  "ui": {\n    "type": "container",\n    "children": []\n  }\n}'
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'code-editor', props: { label: 'Spec (JSON)', language: 'json', height: '220px' }, bind: 'code' },
+        { type: 'text', props: { text: 'Lines: {state.code.split("\\n").length}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const ganttSpec = {
+    version: '1.0' as const,
+    state: { ganttView: 'Day' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'segmented',
+          bind: 'ganttView',
+          props: {
+            label: 'View',
+            options: ['Quarter Day', 'Day', 'Week', 'Month']
+          }
+        },
+        {
+          type: 'gantt',
+          props: {
+            viewMode: '{state.ganttView}',
+            height: '320px',
+            tasks: [
+              { id: 'design', name: 'Design system', start: '2026-05-01', end: '2026-05-10', progress: 100 },
+              { id: 'api', name: 'API spec', start: '2026-05-05', end: '2026-05-18', progress: 70, dependencies: 'design' },
+              { id: 'frontend', name: 'Frontend', start: '2026-05-15', end: '2026-06-05', progress: 30, dependencies: 'api' },
+              { id: 'backend', name: 'Backend', start: '2026-05-12', end: '2026-06-02', progress: 45, dependencies: 'api' },
+              { id: 'qa', name: 'QA', start: '2026-06-01', end: '2026-06-12', progress: 0, dependencies: 'frontend, backend' },
+              { id: 'launch', name: 'Launch', start: '2026-06-13', end: '2026-06-15', progress: 0, dependencies: 'qa' }
+            ]
+          }
+        }
+      ]
+    }
+  };
+
+  const sankeySpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'sankey',
+      props: {
+        title: 'Acquisition flow',
+        height: 320,
+        nodes: [
+          { name: 'Search' }, { name: 'Social' }, { name: 'Email' }, { name: 'Direct' },
+          { name: 'Landing' }, { name: 'Pricing' }, { name: 'Sign-up' }, { name: 'Activated' }
+        ],
+        links: [
+          { source: 'Search', target: 'Landing', value: 5400 },
+          { source: 'Social', target: 'Landing', value: 2200 },
+          { source: 'Email', target: 'Pricing', value: 1500 },
+          { source: 'Direct', target: 'Landing', value: 1200 },
+          { source: 'Direct', target: 'Pricing', value: 600 },
+          { source: 'Landing', target: 'Pricing', value: 4800 },
+          { source: 'Pricing', target: 'Sign-up', value: 3300 },
+          { source: 'Sign-up', target: 'Activated', value: 2100 }
+        ]
+      }
+    }
+  };
+
+  const treemapSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'treemap',
+      props: {
+        title: 'Spend by category',
+        height: 320,
+        data: [
+          {
+            name: 'Compute',
+            children: [
+              { name: 'API servers', value: 12000 },
+              { name: 'Workers', value: 4200 },
+              { name: 'Cron', value: 1100 }
+            ]
+          },
+          {
+            name: 'Storage',
+            children: [
+              { name: 'Postgres', value: 6800 },
+              { name: 'S3', value: 3300 },
+              { name: 'Redis', value: 1900 }
+            ]
+          },
+          {
+            name: 'Observability',
+            children: [
+              { name: 'Logs', value: 2400 },
+              { name: 'Metrics', value: 1300 },
+              { name: 'APM', value: 900 }
+            ]
+          },
+          { name: 'Misc', value: 800 }
+        ]
+      }
+    }
+  };
+
+  const sparklineSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '12px', wrap: 'wrap' },
+          children: [
+            {
+              type: 'card',
+              props: { title: 'Revenue (7d)' },
+              children: [
+                { type: 'sparkline', props: { values: [12, 14, 13, 18, 22, 19, 28], height: 36 } }
+              ]
+            },
+            {
+              type: 'card',
+              props: { title: 'Errors (7d)' },
+              children: [
+                { type: 'sparkline', props: { values: [9, 7, 8, 6, 5, 4, 2], height: 36 } }
+              ]
+            },
+            {
+              type: 'card',
+              props: { title: 'Latency p99' },
+              children: [
+                { type: 'sparkline', props: { values: [110, 130, 145, 200, 320, 410, 380], height: 36 } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const gaugeSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '16px', wrap: 'wrap' },
+      children: [
+        { type: 'gauge', props: { value: 72, label: 'CPU', height: 200 }, style: { width: '220px' } },
+        { type: 'gauge', props: { value: 38, label: 'Memory', height: 200 }, style: { width: '220px' } },
+        { type: 'gauge', props: { value: 91, label: 'Disk', height: 200 }, style: { width: '220px' } }
+      ]
+    }
+  };
+
+  const funnelSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'funnel',
+      props: {
+        title: 'Sign-up funnel',
+        height: 280,
+        data: [
+          { label: 'Visited', value: 12000 },
+          { label: 'Signed up', value: 4800 },
+          { label: 'Verified', value: 3200 },
+          { label: 'Activated', value: 2100 },
+          { label: 'Subscribed', value: 740 }
+        ]
+      }
+    }
+  };
+
+  const heatmapSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'heatmap',
+      props: {
+        title: 'Commits per weekday × hour',
+        height: 280,
+        cells: (() => {
+          const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+          const hours = ['9', '10', '11', '12', '13', '14', '15', '16', '17'];
+          const out: Array<{ x: string; y: string; value: number }> = [];
+          for (const d of days) for (const h of hours) {
+            out.push({ x: d, y: h, value: Math.floor(Math.random() * 12) });
+          }
+          return out;
+        })(),
+        xLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        yLabels: ['9', '10', '11', '12', '13', '14', '15', '16', '17']
+      }
+    }
+  };
+
+  const progressRingSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { gap: '16px', align: 'center', wrap: 'wrap' },
+      children: [
+        { type: 'progress-ring', props: { value: 25, size: 56 } },
+        { type: 'progress-ring', props: { value: 60, size: 72, thickness: 8 } },
+        { type: 'progress-ring', props: { value: 88, size: 96, thickness: 10, label: 'Done' } },
+        { type: 'progress-ring', props: { value: 3, max: 5, size: 64, label: '3/5' } }
+      ]
+    }
+  };
+
+  const numberInputSpec = {
+    version: '1.0' as const,
+    state: { qty: 1, price: 49 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'number-input', props: { label: 'Quantity', min: 0, max: 99 }, bind: 'qty' },
+        { type: 'number-input', props: { label: 'Price (USD)', min: 0, step: 1 }, bind: 'price' },
+        { type: 'text', props: { text: 'Subtotal: ${state.qty * state.price}', size: 'sm' } }
+      ]
+    }
+  };
+
+  const otpInputSpec = {
+    version: '1.0' as const,
+    state: { code: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'otp-input', props: { label: 'Verification code', length: 6 }, bind: 'code' },
+        { type: 'text', props: { text: 'Code → {state.code}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const segmentedSpec = {
+    version: '1.0' as const,
+    state: { range: 'week', filters: ['active'] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px', align: 'start' },
+      children: [
+        {
+          type: 'segmented',
+          bind: 'range',
+          props: {
+            label: 'Time range',
+            options: ['day', 'week', 'month', 'year']
+          }
+        },
+        {
+          type: 'segmented',
+          bind: 'filters',
+          props: {
+            label: 'Filters (multi)',
+            multiple: true,
+            options: [
+              { value: 'active', label: 'Active' },
+              { value: 'starred', label: 'Starred' },
+              { value: 'shared', label: 'Shared' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'range → {state.range}  ·  filters → {state.filters.length}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const collapsibleSpec = {
+    version: '1.0' as const,
+    state: { detailsOpen: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'collapsible',
+          bind: 'detailsOpen',
+          props: { title: 'Show technical details' },
+          children: [
+            { type: 'text', props: { text: 'Rendered with Svelte 5 runes; 0 hydration cost; tree-shaken icons.', size: 'sm' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const colorPickerSpec = {
+    version: '1.0' as const,
+    state: { brand: '#6366f1' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px', align: 'start' },
+      children: [
+        { type: 'color-picker', props: { label: 'Brand color' }, bind: 'brand' },
+        { type: 'text', props: { text: 'Brand → {state.brand}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const dataGridSpec = {
+    version: '1.0' as const,
+    state: { selectedRow: null as number | null },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'data-grid',
+          bind: 'selectedRow',
+          props: {
+            pageSize: 5,
+            defaultSort: 'salary:desc',
+            columns: [
+              { key: 'name', label: 'Name', sortable: true, width: '160px' },
+              { key: 'role', label: 'Role', sortable: true },
+              {
+                key: 'status', label: 'Status', sortable: true,
+                formatter: {
+                  type: 'badge',
+                  props: { text: '{value}', variant: '{value == "active" ? "default" : "secondary"}' }
+                }
+              },
+              { key: 'salary', label: 'Salary', sortable: true, align: 'right' }
+            ],
+            rows: [
+              { id: 1, name: 'Ada Lovelace', role: 'Engineer', status: 'active', salary: 145000 },
+              { id: 2, name: 'Bob Kumar', role: 'Designer', status: 'active', salary: 120000 },
+              { id: 3, name: 'Carol Smith', role: 'PM', status: 'leave', salary: 130000 },
+              { id: 4, name: 'Dana Singh', role: 'Engineer', status: 'active', salary: 155000 },
+              { id: 5, name: 'Eve Park', role: 'Engineer', status: 'active', salary: 140000 },
+              { id: 6, name: 'Frank Diaz', role: 'Designer', status: 'leave', salary: 115000 },
+              { id: 7, name: 'Grace Hu', role: 'PM', status: 'active', salary: 135000 },
+              { id: 8, name: 'Hank Liu', role: 'Engineer', status: 'active', salary: 150000 }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Selected row id → {state.selectedRow ?? "(none)"}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const kanbanSpec = {
+    version: '1.0' as const,
+    state: {
+      cards: [
+        { id: 1, title: 'Login broken on Safari', description: 'iOS 17 blank screen.', status: 'todo' },
+        { id: 2, title: 'Search returns stale results', description: 'Index does not refresh.', status: 'todo' },
+        { id: 3, title: 'p99 latency regression', description: '280ms → 410ms on /search', status: 'in_progress' },
+        { id: 4, title: 'Add Slack integration', description: 'Notify on thread updates.', status: 'in_progress' },
+        { id: 5, title: 'Update onboarding copy', description: 'Marketing copy refresh.', status: 'review' },
+        { id: 6, title: 'Migration plan', description: 'Postgres 14 → 16 plan.', status: 'done' }
+      ]
+    },
+    ui: {
+      type: 'kanban',
+      bind: 'cards',
+      props: {
+        columns: [
+          { id: 'todo', title: 'To do', accentClass: 'bg-zinc-400' },
+          { id: 'in_progress', title: 'In progress', accentClass: 'bg-amber-400' },
+          { id: 'review', title: 'Review', accentClass: 'bg-sky-400' },
+          { id: 'done', title: 'Done', accentClass: 'bg-emerald-400' }
+        ]
+      }
+    }
+  };
+
+  const treeSpec = {
+    version: '1.0' as const,
+    state: { selectedNode: 'src/lib' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'tree',
+          bind: 'selectedNode',
+          props: {
+            defaultExpanded: 'first-level',
+            nodes: [
+              {
+                id: 'src', label: 'src', icon: 'folder',
+                children: [
+                  { id: 'src/index.ts', label: 'index.ts', icon: 'file-code' },
+                  {
+                    id: 'src/lib', label: 'lib', icon: 'folder',
+                    children: [
+                      { id: 'src/lib/state.ts', label: 'state.ts', icon: 'file-code' },
+                      { id: 'src/lib/util.ts', label: 'util.ts', icon: 'file-code' }
+                    ]
+                  },
+                  {
+                    id: 'src/widgets', label: 'widgets', icon: 'folder',
+                    children: [
+                      { id: 'src/widgets/Tree.svelte', label: 'Tree.svelte', icon: 'file' },
+                      { id: 'src/widgets/Kanban.svelte', label: 'Kanban.svelte', icon: 'file' }
+                    ]
+                  }
+                ]
+              },
+              {
+                id: 'tests', label: 'tests', icon: 'folder',
+                children: [
+                  { id: 'tests/tree.test.ts', label: 'tree.test.ts', icon: 'file-check' }
+                ]
+              },
+              { id: 'README.md', label: 'README.md', icon: 'file-text', isLeaf: true }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Selected → {state.selectedNode}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const virtualListSpec = {
+    version: '1.0' as const,
+    state: {
+      bigList: Array.from({ length: 5000 }, (_, i) => ({
+        id: i,
+        title: `Item #${i + 1}`,
+        body: `Generated row ${i + 1} of 5,000 — only the visible window is in the DOM.`
+      }))
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'text', props: { text: 'Rendering 5,000 rows efficiently — scroll to verify the DOM stays small.', size: 'xs' } },
+        {
+          type: 'virtual-list',
+          props: {
+            items: '{state.bigList}',
+            itemHeight: 56,
+            height: '320px',
+            overscan: 4,
+            item: {
+              type: 'flex',
+              props: { direction: 'column', gap: '2px' },
+              style: { padding: '8px 12px', 'border-bottom': '1px solid hsl(var(--border) / 0.5)' },
+              children: [
+                { type: 'text', props: { text: '{item.title}', size: 'sm', weight: 'medium' } },
+                { type: 'text', props: { text: '{item.body}', size: 'xs', muted: true } }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  };
+
+  const formSpec = {
+    version: '1.0' as const,
+    state: { fullName: '', email: '', age: 0, agreed: false, errors: {}, valid: false, submitted: '' },
+    ui: {
+      type: 'form',
+      on_submit: { action: 'set', target: 'submitted', value: 'Submitted: {state.fullName}' },
+      props: {
+        validateOn: 'change',
+        fields: {
+          fullName: { required: true, minLength: 2, label: 'Full name' },
+          email: { required: true, pattern: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$', label: 'Email' },
+          age: { min: 0, max: 130, label: 'Age' },
+          agreed: { required: 'You must accept the terms', label: 'Terms' }
+        }
+      },
+      children: [
+        { type: 'input', props: { label: 'Full name', placeholder: 'Jane Doe' }, bind: 'fullName' },
+        { type: 'if', condition: '{state.errors.fullName}', children: [
+          { type: 'text', props: { text: '{state.errors.fullName}', size: 'xs', class: 'text-destructive' } }
+        ]},
+        { type: 'input', props: { label: 'Email', placeholder: 'jane@example.com', type: 'email' }, bind: 'email' },
+        { type: 'if', condition: '{state.errors.email}', children: [
+          { type: 'text', props: { text: '{state.errors.email}', size: 'xs', class: 'text-destructive' } }
+        ]},
+        { type: 'input', props: { label: 'Age', type: 'number' }, bind: 'age' },
+        { type: 'if', condition: '{state.errors.age}', children: [
+          { type: 'text', props: { text: '{state.errors.age}', size: 'xs', class: 'text-destructive' } }
+        ]},
+        { type: 'checkbox', props: { label: 'I accept the terms' }, bind: 'agreed' },
+        { type: 'if', condition: '{state.errors.agreed}', children: [
+          { type: 'text', props: { text: '{state.errors.agreed}', size: 'xs', class: 'text-destructive' } }
+        ]},
+        { type: 'button', props: { label: 'Submit', type: 'submit', disabled: '{!state.valid}' } },
+        { type: 'if', condition: '{state.submitted}', children: [
+          { type: 'alert', props: { variant: 'default', title: 'Done', description: '{state.submitted}' } }
+        ]}
+      ]
+    }
+  };
+
+  const commandPaletteSpec = {
+    version: '1.0' as const,
+    state: { paletteOpen: false, lastCommand: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px', align: 'start' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            {
+              type: 'button',
+              props: { label: 'Open palette', variant: 'outline' },
+              on_click: { action: 'set', target: 'paletteOpen', value: true }
+            },
+            { type: 'kbd', props: { keys: ['⌘', 'K'] } }
+          ]
+        },
+        { type: 'text', props: { text: 'Last command → {state.lastCommand || "(none)"}', size: 'xs' } },
+        {
+          type: 'command-palette',
+          bind: 'paletteOpen',
+          on_select: { action: 'set', target: 'lastCommand', value: '{event}' },
+          props: {
+            placeholder: 'Type a command…',
+            commands: [
+              { id: 'new-doc', label: 'New document', icon: 'file-plus', group: 'File', shortcut: '⌘N' },
+              { id: 'open-file', label: 'Open file...', icon: 'folder-open', group: 'File', shortcut: '⌘O' },
+              { id: 'save', label: 'Save', icon: 'save', group: 'File', shortcut: '⌘S' },
+              { id: 'cut', label: 'Cut', icon: 'scissors', group: 'Edit', shortcut: '⌘X' },
+              { id: 'copy', label: 'Copy', icon: 'copy', group: 'Edit', shortcut: '⌘C' },
+              { id: 'paste', label: 'Paste', icon: 'clipboard', group: 'Edit', shortcut: '⌘V' },
+              { id: 'settings', label: 'Open settings', icon: 'settings', group: 'App', keywords: ['preferences'] },
+              { id: 'theme', label: 'Toggle theme', icon: 'sun', group: 'App' }
+            ]
+          }
+        }
+      ]
+    }
+  };
+
+  const fileUploadSpec = {
+    version: '1.0' as const,
+    state: { uploads: [] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'file-upload',
+          bind: 'uploads',
+          props: {
+            label: 'Attachments',
+            multiple: true,
+            accept: 'image/*,.pdf',
+            maxSize: 5_000_000,
+            helperText: 'PNG, JPG, or PDF — up to 5MB each'
+          }
+        },
+        { type: 'text', props: { text: '{state.uploads.length} file(s) staged', size: 'xs' } }
+      ]
+    }
+  };
+
+  const timePickerSpec = {
+    version: '1.0' as const,
+    state: { meeting: '14:30', alarm: '06:00:00' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'time-picker', props: { label: 'Meeting time' }, bind: 'meeting' },
+        { type: 'time-picker', props: { label: 'Alarm', showSeconds: true, use12Hour: true }, bind: 'alarm' },
+        { type: 'text', props: { text: 'meeting → {state.meeting}  ·  alarm → {state.alarm}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const multiSelectSpec = {
+    version: '1.0' as const,
+    state: { stack: ['svelte', 'tailwind'] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'multi-select',
+          bind: 'stack',
+          props: {
+            label: 'Tech stack',
+            placeholder: 'Pick technologies',
+            creatable: true,
+            options: [
+              { value: 'svelte', label: 'Svelte' },
+              { value: 'react', label: 'React' },
+              { value: 'vue', label: 'Vue' },
+              { value: 'solid', label: 'Solid' },
+              { value: 'tailwind', label: 'Tailwind CSS' },
+              { value: 'typescript', label: 'TypeScript' },
+              { value: 'rust', label: 'Rust' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Selected → {state.stack.length} item(s)', size: 'xs' } }
+      ]
+    }
+  };
+
+  const filterBarSpec = {
+    version: '1.0' as const,
+    state: {
+      filters: [
+        { key: 'status', label: 'Status', value: 'open' },
+        { key: 'priority', label: 'Priority', value: 'high' }
+      ]
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'filter-bar',
+          bind: 'filters',
+          props: {
+            addLabel: 'Add filter',
+            options: [
+              { key: 'status', label: 'Status', default: 'open' },
+              { key: 'priority', label: 'Priority', default: 'medium' },
+              { key: 'owner', label: 'Owner' },
+              { key: 'milestone', label: 'Milestone' },
+              { key: 'label', label: 'Label' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Active filters: {state.filters.length}', size: 'xs' } }
+      ]
+    }
+  };
+
   const datePickerSpec = {
     version: '1.0' as const,
     state: { departure: '2026-05-15', returnDate: '' },
@@ -1117,8 +2165,8 @@
       type: 'flex',
       props: { direction: 'column', gap: '8px' },
       children: [
-        { type: 'input', props: { label: 'Departure', type: 'date' }, bind: 'departure' },
-        { type: 'input', props: { label: 'Return', type: 'date' }, bind: 'returnDate' },
+        { type: 'date-picker', props: { label: 'Departure', placeholder: 'Pick a date' }, bind: 'departure' },
+        { type: 'date-picker', props: { label: 'Return', placeholder: 'Pick a date', format: 'long' }, bind: 'returnDate' },
         { type: 'text', props: { text: 'departure → {state.departure}  ·  return → {state.returnDate}', size: 'xs' } }
       ]
     }
@@ -2774,7 +3822,10 @@
       { label: 'Empty State', spec: emptyStateSpec },
       { label: 'Sidebar', spec: sidebarSpec },
       { label: 'App Shell', spec: appShellSpec },
+      { label: 'Breadcrumb', spec: breadcrumbSpec },
+      { label: 'Split / Resizable', spec: splitSpec },
       { label: 'Master / Detail', spec: masterDetailSpec },
+      { label: 'Collapsible', spec: collapsibleSpec },
       { label: 'Tooltip', spec: tooltipSpec },
       { label: 'Popover', spec: popoverSpec },
       { label: 'Hover Card', spec: hoverCardSpec },
@@ -2808,12 +3859,26 @@
       { label: 'Icon', spec: iconSpec },
       { label: 'Copy', spec: copySpec },
       { label: 'Inline Code', spec: inlineCodeSpec },
+      { label: 'Progress Ring', spec: progressRingSpec },
     ]},
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },
       { label: 'Input', spec: inputSpec },
       { label: 'Textarea', spec: textareaSpec },
       { label: 'Date Picker', spec: datePickerSpec },
+      { label: 'Time Picker', spec: timePickerSpec },
+      { label: 'File Upload', spec: fileUploadSpec },
+      { label: 'Command Palette', spec: commandPaletteSpec },
+      { label: 'Form (with validation)', spec: formSpec },
+      { label: 'Number Input', spec: numberInputSpec },
+      { label: 'OTP Input', spec: otpInputSpec },
+      { label: 'Segmented / Toggle Group', spec: segmentedSpec },
+      { label: 'Color Picker', spec: colorPickerSpec },
+      { label: 'Rich Text', spec: richTextSpec },
+      { label: 'Code Editor', spec: codeEditorSpec },
+      { label: 'Combobox', spec: comboboxSpec },
+      { label: 'Multi-select', spec: multiSelectSpec },
+      { label: 'Filter Bar', spec: filterBarSpec },
       { label: 'Select', spec: selectSpec },
       { label: 'Slider', spec: sliderSpec },
       { label: 'Radio Group', spec: radioSpec },
@@ -2822,11 +3887,35 @@
     ]},
     { id: 'data', title: 'Data', items: [
       { label: 'Table', spec: tableSpec },
+      { label: 'Data Grid', spec: dataGridSpec },
       { label: 'Chart', spec: chartSpec },
+      { label: 'Sparkline', spec: sparklineSpec },
+      { label: 'Gauge', spec: gaugeSpec },
+      { label: 'Funnel', spec: funnelSpec },
+      { label: 'Heatmap', spec: heatmapSpec },
+      { label: 'Sankey', spec: sankeySpec },
+      { label: 'Treemap', spec: treemapSpec },
+      { label: 'Gantt', spec: ganttSpec },
+      { label: 'Virtual List', spec: virtualListSpec },
+      { label: 'Tree', spec: treeSpec },
+      { label: 'Kanban', spec: kanbanSpec },
       { label: 'C4 Diagram', spec: c4Spec },
     ]},
     { id: 'control', title: 'Control Flow', items: [
       { label: 'If / Each', spec: controlSpec },
+    ]},
+    { id: 'vertical', title: 'Verticals', items: [
+      { label: 'Pricing Table', spec: pricingTableSpec },
+      { label: 'Settings List', spec: settingsListSpec },
+      { label: 'Comment Thread', spec: commentThreadSpec },
+      { label: 'Audit Log', spec: auditLogSpec },
+      { label: 'API Key', spec: apiKeySpec },
+      { label: 'Bulk Action Bar', spec: bulkActionBarSpec },
+      { label: 'Saved Views', spec: savedViewsSpec },
+      { label: 'People Picker', spec: peoplePickerSpec },
+      { label: 'Permission Matrix', spec: permissionMatrixSpec },
+      { label: 'Org Chart', spec: orgChartSpec },
+      { label: 'Invoice Lines', spec: invoiceLinesSpec },
     ]},
     { id: 'research', title: 'Research', items: [
       { label: 'Source Card', spec: sourceCardSpec },

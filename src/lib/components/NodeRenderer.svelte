@@ -123,6 +123,29 @@
 	const onblur = createEventHandler(node.on_blur);
 	const oninputUser = createEventHandler(node.on_input);
 
+	/**
+	 * Build handlers for any other `on_*` keys on the node (e.g. on_close, on_resize,
+	 * on_navigate, on_select). The well-known events above are wired explicitly
+	 * because they participate in two-way binding or have special semantics; the
+	 * rest are passed through generically as `on<event>` props.
+	 */
+	const KNOWN_ON_KEYS = new Set([
+		'on_click', 'on_change', 'on_input', 'on_submit', 'on_focus', 'on_blur'
+	]);
+	const extraHandlers = $derived.by<Record<string, (v?: unknown) => unknown>>(() => {
+		const out: Record<string, (v?: unknown) => unknown> = {};
+		const raw = node as unknown as Record<string, unknown>;
+		for (const key of Object.keys(raw)) {
+			if (!key.startsWith('on_') || KNOWN_ON_KEYS.has(key)) continue;
+			const handler = createEventHandler(raw[key] as EventHandlerOrArray);
+			if (!handler) continue;
+			// on_close → onclose, on_open_change → onopenchange
+			const propName = 'on' + key.slice(3).replace(/_/g, '');
+			out[propName] = handler;
+		}
+		return out;
+	});
+
 	// `bind` may itself contain `{...}` placeholders (e.g. `lines.{i}.qty`)
 	// that reference loop-local variables. This template is resolved per
 	// invocation of onchange / oninput so the path picks up the current
@@ -307,6 +330,7 @@
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),
+			...extraHandlers,
 			...(defaultKids.length > 0 && { hasChildren: true }),
 			...(node.type === 'tabs' && defaultKids.length > 0 && { panels: defaultKids, panelLoopContext: loopContext })
 		}}

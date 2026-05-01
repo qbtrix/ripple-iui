@@ -585,6 +585,26 @@ export function resolveObject(
 }
 
 /**
+ * Detect a UINode-shaped subtree. We use a narrow signature — a string `type`
+ * combined with at least one widget-tree marker (props/children/bind/show/items
+ * /condition). Such subtrees are passed through unresolved so they can be
+ * resolved later at render time, against the loop context that exists at the
+ * point of rendering (e.g. `{item.label}` inside a `master-detail` detail
+ * pane sees `item = selectedItem`, not the parent's `item`).
+ */
+function isUINodeSpec(v: Record<string, unknown>): boolean {
+	if (typeof v.type !== 'string') return false;
+	return (
+		'props' in v ||
+		'children' in v ||
+		'bind' in v ||
+		'show' in v ||
+		'items' in v ||
+		'condition' in v
+	);
+}
+
+/**
  * Resolve any value (string, object, array, or primitive).
  */
 export function resolveValue(value: unknown, context: ResolverContext): unknown {
@@ -597,7 +617,12 @@ export function resolveValue(value: unknown, context: ResolverContext): unknown 
 	}
 
 	if (value !== null && typeof value === 'object') {
-		return resolveObject(value as Record<string, unknown>, context);
+		const obj = value as Record<string, unknown>;
+		if (isUINodeSpec(obj)) {
+			// Leave UINode subtrees raw for downstream NodeRenderer to resolve.
+			return obj;
+		}
+		return resolveObject(obj, context);
 	}
 
 	return value;
