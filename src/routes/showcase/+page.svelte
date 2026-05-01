@@ -1505,6 +1505,253 @@
     }
   };
 
+  // ── Wave 4 — final cleanup ───────────────────────────────────
+
+  const searchSpec = {
+    version: '1.0' as const,
+    state: { q: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'search',
+          bind: 'q',
+          props: {
+            placeholder: 'Find anything…',
+            results: [
+              { id: 'i1', label: 'Login broken on Safari', description: '#142 · open', icon: 'bug', group: 'Issues' },
+              { id: 'i2', label: 'Add Slack integration', description: '#147 · open', icon: 'bug', group: 'Issues' },
+              { id: 'p1', label: 'Ripple', description: 'UI library', icon: 'folder-git-2', group: 'Projects' },
+              { id: 'p2', label: 'Pocketpaw', description: 'Agent server', icon: 'folder-git-2', group: 'Projects' },
+              { id: 'u1', label: 'Ada Lovelace', description: 'ada@example.com', icon: 'user', group: 'People' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Query → "{state.q}"', size: 'xs' } }
+      ]
+    }
+  };
+
+  const treeTableSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'tree-table',
+      props: {
+        columns: [
+          { key: 'name', label: 'Name' },
+          { key: 'size', label: 'Size', align: 'right', width: '120px' },
+          { key: 'modified', label: 'Modified', align: 'right', width: '160px' }
+        ],
+        rows: [
+          {
+            id: 'src', name: 'src/', size: '—', modified: '2026-04-30',
+            children: [
+              { id: 'src-lib', name: 'lib/', size: '—', modified: '2026-04-30',
+                children: [
+                  { id: 'src-lib-state', name: 'state.ts', size: '4.1 KB', modified: '2026-04-29' },
+                  { id: 'src-lib-utils', name: 'utils.ts', size: '1.7 KB', modified: '2026-04-28' }
+                ]
+              },
+              { id: 'src-index', name: 'index.ts', size: '0.8 KB', modified: '2026-04-30' }
+            ]
+          },
+          { id: 'tests', name: 'tests/', size: '—', modified: '2026-04-27',
+            children: [
+              { id: 'tests-state', name: 'state.test.ts', size: '2.3 KB', modified: '2026-04-27' }
+            ]
+          },
+          { id: 'readme', name: 'README.md', size: '5.6 KB', modified: '2026-04-25' }
+        ],
+        defaultExpanded: 'first-level'
+      }
+    }
+  };
+
+  const calendarSpec = {
+    version: '1.0' as const,
+    state: { calDay: '2026-05-15' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'calendar',
+          bind: 'calDay',
+          props: {
+            view: 'month',
+            events: [
+              { id: 1, title: 'Demo dry run', start: '2026-05-12', color: '#3b82f6' },
+              { id: 2, title: 'Sprint review', start: '2026-05-15', color: '#22c55e' },
+              { id: 3, title: 'Customer interview', start: '2026-05-15', color: '#f59e0b' },
+              { id: 4, title: 'Launch window', start: '2026-05-20', end: '2026-05-22', color: '#ec4899' },
+              { id: 5, title: 'On-call rotation', start: '2026-05-26', end: '2026-05-30', color: '#a855f7' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Selected → {state.calDay}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const contextMenuSpec = {
+    version: '1.0' as const,
+    state: { lastAction: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'context-menu',
+          on_change: { action: 'set', target: 'lastAction', value: '{event}' },
+          props: {
+            trigger: 'Right-click anywhere here',
+            items: [
+              { label: 'Open', value: 'open', icon: 'arrow-up-right', shortcut: '⌘O' },
+              { label: 'Rename', value: 'rename', icon: 'pencil', shortcut: 'F2' },
+              { label: 'Duplicate', value: 'duplicate', icon: 'copy', shortcut: '⌘D' },
+              { type: 'separator' },
+              { label: 'Move to trash', value: 'delete', icon: 'trash-2', variant: 'destructive' }
+            ]
+          }
+        },
+        { type: 'text', props: { text: 'Last action → {state.lastAction || "(none)"}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const notificationCenterSpec = {
+    version: '1.0' as const,
+    state: {
+      notes: [
+        { id: 1, title: 'Build failed on main', description: 'commit a3f8e2 · 2 minutes ago', timestamp: '2 min ago', severity: 'destructive', icon: 'alert-triangle' },
+        { id: 2, title: 'Carol commented on your PR', description: '"LGTM, just one nit on the auth flow."', timestamp: '14 min ago', severity: 'info', icon: 'message-square', read: false },
+        { id: 3, title: 'Deploy succeeded', description: 'Production · v2.4.1', timestamp: '1 hour ago', severity: 'success', icon: 'check', read: false },
+        { id: 4, title: 'Your subscription renews soon', description: 'In 7 days · $19/mo', timestamp: 'yesterday', severity: 'warning', icon: 'credit-card', read: true }
+      ]
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'flex',
+          props: { gap: '12px', align: 'center' },
+          children: [
+            { type: 'text', props: { text: 'Bell trigger:', size: 'sm' } },
+            { type: 'notification-center', bind: 'notes' }
+          ]
+        },
+        { type: 'notification-center', bind: 'notes', props: { inline: true } }
+      ]
+    }
+  };
+
+  const errorStateSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'error-state',
+          props: {
+            title: "We couldn't load this dashboard",
+            description: 'The metrics service returned an unexpected error. Try again in a moment, or contact support if it persists.',
+            actionLabel: 'Retry',
+            secondaryLabel: 'Contact support',
+            detail: 'TimeoutError: upstream did not respond within 5000ms (req_id: 9a7e2c4f)'
+          }
+        }
+      ]
+    }
+  };
+
+  const mentionSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'text',
+          props: { size: 'sm', text: 'Hover the names below.' }
+        },
+        {
+          type: 'flex',
+          props: { gap: '8px', wrap: 'wrap', align: 'center' },
+          children: [
+            {
+              type: 'mention',
+              props: {
+                name: 'ada',
+                displayName: 'Ada Lovelace',
+                role: 'CEO',
+                bio: 'Building tools that make AI generate UI you can trust.'
+              }
+            },
+            {
+              type: 'mention',
+              props: {
+                name: 'bob',
+                displayName: 'Bob Kumar',
+                role: 'CTO',
+                bio: 'Distributed systems & language runtimes. Likes Erlang, regrets nothing.'
+              }
+            },
+            {
+              type: 'mention',
+              props: { name: 'carol', plain: true }
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const linkPreviewSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'link-preview',
+          props: {
+            url: 'https://svelte.dev',
+            title: 'Svelte • Cybernetically enhanced web apps',
+            description: 'Svelte is a radical new approach to building user interfaces. Whereas traditional frameworks do the bulk of their work in the browser, Svelte shifts that work into a compile step.',
+            domain: 'svelte.dev'
+          }
+        },
+        {
+          type: 'link-preview',
+          props: {
+            url: 'https://anthropic.com/claude',
+            title: 'Claude — Anthropic',
+            description: "Claude is a family of foundational AI models for any use case.",
+            domain: 'anthropic.com',
+            layout: 'horizontal'
+          }
+        }
+      ]
+    }
+  };
+
+  const activityFeedSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'activity-feed',
+      props: {
+        items: [
+          { id: 1, actor: 'Ada', action: 'opened pull request', target: '#142', timestamp: '2 min ago' },
+          { id: 2, actor: 'Bob', action: 'merged', target: '#138', timestamp: '14 min ago' },
+          { id: 3, actor: 'Carol', action: 'commented on', target: '#142', timestamp: '20 min ago' }
+        ]
+      }
+    }
+  };
+
   const richTextSpec = {
     version: '1.0' as const,
     state: { note: '<h2>Welcome</h2><p>Try <strong>bold</strong>, <em>italic</em>, lists, and more.</p>' },
@@ -3830,6 +4077,9 @@
       { label: 'Popover', spec: popoverSpec },
       { label: 'Hover Card', spec: hoverCardSpec },
       { label: 'Toast', spec: toastSpec },
+      { label: 'Context Menu', spec: contextMenuSpec },
+      { label: 'Notification Center', spec: notificationCenterSpec },
+      { label: 'Error State', spec: errorStateSpec },
     ]},
     { id: 'display', title: 'Display', items: [
       { label: 'Text', spec: textSpec },
@@ -3860,6 +4110,8 @@
       { label: 'Copy', spec: copySpec },
       { label: 'Inline Code', spec: inlineCodeSpec },
       { label: 'Progress Ring', spec: progressRingSpec },
+      { label: 'Mention', spec: mentionSpec },
+      { label: 'Link Preview', spec: linkPreviewSpec },
     ]},
     { id: 'input', title: 'Input', items: [
       { label: 'Button', spec: buttonSpec },
@@ -3876,6 +4128,7 @@
       { label: 'Color Picker', spec: colorPickerSpec },
       { label: 'Rich Text', spec: richTextSpec },
       { label: 'Code Editor', spec: codeEditorSpec },
+      { label: 'Search', spec: searchSpec },
       { label: 'Combobox', spec: comboboxSpec },
       { label: 'Multi-select', spec: multiSelectSpec },
       { label: 'Filter Bar', spec: filterBarSpec },
@@ -3896,6 +4149,8 @@
       { label: 'Sankey', spec: sankeySpec },
       { label: 'Treemap', spec: treemapSpec },
       { label: 'Gantt', spec: ganttSpec },
+      { label: 'Tree Table', spec: treeTableSpec },
+      { label: 'Calendar', spec: calendarSpec },
       { label: 'Virtual List', spec: virtualListSpec },
       { label: 'Tree', spec: treeSpec },
       { label: 'Kanban', spec: kanbanSpec },
@@ -3916,6 +4171,7 @@
       { label: 'Permission Matrix', spec: permissionMatrixSpec },
       { label: 'Org Chart', spec: orgChartSpec },
       { label: 'Invoice Lines', spec: invoiceLinesSpec },
+      { label: 'Activity Feed', spec: activityFeedSpec },
     ]},
     { id: 'research', title: 'Research', items: [
       { label: 'Source Card', spec: sourceCardSpec },

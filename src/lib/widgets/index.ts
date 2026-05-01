@@ -2,12 +2,12 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor } from './input/index.js';
-import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart } from './data/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview } from './display/index.js';
+import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search } from './input/index.js';
+import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar } from './data/index.js';
 import { If, Each } from './control/index.js';
 import { Terminal, RippleFrame, AvatarGroup } from './composite/index.js';
-import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette } from './overlay/index.js';
+import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -82,6 +82,8 @@ const defaultRegistry: WidgetMap = {
   metric: Metric,
   stat: Stat,
   feed: Feed,
+  'activity-feed': Feed,
+  activity: Feed,
   'soul-status': SoulStatus,
   skeleton: Skeleton,
   markdown: Markdown,
@@ -156,6 +158,21 @@ const defaultRegistry: WidgetMap = {
   editor: CodeEditor,
   gantt: GanttChart,
   'gantt-chart': GanttChart,
+  search: Search,
+  'tree-table': TreeTable,
+  treetable: TreeTable,
+  'nested-rows': TreeTable,
+  calendar: Calendar,
+  'context-menu': ContextMenu,
+  contextmenu: ContextMenu,
+  'notification-center': NotificationCenter,
+  notifications: NotificationCenter,
+  inbox: NotificationCenter,
+  'error-state': ErrorState,
+  error: ErrorState,
+  mention: Mention,
+  'link-preview': LinkPreview,
+  linkpreview: LinkPreview,
   // Enterprise verticals
   'pricing-table': PricingTable,
   pricing: PricingTable,
@@ -259,14 +276,15 @@ export {
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
-  NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor,
-  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, ProgressRing, Terminal, If, Each,
+  NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search,
+  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar,
+  ProgressRing, Mention, LinkPreview, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
   AnalystBar, RangeBar,
   Workflow,
   C4Diagram,
-  Toast, Tooltip, Popover, HoverCard, CommandPalette,
+  Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState,
   PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
   BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines,
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,

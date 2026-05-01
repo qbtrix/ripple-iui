@@ -11,3 +11,5 @@ export { default as Heatmap } from './Heatmap.svelte';
 export { default as Sankey } from './Sankey.svelte';
 export { default as Treemap } from './Treemap.svelte';
 export { default as GanttChart } from './GanttChart.svelte';
+export { default as TreeTable } from './TreeTable.svelte';
+export { default as Calendar } from './Calendar.svelte';

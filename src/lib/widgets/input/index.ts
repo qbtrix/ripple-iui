@@ -20,3 +20,4 @@ export { default as Segmented } from './Segmented.svelte';
 export { default as ColorPicker } from './ColorPicker.svelte';
 export { default as RichText } from './RichText.svelte';
 export { default as CodeEditor } from './CodeEditor.svelte';
+export { default as Search } from './Search.svelte';

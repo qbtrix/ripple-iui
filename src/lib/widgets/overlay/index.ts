@@ -12,3 +12,6 @@ export { default as Tooltip } from './Tooltip.svelte';
 export { default as Popover } from './Popover.svelte';
 export { default as HoverCard } from './HoverCard.svelte';
 export { default as CommandPalette } from './CommandPalette.svelte';
+export { default as ContextMenu } from './ContextMenu.svelte';
+export { default as NotificationCenter } from './NotificationCenter.svelte';
+export { default as ErrorState } from './ErrorState.svelte';
