@@ -108,11 +108,14 @@ export class EventDispatcher {
 		context: ResolverContext,
 		eventValue?: unknown
 	): Promise<void> {
+		// Expose the event payload to expressions via the `{event}` template
+		// (e.g. `value: '{event}'` on a handler). Done once at the top level so
+		// nested flow/branch handlers also see it without manual threading.
+		const ctx: ResolverContext = { ...context, event: eventValue };
 		try {
-			await this.runHandlers(handler, context, eventValue, 0);
+			await this.runHandlers(handler, ctx, eventValue, 0);
 		} catch (err) {
 			if (err instanceof FlowAbortError) {
-				// Expected control-flow signal. Swallow at the top level.
 				return;
 			}
 			throw err;
