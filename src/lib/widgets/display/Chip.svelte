@@ -16,13 +16,15 @@
     size?: Size;
     closable?: boolean;
     onclose?: () => void;
+    /** Body click — wired by NodeRenderer when spec uses `on_click`. */
+    onclick?: (e: MouseEvent) => void;
     children?: Snippet;
     hasChildren?: boolean;
   }
 
   let {
     id, class: className, style, label,
-    variant = 'default', size = 'md', closable = false, onclose,
+    variant = 'default', size = 'md', closable = false, onclose, onclick,
     children, hasChildren = false
   }: Props = $props();
 
@@ -45,24 +47,60 @@
   const iconSize = $derived(size === 'sm' ? 10 : 12);
 </script>
 
-<span
-  {id}
-  class={cn('inline-flex items-center rounded-full border font-medium', variantClass, sizeClass, className)}
-  style={styleString}
->
-  {#if hasChildren && children}
-    {@render children()}
-  {:else if label}
-    {label}
-  {/if}
-  {#if closable}
-    <button
-      type="button"
-      class="hover:opacity-70 transition-opacity"
-      aria-label="Remove"
-      onclick={() => onclose?.()}
-    >
-      <XIcon size={iconSize} />
-    </button>
-  {/if}
-</span>
+{#if onclick}
+  <button
+    type="button"
+    {id}
+    onclick={(e) => {
+      // Don't fire body click when the close X is clicked.
+      if ((e.target as HTMLElement).closest('[data-chip-close]')) return;
+      onclick?.(e);
+    }}
+    class={cn(
+      'inline-flex items-center rounded-full border font-medium cursor-pointer transition-colors hover:brightness-95',
+      variantClass, sizeClass, className
+    )}
+    style={styleString}
+  >
+    {#if hasChildren && children}
+      {@render children()}
+    {:else if label}
+      {label}
+    {/if}
+    {#if closable}
+      <span
+        role="button"
+        tabindex="-1"
+        data-chip-close
+        class="hover:opacity-70 transition-opacity"
+        aria-label="Remove"
+        onclick={(e) => { e.stopPropagation(); onclose?.(); }}
+        onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclose?.(); } }}
+      >
+        <XIcon size={iconSize} />
+      </span>
+    {/if}
+  </button>
+{:else}
+  <span
+    {id}
+    class={cn('inline-flex items-center rounded-full border font-medium', variantClass, sizeClass, className)}
+    style={styleString}
+  >
+    {#if hasChildren && children}
+      {@render children()}
+    {:else if label}
+      {label}
+    {/if}
+    {#if closable}
+      <button
+        type="button"
+        class="hover:opacity-70 transition-opacity"
+        aria-label="Remove"
+        onclick={() => onclose?.()}
+      >
+        <XIcon size={iconSize} />
+      </button>
+    {/if}
+  </span>
+{/if}
