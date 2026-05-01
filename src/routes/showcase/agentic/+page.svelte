@@ -15,15 +15,11 @@
   let messages = $state<ChatMsg[]>([]);
   let inputValue = $state('');
   let busy = $state(false);
-  let apiKey = $state('');
-  let showKeyDialog = $state(false);
   let usage = $state<{ input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number } | null>(null);
   let scrollEl = $state<HTMLElement | null>(null);
   let specVersion = $state(0);
 
   onMount(() => {
-    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('rk') : null;
-    if (stored) apiKey = stored;
     messages = [
       {
         role: 'assistant',
@@ -31,14 +27,6 @@
       }
     ];
   });
-
-  function saveKey() {
-    if (typeof localStorage !== 'undefined') {
-      if (apiKey) localStorage.setItem('rk', apiKey);
-      else localStorage.removeItem('rk');
-    }
-    showKeyDialog = false;
-  }
 
   // ── Send + stream ──────────────────────────────────────────────────
 
@@ -67,7 +55,7 @@
       const res = await fetch('/showcase/agentic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history, apiKey: apiKey || undefined })
+        body: JSON.stringify({ messages: history })
       });
 
       if (!res.ok || !res.body) {
@@ -209,9 +197,6 @@
           <span>· out {usage.output_tokens ?? 0}</span>
         </div>
       {/if}
-      <button type="button" class="ghost" onclick={() => (showKeyDialog = true)}>
-        {apiKey ? '🔑 Key set' : '🔑 Set API key'}
-      </button>
       <button type="button" class="ghost" onclick={reset}>Reset</button>
     </div>
   </header>
@@ -265,41 +250,6 @@
     <button type="submit" disabled={busy || !inputValue.trim()}>Send</button>
   </form>
 
-  {#if showKeyDialog}
-    <div
-      class="key-overlay"
-      role="presentation"
-      onclick={() => (showKeyDialog = false)}
-    >
-      <div
-        class="key-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="key-dialog-title"
-        tabindex="-1"
-        onclick={(e) => e.stopPropagation()}
-        onkeydown={(e) => e.stopPropagation()}
-      >
-        <h2 id="key-dialog-title">Anthropic API key</h2>
-        <p class="muted">
-          Used only by your browser to call <code>/showcase/agentic</code>. Stored in
-          <code>localStorage</code>; never leaves your machine except to the SvelteKit endpoint
-          (which forwards directly to Anthropic). If <code>ANTHROPIC_API_KEY</code> is set in
-          <code>.env</code>, you can leave this empty.
-        </p>
-        <input
-          type="password"
-          placeholder="sk-ant-..."
-          bind:value={apiKey}
-          autocomplete="off"
-        />
-        <div class="actions">
-          <button type="button" class="ghost" onclick={() => (showKeyDialog = false)}>Cancel</button>
-          <button type="button" onclick={saveKey}>Save</button>
-        </div>
-      </div>
-    </div>
-  {/if}
 </main>
 
 <style>
@@ -553,53 +503,6 @@
   .composer input:focus {
     border-color: rgba(110, 58, 255, 0.6);
     box-shadow: 0 0 0 3px rgba(110, 58, 255, 0.18);
-  }
-
-  .key-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: grid;
-    place-items: center;
-    z-index: 100;
-    padding: 1rem;
-  }
-  .key-dialog {
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    border-radius: 12px;
-    padding: 1.25rem;
-    width: 100%;
-    max-width: 480px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .key-dialog h2 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0;
-  }
-  .key-dialog p {
-    font-size: 0.78rem;
-    line-height: 1.45;
-    margin: 0;
-  }
-  .key-dialog input {
-    height: 38px;
-    padding: 0 0.75rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: 8px;
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: ui-monospace, monospace;
-    font-size: 0.82rem;
-    outline: none;
-  }
-  .key-dialog .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
   }
 
   code {

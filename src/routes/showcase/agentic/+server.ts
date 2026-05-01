@@ -143,17 +143,23 @@ interface ChatMsg {
 }
 
 export const POST: RequestHandler = async ({ request }) => {
-  const { messages, apiKey } = (await request.json()) as {
-    messages: ChatMsg[];
-    apiKey?: string;
-  };
+  const { messages } = (await request.json()) as { messages: ChatMsg[] };
 
-  const key = apiKey || env.ANTHROPIC_API_KEY;
-  if (!key) {
-    throw error(401, 'Missing ANTHROPIC_API_KEY. Set it in .env or pass via the UI.');
+  // Prefer OAuth/Bearer token if present, fall back to API key. Either env
+  // var works — set whichever auth surface you have access to.
+  const authToken = env.ANTHROPIC_AUTH_TOKEN;
+  const apiKey = env.ANTHROPIC_API_KEY;
+
+  if (!authToken && !apiKey) {
+    throw error(
+      401,
+      'Set ANTHROPIC_AUTH_TOKEN (preferred) or ANTHROPIC_API_KEY in .env'
+    );
   }
 
-  const client = new Anthropic({ apiKey: key });
+  const client = authToken
+    ? new Anthropic({ authToken, apiKey: null as unknown as string })
+    : new Anthropic({ apiKey: apiKey! });
 
   const stream = new ReadableStream({
     async start(controller) {
