@@ -3,6 +3,10 @@
 
 import pkg from '../../../package.json' with { type: 'json' };
 import { metricEntry } from './entries/metric.js';
+import { textEntry } from './entries/text.js';
+import { headingEntry } from './entries/heading.js';
+import { flexEntry } from './entries/flex.js';
+import { gridEntry } from './entries/grid.js';
 
 export interface WidgetPropSpec {
   type: string;
@@ -32,6 +36,10 @@ export interface WidgetManifest {
 
 export const manifestEntries: WidgetManifestEntry[] = [
   metricEntry,
+  textEntry,
+  headingEntry,
+  flexEntry,
+  gridEntry,
 ];
 
 export function buildManifest(): WidgetManifest {
