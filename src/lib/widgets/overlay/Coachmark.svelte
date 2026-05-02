@@ -19,7 +19,7 @@
     style?: Record<string, string>;
     /** Tour steps. */
     steps?: Step[];
-    /** Show the tour now. Bind via `bind: "<state-path>"`. */
+    /** Show the tour now. Bind via bind: "state.path". */
     value?: boolean;
     /** Auto-show on first mount. */
     autoStart?: boolean;
@@ -57,7 +57,7 @@
     if (steps.length === 0) return;
     const mod = await import('driver.js');
     // Driver.js ships its CSS too — same pattern as gantt: skip since SSR-strict
-    // doesn't expose the path. Vendor a minimal core in <style :global> below.
+    // doesn't expose the path. Vendor a minimal core in the style block below.
     const { driver } = mod as any;
     if (driverInstance) {
       try { driverInstance.destroy(); } catch {}

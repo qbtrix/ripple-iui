@@ -4409,12 +4409,6 @@
   }
 </script>
 
-<div class="showcase-banner">
-  <a href="/showcase/agentic" class="showcase-banner-link">
-    🔁 <strong>Agentic chat loop demo</strong> — see how Ripple specs round-trip user actions back into a chat thread →
-  </a>
-</div>
-
 <Ripple spec={showcaseSpec} state={initialOverride} {onStateChange} onEvent={handleEvent} />
 
 <style>
@@ -4447,20 +4441,5 @@
     }
   }
 
-  .showcase-banner {
-    background: linear-gradient(90deg, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.02));
-    border-bottom: 1px solid hsl(var(--border));
-    padding: 0.5rem 1.5rem;
-    text-align: center;
-    font-size: 0.85rem;
-  }
-  .showcase-banner-link {
-    color: hsl(var(--foreground));
-    text-decoration: none;
-    transition: color 0.15s ease;
-  }
-  .showcase-banner-link:hover {
-    color: hsl(var(--primary));
-  }
 </style>
 
