@@ -2,6 +2,7 @@
 // about. Aggregated into dist/manifest.json by scripts/build-manifest.ts.
 
 import pkg from '../../../package.json' with { type: 'json' };
+import { metricEntry } from './entries/metric.js';
 
 export interface WidgetPropSpec {
   type: string;
@@ -29,7 +30,9 @@ export interface WidgetManifest {
   widgets: WidgetManifestEntry[];
 }
 
-export const manifestEntries: WidgetManifestEntry[] = [];
+export const manifestEntries: WidgetManifestEntry[] = [
+  metricEntry,
+];
 
 export function buildManifest(): WidgetManifest {
   if (manifestEntries.length === 0) {
