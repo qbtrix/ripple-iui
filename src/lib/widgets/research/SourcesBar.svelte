@@ -120,7 +120,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 1.5px solid hsl(var(--card));
+    border: 1.5px solid var(--card);
     flex-shrink: 0;
     position: relative;
   }
@@ -128,7 +128,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 1.5px solid hsl(var(--card));
+    border: 1.5px solid var(--card);
     flex-shrink: 0;
     position: relative;
     object-fit: cover;
@@ -136,7 +136,7 @@
   .rsbar-count {
     font-size: 12px;
     font-weight: 500;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
   }
   .rsbar-actions {
     display: flex;
@@ -152,12 +152,12 @@
     border-radius: 6px;
     border: none;
     background: transparent;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
   .rsbar-btn:hover {
-    background: hsl(var(--muted));
-    color: hsl(var(--foreground));
+    background: var(--muted);
+    color: var(--foreground);
   }
 </style>

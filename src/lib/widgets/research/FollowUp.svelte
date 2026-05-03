@@ -75,13 +75,13 @@
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 12px;
-    background: hsl(var(--card));
+    background: var(--card);
     transition: border-color 0.15s;
   }
   .rfollow:focus-within {
-    border-color: hsl(var(--primary) / 0.5);
+    border-color: color-mix(in oklab, var(--primary) 50%, transparent);
   }
   .rfollow-input {
     flex: 1;
@@ -89,11 +89,11 @@
     outline: none;
     background: transparent;
     font-size: 14px;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-family: inherit;
   }
   .rfollow-input::placeholder {
-    color: hsl(var(--muted-foreground) / 0.6);
+    color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
   }
   .rfollow-btn {
     display: flex;
@@ -103,8 +103,8 @@
     height: 30px;
     border-radius: 8px;
     border: none;
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
+    background: var(--primary);
+    color: var(--primary-foreground);
     cursor: pointer;
     flex-shrink: 0;
     transition: opacity 0.15s;

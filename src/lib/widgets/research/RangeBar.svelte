@@ -24,7 +24,7 @@
   let {
     label, min, max, current,
     minLabel, maxLabel, currentLabel,
-    color = 'hsl(var(--primary))',
+    color = 'var(--primary)',
     class: className
   }: Props = $props();
 
@@ -70,7 +70,7 @@
   }
   .rrb-label {
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-weight: 500;
   }
   .rrb-current {
@@ -83,7 +83,7 @@
     position: relative;
     height: 6px;
     border-radius: 3px;
-    background: hsl(var(--muted) / 0.5);
+    background: color-mix(in oklab, var(--muted) 50%, transparent);
   }
   .rrb-fill {
     position: absolute;
@@ -101,7 +101,7 @@
     height: 14px;
     border-radius: 50%;
     border: 2px solid;
-    background: hsl(var(--card));
+    background: var(--card);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -117,7 +117,7 @@
   }
   .rrb-bound {
     font-size: 10px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-variant-numeric: tabular-nums;
     font-family: "JetBrains Mono Variable", "SF Mono", ui-monospace, monospace;
   }

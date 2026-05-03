@@ -118,10 +118,64 @@
 
 	// Event handlers are computed once but context is fresh on each call
 	const onclick = createEventHandler(node.on_click);
-	const onchange = createEventHandler(node.on_change);
 	const onsubmit = createEventHandler(node.on_submit);
 	const onfocus = createEventHandler(node.on_focus);
 	const onblur = createEventHandler(node.on_blur);
+	const oninputUser = createEventHandler(node.on_input);
+
+	/**
+	 * Build handlers for any other `on_*` keys on the node (e.g. on_close, on_resize,
+	 * on_navigate, on_select). The well-known events above are wired explicitly
+	 * because they participate in two-way binding or have special semantics; the
+	 * rest are passed through generically as `on<event>` props.
+	 */
+	const KNOWN_ON_KEYS = new Set([
+		'on_click', 'on_change', 'on_input', 'on_submit', 'on_focus', 'on_blur'
+	]);
+	const extraHandlers = $derived.by<Record<string, (v?: unknown) => unknown>>(() => {
+		const out: Record<string, (v?: unknown) => unknown> = {};
+		const raw = node as unknown as Record<string, unknown>;
+		for (const key of Object.keys(raw)) {
+			if (!key.startsWith('on_') || KNOWN_ON_KEYS.has(key)) continue;
+			const handler = createEventHandler(raw[key] as EventHandlerOrArray);
+			if (!handler) continue;
+			// on_close → onclose, on_open_change → onopenchange
+			const propName = 'on' + key.slice(3).replace(/_/g, '');
+			out[propName] = handler;
+		}
+		return out;
+	});
+
+	// `bind` may itself contain `{...}` placeholders (e.g. `lines.{i}.qty`)
+	// that reference loop-local variables. This template is resolved per
+	// invocation of onchange / oninput so the path picks up the current
+	// loop context.
+	const boundPathTemplate = $derived.by(() => {
+		if (!node.bind) return null;
+		const stripped = node.bind.replace(/^\{|\}$/g, '').trim();
+		return stripped.replace(/^state\./, '');
+	});
+
+	function resolveBoundPath(): string | null {
+		const tpl = boundPathTemplate;
+		if (!tpl) return null;
+		if (!tpl.includes('{')) return tpl;
+		const result = resolveString(tpl, getResolverContext());
+		return typeof result === 'string' ? result : String(result ?? '');
+	}
+
+	const onchangeUser = createEventHandler(node.on_change);
+	const onchange = (eventValue?: unknown) => {
+		const path = resolveBoundPath();
+		if (path) stateManager.set(path, eventValue);
+		return onchangeUser?.(eventValue);
+	};
+
+	const oninput = (eventValue?: unknown) => {
+		const path = resolveBoundPath();
+		if (path) stateManager.set(path, eventValue);
+		return oninputUser?.(eventValue);
+	};
 
 	/**
 	 * Get bound value if 'bind' is specified.
@@ -129,17 +183,19 @@
 	 */
 	const boundValue = $derived.by(() => {
 		if (!node.bind) return undefined;
-		// Remove curly braces if present
-		const path = node.bind.replace(/^\{|\}$/g, '').trim();
-		const statePath = path.replace(/^state\./, '');
+		const tpl = boundPathTemplate;
+		if (!tpl) return undefined;
+		// Resolve `{...}` placeholders against current loop context.
+		const statePath = tpl.includes('{')
+			? (() => {
+					const r = resolveString(tpl, getResolverContext());
+					return typeof r === 'string' ? r : String(r ?? '');
+			  })()
+			: tpl;
 
-		// For simple keys (no dots), access state directly for proper reactivity tracking
-		// The $state proxy will track this property access
 		if (!statePath.includes('.')) {
 			return stateManager.state[statePath];
 		}
-
-		// For nested paths, use the get method (less reactive but works for reads)
 		return stateManager.get(statePath);
 	});
 
@@ -205,12 +261,14 @@
 	 * Children without `slot` go to the default bucket (the body children snippet).
 	 * Named-slot children are forwarded to the widget via matching snippet props.
 	 */
+	const KNOWN_SLOTS = new Set(['default', 'header', 'footer', 'sidebar', 'topbar', 'actions']);
+
 	const childBuckets = $derived.by<Record<string, UINode[]>>(() => {
 		const buckets: Record<string, UINode[]> = { default: [] };
 		if (!node.children) return buckets;
 		for (const child of node.children) {
 			const key = child.slot ?? 'default';
-			if (key !== 'default' && key !== 'header' && key !== 'footer') {
+			if (!KNOWN_SLOTS.has(key)) {
 				console.warn(`[Ripple] Unknown slot name: ${key}`);
 			}
 			if (!buckets[key]) buckets[key] = [];
@@ -256,6 +314,9 @@
 		{@const defaultKids = childBuckets.default ?? []}
 		{@const headerKids = childBuckets.header ?? []}
 		{@const footerKids = childBuckets.footer ?? []}
+		{@const sidebarKids = childBuckets.sidebar ?? []}
+		{@const topbarKids = childBuckets.topbar ?? []}
+		{@const actionsKids = childBuckets.actions ?? []}
 		{@const widgetProps = {
 			id: node.id,
 			...(resolvedClass !== undefined && { class: resolvedClass }),
@@ -264,11 +325,14 @@
 			...(boundValue !== undefined && { value: boundValue }),
 			...((node.type === 'checkbox' || node.type === 'switch') && boundValue !== undefined && { checked: boundValue }),
 			...(onclick !== undefined && { onclick }),
-			...(onchange !== undefined && { onchange }),
+			...((boundPathTemplate ||onchangeUser) && { onchange }),
+			...((boundPathTemplate ||oninputUser) && { oninput }),
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),
-			...(defaultKids.length > 0 && { hasChildren: true })
+			...extraHandlers,
+			...(defaultKids.length > 0 && { hasChildren: true }),
+			...(node.type === 'tabs' && defaultKids.length > 0 && { panels: defaultKids, panelLoopContext: loopContext })
 		}}
 		{#snippet headerSnippet()}
 			{#each headerKids as child, i (child.id ?? i)}
@@ -280,10 +344,28 @@
 				<Self node={child} {loopContext} />
 			{/each}
 		{/snippet}
+		{#snippet sidebarSnippet()}
+			{#each sidebarKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet topbarSnippet()}
+			{#each topbarKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet actionsSnippet()}
+			{#each actionsKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
 		<WidgetComponent
 			{...widgetProps}
 			header={headerKids.length > 0 ? headerSnippet : undefined}
 			footer={footerKids.length > 0 ? footerSnippet : undefined}
+			sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
+			topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
+			actions={actionsKids.length > 0 ? actionsSnippet : undefined}
 		>
 			{#snippet children()}
 				{#each defaultKids as child, i (child.id ?? i)}

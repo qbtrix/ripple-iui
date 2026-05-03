@@ -118,15 +118,15 @@
     height: 40px;
     border-radius: 10px;
     object-fit: contain;
-    background: hsl(var(--muted) / 0.3);
+    background: color-mix(in oklab, var(--muted) 30%, transparent);
     flex-shrink: 0;
   }
   .rch-logo-fallback {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
+    background: var(--primary);
+    color: var(--primary-foreground);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,13 +146,13 @@
   .rch-name {
     font-size: 18px;
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     line-height: 1.2;
   }
   .rch-ticker {
     font-size: 13px;
     font-weight: 600;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-family: "JetBrains Mono Variable", "SF Mono", ui-monospace, monospace;
   }
   .rch-exchange {
@@ -160,14 +160,14 @@
     font-weight: 500;
     padding: 1px 6px;
     border-radius: 4px;
-    background: hsl(var(--muted) / 0.5);
-    color: hsl(var(--muted-foreground));
+    background: color-mix(in oklab, var(--muted) 50%, transparent);
+    color: var(--muted-foreground);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
   .rch-desc {
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin: 3px 0 0;
     line-height: 1.4;
   }
@@ -182,7 +182,7 @@
     font-weight: 700;
     font-family: "JetBrains Mono Variable", "SF Mono", ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     line-height: 1;
   }
   .rch-change {
@@ -211,16 +211,16 @@
     font-weight: 500;
     padding: 2px 8px;
     border-radius: 5px;
-    background: hsl(var(--muted) / 0.45);
-    color: hsl(var(--muted-foreground));
+    background: color-mix(in oklab, var(--muted) 45%, transparent);
+    color: var(--muted-foreground);
   }
   .rch-mcap {
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
   }
   .rch-mcap strong {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
 </style>

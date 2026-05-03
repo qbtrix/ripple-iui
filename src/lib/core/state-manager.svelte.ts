@@ -1,169 +1,109 @@
 /**
  * @file state-manager.svelte.ts
  * @description Reactive state management for the UI renderer using Svelte 5 runes.
- * @created 2024-12-XX
- * @changes
- *   - Initial creation with StateManager class
- *   - Path-based get/set operations with dot notation support
- *   - Svelte 5 $state rune for reactivity
  */
 
-/**
- * StateManager handles all reactive state for a UIRenderer instance.
- *
- * Features:
- * - Dot-notation path access: "user.profile.name"
- * - Automatic reactivity via Svelte 5 $state
- * - Immutable updates that trigger re-renders
- *
- * @example
- * const manager = new StateManager({ count: 0, user: { name: 'Alice' } });
- * manager.get('count'); // 0
- * manager.get('user.name'); // 'Alice'
- * manager.set('count', 1); // triggers reactivity
- */
+export type StateSubscriber = (
+  path: string,
+  value: unknown,
+  state: Record<string, unknown>
+) => void;
+
 export class StateManager {
-	/** The reactive state object */
-	private _state = $state<Record<string, unknown>>({});
+  private _state = $state<Record<string, unknown>>({});
+  private subscribers = new Set<StateSubscriber>();
 
-	constructor(initialState: Record<string, unknown> = {}) {
-		try {
-			this._state = structuredClone(initialState);
-		} catch {
-			// Fallback for non-cloneable values (functions, proxies, etc.)
-			this._state = JSON.parse(JSON.stringify(initialState));
-		}
-	}
+  constructor(initialState: Record<string, unknown> = {}) {
+    try {
+      this._state = structuredClone(initialState);
+    } catch {
+      this._state = JSON.parse(JSON.stringify(initialState));
+    }
+  }
 
-	/**
-	 * Get the entire state object (readonly snapshot).
-	 */
-	get state(): Record<string, unknown> {
-		return this._state;
-	}
+  get state(): Record<string, unknown> {
+    return this._state;
+  }
 
-	/**
-	 * Get a value by dot-notation path.
-	 *
-	 * @param path - Dot-separated path like "user.profile.name"
-	 * @returns The value at path, or undefined if not found
-	 *
-	 * @example
-	 * manager.get('user.name'); // 'Alice'
-	 * manager.get('nonexistent'); // undefined
-	 */
-	get(path: string): unknown {
-		if (!path) return undefined;
+  get(path: string): unknown {
+    if (!path) return undefined;
+    const parts = path.split('.');
+    let current: unknown = this._state;
+    for (const part of parts) {
+      if (current === null || current === undefined) return undefined;
+      if (typeof current !== 'object') return undefined;
+      current = (current as Record<string, unknown>)[part];
+    }
+    return current;
+  }
 
-		const parts = path.split('.');
-		let current: unknown = this._state;
+  set(path: string, value: unknown): void {
+    if (!path) return;
+    const parts = path.split('.');
+    const lastKey = parts.pop()!;
+    let current: Record<string, unknown> = this._state;
+    for (const part of parts) {
+      if (current[part] === undefined || current[part] === null) {
+        current[part] = {};
+      }
+      if (typeof current[part] !== 'object') {
+        console.warn(`StateManager: Cannot set path "${path}" - "${part}" is not an object`);
+        return;
+      }
+      current = current[part] as Record<string, unknown>;
+    }
+    current[lastKey] = value;
+    this.notify(path, value);
+  }
 
-		for (const part of parts) {
-			if (current === null || current === undefined) {
-				return undefined;
-			}
-			if (typeof current !== 'object') {
-				return undefined;
-			}
-			current = (current as Record<string, unknown>)[part];
-		}
+  update(path: string, updater: (current: unknown) => unknown): void {
+    const current = this.get(path);
+    this.set(path, updater(current));
+  }
 
-		return current;
-	}
+  has(path: string): boolean {
+    return this.get(path) !== undefined;
+  }
 
-	/**
-	 * Set a value by dot-notation path.
-	 * Creates intermediate objects if they don't exist.
-	 *
-	 * @param path - Dot-separated path like "user.profile.name"
-	 * @param value - The value to set
-	 *
-	 * @example
-	 * manager.set('user.name', 'Bob');
-	 * manager.set('deeply.nested.value', 42); // creates intermediate objects
-	 */
-	set(path: string, value: unknown): void {
-		if (!path) return;
+  delete(path: string): void {
+    if (!path) return;
+    const parts = path.split('.');
+    const lastKey = parts.pop()!;
+    let current: Record<string, unknown> = this._state;
+    for (const part of parts) {
+      if (current[part] === undefined || typeof current[part] !== 'object') return;
+      current = current[part] as Record<string, unknown>;
+    }
+    delete current[lastKey];
+    this.notify(path, undefined);
+  }
 
-		const parts = path.split('.');
-		const lastKey = parts.pop()!;
+  reset(newState: Record<string, unknown> = {}): void {
+    for (const key of Object.keys(this._state)) {
+      delete this._state[key];
+    }
+    Object.assign(this._state, structuredClone(newState));
+    this.notify('', undefined);
+  }
 
-		// Navigate to parent, creating objects as needed
-		let current: Record<string, unknown> = this._state;
-		for (const part of parts) {
-			if (current[part] === undefined || current[part] === null) {
-				current[part] = {};
-			}
-			if (typeof current[part] !== 'object') {
-				// Can't traverse through non-object
-				console.warn(`StateManager: Cannot set path "${path}" - "${part}" is not an object`);
-				return;
-			}
-			current = current[part] as Record<string, unknown>;
-		}
+  subscribe(fn: StateSubscriber): () => void {
+    this.subscribers.add(fn);
+    return () => {
+      this.subscribers.delete(fn);
+    };
+  }
 
-		// Set the final value - Svelte 5 will track this mutation
-		current[lastKey] = value;
-	}
-
-	/**
-	 * Update a value using a function.
-	 *
-	 * @param path - Dot-separated path
-	 * @param updater - Function that receives current value and returns new value
-	 *
-	 * @example
-	 * manager.update('count', (n) => (n as number) + 1);
-	 */
-	update(path: string, updater: (current: unknown) => unknown): void {
-		const current = this.get(path);
-		this.set(path, updater(current));
-	}
-
-	/**
-	 * Check if a path exists and has a non-undefined value.
-	 */
-	has(path: string): boolean {
-		return this.get(path) !== undefined;
-	}
-
-	/**
-	 * Delete a value at path.
-	 */
-	delete(path: string): void {
-		if (!path) return;
-
-		const parts = path.split('.');
-		const lastKey = parts.pop()!;
-
-		let current: Record<string, unknown> = this._state;
-		for (const part of parts) {
-			if (current[part] === undefined || typeof current[part] !== 'object') {
-				return; // Path doesn't exist
-			}
-			current = current[part] as Record<string, unknown>;
-		}
-
-		delete current[lastKey];
-	}
-
-	/**
-	 * Reset state to initial values or new state.
-	 */
-	reset(newState: Record<string, unknown> = {}): void {
-		// Clear current state
-		for (const key of Object.keys(this._state)) {
-			delete this._state[key];
-		}
-		// Set new state
-		Object.assign(this._state, structuredClone(newState));
-	}
+  private notify(path: string, value: unknown): void {
+    for (const fn of this.subscribers) {
+      try {
+        fn(path, value, this._state);
+      } catch (err) {
+        console.error('StateManager subscriber threw:', err);
+      }
+    }
+  }
 }
 
-/**
- * Create a new StateManager instance.
- * Convenience function for functional style.
- */
 export function createStateManager(initialState: Record<string, unknown> = {}): StateManager {
-	return new StateManager(initialState);
+  return new StateManager(initialState);
 }

@@ -16,6 +16,7 @@
   import { createStateManager } from './core/state-manager.svelte.js';
   import { createEventDispatcher, type OnEventCallback } from './core/event-dispatcher.js';
   import { createWidgetRegistry } from './core/widget-registry.js';
+  import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
@@ -32,6 +33,7 @@
     state?: Record<string, any>;
     onEvent?: OnEventCallback;
     onSpecChanged?: (spec: DashboardSpec) => void;
+    onStateChange?: (path: string, value: unknown, state: Record<string, unknown>) => void;
     class?: string;
     style?: string;
   }
@@ -43,6 +45,7 @@
     state: initialStateOverride,
     onEvent,
     onSpecChanged,
+    onStateChange,
     class: className = '',
     style
   }: Props = $props();
@@ -57,18 +60,56 @@
 
   const stateManager = createStateManager(mergedInitialState);
   const widgetRegistry = createWidgetRegistry();
-  const eventDispatcher = createEventDispatcher(stateManager, onEvent, widgetRegistry);
+  const toastBus = createToastBus();
+
+  // Chain: forward toast events into the in-process bus AND to any host onEvent.
+  // Hosts that already render toasts continue to work; specs that mount a
+  // `<toast />` widget get rendering for free. The host's return value is
+  // preserved so `api` action chaining (on_success/on_error/response_key) works.
+  const chainedOnEvent: OnEventCallback = (event: RippleEvent) => {
+    if (event.type === 'toast') {
+      const rawVariant = (event as { variant?: string }).variant;
+      const variant: ToastVariant =
+        rawVariant === 'success' || rawVariant === 'warning' || rawVariant === 'error'
+          ? rawVariant
+          : 'info';
+      const rawMessage = (event as { message?: unknown }).message;
+      toastBus.push({
+        message: typeof rawMessage === 'string' ? rawMessage : String(rawMessage ?? ''),
+        variant
+      });
+    }
+    return onEvent?.(event);
+  };
+
+  const eventDispatcher = createEventDispatcher(stateManager, chainedOnEvent, widgetRegistry);
   let dataStore = $state<Record<string, unknown>>({});
 
   // Sync external state prop changes into the stateManager reactively.
   // This allows data_sources and other async state updates to flow in
   // after the initial render.
+  //
+  // We deep-compare via JSON because $state wraps arrays/objects in proxies —
+  // a simple `value !== stateManager.get(key)` comparison would always be true
+  // for non-primitive values (proxy !== plain object), causing infinite loops
+  // when callers pass arrays / objects through this prop.
+  function shallowDifferent(a: unknown, b: unknown): boolean {
+    if (a === b) return false;
+    if (a == null || b == null) return a !== b;
+    if (typeof a !== 'object' || typeof b !== 'object') return a !== b;
+    try {
+      return JSON.stringify(a) !== JSON.stringify(b);
+    } catch {
+      return true;
+    }
+  }
+
   $effect(() => {
-    if (initialStateOverride) {
-      for (const [key, value] of Object.entries(initialStateOverride)) {
-        if (value !== undefined && value !== stateManager.get(key)) {
-          stateManager.set(key, value);
-        }
+    if (!initialStateOverride) return;
+    for (const [key, value] of Object.entries(initialStateOverride)) {
+      if (value === undefined) continue;
+      if (shallowDifferent(value, stateManager.get(key))) {
+        stateManager.set(key, value);
       }
     }
   });
@@ -78,6 +119,15 @@
   setContext('ui-data', dataStore);
   setContext('ui-widget-resolver', getWidget);
   setContext('ui-widget-registry', widgetRegistry);
+  // Expose the host onEvent so nested ripple-frame instances can forward
+  // their inner events back up to the outermost host.
+  setContext('ui-host-event', onEvent);
+  setContext('ui-toasts', toastBus);
+
+  $effect(() => {
+    if (!onStateChange) return;
+    return stateManager.subscribe(onStateChange);
+  });
 
   let renderMode = $derived.by((): 'dashboard' | 'node' | 'empty' | 'skeleton' | 'stream-error' => {
     if (streaming && streaming.done && streaming.error && streaming.current == null) {
