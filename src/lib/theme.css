@@ -22,6 +22,8 @@
   --ripple-error-foreground: oklch(1 0 0);
   --ripple-info: oklch(0.70 0.12 250);
   --ripple-info-foreground: oklch(1 0 0);
+  --ripple-input: var(--background);
+  --ripple-input-foreground: var(--foreground);
   --ripple-radius: var(--radius);
 }
 
@@ -42,5 +44,7 @@
   --color-ripple-error-foreground: var(--ripple-error-foreground);
   --color-ripple-info: var(--ripple-info);
   --color-ripple-info-foreground: var(--ripple-info-foreground);
+  --color-ripple-input: var(--ripple-input);
+  --color-ripple-input-foreground: var(--ripple-input-foreground);
   --radius-ripple: var(--ripple-radius);
 }
