@@ -135,7 +135,7 @@
 
 <div {id} class={cn('flex flex-col gap-2', className)} style={styleString}>
   {#if searchable}
-    <div class="flex items-center gap-2 rounded-md border border-input bg-background px-3 h-9 max-w-sm">
+    <div class="flex items-center gap-2 rounded-md border border-input bg-ripple-input px-3 h-9 max-w-sm">
       <SearchIcon size={14} class="opacity-60 shrink-0" />
       <input
         type="text"

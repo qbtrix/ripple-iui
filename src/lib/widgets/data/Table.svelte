@@ -144,7 +144,7 @@
         type="search"
         placeholder="Search..."
         bind:value={query}
-        class="h-8 flex-1 rounded-md border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+        class="h-8 flex-1 rounded-md border border-border bg-ripple-input px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
       />
       <span class="text-xs text-muted-foreground tabular-nums">{sorted.length} {sorted.length === 1 ? 'row' : 'rows'}</span>
     </div>

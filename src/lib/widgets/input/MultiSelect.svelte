@@ -22,7 +22,7 @@
     placeholder?: string;
     searchPlaceholder?: string;
     emptyText?: string;
-    options?: Option[];
+    options?: (Option | string)[];
     /** Array of selected values. Bind via `bind: "<state-path>"`. */
     value?: (string | number)[];
     /** Allow creating arbitrary tags by pressing Enter when there's no exact match. */
@@ -53,6 +53,12 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  // LLM-generated specs often pass options as plain strings (e.g. ["A", "B"]).
+  // Normalize to {value, label} so each-block keys stay unique.
+  const normalizedOptions: Option[] = $derived(
+    options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
+  );
+
   let open = $state(false);
   let query = $state('');
 
@@ -61,13 +67,13 @@
 
   const filtered = $derived(
     !query
-      ? options
-      : options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+      ? normalizedOptions
+      : normalizedOptions.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
   );
 
   const exactMatch = $derived(
     query.trim().length > 0 &&
-      options.some((o) => o.label.toLowerCase() === query.trim().toLowerCase())
+      normalizedOptions.some((o) => o.label.toLowerCase() === query.trim().toLowerCase())
   );
 
   function emit(next: (string | number)[]) {
@@ -113,7 +119,7 @@
   }
 
   function getOptionLabel(v: string | number): string {
-    return options.find((o) => o.value === v)?.label ?? String(v);
+    return normalizedOptions.find((o) => o.value === v)?.label ?? String(v);
   }
 
   const visibleChips = $derived(selected.slice(0, maxChips));
@@ -130,7 +136,7 @@
       {id}
       {disabled}
       class={cn(
-        'flex min-h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-2 py-1 text-sm shadow-xs',
+        'flex min-h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-ripple-input px-2 py-1 text-sm shadow-xs',
         'transition-[color,box-shadow] outline-none',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
         'disabled:cursor-not-allowed disabled:opacity-50'
@@ -146,7 +152,7 @@
               <button
                 type="button"
                 aria-label={`Remove ${getOptionLabel(v)}`}
-                class="rounded-full hover:bg-background/60 p-0.5"
+                class="rounded-full hover:bg-ripple-muted/60 p-0.5"
                 onclick={(e) => { e.stopPropagation(); remove(v); }}
               >
                 <XIcon size={10} />

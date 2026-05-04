@@ -81,7 +81,7 @@
     </div>
   {/if}
 
-  <div class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 h-9 shadow-xs font-mono text-sm">
+  <div class="inline-flex items-center gap-1 rounded-md border border-input bg-ripple-input px-2 h-9 shadow-xs font-mono text-sm">
     <span class="flex-1 min-w-0 truncate tabular-nums">{masked || '—'}</span>
 
     {#if !hideReveal}

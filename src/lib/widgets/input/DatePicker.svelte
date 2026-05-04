@@ -151,7 +151,7 @@
       {id}
       {disabled}
       class={cn(
-        'flex h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs',
+        'flex h-9 w-full items-center gap-2 rounded-md border border-input bg-ripple-input px-3 py-1 text-sm shadow-xs',
         'transition-[color,box-shadow] outline-none',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
         'disabled:cursor-not-allowed disabled:opacity-50',

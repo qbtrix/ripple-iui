@@ -81,7 +81,7 @@
 
   <div
     class={cn(
-      'inline-flex items-stretch rounded-md border border-input bg-background shadow-xs overflow-hidden',
+      'inline-flex items-stretch rounded-md border border-input bg-ripple-input shadow-xs overflow-hidden',
       'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
       disabled && 'opacity-50 cursor-not-allowed'
     )}

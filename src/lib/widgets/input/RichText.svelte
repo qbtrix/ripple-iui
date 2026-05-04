@@ -137,7 +137,7 @@
 
   <div
     {id}
-    class="rounded-md border border-input bg-background shadow-xs focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-[color,box-shadow]"
+    class="rounded-md border border-input bg-ripple-input shadow-xs focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-[color,box-shadow]"
   >
     {#if !hideToolbar}
       <div class="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/20 px-1 py-1">
