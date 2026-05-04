@@ -53,7 +53,6 @@ import { dropdownMenuEntry } from './entries/dropdown-menu.js';
 import { eachEntry } from './entries/each.js';
 import { emptyStateEntry } from './entries/empty-state.js';
 import { errorStateEntry } from './entries/error-state.js';
-import { feedEntry } from './entries/feed.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flexEntry } from './entries/flex.js';
@@ -158,16 +157,89 @@ export interface WidgetManifestEntry {
   description: string;
   /** Prop name → spec. Only LLM-relevant props; internal/passthrough props omitted. */
   props: Record<string, WidgetPropSpec>;
-  /** A runnable UISpec node the LLM can lift as a starting point. */
-  example: { type: string; props: Record<string, unknown>; children?: unknown };
+  /**
+   * Node-level event handlers (`on_click`, `on_change`, …). These live as
+   * siblings to `props` on the UINode, not inside `props`. See ui-spec.ts.
+   */
+  events?: Record<string, WidgetPropSpec>;
+  /**
+   * Other node-level fields specific to control-flow widgets — `condition`
+   * for `if`, `items`/`item_as`/`index_as` for `each`. Sibling to `props`.
+   */
+  nodeFields?: Record<string, WidgetPropSpec>;
+  /**
+   * A runnable UISpec node the LLM can lift as a starting point. May include
+   * sibling fields like `on_click`, `condition`, `items` alongside `props`.
+   */
+  example: {
+    type: string;
+    props?: Record<string, unknown>;
+    children?: unknown;
+    [extraNodeField: string]: unknown;
+  };
+}
+
+/**
+ * Top-level spec envelope contract — the shape every Ripple spec MUST follow.
+ *
+ * The agent's most expensive failure mode is inventing the wrong field name
+ * for the renderable tree (`root` / `tree` / `view` / `body` / `content`)
+ * and shipping a spec the renderer can't mount. Documenting the envelope
+ * here, in the same artifact that documents widget shapes, anchors the
+ * field names in the LLM context alongside the per-widget reference.
+ */
+export interface SpecEnvelope {
+  /** The required top-level field name for the renderable node tree. */
+  uiField: 'ui';
+  /** The required top-level field name for the StateManager seed. */
+  stateField: 'state';
+  /** Current envelope version. */
+  version: '1.0';
+  /** Aliases the agent sometimes invents — explicitly NOT supported. */
+  aliasesNotAllowed: readonly string[];
+  /** One-line contract summary suitable for prompt injection. */
+  description: string;
+  /** A minimal but complete example showing every required field in place. */
+  example: Record<string, unknown>;
 }
 
 export interface WidgetManifest {
   schema: 'ripple.manifest/v1';
   version: string;
   generatedAt: string;
+  /**
+   * The spec envelope contract — describes how widgets compose into a
+   * complete spec. Read this BEFORE the widget catalog: the catalog
+   * documents nodes, the envelope documents the tree they live in.
+   */
+  spec: SpecEnvelope;
   widgets: WidgetManifestEntry[];
 }
+
+export const specEnvelope: SpecEnvelope = {
+  uiField: 'ui',
+  stateField: 'state',
+  version: '1.0',
+  aliasesNotAllowed: ['root', 'tree', 'view', 'body', 'content'],
+  description:
+    'A Ripple spec is a JSON object with two top-level fields that matter for ' +
+    "rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` " +
+    '(the StateManager seed — required when any node uses `bind` or reads ' +
+    '`{state.*}`). The renderable tree field is named `ui` exactly — never ' +
+    '`root`, `tree`, `view`, `body`, or `content`. Specs that use those ' +
+    'aliases will not render.',
+  example: {
+    version: '1.0',
+    state: { draft: '', items: [] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'input', bind: 'draft', props: { placeholder: 'Add an item' } },
+      ],
+    },
+  },
+};
 
 export const manifestEntries: WidgetManifestEntry[] = [
   accordionEntry,
@@ -217,7 +289,6 @@ export const manifestEntries: WidgetManifestEntry[] = [
   eachEntry,
   emptyStateEntry,
   errorStateEntry,
-  feedEntry,
   fileUploadEntry,
   filterBarEntry,
   flexEntry,
@@ -316,6 +387,7 @@ export function buildManifest(): WidgetManifest {
     schema: 'ripple.manifest/v1',
     version: pkg.version,
     generatedAt: new Date().toISOString(),
+    spec: specEnvelope,
     widgets: manifestEntries,
   };
 }
