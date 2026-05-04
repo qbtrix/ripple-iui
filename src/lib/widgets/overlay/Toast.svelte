@@ -48,10 +48,10 @@
   }
 
   function variantTone(v: ToastVariant) {
-    return v === 'success' ? 'text-emerald-600 dark:text-emerald-400'
-      : v === 'warning' ? 'text-amber-600 dark:text-amber-400'
-      : v === 'error' ? 'text-rose-600 dark:text-rose-400'
-      : 'text-blue-600 dark:text-blue-400';
+    return v === 'success' ? 'text-ripple-success'
+      : v === 'warning' ? 'text-ripple-warning'
+      : v === 'error' ? 'text-ripple-error'
+      : 'text-ripple-info';
   }
 
   const flyOffset = $derived(position.startsWith('top') ? -16 : 16);
