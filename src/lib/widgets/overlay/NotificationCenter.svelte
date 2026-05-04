@@ -153,7 +153,7 @@
   <div {id} class={cn('inline-block', className)} style={styleString}>
     <P.Root>
       <P.Trigger
-        class="relative inline-grid place-items-center h-9 w-9 rounded-md border border-input bg-background hover:bg-muted/60 transition-colors"
+        class="relative inline-grid place-items-center h-9 w-9 rounded-md border border-input bg-ripple-surface hover:bg-ripple-muted/60 transition-colors"
         aria-label={title}
       >
         <BellIcon size={16} />

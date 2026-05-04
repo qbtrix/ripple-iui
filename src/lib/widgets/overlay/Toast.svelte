@@ -68,7 +68,7 @@
     {#each visible as toast (toast.id)}
       {@const Icon = variantIcon(toast.variant)}
       <div
-        class="pointer-events-auto flex items-start gap-2 rounded-md border border-border bg-background px-3 py-2 shadow-lg min-w-[220px] max-w-[360px]"
+        class="pointer-events-auto flex items-start gap-2 rounded-md border border-border bg-ripple-surface px-3 py-2 shadow-lg min-w-[220px] max-w-[360px]"
         aria-atomic="true"
         in:fly={{ y: flyOffset, duration: 200 }}
         out:fade={{ duration: 150 }}

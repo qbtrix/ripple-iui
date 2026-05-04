@@ -62,7 +62,7 @@
       'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
       'disabled:pointer-events-none disabled:opacity-50',
       triggerVariant === 'default' && 'bg-primary text-primary-foreground hover:bg-primary/90',
-      triggerVariant === 'outline' && 'border border-border bg-background hover:bg-muted/60',
+      triggerVariant === 'outline' && 'border border-border bg-ripple-surface hover:bg-ripple-muted/60',
       triggerVariant === 'ghost' && 'hover:bg-muted/60',
       triggerVariant === 'secondary' && 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
       className
