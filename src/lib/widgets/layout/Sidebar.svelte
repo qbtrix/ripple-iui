@@ -76,7 +76,7 @@
 <aside
   {id}
   class={cn(
-    'flex flex-col gap-3 border-r border-border bg-card/40 p-3',
+    'flex flex-col gap-3 border-r border-ripple-border p-3',
     'w-56 shrink-0 h-full',
     className
   )}
