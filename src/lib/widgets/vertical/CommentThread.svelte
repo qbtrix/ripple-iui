@@ -1,10 +1,8 @@
 <!-- src/lib/widgets/vertical/CommentThread.svelte -->
-<script lang="ts">
-  import { cn } from '$lib/utils.js';
-  import Self from './CommentThread.svelte';
-  import MessageSquareIcon from '@lucide/svelte/icons/message-square';
-
-  type Comment = {
+<script module lang="ts">
+  // Public type — module scope so svelte-package emits it in the
+  // generated .d.ts.
+  export type Comment = {
     id: string | number;
     author: string;
     avatar?: string;
@@ -12,6 +10,12 @@
     timestamp?: string;
     replies?: Comment[];
   };
+</script>
+
+<script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import Self from './CommentThread.svelte';
+  import MessageSquareIcon from '@lucide/svelte/icons/message-square';
 
   interface Props {
     id?: string;
