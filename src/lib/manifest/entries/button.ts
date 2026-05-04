@@ -11,6 +11,8 @@ export const buttonEntry: WidgetManifestEntry = {
     disabled: { type: 'boolean', required: false, description: 'Disable interaction.' },
     loading: { type: 'boolean', required: false, description: 'Show spinner and disable.' },
     type: { type: '"button" | "submit" | "reset"', required: false, description: 'HTML button type.' },
+  },
+  events: {
     on_click: { type: 'EventAction', required: false, description: 'Action fired on click.' },
   },
   example: { type: 'button', props: { label: 'Save changes', variant: 'default', size: 'md', type: 'submit' } },

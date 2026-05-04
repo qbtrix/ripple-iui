@@ -9,7 +9,7 @@ export const appShellEntry: WidgetManifestEntry = {
     type: 'app-shell',
     props: {},
     children: [
-      { type: 'text', props: { content: 'Main app content' } },
+      { type: 'text', props: { text: 'Main app content' } },
     ],
   },
 };

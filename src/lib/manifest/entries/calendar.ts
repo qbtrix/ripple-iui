@@ -9,6 +9,8 @@ export const calendarEntry: WidgetManifestEntry = {
     view: { type: '"month" | "week"', required: false, description: 'Display mode.' },
     value: { type: 'string | null', required: false, description: 'Selected ISO date (use with bind).' },
     locale: { type: 'string', required: false, description: 'Locale code. Default "en-US".' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on date selection.' },
     on_select: { type: 'EventAction', required: false, description: 'Fired when an event is clicked.' },
   },

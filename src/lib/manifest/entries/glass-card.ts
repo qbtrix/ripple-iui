@@ -16,7 +16,7 @@ export const glassCardEntry: WidgetManifestEntry = {
     type: 'glass-card',
     props: { title: 'Pro tier', opacity: 40, blur: 12 },
     children: [
-      { type: 'text', props: { content: '$48/month' } },
+      { type: 'text', props: { text: '$48/month' } },
     ],
   },
 };

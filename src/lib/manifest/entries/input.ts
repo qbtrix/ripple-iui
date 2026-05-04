@@ -16,6 +16,8 @@ export const inputEntry: WidgetManifestEntry = {
     required: { type: 'boolean', required: false, description: 'Mark as required.' },
     error: { type: 'string', required: false, description: 'Error message below input.' },
     helper: { type: 'string', required: false, description: 'Helper text below input.' },
+  },
+  events: {
     on_input: { type: 'EventAction', required: false, description: 'Fired on every keystroke.' },
     on_change: { type: 'EventAction', required: false, description: 'Fired on blur.' },
   },

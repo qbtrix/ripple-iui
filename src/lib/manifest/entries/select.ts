@@ -11,6 +11,8 @@ export const selectEntry: WidgetManifestEntry = {
     placeholder: { type: 'string', required: false, description: 'Placeholder text.' },
     options: { type: 'string[] | Array<{ value: string; label: string }>', required: true, description: 'Option list.' },
     disabled: { type: 'boolean', required: false, description: 'Disable select.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired when selection changes.' },
   },
   example: {

@@ -13,6 +13,8 @@ export const sliderEntry: WidgetManifestEntry = {
     step: { type: 'number', required: false, description: 'Step increment. Default 1.' },
     disabled: { type: 'boolean', required: false, description: 'Disable slider.' },
     showValue: { type: 'boolean', required: false, description: 'Show numeric value badge.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on value change.' },
   },
   example: { type: 'slider', props: { label: 'Volume', min: 0, max: 100, step: 1, bind: '{state.volume}', showValue: true } },

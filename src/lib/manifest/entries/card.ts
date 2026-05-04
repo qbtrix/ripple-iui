@@ -15,7 +15,7 @@ export const cardEntry: WidgetManifestEntry = {
     type: 'card',
     props: { title: 'Recent Activity', description: 'Last 24 hours', variant: 'default' },
     children: [
-      { type: 'text', props: { content: '12 events' } },
+      { type: 'text', props: { text: '12 events' } },
     ],
   },
 };

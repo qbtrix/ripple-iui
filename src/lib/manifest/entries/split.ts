@@ -14,8 +14,8 @@ export const splitEntry: WidgetManifestEntry = {
     type: 'split',
     props: { direction: 'horizontal', defaultSize: 30 },
     children: [
-      { type: 'text', props: { content: 'Left navigation' } },
-      { type: 'text', props: { content: 'Right detail view' } },
+      { type: 'text', props: { text: 'Left navigation' } },
+      { type: 'text', props: { text: 'Right detail view' } },
     ],
   },
 };

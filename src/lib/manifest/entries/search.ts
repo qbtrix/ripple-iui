@@ -12,8 +12,10 @@ export const searchEntry: WidgetManifestEntry = {
     alwaysShow: { type: 'boolean', required: false, description: 'Show dropdown even when query is empty.' },
     emptyText: { type: 'string', required: false, description: 'Empty-results text.' },
     loading: { type: 'boolean', required: false, description: 'Show loading indicator.' },
+  },
+  events: {
     on_input: { type: 'EventAction', required: false, description: 'Fired on every keystroke.' },
-    on_change: { type: 'EventAction', required: false, description: 'Fired when query changes.' },
+    on_change: { type: 'EventAction', required: false, description: 'Fired when the query changes.' },
     on_select: { type: 'EventAction', required: false, description: 'Fired when a result is selected.' },
   },
   example: {

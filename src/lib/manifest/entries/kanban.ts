@@ -11,6 +11,8 @@ export const kanbanEntry: WidgetManifestEntry = {
     titleKey: { type: 'string', required: false, description: 'Card field for title. Default "title".' },
     descriptionKey: { type: 'string', required: false, description: 'Card field for description.' },
     badgeKey: { type: 'string', required: false, description: 'Card field for top-right badge.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired when cards are reordered.' },
   },
   example: {

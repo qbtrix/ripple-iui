@@ -11,6 +11,8 @@ export const textareaEntry: WidgetManifestEntry = {
     placeholder: { type: 'string', required: false, description: 'Placeholder text.' },
     rows: { type: 'number', required: false, description: 'Visible rows. Default 3.' },
     disabled: { type: 'boolean', required: false, description: 'Disable textarea.' },
+  },
+  events: {
     on_input: { type: 'EventAction', required: false, description: 'Fired on every keystroke.' },
     on_change: { type: 'EventAction', required: false, description: 'Fired on blur.' },
   },

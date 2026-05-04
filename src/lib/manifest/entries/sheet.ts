@@ -14,7 +14,7 @@ export const sheetEntry: WidgetManifestEntry = {
     type: 'sheet',
     props: { value: false, side: 'right', title: 'Filters' },
     children: [
-      { type: 'text', props: { content: 'Filter options here.' } },
+      { type: 'text', props: { text: 'Filter options here.' } },
     ],
   },
 };

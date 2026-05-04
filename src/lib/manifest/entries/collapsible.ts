@@ -14,7 +14,7 @@ export const collapsibleEntry: WidgetManifestEntry = {
     type: 'collapsible',
     props: { title: 'Show advanced options', defaultOpen: false },
     children: [
-      { type: 'text', props: { content: 'Advanced settings here.' } },
+      { type: 'text', props: { text: 'Advanced settings here.' } },
     ],
   },
 };

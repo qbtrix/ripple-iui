@@ -13,6 +13,8 @@ export const numberInputEntry: WidgetManifestEntry = {
     step: { type: 'number', required: false, description: 'Step increment. Default 1.' },
     placeholder: { type: 'string', required: false, description: 'Placeholder text.' },
     disabled: { type: 'boolean', required: false, description: 'Disable input.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on value change.' },
   },
   example: { type: 'number-input', props: { label: 'Quantity', min: 1, max: 100, step: 1, bind: '{state.quantity}' } },
