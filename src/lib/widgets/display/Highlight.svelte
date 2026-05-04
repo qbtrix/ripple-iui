@@ -41,7 +41,7 @@
 
 <div
   {id}
-  class={cn('flex flex-col gap-1 rounded-lg border border-border bg-card/40 p-5', className)}
+  class={cn('flex flex-col gap-1 p-5', className)}
   style={styleString}
 >
   <div class="flex items-baseline gap-3">
