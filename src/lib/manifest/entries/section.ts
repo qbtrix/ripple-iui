@@ -12,7 +12,16 @@ export const sectionEntry: WidgetManifestEntry = {
     type: 'section',
     props: { title: 'Recent activity', description: 'Past 7 days' },
     children: [
-      { type: 'feed', props: { items: [] } },
+      {
+        type: 'timeline',
+        props: {
+          density: 'compact',
+          events: [
+            { date: '2m ago', title: 'Deploy succeeded', type: 'success' },
+            { date: '14m ago', title: 'PR merged', type: 'info' },
+          ],
+        },
+      },
     ],
   },
 };

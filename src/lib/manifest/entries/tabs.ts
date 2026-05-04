@@ -4,10 +4,7 @@ export const tabsEntry: WidgetManifestEntry = {
   type: 'tabs',
   category: 'layout',
   description:
-    'Tabbed interface with switchable panels. Define tab labels via the `tabs` prop ' +
-    "(in display order). Provide tab CONTENT in the node's `children` array — one " +
-    'child node per tab, matched by INDEX (children[0] is the panel for tabs[0], etc.). ' +
-    'Do NOT nest content inside `props.tabs[i].content` — that field is ignored by the renderer.',
+    'Tabbed panels. Tab labels go in the `tabs` prop; panel content goes in `children` — one child per tab, matched by index (children[0] renders for tabs[0]).',
   props: {
     tabs: {
       type: 'Array<{ value: string; label: string }>',
@@ -46,11 +43,12 @@ export const tabsEntry: WidgetManifestEntry = {
       },
       // Panel 1 — content for the "activity" tab.
       {
-        type: 'feed',
+        type: 'timeline',
         props: {
-          items: [
-            { text: 'Deploy succeeded', type: 'info' },
-            { text: 'New PR opened', type: 'info' },
+          density: 'compact',
+          events: [
+            { date: '2m ago', title: 'Deploy succeeded', type: 'info' },
+            { date: '14m ago', title: 'New PR opened', type: 'info' },
           ],
         },
       },
