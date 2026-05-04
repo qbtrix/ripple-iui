@@ -59,7 +59,7 @@
   {target}
   {rel}
   class={cn(
-    'group block max-w-md rounded-lg border border-border bg-card overflow-hidden transition-colors hover:border-primary/40 hover:bg-muted/30',
+    'group block max-w-md rounded-ripple border border-ripple-border overflow-hidden transition-colors hover:border-ripple-accent/40 hover:bg-ripple-muted/30',
     className
   )}
   style={styleString}

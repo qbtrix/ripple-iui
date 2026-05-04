@@ -124,11 +124,11 @@
 
 <div
   {id}
-  class={cn('rounded-md border border-border bg-card overflow-hidden', className)}
+  class={cn('rounded-ripple border border-ripple-border overflow-hidden', className)}
   style={styleString}
 >
   {#if title}
-    <div class="border-b border-border bg-muted/30 px-3 py-1.5 text-xs font-mono text-muted-foreground">
+    <div class="border-b border-ripple-border bg-ripple-muted/30 px-3 py-1.5 text-xs font-mono text-muted-foreground">
       {title}
     </div>
   {/if}
