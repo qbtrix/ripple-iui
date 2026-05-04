@@ -9,7 +9,9 @@ export const formEntry: WidgetManifestEntry = {
     errorsTarget: { type: 'string', required: false, description: 'State path for validation errors. Default "errors".' },
     validTarget: { type: 'string', required: false, description: 'State path for overall validity. Default "valid".' },
     validateOn: { type: '"submit" | "change"', required: false, description: 'When validation runs.' },
-    on_submit: { type: 'EventAction', required: false, description: 'Fired when valid form is submitted.' },
+  },
+  events: {
+    on_submit: { type: 'EventAction', required: false, description: 'Fired when a valid form is submitted.' },
     on_validate: { type: 'EventAction', required: false, description: 'Fired after each validation run.' },
   },
   example: {

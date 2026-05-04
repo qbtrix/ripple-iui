@@ -16,8 +16,8 @@ export const flexEntry: WidgetManifestEntry = {
     type: 'flex',
     props: { direction: 'row', gap: 4, justify: 'between' },
     children: [
-      { type: 'text', props: { content: 'Left' } },
-      { type: 'text', props: { content: 'Right' } },
+      { type: 'text', props: { text: 'Left' } },
+      { type: 'text', props: { text: 'Right' } },
     ],
   },
 };

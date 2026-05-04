@@ -15,6 +15,8 @@ export const multiSelectEntry: WidgetManifestEntry = {
     creatable: { type: 'boolean', required: false, description: 'Allow creating new tags via Enter.' },
     maxChips: { type: 'number', required: false, description: 'Max chips before "+N more". Default 3.' },
     disabled: { type: 'boolean', required: false, description: 'Disable multi-select.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on selection change.' },
   },
   example: {

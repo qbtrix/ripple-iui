@@ -15,7 +15,7 @@ export const rippleFrameEntry: WidgetManifestEntry = {
         type: 'flex',
         props: { direction: 'column', gap: 2 },
         children: [
-          { type: 'text', props: { content: 'Inner spec' } },
+          { type: 'text', props: { text: 'Inner spec' } },
           { type: 'button', props: { label: 'Click me' } },
         ],
       },

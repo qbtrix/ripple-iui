@@ -12,6 +12,8 @@ export const codeEditorEntry: WidgetManifestEntry = {
     height: { type: 'string', required: false, description: 'Editor height. Default "240px".' },
     readonly: { type: 'boolean', required: false, description: 'Make read-only.' },
     placeholder: { type: 'string', required: false, description: 'Placeholder text.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on code change.' },
   },
   example: { type: 'code-editor', props: { label: 'JSON config', language: 'json', height: '300px', bind: '{state.jsonConfig}' } },

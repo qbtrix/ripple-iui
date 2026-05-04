@@ -14,6 +14,8 @@ export const dataGridEntry: WidgetManifestEntry = {
     striped: { type: 'boolean', required: false, description: 'Alternate row backgrounds.' },
     dense: { type: 'boolean', required: false, description: 'Compact row density.' },
     emptyText: { type: 'string', required: false, description: 'Empty-state text.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on row selection.' },
   },
   example: {

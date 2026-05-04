@@ -12,6 +12,8 @@ export const segmentedEntry: WidgetManifestEntry = {
     multiple: { type: 'boolean', required: false, description: 'Allow multiple selections.' },
     size: { type: '"sm" | "md"', required: false, description: 'Button size.' },
     disabled: { type: 'boolean', required: false, description: 'Disable all buttons.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on selection change.' },
   },
   example: {

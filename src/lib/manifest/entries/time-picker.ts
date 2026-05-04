@@ -12,6 +12,8 @@ export const timePickerEntry: WidgetManifestEntry = {
     use12Hour: { type: 'boolean', required: false, description: 'Use 12-hour format with AM/PM.' },
     disabled: { type: 'boolean', required: false, description: 'Disable picker.' },
     step: { type: 'number', required: false, description: 'Minute step increment. Default 1.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on time change.' },
   },
   example: { type: 'time-picker', props: { label: 'Meeting time', use12Hour: true, step: 15, bind: '{state.meetingTime}' } },

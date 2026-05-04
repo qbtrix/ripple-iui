@@ -13,6 +13,8 @@ export const comboboxEntry: WidgetManifestEntry = {
     emptyText: { type: 'string', required: false, description: 'Empty-results text.' },
     options: { type: 'Array<{ value: string | number; label: string; description?: string; disabled?: boolean }>', required: true, description: 'Options to choose from.' },
     disabled: { type: 'boolean', required: false, description: 'Disable combobox.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on selection change.' },
   },
   example: {

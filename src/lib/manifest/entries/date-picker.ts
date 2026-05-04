@@ -14,6 +14,8 @@ export const datePickerEntry: WidgetManifestEntry = {
     min: { type: 'string', required: false, description: 'Minimum selectable ISO date.' },
     max: { type: 'string', required: false, description: 'Maximum selectable ISO date.' },
     locale: { type: 'string', required: false, description: 'Locale code. Default "en-US".' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on date change.' },
   },
   example: { type: 'date-picker', props: { label: 'Due date', format: 'long', min: '2026-01-01', max: '2026-12-31', bind: '{state.dueDate}' } },

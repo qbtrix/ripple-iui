@@ -8,6 +8,8 @@ export const treeEntry: WidgetManifestEntry = {
     nodes: { type: 'Array<{ id: string | number; label: string; icon?: string; description?: string; children?: TreeNode[] }>', required: true, description: 'Nested node tree.' },
     value: { type: 'string | number | null', required: false, description: 'Selected node id (use with bind).' },
     defaultExpanded: { type: '"none" | "first-level" | "all"', required: false, description: 'Initial expansion mode.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on node selection.' },
   },
   example: {

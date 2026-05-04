@@ -11,6 +11,8 @@ export const colorPickerEntry: WidgetManifestEntry = {
     presets: { type: 'string[]', required: false, description: 'Preset hex colors.' },
     showInput: { type: 'boolean', required: false, description: 'Show hex text input.' },
     disabled: { type: 'boolean', required: false, description: 'Disable picker.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on color change.' },
   },
   example: { type: 'color-picker', props: { label: 'Theme color', value: '#3b82f6', showInput: true, bind: '{state.themeColor}' } },

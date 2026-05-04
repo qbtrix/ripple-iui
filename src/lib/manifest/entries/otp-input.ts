@@ -12,7 +12,9 @@ export const otpInputEntry: WidgetManifestEntry = {
     alpha: { type: 'boolean', required: false, description: 'Accept alphanumeric (else digits only).' },
     mask: { type: 'boolean', required: false, description: 'Mask cells like a password.' },
     disabled: { type: 'boolean', required: false, description: 'Disable input.' },
-    on_complete: { type: 'EventAction', required: false, description: 'Fired when all cells filled.' },
+  },
+  events: {
+    on_complete: { type: 'EventAction', required: false, description: 'Fired when all cells are filled.' },
     on_change: { type: 'EventAction', required: false, description: 'Fired on every change.' },
   },
   example: { type: 'otp-input', props: { label: 'Verification code', length: 6, mask: true, bind: '{state.verificationCode}' } },

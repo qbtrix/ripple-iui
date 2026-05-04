@@ -12,6 +12,8 @@ export const richTextEntry: WidgetManifestEntry = {
     hideToolbar: { type: 'boolean', required: false, description: 'Hide formatting toolbar.' },
     minHeight: { type: 'string', required: false, description: 'Min editor height. Default "120px".' },
     maxHeight: { type: 'string', required: false, description: 'Max editor height (scrollable). Default "320px".' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired on content change.' },
   },
   example: { type: 'rich-text', props: { label: 'Article body', placeholder: 'Write your article…', minHeight: '200px', bind: '{state.articleBody}' } },

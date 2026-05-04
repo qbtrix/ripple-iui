@@ -9,7 +9,7 @@ export const containerEntry: WidgetManifestEntry = {
     type: 'container',
     props: {},
     children: [
-      { type: 'text', props: { content: 'Wrapped content' } },
+      { type: 'text', props: { text: 'Wrapped content' } },
     ],
   },
 };

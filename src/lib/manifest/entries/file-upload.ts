@@ -14,6 +14,8 @@ export const fileUploadEntry: WidgetManifestEntry = {
     helperText: { type: 'string', required: false, description: 'Helper text below dropzone.' },
     hideFileList: { type: 'boolean', required: false, description: 'Hide file list under dropzone.' },
     disabled: { type: 'boolean', required: false, description: 'Disable upload.' },
+  },
+  events: {
     on_change: { type: 'EventAction', required: false, description: 'Fired when files are added.' },
     on_error: { type: 'EventAction', required: false, description: 'Fired on validation error.' },
   },

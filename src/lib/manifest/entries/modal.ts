@@ -14,7 +14,7 @@ export const modalEntry: WidgetManifestEntry = {
     type: 'modal',
     props: { value: false, title: 'Delete project?', description: 'This cannot be undone.', size: 'sm' },
     children: [
-      { type: 'text', props: { content: 'All data will be permanently removed.' } },
+      { type: 'text', props: { text: 'All data will be permanently removed.' } },
     ],
   },
 };
