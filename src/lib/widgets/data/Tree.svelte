@@ -108,7 +108,7 @@
   {id}
   role={isRoot ? 'tree' : 'group'}
   class={cn(
-    isRoot && 'list-none p-2 m-0 rounded-md border border-border bg-card/30',
+    isRoot && 'list-none p-2 m-0 rounded-ripple border border-ripple-border',
     !isRoot && 'list-none m-0 p-0',
     className
   )}

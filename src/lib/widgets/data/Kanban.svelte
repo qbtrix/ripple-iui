@@ -125,8 +125,8 @@
     {@const colCards = cardsByColumn.get(col.id) ?? []}
     <div
       class={cn(
-        'flex flex-col w-72 shrink-0 rounded-lg border bg-card/30 p-2 gap-2 transition-colors',
-        hoverColumn === col.id ? 'border-primary bg-primary/5' : 'border-border'
+        'flex flex-col w-72 shrink-0 rounded-ripple border bg-ripple-muted/30 p-2 gap-2 transition-colors',
+        hoverColumn === col.id ? 'border-primary bg-primary/5' : 'border-ripple-border'
       )}
       ondragover={(e) => onDragOverColumn(e, col.id)}
       ondragleave={() => onDragLeaveColumn(col.id)}

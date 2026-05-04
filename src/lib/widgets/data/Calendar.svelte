@@ -153,7 +153,7 @@
 
 <div
   {id}
-  class={cn('rounded-md border border-border bg-card overflow-hidden', className)}
+  class={cn('rounded-ripple border border-ripple-border overflow-hidden', className)}
   style={styleString}
 >
   <div class="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
