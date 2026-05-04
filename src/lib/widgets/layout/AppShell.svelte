@@ -35,7 +35,7 @@
   style={styleString}
 >
   {#if topbar}
-    <header class={cn('col-span-full row-start-1 border-b border-ripple-border px-4 py-2')}>
+    <header class={cn('col-span-full row-start-1 border-b border-border bg-card/40 px-4 py-2')}>
       {@render topbar()}
     </header>
   {/if}

@@ -59,7 +59,7 @@
       {id}
       {disabled}
       class={cn(
-        'inline-flex items-center gap-2 rounded-md border border-input bg-ripple-input px-2 py-1 h-9 text-sm shadow-xs',
+        'inline-flex items-center gap-2 rounded-md border border-input bg-background px-2 py-1 h-9 text-sm shadow-xs',
         'transition-[color,box-shadow] outline-none',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
         disabled && 'opacity-50 cursor-not-allowed'
@@ -109,7 +109,7 @@
                 const v = (e.target as HTMLInputElement).value.trim();
                 if (isValidHex(v)) emit(v);
               }}
-              class="flex-1 h-9 rounded-md border border-input bg-ripple-input px-2 text-sm tabular-nums outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+              class="flex-1 h-9 rounded-md border border-input bg-background px-2 text-sm tabular-nums outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
               aria-label="Hex color"
             />
           {/if}

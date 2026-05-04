@@ -66,7 +66,7 @@
       )}
     >
       {#if view.pinned}
-        <StarIcon size={12} class="text-ripple-warning fill-ripple-warning" />
+        <StarIcon size={12} class="text-amber-500 fill-amber-500" />
       {/if}
       <span>{view.label}</span>
       {#if typeof view.count === 'number'}

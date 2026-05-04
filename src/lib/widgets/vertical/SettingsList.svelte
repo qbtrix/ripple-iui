@@ -56,7 +56,7 @@
   style={styleString}
 >
   {#each grouped as [group, list] (group)}
-    <div class="rounded-ripple border border-ripple-border divide-y divide-border overflow-hidden">
+    <div class="rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
       {#if group}
         <div class="px-4 py-2 bg-muted/30 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {group}

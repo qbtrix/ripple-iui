@@ -62,10 +62,10 @@
   }
 
   function severityColor(s: Notification['severity']): string {
-    if (s === 'destructive') return 'bg-ripple-error';
-    if (s === 'warning') return 'bg-ripple-warning';
-    if (s === 'success') return 'bg-ripple-success';
-    return 'bg-ripple-info';
+    if (s === 'destructive') return 'bg-rose-500';
+    if (s === 'warning') return 'bg-amber-500';
+    if (s === 'success') return 'bg-emerald-500';
+    return 'bg-sky-500';
   }
 
   function markAllRead() {
@@ -153,7 +153,7 @@
   <div {id} class={cn('inline-block', className)} style={styleString}>
     <P.Root>
       <P.Trigger
-        class="relative inline-grid place-items-center h-9 w-9 rounded-md border border-input bg-ripple-surface hover:bg-ripple-muted/60 transition-colors"
+        class="relative inline-grid place-items-center h-9 w-9 rounded-md border border-input bg-background hover:bg-muted/60 transition-colors"
         aria-label={title}
       >
         <BellIcon size={16} />

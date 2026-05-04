@@ -136,7 +136,7 @@
         onpaste={(e) => onPaste(i, e)}
         onfocus={(e) => (e.target as HTMLInputElement).select()}
         class={cn(
-          'h-11 w-9 rounded-md border border-input bg-ripple-input text-center text-lg font-semibold tabular-nums shadow-xs',
+          'h-11 w-9 rounded-md border border-input bg-background text-center text-lg font-semibold tabular-nums shadow-xs',
           'transition-[color,box-shadow] outline-none',
           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
           ch && 'bg-muted/40',

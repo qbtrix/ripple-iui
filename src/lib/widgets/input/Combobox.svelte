@@ -21,7 +21,7 @@
     placeholder?: string;
     searchPlaceholder?: string;
     emptyText?: string;
-    options?: (Option | string)[];
+    options?: Option[];
     value?: string | number | null;
     disabled?: boolean;
     onchange?: (value?: unknown) => void;
@@ -49,22 +49,16 @@
   let query = $state('');
   let highlight = $state(0);
 
-  // LLM-generated specs often pass options as plain strings (e.g. ["A", "B"]).
-  // Normalize to {value, label} so each-block keys stay unique.
-  const normalizedOptions: Option[] = $derived(
-    options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
-  );
-
   const filtered = $derived(
     !query
-      ? normalizedOptions
-      : normalizedOptions.filter((o) =>
+      ? options
+      : options.filter((o) =>
           o.label.toLowerCase().includes(query.toLowerCase()) ||
           (o.description?.toLowerCase().includes(query.toLowerCase()) ?? false)
         )
   );
 
-  const selected = $derived(normalizedOptions.find((o) => o.value === value) ?? null);
+  const selected = $derived(options.find((o) => o.value === value) ?? null);
 
   function pick(opt: Option) {
     if (opt.disabled) return;
@@ -106,7 +100,7 @@
       {id}
       {disabled}
       class={cn(
-        'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-ripple-input px-3 py-1 text-sm shadow-xs',
+        'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs',
         'transition-[color,box-shadow] outline-none',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
         'disabled:cursor-not-allowed disabled:opacity-50',

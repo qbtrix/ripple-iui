@@ -1,15 +1,19 @@
 <!-- src/lib/widgets/vertical/OrgChart.svelte -->
-<script lang="ts">
-  import { cn } from '$lib/utils.js';
-  import Self from './OrgChart.svelte';
-
-  type Node = {
+<script module lang="ts">
+  // Public type — module scope so svelte-package emits it in the
+  // generated .d.ts.
+  export type Node = {
     id: string | number;
     name: string;
     title?: string;
     avatar?: string;
     children?: Node[];
   };
+</script>
+
+<script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import Self from './OrgChart.svelte';
 
   interface Props {
     id?: string;
@@ -66,8 +70,8 @@
         type="button"
         onclick={() => onchange?.(root.id)}
         class={cn(
-          'inline-flex flex-col items-center gap-1.5 rounded-ripple border px-3 py-2 min-w-[120px] transition-colors',
-          isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-ripple-border hover:border-primary/50'
+          'inline-flex flex-col items-center gap-1.5 rounded-lg border bg-card px-3 py-2 min-w-[120px] transition-colors',
+          isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-border hover:border-primary/50'
         )}
       >
         {#if root.avatar}

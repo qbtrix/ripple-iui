@@ -42,9 +42,9 @@
 
   // Tone color for non-destructive variants applied via class.
   const toneClass = $derived(
-    variant === 'success' ? 'text-ripple-success'
-      : variant === 'warning' ? 'text-ripple-warning'
-      : variant === 'info' ? 'text-ripple-info'
+    variant === 'success' ? 'text-emerald-600 dark:text-emerald-400'
+      : variant === 'warning' ? 'text-amber-600 dark:text-amber-500'
+      : variant === 'info' ? 'text-blue-600 dark:text-blue-400'
       : ''
   );
 </script>

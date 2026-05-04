@@ -85,7 +85,7 @@
   style={`grid-template-columns: ${width} 1fr; min-height: 240px; ${styleString ?? ''}`}
 >
   <ul
-    class="border-r border-ripple-border overflow-auto p-1.5 m-0 list-none"
+    class="border-r border-border bg-card/30 overflow-auto p-1.5 m-0 list-none"
     role="listbox"
   >
     {#each safeItems as item, i (getValue(item) ?? i)}

@@ -141,7 +141,7 @@
   <div
     {id}
     class={cn(
-      'inline-flex items-center gap-1 h-9 rounded-md border border-input bg-ripple-input px-2 text-sm shadow-xs',
+      'inline-flex items-center gap-1 h-9 rounded-md border border-input bg-background px-2 text-sm shadow-xs',
       'transition-[color,box-shadow] outline-none',
       'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
       disabled && 'cursor-not-allowed opacity-50'

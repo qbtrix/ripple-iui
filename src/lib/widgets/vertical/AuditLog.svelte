@@ -56,10 +56,10 @@
   }
 
   function severityClasses(s: Severity = 'info'): string {
-    if (s === 'destructive') return 'bg-ripple-error';
-    if (s === 'warning') return 'bg-ripple-warning';
-    if (s === 'success') return 'bg-ripple-success';
-    return 'bg-ripple-info';
+    if (s === 'destructive') return 'bg-rose-500';
+    if (s === 'warning') return 'bg-amber-500';
+    if (s === 'success') return 'bg-emerald-500';
+    return 'bg-sky-500';
   }
 
   function formatDetails(d: Entry['details']): string {

@@ -30,28 +30,28 @@
   style={styleString}
 >
   <div class="rounded-md border border-border p-3">
-    <div class="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-ripple-success">
+    <div class="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
       <CheckIcon size={14} />
       <span>{prosLabel}</span>
     </div>
     <ul class="flex flex-col gap-1.5 text-sm">
       {#each pros as p}
         <li class="flex items-start gap-2">
-          <CheckIcon size={14} class="mt-0.5 shrink-0 text-ripple-success" />
+          <CheckIcon size={14} class="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>{p}</span>
         </li>
       {/each}
     </ul>
   </div>
   <div class="rounded-md border border-border p-3">
-    <div class="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-ripple-error">
+    <div class="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-rose-600 dark:text-rose-400">
       <XIcon size={14} />
       <span>{consLabel}</span>
     </div>
     <ul class="flex flex-col gap-1.5 text-sm">
       {#each cons as c}
         <li class="flex items-start gap-2">
-          <XIcon size={14} class="mt-0.5 shrink-0 text-ripple-error" />
+          <XIcon size={14} class="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400" />
           <span>{c}</span>
         </li>
       {/each}

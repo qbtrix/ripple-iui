@@ -1,12 +1,10 @@
 <!-- src/lib/widgets/data/Tree.svelte -->
-<script lang="ts">
-  import { cn } from '$lib/utils.js';
-  import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
-  import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
-  import * as icons from '@lucide/svelte';
-  import Self from './Tree.svelte';
-
-  type TreeNode = {
+<script module lang="ts">
+  // Public type — module scope so svelte-package emits it in the
+  // generated .d.ts. Without this, `export type` inside the
+  // per-instance <script> block isn't reachable from the module's
+  // d.ts surface and svelte-package fails the build.
+  export type TreeNode = {
     id: string | number;
     label: string;
     icon?: string;
@@ -15,6 +13,14 @@
     /** Mark as a folder/leaf explicitly. Defaults: leaf if no children. */
     isLeaf?: boolean;
   };
+</script>
+
+<script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+  import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+  import * as icons from '@lucide/svelte';
+  import Self from './Tree.svelte';
 
   interface Props {
     id?: string;
@@ -108,7 +114,7 @@
   {id}
   role={isRoot ? 'tree' : 'group'}
   class={cn(
-    isRoot && 'list-none p-2 m-0 rounded-ripple border border-ripple-border',
+    isRoot && 'list-none p-2 m-0 rounded-md border border-border bg-card/30',
     !isRoot && 'list-none m-0 p-0',
     className
   )}

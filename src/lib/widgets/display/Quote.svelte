@@ -30,7 +30,7 @@
 
 <figure
   {id}
-  class={cn('flex flex-col gap-4 p-5', className)}
+  class={cn('flex flex-col gap-4 rounded-lg border border-border bg-card/40 p-5', className)}
   style={styleString}
 >
   {#if !hideIcon}

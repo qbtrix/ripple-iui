@@ -48,10 +48,10 @@
   }
 
   function variantTone(v: ToastVariant) {
-    return v === 'success' ? 'text-ripple-success'
-      : v === 'warning' ? 'text-ripple-warning'
-      : v === 'error' ? 'text-ripple-error'
-      : 'text-ripple-info';
+    return v === 'success' ? 'text-emerald-600 dark:text-emerald-400'
+      : v === 'warning' ? 'text-amber-600 dark:text-amber-400'
+      : v === 'error' ? 'text-rose-600 dark:text-rose-400'
+      : 'text-blue-600 dark:text-blue-400';
   }
 
   const flyOffset = $derived(position.startsWith('top') ? -16 : 16);
@@ -68,7 +68,7 @@
     {#each visible as toast (toast.id)}
       {@const Icon = variantIcon(toast.variant)}
       <div
-        class="pointer-events-auto flex items-start gap-2 rounded-md border border-border bg-ripple-surface px-3 py-2 shadow-lg min-w-[220px] max-w-[360px]"
+        class="pointer-events-auto flex items-start gap-2 rounded-md border border-border bg-background px-3 py-2 shadow-lg min-w-[220px] max-w-[360px]"
         aria-atomic="true"
         in:fly={{ y: flyOffset, duration: 200 }}
         out:fade={{ duration: 150 }}

@@ -36,7 +36,7 @@
     {#each steps as step, i}
       <li class="flex-1 flex items-start gap-3">
         <div class="flex flex-col items-center">
-          <div class="flex size-7 items-center justify-center rounded-full border border-ripple-border bg-ripple-muted/40 text-sm font-semibold tabular-nums">
+          <div class="flex size-7 items-center justify-center rounded-full border border-border bg-card text-sm font-semibold tabular-nums">
             {step.number ?? i + 1}
           </div>
         </div>
@@ -47,7 +47,7 @@
           {/if}
         </div>
         {#if i < steps.length - 1}
-          <div class="hidden md:block border-t border-ripple-border flex-1 mt-3.5"></div>
+          <div class="hidden md:block border-t border-border flex-1 mt-3.5"></div>
         {/if}
       </li>
     {/each}
@@ -61,11 +61,11 @@
     {#each steps as step, i}
       <li class="flex gap-3">
         <div class="flex flex-col items-center">
-          <div class="flex size-7 shrink-0 items-center justify-center rounded-full border border-ripple-border bg-ripple-muted/40 text-sm font-semibold tabular-nums">
+          <div class="flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-card text-sm font-semibold tabular-nums">
             {step.number ?? i + 1}
           </div>
           {#if i < steps.length - 1}
-            <div class="w-px flex-1 bg-ripple-border mt-1 mb-1 min-h-3"></div>
+            <div class="w-px flex-1 bg-border mt-1 mb-1 min-h-3"></div>
           {/if}
         </div>
         <div class="pb-4 flex-1 pt-0.5">

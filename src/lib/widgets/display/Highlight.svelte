@@ -33,15 +33,15 @@
   );
 
   const toneClass = $derived(
-    resolvedTone === 'positive' ? 'text-ripple-success'
-      : resolvedTone === 'negative' ? 'text-ripple-error'
+    resolvedTone === 'positive' ? 'text-emerald-600 dark:text-emerald-400'
+      : resolvedTone === 'negative' ? 'text-rose-600 dark:text-rose-400'
       : 'text-muted-foreground'
   );
 </script>
 
 <div
   {id}
-  class={cn('flex flex-col gap-1 p-5', className)}
+  class={cn('flex flex-col gap-1 rounded-lg border border-border bg-card/40 p-5', className)}
   style={styleString}
 >
   <div class="flex items-baseline gap-3">

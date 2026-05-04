@@ -59,7 +59,7 @@
             {@const v = row[c.key]}
             <Table.Cell class={c.highlight ? 'bg-primary/5' : ''}>
               {#if v === true}
-                <CheckIcon size={16} class="text-ripple-success" />
+                <CheckIcon size={16} class="text-emerald-600 dark:text-emerald-400" />
               {:else if v === false || v === undefined || v === null}
                 <MinusIcon size={16} class="text-muted-foreground" />
               {:else}

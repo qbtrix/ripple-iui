@@ -123,7 +123,7 @@
       {id}
       {disabled}
       class={cn(
-        'flex min-h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-ripple-input px-2 py-1 text-sm shadow-xs',
+        'flex min-h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-2 py-1 text-sm shadow-xs',
         'transition-[color,box-shadow] outline-none',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
         disabled && 'cursor-not-allowed opacity-50'
@@ -147,7 +147,7 @@
                 <span class="truncate max-w-[8rem]">{p.name}</span>
                 <button
                   type="button"
-                  class="rounded-full hover:bg-ripple-muted/60 p-0.5"
+                  class="rounded-full hover:bg-background/60 p-0.5"
                   aria-label={`Remove ${p.name}`}
                   onclick={(e) => { e.stopPropagation(); remove(idv); }}
                 >

@@ -81,7 +81,7 @@
     {id}
     role={multiple ? 'group' : 'radiogroup'}
     class={cn(
-      'inline-flex items-stretch rounded-md border border-input bg-ripple-input p-0.5 gap-0.5 w-fit',
+      'inline-flex items-stretch rounded-md border border-input bg-background p-0.5 gap-0.5 w-fit',
       disabled && 'opacity-50 cursor-not-allowed'
     )}
   >
@@ -98,7 +98,7 @@
           'inline-flex items-center justify-center gap-1.5 rounded transition-colors font-medium',
           sizeClass,
           selected
-            ? 'bg-ripple-surface shadow-sm ring-1 ring-ripple-border text-foreground'
+            ? 'bg-background shadow-sm ring-1 ring-border text-foreground'
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
           (opt as any).disabled && 'opacity-50 cursor-not-allowed'
         )}

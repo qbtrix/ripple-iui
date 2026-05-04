@@ -33,8 +33,8 @@
   const sign = $derived(numeric > 0 ? 'up' : numeric < 0 ? 'down' : 'flat');
 
   const toneClass = $derived(
-    sign === 'up' ? 'text-ripple-success'
-    : sign === 'down' ? 'text-ripple-error'
+    sign === 'up' ? 'text-emerald-600 dark:text-emerald-400'
+    : sign === 'down' ? 'text-rose-600 dark:text-rose-400'
     : 'text-muted-foreground'
   );
 
