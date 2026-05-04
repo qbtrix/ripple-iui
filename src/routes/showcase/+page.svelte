@@ -796,21 +796,6 @@
     }
   };
 
-  const feedSpec = {
-    version: '1.0' as const,
-    ui: {
-      type: 'feed',
-      props: {
-        items: [
-          { text: 'Deployment completed successfully', time: '2m ago', type: 'success' },
-          { text: 'Database migration started', time: '5m ago', type: 'info' },
-          { text: 'High memory usage detected', time: '12m ago', type: 'warning' },
-          { text: 'Build failed on main branch', time: '18m ago', type: 'error' },
-        ]
-      }
-    }
-  };
-
   const markdownSpec = {
     version: '1.0' as const,
     ui: {
@@ -1735,20 +1720,6 @@
           }
         }
       ]
-    }
-  };
-
-  const activityFeedSpec = {
-    version: '1.0' as const,
-    ui: {
-      type: 'activity-feed',
-      props: {
-        items: [
-          { id: 1, actor: 'Ada', action: 'opened pull request', target: '#142', timestamp: '2 min ago' },
-          { id: 2, actor: 'Bob', action: 'merged', target: '#138', timestamp: '14 min ago' },
-          { id: 3, actor: 'Carol', action: 'commented on', target: '#142', timestamp: '20 min ago' }
-        ]
-      }
     }
   };
 
@@ -4184,7 +4155,6 @@
       { label: 'Progress', spec: progressSpec },
       { label: 'Avatar', spec: avatarSpec },
       { label: 'Metric', spec: metricSpec },
-      { label: 'Feed', spec: feedSpec },
       { label: 'Markdown', spec: markdownSpec },
       { label: 'Code Block', spec: codeBlockSpec },
       { label: 'Pros / Cons', spec: prosConsSpec },
@@ -4268,7 +4238,6 @@
       { label: 'Permission Matrix', spec: permissionMatrixSpec },
       { label: 'Org Chart', spec: orgChartSpec },
       { label: 'Invoice Lines', spec: invoiceLinesSpec },
-      { label: 'Activity Feed', spec: activityFeedSpec },
     ]},
     { id: 'research', title: 'Research', items: [
       { label: 'Source Card', spec: sourceCardSpec },
