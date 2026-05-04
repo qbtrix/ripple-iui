@@ -106,7 +106,7 @@
       onclick={copy}
     >
       {#if copied}
-        <CheckIcon size={14} class="text-emerald-500" />
+        <CheckIcon size={14} class="text-ripple-success" />
       {:else}
         <CopyIcon size={14} />
       {/if}
