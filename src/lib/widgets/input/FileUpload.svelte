@@ -176,7 +176,7 @@
   {#if !hideFileList && files.length > 0}
     <ul class="flex flex-col gap-1.5 m-0 p-0 list-none">
       {#each files as f, i (f.name + i)}
-        <li class="flex items-center gap-2 rounded-md border border-border bg-card/40 px-2.5 py-1.5">
+        <li class="flex items-center gap-2 rounded-md border border-ripple-border bg-ripple-muted/40 px-2.5 py-1.5">
           <FileIcon size={14} class="opacity-60 shrink-0" />
           <div class="flex-1 min-w-0">
             <div class="text-sm truncate">{f.name}</div>
