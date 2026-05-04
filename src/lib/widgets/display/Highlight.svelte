@@ -33,8 +33,8 @@
   );
 
   const toneClass = $derived(
-    resolvedTone === 'positive' ? 'text-emerald-600 dark:text-emerald-400'
-      : resolvedTone === 'negative' ? 'text-rose-600 dark:text-rose-400'
+    resolvedTone === 'positive' ? 'text-ripple-success'
+      : resolvedTone === 'negative' ? 'text-ripple-error'
       : 'text-muted-foreground'
   );
 </script>

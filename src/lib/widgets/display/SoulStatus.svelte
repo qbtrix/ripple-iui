@@ -35,8 +35,8 @@
   );
 
   const statusColor = $derived(
-    status === 'online' ? 'bg-green-500'
-    : status === 'busy' ? 'bg-amber-500'
+    status === 'online' ? 'bg-ripple-success'
+    : status === 'busy' ? 'bg-ripple-warning'
     : 'bg-gray-400'
   );
 
@@ -70,7 +70,7 @@
     <div class="flex items-center gap-1.5 ml-auto shrink-0">
       <div class="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          class="h-full rounded-full bg-blue-500 transition-all duration-300"
+          class="h-full rounded-full bg-ripple-info transition-all duration-300"
           style:width="{energyClamped}%"
         ></div>
       </div>
@@ -116,7 +116,7 @@
         <div class="flex items-center gap-2 flex-1 justify-end">
           <div class="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              class="h-full rounded-full bg-blue-500 transition-all duration-300"
+              class="h-full rounded-full bg-ripple-info transition-all duration-300"
               style:width="{energyClamped}%"
             ></div>
           </div>

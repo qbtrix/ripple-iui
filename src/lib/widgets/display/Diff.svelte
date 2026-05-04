@@ -111,8 +111,8 @@
   const unified = $derived(layout === 'unified' || mode !== 'lines');
 
   function rowClass(kind: Row['kind']): string {
-    if (kind === 'added') return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
-    if (kind === 'removed') return 'bg-rose-500/10 text-rose-700 dark:text-rose-300';
+    if (kind === 'added') return 'bg-ripple-success/10 text-ripple-success';
+    if (kind === 'removed') return 'bg-ripple-error/10 text-ripple-error';
     return '';
   }
   function rowSign(kind: Row['kind']): string {
@@ -138,9 +138,9 @@
     <div class="px-3 py-2 font-mono text-xs whitespace-pre-wrap leading-relaxed">
       {#each parts as p, i (i)}
         {#if p.added}
-          <span class="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 rounded-sm px-0.5">{p.value}</span>
+          <span class="bg-ripple-success/15 text-ripple-success rounded-sm px-0.5">{p.value}</span>
         {:else if p.removed}
-          <span class="bg-rose-500/15 text-rose-700 dark:text-rose-300 line-through rounded-sm px-0.5">{p.value}</span>
+          <span class="bg-ripple-error/15 text-ripple-error line-through rounded-sm px-0.5">{p.value}</span>
         {:else}
           <span>{p.value}</span>
         {/if}

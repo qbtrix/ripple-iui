@@ -145,8 +145,8 @@
     base: 'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
     variants: {
       sentiment: {
-        positive: 'text-emerald-600 bg-emerald-500/10 dark:text-emerald-400',
-        negative: 'text-red-600 bg-red-500/10 dark:text-red-400',
+        positive: 'text-ripple-success bg-ripple-success/10',
+        negative: 'text-ripple-error bg-ripple-error/10',
         neutral: 'text-muted-foreground bg-muted',
       },
     },

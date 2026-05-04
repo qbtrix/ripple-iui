@@ -34,9 +34,9 @@
 
   const variantClass = $derived(
     variant === 'primary' ? 'bg-primary/10 text-primary border-primary/20'
-    : variant === 'success' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
-    : variant === 'warning' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
-    : variant === 'destructive' ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
+    : variant === 'success' ? 'bg-ripple-success/10 text-ripple-success border-ripple-success/20'
+    : variant === 'warning' ? 'bg-ripple-warning/10 text-ripple-warning border-ripple-warning/20'
+    : variant === 'destructive' ? 'bg-ripple-error/10 text-ripple-error border-ripple-error/20'
     : 'bg-muted text-foreground border-border'
   );
 
