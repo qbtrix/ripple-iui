@@ -406,12 +406,13 @@
         }},
         { type: 'heading', props: { text: 'How it works', level: 4 } },
         {
-          type: 'feed', props: {
-            items: [
-              { text: 'Each call clears the previous timer via clearTimeout', type: 'info' },
-              { text: 'A new timer is set with the specified delay', type: 'info' },
-              { text: 'The function only fires after the caller stops for delay ms', type: 'success' },
-              { text: 'Closures preserve the timer reference between calls', type: 'default' },
+          type: 'timeline', props: {
+            density: 'compact',
+            events: [
+              { date: '1.', title: 'Each call clears the previous timer via clearTimeout', type: 'info' },
+              { date: '2.', title: 'A new timer is set with the specified delay', type: 'info' },
+              { date: '3.', title: 'The function only fires after the caller stops for delay ms', type: 'success' },
+              { date: '4.', title: 'Closures preserve the timer reference between calls', type: 'default' },
             ]
           }
         },
@@ -448,32 +449,35 @@
           type: 'tabs', props: { tabs: ['Day 1', 'Day 2', 'Day 3'] },
           children: [
             {
-              type: 'feed', props: {
-                items: [
-                  { text: 'Fushimi Inari — walk the thousand torii gates (early morning)', type: 'success', time: '7:00' },
-                  { text: 'Nishiki Market — street food and local ingredients', type: 'info', time: '11:00' },
-                  { text: 'Kiyomizu-dera — panoramic views of the city', type: 'success', time: '14:00' },
-                  { text: 'Gion district — evening walk, spot maiko', type: 'default', time: '18:00' },
+              type: 'timeline', props: {
+                density: 'compact',
+                events: [
+                  { date: '7:00', title: 'Fushimi Inari — walk the thousand torii gates (early morning)', type: 'success' },
+                  { date: '11:00', title: 'Nishiki Market — street food and local ingredients', type: 'info' },
+                  { date: '14:00', title: 'Kiyomizu-dera — panoramic views of the city', type: 'success' },
+                  { date: '18:00', title: 'Gion district — evening walk, spot maiko', type: 'default' },
                 ]
               }
             },
             {
-              type: 'feed', props: {
-                items: [
-                  { text: 'Arashiyama Bamboo Grove — arrive before crowds', type: 'success', time: '7:30' },
-                  { text: 'Tenryu-ji temple and garden', type: 'info', time: '10:00' },
-                  { text: 'Monkey Park Iwatayama — hilltop views', type: 'default', time: '13:00' },
-                  { text: 'Togetsukyo Bridge — sunset photos', type: 'success', time: '17:00' },
+              type: 'timeline', props: {
+                density: 'compact',
+                events: [
+                  { date: '7:30', title: 'Arashiyama Bamboo Grove — arrive before crowds', type: 'success' },
+                  { date: '10:00', title: 'Tenryu-ji temple and garden', type: 'info' },
+                  { date: '13:00', title: 'Monkey Park Iwatayama — hilltop views', type: 'default' },
+                  { date: '17:00', title: 'Togetsukyo Bridge — sunset photos', type: 'success' },
                 ]
               }
             },
             {
-              type: 'feed', props: {
-                items: [
-                  { text: 'Kinkaku-ji (Golden Pavilion)', type: 'success', time: '8:30' },
-                  { text: 'Ryoan-ji — famous rock garden', type: 'info', time: '10:30' },
-                  { text: 'Philosopher\'s Path — peaceful canal walk', type: 'default', time: '13:00' },
-                  { text: 'Pontocho alley — farewell dinner', type: 'success', time: '18:30' },
+              type: 'timeline', props: {
+                density: 'compact',
+                events: [
+                  { date: '8:30', title: 'Kinkaku-ji (Golden Pavilion)', type: 'success' },
+                  { date: '10:30', title: 'Ryoan-ji — famous rock garden', type: 'info' },
+                  { date: '13:00', title: 'Philosopher\'s Path — peaceful canal walk', type: 'default' },
+                  { date: '18:30', title: 'Pontocho alley — farewell dinner', type: 'success' },
                 ]
               }
             },
