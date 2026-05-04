@@ -66,8 +66,8 @@
         type="button"
         onclick={() => onchange?.(root.id)}
         class={cn(
-          'inline-flex flex-col items-center gap-1.5 rounded-lg border bg-card px-3 py-2 min-w-[120px] transition-colors',
-          isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-border hover:border-primary/50'
+          'inline-flex flex-col items-center gap-1.5 rounded-ripple border px-3 py-2 min-w-[120px] transition-colors',
+          isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-ripple-border hover:border-primary/50'
         )}
       >
         {#if root.avatar}

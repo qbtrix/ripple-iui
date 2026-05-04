@@ -56,8 +56,8 @@
   {#each tiers as tier (tier.id)}
     <div
       class={cn(
-        'relative flex flex-col rounded-xl border bg-card p-6 transition-shadow',
-        tier.popular ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border'
+        'relative flex flex-col rounded-ripple border p-6 transition-shadow',
+        tier.popular ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-ripple-border'
       )}
     >
       {#if tier.popular}

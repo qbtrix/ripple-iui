@@ -60,7 +60,7 @@
   <div
     {id}
     class={cn(
-      'flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 shadow-md',
+      'flex items-center gap-2 rounded-ripple border border-ripple-border px-3 py-2 shadow-md',
       position === 'sticky-bottom' && 'sticky bottom-4 z-10',
       className
     )}
