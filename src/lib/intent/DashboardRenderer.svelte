@@ -188,16 +188,6 @@
             node.props = { ...node.props, ...widget.data };
           }
           break;
-        case 'feed': {
-          const fd = widget.data;
-          // Handle AI spec format: { items: [{text, time, type}] }
-          if (fd && typeof fd === 'object' && !Array.isArray(fd) && fd.items) {
-            node.props.items = fd.items;
-          } else {
-            node.props.items = fd;
-          }
-          break;
-        }
         case 'text': {
           const txt = widget.data;
           // Handle AI spec format: { content: "markdown string" }
