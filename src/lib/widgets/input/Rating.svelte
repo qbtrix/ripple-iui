@@ -54,7 +54,7 @@
         class={cn(
           'inline-flex items-center justify-center rounded-md p-0.5 transition-colors',
           'hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
-          filled ? 'text-amber-500' : 'text-muted-foreground'
+          filled ? 'text-ripple-warning' : 'text-muted-foreground'
         )}
       >
         <StarIcon size={iconSize} fill={filled ? 'currentColor' : 'none'} />
