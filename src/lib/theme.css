@@ -1,0 +1,30 @@
+/* Ripple theme tokens.
+   Hosts may override any --ripple-* custom property in a scoped selector
+   (e.g. `.my-context .ripple-root { --ripple-surface: transparent; }`)
+   to retheme Ripple per render context without polluting the global
+   shadcn token set. Defaults below cascade from the host's shadcn tokens
+   so doing nothing keeps the existing look. */
+
+:root {
+  --ripple-surface: var(--card);
+  --ripple-surface-foreground: var(--card-foreground);
+  --ripple-muted: var(--muted);
+  --ripple-muted-foreground: var(--muted-foreground);
+  --ripple-accent: var(--primary);
+  --ripple-accent-foreground: var(--primary-foreground);
+  --ripple-border: var(--border);
+  --ripple-ring: var(--ring);
+  --ripple-radius: var(--radius);
+}
+
+@theme inline {
+  --color-ripple-surface: var(--ripple-surface);
+  --color-ripple-surface-foreground: var(--ripple-surface-foreground);
+  --color-ripple-muted: var(--ripple-muted);
+  --color-ripple-muted-foreground: var(--ripple-muted-foreground);
+  --color-ripple-accent: var(--ripple-accent);
+  --color-ripple-accent-foreground: var(--ripple-accent-foreground);
+  --color-ripple-border: var(--ripple-border);
+  --color-ripple-ring: var(--ripple-ring);
+  --radius-ripple: var(--ripple-radius);
+}
