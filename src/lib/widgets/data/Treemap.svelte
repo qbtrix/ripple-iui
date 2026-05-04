@@ -1,14 +1,19 @@
 <!-- src/lib/widgets/data/Treemap.svelte -->
-<script lang="ts">
-  import { onMount } from 'svelte';
-  import { cn } from '$lib/utils.js';
-
-  type Node = {
+<script module lang="ts">
+  // Public type — declared at module scope so svelte-package can emit
+  // it in the generated .d.ts. `export type` inside the per-instance
+  // <script> block isn't reachable from the module's d.ts surface.
+  export type Node = {
     name: string;
     value?: number;
     children?: Node[];
     color?: string;
   };
+</script>
+
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { cn } from '$lib/utils.js';
 
   interface Props {
     id?: string;

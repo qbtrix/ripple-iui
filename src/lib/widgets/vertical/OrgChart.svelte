@@ -1,15 +1,19 @@
 <!-- src/lib/widgets/vertical/OrgChart.svelte -->
-<script lang="ts">
-  import { cn } from '$lib/utils.js';
-  import Self from './OrgChart.svelte';
-
-  type Node = {
+<script module lang="ts">
+  // Public type — module scope so svelte-package emits it in the
+  // generated .d.ts.
+  export type Node = {
     id: string | number;
     name: string;
     title?: string;
     avatar?: string;
     children?: Node[];
   };
+</script>
+
+<script lang="ts">
+  import { cn } from '$lib/utils.js';
+  import Self from './OrgChart.svelte';
 
   interface Props {
     id?: string;
