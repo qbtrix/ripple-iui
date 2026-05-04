@@ -151,7 +151,7 @@
             ondragstart={(e) => onDragStart(e, card.id)}
             ondragend={onDragEnd}
             class={cn(
-              'rounded-md border border-border bg-background p-2.5 shadow-xs cursor-grab active:cursor-grabbing select-none',
+              'rounded-md border border-ripple-border bg-ripple-surface p-2.5 shadow-xs cursor-grab active:cursor-grabbing select-none',
               draggingId === card.id && 'opacity-60'
             )}
           >

@@ -123,7 +123,7 @@
   style={styleString}
 >
   <div
-    class="flex items-center gap-2 rounded-md border border-input bg-background h-9 px-3 shadow-xs focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-[color,box-shadow]"
+    class="flex items-center gap-2 rounded-md border border-input bg-ripple-input h-9 px-3 shadow-xs focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-[color,box-shadow]"
   >
     <SearchIcon size={14} class="opacity-60 shrink-0" />
     <input
