@@ -18,10 +18,17 @@
     events: TimelineEvent[];
     /** Max events to show before truncating */
     maxItems?: number;
+    /** Visual density. 'compact' hides the rail, tightens spacing — use for activity streams. */
+    density?: 'comfortable' | 'compact';
     class?: string;
   }
 
-  let { events = [], maxItems, class: className }: Props = $props();
+  let {
+    events = [],
+    maxItems,
+    density = 'comfortable',
+    class: className,
+  }: Props = $props();
 
   const visible = $derived(maxItems ? events.slice(0, maxItems) : events);
 
@@ -39,7 +46,7 @@
   }
 </script>
 
-<div class={cn('rtl', className)}>
+<div class={cn('rtl', density === 'compact' && 'rtl--compact', className)}>
   {#each visible as ev, i}
     <div class="rtl-item">
       <div class="rtl-rail">
@@ -126,4 +133,15 @@
     padding-left: 24px;
     font-weight: 500;
   }
+
+  /* Compact density — activity-stream layout. No rail, tighter rows, smaller dot. */
+  .rtl--compact .rtl-rail { padding-top: 6px; }
+  .rtl--compact .rtl-dot {
+    width: 6px;
+    height: 6px;
+    box-shadow: none;
+  }
+  .rtl--compact .rtl-line { display: none; }
+  .rtl--compact .rtl-content { padding-bottom: 4px; }
+  .rtl--compact .rtl-title { font-size: 12px; }
 </style>

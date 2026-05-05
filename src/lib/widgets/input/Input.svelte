@@ -64,7 +64,7 @@
   );
 
   const shell = tv({
-    base: 'flex items-center gap-2 rounded-[8px] border bg-background text-foreground transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring',
+    base: 'flex items-center gap-2 rounded-[8px] border bg-ripple-input text-foreground transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring',
     variants: {
       size: {
         sm: 'h-8 px-2.5 text-[13px]',

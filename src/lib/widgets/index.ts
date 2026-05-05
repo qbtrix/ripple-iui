@@ -2,7 +2,7 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
 import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search } from './input/index.js';
 import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar } from './data/index.js';
 import { If, Each } from './control/index.js';
@@ -81,9 +81,6 @@ const defaultRegistry: WidgetMap = {
   avatar: Avatar,
   metric: Metric,
   stat: Stat,
-  feed: Feed,
-  'activity-feed': Feed,
-  activity: Feed,
   'soul-status': SoulStatus,
   skeleton: Skeleton,
   markdown: Markdown,
@@ -280,7 +277,7 @@ export {
   Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
   Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible, DropdownMenu,
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
-  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, Feed, SoulStatus, Skeleton, Markdown, CodeBlock,
+  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
   NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search,
   Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar,

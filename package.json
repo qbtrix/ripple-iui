@@ -23,7 +23,8 @@
       "types": "./dist/streaming/index.d.ts",
       "svelte": "./dist/streaming/index.js",
       "default": "./dist/streaming/index.js"
-    }
+    },
+    "./theme.css": "./dist/theme.css"
   },
   "files": [
     "dist",
@@ -31,7 +32,8 @@
   ],
   "scripts": {
     "dev": "vite dev",
-    "build": "svelte-package",
+    "build": "svelte-package && bun run scripts/build-manifest.ts",
+    "build:manifest": "bun run scripts/build-manifest.ts",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

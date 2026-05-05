@@ -36,13 +36,13 @@
   }: Props = $props();
 
   const card = tv({
-    base: 'relative flex flex-col rounded-[8px] bg-card text-card-foreground transition-colors',
+    base: 'relative flex flex-col rounded-ripple bg-ripple-surface text-ripple-surface-foreground transition-colors',
     variants: {
       variant: {
-        default: 'border border-border',
-        muted: 'border border-border bg-muted',
+        default: 'border border-ripple-border',
+        muted: 'border border-ripple-border bg-ripple-muted',
         outlined: 'border border-foreground/15',
-        selected: 'border border-border ring-1 ring-inset ring-primary',
+        selected: 'border border-ripple-border ring-1 ring-inset ring-ripple-accent',
         glass: 'border border-white/10 bg-black/40 backdrop-blur-md backdrop-saturate-150',
       },
       density: {
@@ -118,7 +118,7 @@
   {/if}
 
   {#if footer}
-    <div data-slot="card-footer" class="mt-auto pt-2 border-t border-border/60">
+    <div data-slot="card-footer" class="mt-auto pt-2 border-t border-ripple-border/60">
       {@render footer()}
     </div>
   {/if}

@@ -57,12 +57,13 @@
         "props": { "title": "Recent activity" },
         "children": [
           {
-            "type": "feed",
+            "type": "timeline",
             "props": {
-              "items": [
-                { "title": "New order #1204", "timestamp": "2m ago" },
-                { "title": "Refund processed", "timestamp": "14m ago" },
-                { "title": "Inventory low: Widget Pro", "timestamp": "1h ago" }
+              "density": "compact",
+              "events": [
+                { "date": "2m ago", "title": "New order #1204" },
+                { "date": "14m ago", "title": "Refund processed" },
+                { "date": "1h ago", "title": "Inventory low: Widget Pro" }
               ]
             }
           }
