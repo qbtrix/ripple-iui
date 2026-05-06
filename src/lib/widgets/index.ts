@@ -3,10 +3,14 @@ import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search } from './input/index.js';
-import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar } from './data/index.js';
+import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
+import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, Map as MapWidget } from './data/index.js';
 import { If, Each } from './control/index.js';
-import { Terminal, RippleFrame, AvatarGroup } from './composite/index.js';
+import {
+  Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
+  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
+  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard
+} from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
@@ -160,6 +164,13 @@ const defaultRegistry: WidgetMap = {
   treetable: TreeTable,
   'nested-rows': TreeTable,
   calendar: Calendar,
+  map: MapWidget,
+  'geo-map': MapWidget,
+  'tracking-map': MapWidget,
+  'route-map': MapWidget,
+  'location-picker': LocationPicker,
+  'geo-picker': LocationPicker,
+  'pick-location': LocationPicker,
   'context-menu': ContextMenu,
   contextmenu: ContextMenu,
   'notification-center': NotificationCenter,
@@ -204,6 +215,38 @@ const defaultRegistry: WidgetMap = {
   'ripple-frame': RippleFrame,
   frame: RippleFrame,
   'nested-spec': RippleFrame,
+  'comparison-layout': ComparisonLayout,
+  'comparison-cards': ComparisonLayout,
+  compare: ComparisonLayout,
+  'entity-detail': EntityDetail,
+  'record-detail': EntityDetail,
+  'entity-page': EntityDetail,
+  'form-layout': FormLayout,
+  'wizard-layout': WizardLayout,
+  wizard: WizardLayout,
+  'checklist-layout': ChecklistLayout,
+  checklist: ChecklistLayout,
+  'report-layout': ReportLayout,
+  report: ReportLayout,
+  'invoice-layout': InvoiceLayout,
+  'quote-layout': InvoiceLayout,
+  receipt: InvoiceLayout,
+  'order-status': OrderStatus,
+  'shipment-tracker': OrderStatus,
+  'order-tracking': OrderStatus,
+  'exec-dashboard': ExecDashboard,
+  'kpi-dashboard': ExecDashboard,
+  'executive-dashboard': ExecDashboard,
+  'ops-dashboard': OpsDashboard,
+  'status-dashboard': OpsDashboard,
+  'sre-dashboard': OpsDashboard,
+  'analytics-dashboard': AnalyticsDashboard,
+  'product-dashboard': AnalyticsDashboard,
+  'pipeline-dashboard': PipelineDashboard,
+  'sales-dashboard': PipelineDashboard,
+  'funnel-dashboard': PipelineDashboard,
+  'project-dashboard': ProjectDashboard,
+  'team-dashboard': ProjectDashboard,
   if: If,
   each: Each,
   'source-card': SourceCard,
@@ -279,8 +322,8 @@ export {
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock,
   Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
-  NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search,
-  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar,
+  NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker,
+  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, MapWidget,
   ProgressRing, Mention, LinkPreview, Qr, Diff, Terminal, If, Each,
   SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
   CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
@@ -291,5 +334,7 @@ export {
   PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
   BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines,
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
-  AvatarGroup
+  AvatarGroup, ComparisonLayout,
+  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
+  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard
 };

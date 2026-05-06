@@ -6,12 +6,13 @@ export const gridEntry: WidgetManifestEntry = {
   category: 'layout',
   description: 'CSS grid container. Lays children in evenly-sized columns. Best for KPI rows and card grids.',
   props: {
-    cols: { type: 'number', required: false, description: 'Number of columns. Defaults to 2.' },
-    gap: { type: 'number', required: false, description: 'Gap between cells in tailwind spacing units.' },
+    columns: { type: 'number | string', required: false, description: 'Number of columns (number → repeat(N, 1fr)) or a raw grid-template-columns value. Defaults to 1.' },
+    rows: { type: 'number | string', required: false, description: 'Optional number of rows or grid-template-rows value.' },
+    gap: { type: 'number | string', required: false, description: 'Gap between cells. Number → tailwind spacing units (4px multiplier); string → raw CSS gap (e.g. "12px").' },
   },
   example: {
     type: 'grid',
-    props: { cols: 3, gap: 4 },
+    props: { columns: 3, gap: '12px' },
     children: [
       { type: 'metric', props: { label: 'Users', value: 1240 } },
       { type: 'metric', props: { label: 'MRR', value: '$48k' } },

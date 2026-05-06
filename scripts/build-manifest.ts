@@ -8,10 +8,16 @@ import { fileURLToPath } from 'node:url';
 import { buildManifest } from '../src/lib/manifest/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const outPath = resolve(__dirname, '../dist/manifest.json');
+const distPath = resolve(__dirname, '../dist/manifest.json');
+const staticPath = resolve(__dirname, '../static/manifest.json');
 
-mkdirSync(dirname(outPath), { recursive: true });
 const manifest = buildManifest();
-writeFileSync(outPath, JSON.stringify(manifest, null, 2), 'utf-8');
+const json = JSON.stringify(manifest, null, 2);
 
-console.log(`✓ wrote ${outPath} (${manifest.widgets.length} widgets, v${manifest.version})`);
+// Ship to dist/ for the published package and to static/ so the dev server
+// serves it at /manifest.json on whichever port Vite picked.
+for (const out of [distPath, staticPath]) {
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, json, 'utf-8');
+  console.log(`✓ wrote ${out} (${manifest.widgets.length} widgets, v${manifest.version})`);
+}

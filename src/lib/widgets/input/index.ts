@@ -21,3 +21,4 @@ export { default as ColorPicker } from './ColorPicker.svelte';
 export { default as RichText } from './RichText.svelte';
 export { default as CodeEditor } from './CodeEditor.svelte';
 export { default as Search } from './Search.svelte';
+export { default as LocationPicker } from './LocationPicker.svelte';

@@ -37,6 +37,9 @@ import { comboboxEntry } from './entries/combobox.js';
 import { commandPaletteEntry } from './entries/command-palette.js';
 import { commentThreadEntry } from './entries/comment-thread.js';
 import { companyHeaderEntry } from './entries/company-header.js';
+import { analyticsDashboardEntry } from './entries/analytics-dashboard.js';
+import { checklistLayoutEntry } from './entries/checklist-layout.js';
+import { comparisonLayoutEntry } from './entries/comparison-layout.js';
 import { comparisonTableEntry } from './entries/comparison-table.js';
 import { confirmDialogEntry } from './entries/confirm-dialog.js';
 import { containerEntry } from './entries/container.js';
@@ -52,12 +55,15 @@ import { discoverCardEntry } from './entries/discover-card.js';
 import { dropdownMenuEntry } from './entries/dropdown-menu.js';
 import { eachEntry } from './entries/each.js';
 import { emptyStateEntry } from './entries/empty-state.js';
+import { entityDetailEntry } from './entries/entity-detail.js';
+import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flexEntry } from './entries/flex.js';
 import { followUpEntry } from './entries/follow-up.js';
 import { formEntry } from './entries/form.js';
+import { formLayoutEntry } from './entries/form-layout.js';
 import { funnelEntry } from './entries/funnel.js';
 import { ganttEntry } from './entries/gantt.js';
 import { gaugeEntry } from './entries/gauge.js';
@@ -72,12 +78,15 @@ import { iconEntry } from './entries/icon.js';
 import { ifEntry } from './entries/if.js';
 import { imageEntry } from './entries/image.js';
 import { inputEntry } from './entries/input.js';
+import { invoiceLayoutEntry } from './entries/invoice-layout.js';
 import { invoiceLinesEntry } from './entries/invoice-lines.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
 import { linkPreviewEntry } from './entries/link-preview.js';
 import { loadingEntry } from './entries/loading.js';
+import { locationPickerEntry } from './entries/location-picker.js';
+import { mapEntry } from './entries/map.js';
 import { markdownEntry } from './entries/markdown.js';
 import { masterDetailEntry } from './entries/master-detail.js';
 import { mentionEntry } from './entries/mention.js';
@@ -87,21 +96,26 @@ import { multiSelectEntry } from './entries/multi-select.js';
 import { newsCardEntry } from './entries/news-card.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
+import { opsDashboardEntry } from './entries/ops-dashboard.js';
+import { orderStatusEntry } from './entries/order-status.js';
 import { orgChartEntry } from './entries/org-chart.js';
 import { otpInputEntry } from './entries/otp-input.js';
 import { pageHeaderEntry } from './entries/page-header.js';
 import { peoplePickerEntry } from './entries/people-picker.js';
+import { pipelineDashboardEntry } from './entries/pipeline-dashboard.js';
 import { permissionMatrixEntry } from './entries/permission-matrix.js';
 import { popoverEntry } from './entries/popover.js';
 import { pricingTableEntry } from './entries/pricing-table.js';
 import { progressEntry } from './entries/progress.js';
 import { progressRingEntry } from './entries/progress-ring.js';
+import { projectDashboardEntry } from './entries/project-dashboard.js';
 import { prosConsEntry } from './entries/pros-cons.js';
 import { qrEntry } from './entries/qr.js';
 import { quoteEntry } from './entries/quote.js';
 import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
+import { reportLayoutEntry } from './entries/report-layout.js';
 import { richTextEntry } from './entries/rich-text.js';
 import { rippleFrameEntry } from './entries/ripple-frame.js';
 import { sankeyEntry } from './entries/sankey.js';
@@ -140,6 +154,7 @@ import { treemapEntry } from './entries/treemap.js';
 import { treeTableEntry } from './entries/tree-table.js';
 import { trendEntry } from './entries/trend.js';
 import { virtualListEntry } from './entries/virtual-list.js';
+import { wizardLayoutEntry } from './entries/wizard-layout.js';
 import { workflowEntry } from './entries/workflow.js';
 
 export interface WidgetPropSpec {
@@ -273,6 +288,9 @@ export const manifestEntries: WidgetManifestEntry[] = [
   commandPaletteEntry,
   commentThreadEntry,
   companyHeaderEntry,
+  analyticsDashboardEntry,
+  checklistLayoutEntry,
+  comparisonLayoutEntry,
   comparisonTableEntry,
   confirmDialogEntry,
   containerEntry,
@@ -288,12 +306,15 @@ export const manifestEntries: WidgetManifestEntry[] = [
   dropdownMenuEntry,
   eachEntry,
   emptyStateEntry,
+  entityDetailEntry,
+  execDashboardEntry,
   errorStateEntry,
   fileUploadEntry,
   filterBarEntry,
   flexEntry,
   followUpEntry,
   formEntry,
+  formLayoutEntry,
   funnelEntry,
   ganttEntry,
   gaugeEntry,
@@ -308,12 +329,15 @@ export const manifestEntries: WidgetManifestEntry[] = [
   ifEntry,
   imageEntry,
   inputEntry,
+  invoiceLayoutEntry,
   invoiceLinesEntry,
   kanbanEntry,
   kbdEntry,
   kvTableEntry,
   linkPreviewEntry,
   loadingEntry,
+  locationPickerEntry,
+  mapEntry,
   markdownEntry,
   masterDetailEntry,
   mentionEntry,
@@ -323,21 +347,26 @@ export const manifestEntries: WidgetManifestEntry[] = [
   newsCardEntry,
   notificationCenterEntry,
   numberInputEntry,
+  opsDashboardEntry,
+  orderStatusEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
   peoplePickerEntry,
+  pipelineDashboardEntry,
   permissionMatrixEntry,
   popoverEntry,
   pricingTableEntry,
   progressEntry,
   progressRingEntry,
+  projectDashboardEntry,
   prosConsEntry,
   qrEntry,
   quoteEntry,
   radioGroupEntry,
   rangeBarEntry,
   ratingEntry,
+  reportLayoutEntry,
   richTextEntry,
   rippleFrameEntry,
   sankeyEntry,
@@ -376,6 +405,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   treeTableEntry,
   trendEntry,
   virtualListEntry,
+  wizardLayoutEntry,
   workflowEntry,
 ];
 

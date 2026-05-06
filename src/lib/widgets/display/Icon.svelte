@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/display/Icon.svelte -->
 <script lang="ts">
   import type { Component } from 'svelte';
+  import * as iconMap from '@lucide/svelte';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -20,25 +21,25 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  let IconComponent = $state<Component | null>(null);
+  function pascalCase(slug: string): string {
+    return slug
+      .split(/[-_]/g)
+      .filter(Boolean)
+      .map((p) => p[0]?.toUpperCase() + p.slice(1).toLowerCase())
+      .join('');
+  }
 
-  $effect(() => {
-    let cancelled = false;
-    const target = name;
-    IconComponent = null;
-    if (!target) return;
-    // Vite analyzes this template literal at build-time and code-splits each
-    // icon module — tree-shaking is preserved.
-    import(`@lucide/svelte/icons/${target}`)
-      .then((m) => {
-        if (cancelled) return;
-        IconComponent = m.default ?? null;
-      })
-      .catch(() => {
-        if (cancelled) return;
-        IconComponent = null;
-      });
-    return () => { cancelled = true; };
+  const lookup = iconMap as unknown as Record<string, Component>;
+
+  const IconComponent = $derived.by<Component | null>(() => {
+    if (!name) return null;
+    // Try exact PascalCase first (e.g. "chevron-right" -> "ChevronRight").
+    const direct = lookup[pascalCase(name)];
+    if (direct) return direct;
+    // Fall back to "Icon" suffix variant (lucide v0 export style).
+    const suffixed = lookup[`${pascalCase(name)}Icon`];
+    if (suffixed) return suffixed;
+    return null;
   });
 </script>
 

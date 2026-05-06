@@ -605,6 +605,594 @@
     }
   };
 
+  const comparisonLayoutSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'comparison-layout',
+      props: {
+        title: 'Observability platforms',
+        description: 'Side-by-side comparison with section tabs and per-item chat actions.',
+        primaryLabel: 'Choose plan',
+        secondaryLabel: 'Learn more',
+        items: [
+          {
+            id: 'datadog',
+            title: 'Datadog',
+            subtitle: 'Pro tier',
+            price: '$15 / host / mo',
+            ingestion: '15-day retention',
+            apm: true,
+            rum: true,
+            sso: true,
+            rating: 4,
+            actions: [{ action: 'toast', message: 'Selected Datadog', variant: 'success' }],
+            learn_more: [{ action: 'navigate', url: 'https://docs.datadoghq.com/' }]
+          },
+          {
+            id: 'newrelic',
+            title: 'New Relic',
+            subtitle: 'Standard',
+            price: '$0.30 / GB',
+            ingestion: '8-day retention',
+            apm: true,
+            rum: true,
+            sso: false,
+            rating: 4,
+            actions: [{ action: 'toast', message: 'Selected New Relic', variant: 'success' }]
+          },
+          {
+            id: 'grafana',
+            title: 'Grafana Cloud',
+            subtitle: 'Pro',
+            price: '$8 / user / mo',
+            ingestion: '13-month retention',
+            apm: true,
+            rum: false,
+            sso: true,
+            rating: 5,
+            actions: [{ action: 'toast', message: 'Selected Grafana Cloud', variant: 'success' }]
+          }
+        ],
+        features: [
+          { key: 'ingestion', label: 'Log retention', section: 'Data', highlight: true },
+          { key: 'apm', label: 'APM tracing', section: 'Features', type: 'boolean', highlight: true },
+          { key: 'rum', label: 'Real-user monitoring', section: 'Features', type: 'boolean' },
+          { key: 'sso', label: 'SSO / SAML', section: 'Security', type: 'boolean' },
+          { key: 'rating', label: 'G2 score', section: 'Reviews', type: 'rating' }
+        ]
+      }
+    }
+  };
+
+  const mapSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'map',
+      props: {
+        tiles: 'carto-voyager',
+        center: [37.7749, -122.4194],
+        zoom: 13,
+        height: '420px',
+        markers: [
+          { id: 'hq', lat: 37.7749, lng: -122.4194, label: 'HQ', color: 'oklch(0.55 0.18 250)', popup: 'Headquarters — 1 Market St' },
+          { id: 'wh', lat: 37.79, lng: -122.41, label: 'Warehouse', color: 'oklch(0.65 0.16 150)', popup: 'Order fulfillment center' },
+          { id: 'pop', lat: 37.77, lng: -122.43, label: 'Popup', color: 'oklch(0.7 0.18 80)', popup: 'Pop-up location' }
+        ],
+        paths: [
+          { id: 'route', points: [[37.7749, -122.4194], [37.78, -122.412], [37.79, -122.41]], color: 'oklch(0.55 0.18 250)', weight: 4, dashed: true, animate: true, label: 'Daily route' }
+        ],
+        polygons: [
+          { id: 'zone', points: [[37.77, -122.43], [37.80, -122.43], [37.80, -122.39], [37.77, -122.39]], color: 'oklch(0.65 0.16 150)', fillOpacity: 0.12, label: 'Service area' }
+        ],
+        trackers: [
+          { id: 'truck-1', lat: 37.785, lng: -122.415, heading: 45, label: 'Truck 1', color: 'oklch(0.65 0.22 25)', trail: [[37.7749, -122.4194], [37.78, -122.418], [37.785, -122.415]] }
+        ]
+      }
+    }
+  };
+
+  const locationPickerSpec = {
+    version: '1.0' as const,
+    state: { picked: null },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'location-picker',
+          bind: 'picked',
+          props: {
+            label: 'Pin the meeting point',
+            center: [40.7128, -74.006],
+            zoom: 12,
+            height: '300px',
+            tiles: 'carto-light'
+          }
+        },
+        { type: 'text', props: { text: 'Bound state → {state.picked}', size: 'xs' } }
+      ]
+    }
+  };
+
+  const entityDetailSpec = {
+    version: '1.0' as const,
+    state: { tab: 'overview' },
+    ui: {
+      type: 'entity-detail',
+      props: {
+        eyebrow: 'Customer · ACME-1042',
+        title: 'Acme Corp',
+        subtitle: 'Enterprise · Annual contract',
+        icon: 'building-2',
+        iconColor: 'oklch(0.55 0.18 250)',
+        status: { label: 'Active', variant: 'success' },
+        tags: ['SSO', 'Audit', { label: 'Strategic', color: 'oklch(0.55 0.22 25)' }],
+        kpis: [
+          { label: 'MRR', value: '$48k', delta: '+12%', trend: 'up' },
+          { label: 'Open tickets', value: 3, sublabel: '1 high priority' },
+          { label: 'Health score', value: 92, delta: '+4', trend: 'up' },
+          { label: 'Last touch', value: '2d ago', trend: 'flat' }
+        ],
+        actions: [
+          { id: 'edit', label: 'Edit', icon: 'pencil', variant: 'outline' },
+          { id: 'note', label: 'Add note', icon: 'message-square' }
+        ],
+        meta: [
+          { label: 'Owner', value: 'Jane Doe', icon: 'user' },
+          { label: 'Created', value: 'Aug 14, 2019' },
+          { label: 'Renewal', value: 'Mar 1, 2027', icon: 'calendar' },
+          { label: 'Industry', value: 'Logistics' }
+        ]
+      },
+      children: [
+        {
+          type: 'tabs',
+          props: { tabs: ['Overview', 'Activity', 'Files', 'Settings'] },
+          bind: 'tab',
+          children: [
+            { type: 'text', props: { text: 'Overview content goes here.', size: 'sm' } },
+            { type: 'text', props: { text: 'Activity feed goes here.', size: 'sm' } },
+            { type: 'text', props: { text: 'Files list goes here.', size: 'sm' } },
+            { type: 'text', props: { text: 'Settings panel goes here.', size: 'sm' } }
+          ]
+        }
+      ]
+    }
+  };
+
+  const formLayoutSpec = {
+    version: '1.0' as const,
+    state: { name: 'Jane Doe', email: 'jane@acme.com', twofa: true, dirty: true },
+    ui: {
+      type: 'form-layout',
+      props: {
+        title: 'Account settings',
+        description: 'Update your profile, security, and notification preferences.',
+        sections: [
+          { id: 'profile', title: 'Profile', description: 'Name, email, avatar', icon: 'user' },
+          { id: 'security', title: 'Security', description: 'Password & 2FA', icon: 'shield' },
+          { id: 'notifications', title: 'Notifications', icon: 'bell' }
+        ],
+        progress: 60,
+        dirty: true,
+        submitActions: [{ action: 'toast', message: 'Settings saved', variant: 'success' }],
+        cancelActions: [{ action: 'toast', message: 'Cancelled', variant: 'info' }]
+      },
+      children: [
+        {
+          type: 'section',
+          id: 'profile',
+          props: { title: 'Profile' },
+          children: [
+            { type: 'input', bind: 'name', props: { label: 'Name' } },
+            { type: 'input', bind: 'email', props: { label: 'Email' } }
+          ]
+        },
+        {
+          type: 'section',
+          id: 'security',
+          props: { title: 'Security' },
+          children: [{ type: 'switch', bind: 'twofa', props: { label: 'Enable 2FA' } }]
+        },
+        {
+          type: 'section',
+          id: 'notifications',
+          props: { title: 'Notifications' },
+          children: [{ type: 'text', props: { text: 'Email & push preferences here.', size: 'sm' } }]
+        }
+      ]
+    }
+  };
+
+  const wizardLayoutSpec = {
+    version: '1.0' as const,
+    state: { currentStep: 'basics', projectName: 'New initiative', team: [] },
+    ui: {
+      type: 'wizard-layout',
+      bind: 'currentStep',
+      props: {
+        title: 'New project',
+        steps: [
+          { id: 'basics', label: 'Basics', description: 'Name & repo' },
+          { id: 'team', label: 'Team', description: 'Owners & access' },
+          { id: 'integrations', label: 'Integrations', optional: true },
+          { id: 'review', label: 'Review' }
+        ],
+        finishActions: [{ action: 'toast', message: 'Project created', variant: 'success' }]
+      },
+      children: [
+        {
+          type: 'if',
+          condition: 'state.currentStep === "basics"',
+          children: [{ type: 'input', bind: 'projectName', props: { label: 'Project name' } }]
+        },
+        {
+          type: 'if',
+          condition: 'state.currentStep === "team"',
+          children: [{ type: 'text', props: { text: 'Team picker placeholder.', size: 'sm' } }]
+        },
+        {
+          type: 'if',
+          condition: 'state.currentStep === "integrations"',
+          children: [{ type: 'text', props: { text: 'Integration toggles placeholder.', size: 'sm' } }]
+        },
+        {
+          type: 'if',
+          condition: 'state.currentStep === "review"',
+          children: [{ type: 'text', props: { text: 'Review your choices and click Submit.', size: 'sm' } }]
+        }
+      ]
+    }
+  };
+
+  const checklistLayoutSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'checklist-layout',
+      props: {
+        title: 'Customer onboarding',
+        description: 'Tasks required before going live.',
+        groupBy: 'state',
+        items: [
+          { id: 'sso', label: 'Configure SSO', state: 'done', owner: { name: 'Alex Liu' }, due: 'May 1' },
+          { id: 'data', label: 'Import historical data', state: 'in-progress', owner: { name: 'Sam Patel' }, due: 'May 8', attachments: [{ name: 'data.csv' }] },
+          { id: 'roles', label: 'Map user roles', state: 'pending', owner: { name: 'Jess Tan' }, due: 'May 10' },
+          { id: 'training', label: 'Run admin training', state: 'blocked', blockedBy: ['roles'], due: 'May 14', owner: { name: 'Sam Patel' } },
+          { id: 'review', label: 'Final QA review', state: 'pending', due: 'May 16' }
+        ]
+      }
+    }
+  };
+
+  const reportLayoutSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'report-layout',
+      props: {
+        title: 'Q1 2026 Compliance Audit',
+        subtitle: 'Information security & access controls',
+        brand: 'Acme Corp',
+        meta: [
+          { label: 'Period', value: 'Jan 1 – Mar 31, 2026' },
+          { label: 'Generated', value: 'May 4, 2026' },
+          { label: 'Author', value: 'Internal Audit' },
+          { label: 'Version', value: '1.3' }
+        ],
+        footer: 'Confidential — internal use only. Do not redistribute outside Acme Corp.',
+        watermark: 'DRAFT'
+      },
+      children: [
+        { type: 'heading', props: { text: 'Executive summary', level: 2 } },
+        { type: 'text', props: { text: 'Findings indicate strong access-control posture with three medium-risk items.', size: 'sm' } },
+        { type: 'heading', props: { text: 'Key findings', level: 3 } },
+        { type: 'text', props: { text: '• MFA coverage at 96%. • Two stale service accounts. • Access review cadence on schedule.', size: 'sm' } }
+      ]
+    }
+  };
+
+  const invoiceLayoutSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'invoice-layout',
+      props: {
+        docType: 'Invoice',
+        from: { name: 'Acme Corp', address: '1 Market St, San Francisco, CA', email: 'billing@acme.com', taxId: 'US-83-1234567' },
+        billTo: { name: 'Globex Industries', address: '500 Industrial Pkwy, Springfield, IL', email: 'ap@globex.com' },
+        invoiceNumber: 'INV-2026-042',
+        issueDate: 'May 1, 2026',
+        dueDate: 'May 31, 2026',
+        status: 'sent',
+        paymentTerms: 'Net 30',
+        lines: [
+          { description: 'Enterprise plan — May 2026', quantity: 1, unitPrice: 2500 },
+          { description: 'Additional seats (40 × $30)', quantity: 40, unitPrice: 30 },
+          { description: 'Onboarding services', quantity: 4, unitPrice: 250, note: '4-hour kickoff' }
+        ],
+        summary: [
+          { label: 'Subtotal', value: 4900 },
+          { label: 'Tax (8.5%)', value: 416.5 }
+        ],
+        paymentMethods: [
+          { label: 'Wire transfer', detail: 'Routing 121000358 · Account 9876543210' },
+          { label: 'ACH', detail: 'Same details as wire' }
+        ],
+        notes: 'Thank you for your business.',
+        actions: [
+          { id: 'download', label: 'Download PDF', icon: 'download', variant: 'outline' },
+          { id: 'pay', label: 'Pay invoice', icon: 'credit-card' }
+        ]
+      }
+    }
+  };
+
+  const orderStatusSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'order-status',
+      props: {
+        orderId: 'AC-1042',
+        status: 'out-for-delivery',
+        eta: 'Today, 4 – 6 PM',
+        tracking: { carrier: 'UPS', number: '1Z999AA10123456784' },
+        origin: { name: 'Acme Warehouse', address: 'Oakland, CA', lat: 37.79, lng: -122.41 },
+        destination: { name: 'Customer', address: '500 Howard St, San Francisco, CA', lat: 37.7884, lng: -122.4 },
+        tracker: { lat: 37.785, lng: -122.405, heading: 45, label: 'Driver' },
+        events: [
+          { time: '11:42 AM', label: 'Out for delivery', location: 'San Francisco, CA', icon: 'truck' },
+          { time: '07:18 AM', label: 'Departed sorting facility', location: 'Oakland, CA' },
+          { time: 'Yesterday 9:02 PM', label: 'Arrived at sorting facility', location: 'Oakland, CA' },
+          { time: 'Yesterday 11:14 AM', label: 'Order placed' }
+        ],
+        actions: [
+          { id: 'contact', label: 'Contact courier', icon: 'phone', variant: 'outline' },
+          { id: 'issue', label: 'Report issue', icon: 'alert-triangle', variant: 'ghost' }
+        ]
+      }
+    }
+  };
+
+  const execDashboardSpec = {
+    version: '1.0' as const,
+    state: { activeDateRange: '30d', activeGranularity: 'Day', activeActivityFilter: 'All' },
+    ui: {
+      type: 'exec-dashboard',
+      bind: 'activeDateRange',
+      props: {
+        title: 'Q2 performance',
+        subtitle: 'Cross-team metrics and KPIs',
+        dateRanges: ['7d', '30d', '90d', 'QTD', 'YTD'],
+        granularities: ['Day', 'Week', 'Month'],
+        activityFilters: ['All', 'Mine', 'Alerts'],
+        refreshActions: [{ action: 'toast', message: 'Refreshed', variant: 'info' }],
+        kpis: [
+          { id: 'mrr', label: 'Revenue', value: '$2.4M', delta: '+18%', trend: 'up', sparkline: [22, 25, 30, 28, 36, 40, 48], actions: [{ action: 'toast', message: 'Drill: Revenue', variant: 'info' }] },
+          { id: 'cust', label: 'New customers', value: 142, delta: '+12', trend: 'up', sparkline: [10, 12, 18, 16, 20, 22, 28], actions: [{ action: 'toast', message: 'Drill: customers', variant: 'info' }] },
+          { id: 'churn', label: 'Churn', value: '2.1%', delta: '-0.4pp', trend: 'down', sparkline: [3, 2.8, 2.6, 2.5, 2.4, 2.3, 2.1], actions: [{ action: 'toast', message: 'Drill: Churn', variant: 'info' }] },
+          { id: 'nps', label: 'NPS', value: 64, delta: '+5', trend: 'up' }
+        ],
+        primaryChart: {
+          title: 'Monthly recurring revenue',
+          type: 'area',
+          data: [
+            { label: 'Jan', value: 1450 }, { label: 'Feb', value: 1620 }, { label: 'Mar', value: 1810 },
+            { label: 'Apr', value: 1980 }, { label: 'May', value: 2200 }, { label: 'Jun', value: 2400 }
+          ]
+        },
+        activity: [
+          { id: 'a1', time: '12m ago', label: 'New deal closed: Globex ($120k)', actor: 'Alice', severity: 'success', icon: 'trophy', actions: [{ action: 'toast', message: 'Open Globex deal', variant: 'info' }] },
+          { id: 'a2', time: '38m ago', label: 'Onboarding kicked off: Initech', actor: 'Bob', severity: 'info' },
+          { id: 'a3', time: '2h ago', label: 'Churn risk flagged: Hooli', severity: 'warning', icon: 'alert-triangle', actions: [{ action: 'toast', message: 'Why is Hooli at risk?', variant: 'warning' }] },
+          { id: 'a4', time: 'Yesterday', label: 'Q1 report published', actor: 'Carol', severity: 'info' }
+        ],
+        charts: [
+          { title: 'Revenue by segment', type: 'donut', data: [{ label: 'Enterprise', value: 60 }, { label: 'Mid-market', value: 28 }, { label: 'SMB', value: 12 }] },
+          { title: 'Top regions', type: 'bar', data: [{ label: 'US', value: 1200 }, { label: 'EU', value: 720 }, { label: 'APAC', value: 480 }] }
+        ]
+      }
+    }
+  };
+
+  const opsDashboardSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'ops-dashboard',
+      props: {
+        systemStatus: 'partial-outage',
+        statusMessage: 'API errors elevated in EU regions; team is investigating.',
+        services: [
+          { id: 'api', name: 'API', icon: 'server', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'degraded' },
+            { region: 'apac', status: 'operational' }
+          ] },
+          { id: 'web', name: 'Web app', icon: 'globe', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'operational' },
+            { region: 'apac', status: 'operational' }
+          ] },
+          { id: 'db', name: 'Database', icon: 'database', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'down' },
+            { region: 'apac', status: 'maintenance' }
+          ] }
+        ],
+        metrics: [
+          { label: 'P95 latency', value: 184, unit: 'ms', trend: 'up', sparkline: [120, 128, 140, 165, 178, 184], color: 'oklch(0.55 0.22 25)' },
+          { label: 'Error rate', value: '0.42%', trend: 'up', sparkline: [0.1, 0.12, 0.18, 0.28, 0.36, 0.42] },
+          { label: 'Requests/s', value: '12.4k', trend: 'flat', sparkline: [12, 12.1, 12.3, 12.0, 12.4, 12.4] },
+          { label: 'Active alerts', value: 3 }
+        ],
+        incidents: [
+          { id: 'i1', severity: 'sev2', title: 'EU API elevated 5xx errors', status: 'investigating', started: '14m ago', services: ['api', 'db'] },
+          { id: 'i2', severity: 'sev3', title: 'Slow DB query in audit log', status: 'identified', started: '38m ago', services: ['db'] }
+        ],
+        deploys: [
+          { id: 'd1', label: 'api: bump v1.42.3', actor: 'Alice', time: '08:32', status: 'success', sha: 'a3f2c1' },
+          { id: 'd2', label: 'web: feature flag rollout', actor: 'Bob', time: '07:11', status: 'success', sha: '0d12bf' },
+          { id: 'd3', label: 'api: schema migration', actor: 'CI', time: 'Yesterday', status: 'reverted', sha: '7e9a8b' }
+        ]
+      }
+    }
+  };
+
+  const analyticsDashboardSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'analytics-dashboard',
+      props: {
+        title: 'Web traffic',
+        subtitle: 'docs.acme.com',
+        dateRange: 'Last 30 days',
+        headline: {
+          label: 'Visitors',
+          value: '482k',
+          delta: '+22.4%',
+          trend: 'up',
+          comparison: 'vs prior 30 days',
+          sparkline: [12, 14, 18, 16, 20, 22, 26, 24, 28, 32, 36, 38, 42, 48]
+        },
+        secondaryMetrics: [
+          { label: 'Pageviews', value: '1.6M', delta: '+18%', trend: 'up' },
+          { label: 'Avg session', value: '2m 14s', delta: '+8s', trend: 'up' },
+          { label: 'Bounce rate', value: '38%', delta: '-3pp', trend: 'down' }
+        ],
+        primaryChart: {
+          title: 'Visitors by day',
+          type: 'area',
+          data: Array.from({ length: 14 }, (_, i) => ({ label: `Day ${i + 1}`, value: 8000 + Math.round(Math.sin(i / 2) * 2000 + i * 1500) }))
+        },
+        breakdowns: [
+          { title: 'By source', type: 'donut', data: [{ label: 'Direct', value: 42 }, { label: 'Search', value: 31 }, { label: 'Social', value: 15 }, { label: 'Referral', value: 12 }] },
+          { title: 'By device', type: 'donut', data: [{ label: 'Desktop', value: 64 }, { label: 'Mobile', value: 30 }, { label: 'Tablet', value: 6 }] },
+          { title: 'By region', type: 'bar', data: [{ label: 'NA', value: 220 }, { label: 'EU', value: 154 }, { label: 'APAC', value: 78 }, { label: 'LATAM', value: 30 }] }
+        ],
+        topItems: {
+          title: 'Top pages',
+          columns: [
+            { key: 'page', label: 'Page' },
+            { key: 'views', label: 'Views', align: 'right' },
+            { key: 'avg', label: 'Avg time', align: 'right' }
+          ],
+          rows: [
+            { page: '/getting-started', views: '92k', avg: '3m 12s' },
+            { page: '/api', views: '64k', avg: '4m 02s' },
+            { page: '/pricing', views: '48k', avg: '1m 18s' },
+            { page: '/faq', views: '24k', avg: '0m 54s' }
+          ]
+        }
+      }
+    }
+  };
+
+  const pipelineDashboardSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'pipeline-dashboard',
+      props: {
+        title: 'Sales pipeline',
+        period: 'Q2 2026',
+        quota: { label: 'Team quota', current: 1820000, target: 2500000, currency: '$', period: 'Q2 — 28 days remaining' },
+        funnel: {
+          title: 'Pipeline funnel',
+          stages: [
+            { label: 'Leads', value: 1240 },
+            { label: 'Qualified', value: 480 },
+            { label: 'Proposal', value: 180 },
+            { label: 'Negotiation', value: 92 },
+            { label: 'Closed won', value: 38 }
+          ]
+        },
+        conversion: [
+          { from: 'Leads', to: 'Qualified', rate: 38.7 },
+          { from: 'Qualified', to: 'Proposal', rate: 37.5 },
+          { from: 'Proposal', to: 'Negotiation', rate: 51.1 },
+          { from: 'Negotiation', to: 'Closed won', rate: 41.3 }
+        ],
+        leaderboard: {
+          title: 'Top reps',
+          items: [
+            { name: 'Alex Liu', value: '$420k', delta: '+$80k', sublabel: '12 deals' },
+            { name: 'Sam Patel', value: '$380k', delta: '+$45k', sublabel: '9 deals' },
+            { name: 'Jess Tan', value: '$310k', delta: '+$22k', sublabel: '14 deals' },
+            { name: 'Rico Diaz', value: '$240k', sublabel: '8 deals' }
+          ]
+        },
+        deals: {
+          title: 'Recent deals',
+          columns: [
+            { key: 'name', label: 'Deal' },
+            { key: 'stage', label: 'Stage' },
+            { key: 'value', label: 'Value', align: 'right' },
+            { key: 'owner', label: 'Owner' }
+          ],
+          rows: [
+            { name: 'Globex Q2 expansion', stage: 'Negotiation', value: '$120k', owner: 'Alex Liu' },
+            { name: 'Hooli SSO add-on', stage: 'Proposal', value: '$48k', owner: 'Sam Patel' },
+            { name: 'Initech renewal', stage: 'Closed won', value: '$62k', owner: 'Jess Tan' }
+          ]
+        },
+        ticker: [
+          { time: '2m ago', label: 'Closed: Globex Q2 expansion', actor: 'Alex Liu', icon: 'trophy' },
+          { time: '14m ago', label: 'Demo scheduled: Massive Dynamic', actor: 'Sam Patel' },
+          { time: '38m ago', label: 'Lead qualified: Pied Piper', actor: 'Jess Tan' }
+        ]
+      }
+    }
+  };
+
+  const projectDashboardSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'project-dashboard',
+      props: {
+        title: 'Phoenix migration',
+        description: 'Move legacy reporting service to the new analytics platform.',
+        status: 'at-risk',
+        progress: 64,
+        dueDate: 'Jun 30, 2026',
+        lead: { name: 'Jamie Park', role: 'Tech lead' },
+        meta: [
+          { label: 'Sprint', value: '4 of 6' },
+          { label: 'Repo', value: 'acme/phoenix' },
+          { label: 'Started', value: 'Mar 4, 2026' }
+        ],
+        burndown: {
+          title: 'Sprint burndown',
+          data: [
+            { label: 'Day 1', series: { ideal: 100, actual: 100 } },
+            { label: 'Day 3', series: { ideal: 85, actual: 92 } },
+            { label: 'Day 5', series: { ideal: 70, actual: 78 } },
+            { label: 'Day 7', series: { ideal: 55, actual: 60 } },
+            { label: 'Day 9', series: { ideal: 40, actual: 48 } },
+            { label: 'Day 11', series: { ideal: 25, actual: 32 } },
+            { label: 'Day 14', series: { ideal: 0, actual: 14 } }
+          ]
+        },
+        breakdown: { done: 38, inProgress: 12, todo: 18, blocked: 4 },
+        team: [
+          { name: 'Jamie Park', role: 'Tech lead', load: 85 },
+          { name: 'Priya Mehta', role: 'Backend', load: 110, status: 'overloaded' },
+          { name: 'Marcus Lee', role: 'Frontend', load: 70 },
+          { name: 'Emma Schmidt', role: 'QA', load: 55 }
+        ],
+        milestones: [
+          { label: 'Schema design', done: true, due: 'Mar 18' },
+          { label: 'Data backfill', done: true, due: 'Apr 15' },
+          { label: 'Dual-write rollout', due: 'May 10', overdue: true },
+          { label: 'Cutover', due: 'Jun 25' }
+        ],
+        updates: [
+          { time: '14m ago', label: 'Backfill validated for region us-east', actor: 'Priya Mehta', icon: 'check-circle-2', type: 'milestone' },
+          { time: '2h ago', label: 'Dual-write blocked on EU schema review', actor: 'Jamie Park', icon: 'alert-circle', type: 'risk' },
+          { time: 'Yesterday', label: 'Sprint planning notes posted', actor: 'Emma Schmidt', icon: 'file-text', type: 'doc' }
+        ]
+      }
+    }
+  };
+
   const stepsSpec = {
     version: '1.0' as const,
     ui: {
@@ -4159,6 +4747,7 @@
       { label: 'Code Block', spec: codeBlockSpec },
       { label: 'Pros / Cons', spec: prosConsSpec },
       { label: 'Comparison Table', spec: comparisonTableSpec },
+      { label: 'Comparison Layout', spec: comparisonLayoutSpec },
       { label: 'Steps', spec: stepsSpec },
       { label: 'Quote', spec: quoteSpec },
       { label: 'Highlight', spec: highlightSpec },
@@ -4196,6 +4785,7 @@
       { label: 'Rich Text', spec: richTextSpec },
       { label: 'Code Editor', spec: codeEditorSpec },
       { label: 'Search', spec: searchSpec },
+      { label: 'Location Picker', spec: locationPickerSpec },
       { label: 'Combobox', spec: comboboxSpec },
       { label: 'Multi-select', spec: multiSelectSpec },
       { label: 'Filter Bar', spec: filterBarSpec },
@@ -4218,6 +4808,7 @@
       { label: 'Gantt', spec: ganttSpec },
       { label: 'Tree Table', spec: treeTableSpec },
       { label: 'Calendar', spec: calendarSpec },
+      { label: 'Map', spec: mapSpec },
       { label: 'Virtual List', spec: virtualListSpec },
       { label: 'Tree', spec: treeSpec },
       { label: 'Kanban', spec: kanbanSpec },
@@ -4225,6 +4816,22 @@
     ]},
     { id: 'control', title: 'Control Flow', items: [
       { label: 'If / Each', spec: controlSpec },
+    ]},
+    { id: 'dashboards', title: 'Dashboard Layouts', items: [
+      { label: 'Executive Dashboard', spec: execDashboardSpec },
+      { label: 'Ops / SRE Dashboard', spec: opsDashboardSpec },
+      { label: 'Analytics Dashboard', spec: analyticsDashboardSpec },
+      { label: 'Pipeline Dashboard', spec: pipelineDashboardSpec },
+      { label: 'Project Dashboard', spec: projectDashboardSpec },
+    ]},
+    { id: 'enterprise', title: 'Enterprise Layouts', items: [
+      { label: 'Entity Detail', spec: entityDetailSpec },
+      { label: 'Form Layout', spec: formLayoutSpec },
+      { label: 'Wizard / Stepper', spec: wizardLayoutSpec },
+      { label: 'Checklist Layout', spec: checklistLayoutSpec },
+      { label: 'Report Layout', spec: reportLayoutSpec },
+      { label: 'Invoice Layout', spec: invoiceLayoutSpec },
+      { label: 'Order Status', spec: orderStatusSpec },
     ]},
     { id: 'vertical', title: 'Verticals', items: [
       { label: 'Pricing Table', spec: pricingTableSpec },
