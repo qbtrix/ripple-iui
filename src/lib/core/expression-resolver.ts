@@ -240,6 +240,7 @@ function splitArithmetic(
 	const parts: string[] = [];
 	const ops: string[] = [];
 	let depth = 0;
+	let bracketDepth = 0;
 	let inStr: '"' | "'" | null = null;
 	let current = '';
 	let prevNonSpace = '';
@@ -273,7 +274,19 @@ function splitArithmetic(
 			prevNonSpace = ch;
 			continue;
 		}
-		if (depth === 0 && operators.includes(ch)) {
+		if (ch === '[') {
+			bracketDepth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === ']') {
+			bracketDepth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (depth === 0 && bracketDepth === 0 && operators.includes(ch)) {
 			const isBinary = /[a-zA-Z0-9_)\]'"]/.test(prevNonSpace);
 			if (isBinary) {
 				parts.push(current.trim());
@@ -403,6 +416,57 @@ function applyMethod(receiver: unknown, method: string, args: unknown[]): unknow
 				return receiver[0];
 			case 'last':
 				return receiver[receiver.length - 1];
+			case 'where': {
+				// .where(field, value) — equality match. Pass-through when value is
+				// nullish or 'All' so a "no filter" select can bind directly.
+				const field = args[0];
+				const value = args[1];
+				if (typeof field !== 'string') return receiver;
+				if (value === null || value === undefined || value === 'All') return receiver;
+				return receiver.filter(
+					(r) =>
+						r !== null &&
+						typeof r === 'object' &&
+						(r as Record<string, unknown>)[field] === value
+				);
+			}
+			case 'whereIn': {
+				// .whereIn(field, [values]) — pass-through on empty/non-array.
+				const field = args[0];
+				const values = args[1];
+				if (typeof field !== 'string') return receiver;
+				if (!Array.isArray(values) || values.length === 0) return receiver;
+				return receiver.filter(
+					(r) =>
+						r !== null &&
+						typeof r === 'object' &&
+						values.includes((r as Record<string, unknown>)[field])
+				);
+			}
+			case 'sortBy': {
+				// .sortBy(field, 'asc'|'desc') — non-mutating, numeric-aware.
+				const field = args[0];
+				if (typeof field !== 'string') return receiver;
+				const dir = args[1] === 'desc' ? -1 : 1;
+				return [...receiver].sort((a, b) => {
+					const av = (a as Record<string, unknown> | null)?.[field];
+					const bv = (b as Record<string, unknown> | null)?.[field];
+					if (av === bv) return 0;
+					if (av === null || av === undefined) return -1;
+					if (bv === null || bv === undefined) return 1;
+					if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+					return (
+						String(av).localeCompare(String(bv), undefined, { numeric: true }) * dir
+					);
+				});
+			}
+			case 'limit': {
+				const n = Number(args[0]);
+				if (!Number.isFinite(n) || n < 0) return receiver;
+				return receiver.slice(0, n);
+			}
+			case 'reverse':
+				return [...receiver].reverse();
 		}
 	}
 	if (typeof receiver === 'number') {
@@ -448,55 +512,123 @@ function splitLogicalOperator(expr: string, operator: string): string[] {
 }
 
 /**
- * Evaluate a simple dot-notation path against context.
- * Supports optional chaining: "state.user?.name" treats ?. same as .
- *
- * @param path - Dot-separated path like "state.user.name" or "state.user?.name"
- * @param context - The resolver context
+ * Path segment: either a static dot-segment (`foo`) or a bracket lookup whose
+ * key is itself an expression to evaluate (`[state.k]`, `[0]`, `['Astro']`).
  */
-function evaluateSimplePath(path: string, context: ResolverContext): unknown {
-	// Normalize optional chaining - treat ?. as . (we already handle null/undefined)
-	const normalizedPath = path.replace(/\?\./g, '.');
-	const parts = normalizedPath.split('.');
-	const rootKey = parts[0];
+type PathSegment = { kind: 'dot'; key: string } | { kind: 'bracket'; expr: string };
 
-	// Determine the root object
-	let root: unknown;
-	if (rootKey === 'state') {
-		root = context.state;
-		parts.shift(); // Remove 'state' from path
-	} else if (rootKey === 'data' && context.data) {
-		root = context.data;
-		parts.shift();
-	} else if (rootKey === 'item' && context.item !== undefined) {
-		root = context.item;
-		parts.shift();
-	} else if (rootKey === 'index' && context.index !== undefined) {
-		return context.index;
-	} else if (context[rootKey] !== undefined) {
-		// Custom loop variable (e.g., 'flight' from item_as: 'flight')
-		root = context[rootKey];
-		parts.shift();
-	} else {
-		// Assume it's a state path without 'state.' prefix
-		root = context.state;
-	}
-
-	// Navigate the path
-	let current: unknown = root;
-	for (const part of parts) {
-		if (current === null || current === undefined) {
-			return undefined;
-		}
-		// Strings and arrays expose `length`; allow built-in indexed access too.
-		if (typeof current === 'string' || Array.isArray(current)) {
-			current = (current as unknown as Record<string, unknown>)[part];
+/**
+ * Tokenize a dot/bracket path into segments.
+ * Handles `state.m[state.k].name`, `state.r[0]`, `state.m['foo']`.
+ * Quotes inside brackets are respected so `[']']` parses correctly.
+ */
+function parsePath(path: string): PathSegment[] {
+	const segments: PathSegment[] = [];
+	let buf = '';
+	let i = 0;
+	while (i < path.length) {
+		const ch = path[i];
+		if (ch === '.') {
+			if (buf) {
+				segments.push({ kind: 'dot', key: buf });
+				buf = '';
+			}
+			i++;
 			continue;
 		}
-		if (typeof current !== 'object') {
-			return undefined;
+		if (ch === '[') {
+			if (buf) {
+				segments.push({ kind: 'dot', key: buf });
+				buf = '';
+			}
+			let depth = 1;
+			let j = i + 1;
+			let inStr: '"' | "'" | null = null;
+			while (j < path.length && depth > 0) {
+				const c = path[j];
+				if (inStr) {
+					if (c === inStr && path[j - 1] !== '\\') inStr = null;
+				} else if (c === '"' || c === "'") {
+					inStr = c;
+				} else if (c === '[') {
+					depth++;
+				} else if (c === ']') {
+					depth--;
+					if (depth === 0) break;
+				}
+				j++;
+			}
+			if (depth !== 0) return segments; // malformed — bail
+			segments.push({ kind: 'bracket', expr: path.slice(i + 1, j) });
+			i = j + 1;
+			continue;
 		}
-		current = (current as Record<string, unknown>)[part];
+		buf += ch;
+		i++;
+	}
+	if (buf) segments.push({ kind: 'dot', key: buf });
+	return segments;
+}
+
+/**
+ * Evaluate a simple dot/bracket-notation path against context.
+ * Supports optional chaining (`?.`) and bracket indexing with expressions.
+ *
+ * @example
+ *   state.user.name
+ *   state.user?.name
+ *   state.repos_by_lang[state.filter]
+ *   state.items[0].title
+ */
+function evaluateSimplePath(path: string, context: ResolverContext): unknown {
+	const normalizedPath = path.replace(/\?\./g, '.');
+	const segments = parsePath(normalizedPath);
+	if (segments.length === 0) return undefined;
+
+	// Determine root from the first dot-segment.
+	const first = segments[0];
+	let current: unknown;
+	let startIdx = 1;
+
+	if (first.kind !== 'dot') {
+		// Path can't start with a bracket — nothing meaningful to resolve.
+		return undefined;
+	}
+
+	const rootKey = first.key;
+	if (rootKey === 'state') {
+		current = context.state;
+	} else if (rootKey === 'data' && context.data) {
+		current = context.data;
+	} else if (rootKey === 'item' && context.item !== undefined) {
+		current = context.item;
+	} else if (rootKey === 'index' && context.index !== undefined) {
+		return segments.length === 1 ? context.index : undefined;
+	} else if (context[rootKey] !== undefined) {
+		current = context[rootKey];
+	} else {
+		// Implicit state-prefix: treat the whole path as state-relative.
+		current = context.state;
+		startIdx = 0;
+	}
+
+	for (let idx = startIdx; idx < segments.length; idx++) {
+		if (current === null || current === undefined) return undefined;
+		const seg = segments[idx];
+		let key: string | number;
+		if (seg.kind === 'dot') {
+			key = seg.key;
+		} else {
+			const resolved = evaluateExpression(seg.expr, context);
+			if (resolved === null || resolved === undefined) return undefined;
+			key = typeof resolved === 'number' ? resolved : String(resolved);
+		}
+		if (typeof current === 'string' || Array.isArray(current)) {
+			current = (current as unknown as Record<string | number, unknown>)[key];
+			continue;
+		}
+		if (typeof current !== 'object') return undefined;
+		current = (current as Record<string | number, unknown>)[key];
 	}
 
 	return current;
