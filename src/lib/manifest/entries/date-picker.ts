@@ -19,4 +19,15 @@ export const datePickerEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on date change.' },
   },
   example: { type: 'date-picker', props: { label: 'Due date', format: 'long', min: '2026-01-01', max: '2026-12-31', bind: '{state.dueDate}' } },
+  pocket: {
+    state: { dueDate: null },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'date-picker', props: { label: 'Due date', format: 'long', min: '2026-01-01', max: '2026-12-31' }, bind: 'state.dueDate' },
+        { type: 'text', show: '{state.dueDate != null}', props: { text: 'Due: {state.dueDate}' } },
+      ],
+    },
+  },
 };

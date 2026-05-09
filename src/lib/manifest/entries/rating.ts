@@ -17,4 +17,23 @@ export const ratingEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on rating change.' },
   },
   example: { type: 'rating', props: { label: 'Rate this product', max: 5, bind: '{state.productRating}', showValue: true } },
+  pocket: {
+    state: { productRating: 0, submitted: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'rating', props: { label: 'Rate this product', max: 5, showValue: true }, bind: 'state.productRating' },
+        { type: 'text', props: { text: 'You rated: {state.productRating}/5' } },
+        {
+          type: 'button',
+          props: { label: 'Submit rating', disabled: '{state.productRating == 0}' },
+          on_click: [
+            { action: 'set', target: 'submitted', value: true },
+            { action: 'toast', message: 'Thanks for the {state.productRating}-star rating!', variant: 'success' },
+          ],
+        },
+      ],
+    },
+  },
 };

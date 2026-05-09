@@ -17,4 +17,15 @@ export const richTextEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on content change.' },
   },
   example: { type: 'rich-text', props: { label: 'Article body', placeholder: 'Write your article…', minHeight: '200px', bind: '{state.articleBody}' } },
+  pocket: {
+    state: { articleBody: '<p>Start writing…</p>' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'rich-text', props: { label: 'Article body', placeholder: 'Write your article…', minHeight: '200px' }, bind: 'state.articleBody' },
+        { type: 'text', props: { text: '{state.articleBody.length} characters (HTML).' } },
+      ],
+    },
+  },
 };

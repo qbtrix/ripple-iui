@@ -20,4 +20,15 @@ export const fileUploadEntry: WidgetManifestEntry = {
     on_error: { type: 'EventAction', required: false, description: 'Fired on validation error.' },
   },
   example: { type: 'file-upload', props: { label: 'Upload documents', accept: '.pdf,.docx', multiple: true, maxSize: 10485760, maxFiles: 5, bind: '{state.uploadedFiles}' } },
+  pocket: {
+    state: { uploadedFiles: [] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'file-upload', props: { label: 'Upload documents', accept: '.pdf,.docx', multiple: true, maxSize: 10485760, maxFiles: 5, helperText: 'PDF or Word, up to 10MB each.' }, bind: 'state.uploadedFiles' },
+        { type: 'text', props: { text: '{state.uploadedFiles.length} file(s) ready to upload' } },
+      ],
+    },
+  },
 };

@@ -17,4 +17,15 @@ export const timePickerEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on time change.' },
   },
   example: { type: 'time-picker', props: { label: 'Meeting time', use12Hour: true, step: 15, bind: '{state.meetingTime}' } },
+  pocket: {
+    state: { meetingTime: '09:30' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'time-picker', props: { label: 'Meeting time', use12Hour: true, step: 15 }, bind: 'state.meetingTime' },
+        { type: 'text', props: { text: 'Reminder set for {state.meetingTime}' } },
+      ],
+    },
+  },
 };
