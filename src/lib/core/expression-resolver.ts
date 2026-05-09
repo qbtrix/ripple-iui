@@ -72,19 +72,16 @@ export function isSingleExpression(value: string): boolean {
 export function evaluateExpression(expression: string, context: ResolverContext): unknown {
 	const trimmed = expression.trim();
 
-	// Check for ternary operator first (condition ? trueVal : falseVal)
-	// First normalize optional chaining to avoid confusion with ternary operator
-	// We replace ?. with a placeholder, find ternary, then restore
-	const normalized = trimmed.replace(/\?\./g, '\x00OPTCHAIN\x00');
-	const ternaryMatch = normalized.match(/^(.+?)\s*\?\s*(.+?)\s*:\s*(.+)$/);
-	if (ternaryMatch) {
-		// Restore optional chaining in the matched parts
-		const restoreOptChain = (s: string) => s.replace(/\x00OPTCHAIN\x00/g, '?.');
-		const [, conditionExpr, trueExpr, falseExpr] = ternaryMatch;
-		const condition = evaluateExpression(restoreOptChain(conditionExpr.trim()), context);
+	// Ternary: scan for the top-level `?` and matching `:`, respecting
+	// parens, brackets, braces, and string literals. The previous regex
+	// approach broke when the true / false branch contained `:` inside a
+	// nested object literal (e.g. `cond ? a : [{value: 'x'}]`).
+	const ternary = findTernarySplit(trimmed);
+	if (ternary) {
+		const condition = evaluateExpression(ternary.cond, context);
 		return condition
-			? evaluateExpression(restoreOptChain(trueExpr.trim()), context)
-			: evaluateExpression(restoreOptChain(falseExpr.trim()), context);
+			? evaluateExpression(ternary.then, context)
+			: evaluateExpression(ternary.else, context);
 	}
 
 	// Check for OR operator (||) - split and evaluate each part
@@ -241,6 +238,7 @@ function splitArithmetic(
 	const ops: string[] = [];
 	let depth = 0;
 	let bracketDepth = 0;
+	let braceDepth = 0;
 	let inStr: '"' | "'" | null = null;
 	let current = '';
 	let prevNonSpace = '';
@@ -286,8 +284,20 @@ function splitArithmetic(
 			prevNonSpace = ch;
 			continue;
 		}
-		if (depth === 0 && bracketDepth === 0 && operators.includes(ch)) {
-			const isBinary = /[a-zA-Z0-9_)\]'"]/.test(prevNonSpace);
+		if (ch === '{') {
+			braceDepth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '}') {
+			braceDepth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (depth === 0 && bracketDepth === 0 && braceDepth === 0 && operators.includes(ch)) {
+			const isBinary = /[a-zA-Z0-9_)\]}'"]/.test(prevNonSpace);
 			if (isBinary) {
 				parts.push(current.trim());
 				ops.push(ch);
@@ -636,6 +646,15 @@ function evaluateSimplePath(path: string, context: ResolverContext): unknown {
 
 /**
  * Parse a value from expression (handles literals and paths).
+ *
+ * Supported literals:
+ *   - `null`, `undefined`, `true`, `false`
+ *   - Strings: `'foo'` / `"foo"`
+ *   - Numbers: `42`, `-1.5`
+ *   - Arrays: `[1, 2, 'x']`, `[{value: 'a', label: 'A'}]`
+ *   - Objects: `{key: 'val', n: 1}` (key is identifier, string, or number)
+ *
+ * Anything else is treated as a state-relative path.
  */
 function parseValue(value: string, context: ResolverContext): unknown {
 	// Null literal
@@ -658,8 +677,199 @@ function parseValue(value: string, context: ResolverContext): unknown {
 		return num;
 	}
 
+	// Array literal: `[item, item, ...]` — each item is itself an expression.
+	const arrLit = parseArrayLiteral(value, context);
+	if (arrLit !== undefined) return arrLit;
+
+	// Object literal: `{key: value, ...}` — keys may be identifiers, quoted
+	// strings, or numbers; values are recursively evaluated as expressions.
+	const objLit = parseObjectLiteral(value, context);
+	if (objLit !== undefined) return objLit;
+
 	// Otherwise, treat as path
 	return evaluateSimplePath(value, context);
+}
+
+/**
+ * Locate the top-level `?` and matching `:` for a ternary expression,
+ * respecting parens / brackets / braces and string literals so that
+ * `:` inside a nested object literal doesn't split the ternary
+ * prematurely. Returns null when no ternary is present.
+ *
+ * Treats `?.` (optional chaining) as not-a-ternary.
+ */
+function findTernarySplit(expr: string): { cond: string; then: string; else: string } | null {
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let qIdx = -1;
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		else if (ch === '?' && depth === 0 && expr[i + 1] !== '.') {
+			qIdx = i;
+			break;
+		}
+	}
+	if (qIdx === -1) return null;
+
+	let cIdx = -1;
+	let d = 0;
+	inStr = null;
+	for (let i = qIdx + 1; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') d++;
+		else if (ch === ')' || ch === ']' || ch === '}') d--;
+		else if (ch === ':' && d === 0) {
+			cIdx = i;
+			break;
+		}
+	}
+	if (cIdx === -1) return null;
+
+	return {
+		cond: expr.slice(0, qIdx).trim(),
+		then: expr.slice(qIdx + 1, cIdx).trim(),
+		else: expr.slice(cIdx + 1).trim()
+	};
+}
+
+/**
+ * Split an expression on a single-character separator at top level —
+ * respecting `()` / `[]` / `{}` nesting and string literals. Used by
+ * array / object literal parsers.
+ */
+function splitTopLevel(expr: string, sep: string): string[] {
+	const parts: string[] = [];
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let current = '';
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		if (ch === sep && depth === 0) {
+			parts.push(current);
+			current = '';
+			continue;
+		}
+		current += ch;
+	}
+	if (current.trim() !== '') parts.push(current);
+	return parts;
+}
+
+/** Find the index of the first top-level `:` in a key:value pair. */
+function findKeyValueSplit(pair: string): number {
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	for (let i = 0; i < pair.length; i++) {
+		const ch = pair[i];
+		if (inStr) {
+			if (ch === inStr && pair[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		else if (ch === ':' && depth === 0) return i;
+	}
+	return -1;
+}
+
+function parseArrayLiteral(value: string, context: ResolverContext): unknown[] | undefined {
+	const t = value.trim();
+	if (t.length < 2 || t[0] !== '[' || t[t.length - 1] !== ']') return undefined;
+	if (!isBalanced(t)) return undefined;
+	const inner = t.slice(1, -1).trim();
+	if (inner === '') return [];
+	return splitTopLevel(inner, ',').map((p) => evaluateExpression(p.trim(), context));
+}
+
+function parseObjectLiteral(
+	value: string,
+	context: ResolverContext
+): Record<string, unknown> | undefined {
+	const t = value.trim();
+	if (t.length < 2 || t[0] !== '{' || t[t.length - 1] !== '}') return undefined;
+	if (!isBalanced(t)) return undefined;
+	const inner = t.slice(1, -1).trim();
+	if (inner === '') return {};
+	const result: Record<string, unknown> = {};
+	for (const pair of splitTopLevel(inner, ',')) {
+		const colonIdx = findKeyValueSplit(pair);
+		if (colonIdx === -1) continue; // malformed pair — skip
+		const rawKey = pair.slice(0, colonIdx).trim();
+		const rawVal = pair.slice(colonIdx + 1).trim();
+		let key: string | undefined;
+		const strMatch = rawKey.match(/^['"](.*)['"]$/);
+		if (strMatch) {
+			key = strMatch[1];
+		} else if (/^[a-zA-Z_$][\w$]*$/.test(rawKey)) {
+			key = rawKey;
+		} else if (!isNaN(Number(rawKey))) {
+			key = String(Number(rawKey));
+		}
+		if (key === undefined) continue;
+		result[key] = evaluateExpression(rawVal, context);
+	}
+	return result;
+}
+
+/**
+ * Quick balance check — verifies that every `(`, `[`, `{` has a matching
+ * close in order, ignoring characters inside string literals. Used by the
+ * literal parsers to bail out on malformed input.
+ */
+function isBalanced(expr: string): boolean {
+	const stack: string[] = [];
+	const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+	let inStr: '"' | "'" | null = null;
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') stack.push(ch);
+		else if (ch === ')' || ch === ']' || ch === '}') {
+			if (stack.pop() !== pairs[ch]) return false;
+		}
+	}
+	return stack.length === 0 && inStr === null;
 }
 
 /**
