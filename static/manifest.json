@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.2.0",
-  "generatedAt": "2026-05-06T08:17:07.128Z",
+  "generatedAt": "2026-05-09T11:40:52.693Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -35,6 +35,311 @@
             }
           }
         ]
+      }
+    }
+  },
+  "actions": {
+    "set": {
+      "description": "Assign `value` to the state path `target`. The most common action — use it to update any state field.",
+      "shape": {
+        "action": "\"set\"",
+        "target": "string — state path, e.g. \"modalOpen\" or \"user.name\"",
+        "value?": "any — value to assign. Supports {state.x} expressions."
+      },
+      "example": {
+        "action": "set",
+        "target": "modalOpen",
+        "value": false
+      }
+    },
+    "toggle": {
+      "description": "Flip a boolean target, or toggle membership of `value` in an array target.",
+      "shape": {
+        "action": "\"toggle\"",
+        "target": "string — state path. If boolean, value is inverted; if array, `value` is added or removed.",
+        "value?": "any — when target is an array, the membership toggle key."
+      },
+      "example": {
+        "action": "toggle",
+        "target": "expanded"
+      }
+    },
+    "push": {
+      "description": "Append `value` to the array at `target`. Creates the array if undefined.",
+      "shape": {
+        "action": "\"push\"",
+        "target": "string — state path to an array.",
+        "value?": "any — item to append."
+      },
+      "example": {
+        "action": "push",
+        "target": "todos",
+        "value": {
+          "id": 1,
+          "text": "New task",
+          "done": false
+        }
+      }
+    },
+    "remove": {
+      "description": "Remove an item from the array at `target` — by `value` (equality match) or by `index`.",
+      "shape": {
+        "action": "\"remove\"",
+        "target": "string — state path to an array.",
+        "value?": "any — first matching item is removed.",
+        "index?": "number — remove by position instead."
+      },
+      "example": {
+        "action": "remove",
+        "target": "todos",
+        "index": 0
+      }
+    },
+    "open": {
+      "description": "Set the target state path to `true`. Idiomatic shortcut for opening a modal or dialog whose `value` is bound to that path.",
+      "shape": {
+        "action": "\"open\"",
+        "target": "string — state path that controls the modal/dialog open state."
+      },
+      "example": {
+        "action": "open",
+        "target": "confirmDeleteOpen"
+      }
+    },
+    "navigate": {
+      "description": "Host-delegated URL change. The host's `onEvent` callback performs the navigation.",
+      "shape": {
+        "action": "\"navigate\"",
+        "url": "string — destination URL. Supports {state.x} interpolation."
+      },
+      "example": {
+        "action": "navigate",
+        "url": "/projects/{state.selectedId}"
+      }
+    },
+    "toast": {
+      "description": "Show a toast notification. Use after `set` / `api` to give the user feedback.",
+      "shape": {
+        "action": "\"toast\"",
+        "message": "string — toast body. Supports {state.x} interpolation.",
+        "variant?": "\"default\" | \"success\" | \"error\" | \"warning\" | \"info\""
+      },
+      "example": {
+        "action": "toast",
+        "message": "Saved",
+        "variant": "success"
+      }
+    },
+    "emit": {
+      "description": "Emit a custom event up to the host. Use to hand control back to the host pipeline (e.g. \"submit complete, take it from here\").",
+      "shape": {
+        "action": "\"emit\"",
+        "target?": "string — event name.",
+        "value?": "any — event payload."
+      },
+      "example": {
+        "action": "emit",
+        "target": "submitted",
+        "value": "{state.formData}"
+      }
+    },
+    "pin": {
+      "description": "Host-delegated bookmark/pin operation. The host implements the persistence.",
+      "shape": {
+        "action": "\"pin\"",
+        "target?": "string — what is being pinned.",
+        "value?": "any — payload describing the pinned item."
+      },
+      "example": {
+        "action": "pin",
+        "target": "project",
+        "value": "{state.projectId}"
+      }
+    },
+    "unpin": {
+      "description": "Inverse of `pin`. Host-delegated bookmark removal.",
+      "shape": {
+        "action": "\"unpin\"",
+        "target?": "string — what is being unpinned.",
+        "value?": "any"
+      },
+      "example": {
+        "action": "unpin",
+        "target": "project",
+        "value": "{state.projectId}"
+      }
+    },
+    "api": {
+      "description": "Host-delegated HTTP call. The host performs the request; the response is written to `response_key` (if given) and `on_success` runs. On failure `on_error` runs and the error is exposed at state path `_flow_error`.",
+      "shape": {
+        "action": "\"api\"",
+        "url": "string — endpoint. Supports {state.x} interpolation.",
+        "method?": "\"GET\" | \"POST\" | \"PUT\" | \"DELETE\" | \"PATCH\" — default GET",
+        "body?": "object — request body. Values support {state.x} expressions.",
+        "headers?": "Record<string, string>",
+        "response_key?": "string — state path to write the response into.",
+        "on_success?": "EventHandler[] — runs after a successful response.",
+        "on_error?": "EventHandler[] — runs on host-reported failure."
+      },
+      "example": {
+        "action": "api",
+        "method": "POST",
+        "url": "/api/todos",
+        "body": {
+          "text": "{state.draft}"
+        },
+        "response_key": "newTodo",
+        "on_success": [
+          {
+            "action": "push",
+            "target": "todos",
+            "value": "{state.newTodo}"
+          },
+          {
+            "action": "set",
+            "target": "draft",
+            "value": ""
+          },
+          {
+            "action": "toast",
+            "message": "Added",
+            "variant": "success"
+          }
+        ],
+        "on_error": [
+          {
+            "action": "toast",
+            "message": "Could not save",
+            "variant": "error"
+          }
+        ]
+      }
+    },
+    "flow": {
+      "description": "Run a list of handlers sequentially. If any step throws `FlowAbortError` (e.g. failed `validate`), `on_error` runs.",
+      "shape": {
+        "action": "\"flow\"",
+        "steps": "EventHandler[] — sequential handlers.",
+        "on_error?": "EventHandler[] — runs on FlowAbortError."
+      },
+      "example": {
+        "action": "flow",
+        "steps": [
+          {
+            "action": "set",
+            "target": "saving",
+            "value": true
+          },
+          {
+            "action": "delay",
+            "ms": 400
+          },
+          {
+            "action": "set",
+            "target": "saving",
+            "value": false
+          },
+          {
+            "action": "toast",
+            "message": "Done",
+            "variant": "success"
+          }
+        ]
+      }
+    },
+    "branch": {
+      "description": "Evaluate `if` and run `then` or `else`. The condition is a Ripple expression string (e.g. \"state.count > 5\").",
+      "shape": {
+        "action": "\"branch\"",
+        "if": "string — Ripple expression evaluated as boolean.",
+        "then": "EventHandler[] — runs when truthy.",
+        "else?": "EventHandler[] — runs when falsy."
+      },
+      "example": {
+        "action": "branch",
+        "if": "state.user.role == \"admin\"",
+        "then": [
+          {
+            "action": "navigate",
+            "url": "/admin"
+          }
+        ],
+        "else": [
+          {
+            "action": "toast",
+            "message": "Admins only",
+            "variant": "warning"
+          }
+        ]
+      }
+    },
+    "confirm": {
+      "description": "Show the ConfirmDialog, suspend the flow, and run `on_confirm` or `on_cancel` based on the user's choice.",
+      "shape": {
+        "action": "\"confirm\"",
+        "message": "string — body shown in the dialog.",
+        "title?": "string",
+        "confirm_label?": "string — default \"Confirm\".",
+        "cancel_label?": "string — default \"Cancel\".",
+        "on_confirm": "EventHandler[]",
+        "on_cancel?": "EventHandler[]"
+      },
+      "example": {
+        "action": "confirm",
+        "title": "Delete project?",
+        "message": "This cannot be undone.",
+        "confirm_label": "Delete",
+        "on_confirm": [
+          {
+            "action": "api",
+            "method": "DELETE",
+            "url": "/api/projects/{state.projectId}"
+          },
+          {
+            "action": "navigate",
+            "url": "/projects"
+          }
+        ]
+      }
+    },
+    "validate": {
+      "description": "If `condition` is falsy, show a toast and abort the enclosing flow (FlowAbortError). Silent on pass.",
+      "shape": {
+        "action": "\"validate\"",
+        "condition": "string — Ripple expression. Falsy aborts the flow.",
+        "message": "string — toast shown on failure.",
+        "variant?": "\"default\" | \"success\" | \"error\" | \"warning\" | \"info\""
+      },
+      "example": {
+        "action": "validate",
+        "condition": "state.email != \"\"",
+        "message": "Email required",
+        "variant": "error"
+      }
+    },
+    "delay": {
+      "description": "Pause the flow for the given number of milliseconds. Useful for optimistic-UI demos and animations.",
+      "shape": {
+        "action": "\"delay\"",
+        "ms": "number — non-negative."
+      },
+      "example": {
+        "action": "delay",
+        "ms": 300
+      }
+    },
+    "invoke": {
+      "description": "Call a registered widget method by widget id. Used for imperative actions on widgets that expose them (e.g. focusing an input).",
+      "shape": {
+        "action": "\"invoke\"",
+        "target": "string — widget id.",
+        "method": "string — registered method name.",
+        "args?": "any[]"
+      },
+      "example": {
+        "action": "invoke",
+        "target": "searchInput",
+        "method": "focus"
       }
     }
   },
@@ -218,6 +523,120 @@
             }
           }
         ]
+      },
+      "pocket": {
+        "state": {
+          "activePage": "overview"
+        },
+        "ui": {
+          "type": "app-shell",
+          "props": {},
+          "children": [
+            {
+              "slot": "sidebar",
+              "type": "flex",
+              "props": {
+                "direction": "column",
+                "gap": "4px"
+              },
+              "children": [
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Overview",
+                    "variant": "{state.activePage == \"overview\" ? \"default\" : \"ghost\"}"
+                  },
+                  "on_click": {
+                    "action": "set",
+                    "target": "activePage",
+                    "value": "overview"
+                  }
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Projects",
+                    "variant": "{state.activePage == \"projects\" ? \"default\" : \"ghost\"}"
+                  },
+                  "on_click": {
+                    "action": "set",
+                    "target": "activePage",
+                    "value": "projects"
+                  }
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Settings",
+                    "variant": "{state.activePage == \"settings\" ? \"default\" : \"ghost\"}"
+                  },
+                  "on_click": {
+                    "action": "set",
+                    "target": "activePage",
+                    "value": "settings"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "if",
+              "condition": "state.activePage == \"overview\"",
+              "children": [
+                {
+                  "type": "heading",
+                  "props": {
+                    "level": 2,
+                    "text": "Overview"
+                  }
+                },
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Welcome back. Pick a section from the sidebar."
+                  }
+                }
+              ]
+            },
+            {
+              "type": "if",
+              "condition": "state.activePage == \"projects\"",
+              "children": [
+                {
+                  "type": "heading",
+                  "props": {
+                    "level": 2,
+                    "text": "Projects"
+                  }
+                },
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Your projects appear here."
+                  }
+                }
+              ]
+            },
+            {
+              "type": "if",
+              "condition": "state.activePage == \"settings\"",
+              "children": [
+                {
+                  "type": "heading",
+                  "props": {
+                    "level": 2,
+                    "text": "Settings"
+                  }
+                },
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Configure your workspace."
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -579,6 +998,64 @@
           "size": "md",
           "type": "submit"
         }
+      },
+      "pocket": {
+        "state": {
+          "saving": false,
+          "savedCount": 0
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px",
+            "align": "start"
+          },
+          "children": [
+            {
+              "type": "button",
+              "props": {
+                "label": "{state.saving ? \"Saving…\" : \"Save changes\"}",
+                "loading": "{state.saving}"
+              },
+              "on_click": {
+                "action": "flow",
+                "steps": [
+                  {
+                    "action": "set",
+                    "target": "saving",
+                    "value": true
+                  },
+                  {
+                    "action": "delay",
+                    "ms": 600
+                  },
+                  {
+                    "action": "set",
+                    "target": "saving",
+                    "value": false
+                  },
+                  {
+                    "action": "set",
+                    "target": "savedCount",
+                    "value": "{state.savedCount + 1}"
+                  },
+                  {
+                    "action": "toast",
+                    "message": "Saved",
+                    "variant": "success"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Saved {state.savedCount} times"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -696,6 +1173,54 @@
               "title": "Release",
               "start": "2026-05-19",
               "color": "#22c55e"
+            }
+          ]
+        }
+      },
+      "pocket": {
+        "state": {
+          "selectedDate": "2026-05-12",
+          "events": [
+            {
+              "id": 1,
+              "title": "Sprint Start",
+              "start": "2026-05-05",
+              "color": "#3b82f6"
+            },
+            {
+              "id": 2,
+              "title": "Review",
+              "start": "2026-05-12",
+              "color": "#8b5cf6"
+            },
+            {
+              "id": 3,
+              "title": "Release",
+              "start": "2026-05-19",
+              "color": "#22c55e"
+            }
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "calendar",
+              "props": {
+                "view": "month",
+                "events": "{state.events}"
+              },
+              "bind": "state.selectedDate"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Selected: {state.selectedDate}"
+              }
             }
           ]
         }
@@ -876,6 +1401,39 @@
         "props": {
           "label": "I agree to the terms",
           "bind": "{state.agreed}"
+        }
+      },
+      "pocket": {
+        "state": {
+          "agreed": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "checkbox",
+              "props": {
+                "label": "I agree to the terms"
+              },
+              "bind": "state.agreed"
+            },
+            {
+              "type": "button",
+              "props": {
+                "label": "Continue",
+                "disabled": "{!state.agreed}"
+              },
+              "on_click": {
+                "action": "toast",
+                "message": "Continuing…",
+                "variant": "info"
+              }
+            }
+          ]
         }
       }
     },
@@ -1114,6 +1672,50 @@
           "height": "300px",
           "bind": "{state.jsonConfig}"
         }
+      },
+      "pocket": {
+        "state": {
+          "jsonConfig": "{\n  \"host\": \"localhost\",\n  \"port\": 5432\n}",
+          "language": "json"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "segmented",
+              "props": {
+                "options": [
+                  {
+                    "value": "json",
+                    "label": "JSON"
+                  },
+                  {
+                    "value": "javascript",
+                    "label": "JS"
+                  },
+                  {
+                    "value": "typescript",
+                    "label": "TS"
+                  }
+                ]
+              },
+              "bind": "state.language"
+            },
+            {
+              "type": "code-editor",
+              "props": {
+                "label": "Config",
+                "language": "{state.language}",
+                "height": "200px"
+              },
+              "bind": "state.jsonConfig"
+            }
+          ]
+        }
       }
     },
     {
@@ -1209,6 +1811,53 @@
           "showInput": true,
           "bind": "{state.themeColor}"
         }
+      },
+      "pocket": {
+        "state": {
+          "themeColor": "#3b82f6"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "color-picker",
+              "props": {
+                "label": "Theme color",
+                "showInput": true,
+                "presets": [
+                  "#3b82f6",
+                  "#8b5cf6",
+                  "#22c55e",
+                  "#f59e0b",
+                  "#ef4444"
+                ]
+              },
+              "bind": "state.themeColor"
+            },
+            {
+              "type": "card",
+              "style": {
+                "background-color": "{state.themeColor}",
+                "height": "48px"
+              },
+              "props": {
+                "padding": "sm"
+              },
+              "children": [
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Preview: {state.themeColor}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -1288,6 +1937,41 @@
           "bind": "{state.assigneeId}",
           "searchPlaceholder": "Search users…"
         }
+      },
+      "pocket": {
+        "state": {
+          "assigneeId": null
+        },
+        "ui": {
+          "type": "combobox",
+          "props": {
+            "label": "Assignee",
+            "options": [
+              {
+                "value": 1,
+                "label": "Alice",
+                "description": "Admin"
+              },
+              {
+                "value": 2,
+                "label": "Bob",
+                "description": "Editor"
+              },
+              {
+                "value": 3,
+                "label": "Carol",
+                "description": "Viewer"
+              }
+            ],
+            "searchPlaceholder": "Search users…"
+          },
+          "bind": "state.assigneeId",
+          "on_change": {
+            "action": "toast",
+            "message": "Assigned",
+            "variant": "success"
+          }
+        }
       }
     },
     {
@@ -1346,6 +2030,67 @@
               "icon": "search",
               "shortcut": "mod+f",
               "group": "Navigation"
+            }
+          ]
+        }
+      },
+      "pocket": {
+        "state": {
+          "paletteOpen": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "button",
+              "props": {
+                "label": "Open command palette",
+                "variant": "secondary"
+              },
+              "on_click": {
+                "action": "open",
+                "target": "paletteOpen"
+              }
+            },
+            {
+              "type": "command-palette",
+              "props": {
+                "shortcut": "mod+k",
+                "commands": [
+                  {
+                    "id": "create",
+                    "label": "Create document",
+                    "keywords": [
+                      "new",
+                      "doc"
+                    ],
+                    "icon": "plus",
+                    "group": "Documents"
+                  },
+                  {
+                    "id": "search",
+                    "label": "Search",
+                    "keywords": [
+                      "find"
+                    ],
+                    "icon": "search",
+                    "shortcut": "mod+f",
+                    "group": "Navigation"
+                  },
+                  {
+                    "id": "settings",
+                    "label": "Open settings",
+                    "icon": "settings",
+                    "shortcut": "mod+,",
+                    "group": "Navigation"
+                  }
+                ]
+              },
+              "bind": "state.paletteOpen"
             }
           ]
         }
@@ -2068,6 +2813,81 @@
       "example": {
         "type": "confirm-dialog",
         "props": {}
+      },
+      "pocket": {
+        "state": {
+          "projects": [
+            {
+              "id": 1,
+              "name": "Atlas migration"
+            },
+            {
+              "id": 2,
+              "name": "Onboarding redesign"
+            }
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "confirm-dialog"
+            },
+            {
+              "type": "each",
+              "items": "state.projects",
+              "item_as": "project",
+              "children": [
+                {
+                  "type": "flex",
+                  "props": {
+                    "gap": "12px",
+                    "align": "center",
+                    "justify": "between"
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "props": {
+                        "text": "{project.name}"
+                      }
+                    },
+                    {
+                      "type": "button",
+                      "props": {
+                        "label": "Delete",
+                        "variant": "destructive",
+                        "size": "sm"
+                      },
+                      "on_click": {
+                        "action": "confirm",
+                        "title": "Delete {project.name}?",
+                        "message": "This cannot be undone.",
+                        "confirm_label": "Delete",
+                        "on_confirm": [
+                          {
+                            "action": "remove",
+                            "target": "projects",
+                            "value": "{project}"
+                          },
+                          {
+                            "action": "toast",
+                            "message": "Deleted",
+                            "variant": "success"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -2214,6 +3034,77 @@
             }
           }
         ]
+      },
+      "pocket": {
+        "state": {
+          "range": "7d",
+          "revenue": 48200,
+          "users": 1240,
+          "churn": 2.1
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "segmented",
+              "props": {
+                "options": [
+                  {
+                    "value": "24h",
+                    "label": "24h"
+                  },
+                  {
+                    "value": "7d",
+                    "label": "7d"
+                  },
+                  {
+                    "value": "30d",
+                    "label": "30d"
+                  },
+                  {
+                    "value": "90d",
+                    "label": "90d"
+                  }
+                ]
+              },
+              "bind": "state.range"
+            },
+            {
+              "type": "dashboard",
+              "props": {
+                "columnMin": "200px",
+                "gap": "16px"
+              },
+              "children": [
+                {
+                  "type": "metric",
+                  "props": {
+                    "label": "Revenue ({state.range})",
+                    "value": "${state.revenue}"
+                  }
+                },
+                {
+                  "type": "metric",
+                  "props": {
+                    "label": "Users ({state.range})",
+                    "value": "{state.users}"
+                  }
+                },
+                {
+                  "type": "metric",
+                  "props": {
+                    "label": "Churn ({state.range})",
+                    "value": "{state.churn}%"
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -2356,6 +3247,94 @@
           ],
           "searchable": true
         }
+      },
+      "pocket": {
+        "state": {
+          "selected": null,
+          "rows": [
+            {
+              "id": 1,
+              "name": "Alice",
+              "email": "alice@example.com",
+              "revenue": "$8,400"
+            },
+            {
+              "id": 2,
+              "name": "Bob",
+              "email": "bob@example.com",
+              "revenue": "$5,200"
+            },
+            {
+              "id": 3,
+              "name": "Carol",
+              "email": "carol@example.com",
+              "revenue": "$12,800"
+            }
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "data-grid",
+              "props": {
+                "columns": [
+                  {
+                    "key": "name",
+                    "label": "Customer",
+                    "sortable": true
+                  },
+                  {
+                    "key": "email",
+                    "label": "Email"
+                  },
+                  {
+                    "key": "revenue",
+                    "label": "Revenue",
+                    "align": "right",
+                    "sortable": true
+                  }
+                ],
+                "rows": "{state.rows}",
+                "searchable": true
+              },
+              "bind": "state.selected"
+            },
+            {
+              "type": "flex",
+              "show": "{state.selected != null}",
+              "props": {
+                "gap": "8px",
+                "align": "center"
+              },
+              "children": [
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Selected row id: {state.selected}"
+                  }
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Email customer",
+                    "variant": "secondary",
+                    "size": "sm"
+                  },
+                  "on_click": {
+                    "action": "toast",
+                    "message": "Sent",
+                    "variant": "success"
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -2424,6 +3403,37 @@
           "min": "2026-01-01",
           "max": "2026-12-31",
           "bind": "{state.dueDate}"
+        }
+      },
+      "pocket": {
+        "state": {
+          "dueDate": null
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "date-picker",
+              "props": {
+                "label": "Due date",
+                "format": "long",
+                "min": "2026-01-01",
+                "max": "2026-12-31"
+              },
+              "bind": "state.dueDate"
+            },
+            {
+              "type": "text",
+              "show": "{state.dueDate != null}",
+              "props": {
+                "text": "Due: {state.dueDate}"
+              }
+            }
+          ]
         }
       }
     },
@@ -3305,6 +4315,38 @@
           "maxFiles": 5,
           "bind": "{state.uploadedFiles}"
         }
+      },
+      "pocket": {
+        "state": {
+          "uploadedFiles": []
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "file-upload",
+              "props": {
+                "label": "Upload documents",
+                "accept": ".pdf,.docx",
+                "multiple": true,
+                "maxSize": 10485760,
+                "maxFiles": 5,
+                "helperText": "PDF or Word, up to 10MB each."
+              },
+              "bind": "state.uploadedFiles"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "{state.uploadedFiles.length} file(s) ready to upload"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -3359,6 +4401,47 @@
           ],
           "bind": "{state.filters}",
           "showClearAll": true
+        }
+      },
+      "pocket": {
+        "state": {
+          "filters": []
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "filter-bar",
+              "props": {
+                "options": [
+                  {
+                    "key": "status",
+                    "label": "Status"
+                  },
+                  {
+                    "key": "priority",
+                    "label": "Priority"
+                  },
+                  {
+                    "key": "assignee",
+                    "label": "Assignee"
+                  }
+                ],
+                "showClearAll": true
+              },
+              "bind": "state.filters"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "{state.filters.length} active filter(s)"
+              }
+            }
+          ]
         }
       }
     },
@@ -3523,7 +4606,170 @@
             }
           }
         ]
-      }
+      },
+      "pockets": [
+        {
+          "name": "validate-and-emit",
+          "description": "Client-side validation, then hand off to the host via emit.",
+          "state": {
+            "email": "",
+            "password": "",
+            "errors": {}
+          },
+          "ui": {
+            "type": "form",
+            "props": {
+              "fields": {
+                "email": {
+                  "required": "Email is required",
+                  "minLength": 5
+                },
+                "password": {
+                  "required": "Password is required",
+                  "minLength": 8
+                }
+              },
+              "validateOn": "submit"
+            },
+            "on_submit": {
+              "action": "emit",
+              "target": "login",
+              "value": {
+                "email": "{state.email}",
+                "password": "{state.password}"
+              }
+            },
+            "children": [
+              {
+                "type": "input",
+                "props": {
+                  "label": "Email",
+                  "type": "email"
+                },
+                "bind": "state.email"
+              },
+              {
+                "type": "input",
+                "props": {
+                  "label": "Password",
+                  "type": "password"
+                },
+                "bind": "state.password"
+              },
+              {
+                "type": "button",
+                "props": {
+                  "label": "Sign in",
+                  "type": "submit"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "validate-and-api",
+          "description": "Validate, call API, toast on success or failure.",
+          "state": {
+            "name": "",
+            "email": "",
+            "submitting": false,
+            "errors": {}
+          },
+          "ui": {
+            "type": "form",
+            "props": {
+              "fields": {
+                "name": {
+                  "required": "Name is required"
+                },
+                "email": {
+                  "required": "Email is required",
+                  "minLength": 5
+                }
+              },
+              "validateOn": "submit"
+            },
+            "on_submit": {
+              "action": "flow",
+              "steps": [
+                {
+                  "action": "set",
+                  "target": "submitting",
+                  "value": true
+                },
+                {
+                  "action": "api",
+                  "method": "POST",
+                  "url": "/api/contacts",
+                  "body": {
+                    "name": "{state.name}",
+                    "email": "{state.email}"
+                  },
+                  "on_success": [
+                    {
+                      "action": "set",
+                      "target": "submitting",
+                      "value": false
+                    },
+                    {
+                      "action": "set",
+                      "target": "name",
+                      "value": ""
+                    },
+                    {
+                      "action": "set",
+                      "target": "email",
+                      "value": ""
+                    },
+                    {
+                      "action": "toast",
+                      "message": "Contact saved",
+                      "variant": "success"
+                    }
+                  ],
+                  "on_error": [
+                    {
+                      "action": "set",
+                      "target": "submitting",
+                      "value": false
+                    },
+                    {
+                      "action": "toast",
+                      "message": "Could not save",
+                      "variant": "error"
+                    }
+                  ]
+                }
+              ]
+            },
+            "children": [
+              {
+                "type": "input",
+                "props": {
+                  "label": "Name"
+                },
+                "bind": "state.name"
+              },
+              {
+                "type": "input",
+                "props": {
+                  "label": "Email",
+                  "type": "email"
+                },
+                "bind": "state.email"
+              },
+              {
+                "type": "button",
+                "props": {
+                  "label": "{state.submitting ? \"Saving…\" : \"Save\"}",
+                  "loading": "{state.submitting}",
+                  "type": "submit"
+                }
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "type": "form-layout",
@@ -4330,6 +5576,55 @@
           "bind": "{state.email}",
           "required": true
         }
+      },
+      "pocket": {
+        "state": {
+          "email": "",
+          "sent": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "input",
+              "props": {
+                "label": "Email",
+                "type": "email",
+                "placeholder": "you@example.com"
+              },
+              "bind": "state.email"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Will send to: {state.email || \"(nothing yet)\"}"
+              }
+            },
+            {
+              "type": "button",
+              "props": {
+                "label": "Send",
+                "disabled": "{state.email == \"\"}"
+              },
+              "on_click": [
+                {
+                  "action": "set",
+                  "target": "sent",
+                  "value": true
+                },
+                {
+                  "action": "toast",
+                  "message": "Sent to {state.email}",
+                  "variant": "success"
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -4655,6 +5950,74 @@
               "id": 3,
               "title": "Finalize spec",
               "status": "done"
+            }
+          ]
+        }
+      },
+      "pocket": {
+        "state": {
+          "cards": [
+            {
+              "id": 1,
+              "title": "Design mockups",
+              "status": "todo"
+            },
+            {
+              "id": 2,
+              "title": "Review feedback",
+              "status": "in-progress"
+            },
+            {
+              "id": 3,
+              "title": "Finalize spec",
+              "status": "done"
+            },
+            {
+              "id": 4,
+              "title": "Write release notes",
+              "status": "todo"
+            }
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "kanban",
+              "props": {
+                "columns": [
+                  {
+                    "id": "todo",
+                    "title": "To Do"
+                  },
+                  {
+                    "id": "in-progress",
+                    "title": "In Progress"
+                  },
+                  {
+                    "id": "done",
+                    "title": "Done"
+                  }
+                ],
+                "columnKey": "status",
+                "titleKey": "title"
+              },
+              "bind": "state.cards",
+              "on_change": {
+                "action": "toast",
+                "message": "Board updated",
+                "variant": "info"
+              }
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "{state.cards.length} cards across 3 columns"
+              }
             }
           ]
         }
@@ -5190,6 +6553,71 @@
           "labelKey": "label",
           "descriptionKey": "description"
         }
+      },
+      "pocket": {
+        "state": {
+          "selectedId": 1,
+          "tickets": [
+            {
+              "id": 1,
+              "title": "Login fails on Safari",
+              "priority": "high",
+              "body": "Users on Safari 17 hit a redirect loop after OAuth."
+            },
+            {
+              "id": 2,
+              "title": "Export is slow",
+              "priority": "medium",
+              "body": "CSV export of >10k rows takes >30s."
+            },
+            {
+              "id": 3,
+              "title": "Typo in onboarding",
+              "priority": "low",
+              "body": "\"Welome\" should be \"Welcome\" on the second step."
+            }
+          ]
+        },
+        "ui": {
+          "type": "master-detail",
+          "props": {
+            "items": "{state.tickets}",
+            "valueKey": "id",
+            "labelKey": "title",
+            "descriptionKey": "priority",
+            "width": "320px",
+            "detail": {
+              "type": "flex",
+              "props": {
+                "direction": "column",
+                "gap": "12px"
+              },
+              "children": [
+                {
+                  "type": "heading",
+                  "props": {
+                    "level": 3,
+                    "text": "{item.title}"
+                  }
+                },
+                {
+                  "type": "badge",
+                  "props": {
+                    "text": "{item.priority}",
+                    "variant": "secondary"
+                  }
+                },
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "{item.body}"
+                  }
+                }
+              ]
+            }
+          },
+          "bind": "state.selectedId"
+        }
       }
     },
     {
@@ -5326,6 +6754,74 @@
             }
           }
         ]
+      },
+      "pocket": {
+        "state": {
+          "settingsOpen": false,
+          "theme": "light"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "button",
+              "props": {
+                "label": "Open settings"
+              },
+              "on_click": {
+                "action": "open",
+                "target": "settingsOpen"
+              }
+            },
+            {
+              "type": "modal",
+              "props": {
+                "title": "Settings",
+                "description": "Personalize your experience.",
+                "size": "sm"
+              },
+              "bind": "state.settingsOpen",
+              "children": [
+                {
+                  "type": "radio-group",
+                  "props": {
+                    "label": "Theme",
+                    "options": [
+                      {
+                        "value": "light",
+                        "label": "Light"
+                      },
+                      {
+                        "value": "dark",
+                        "label": "Dark"
+                      },
+                      {
+                        "value": "system",
+                        "label": "System"
+                      }
+                    ]
+                  },
+                  "bind": "state.theme"
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Done"
+                  },
+                  "on_click": {
+                    "action": "set",
+                    "target": "settingsOpen",
+                    "value": false
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -5415,6 +6911,53 @@
           ],
           "bind": "{state.tags}",
           "creatable": true
+        }
+      },
+      "pocket": {
+        "state": {
+          "tags": [
+            "urgent"
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "multi-select",
+              "props": {
+                "label": "Tags",
+                "options": [
+                  {
+                    "value": "urgent",
+                    "label": "Urgent"
+                  },
+                  {
+                    "value": "bug",
+                    "label": "Bug"
+                  },
+                  {
+                    "value": "feature",
+                    "label": "Feature"
+                  },
+                  {
+                    "value": "docs",
+                    "label": "Docs"
+                  }
+                ]
+              },
+              "bind": "state.tags"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Selected: {state.tags.length} tag(s)"
+              }
+            }
+          ]
         }
       }
     },
@@ -5575,6 +7118,36 @@
           "max": 100,
           "step": 1,
           "bind": "{state.quantity}"
+        }
+      },
+      "pocket": {
+        "state": {
+          "quantity": 1
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "row",
+            "gap": "12px",
+            "align": "center"
+          },
+          "children": [
+            {
+              "type": "number-input",
+              "props": {
+                "label": "Quantity",
+                "min": 1,
+                "max": 99
+              },
+              "bind": "state.quantity"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Subtotal: ${state.quantity * 12}"
+              }
+            }
+          ]
         }
       }
     },
@@ -6081,6 +7654,54 @@
           "length": 6,
           "mask": true,
           "bind": "{state.verificationCode}"
+        }
+      },
+      "pocket": {
+        "state": {
+          "verificationCode": "",
+          "verified": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "otp-input",
+              "props": {
+                "label": "Verification code",
+                "length": 6,
+                "mask": true
+              },
+              "bind": "state.verificationCode",
+              "on_complete": {
+                "action": "flow",
+                "steps": [
+                  {
+                    "action": "set",
+                    "target": "verified",
+                    "value": true
+                  },
+                  {
+                    "action": "toast",
+                    "message": "Code accepted",
+                    "variant": "success"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "alert",
+              "show": "{state.verified}",
+              "props": {
+                "variant": "success",
+                "title": "Verified",
+                "description": "Your account is now active."
+              }
+            }
+          ]
         }
       }
     },
@@ -7086,6 +8707,32 @@
           ],
           "bind": "{state.subscription}"
         }
+      },
+      "pocket": {
+        "state": {
+          "delivery": "standard"
+        },
+        "ui": {
+          "type": "radio-group",
+          "props": {
+            "label": "Delivery",
+            "options": [
+              {
+                "value": "standard",
+                "label": "Standard (3-5 days)"
+              },
+              {
+                "value": "express",
+                "label": "Express (1-2 days)"
+              },
+              {
+                "value": "pickup",
+                "label": "Pickup (today)"
+              }
+            ]
+          },
+          "bind": "state.delivery"
+        }
       }
     },
     {
@@ -7203,6 +8850,55 @@
           "max": 5,
           "bind": "{state.productRating}",
           "showValue": true
+        }
+      },
+      "pocket": {
+        "state": {
+          "productRating": 0,
+          "submitted": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "rating",
+              "props": {
+                "label": "Rate this product",
+                "max": 5,
+                "showValue": true
+              },
+              "bind": "state.productRating"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "You rated: {state.productRating}/5"
+              }
+            },
+            {
+              "type": "button",
+              "props": {
+                "label": "Submit rating",
+                "disabled": "{state.productRating == 0}"
+              },
+              "on_click": [
+                {
+                  "action": "set",
+                  "target": "submitted",
+                  "value": true
+                },
+                {
+                  "action": "toast",
+                  "message": "Thanks for the {state.productRating}-star rating!",
+                  "variant": "success"
+                }
+              ]
+            }
+          ]
         }
       }
     },
@@ -7361,6 +9057,35 @@
           "placeholder": "Write your article…",
           "minHeight": "200px",
           "bind": "{state.articleBody}"
+        }
+      },
+      "pocket": {
+        "state": {
+          "articleBody": "<p>Start writing…</p>"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "rich-text",
+              "props": {
+                "label": "Article body",
+                "placeholder": "Write your article…",
+                "minHeight": "200px"
+              },
+              "bind": "state.articleBody"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "{state.articleBody.length} characters (HTML)."
+              }
+            }
+          ]
         }
       }
     },
@@ -7614,6 +9339,63 @@
           ],
           "bind": "{state.searchQuery}"
         }
+      },
+      "pocket": {
+        "state": {
+          "searchQuery": "",
+          "lastSelected": null
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "search",
+              "props": {
+                "placeholder": "Search users…",
+                "results": [
+                  {
+                    "id": 1,
+                    "label": "Alice Chen",
+                    "description": "Product Designer",
+                    "group": "Users",
+                    "icon": "user"
+                  },
+                  {
+                    "id": 2,
+                    "label": "Bob Singh",
+                    "description": "Engineering Lead",
+                    "group": "Users",
+                    "icon": "user"
+                  },
+                  {
+                    "id": 3,
+                    "label": "Carol Park",
+                    "description": "Customer Success",
+                    "group": "Users",
+                    "icon": "user"
+                  }
+                ]
+              },
+              "bind": "state.searchQuery",
+              "on_select": {
+                "action": "set",
+                "target": "lastSelected",
+                "value": "{event}"
+              }
+            },
+            {
+              "type": "text",
+              "show": "{state.lastSelected != null}",
+              "props": {
+                "text": "Picked: {state.lastSelected.label}"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -7726,6 +9508,46 @@
           ],
           "bind": "{state.viewMode}"
         }
+      },
+      "pocket": {
+        "state": {
+          "view": "list"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "segmented",
+              "props": {
+                "options": [
+                  {
+                    "value": "list",
+                    "label": "List"
+                  },
+                  {
+                    "value": "grid",
+                    "label": "Grid"
+                  },
+                  {
+                    "value": "map",
+                    "label": "Map"
+                  }
+                ]
+              },
+              "bind": "state.view"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Showing as: {state.view}"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -7790,6 +9612,48 @@
             }
           ],
           "bind": "{state.plan}"
+        }
+      },
+      "pocket": {
+        "state": {
+          "plan": "pro"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "select",
+              "props": {
+                "label": "Plan",
+                "options": [
+                  {
+                    "value": "free",
+                    "label": "Free"
+                  },
+                  {
+                    "value": "pro",
+                    "label": "Pro"
+                  },
+                  {
+                    "value": "enterprise",
+                    "label": "Enterprise"
+                  }
+                ]
+              },
+              "bind": "state.plan"
+            },
+            {
+              "type": "badge",
+              "props": {
+                "text": "Current: {state.plan}",
+                "variant": "secondary"
+              }
+            }
+          ]
         }
       }
     },
@@ -8033,6 +9897,36 @@
           "step": 1,
           "bind": "{state.volume}",
           "showValue": true
+        }
+      },
+      "pocket": {
+        "state": {
+          "volume": 50
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "slider",
+              "props": {
+                "label": "Volume",
+                "min": 0,
+                "max": 100,
+                "step": 1
+              },
+              "bind": "state.volume"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Volume: {state.volume}%"
+              }
+            }
+          ]
         }
       }
     },
@@ -8482,6 +10376,36 @@
           "label": "Enable notifications",
           "bind": "{state.notificationsEnabled}"
         }
+      },
+      "pocket": {
+        "state": {
+          "notificationsEnabled": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "switch",
+              "props": {
+                "label": "Enable notifications"
+              },
+              "bind": "state.notificationsEnabled"
+            },
+            {
+              "type": "alert",
+              "show": "{state.notificationsEnabled}",
+              "props": {
+                "variant": "info",
+                "title": "Notifications on",
+                "description": "You will receive desktop alerts."
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -8784,6 +10708,35 @@
           "rows": 4,
           "bind": "{state.comments}"
         }
+      },
+      "pocket": {
+        "state": {
+          "feedback": ""
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "textarea",
+              "props": {
+                "label": "Feedback",
+                "placeholder": "Tell us what you think…",
+                "rows": 4
+              },
+              "bind": "state.feedback"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "{state.feedback.length} / 500 characters"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -8926,6 +10879,35 @@
           "step": 15,
           "bind": "{state.meetingTime}"
         }
+      },
+      "pocket": {
+        "state": {
+          "meetingTime": "09:30"
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "time-picker",
+              "props": {
+                "label": "Meeting time",
+                "use12Hour": true,
+                "step": 15
+              },
+              "bind": "state.meetingTime"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Reminder set for {state.meetingTime}"
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -9046,6 +11028,58 @@
               "id": "components",
               "label": "Components",
               "icon": "box"
+            }
+          ]
+        }
+      },
+      "pocket": {
+        "state": {
+          "selectedNode": null
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "tree",
+              "props": {
+                "defaultExpanded": "first-level",
+                "nodes": [
+                  {
+                    "id": "docs",
+                    "label": "Docs",
+                    "icon": "folder",
+                    "children": [
+                      {
+                        "id": "docs-api",
+                        "label": "API",
+                        "icon": "file-text"
+                      },
+                      {
+                        "id": "docs-guide",
+                        "label": "Guide",
+                        "icon": "book-open"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "components",
+                    "label": "Components",
+                    "icon": "box"
+                  }
+                ]
+              },
+              "bind": "state.selectedNode"
+            },
+            {
+              "type": "text",
+              "show": "{state.selectedNode != null}",
+              "props": {
+                "text": "Open: {state.selectedNode}"
+              }
             }
           ]
         }
@@ -9442,6 +11476,91 @@
             ]
           }
         ]
+      },
+      "pocket": {
+        "state": {
+          "currentStep": "basics",
+          "projectName": "",
+          "team": []
+        },
+        "ui": {
+          "type": "wizard-layout",
+          "bind": "state.currentStep",
+          "props": {
+            "title": "New project",
+            "description": "Set up a new project in three steps.",
+            "steps": [
+              {
+                "id": "basics",
+                "label": "Basics",
+                "description": "Name & repo",
+                "valid": "{state.projectName.length > 0}"
+              },
+              {
+                "id": "team",
+                "label": "Team",
+                "description": "Owners & access"
+              },
+              {
+                "id": "review",
+                "label": "Review"
+              }
+            ],
+            "finishActions": [
+              {
+                "action": "toast",
+                "message": "Project \"{state.projectName}\" created",
+                "variant": "success"
+              }
+            ]
+          },
+          "children": [
+            {
+              "type": "if",
+              "condition": "state.currentStep == \"basics\"",
+              "children": [
+                {
+                  "type": "input",
+                  "props": {
+                    "label": "Project name",
+                    "placeholder": "e.g. atlas-migration"
+                  },
+                  "bind": "state.projectName"
+                }
+              ]
+            },
+            {
+              "type": "if",
+              "condition": "state.currentStep == \"team\"",
+              "children": [
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Add team members or skip to continue."
+                  }
+                }
+              ]
+            },
+            {
+              "type": "if",
+              "condition": "state.currentStep == \"review\"",
+              "children": [
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Project: {state.projectName}"
+                  }
+                },
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "Click Submit to create."
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
