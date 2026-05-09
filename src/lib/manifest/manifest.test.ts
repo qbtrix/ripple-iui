@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { manifestEntries, buildManifest } from './index.js';
 import { getWidgetTypes } from '../widgets/index.js';
+import { EventHandler, EventAction } from '../schema/event-handler.js';
+import { manifestActions } from './actions.js';
 
 describe('widget manifest', () => {
   it('has at least one entry registered', () => {
@@ -85,5 +87,44 @@ describe('widget manifest', () => {
     expect(m.spec.example).toHaveProperty('ui');
     expect(m.spec.example).toHaveProperty('state');
     expect((m.spec.example as { ui: { type: string } }).ui.type).toBeTruthy();
+  });
+});
+
+describe('manifest actions section', () => {
+  const ALL_VARIANTS = EventAction.options;
+
+  it('documents every EventAction variant the dispatcher supports', () => {
+    const documented = new Set(Object.keys(manifestActions));
+    const missing = ALL_VARIANTS.filter((v) => !documented.has(v));
+    expect(missing).toEqual([]);
+  });
+
+  it('does not document any unknown action variants', () => {
+    const known = new Set(ALL_VARIANTS);
+    const ghosts = Object.keys(manifestActions).filter((k) => !known.has(k as never));
+    expect(ghosts).toEqual([]);
+  });
+
+  it('every action.example parses against the live EventHandler schema', () => {
+    for (const [name, spec] of Object.entries(manifestActions)) {
+      const result = EventHandler.safeParse(spec.example);
+      expect(
+        result.success,
+        `actions.${name}.example failed: ${result.success ? '' : JSON.stringify(result.error.issues)}`,
+      ).toBe(true);
+    }
+  });
+
+  it("every action.example's `action` field matches its key", () => {
+    for (const [name, spec] of Object.entries(manifestActions)) {
+      expect((spec.example as { action: string }).action).toBe(name);
+    }
+  });
+
+  it('every action has a non-empty description and shape', () => {
+    for (const [name, spec] of Object.entries(manifestActions)) {
+      expect(spec.description.length, `actions.${name}.description is empty`).toBeGreaterThan(0);
+      expect(Object.keys(spec.shape).length, `actions.${name}.shape is empty`).toBeGreaterThan(0);
+    }
   });
 });
