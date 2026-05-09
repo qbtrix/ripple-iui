@@ -47,4 +47,47 @@ export const wizardLayoutEntry: WidgetManifestEntry = {
       ] },
     ],
   },
+  pocket: {
+    state: { currentStep: 'basics', projectName: '', team: [] },
+    ui: {
+      type: 'wizard-layout',
+      bind: 'state.currentStep',
+      props: {
+        title: 'New project',
+        description: 'Set up a new project in three steps.',
+        steps: [
+          { id: 'basics', label: 'Basics', description: 'Name & repo', valid: '{state.projectName.length > 0}' },
+          { id: 'team', label: 'Team', description: 'Owners & access' },
+          { id: 'review', label: 'Review' },
+        ],
+        finishActions: [
+          { action: 'toast', message: 'Project "{state.projectName}" created', variant: 'success' },
+        ],
+      },
+      children: [
+        {
+          type: 'if',
+          condition: 'state.currentStep == "basics"',
+          children: [
+            { type: 'input', props: { label: 'Project name', placeholder: 'e.g. atlas-migration' }, bind: 'state.projectName' },
+          ],
+        },
+        {
+          type: 'if',
+          condition: 'state.currentStep == "team"',
+          children: [
+            { type: 'text', props: { text: 'Add team members or skip to continue.' } },
+          ],
+        },
+        {
+          type: 'if',
+          condition: 'state.currentStep == "review"',
+          children: [
+            { type: 'text', props: { text: 'Project: {state.projectName}' } },
+            { type: 'text', props: { text: 'Click Submit to create.' } },
+          ],
+        },
+      ],
+    },
+  },
 };

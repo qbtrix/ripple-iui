@@ -17,4 +17,34 @@ export const dashboardEntry: WidgetManifestEntry = {
       { type: 'metric', props: { label: 'Churn', value: '2.1%' } },
     ],
   },
+  pocket: {
+    state: { range: '7d', revenue: 48200, users: 1240, churn: 2.1 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'segmented',
+          props: {
+            options: [
+              { value: '24h', label: '24h' },
+              { value: '7d', label: '7d' },
+              { value: '30d', label: '30d' },
+              { value: '90d', label: '90d' },
+            ],
+          },
+          bind: 'state.range',
+        },
+        {
+          type: 'dashboard',
+          props: { columnMin: '200px', gap: '16px' },
+          children: [
+            { type: 'metric', props: { label: 'Revenue ({state.range})', value: '${state.revenue}' } },
+            { type: 'metric', props: { label: 'Users ({state.range})', value: '{state.users}' } },
+            { type: 'metric', props: { label: 'Churn ({state.range})', value: '{state.churn}%' } },
+          ],
+        },
+      ],
+    },
+  },
 };
