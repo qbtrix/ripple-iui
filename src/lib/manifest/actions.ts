@@ -105,4 +105,33 @@ export const manifestActions: Record<string, ActionSpec> = {
     },
     example: { action: 'unpin', target: 'project', value: '{state.projectId}' },
   },
+
+  api: {
+    description: "Host-delegated HTTP call. The host performs the request; the response is written to `response_key` (if given) and `on_success` runs. On failure `on_error` runs and the error is exposed at state path `_flow_error`.",
+    shape: {
+      action: '"api"',
+      url: 'string — endpoint. Supports {state.x} interpolation.',
+      'method?': '"GET" | "POST" | "PUT" | "DELETE" | "PATCH" — default GET',
+      'body?': 'object — request body. Values support {state.x} expressions.',
+      'headers?': 'Record<string, string>',
+      'response_key?': 'string — state path to write the response into.',
+      'on_success?': 'EventHandler[] — runs after a successful response.',
+      'on_error?': 'EventHandler[] — runs on host-reported failure.',
+    },
+    example: {
+      action: 'api',
+      method: 'POST',
+      url: '/api/todos',
+      body: { text: '{state.draft}' },
+      response_key: 'newTodo',
+      on_success: [
+        { action: 'push', target: 'todos', value: '{state.newTodo}' },
+        { action: 'set', target: 'draft', value: '' },
+        { action: 'toast', message: 'Added', variant: 'success' },
+      ],
+      on_error: [
+        { action: 'toast', message: 'Could not save', variant: 'error' },
+      ],
+    },
+  },
 };
