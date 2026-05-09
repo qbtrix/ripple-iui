@@ -134,4 +134,97 @@ export const manifestActions: Record<string, ActionSpec> = {
       ],
     },
   },
+
+  flow: {
+    description: "Run a list of handlers sequentially. If any step throws `FlowAbortError` (e.g. failed `validate`), `on_error` runs.",
+    shape: {
+      action: '"flow"',
+      steps: 'EventHandler[] — sequential handlers.',
+      'on_error?': 'EventHandler[] — runs on FlowAbortError.',
+    },
+    example: {
+      action: 'flow',
+      steps: [
+        { action: 'set', target: 'saving', value: true },
+        { action: 'delay', ms: 400 },
+        { action: 'set', target: 'saving', value: false },
+        { action: 'toast', message: 'Done', variant: 'success' },
+      ],
+    },
+  },
+
+  branch: {
+    description: "Evaluate `if` and run `then` or `else`. The condition is a Ripple expression string (e.g. \"state.count > 5\").",
+    shape: {
+      action: '"branch"',
+      if: 'string — Ripple expression evaluated as boolean.',
+      then: 'EventHandler[] — runs when truthy.',
+      'else?': 'EventHandler[] — runs when falsy.',
+    },
+    example: {
+      action: 'branch',
+      if: 'state.user.role == "admin"',
+      then: [{ action: 'navigate', url: '/admin' }],
+      else: [{ action: 'toast', message: 'Admins only', variant: 'warning' }],
+    },
+  },
+
+  confirm: {
+    description: "Show the ConfirmDialog, suspend the flow, and run `on_confirm` or `on_cancel` based on the user's choice.",
+    shape: {
+      action: '"confirm"',
+      message: 'string — body shown in the dialog.',
+      'title?': 'string',
+      'confirm_label?': 'string — default "Confirm".',
+      'cancel_label?': 'string — default "Cancel".',
+      on_confirm: 'EventHandler[]',
+      'on_cancel?': 'EventHandler[]',
+    },
+    example: {
+      action: 'confirm',
+      title: 'Delete project?',
+      message: 'This cannot be undone.',
+      confirm_label: 'Delete',
+      on_confirm: [
+        { action: 'api', method: 'DELETE', url: '/api/projects/{state.projectId}' },
+        { action: 'navigate', url: '/projects' },
+      ],
+    },
+  },
+
+  validate: {
+    description: "If `condition` is falsy, show a toast and abort the enclosing flow (FlowAbortError). Silent on pass.",
+    shape: {
+      action: '"validate"',
+      condition: 'string — Ripple expression. Falsy aborts the flow.',
+      message: 'string — toast shown on failure.',
+      'variant?': '"default" | "success" | "error" | "warning" | "info"',
+    },
+    example: {
+      action: 'validate',
+      condition: 'state.email != ""',
+      message: 'Email required',
+      variant: 'error',
+    },
+  },
+
+  delay: {
+    description: "Pause the flow for the given number of milliseconds. Useful for optimistic-UI demos and animations.",
+    shape: {
+      action: '"delay"',
+      ms: 'number — non-negative.',
+    },
+    example: { action: 'delay', ms: 300 },
+  },
+
+  invoke: {
+    description: "Call a registered widget method by widget id. Used for imperative actions on widgets that expose them (e.g. focusing an input).",
+    shape: {
+      action: '"invoke"',
+      target: 'string — widget id.',
+      method: 'string — registered method name.',
+      'args?': 'any[]',
+    },
+    example: { action: 'invoke', target: 'searchInput', method: 'focus' },
+  },
 };
