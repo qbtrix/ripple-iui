@@ -30,4 +30,21 @@ export const comboboxEntry: WidgetManifestEntry = {
       searchPlaceholder: 'Search users…',
     },
   },
+  pocket: {
+    state: { assigneeId: null },
+    ui: {
+      type: 'combobox',
+      props: {
+        label: 'Assignee',
+        options: [
+          { value: 1, label: 'Alice', description: 'Admin' },
+          { value: 2, label: 'Bob', description: 'Editor' },
+          { value: 3, label: 'Carol', description: 'Viewer' },
+        ],
+        searchPlaceholder: 'Search users…',
+      },
+      bind: 'state.assigneeId',
+      on_change: { action: 'toast', message: 'Assigned', variant: 'success' },
+    },
+  },
 };

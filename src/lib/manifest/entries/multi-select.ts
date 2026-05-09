@@ -33,4 +33,27 @@ export const multiSelectEntry: WidgetManifestEntry = {
       creatable: true,
     },
   },
+  pocket: {
+    state: { tags: ['urgent'] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'multi-select',
+          props: {
+            label: 'Tags',
+            options: [
+              { value: 'urgent', label: 'Urgent' },
+              { value: 'bug', label: 'Bug' },
+              { value: 'feature', label: 'Feature' },
+              { value: 'docs', label: 'Docs' },
+            ],
+          },
+          bind: 'state.tags',
+        },
+        { type: 'text', props: { text: 'Selected: {state.tags.length} tag(s)' } },
+      ],
+    },
+  },
 };

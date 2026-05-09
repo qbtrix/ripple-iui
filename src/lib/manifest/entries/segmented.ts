@@ -27,4 +27,25 @@ export const segmentedEntry: WidgetManifestEntry = {
       bind: '{state.viewMode}',
     },
   },
+  pocket: {
+    state: { view: 'list' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'segmented',
+          props: {
+            options: [
+              { value: 'list', label: 'List' },
+              { value: 'grid', label: 'Grid' },
+              { value: 'map', label: 'Map' },
+            ],
+          },
+          bind: 'state.view',
+        },
+        { type: 'text', props: { text: 'Showing as: {state.view}' } },
+      ],
+    },
+  },
 };
