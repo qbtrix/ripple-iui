@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { canonicalOptions } from '$lib/utils/safe-props.js';
   import * as Select from '$lib/components/ui/select/index.js';
 
   interface Props {
@@ -28,12 +29,16 @@
     if (value !== internalValue) internalValue = value;
   });
 
+  // Accept the canonical `{value, label}` shape AND the common alias
+  // shapes a data source might return (e.g. `workspace.members` →
+  // `{id, name, email, ...}`). See `canonicalOptions` for the full
+  // alias-key list.
   const normalizedOptions = $derived(
-    options.map(o => typeof o === 'string' ? { value: o, label: o } : o)
+    canonicalOptions(options, { widget: 'select', key: 'options' })
   );
 
   const selectedLabel = $derived(
-    normalizedOptions.find(o => o.value === internalValue)?.label ?? placeholder
+    normalizedOptions.find(o => String(o.value) === String(internalValue))?.label ?? placeholder
   );
 
   const styleString = $derived(
@@ -65,7 +70,7 @@
     </Select.Trigger>
     <Select.Content>
       {#each normalizedOptions as option}
-        <Select.Item value={option.value}>
+        <Select.Item value={String(option.value)}>
           {option.label}
         </Select.Item>
       {/each}

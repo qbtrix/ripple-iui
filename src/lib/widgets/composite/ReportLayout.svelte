@@ -10,6 +10,7 @@
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import type { EventHandler, EventHandlerOrArray } from '$lib/schema/event-handler.js';
   import type { EventDispatcher } from '$lib/core/event-dispatcher.js';
@@ -60,16 +61,23 @@
     subtitle,
     logo,
     brand,
-    meta = [],
+    meta: rawMeta = [],
     footer,
     showPrintAction = true,
-    actions,
+    actions: rawActions,
     watermark,
     paperWidth = true,
     children,
     hasChildren = false,
     onaction
   }: Props = $props();
+
+  const meta = $derived(safeArray<MetaItem>(rawMeta, { widget: 'report-layout', key: 'meta' }));
+  const actions = $derived(
+    rawActions === undefined
+      ? undefined
+      : safeArray<Action>(rawActions, { widget: 'report-layout', key: 'actions' })
+  );
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

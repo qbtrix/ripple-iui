@@ -8,6 +8,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import InvoiceLines from '$lib/widgets/vertical/InvoiceLines.svelte';
   import type { EventHandler, EventHandlerOrArray } from '$lib/schema/event-handler.js';
@@ -90,16 +91,21 @@
     dueDate,
     status,
     currency = '$',
-    lines,
-    summary = [],
+    lines: rawLines,
+    summary: rawSummary = [],
     subtotal,
     total,
     notes,
     paymentTerms,
-    paymentMethods = [],
-    actions = [],
+    paymentMethods: rawPaymentMethods = [],
+    actions: rawActions = [],
     onaction
   }: Props = $props();
+
+  const lines = $derived(safeArray<Line>(rawLines, { widget: 'invoice-layout', key: 'lines' }));
+  const summary = $derived(safeArray<SummaryLine>(rawSummary, { widget: 'invoice-layout', key: 'summary' }));
+  const paymentMethods = $derived(safeArray<PaymentMethod>(rawPaymentMethods, { widget: 'invoice-layout', key: 'paymentMethods' }));
+  const actions = $derived(safeArray<Action>(rawActions, { widget: 'invoice-layout', key: 'actions' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

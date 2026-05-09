@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/input/Segmented.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { canonicalOptions } from '$lib/utils/safe-props.js';
   import * as icons from '@lucide/svelte';
 
   type Option =
@@ -38,9 +39,7 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  const normalized = $derived(
-    options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
-  );
+  const normalized = $derived(canonicalOptions(options, { widget: 'segmented', key: 'options' }));
 
   function isSelected(v: string | number): boolean {
     if (multiple) return Array.isArray(value) && value.includes(v);

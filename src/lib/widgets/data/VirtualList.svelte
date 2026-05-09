@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
 
   interface Props {
@@ -25,7 +26,7 @@
     id,
     class: className,
     style,
-    items = [],
+    items: rawItems = [],
     itemHeight = 36,
     height = '320px',
     overscan = 5,
@@ -33,6 +34,8 @@
     emptyText = 'No items',
     children
   }: Props = $props();
+
+  const items = $derived(safeArray(rawItems, { widget: 'virtual-list', key: 'items' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

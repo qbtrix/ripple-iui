@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/data/TreeTable.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
@@ -40,8 +41,8 @@
     id,
     class: className,
     style,
-    columns = [],
-    rows = [],
+    columns: rawColumns = [],
+    rows: rawRows = [],
     defaultExpanded = 'first-level',
     value = null,
     striped = true,
@@ -49,6 +50,9 @@
     emptyText = 'No rows',
     onchange
   }: Props = $props();
+
+  const columns = $derived(safeArray<Column>(rawColumns, { widget: 'tree-table', key: 'columns' }));
+  const rows = $derived(safeArray<Row>(rawRows, { widget: 'tree-table', key: 'rows' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

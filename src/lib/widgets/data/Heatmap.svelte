@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   type Cell = { x: string | number; y: string | number; value: number };
 
@@ -26,7 +27,7 @@
     id,
     class: className,
     style,
-    cells = [],
+    cells: rawCells = [],
     xLabels,
     yLabels,
     height = 280,
@@ -35,6 +36,8 @@
     showLabels = false,
     tooltip = true
   }: Props = $props();
+
+  const cells = $derived(safeArray<Cell>(rawCells, { widget: 'heatmap', key: 'cells' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

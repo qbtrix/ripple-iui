@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { canonicalOptions } from '$lib/utils/safe-props.js';
   import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 
   interface Option {
@@ -24,7 +25,10 @@
   }: Props = $props();
 
   const normalized: Option[] = $derived(
-    options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
+    canonicalOptions(options, { widget: 'radio-group', key: 'options' }).map((o) => ({
+      value: String(o.value),
+      label: o.label
+    }))
   );
 
   const styleString = $derived(

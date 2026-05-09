@@ -9,6 +9,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import type { EventHandler, EventHandlerOrArray } from '$lib/schema/event-handler.js';
   import type { EventDispatcher } from '$lib/core/event-dispatcher.js';
@@ -65,7 +66,7 @@
     style,
     title,
     description,
-    items = [],
+    items: rawItems = [],
     groupBy = 'none',
     showProgress = true,
     progress,
@@ -73,6 +74,8 @@
     onitemclick,
     ontoggle
   }: Props = $props();
+
+  const items = $derived(safeArray<ChecklistItem>(rawItems, { widget: 'checklist-layout', key: 'items' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

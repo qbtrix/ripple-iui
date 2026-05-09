@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import Chart from '$lib/widgets/data/Chart.svelte';
 
@@ -89,13 +90,18 @@
     progress,
     dueDate,
     lead,
-    meta = [],
+    meta: rawMeta = [],
     burndown,
     breakdown,
-    team = [],
-    updates = [],
-    milestones = []
+    team: rawTeam = [],
+    updates: rawUpdates = [],
+    milestones: rawMilestones = []
   }: Props = $props();
+
+  const meta = $derived(safeArray<MetaItem>(rawMeta, { widget: 'project-dashboard', key: 'meta' }));
+  const team = $derived(safeArray<TeamMember>(rawTeam, { widget: 'project-dashboard', key: 'team' }));
+  const updates = $derived(safeArray<Update>(rawUpdates, { widget: 'project-dashboard', key: 'updates' }));
+  const milestones = $derived(safeArray<Milestone>(rawMilestones, { widget: 'project-dashboard', key: 'milestones' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

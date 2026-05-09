@@ -8,6 +8,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import Chart from '$lib/widgets/data/Chart.svelte';
   import Sparkline from '$lib/widgets/data/Sparkline.svelte';
@@ -126,12 +127,12 @@
     activeActivityFilter = $bindable(),
     showRefresh = true,
     refreshActions,
-    actions = [],
-    kpis = [],
+    actions: rawActions = [],
+    kpis: rawKpis = [],
     primaryChart,
-    activity = [],
+    activity: rawActivity = [],
     activityTitle = 'Recent activity',
-    charts = [],
+    charts: rawCharts = [],
     table,
     onaction,
     onkpiclick,
@@ -141,6 +142,11 @@
     onactivityfilterchange,
     onrefresh
   }: Props = $props();
+
+  const actions = $derived(safeArray<Action>(rawActions, { widget: 'exec-dashboard', key: 'actions' }));
+  const kpis = $derived(safeArray<Kpi>(rawKpis, { widget: 'exec-dashboard', key: 'kpis' }));
+  const activity = $derived(safeArray<ActivityItem>(rawActivity, { widget: 'exec-dashboard', key: 'activity' }));
+  const charts = $derived(safeArray<ChartConfig>(rawCharts, { widget: 'exec-dashboard', key: 'charts' }));
 
   $effect(() => {
     if (dateRanges && dateRanges.length > 0 && (!activeDateRange || !dateRanges.includes(activeDateRange))) {

@@ -10,6 +10,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import Map from '$lib/widgets/data/Map.svelte';
   import type { EventHandler, EventHandlerOrArray } from '$lib/schema/event-handler.js';
@@ -108,7 +109,7 @@
     title,
     orderId,
     status,
-    steps,
+    steps: rawSteps,
     currentStep,
     eta,
     tracking,
@@ -120,10 +121,18 @@
     mapHeight = '320px',
     mapTiles = 'carto-voyager',
     followTracker = false,
-    events = [],
-    actions = [],
+    events: rawEvents = [],
+    actions: rawActions = [],
     onaction
   }: Props = $props();
+
+  const steps = $derived(
+    rawSteps === undefined
+      ? undefined
+      : safeArray<Step>(rawSteps, { widget: 'order-status', key: 'steps' })
+  );
+  const events = $derived(safeArray<OrderEvent>(rawEvents, { widget: 'order-status', key: 'events' }));
+  const actions = $derived(safeArray<Action>(rawActions, { widget: 'order-status', key: 'actions' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

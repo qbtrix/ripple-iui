@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   interface KvRow {
     key: string;
@@ -16,7 +17,9 @@
     class?: string;
   }
 
-  let { rows = [], columns = 1, striped = true, class: className }: Props = $props();
+  let { rows: rawRows = [], columns = 1, striped = true, class: className }: Props = $props();
+
+  const rows = $derived(safeArray<KvRow>(rawRows, { widget: 'kv-table', key: 'rows' }));
 
   /** Split rows into column groups */
   const groups = $derived.by(() => {

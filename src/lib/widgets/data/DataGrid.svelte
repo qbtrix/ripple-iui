@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/data/DataGrid.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
   import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
@@ -47,8 +48,8 @@
     id,
     class: className,
     style,
-    columns = [],
-    rows = [],
+    columns: rawColumns = [],
+    rows: rawRows = [],
     value = null,
     pageSize = 10,
     searchable = true,
@@ -59,6 +60,9 @@
     onchange,
     onsort
   }: Props = $props();
+
+  const columns = $derived(safeArray<Column>(rawColumns, { widget: 'datagrid', key: 'columns' }));
+  const rows = $derived(safeArray<Row>(rawRows, { widget: 'datagrid', key: 'rows' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

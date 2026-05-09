@@ -9,6 +9,7 @@
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import type { EventHandler, EventHandlerOrArray } from '$lib/schema/event-handler.js';
   import type { EventDispatcher } from '$lib/core/event-dispatcher.js';
@@ -82,15 +83,22 @@
     icon,
     iconColor,
     status,
-    tags = [],
-    kpis = [],
-    actions = [],
-    meta = [],
+    tags: rawTags = [],
+    kpis: rawKpis = [],
+    actions: rawActions = [],
+    meta: rawMeta = [],
     metaPlacement = 'rail',
     children,
     hasChildren = false,
     onaction
   }: Props = $props();
+
+  // Defensive: array props may arrive as undefined / unevaluated strings
+  // from LLM-generated specs.
+  const tags = $derived(safeArray<string | Tag>(rawTags, { widget: 'entity-detail', key: 'tags' }));
+  const kpis = $derived(safeArray<Kpi>(rawKpis, { widget: 'entity-detail', key: 'kpis' }));
+  const actions = $derived(safeArray<Action>(rawActions, { widget: 'entity-detail', key: 'actions' }));
+  const meta = $derived(safeArray<MetaItem>(rawMeta, { widget: 'entity-detail', key: 'meta' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
