@@ -17,4 +17,15 @@ export const textareaEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on blur.' },
   },
   example: { type: 'textarea', props: { label: 'Comments', placeholder: 'Share your thoughts…', rows: 4, bind: '{state.comments}' } },
+  pocket: {
+    state: { feedback: '' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'textarea', props: { label: 'Feedback', placeholder: 'Tell us what you think…', rows: 4 }, bind: 'state.feedback' },
+        { type: 'text', props: { text: '{state.feedback.length} / 500 characters' } },
+      ],
+    },
+  },
 };
