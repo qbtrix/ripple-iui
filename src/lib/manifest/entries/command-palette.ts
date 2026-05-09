@@ -22,4 +22,30 @@ export const commandPaletteEntry: WidgetManifestEntry = {
       ],
     },
   },
+  pocket: {
+    state: { paletteOpen: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'button',
+          props: { label: 'Open command palette', variant: 'secondary' },
+          on_click: { action: 'open', target: 'paletteOpen' },
+        },
+        {
+          type: 'command-palette',
+          props: {
+            shortcut: 'mod+k',
+            commands: [
+              { id: 'create', label: 'Create document', keywords: ['new', 'doc'], icon: 'plus', group: 'Documents' },
+              { id: 'search', label: 'Search', keywords: ['find'], icon: 'search', shortcut: 'mod+f', group: 'Navigation' },
+              { id: 'settings', label: 'Open settings', icon: 'settings', shortcut: 'mod+,', group: 'Navigation' },
+            ],
+          },
+          bind: 'state.paletteOpen',
+        },
+      ],
+    },
+  },
 };

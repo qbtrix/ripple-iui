@@ -34,4 +34,46 @@ export const dataGridEntry: WidgetManifestEntry = {
       searchable: true,
     },
   },
+  pocket: {
+    state: {
+      selected: null,
+      rows: [
+        { id: 1, name: 'Alice', email: 'alice@example.com', revenue: '$8,400' },
+        { id: 2, name: 'Bob', email: 'bob@example.com', revenue: '$5,200' },
+        { id: 3, name: 'Carol', email: 'carol@example.com', revenue: '$12,800' },
+      ],
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'data-grid',
+          props: {
+            columns: [
+              { key: 'name', label: 'Customer', sortable: true },
+              { key: 'email', label: 'Email' },
+              { key: 'revenue', label: 'Revenue', align: 'right', sortable: true },
+            ],
+            rows: '{state.rows}',
+            searchable: true,
+          },
+          bind: 'state.selected',
+        },
+        {
+          type: 'flex',
+          show: '{state.selected != null}',
+          props: { gap: '8px', align: 'center' },
+          children: [
+            { type: 'text', props: { text: 'Selected row id: {state.selected}' } },
+            {
+              type: 'button',
+              props: { label: 'Email customer', variant: 'secondary', size: 'sm' },
+              on_click: { action: 'toast', message: 'Sent', variant: 'success' },
+            },
+          ],
+        },
+      ],
+    },
+  },
 };

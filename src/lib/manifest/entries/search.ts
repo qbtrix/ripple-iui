@@ -29,4 +29,27 @@ export const searchEntry: WidgetManifestEntry = {
       bind: '{state.searchQuery}',
     },
   },
+  pocket: {
+    state: { searchQuery: '', lastSelected: null },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'search',
+          props: {
+            placeholder: 'Search users…',
+            results: [
+              { id: 1, label: 'Alice Chen', description: 'Product Designer', group: 'Users', icon: 'user' },
+              { id: 2, label: 'Bob Singh', description: 'Engineering Lead', group: 'Users', icon: 'user' },
+              { id: 3, label: 'Carol Park', description: 'Customer Success', group: 'Users', icon: 'user' },
+            ],
+          },
+          bind: 'state.searchQuery',
+          on_select: { action: 'set', target: 'lastSelected', value: '{event}' },
+        },
+        { type: 'text', show: '{state.lastSelected != null}', props: { text: 'Picked: {state.lastSelected.label}' } },
+      ],
+    },
+  },
 };

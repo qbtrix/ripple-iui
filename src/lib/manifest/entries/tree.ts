@@ -30,4 +30,33 @@ export const treeEntry: WidgetManifestEntry = {
       ],
     },
   },
+  pocket: {
+    state: { selectedNode: null },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'tree',
+          props: {
+            defaultExpanded: 'first-level',
+            nodes: [
+              {
+                id: 'docs',
+                label: 'Docs',
+                icon: 'folder',
+                children: [
+                  { id: 'docs-api', label: 'API', icon: 'file-text' },
+                  { id: 'docs-guide', label: 'Guide', icon: 'book-open' },
+                ],
+              },
+              { id: 'components', label: 'Components', icon: 'box' },
+            ],
+          },
+          bind: 'state.selectedNode',
+        },
+        { type: 'text', show: '{state.selectedNode != null}', props: { text: 'Open: {state.selectedNode}' } },
+      ],
+    },
+  },
 };

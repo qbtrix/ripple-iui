@@ -25,4 +25,26 @@ export const filterBarEntry: WidgetManifestEntry = {
       showClearAll: true,
     },
   },
+  pocket: {
+    state: { filters: [] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'filter-bar',
+          props: {
+            options: [
+              { key: 'status', label: 'Status' },
+              { key: 'priority', label: 'Priority' },
+              { key: 'assignee', label: 'Assignee' },
+            ],
+            showClearAll: true,
+          },
+          bind: 'state.filters',
+        },
+        { type: 'text', props: { text: '{state.filters.length} active filter(s)' } },
+      ],
+    },
+  },
 };
