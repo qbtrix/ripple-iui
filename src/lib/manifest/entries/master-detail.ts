@@ -30,9 +30,9 @@ export const masterDetailEntry: WidgetManifestEntry = {
     state: {
       selectedId: 1,
       tickets: [
-        { id: 1, label: 'Login fails on Safari', priority: 'high', body: 'Users on Safari 17 hit a redirect loop after OAuth.' },
-        { id: 2, label: 'Export is slow', priority: 'medium', body: 'CSV export of >10k rows takes >30s.' },
-        { id: 3, label: 'Typo in onboarding', priority: 'low', body: '"Welome" should be "Welcome" on the second step.' },
+        { id: 1, title: 'Login fails on Safari', priority: 'high', body: 'Users on Safari 17 hit a redirect loop after OAuth.' },
+        { id: 2, title: 'Export is slow', priority: 'medium', body: 'CSV export of >10k rows takes >30s.' },
+        { id: 3, title: 'Typo in onboarding', priority: 'low', body: '"Welome" should be "Welcome" on the second step.' },
       ],
     },
     ui: {
@@ -40,13 +40,14 @@ export const masterDetailEntry: WidgetManifestEntry = {
       props: {
         items: '{state.tickets}',
         valueKey: 'id',
-        labelKey: 'label',
+        labelKey: 'title',
         descriptionKey: 'priority',
+        width: '320px',
         detail: {
           type: 'flex',
           props: { direction: 'column', gap: '12px' },
           children: [
-            { type: 'heading', props: { level: 3, text: '{item.label}' } },
+            { type: 'heading', props: { level: 3, text: '{item.title}' } },
             { type: 'badge', props: { text: '{item.priority}', variant: 'secondary' } },
             { type: 'text', props: { text: '{item.body}' } },
           ],
