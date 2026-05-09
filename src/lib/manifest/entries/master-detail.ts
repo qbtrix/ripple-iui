@@ -26,4 +26,33 @@ export const masterDetailEntry: WidgetManifestEntry = {
       descriptionKey: 'description',
     },
   },
+  pocket: {
+    state: {
+      selectedId: 1,
+      tickets: [
+        { id: 1, label: 'Login fails on Safari', priority: 'high', body: 'Users on Safari 17 hit a redirect loop after OAuth.' },
+        { id: 2, label: 'Export is slow', priority: 'medium', body: 'CSV export of >10k rows takes >30s.' },
+        { id: 3, label: 'Typo in onboarding', priority: 'low', body: '"Welome" should be "Welcome" on the second step.' },
+      ],
+    },
+    ui: {
+      type: 'master-detail',
+      props: {
+        items: '{state.tickets}',
+        valueKey: 'id',
+        labelKey: 'label',
+        descriptionKey: 'priority',
+        detail: {
+          type: 'flex',
+          props: { direction: 'column', gap: '12px' },
+          children: [
+            { type: 'heading', props: { level: 3, text: '{item.label}' } },
+            { type: 'badge', props: { text: '{item.priority}', variant: 'secondary' } },
+            { type: 'text', props: { text: '{item.body}' } },
+          ],
+        },
+      },
+      bind: 'state.selectedId',
+    },
+  },
 };
