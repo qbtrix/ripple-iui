@@ -164,6 +164,29 @@ export interface WidgetPropSpec {
   description: string;
 }
 
+/**
+ * A runnable mini-spec demonstrating realistic interaction wiring for a
+ * widget. Sibling to `example` — never a replacement for it. `example`
+ * is a liftable node; `pocket` is a complete pocket.
+ */
+export interface PocketSpec {
+  /** Optional state seed. Required if `ui` uses `bind` or reads `{state.*}`. */
+  state?: Record<string, unknown>;
+  /** The runnable widget tree. Top-level node should match (or contain) the entry's widget type. */
+  ui: WidgetManifestEntry['example'];
+}
+
+/**
+ * A named pocket variant for widgets with distinct interaction modes
+ * (e.g. form submit-with-api vs submit-with-emit). Use `pocket` for the
+ * single-variant case; reach for `pockets` only when one example genuinely
+ * cannot represent the widget's range.
+ */
+export interface NamedPocketSpec extends PocketSpec {
+  name: string;
+  description?: string;
+}
+
 export interface WidgetManifestEntry {
   /** Canonical widget type as registered in `widgets/index.ts`. */
   type: string;
@@ -206,29 +229,6 @@ export interface WidgetManifestEntry {
    * the widget's interaction range. Cap at 3 entries.
    */
   pockets?: NamedPocketSpec[];
-}
-
-/**
- * A runnable mini-spec demonstrating realistic interaction wiring for a
- * widget. Sibling to `example` — never a replacement for it. `example`
- * is a liftable node; `pocket` is a complete pocket.
- */
-export interface PocketSpec {
-  /** Optional state seed. Required if `ui` uses `bind` or reads `{state.*}`. */
-  state?: Record<string, unknown>;
-  /** The runnable widget tree. Top-level node should match (or contain) the entry's widget type. */
-  ui: WidgetManifestEntry['example'];
-}
-
-/**
- * A named pocket variant for widgets with distinct interaction modes
- * (e.g. form submit-with-api vs submit-with-emit). Use `pocket` for the
- * single-variant case; reach for `pockets` only when one example genuinely
- * cannot represent the widget's range.
- */
-export interface NamedPocketSpec extends PocketSpec {
-  name: string;
-  description?: string;
 }
 
 /**
