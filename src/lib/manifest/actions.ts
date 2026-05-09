@@ -47,4 +47,62 @@ export const manifestActions: Record<string, ActionSpec> = {
     },
     example: { action: 'remove', target: 'todos', index: 0 },
   },
+
+  open: {
+    description: "Set the target state path to `true`. Idiomatic shortcut for opening a modal or dialog whose `value` is bound to that path.",
+    shape: {
+      action: '"open"',
+      target: 'string — state path that controls the modal/dialog open state.',
+    },
+    example: { action: 'open', target: 'confirmDeleteOpen' },
+  },
+
+  navigate: {
+    description: "Host-delegated URL change. The host's `onEvent` callback performs the navigation.",
+    shape: {
+      action: '"navigate"',
+      url: 'string — destination URL. Supports {state.x} interpolation.',
+    },
+    example: { action: 'navigate', url: '/projects/{state.selectedId}' },
+  },
+
+  toast: {
+    description: "Show a toast notification. Use after `set` / `api` to give the user feedback.",
+    shape: {
+      action: '"toast"',
+      message: 'string — toast body. Supports {state.x} interpolation.',
+      'variant?': '"default" | "success" | "error" | "warning" | "info"',
+    },
+    example: { action: 'toast', message: 'Saved', variant: 'success' },
+  },
+
+  emit: {
+    description: "Emit a custom event up to the host. Use to hand control back to the host pipeline (e.g. \"submit complete, take it from here\").",
+    shape: {
+      action: '"emit"',
+      'target?': 'string — event name.',
+      'value?': 'any — event payload.',
+    },
+    example: { action: 'emit', target: 'submitted', value: '{state.formData}' },
+  },
+
+  pin: {
+    description: "Host-delegated bookmark/pin operation. The host implements the persistence.",
+    shape: {
+      action: '"pin"',
+      'target?': 'string — what is being pinned.',
+      'value?': 'any — payload describing the pinned item.',
+    },
+    example: { action: 'pin', target: 'project', value: '{state.projectId}' },
+  },
+
+  unpin: {
+    description: "Inverse of `pin`. Host-delegated bookmark removal.",
+    shape: {
+      action: '"unpin"',
+      'target?': 'string — what is being unpinned.',
+      'value?': 'any',
+    },
+    example: { action: 'unpin', target: 'project', value: '{state.projectId}' },
+  },
 };
