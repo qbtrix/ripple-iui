@@ -6,6 +6,7 @@
 
 import pkg from '../../../package.json' with { type: 'json' };
 
+import { manifestActions } from './actions.js';
 import { accordionEntry } from './entries/accordion.js';
 import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
@@ -192,6 +193,57 @@ export interface WidgetManifestEntry {
     children?: unknown;
     [extraNodeField: string]: unknown;
   };
+
+  /**
+   * A complete, runnable mini-spec showing realistic interaction wiring.
+   * Present on Tier A (interactive) and Tier B (composite) widgets only.
+   * At most one of `pocket` / `pockets` may be set.
+   */
+  pocket?: PocketSpec;
+
+  /**
+   * Multiple named pockets — only when one example genuinely cannot show
+   * the widget's interaction range. Cap at 3 entries.
+   */
+  pockets?: NamedPocketSpec[];
+}
+
+/**
+ * A runnable mini-spec demonstrating realistic interaction wiring for a
+ * widget. Sibling to `example` — never a replacement for it. `example`
+ * is a liftable node; `pocket` is a complete pocket.
+ */
+export interface PocketSpec {
+  /** Optional state seed. Required if `ui` uses `bind` or reads `{state.*}`. */
+  state?: Record<string, unknown>;
+  /** The runnable widget tree. Top-level node should match (or contain) the entry's widget type. */
+  ui: WidgetManifestEntry['example'];
+}
+
+/**
+ * A named pocket variant for widgets with distinct interaction modes
+ * (e.g. form submit-with-api vs submit-with-emit). Use `pocket` for the
+ * single-variant case; reach for `pockets` only when one example genuinely
+ * cannot represent the widget's range.
+ */
+export interface NamedPocketSpec extends PocketSpec {
+  name: string;
+  description?: string;
+}
+
+/**
+ * Documents a single EventAction variant — what fields it takes, when to
+ * use it, and a minimal valid example. Mirrors `EventHandler` zod schemas
+ * in `src/lib/schema/event-handler.ts`. The drift test ensures every
+ * `example` here parses against the live schema.
+ */
+export interface ActionSpec {
+  /** One-line guidance — what this action does and when to use it. */
+  description: string;
+  /** Field name -> "type — note". Mark required fields with no `?`. */
+  shape: Record<string, string>;
+  /** A minimal valid handler — must parse against EventHandler. */
+  example: Record<string, unknown>;
 }
 
 /**
@@ -228,6 +280,8 @@ export interface WidgetManifest {
    * documents nodes, the envelope documents the tree they live in.
    */
   spec: SpecEnvelope;
+  /** Grammar reference for every EventAction variant the dispatcher accepts. */
+  actions: Record<string, ActionSpec>;
   widgets: WidgetManifestEntry[];
 }
 
@@ -418,6 +472,7 @@ export function buildManifest(): WidgetManifest {
     version: pkg.version,
     generatedAt: new Date().toISOString(),
     spec: specEnvelope,
+    actions: manifestActions,
     widgets: manifestEntries,
   };
 }
