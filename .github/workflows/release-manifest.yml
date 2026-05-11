@@ -1,0 +1,66 @@
+name: Release manifest
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v0.2.1). Creates the tag if it does not exist.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build library + manifest
+        run: bun run build
+
+      - name: Stage release assets
+        run: |
+          set -euo pipefail
+          mkdir -p release/ripple-manifest/schema
+          cp dist/manifest.json release/manifest.json
+          cp -r dist release/ripple-manifest/dist
+          cp dist/manifest.json release/ripple-manifest/manifest.json
+          cp src/lib/schema/*.ts release/ripple-manifest/schema/
+          cd release
+          zip -r ripple-manifest.zip ripple-manifest
+          rm -rf ripple-manifest
+          ls -la
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release/manifest.json
+            release/ripple-manifest.zip
