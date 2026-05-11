@@ -72,6 +72,7 @@ const UINodeBase = z.object({
 	// Event handlers
 	on_click: EventHandlerOrArray.optional(),
 	on_change: EventHandlerOrArray.optional(),
+	on_input: EventHandlerOrArray.optional(),
 	on_submit: EventHandlerOrArray.optional(),
 	on_focus: EventHandlerOrArray.optional(),
 	on_blur: EventHandlerOrArray.optional(),

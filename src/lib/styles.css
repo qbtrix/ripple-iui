@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* Map shadcn-svelte/bits-ui state attributes to Tailwind v4 shorthand
+   variants. bits-ui exposes `data-state="checked|unchecked|active|open|closed"`
+   etc. — without these declarations, classes like `data-checked:bg-primary`
+   silently match nothing because Tailwind's default `data-foo:` matches
+   `[data-foo]` (boolean), not `[data-state="foo"]`. */
+@custom-variant data-checked (&[data-state="checked"]);
+@custom-variant data-unchecked (&[data-state="unchecked"]);
+@custom-variant data-active (&[data-state="active"]);
+@custom-variant data-inactive (&[data-state="inactive"]);
+@custom-variant data-open (&[data-state="open"]);
+@custom-variant data-closed (&[data-state="closed"]);
+@custom-variant data-vertical (&[data-orientation="vertical"]);
+@custom-variant data-horizontal (&[data-orientation="horizontal"]);
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

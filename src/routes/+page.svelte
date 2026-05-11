@@ -406,12 +406,13 @@
         }},
         { type: 'heading', props: { text: 'How it works', level: 4 } },
         {
-          type: 'feed', props: {
-            items: [
-              { text: 'Each call clears the previous timer via clearTimeout', type: 'info' },
-              { text: 'A new timer is set with the specified delay', type: 'info' },
-              { text: 'The function only fires after the caller stops for delay ms', type: 'success' },
-              { text: 'Closures preserve the timer reference between calls', type: 'default' },
+          type: 'timeline', props: {
+            density: 'compact',
+            events: [
+              { date: '1.', title: 'Each call clears the previous timer via clearTimeout', type: 'info' },
+              { date: '2.', title: 'A new timer is set with the specified delay', type: 'info' },
+              { date: '3.', title: 'The function only fires after the caller stops for delay ms', type: 'success' },
+              { date: '4.', title: 'Closures preserve the timer reference between calls', type: 'default' },
             ]
           }
         },
@@ -448,32 +449,35 @@
           type: 'tabs', props: { tabs: ['Day 1', 'Day 2', 'Day 3'] },
           children: [
             {
-              type: 'feed', props: {
-                items: [
-                  { text: 'Fushimi Inari — walk the thousand torii gates (early morning)', type: 'success', time: '7:00' },
-                  { text: 'Nishiki Market — street food and local ingredients', type: 'info', time: '11:00' },
-                  { text: 'Kiyomizu-dera — panoramic views of the city', type: 'success', time: '14:00' },
-                  { text: 'Gion district — evening walk, spot maiko', type: 'default', time: '18:00' },
+              type: 'timeline', props: {
+                density: 'compact',
+                events: [
+                  { date: '7:00', title: 'Fushimi Inari — walk the thousand torii gates (early morning)', type: 'success' },
+                  { date: '11:00', title: 'Nishiki Market — street food and local ingredients', type: 'info' },
+                  { date: '14:00', title: 'Kiyomizu-dera — panoramic views of the city', type: 'success' },
+                  { date: '18:00', title: 'Gion district — evening walk, spot maiko', type: 'default' },
                 ]
               }
             },
             {
-              type: 'feed', props: {
-                items: [
-                  { text: 'Arashiyama Bamboo Grove — arrive before crowds', type: 'success', time: '7:30' },
-                  { text: 'Tenryu-ji temple and garden', type: 'info', time: '10:00' },
-                  { text: 'Monkey Park Iwatayama — hilltop views', type: 'default', time: '13:00' },
-                  { text: 'Togetsukyo Bridge — sunset photos', type: 'success', time: '17:00' },
+              type: 'timeline', props: {
+                density: 'compact',
+                events: [
+                  { date: '7:30', title: 'Arashiyama Bamboo Grove — arrive before crowds', type: 'success' },
+                  { date: '10:00', title: 'Tenryu-ji temple and garden', type: 'info' },
+                  { date: '13:00', title: 'Monkey Park Iwatayama — hilltop views', type: 'default' },
+                  { date: '17:00', title: 'Togetsukyo Bridge — sunset photos', type: 'success' },
                 ]
               }
             },
             {
-              type: 'feed', props: {
-                items: [
-                  { text: 'Kinkaku-ji (Golden Pavilion)', type: 'success', time: '8:30' },
-                  { text: 'Ryoan-ji — famous rock garden', type: 'info', time: '10:30' },
-                  { text: 'Philosopher\'s Path — peaceful canal walk', type: 'default', time: '13:00' },
-                  { text: 'Pontocho alley — farewell dinner', type: 'success', time: '18:30' },
+              type: 'timeline', props: {
+                density: 'compact',
+                events: [
+                  { date: '8:30', title: 'Kinkaku-ji (Golden Pavilion)', type: 'success' },
+                  { date: '10:30', title: 'Ryoan-ji — famous rock garden', type: 'info' },
+                  { date: '13:00', title: 'Philosopher\'s Path — peaceful canal walk', type: 'default' },
+                  { date: '18:30', title: 'Pontocho alley — farewell dinner', type: 'success' },
                 ]
               }
             },
@@ -1385,79 +1389,190 @@
     },
   };
 
-  let activePocket = $state<string | null>(null);
-  let activeCard = $state<string | null>(null);
+  // ── Spec-driven page shell ───────────────────────────────────────────────
+  // The dashboard, detail expansion, and pocket gallery are all rendered by
+  // a single Ripple spec. Each card / pocket body uses the `ripple-frame`
+  // widget to mount its inner spec with isolated state.
 
-  function toggle(id: string) {
-    activePocket = activePocket === id ? null : id;
-  }
+  // Flatten cards + pockets into one items array we can drive with each.
+  const dashItems = cards.map((c) => ({
+    id: c.id,
+    span: c.span,
+    spec: c.spec,
+    clickable: !!details[c.id]
+  }));
+
+  const galleryItems = pockets.map((p) => ({
+    id: p.id,
+    label: p.label,
+    tag: p.tag,
+    spec: p.spec
+  }));
+
+  const pageSpec = {
+    version: '1.0' as const,
+    state: {
+      activeCard: null as string | null,
+      activePocket: null as string | null,
+      dashItems,
+      galleryItems,
+      details
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '24px' },
+      class: 'pockets-page',
+      children: [
+        // ── Snapshot header
+        {
+          type: 'page-header',
+          props: {
+            eyebrow: 'POCKETS',
+            title: 'Company Snapshot',
+            subtitle: 'Each section is its own card — exactly how paw-enterprise renders pockets in a dashboard grid.'
+          }
+        },
+
+        // ── Expanded detail view
+        {
+          type: 'if',
+          condition: '{state.activeCard != null}',
+          children: [
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '16px' },
+              children: [
+                {
+                  type: 'button',
+                  props: { label: '← Back to snapshot', variant: 'ghost', size: 'sm' },
+                  on_click: { action: 'set', target: 'activeCard', value: null }
+                },
+                {
+                  type: 'card',
+                  children: [
+                    {
+                      type: 'each',
+                      items: 'dashItems',
+                      item_as: 'card',
+                      children: [
+                        {
+                          type: 'if',
+                          condition: '{state.activeCard == card.id}',
+                          children: [
+                            { type: 'ripple-frame', props: { spec: '{state.details[card.id]}' } }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          else_children: [
+            // ── Dashboard grid
+            {
+              type: 'grid',
+              props: { columns: 2, gap: '12px' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'dashItems',
+                  item_as: 'card',
+                  children: [
+                    {
+                      type: 'card',
+                      props: { interactive: '{card.clickable}', density: 'comfortable' },
+                      class: '{card.span == "full" ? "col-span-2" : ""}',
+                      on_click: {
+                        action: 'branch',
+                        if: '{card.clickable}',
+                        then: [{ action: 'set', target: 'activeCard', value: '{card.id}' }]
+                      },
+                      children: [
+                        { type: 'ripple-frame', props: { spec: '{card.spec}' } }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+
+        // ── Other pocket types — accordion gallery
+        {
+          type: 'flex',
+          props: { direction: 'column', gap: '8px' },
+          style: { 'margin-top': '32px' },
+          children: [
+            {
+              type: 'page-header',
+              props: { eyebrow: 'GALLERY', title: 'Other Pockets', subtitle: 'Single-spec pockets for different use cases — click to expand.' }
+            },
+            {
+              type: 'flex',
+              props: { direction: 'column', gap: '10px' },
+              children: [
+                {
+                  type: 'each',
+                  items: 'galleryItems',
+                  item_as: 'pocket',
+                  children: [
+                    {
+                      type: 'card',
+                      class: '{state.activePocket == pocket.id ? "ring-1 ring-primary/20" : ""}',
+                      children: [
+                        {
+                          type: 'flex',
+                          props: { justify: 'between', align: 'center' },
+                          on_click: {
+                            action: 'set',
+                            target: 'activePocket',
+                            value: '{state.activePocket == pocket.id ? null : pocket.id}'
+                          },
+                          class: 'cursor-pointer',
+                          children: [
+                            {
+                              type: 'flex',
+                              props: { gap: '10px', align: 'center' },
+                              children: [
+                                { type: 'text', props: { text: '{pocket.label}', weight: 'semibold' } },
+                                { type: 'badge', props: { text: '{pocket.tag}', variant: 'secondary' } }
+                              ]
+                            },
+                            { type: 'text', props: { text: '{state.activePocket == pocket.id ? "▲" : "▼"}', size: 'xs' } }
+                          ]
+                        },
+                        {
+                          type: 'if',
+                          condition: '{state.activePocket == pocket.id}',
+                          children: [
+                            {
+                              type: 'flex',
+                              props: { direction: 'column' },
+                              style: { 'border-top': '1px solid hsl(var(--border))', 'padding-top': '12px', 'margin-top': '12px' },
+                              children: [
+                                { type: 'ripple-frame', props: { spec: '{pocket.spec}' } }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
 </script>
 
 <div class="page">
-  <!-- ── Company Snapshot: card-based dashboard ── -->
-  <header class="hero">
-    <h1>Company Snapshot</h1>
-    <p>Each section is a separate card — exactly how paw-enterprise renders pockets in a dashboard grid.</p>
-  </header>
-
-  {#if activeCard && details[activeCard]}
-    <!-- ── Expanded detail view ── -->
-    <div class="detail">
-      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-      <div class="detail-back" onclick={() => activeCard = null}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        Back to snapshot
-      </div>
-      <div class="detail-body">
-        <Ripple spec={details[activeCard]} onEvent={handleEvent} />
-      </div>
-    </div>
-  {:else}
-    <!-- ── Dashboard grid ── -->
-    <div class="dash">
-      {#each cards as card (card.id)}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-        <div
-          class="dash-card"
-          class:dash-full={card.span === 'full'}
-          class:dash-half={card.span === 'half'}
-          class:dash-clickable={!!details[card.id]}
-          onclick={() => { if (details[card.id]) activeCard = card.id; }}
-        >
-          <Ripple spec={card.spec} onEvent={handleEvent} />
-        </div>
-      {/each}
-    </div>
-  {/if}
-
-  <!-- ── Other pocket types: accordion ── -->
-  <header class="hero" style="margin-top: 3rem;">
-    <h1>Other Pockets</h1>
-    <p>Single-spec pockets for different use cases — click to expand.</p>
-  </header>
-
-  <div class="gallery">
-    {#each pockets as pocket (pocket.id)}
-      <div class="pocket" class:pocket-open={activePocket === pocket.id}>
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-        <div class="pocket-header" onclick={() => toggle(pocket.id)}>
-          <div class="pocket-meta">
-            <span class="pocket-label">{pocket.label}</span>
-            <span class="pocket-tag">{pocket.tag}</span>
-          </div>
-          <span class="pocket-chevron" class:pocket-chevron-open={activePocket === pocket.id}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          </span>
-        </div>
-
-        {#if activePocket === pocket.id}
-          <div class="pocket-body">
-            <Ripple spec={pocket.spec} onEvent={handleEvent} />
-          </div>
-        {/if}
-      </div>
-    {/each}
-  </div>
+  <Ripple spec={pageSpec} onEvent={handleEvent} />
 </div>
 
 <style>
@@ -1465,135 +1580,5 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
-  }
-  .hero {
-    margin-bottom: 1.5rem;
-  }
-  .hero h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 0.3rem;
-    color: hsl(var(--foreground));
-  }
-  .hero p {
-    font-size: 0.82rem;
-    color: hsl(var(--muted-foreground));
-    margin: 0;
-    line-height: 1.5;
-  }
-
-  /* ── Dashboard grid ── */
-  .dash {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .dash-card {
-    border: 1px solid hsl(var(--border));
-    border-radius: 12px;
-    background: hsl(var(--card));
-    padding: 16px;
-    min-width: 0;
-    overflow: hidden;
-  }
-  .dash-full {
-    grid-column: 1 / -1;
-  }
-  .dash-half {
-    grid-column: span 1;
-  }
-  .dash-clickable {
-    cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .dash-clickable:hover {
-    border-color: hsl(var(--primary) / 0.35);
-    box-shadow: 0 2px 8px hsl(var(--primary) / 0.06);
-  }
-
-  /* ── Detail expanded view ── */
-  .detail {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .detail-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: hsl(var(--muted-foreground));
-    cursor: pointer;
-    padding: 4px 0;
-    transition: color 0.15s;
-  }
-  .detail-back:hover {
-    color: hsl(var(--foreground));
-  }
-  .detail-body {
-    border: 1px solid hsl(var(--border));
-    border-radius: 12px;
-    background: hsl(var(--card));
-    padding: 20px;
-  }
-
-  /* ── Accordion gallery ── */
-  .gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .pocket {
-    border: 1px solid hsl(var(--border));
-    border-radius: 12px;
-    background: hsl(var(--card));
-    overflow: hidden;
-    transition: box-shadow 0.2s;
-  }
-  .pocket-open {
-    box-shadow: 0 2px 12px hsl(var(--foreground) / 0.06);
-  }
-  .pocket-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.15s;
-  }
-  .pocket-header:hover {
-    background: hsl(var(--muted) / 0.3);
-  }
-  .pocket-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .pocket-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: hsl(var(--foreground));
-  }
-  .pocket-tag {
-    font-size: 0.7rem;
-    font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: hsl(var(--muted) / 0.5);
-    color: hsl(var(--muted-foreground));
-  }
-  .pocket-chevron {
-    color: hsl(var(--muted-foreground));
-    transition: transform 0.2s;
-    display: flex;
-  }
-  .pocket-chevron-open {
-    transform: rotate(180deg);
-  }
-  .pocket-body {
-    padding: 4px 18px 18px;
-    border-top: 1px solid hsl(var(--border));
   }
 </style>

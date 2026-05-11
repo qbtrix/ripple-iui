@@ -23,7 +23,7 @@ export type WidgetType = z.infer<typeof WidgetType>;
 
 export const WIDGET_CATEGORIES = {
   layout: ['container', 'flex', 'grid', 'card', 'tabs', 'dashboard', 'dashboard-slot', 'glass-card'],
-  display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'stat', 'feed', 'soul-status'],
+  display: ['text', 'heading', 'image', 'badge', 'progress', 'avatar', 'metric', 'stat', 'soul-status'],
   input: ['button', 'input', 'select', 'checkbox', 'switch'],
   data: ['table', 'chart'],
   control: ['if', 'each'],

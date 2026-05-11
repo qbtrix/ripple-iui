@@ -137,6 +137,26 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 		return evaluateExpression(trimmed.slice(1, -1), context);
 	}
 
+	// Null-coalesce (??): split outside parens; pick first non-null/undefined
+	if (trimmed.includes('??')) {
+		const parts = splitLogicalOperator(trimmed, '??');
+		if (parts.length > 1) {
+			for (let i = 0; i < parts.length; i++) {
+				const v = evaluateExpression(parts[i].trim(), context);
+				if (v !== null && v !== undefined) return v;
+				if (i === parts.length - 1) return v;
+			}
+		}
+	}
+
+	// Whitelisted method calls — `<receiver>.<method>(<args>)`
+	const methodCall = matchMethodCall(trimmed);
+	if (methodCall) {
+		const receiver = evaluateExpression(methodCall.receiver, context);
+		const args = methodCall.args.map((a) => evaluateExpression(a, context));
+		return applyMethod(receiver, methodCall.method, args);
+	}
+
 	// Check for comparison operators (order matters - check === before ==)
 	const comparisonMatch = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
 
@@ -165,8 +185,233 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 		}
 	}
 
+	// Arithmetic: + and - (lowest precedence). String concat for + when either side is a string.
+	const additive = splitArithmetic(trimmed, ['+', '-']);
+	if (additive) {
+		let result = evaluateExpression(additive.parts[0], context);
+		for (let i = 0; i < additive.ops.length; i++) {
+			const right = evaluateExpression(additive.parts[i + 1], context);
+			if (additive.ops[i] === '+') {
+				if (typeof result === 'string' || typeof right === 'string') {
+					result = String(result ?? '') + String(right ?? '');
+				} else {
+					result = toNumber(result) + toNumber(right);
+				}
+			} else {
+				result = toNumber(result) - toNumber(right);
+			}
+		}
+		return result;
+	}
+
+	// Arithmetic: *, /, % (higher precedence)
+	const multiplicative = splitArithmetic(trimmed, ['*', '/', '%']);
+	if (multiplicative) {
+		let result = toNumber(evaluateExpression(multiplicative.parts[0], context));
+		for (let i = 0; i < multiplicative.ops.length; i++) {
+			const right = toNumber(evaluateExpression(multiplicative.parts[i + 1], context));
+			const op = multiplicative.ops[i];
+			if (op === '*') result *= right;
+			else if (op === '/') result = right === 0 ? 0 : result / right;
+			else result = right === 0 ? 0 : result % right;
+		}
+		return result;
+	}
+
 	// Fallback: try to parse as value (literal or path)
 	return parseValue(trimmed, context);
+}
+
+/** Coerce any value to a finite number (NaN/non-numeric → 0). */
+function toNumber(v: unknown): number {
+	const n = Number(v);
+	return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Split an expression on top-level binary arithmetic operators, respecting
+ * parentheses and treating leading `-`/`+` as unary (sign of a literal).
+ * Returns null if the expression has no binary operator from the set.
+ */
+function splitArithmetic(
+	expr: string,
+	operators: string[]
+): { ops: string[]; parts: string[] } | null {
+	const parts: string[] = [];
+	const ops: string[] = [];
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let current = '';
+	let prevNonSpace = '';
+
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+
+		// Inside a quoted string — pass everything through, only watch for the closing quote.
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+
+		if (ch === '(') {
+			depth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === ')') {
+			depth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (depth === 0 && operators.includes(ch)) {
+			const isBinary = /[a-zA-Z0-9_)\]'"]/.test(prevNonSpace);
+			if (isBinary) {
+				parts.push(current.trim());
+				ops.push(ch);
+				current = '';
+				prevNonSpace = '';
+				continue;
+			}
+		}
+		current += ch;
+		if (ch !== ' ') prevNonSpace = ch;
+	}
+
+	if (parts.length === 0) return null;
+	parts.push(current.trim());
+	return { ops, parts };
+}
+
+/**
+ * Match a method call at the end of an expression: `<receiver>.<method>(<args>)`.
+ * Respects nested parens and quoted strings inside args.
+ */
+function matchMethodCall(
+	expr: string
+): { receiver: string; method: string; args: string[] } | null {
+	if (!expr.endsWith(')')) return null;
+
+	// Find the matching `(` for the trailing `)`.
+	let depth = 0;
+	let openIdx = -1;
+	for (let i = expr.length - 1; i >= 0; i--) {
+		const ch = expr[i];
+		if (ch === ')') depth++;
+		else if (ch === '(') {
+			depth--;
+			if (depth === 0) {
+				openIdx = i;
+				break;
+			}
+		}
+	}
+	if (openIdx <= 0) return null;
+
+	// `<head>.<method>(<argsExpr>)` — head must end with `.method`.
+	const head = expr.slice(0, openIdx);
+	const dotIdx = head.lastIndexOf('.');
+	if (dotIdx <= 0) return null;
+
+	const method = head.slice(dotIdx + 1);
+	if (!/^[a-zA-Z_][\w]*$/.test(method)) return null;
+
+	const receiver = head.slice(0, dotIdx).trim();
+	if (!receiver) return null;
+
+	const argsExpr = expr.slice(openIdx + 1, expr.length - 1).trim();
+	const args = argsExpr === '' ? [] : splitArgs(argsExpr);
+	return { receiver, method, args };
+}
+
+/** Split a comma-separated argument list, respecting parens and quoted strings. */
+function splitArgs(expr: string): string[] {
+	const parts: string[] = [];
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let current = '';
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			continue;
+		}
+		if (ch === '(') depth++;
+		else if (ch === ')') depth--;
+		if (ch === ',' && depth === 0) {
+			parts.push(current.trim());
+			current = '';
+			continue;
+		}
+		current += ch;
+	}
+	if (current.trim() !== '') parts.push(current.trim());
+	return parts;
+}
+
+/** Apply a whitelisted method on a receiver value. Unknown methods return undefined. */
+function applyMethod(receiver: unknown, method: string, args: unknown[]): unknown {
+	if (typeof receiver === 'string') {
+		switch (method) {
+			case 'toLowerCase':
+				return receiver.toLowerCase();
+			case 'toUpperCase':
+				return receiver.toUpperCase();
+			case 'trim':
+				return receiver.trim();
+			case 'includes':
+				return receiver.includes(String(args[0] ?? ''));
+			case 'startsWith':
+				return receiver.startsWith(String(args[0] ?? ''));
+			case 'endsWith':
+				return receiver.endsWith(String(args[0] ?? ''));
+		}
+	}
+	if (Array.isArray(receiver)) {
+		switch (method) {
+			case 'includes':
+				return receiver.includes(args[0]);
+			case 'join':
+				return receiver.join(String(args[0] ?? ','));
+			case 'sum': {
+				const field = typeof args[0] === 'string' ? (args[0] as string) : null;
+				return receiver.reduce((a: number, v: unknown) => {
+					const n = field
+						? Number((v as Record<string, unknown> | null | undefined)?.[field])
+						: Number(v);
+					return a + (Number.isFinite(n) ? n : 0);
+				}, 0);
+			}
+			case 'count':
+				return receiver.length;
+			case 'first':
+				return receiver[0];
+			case 'last':
+				return receiver[receiver.length - 1];
+		}
+	}
+	if (typeof receiver === 'number') {
+		switch (method) {
+			case 'toFixed':
+				return receiver.toFixed(Number(args[0] ?? 0));
+		}
+	}
+	return undefined;
 }
 
 /**
@@ -242,6 +487,11 @@ function evaluateSimplePath(path: string, context: ResolverContext): unknown {
 	for (const part of parts) {
 		if (current === null || current === undefined) {
 			return undefined;
+		}
+		// Strings and arrays expose `length`; allow built-in indexed access too.
+		if (typeof current === 'string' || Array.isArray(current)) {
+			current = (current as unknown as Record<string, unknown>)[part];
+			continue;
 		}
 		if (typeof current !== 'object') {
 			return undefined;
@@ -335,6 +585,26 @@ export function resolveObject(
 }
 
 /**
+ * Detect a UINode-shaped subtree. We use a narrow signature — a string `type`
+ * combined with at least one widget-tree marker (props/children/bind/show/items
+ * /condition). Such subtrees are passed through unresolved so they can be
+ * resolved later at render time, against the loop context that exists at the
+ * point of rendering (e.g. `{item.label}` inside a `master-detail` detail
+ * pane sees `item = selectedItem`, not the parent's `item`).
+ */
+function isUINodeSpec(v: Record<string, unknown>): boolean {
+	if (typeof v.type !== 'string') return false;
+	return (
+		'props' in v ||
+		'children' in v ||
+		'bind' in v ||
+		'show' in v ||
+		'items' in v ||
+		'condition' in v
+	);
+}
+
+/**
  * Resolve any value (string, object, array, or primitive).
  */
 export function resolveValue(value: unknown, context: ResolverContext): unknown {
@@ -347,7 +617,12 @@ export function resolveValue(value: unknown, context: ResolverContext): unknown 
 	}
 
 	if (value !== null && typeof value === 'object') {
-		return resolveObject(value as Record<string, unknown>, context);
+		const obj = value as Record<string, unknown>;
+		if (isUINodeSpec(obj)) {
+			// Leave UINode subtrees raw for downstream NodeRenderer to resolve.
+			return obj;
+		}
+		return resolveObject(obj, context);
 	}
 
 	return value;
