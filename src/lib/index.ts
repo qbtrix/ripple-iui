@@ -23,6 +23,30 @@ export {
   type ResolverContext
 } from './core/expression-resolver.js';
 export { normalizeSpec } from './core/normalizer.js';
+export { newNodeId, isValidNodeId, ensureNodeIds } from './core/spec-id.js';
+export {
+  findById,
+  findParent,
+  applyAddNode,
+  applyReplaceNode,
+  applySetNodeProp,
+  applyMoveNode,
+  applyRemoveNode,
+  applyOp,
+  type AddNodeOp,
+  type ReplaceNodeOp,
+  type SetNodePropOp,
+  type MoveNodeOp,
+  type RemoveNodeOp
+} from './core/spec-mutator.js';
+export {
+  getStatePath,
+  setStatePath,
+  appendStatePath,
+  removeStatePath,
+  patchState,
+  applyStateOp
+} from './core/state-mutator.js';
 
 // Widget registry
 export {
