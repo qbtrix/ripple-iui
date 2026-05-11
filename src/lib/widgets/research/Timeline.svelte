@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   interface TimelineEvent {
     /** Date or time label */
@@ -24,12 +25,13 @@
   }
 
   let {
-    events = [],
+    events: rawEvents = [],
     maxItems,
     density = 'comfortable',
     class: className,
   }: Props = $props();
 
+  const events = $derived(safeArray<TimelineEvent>(rawEvents, { widget: 'timeline', key: 'events' }));
   const visible = $derived(maxItems ? events.slice(0, maxItems) : events);
 
   const typeColors: Record<string, string> = {

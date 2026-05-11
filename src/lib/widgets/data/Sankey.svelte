@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   type Node = { name: string };
   type Link = { source: string; target: string; value: number };
@@ -25,14 +26,17 @@
     id,
     class: className,
     style,
-    nodes = [],
-    links = [],
+    nodes: rawNodes = [],
+    links: rawLinks = [],
     height = 320,
     title,
     orient = 'horizontal',
     curveness = 0.5,
     tooltip = true
   }: Props = $props();
+
+  const nodes = $derived(safeArray<Node>(rawNodes, { widget: 'sankey', key: 'nodes' }));
+  const links = $derived(safeArray<Link>(rawLinks, { widget: 'sankey', key: 'links' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

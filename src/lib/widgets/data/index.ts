@@ -13,3 +13,4 @@ export { default as Treemap } from './Treemap.svelte';
 export { default as GanttChart } from './GanttChart.svelte';
 export { default as TreeTable } from './TreeTable.svelte';
 export { default as Calendar } from './Calendar.svelte';
+export { default as Map } from './Map.svelte';

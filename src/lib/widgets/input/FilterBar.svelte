@@ -2,6 +2,7 @@
 <script lang="ts">
   import { DropdownMenu as DM } from 'bits-ui';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import XIcon from '@lucide/svelte/icons/x';
   import PlusIcon from '@lucide/svelte/icons/plus';
 
@@ -41,12 +42,14 @@
     id,
     class: className,
     style,
-    options = [],
+    options: rawOptions = [],
     value = [],
     addLabel = 'Filter',
     showClearAll = true,
     onchange
   }: Props = $props();
+
+  const options = $derived(safeArray<FilterOption>(rawOptions, { widget: 'filter-bar', key: 'options' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

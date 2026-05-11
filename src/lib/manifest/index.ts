@@ -6,6 +6,7 @@
 
 import pkg from '../../../package.json' with { type: 'json' };
 
+import { manifestActions } from './actions.js';
 import { accordionEntry } from './entries/accordion.js';
 import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
@@ -37,6 +38,9 @@ import { comboboxEntry } from './entries/combobox.js';
 import { commandPaletteEntry } from './entries/command-palette.js';
 import { commentThreadEntry } from './entries/comment-thread.js';
 import { companyHeaderEntry } from './entries/company-header.js';
+import { analyticsDashboardEntry } from './entries/analytics-dashboard.js';
+import { checklistLayoutEntry } from './entries/checklist-layout.js';
+import { comparisonLayoutEntry } from './entries/comparison-layout.js';
 import { comparisonTableEntry } from './entries/comparison-table.js';
 import { confirmDialogEntry } from './entries/confirm-dialog.js';
 import { containerEntry } from './entries/container.js';
@@ -52,12 +56,15 @@ import { discoverCardEntry } from './entries/discover-card.js';
 import { dropdownMenuEntry } from './entries/dropdown-menu.js';
 import { eachEntry } from './entries/each.js';
 import { emptyStateEntry } from './entries/empty-state.js';
+import { entityDetailEntry } from './entries/entity-detail.js';
+import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flexEntry } from './entries/flex.js';
 import { followUpEntry } from './entries/follow-up.js';
 import { formEntry } from './entries/form.js';
+import { formLayoutEntry } from './entries/form-layout.js';
 import { funnelEntry } from './entries/funnel.js';
 import { ganttEntry } from './entries/gantt.js';
 import { gaugeEntry } from './entries/gauge.js';
@@ -72,12 +79,15 @@ import { iconEntry } from './entries/icon.js';
 import { ifEntry } from './entries/if.js';
 import { imageEntry } from './entries/image.js';
 import { inputEntry } from './entries/input.js';
+import { invoiceLayoutEntry } from './entries/invoice-layout.js';
 import { invoiceLinesEntry } from './entries/invoice-lines.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
 import { linkPreviewEntry } from './entries/link-preview.js';
 import { loadingEntry } from './entries/loading.js';
+import { locationPickerEntry } from './entries/location-picker.js';
+import { mapEntry } from './entries/map.js';
 import { markdownEntry } from './entries/markdown.js';
 import { masterDetailEntry } from './entries/master-detail.js';
 import { mentionEntry } from './entries/mention.js';
@@ -87,21 +97,26 @@ import { multiSelectEntry } from './entries/multi-select.js';
 import { newsCardEntry } from './entries/news-card.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
+import { opsDashboardEntry } from './entries/ops-dashboard.js';
+import { orderStatusEntry } from './entries/order-status.js';
 import { orgChartEntry } from './entries/org-chart.js';
 import { otpInputEntry } from './entries/otp-input.js';
 import { pageHeaderEntry } from './entries/page-header.js';
 import { peoplePickerEntry } from './entries/people-picker.js';
+import { pipelineDashboardEntry } from './entries/pipeline-dashboard.js';
 import { permissionMatrixEntry } from './entries/permission-matrix.js';
 import { popoverEntry } from './entries/popover.js';
 import { pricingTableEntry } from './entries/pricing-table.js';
 import { progressEntry } from './entries/progress.js';
 import { progressRingEntry } from './entries/progress-ring.js';
+import { projectDashboardEntry } from './entries/project-dashboard.js';
 import { prosConsEntry } from './entries/pros-cons.js';
 import { qrEntry } from './entries/qr.js';
 import { quoteEntry } from './entries/quote.js';
 import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
+import { reportLayoutEntry } from './entries/report-layout.js';
 import { richTextEntry } from './entries/rich-text.js';
 import { rippleFrameEntry } from './entries/ripple-frame.js';
 import { sankeyEntry } from './entries/sankey.js';
@@ -140,12 +155,36 @@ import { treemapEntry } from './entries/treemap.js';
 import { treeTableEntry } from './entries/tree-table.js';
 import { trendEntry } from './entries/trend.js';
 import { virtualListEntry } from './entries/virtual-list.js';
+import { wizardLayoutEntry } from './entries/wizard-layout.js';
 import { workflowEntry } from './entries/workflow.js';
 
 export interface WidgetPropSpec {
   type: string;
   required: boolean;
   description: string;
+}
+
+/**
+ * A runnable mini-spec demonstrating realistic interaction wiring for a
+ * widget. Sibling to `example` — never a replacement for it. `example`
+ * is a liftable node; `pocket` is a complete pocket.
+ */
+export interface PocketSpec {
+  /** Optional state seed. Required if `ui` uses `bind` or reads `{state.*}`. */
+  state?: Record<string, unknown>;
+  /** The runnable widget tree. Top-level node should match (or contain) the entry's widget type. */
+  ui: WidgetManifestEntry['example'];
+}
+
+/**
+ * A named pocket variant for widgets with distinct interaction modes
+ * (e.g. form submit-with-api vs submit-with-emit). Use `pocket` for the
+ * single-variant case; reach for `pockets` only when one example genuinely
+ * cannot represent the widget's range.
+ */
+export interface NamedPocketSpec extends PocketSpec {
+  name: string;
+  description?: string;
 }
 
 export interface WidgetManifestEntry {
@@ -177,6 +216,34 @@ export interface WidgetManifestEntry {
     children?: unknown;
     [extraNodeField: string]: unknown;
   };
+
+  /**
+   * A complete, runnable mini-spec showing realistic interaction wiring.
+   * Present on Tier A (interactive) and Tier B (composite) widgets only.
+   * At most one of `pocket` / `pockets` may be set.
+   */
+  pocket?: PocketSpec;
+
+  /**
+   * Multiple named pockets — only when one example genuinely cannot show
+   * the widget's interaction range. Cap at 3 entries.
+   */
+  pockets?: NamedPocketSpec[];
+}
+
+/**
+ * Documents a single EventAction variant — what fields it takes, when to
+ * use it, and a minimal valid example. Mirrors `EventHandler` zod schemas
+ * in `src/lib/schema/event-handler.ts`. The drift test ensures every
+ * `example` here parses against the live schema.
+ */
+export interface ActionSpec {
+  /** One-line guidance — what this action does and when to use it. */
+  description: string;
+  /** Field name -> "type — note". Mark required fields with no `?`. */
+  shape: Record<string, string>;
+  /** A minimal valid handler — must parse against EventHandler. */
+  example: Record<string, unknown>;
 }
 
 /**
@@ -213,6 +280,8 @@ export interface WidgetManifest {
    * documents nodes, the envelope documents the tree they live in.
    */
   spec: SpecEnvelope;
+  /** Grammar reference for every EventAction variant the dispatcher accepts. */
+  actions: Record<string, ActionSpec>;
   widgets: WidgetManifestEntry[];
 }
 
@@ -273,6 +342,9 @@ export const manifestEntries: WidgetManifestEntry[] = [
   commandPaletteEntry,
   commentThreadEntry,
   companyHeaderEntry,
+  analyticsDashboardEntry,
+  checklistLayoutEntry,
+  comparisonLayoutEntry,
   comparisonTableEntry,
   confirmDialogEntry,
   containerEntry,
@@ -288,12 +360,15 @@ export const manifestEntries: WidgetManifestEntry[] = [
   dropdownMenuEntry,
   eachEntry,
   emptyStateEntry,
+  entityDetailEntry,
+  execDashboardEntry,
   errorStateEntry,
   fileUploadEntry,
   filterBarEntry,
   flexEntry,
   followUpEntry,
   formEntry,
+  formLayoutEntry,
   funnelEntry,
   ganttEntry,
   gaugeEntry,
@@ -308,12 +383,15 @@ export const manifestEntries: WidgetManifestEntry[] = [
   ifEntry,
   imageEntry,
   inputEntry,
+  invoiceLayoutEntry,
   invoiceLinesEntry,
   kanbanEntry,
   kbdEntry,
   kvTableEntry,
   linkPreviewEntry,
   loadingEntry,
+  locationPickerEntry,
+  mapEntry,
   markdownEntry,
   masterDetailEntry,
   mentionEntry,
@@ -323,21 +401,26 @@ export const manifestEntries: WidgetManifestEntry[] = [
   newsCardEntry,
   notificationCenterEntry,
   numberInputEntry,
+  opsDashboardEntry,
+  orderStatusEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
   peoplePickerEntry,
+  pipelineDashboardEntry,
   permissionMatrixEntry,
   popoverEntry,
   pricingTableEntry,
   progressEntry,
   progressRingEntry,
+  projectDashboardEntry,
   prosConsEntry,
   qrEntry,
   quoteEntry,
   radioGroupEntry,
   rangeBarEntry,
   ratingEntry,
+  reportLayoutEntry,
   richTextEntry,
   rippleFrameEntry,
   sankeyEntry,
@@ -376,6 +459,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   treeTableEntry,
   trendEntry,
   virtualListEntry,
+  wizardLayoutEntry,
   workflowEntry,
 ];
 
@@ -388,6 +472,7 @@ export function buildManifest(): WidgetManifest {
     version: pkg.version,
     generatedAt: new Date().toISOString(),
     spec: specEnvelope,
+    actions: manifestActions,
     widgets: manifestEntries,
   };
 }

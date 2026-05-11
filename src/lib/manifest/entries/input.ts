@@ -22,4 +22,23 @@ export const inputEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on blur.' },
   },
   example: { type: 'input', props: { label: 'Email', type: 'email', placeholder: 'you@example.com', bind: '{state.email}', required: true } },
+  pocket: {
+    state: { email: '', sent: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'input', props: { label: 'Email', type: 'email', placeholder: 'you@example.com' }, bind: 'state.email' },
+        { type: 'text', props: { text: 'Will send to: {state.email || "(nothing yet)"}' } },
+        {
+          type: 'button',
+          props: { label: 'Send', disabled: '{state.email == ""}' },
+          on_click: [
+            { action: 'set', target: 'sent', value: true },
+            { action: 'toast', message: 'Sent to {state.email}', variant: 'success' },
+          ],
+        },
+      ],
+    },
+  },
 };

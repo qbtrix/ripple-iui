@@ -18,4 +18,26 @@ export const otpInputEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on every change.' },
   },
   example: { type: 'otp-input', props: { label: 'Verification code', length: 6, mask: true, bind: '{state.verificationCode}' } },
+  pocket: {
+    state: { verificationCode: '', verified: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'otp-input',
+          props: { label: 'Verification code', length: 6, mask: true },
+          bind: 'state.verificationCode',
+          on_complete: {
+            action: 'flow',
+            steps: [
+              { action: 'set', target: 'verified', value: true },
+              { action: 'toast', message: 'Code accepted', variant: 'success' },
+            ],
+          },
+        },
+        { type: 'alert', show: '{state.verified}', props: { variant: 'success', title: 'Verified', description: 'Your account is now active.' } },
+      ],
+    },
+  },
 };

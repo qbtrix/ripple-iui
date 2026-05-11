@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import type { EventHandlerOrArray } from '../../schema/event-handler.js';
   import type { EventDispatcher } from '../../core/event-dispatcher.js';
   import type { StateManager } from '../../core/state-manager.svelte.js';
@@ -41,11 +42,18 @@
     pageSize, onRowClick, class: className
   }: Props = $props();
 
-  const tableData = $derived(data ?? rows ?? []);
+  // Coerce both shapes — `data` and `rows` — to arrays. LLM-generated
+  // specs may pass an unevaluated expression string for `rows`.
+  const tableData = $derived(
+    safeArray(data, { widget: 'table', key: 'data' }).length > 0
+      ? safeArray(data, { widget: 'table', key: 'data' })
+      : safeArray(rows, { widget: 'table', key: 'rows' })
+  );
 
   const columns = $derived.by(() => {
-    if (rawColumns.length > 0) {
-      return rawColumns.map((c) => {
+    const colsArr = safeArray<TableColumn | string>(rawColumns, { widget: 'table', key: 'columns' });
+    if (colsArr.length > 0) {
+      return colsArr.map((c) => {
         if (typeof c === 'string') return { accessorKey: c, header: c, sortable: tableSortable };
         return {
           accessorKey: c.accessorKey ?? c.key ?? c.header ?? c.label ?? '',

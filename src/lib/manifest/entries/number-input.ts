@@ -18,4 +18,15 @@ export const numberInputEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on value change.' },
   },
   example: { type: 'number-input', props: { label: 'Quantity', min: 1, max: 100, step: 1, bind: '{state.quantity}' } },
+  pocket: {
+    state: { quantity: 1 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'row', gap: '12px', align: 'center' },
+      children: [
+        { type: 'number-input', props: { label: 'Quantity', min: 1, max: 99 }, bind: 'state.quantity' },
+        { type: 'text', props: { text: 'Subtotal: ${state.quantity * 12}' } },
+      ],
+    },
+  },
 };

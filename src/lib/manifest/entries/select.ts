@@ -27,4 +27,26 @@ export const selectEntry: WidgetManifestEntry = {
       bind: '{state.plan}',
     },
   },
+  pocket: {
+    state: { plan: 'pro' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'select',
+          props: {
+            label: 'Plan',
+            options: [
+              { value: 'free', label: 'Free' },
+              { value: 'pro', label: 'Pro' },
+              { value: 'enterprise', label: 'Enterprise' },
+            ],
+          },
+          bind: 'state.plan',
+        },
+        { type: 'badge', props: { text: 'Current: {state.plan}', variant: 'secondary' } },
+      ],
+    },
+  },
 };

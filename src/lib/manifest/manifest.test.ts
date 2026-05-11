@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { manifestEntries, buildManifest } from './index.js';
 import { getWidgetTypes } from '../widgets/index.js';
+import { EventHandler, EventAction } from '../schema/event-handler.js';
+import { UISpec, UINode } from '../schema/ui-spec.js';
+import { manifestActions } from './actions.js';
 
 describe('widget manifest', () => {
   it('has at least one entry registered', () => {
@@ -85,5 +88,148 @@ describe('widget manifest', () => {
     expect(m.spec.example).toHaveProperty('ui');
     expect(m.spec.example).toHaveProperty('state');
     expect((m.spec.example as { ui: { type: string } }).ui.type).toBeTruthy();
+  });
+});
+
+describe('manifest actions section', () => {
+  const ALL_VARIANTS = EventAction.options;
+
+  it('documents every EventAction variant the dispatcher supports', () => {
+    const documented = new Set(Object.keys(manifestActions));
+    const missing = ALL_VARIANTS.filter((v) => !documented.has(v));
+    expect(missing).toEqual([]);
+  });
+
+  it('does not document any unknown action variants', () => {
+    const known = new Set(ALL_VARIANTS);
+    const ghosts = Object.keys(manifestActions).filter((k) => !known.has(k as never));
+    expect(ghosts).toEqual([]);
+  });
+
+  it('every action.example parses against the live EventHandler schema', () => {
+    for (const [name, spec] of Object.entries(manifestActions)) {
+      const result = EventHandler.safeParse(spec.example);
+      expect(
+        result.success,
+        `actions.${name}.example failed: ${result.success ? '' : JSON.stringify(result.error.issues)}`,
+      ).toBe(true);
+    }
+  });
+
+  it("every action.example's `action` field matches its key", () => {
+    for (const [name, spec] of Object.entries(manifestActions)) {
+      expect((spec.example as { action: string }).action).toBe(name);
+    }
+  });
+
+  it('every action has a non-empty description and shape', () => {
+    for (const [name, spec] of Object.entries(manifestActions)) {
+      expect(spec.description.length, `actions.${name}.description is empty`).toBeGreaterThan(0);
+      expect(Object.keys(spec.shape).length, `actions.${name}.shape is empty`).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('manifest pockets', () => {
+  function entriesWithPockets() {
+    return manifestEntries.flatMap((e) => {
+      if (e.pocket && e.pockets) {
+        // covered by a separate test, but skip here so we don't double-fail.
+        return [];
+      }
+      if (e.pocket) return [{ entry: e, pocket: { name: 'default', ...e.pocket } }];
+      if (e.pockets) return e.pockets.map((p) => ({ entry: e, pocket: p }));
+      return [];
+    });
+  }
+
+  it('no entry sets both `pocket` and `pockets`', () => {
+    const offenders = manifestEntries.filter((e) => e.pocket && e.pockets).map((e) => e.type);
+    expect(offenders).toEqual([]);
+  });
+
+  it('every pocket.ui parses against the UISpec ui-tree schema', () => {
+    for (const { entry, pocket } of entriesWithPockets()) {
+      const result = UINode.safeParse(pocket.ui);
+      expect(
+        result.success,
+        `${entry.type}.${pocket.name}.ui failed: ${result.success ? '' : JSON.stringify(result.error.issues, null, 2)}`,
+      ).toBe(true);
+    }
+  });
+
+  it('every pocket as a complete spec parses against UISpec (including state)', () => {
+    for (const { entry, pocket } of entriesWithPockets()) {
+      const result = UISpec.safeParse({
+        version: '1.0',
+        state: pocket.state ?? {},
+        ui: pocket.ui,
+      });
+      expect(
+        result.success,
+        `${entry.type}.${pocket.name} spec failed: ${result.success ? '' : JSON.stringify(result.error.issues, null, 2)}`,
+      ).toBe(true);
+    }
+  });
+
+  it('every event handler inside any pocket parses against EventHandler', () => {
+    const EVENT_KEYS = ['on_click', 'on_change', 'on_input', 'on_submit', 'on_focus', 'on_blur'] as const;
+
+    function walk(node: unknown, path: string, fail: (msg: string) => void) {
+      if (!node || typeof node !== 'object') return;
+      const n = node as Record<string, unknown>;
+      for (const k of EVENT_KEYS) {
+        if (n[k] === undefined) continue;
+        const handlers = Array.isArray(n[k]) ? (n[k] as unknown[]) : [n[k]];
+        for (const [i, h] of handlers.entries()) {
+          const r = EventHandler.safeParse(h);
+          if (!r.success) fail(`${path}.${k}[${i}] invalid: ${JSON.stringify(r.error.issues)}`);
+        }
+      }
+      const children = n.children;
+      if (Array.isArray(children)) {
+        for (const [i, c] of children.entries()) walk(c, `${path}.children[${i}]`, fail);
+      }
+      const elseChildren = n.else_children;
+      if (Array.isArray(elseChildren)) {
+        for (const [i, c] of elseChildren.entries()) walk(c, `${path}.else_children[${i}]`, fail);
+      }
+    }
+
+    const failures: string[] = [];
+    for (const { entry, pocket } of entriesWithPockets()) {
+      walk(pocket.ui, `${entry.type}.${pocket.name}`, (msg) => failures.push(msg));
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('every `bind` path resolves against the pocket\'s state', () => {
+    function collectBinds(node: unknown, out: string[]) {
+      if (!node || typeof node !== 'object') return;
+      const n = node as Record<string, unknown>;
+      if (typeof n.bind === 'string') out.push(n.bind);
+      const children = n.children;
+      if (Array.isArray(children)) for (const c of children) collectBinds(c, out);
+      const elseChildren = n.else_children;
+      if (Array.isArray(elseChildren)) for (const c of elseChildren) collectBinds(c, out);
+    }
+
+    const failures: string[] = [];
+    for (const { entry, pocket } of entriesWithPockets()) {
+      const binds: string[] = [];
+      collectBinds(pocket.ui, binds);
+      const state = (pocket.state ?? {}) as Record<string, unknown>;
+      for (const raw of binds) {
+        // Accept both 'state.x' and '{state.x}' forms; strip braces and the leading 'state.'.
+        const stripped = raw.replace(/^\{(.*)\}$/, '$1');
+        const path = stripped.startsWith('state.') ? stripped.slice('state.'.length) : stripped;
+        const head = path.split('.')[0]?.split('[')[0];
+        if (!head) continue;
+        if (!(head in state)) {
+          failures.push(`${entry.type}.${pocket.name}: bind "${raw}" references state.${head} which is missing from pocket.state`);
+        }
+      }
+    }
+    expect(failures).toEqual([]);
   });
 });

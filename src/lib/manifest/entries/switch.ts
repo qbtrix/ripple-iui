@@ -14,4 +14,19 @@ export const switchEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on toggle.' },
   },
   example: { type: 'switch', props: { label: 'Enable notifications', bind: '{state.notificationsEnabled}' } },
+  pocket: {
+    state: { notificationsEnabled: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'switch', props: { label: 'Enable notifications' }, bind: 'state.notificationsEnabled' },
+        {
+          type: 'alert',
+          show: '{state.notificationsEnabled}',
+          props: { variant: 'info', title: 'Notifications on', description: 'You will receive desktop alerts.' },
+        },
+      ],
+    },
+  },
 };

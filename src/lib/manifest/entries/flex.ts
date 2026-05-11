@@ -7,7 +7,7 @@ export const flexEntry: WidgetManifestEntry = {
   description: 'Flexbox container. Lays children in a row or column with gap and alignment control.',
   props: {
     direction: { type: '"row" | "column"', required: false, description: 'Main axis. Defaults to row.' },
-    gap: { type: 'number', required: false, description: 'Gap between children in tailwind spacing units (1=4px).' },
+    gap: { type: 'number | string', required: false, description: 'Gap between children. Number → tailwind spacing units (4px multiplier, e.g. 4 → 16px); string → raw CSS gap (e.g. "12px").' },
     align: { type: '"start" | "center" | "end" | "stretch"', required: false, description: 'Cross-axis alignment.' },
     justify: { type: '"start" | "center" | "end" | "between" | "around"', required: false, description: 'Main-axis distribution.' },
     wrap: { type: 'boolean', required: false, description: 'Allow children to wrap to next line.' },

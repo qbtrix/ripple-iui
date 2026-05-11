@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import { faviconUrl } from './favicon.js';
 
   interface Props {
@@ -30,9 +31,11 @@
 
   let {
     name, ticker, exchange, description, logo, domain,
-    tags = [], price, change, changePercent, marketCap,
+    tags: rawTags = [], price, change, changePercent, marketCap,
     class: className
   }: Props = $props();
+
+  const tags = $derived(safeArray<string>(rawTags, { widget: 'company-header', key: 'tags' }));
 
   const logoSrc = $derived(
     logo ?? (domain ? `https://logo.clearbit.com/${domain}` : undefined)

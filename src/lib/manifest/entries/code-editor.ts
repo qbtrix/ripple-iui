@@ -17,4 +17,25 @@ export const codeEditorEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on code change.' },
   },
   example: { type: 'code-editor', props: { label: 'JSON config', language: 'json', height: '300px', bind: '{state.jsonConfig}' } },
+  pocket: {
+    state: { jsonConfig: '{\n  "host": "localhost",\n  "port": 5432\n}', language: 'json' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'segmented',
+          props: {
+            options: [
+              { value: 'json', label: 'JSON' },
+              { value: 'javascript', label: 'JS' },
+              { value: 'typescript', label: 'TS' },
+            ],
+          },
+          bind: 'state.language',
+        },
+        { type: 'code-editor', props: { label: 'Config', language: '{state.language}', height: '200px' }, bind: 'state.jsonConfig' },
+      ],
+    },
+  },
 };

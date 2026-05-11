@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   type Stage = { label: string; value: number };
 
@@ -22,13 +23,16 @@
     id,
     class: className,
     style,
-    data = [],
+    data: rawData = [],
     height = 240,
     title,
-    colors = [],
+    colors: rawColors = [],
     sort = 'descending',
     tooltip = true
   }: Props = $props();
+
+  const data = $derived(safeArray<Stage>(rawData, { widget: 'funnel', key: 'data' }));
+  const colors = $derived(safeArray<string>(rawColors, { widget: 'funnel', key: 'colors' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

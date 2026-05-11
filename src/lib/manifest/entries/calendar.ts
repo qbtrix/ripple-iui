@@ -25,4 +25,22 @@ export const calendarEntry: WidgetManifestEntry = {
       ],
     },
   },
+  pocket: {
+    state: {
+      selectedDate: '2026-05-12',
+      events: [
+        { id: 1, title: 'Sprint Start', start: '2026-05-05', color: '#3b82f6' },
+        { id: 2, title: 'Review', start: '2026-05-12', color: '#8b5cf6' },
+        { id: 3, title: 'Release', start: '2026-05-19', color: '#22c55e' },
+      ],
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'calendar', props: { view: 'month', events: '{state.events}' }, bind: 'state.selectedDate' },
+        { type: 'text', props: { text: 'Selected: {state.selectedDate}' } },
+      ],
+    },
+  },
 };

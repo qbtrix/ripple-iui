@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import * as Accordion from '$lib/components/ui/accordion/index.js';
 
   interface Item {
@@ -22,8 +23,10 @@
 
   let {
     id, class: className, style, multiple = false, value,
-    items = [], onchange
+    items: rawItems = [], onchange
   }: Props = $props();
+
+  const items = $derived(safeArray<Item>(rawItems, { widget: 'accordion', key: 'items' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

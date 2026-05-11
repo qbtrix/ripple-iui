@@ -17,6 +17,7 @@
 
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
   import * as icons from '@lucide/svelte';
@@ -44,7 +45,7 @@
     id,
     class: className,
     style,
-    nodes = [],
+    nodes: rawNodes = [],
     value = null,
     defaultExpanded = 'first-level',
     _level = 0,
@@ -52,6 +53,8 @@
     _onToggle,
     onchange
   }: Props = $props();
+
+  const nodes = $derived(safeArray<TreeNode>(rawNodes, { widget: 'tree', key: 'nodes' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

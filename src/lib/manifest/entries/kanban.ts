@@ -32,4 +32,35 @@ export const kanbanEntry: WidgetManifestEntry = {
       ],
     },
   },
+  pocket: {
+    state: {
+      cards: [
+        { id: 1, title: 'Design mockups', status: 'todo' },
+        { id: 2, title: 'Review feedback', status: 'in-progress' },
+        { id: 3, title: 'Finalize spec', status: 'done' },
+        { id: 4, title: 'Write release notes', status: 'todo' },
+      ],
+    },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'kanban',
+          props: {
+            columns: [
+              { id: 'todo', title: 'To Do' },
+              { id: 'in-progress', title: 'In Progress' },
+              { id: 'done', title: 'Done' },
+            ],
+            columnKey: 'status',
+            titleKey: 'title',
+          },
+          bind: 'state.cards',
+          on_change: { action: 'toast', message: 'Board updated', variant: 'info' },
+        },
+        { type: 'text', props: { text: '{state.cards.length} cards across 3 columns' } },
+      ],
+    },
+  },
 };

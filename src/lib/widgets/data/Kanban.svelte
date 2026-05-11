@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/data/Kanban.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
 
   type Column = {
@@ -40,7 +41,7 @@
     id,
     class: className,
     style,
-    columns = [],
+    columns: rawColumns = [],
     value = [],
     columnKey = 'status',
     titleKey = 'title',
@@ -50,6 +51,8 @@
     onchange,
     onmove
   }: Props = $props();
+
+  const columns = $derived(safeArray<Column>(rawColumns, { widget: 'kanban', key: 'columns' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

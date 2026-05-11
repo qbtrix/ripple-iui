@@ -7,6 +7,7 @@
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils.js';
+	import { safeArray, safeObject } from '$lib/utils/safe-props.js';
 
 	interface DataPoint {
 		label: string;
@@ -34,18 +35,27 @@
 	}
 
 	let {
-		data,
+		data: rawData,
 		type = 'bar',
 		title,
 		height = 200,
-		colors = [],
+		colors: rawColors = [],
 		tooltip = true,
-		themeOverrides = {},
+		themeOverrides: rawThemeOverrides = {},
 		bullColor = '#22c55e',
 		bearColor = '#ef4444',
 		class: className = '',
 		chartSlot
 	}: Props = $props();
+
+	// Defensive: LLM-generated specs may pass non-array `data` (e.g. an
+	// unresolved expression string) — coerce once here so every usage
+	// below is safe. Same for `colors` and `themeOverrides`.
+	const data = $derived(safeArray<DataPoint>(rawData, { widget: 'chart', key: 'data' }));
+	const colors = $derived(safeArray<string>(rawColors, { widget: 'chart', key: 'colors' }));
+	const themeOverrides = $derived(
+		safeObject<Record<string, unknown>>(rawThemeOverrides, { widget: 'chart', key: 'themeOverrides' })
+	);
 
 	const defaultColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 

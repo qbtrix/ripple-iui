@@ -18,4 +18,15 @@ export const sliderEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on value change.' },
   },
   example: { type: 'slider', props: { label: 'Volume', min: 0, max: 100, step: 1, bind: '{state.volume}', showValue: true } },
+  pocket: {
+    state: { volume: 50 },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'slider', props: { label: 'Volume', min: 0, max: 100, step: 1 }, bind: 'state.volume' },
+        { type: 'text', props: { text: 'Volume: {state.volume}%' } },
+      ],
+    },
+  },
 };

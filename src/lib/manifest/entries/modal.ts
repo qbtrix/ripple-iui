@@ -17,4 +17,42 @@ export const modalEntry: WidgetManifestEntry = {
       { type: 'text', props: { text: 'All data will be permanently removed.' } },
     ],
   },
+  pocket: {
+    state: { settingsOpen: false, theme: 'light' },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'button',
+          props: { label: 'Open settings' },
+          on_click: { action: 'open', target: 'settingsOpen' },
+        },
+        {
+          type: 'modal',
+          props: { title: 'Settings', description: 'Personalize your experience.', size: 'sm' },
+          bind: 'state.settingsOpen',
+          children: [
+            {
+              type: 'radio-group',
+              props: {
+                label: 'Theme',
+                options: [
+                  { value: 'light', label: 'Light' },
+                  { value: 'dark', label: 'Dark' },
+                  { value: 'system', label: 'System' },
+                ],
+              },
+              bind: 'state.theme',
+            },
+            {
+              type: 'button',
+              props: { label: 'Done' },
+              on_click: { action: 'set', target: 'settingsOpen', value: false },
+            },
+          ],
+        },
+      ],
+    },
+  },
 };

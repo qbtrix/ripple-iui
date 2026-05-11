@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/data/Sparkline.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import Chart from './Chart.svelte';
 
   interface Props {
@@ -24,7 +25,7 @@
     id,
     class: className,
     style,
-    values = [],
+    values: rawValues = [],
     labels,
     color,
     bullColor,
@@ -32,6 +33,8 @@
     height = 36,
     noTooltip = false
   }: Props = $props();
+
+  const values = $derived(safeArray<number>(rawValues, { widget: 'sparkline', key: 'values' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/data/Calendar.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
@@ -33,13 +34,15 @@
     id,
     class: className,
     style,
-    events = [],
+    events: rawEvents = [],
     view = 'month',
     value = null,
     locale = 'en-US',
     onchange,
     onselect
   }: Props = $props();
+
+  const events = $derived(safeArray<Event>(rawEvents, { widget: 'calendar', key: 'events' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

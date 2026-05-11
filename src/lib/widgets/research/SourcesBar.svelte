@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import { getContext } from 'svelte';
   import type { EventDispatcher } from '$lib/core/event-dispatcher.js';
   import type { StateManager } from '$lib/core/state-manager.svelte.js';
@@ -28,10 +29,11 @@
   }
 
   let {
-    sources = [], count, label = 'sources',
+    sources: rawSources = [], count, label = 'sources',
     share = true, copy = true, class: className, onclick
   }: Props = $props();
 
+  const sources = $derived(safeArray<SourceRef>(rawSources, { widget: 'sources-bar', key: 'sources' }));
   const validSources = $derived(sources.filter(s => s?.name));
   const displayCount = $derived(count ?? validSources.length);
   const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');

@@ -14,4 +14,19 @@ export const checkboxEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired on toggle.' },
   },
   example: { type: 'checkbox', props: { label: 'I agree to the terms', bind: '{state.agreed}' } },
+  pocket: {
+    state: { agreed: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        { type: 'checkbox', props: { label: 'I agree to the terms' }, bind: 'state.agreed' },
+        {
+          type: 'button',
+          props: { label: 'Continue', disabled: '{!state.agreed}' },
+          on_click: { action: 'toast', message: 'Continuing…', variant: 'info' },
+        },
+      ],
+    },
+  },
 };

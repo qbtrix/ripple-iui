@@ -15,4 +15,19 @@ export const radioGroupEntry: WidgetManifestEntry = {
     on_change: { type: 'EventAction', required: false, description: 'Fired when selection changes.' },
   },
   example: { type: 'radio-group', props: { label: 'Subscription', options: ['Monthly', 'Annual', 'Lifetime'], bind: '{state.subscription}' } },
+  pocket: {
+    state: { delivery: 'standard' },
+    ui: {
+      type: 'radio-group',
+      props: {
+        label: 'Delivery',
+        options: [
+          { value: 'standard', label: 'Standard (3-5 days)' },
+          { value: 'express', label: 'Express (1-2 days)' },
+          { value: 'pickup', label: 'Pickup (today)' },
+        ],
+      },
+      bind: 'state.delivery',
+    },
+  },
 };

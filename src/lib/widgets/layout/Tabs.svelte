@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import * as Tabs from '$lib/components/ui/tabs/index.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
   import type { UINode } from '$lib/schema/index.js';
@@ -30,7 +31,7 @@
   }: Props = $props();
 
   const tabs: Tab[] = $derived(
-    rawTabs.map((t, i) =>
+    safeArray<Tab | string>(rawTabs, { widget: 'tabs', key: 'tabs' }).map((t, i) =>
       typeof t === 'string'
         ? { value: t, label: t }
         : { value: t.value ?? t.label ?? `tab-${i}`, label: t.label ?? t.value ?? `Tab ${i + 1}` }

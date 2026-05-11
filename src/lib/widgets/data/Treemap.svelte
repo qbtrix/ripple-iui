@@ -14,6 +14,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   interface Props {
     id?: string;
@@ -34,7 +35,7 @@
     id,
     class: className,
     style,
-    data = [],
+    data: rawData = [],
     height = 320,
     title,
     showBreadcrumb = true,
@@ -42,6 +43,8 @@
     tooltip = true,
     colors
   }: Props = $props();
+
+  const data = $derived(safeArray<Node>(rawData, { widget: 'treemap', key: 'data' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

@@ -2,6 +2,7 @@
 <script lang="ts">
   import { Popover as P } from 'bits-ui';
   import { cn } from '$lib/utils.js';
+  import { canonicalOptions } from '$lib/utils/safe-props.js';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
   import CheckIcon from '@lucide/svelte/icons/check';
   import SearchIcon from '@lucide/svelte/icons/search';
@@ -41,13 +42,17 @@
     placeholder = 'Select...',
     searchPlaceholder = 'Search...',
     emptyText = 'No results',
-    options = [],
+    options: rawOptions = [],
     value = [],
     creatable = false,
     maxChips = 3,
     disabled = false,
     onchange
   }: Props = $props();
+
+  const options = $derived(
+    canonicalOptions(rawOptions, { widget: 'multiselect', key: 'options' }) as Option[]
+  );
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
