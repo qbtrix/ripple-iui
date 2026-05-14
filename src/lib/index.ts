@@ -32,12 +32,18 @@ export {
   applySetNodeProp,
   applyMoveNode,
   applyRemoveNode,
+  applySetPropArrayItem,
+  applyAppendPropArrayItem,
+  applyRemovePropArrayItem,
   applyOp,
   type AddNodeOp,
   type ReplaceNodeOp,
   type SetNodePropOp,
   type MoveNodeOp,
-  type RemoveNodeOp
+  type RemoveNodeOp,
+  type SetPropArrayItemOp,
+  type AppendPropArrayItemOp,
+  type RemovePropArrayItemOp
 } from './core/spec-mutator.js';
 export {
   getStatePath,

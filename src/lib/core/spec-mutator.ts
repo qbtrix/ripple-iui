@@ -16,11 +16,14 @@
  * unknown actions however they like (typically by refetching).
  *
  * Payload shape conventions (action → required fields):
- *   - "node_added"     → { parent_id, after_id?, subtree }
- *   - "node_replaced"  → { node_id, subtree }
- *   - "node_prop_set"  → { node_id, prop, value }
- *   - "node_moved"     → { node_id, new_parent_id, after_id? }
- *   - "node_removed"   → { node_id }
+ *   - "node_added"                     → { parent_id, after_id?, subtree }
+ *   - "node_replaced"                  → { node_id, subtree }
+ *   - "node_prop_set"                  → { node_id, prop, value }
+ *   - "node_moved"                     → { node_id, new_parent_id, after_id? }
+ *   - "node_removed"                   → { node_id }
+ *   - "node_prop_array_item_set"       → { node_id, prop, item_index, item }
+ *   - "node_prop_array_item_appended"  → { node_id, prop, item_index, item }
+ *   - "node_prop_array_item_removed"   → { node_id, prop, removed_index }
  *
  * These are designed to be wire-compatible with any source emitting
  * the same shape (server-sent events, websocket frames, local actions).
@@ -237,6 +240,86 @@ export function applyRemoveNode(root: UINode, op: RemoveNodeOp): UINode {
 }
 
 // ---------------------------------------------------------------------------
+// Prop-array item ops — surgical writes into `node.props[<prop>]` arrays
+// (chart.data, table.rows, feed.items, …). Mirrors the cloud-side Tier-2
+// edit ops; the wire payload carries the resolved index so we don't need
+// to re-run the match grammar here.
+// ---------------------------------------------------------------------------
+
+function getPropArray(node: UINode, prop: string): unknown[] {
+  if (!node.props || typeof node.props !== 'object') {
+    throw new Error(`node ${node.id} has no props`);
+  }
+  const arr = (node.props as Record<string, unknown>)[prop];
+  if (!Array.isArray(arr)) {
+    throw new Error(`prop ${prop} is not an array on node ${node.id}`);
+  }
+  return arr;
+}
+
+export interface SetPropArrayItemOp {
+  node_id: string;
+  prop: string;
+  item_index: number;
+  item: unknown;
+}
+
+export function applySetPropArrayItem(root: UINode, op: SetPropArrayItemOp): unknown {
+  const node = findById(root, op.node_id);
+  if (!node) throw new Error(`no node with id ${op.node_id}`);
+  const arr = getPropArray(node, op.prop);
+  if (op.item_index < 0 || op.item_index >= arr.length) {
+    throw new Error(`item_index ${op.item_index} out of range on ${op.node_id}.${op.prop}`);
+  }
+  const old = arr[op.item_index];
+  // Shallow-merge dicts to match the cloud's set_prop_array_item semantics;
+  // non-dict items get replaced wholesale.
+  if (
+    old && typeof old === 'object' && !Array.isArray(old) &&
+    op.item && typeof op.item === 'object' && !Array.isArray(op.item)
+  ) {
+    arr[op.item_index] = { ...(old as Record<string, unknown>), ...(op.item as Record<string, unknown>) };
+  } else {
+    arr[op.item_index] = op.item;
+  }
+  return old;
+}
+
+export interface AppendPropArrayItemOp {
+  node_id: string;
+  prop: string;
+  item_index: number;
+  item: unknown;
+}
+
+export function applyAppendPropArrayItem(root: UINode, op: AppendPropArrayItemOp): void {
+  const node = findById(root, op.node_id);
+  if (!node) throw new Error(`no node with id ${op.node_id}`);
+  if (!node.props || typeof node.props !== 'object') node.props = {};
+  const props = node.props as Record<string, unknown>;
+  if (!Array.isArray(props[op.prop])) props[op.prop] = [];
+  const arr = props[op.prop] as unknown[];
+  const idx = Math.min(Math.max(op.item_index, 0), arr.length);
+  arr.splice(idx, 0, op.item);
+}
+
+export interface RemovePropArrayItemOp {
+  node_id: string;
+  prop: string;
+  removed_index: number;
+}
+
+export function applyRemovePropArrayItem(root: UINode, op: RemovePropArrayItemOp): unknown {
+  const node = findById(root, op.node_id);
+  if (!node) throw new Error(`no node with id ${op.node_id}`);
+  const arr = getPropArray(node, op.prop);
+  if (op.removed_index < 0 || op.removed_index >= arr.length) {
+    throw new Error(`removed_index ${op.removed_index} out of range on ${op.node_id}.${op.prop}`);
+  }
+  return arr.splice(op.removed_index, 1)[0];
+}
+
+// ---------------------------------------------------------------------------
 // Dispatch by action name
 // ---------------------------------------------------------------------------
 
@@ -281,6 +364,29 @@ export function applyOp(root: UINode, payload: Record<string, unknown>): boolean
       return true;
     case 'node_removed':
       applyRemoveNode(root, { node_id: String(payload.node_id) });
+      return true;
+    case 'node_prop_array_item_set':
+      applySetPropArrayItem(root, {
+        node_id: String(payload.node_id),
+        prop: String(payload.prop),
+        item_index: Number(payload.item_index),
+        item: payload.item,
+      });
+      return true;
+    case 'node_prop_array_item_appended':
+      applyAppendPropArrayItem(root, {
+        node_id: String(payload.node_id),
+        prop: String(payload.prop),
+        item_index: Number(payload.item_index),
+        item: payload.item,
+      });
+      return true;
+    case 'node_prop_array_item_removed':
+      applyRemovePropArrayItem(root, {
+        node_id: String(payload.node_id),
+        prop: String(payload.prop),
+        removed_index: Number(payload.removed_index),
+      });
       return true;
     default:
       return false;

@@ -114,6 +114,32 @@
     }
   });
 
+  // External writes to `spec.state` (pocket SSE mutations, hot-reloaded
+  // specs) need to flow into the live stateManager too — it deep-clones
+  // `spec.state` at construction and otherwise runs disconnected. Track
+  // the last-synced snapshot and push only deltas, so a user typing into
+  // a `{state.draft}`-bound input doesn't get clobbered on every
+  // re-render: their write touches stateManager but never spec.state, so
+  // the diff stays empty for that key.
+  let lastSyncedSpecState: Record<string, unknown> = $state({});
+  $effect(() => {
+    const next = (spec as any).state;
+    if (!next || typeof next !== 'object') return;
+    const overrideKeys = initialStateOverride
+      ? new Set(Object.keys(initialStateOverride))
+      : null;
+    for (const [key, value] of Object.entries(next)) {
+      // initialStateOverride wins on conflict — preserve the host's
+      // API-data precedence from `mergedInitialState`.
+      if (overrideKeys && overrideKeys.has(key)) continue;
+      if (!shallowDifferent(value, lastSyncedSpecState[key])) continue;
+      if (shallowDifferent(value, stateManager.get(key))) {
+        stateManager.set(key, value);
+      }
+      lastSyncedSpecState[key] = value;
+    }
+  });
+
   setContext('ui-state', stateManager);
   setContext('ui-events', eventDispatcher);
   setContext('ui-data', dataStore);
