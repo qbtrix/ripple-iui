@@ -121,7 +121,10 @@
   // a `{state.draft}`-bound input doesn't get clobbered on every
   // re-render: their write touches stateManager but never spec.state, so
   // the diff stays empty for that key.
-  let lastSyncedSpecState: Record<string, unknown> = $state({});
+  // Plain `let` (not `$state`) — this is a snapshot tracker we both read
+  // and write inside the same effect; making it reactive would create a
+  // self-dependency that re-runs the effect on every sync.
+  let lastSyncedSpecState: Record<string, unknown> = {};
   $effect(() => {
     const next = (spec as any).state;
     if (!next || typeof next !== 'object') return;

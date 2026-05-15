@@ -297,10 +297,20 @@ export function applyAppendPropArrayItem(root: UINode, op: AppendPropArrayItemOp
   if (!node) throw new Error(`no node with id ${op.node_id}`);
   if (!node.props || typeof node.props !== 'object') node.props = {};
   const props = node.props as Record<string, unknown>;
-  if (!Array.isArray(props[op.prop])) props[op.prop] = [];
+  // Auto-init only when the prop is missing/null. A non-array existing
+  // value is a protocol mismatch — refuse to clobber it.
+  const existing = props[op.prop];
+  if (existing == null) {
+    props[op.prop] = [];
+  } else if (!Array.isArray(existing)) {
+    throw new Error(`prop ${op.prop} is not an array on node ${op.node_id}`);
+  }
   const arr = props[op.prop] as unknown[];
-  const idx = Math.min(Math.max(op.item_index, 0), arr.length);
-  arr.splice(idx, 0, op.item);
+  // Allow item_index === arr.length (append at end); reject other out-of-range.
+  if (op.item_index < 0 || op.item_index > arr.length) {
+    throw new Error(`item_index ${op.item_index} out of range on ${op.node_id}.${op.prop}`);
+  }
+  arr.splice(op.item_index, 0, op.item);
 }
 
 export interface RemovePropArrayItemOp {
