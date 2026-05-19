@@ -365,7 +365,12 @@ export class EventDispatcher {
 		};
 
 		if (handler.action === 'navigate') {
-			event.url = resolveString(handler.url, context) as string;
+			// Defensive fallback: LLM-generated specs occasionally emit
+			// `target` instead of `url` for navigate (cross-contamination
+			// from the emit/pin/unpin shape). Accept either so the click
+			// still works; the prompt teaches `url` going forward.
+			const rawUrl = handler.url ?? (handler as { target?: string }).target;
+			event.url = rawUrl ? (resolveString(rawUrl, context) as string) : '';
 		}
 
 		if (handler.action === 'toast') {
