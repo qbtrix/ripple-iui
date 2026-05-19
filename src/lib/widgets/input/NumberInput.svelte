@@ -76,21 +76,26 @@
 
 <div class={cn('flex flex-col gap-1.5', className)} style={styleString}>
   {#if label}
-    <label for={id} class="text-sm font-medium">{label}</label>
+    <label for={id} class="text-sm font-medium text-foreground">{label}</label>
   {/if}
 
   <div
     class={cn(
-      'inline-flex items-stretch rounded-md border border-input bg-background shadow-xs overflow-hidden',
-      'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
-      disabled && 'opacity-50 cursor-not-allowed'
+      'inline-flex h-9 w-full max-w-[14rem] items-stretch overflow-hidden rounded-md border border-input bg-background shadow-xs transition-shadow',
+      'focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40',
+      disabled && 'cursor-not-allowed opacity-50'
     )}
   >
     <button
       type="button"
       onclick={() => bump(-step)}
       aria-label="Decrement"
-      class="px-2 hover:bg-muted disabled:opacity-40 transition-colors border-r border-input"
+      class={cn(
+        'flex w-9 shrink-0 items-center justify-center border-r border-input text-muted-foreground transition-colors',
+        'hover:bg-muted hover:text-foreground active:bg-muted/70',
+        'focus-visible:bg-muted focus-visible:text-foreground focus-visible:outline-none',
+        'disabled:pointer-events-none disabled:opacity-40'
+      )}
       disabled={disabled || cantDecrement}
     >
       <MinusIcon size={14} />
@@ -99,17 +104,27 @@
       {id}
       type="text"
       inputmode="decimal"
+      aria-label={label}
       {placeholder}
       {disabled}
       value={display}
       oninput={onInput}
-      class="w-20 bg-transparent text-center tabular-nums text-sm outline-none"
+      class={cn(
+        'min-w-0 flex-1 bg-transparent px-2 text-center text-sm tabular-nums outline-none',
+        'placeholder:text-muted-foreground/60',
+        'disabled:cursor-not-allowed'
+      )}
     />
     <button
       type="button"
       onclick={() => bump(step)}
       aria-label="Increment"
-      class="px-2 hover:bg-muted disabled:opacity-40 transition-colors border-l border-input"
+      class={cn(
+        'flex w-9 shrink-0 items-center justify-center border-l border-input text-muted-foreground transition-colors',
+        'hover:bg-muted hover:text-foreground active:bg-muted/70',
+        'focus-visible:bg-muted focus-visible:text-foreground focus-visible:outline-none',
+        'disabled:pointer-events-none disabled:opacity-40'
+      )}
       disabled={disabled || cantIncrement}
     >
       <PlusIcon size={14} />

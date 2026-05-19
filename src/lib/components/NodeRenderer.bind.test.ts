@@ -75,6 +75,91 @@ test('bind write-back runs before user on_change handler so handler sees new sta
   expect(finalState).toMatchObject({ username: 'x', mirrored: 'x' });
 });
 
+test('wizard-layout Next advances bound currentStep state', async () => {
+  const onStateChange = vi.fn();
+  const { container } = render(Ripple, {
+    props: {
+      spec: {
+        state: { currentStep: 'one' },
+        ui: {
+          type: 'wizard-layout',
+          bind: '{state.currentStep}',
+          props: {
+            steps: [
+              { id: 'one', label: 'One' },
+              { id: 'two', label: 'Two' },
+              { id: 'three', label: 'Three' },
+            ],
+          },
+        },
+      },
+      onStateChange,
+    },
+  });
+
+  const buttons = container.querySelectorAll('button');
+  const nextBtn = Array.from(buttons).find((b) => b.textContent?.includes('Next')) as HTMLElement;
+  await userEvent.click(nextBtn);
+
+  expect(onStateChange).toHaveBeenLastCalledWith(
+    'currentStep',
+    'two',
+    expect.objectContaining({ currentStep: 'two' })
+  );
+});
+
+test('wizard finishActions resolve {state.x} at dispatch time, not render time', async () => {
+  // Reproduces the "Create account does nothing" bug: action handlers
+  // nested inside props (e.g. finishActions) were having their
+  // `{state.x}` expressions resolved at render time, turning a
+  // validate.condition string into a stale boolean before the user
+  // even interacted. The dispatcher then crashed when it tried to
+  // re-evaluate a boolean as an expression, silently aborting the flow.
+  const events: unknown[] = [];
+  const onStateChange = vi.fn();
+  const { container } = render(Ripple, {
+    props: {
+      spec: {
+        state: { agreed: false, name: 'Ada' },
+        ui: {
+          type: 'wizard-layout',
+          bind: '{state.currentStep}',
+          props: {
+            steps: [{ id: 'review', label: 'Review' }],
+            finishActions: [
+              { action: 'validate', condition: '{state.agreed}', message: 'tick first' },
+              { action: 'emit', target: 'chat.send', value: 'done for {state.name}' },
+            ],
+          },
+          children: [{ type: 'checkbox', bind: '{state.agreed}', props: { label: 'Agree' } }],
+        },
+      },
+      onStateChange,
+      onEvent: (e) => {
+        events.push(e);
+      },
+    },
+  });
+
+  const buttons = container.querySelectorAll('button');
+  const finishBtn = Array.from(buttons).find((b) => b.textContent?.match(/Submit|Finish/i)) as HTMLElement;
+
+  // First click: agreed=false → validate aborts, emit must NOT fire.
+  await userEvent.click(finishBtn);
+  expect(events.some((e: any) => e?.type === 'emit')).toBe(false);
+  expect(events.some((e: any) => e?.type === 'toast')).toBe(true);
+
+  // Tick the checkbox.
+  const cb = container.querySelector('button[role="checkbox"]') as HTMLElement;
+  await userEvent.click(cb);
+
+  // Second click: agreed=true → validate passes, emit fires with resolved name.
+  await userEvent.click(finishBtn);
+  const emit = events.find((e: any) => e?.type === 'emit') as any;
+  expect(emit).toBeDefined();
+  expect(emit.payload).toBe('done for Ada');
+});
+
 test('on_input fires on every keystroke', async () => {
   const onStateChange = vi.fn();
   render(Ripple, {

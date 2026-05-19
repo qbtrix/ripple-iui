@@ -183,43 +183,45 @@
 
 <div {id} class={cn('w-full', className)} style={styleString}>
   {#if title || description}
-    <div class="mb-4 sm:mb-6">
+    <div class="mb-5 sm:mb-7">
       {#if title}
-        <h2 class="mb-1 text-lg font-semibold tracking-tight sm:mb-2 sm:text-xl md:text-2xl">
+        <h2 class="text-balance text-lg font-semibold tracking-tight sm:text-xl md:text-2xl">
           {title}
         </h2>
       {/if}
       {#if description}
-        <p class="text-sm text-muted-foreground">{description}</p>
+        <p class="mt-1 text-pretty text-sm text-muted-foreground sm:mt-1.5 sm:text-[15px]">
+          {description}
+        </p>
       {/if}
     </div>
   {/if}
 
   <!-- Horizontal product cards -->
-  <div class="space-y-3">
+  <div class="space-y-2.5 sm:space-y-3">
     {#each safeItems as item (item.id)}
-      <div class="group relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md">
-        <div class="cmp-row flex flex-col">
+      <div class="group relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm ring-1 ring-transparent transition-all duration-300 hover:border-border hover:shadow-md hover:ring-primary/10">
+        <div class="flex flex-row items-stretch">
           <!-- Image -->
-          <div class="cmp-thumb relative flex shrink-0 items-center justify-center bg-gradient-to-br from-muted/30 to-transparent p-3 sm:w-36 sm:p-5 md:w-44 lg:w-52">
+          <div class="relative flex w-20 shrink-0 items-center justify-center bg-gradient-to-br from-muted/40 via-muted/20 to-transparent p-2.5 xs:w-24 xs:p-3 sm:w-36 sm:p-5 md:w-44 lg:w-52">
             {#if item.image}
               <img
                 src={item.image}
                 alt={item.title ?? item.name ?? ''}
-                class="h-20 w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-105 sm:h-24 md:h-28"
+                class="h-16 w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] xs:h-20 sm:h-24 md:h-28"
               />
             {:else}
-              <div class="flex aspect-square h-20 items-center justify-center rounded-lg bg-muted/20 sm:h-24 md:h-28">
-                <PackageIcon size={32} class="text-muted-foreground/30" />
+              <div class="flex aspect-square h-16 items-center justify-center rounded-lg bg-muted/30 xs:h-20 sm:h-24 md:h-28">
+                <PackageIcon size={28} class="text-muted-foreground/30" />
               </div>
             {/if}
           </div>
 
           <!-- Content -->
           <div class="flex min-w-0 flex-1 flex-col p-3 sm:p-5">
-            <div class="mb-2 flex flex-col gap-1 sm:mb-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+            <div class="mb-2 flex flex-col gap-1 sm:mb-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
               <div class="min-w-0 flex-1">
-                <h3 class="truncate text-sm leading-tight font-semibold sm:text-base md:text-lg">
+                <h3 class="truncate text-sm leading-snug font-semibold tracking-tight sm:text-base md:text-lg">
                   {item.title ?? item.name ?? ''}
                 </h3>
                 {#if item.subtitle || item.chip}
@@ -229,7 +231,7 @@
                 {/if}
               </div>
               {#if item.price !== undefined && item.price !== null && item.price !== ''}
-                <div class="mt-1 shrink-0 text-sm font-medium text-foreground/90 sm:mt-0 sm:text-base md:text-lg">
+                <div class="shrink-0 text-sm font-semibold tabular-nums text-foreground sm:text-base md:text-lg">
                   {item.price}
                 </div>
               {/if}
@@ -237,11 +239,11 @@
 
             <!-- Spec pills -->
             {#if highlightFeatures.length > 0}
-              <div class="mb-2 flex flex-wrap gap-1.5 sm:mb-3 sm:gap-2">
+              <div class="mb-2.5 flex flex-wrap gap-1.5 sm:mb-3.5 sm:gap-2">
                 {#each highlightFeatures.slice(0, 3) as feature}
                   {@const val = item[feature.key]}
                   {#if val !== null && val !== undefined && val !== ''}
-                    <div class="inline-flex items-center gap-1 rounded-full bg-muted/40 px-2 py-0.5 text-[10px] sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs">
+                    <div class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] leading-none sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs">
                       {#if feature.icon}
                         <Icon name={feature.icon} size={12} class="text-muted-foreground" />
                       {:else if feature.type === 'boolean'}
@@ -252,7 +254,7 @@
                         {/if}
                       {/if}
                       <span class="text-muted-foreground">{feature.label}:</span>
-                      <span class="font-medium">
+                      <span class="font-medium text-foreground/90">
                         {#if feature.type === 'boolean'}
                           {val ? 'Yes' : 'No'}
                         {:else}
@@ -267,11 +269,11 @@
 
             <!-- Actions -->
             {#if hasPrimary(item) || hasSecondary(item)}
-              <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+              <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-1 sm:gap-2">
                 {#if hasPrimary(item)}
                   <button
                     type="button"
-                    class="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:h-9 sm:px-4 sm:text-sm"
+                    class="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:h-9 sm:px-4 sm:text-sm"
                     onclick={() => handlePrimary(item)}
                   >
                     {primaryLabel}
@@ -280,7 +282,7 @@
                 {#if hasSecondary(item)}
                   <button
                     type="button"
-                    class="inline-flex h-8 items-center px-2.5 text-xs font-medium text-primary transition-colors hover:underline sm:h-9 sm:px-3 sm:text-sm"
+                    class="inline-flex h-8 items-center rounded-md px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5 hover:underline sm:h-9 sm:px-3 sm:text-sm"
                     onclick={() => handleSecondary(item)}
                   >
                     {secondaryLabel}
@@ -296,16 +298,17 @@
 
   <!-- Detailed comparison -->
   {#if sectionNames.length > 0 && safeItems.length > 0}
-    <div class="mt-6 border-t border-border pt-5 sm:mt-8 sm:pt-6">
+    <div class="mt-7 border-t border-border/70 pt-5 sm:mt-9 sm:pt-7">
       <!-- Toolbar -->
-      <div class="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-        <div class="inline-flex rounded-lg border border-border bg-muted/30 p-0.5 lg:hidden">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-5 sm:gap-3">
+        <div class="inline-flex rounded-lg border border-border/70 bg-muted/30 p-0.5 lg:hidden">
           <button
             type="button"
+            aria-pressed={viewMode === 'card'}
             class={cn(
               'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
               viewMode === 'card'
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
                 : 'text-muted-foreground hover:text-foreground'
             )}
             onclick={() => (viewMode = 'card')}
@@ -315,10 +318,11 @@
           </button>
           <button
             type="button"
+            aria-pressed={viewMode === 'table'}
             class={cn(
               'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
               viewMode === 'table'
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
                 : 'text-muted-foreground hover:text-foreground'
             )}
             onclick={() => (viewMode = 'table')}
@@ -329,7 +333,7 @@
         </div>
 
         {#if showDiffToggle && safeItems.length > 1}
-          <label class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground select-none transition-colors hover:text-foreground sm:gap-2 sm:text-sm">
+          <label class="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground select-none transition-colors hover:text-foreground sm:gap-2 sm:text-sm">
             <input
               type="checkbox"
               bind:checked={showDiffOnly}
@@ -343,15 +347,16 @@
 
       <!-- Section tabs -->
       {#if sectionNames.length > 1}
-        <div class="cmp-tabs-scroll -mx-3 mb-4 flex overflow-x-auto px-3 sm:mx-0 sm:mb-5 sm:justify-center sm:px-0">
-          <div class="inline-flex gap-0.5 rounded-full bg-muted/50 p-0.5 sm:gap-1 sm:p-1">
+        <div class="cmp-tabs-scroll -mx-3 mb-4 flex overflow-x-auto px-3 sm:mx-0 sm:mb-6 sm:justify-center sm:px-0">
+          <div class="inline-flex gap-0.5 rounded-full border border-border/60 bg-muted/40 p-1 sm:gap-1">
             {#each sectionNames as section}
               <button
                 type="button"
+                aria-pressed={activeSection === section}
                 class={cn(
-                  'rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200 sm:px-4 sm:py-1.5 sm:text-sm',
+                  'rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200 sm:px-4 sm:py-1.5 sm:text-sm',
                   activeSection === section
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
                 onclick={() => (activeSection = section)}
@@ -365,36 +370,36 @@
 
       <!-- Card view (mobile) -->
       <div class={cn(viewMode === 'table' ? 'hidden' : 'lg:hidden')}>
-        <div class="space-y-3">
+        <div class="space-y-2.5 sm:space-y-3">
           {#each safeItems as item (item.id)}
-            <div class="overflow-hidden rounded-xl border border-border bg-card">
-              <div class="flex items-center gap-3 border-b border-border bg-muted/20 px-3 py-2.5 sm:px-4 sm:py-3">
+            <div class="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+              <div class="flex items-center gap-2.5 border-b border-border/70 bg-muted/30 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
                 {#if item.image}
                   <img
                     src={item.image}
                     alt={item.title ?? item.name ?? ''}
-                    class="h-8 w-8 rounded-lg object-contain sm:h-10 sm:w-10"
+                    class="h-8 w-8 shrink-0 rounded-lg object-contain sm:h-10 sm:w-10"
                   />
                 {:else}
-                  <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/30 sm:h-10 sm:w-10">
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40 sm:h-10 sm:w-10">
                     <PackageIcon size={16} class="text-muted-foreground/50" />
                   </div>
                 {/if}
                 <div class="min-w-0 flex-1">
-                  <h4 class="truncate text-sm font-semibold sm:text-base">
+                  <h4 class="truncate text-sm font-semibold tracking-tight sm:text-base">
                     {item.title ?? item.name ?? ''}
                   </h4>
                   {#if item.price !== undefined && item.price !== null && item.price !== ''}
-                    <p class="text-xs text-muted-foreground sm:text-sm">{item.price}</p>
+                    <p class="truncate text-xs tabular-nums text-muted-foreground sm:text-sm">{item.price}</p>
                   {/if}
                 </div>
               </div>
-              <div class="divide-y divide-border">
+              <div class="divide-y divide-border/60">
                 {#each activeSectionFeatures as feature}
                   {#if !showDiffOnly || isDifferent(feature)}
-                    <div class="flex items-center justify-between gap-3 px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm">
-                      <span class="text-muted-foreground">{feature.label}</span>
-                      <span class="text-right font-medium">
+                    <div class="flex items-center justify-between gap-3 px-3 py-2 text-xs transition-colors hover:bg-muted/20 sm:px-4 sm:py-2.5 sm:text-sm">
+                      <span class="min-w-0 flex-1 truncate text-muted-foreground">{feature.label}</span>
+                      <span class="shrink-0 text-right font-medium">
                         {#if feature.type === 'boolean'}
                           {#if item[feature.key]}
                             <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
@@ -438,17 +443,17 @@
       <!-- Table view (desktop default; opt-in on mobile) -->
       <div class={cn(viewMode === 'card' ? 'hidden lg:block' : 'block')}>
         <div class="cmp-scroll">
-          <div class="cmp-inner rounded-xl border border-border bg-card">
+          <div class="cmp-inner overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
             <!-- Header -->
             <div
-              class="sticky top-0 z-10 grid border-b border-border bg-muted/30 backdrop-blur-sm"
-              style="grid-template-columns: minmax(100px, 140px) repeat({safeItems.length}, minmax(100px, 1fr));"
+              class="cmp-grid sticky top-0 z-10 border-b border-border/70 bg-muted/40 backdrop-blur-md supports-[backdrop-filter]:bg-muted/30"
+              style="--cmp-cols: {safeItems.length};"
             >
-              <div class="p-2 text-xs font-medium text-muted-foreground sm:p-3 sm:text-sm">
+              <div class="p-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:p-3 sm:text-xs">
                 {activeSection ?? ''}
               </div>
               {#each safeItems as item (item.id)}
-                <div class="flex flex-col items-center justify-center gap-1 border-l border-border p-2 text-center sm:p-3">
+                <div class="flex flex-col items-center justify-center gap-1 border-l border-border/70 p-2 text-center sm:p-3">
                   {#if item.image}
                     <img
                       src={item.image}
@@ -456,7 +461,7 @@
                       class="hidden h-6 w-6 rounded object-contain sm:block sm:h-8 sm:w-8"
                     />
                   {/if}
-                  <span class="truncate text-xs font-semibold sm:text-sm">
+                  <span class="truncate text-xs font-semibold tracking-tight sm:text-sm">
                     {item.title ?? item.name ?? ''}
                   </span>
                 </div>
@@ -464,11 +469,14 @@
             </div>
 
             <!-- Rows -->
-            {#each activeSectionFeatures as feature}
+            {#each activeSectionFeatures as feature, rowIdx}
               {#if !showDiffOnly || isDifferent(feature)}
                 <div
-                  class="grid border-b border-border transition-colors last:border-0 hover:bg-muted/5"
-                  style="grid-template-columns: minmax(100px, 140px) repeat({safeItems.length}, minmax(100px, 1fr));"
+                  class={cn(
+                    'cmp-grid border-b border-border/60 transition-colors last:border-0 hover:bg-muted/20',
+                    rowIdx % 2 === 1 && 'bg-muted/10'
+                  )}
+                  style="--cmp-cols: {safeItems.length};"
                 >
                   <div class="flex items-center gap-1.5 p-2 text-xs text-muted-foreground sm:gap-2 sm:p-3 sm:text-sm">
                     {#if feature.icon}
@@ -477,7 +485,7 @@
                     <span class="cmp-clamp-2">{feature.label}</span>
                   </div>
                   {#each safeItems as item (item.id)}
-                    <div class="flex items-center justify-center border-l border-border p-2 text-center sm:p-3">
+                    <div class="flex items-center justify-center border-l border-border/60 p-2 text-center sm:p-3">
                       {#if feature.type === 'boolean'}
                         {#if item[feature.key]}
                           <CheckIcon size={16} class="text-emerald-500" />
@@ -503,7 +511,7 @@
                           {/each}
                         </div>
                       {:else}
-                        <span class="cmp-clamp-2 text-xs font-medium sm:text-sm">
+                        <span class="cmp-clamp-2 text-xs font-medium tabular-nums sm:text-sm">
                           {item[feature.key] ?? '—'}
                         </span>
                       {/if}
@@ -561,12 +569,22 @@
   }
 
   .cmp-inner {
-    min-width: max(100%, 400px);
-    overflow: hidden;
+    min-width: max(100%, 420px);
   }
   @media (min-width: 640px) {
     .cmp-inner {
       min-width: 100%;
+    }
+  }
+
+  /* Comparison table grid — label column shrinks on phones, expands on larger screens */
+  .cmp-grid {
+    display: grid;
+    grid-template-columns: minmax(88px, 120px) repeat(var(--cmp-cols, 1), minmax(88px, 1fr));
+  }
+  @media (min-width: 640px) {
+    .cmp-grid {
+      grid-template-columns: minmax(120px, 160px) repeat(var(--cmp-cols, 1), minmax(110px, 1fr));
     }
   }
 
@@ -576,19 +594,5 @@
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-
-  /* Card row breakpoint — flip image-left/content-right at xs (≥400px) */
-  .cmp-row {
-    flex-direction: column;
-  }
-  @media (min-width: 400px) {
-    .cmp-row {
-      flex-direction: row;
-    }
-    .cmp-thumb {
-      width: 7rem;
-      padding: 1rem;
-    }
   }
 </style>

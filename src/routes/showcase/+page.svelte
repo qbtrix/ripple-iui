@@ -953,41 +953,224 @@
 
   const execDashboardSpec = {
     version: '1.0' as const,
-    state: { activeDateRange: '30d', activeGranularity: 'Day', activeActivityFilter: 'All' },
+    // State owned by the spec — bindable props on the widget mirror these paths.
+    state: { activeDateRange: '30d', activeGranularity: 'Month', activeActivityFilter: 'All' },
     ui: {
       type: 'exec-dashboard',
+      // Ripple `bind` is a single state path → maps to the widget's primary bindable
+      // (activeDateRange). Granularity and activity-filter still work via the widget's
+      // internal $bindable state — they just don't persist back to the spec.
       bind: 'activeDateRange',
       props: {
         title: 'Q2 performance',
-        subtitle: 'Cross-team metrics and KPIs',
-        dateRanges: ['7d', '30d', '90d', 'QTD', 'YTD'],
+        subtitle: 'Cross-team metrics — flip the range or granularity to swap data',
+        dateRanges: ['Today', '7d', '30d', '90d', 'QTD', 'YTD'],
         granularities: ['Day', 'Week', 'Month'],
-        activityFilters: ['All', 'Mine', 'Alerts'],
+        lastUpdated: '2m ago',
         refreshActions: [{ action: 'toast', message: 'Refreshed', variant: 'info' }],
+        actions: [
+          { id: 'export', label: 'Export', icon: 'download', variant: 'outline',
+            actions: [{ action: 'toast', message: 'Exporting…', variant: 'info' }] },
+          { id: 'share',  label: 'Share',  icon: 'share-2', variant: 'default',
+            actions: [{ action: 'toast', message: 'Share link copied', variant: 'success' }] }
+        ],
+
+        // ── 6 KPIs ── byKey overrides fire when activeDateRange / activeGranularity flip.
         kpis: [
-          { id: 'mrr', label: 'Revenue', value: '$2.4M', delta: '+18%', trend: 'up', sparkline: [22, 25, 30, 28, 36, 40, 48], actions: [{ action: 'toast', message: 'Drill: Revenue', variant: 'info' }] },
-          { id: 'cust', label: 'New customers', value: 142, delta: '+12', trend: 'up', sparkline: [10, 12, 18, 16, 20, 22, 28], actions: [{ action: 'toast', message: 'Drill: customers', variant: 'info' }] },
-          { id: 'churn', label: 'Churn', value: '2.1%', delta: '-0.4pp', trend: 'down', sparkline: [3, 2.8, 2.6, 2.5, 2.4, 2.3, 2.1], actions: [{ action: 'toast', message: 'Drill: Churn', variant: 'info' }] },
-          { id: 'nps', label: 'NPS', value: 64, delta: '+5', trend: 'up' }
+          {
+            id: 'mrr', label: 'Revenue', icon: 'dollar-sign', status: 'success', target: '$3.0M',
+            value: '$2.4M', delta: '+18%', trend: 'up', compareLabel: 'vs last month', progress: 80,
+            sparkline: [22, 25, 30, 28, 36, 40, 48],
+            byKey: {
+              Today: { value: '$24k',  delta: '+9%',  sparkline: [3, 4, 3, 5, 4, 6, 7],          progress: 8 },
+              '7d':  { value: '$182k', delta: '+6%',  sparkline: [22, 24, 23, 26, 28, 27, 29],  progress: 55 },
+              '30d': { value: '$780k', delta: '+11%', sparkline: [60, 65, 72, 70, 78, 84, 90],  progress: 68 },
+              '90d': { value: '$2.4M', delta: '+18%', sparkline: [180, 210, 230, 250, 270, 300, 340], progress: 80 },
+              QTD:   { value: '$2.4M', delta: '+18%', compareLabel: 'vs last quarter',           progress: 80 },
+              YTD:   { value: '$8.9M', delta: '+22%', compareLabel: 'vs last year',              progress: 71 }
+            },
+            actions: [{ action: 'toast', message: 'Drill: Revenue', variant: 'info' }]
+          },
+          {
+            id: 'arr', label: 'ARR pacing', icon: 'target', status: 'success',
+            value: '$11.4M', unit: '/ $14M', delta: '+22%', trend: 'up',
+            compareLabel: 'vs plan', target: '$14M', progress: 81,
+            sparkline: [50, 58, 62, 68, 74, 80, 81]
+          },
+          {
+            id: 'cust', label: 'New customers', icon: 'users',
+            value: 142, delta: '+12', trend: 'up', compareLabel: 'vs last month',
+            sparkline: [10, 12, 18, 16, 20, 22, 28],
+            byKey: {
+              Today: { value: 6,    delta: '+1' },
+              '7d':  { value: 24,   delta: '+4',   sparkline: [3, 4, 3, 5, 4, 5, 6] },
+              '30d': { value: 142,  delta: '+12',  sparkline: [10, 12, 18, 16, 20, 22, 28] },
+              '90d': { value: 412,  delta: '+38',  sparkline: [30, 35, 50, 60, 65, 78, 90] },
+              YTD:   { value: 1284, delta: '+182' }
+            },
+            actions: [{ action: 'toast', message: 'Drill: customers', variant: 'info' }]
+          },
+          {
+            id: 'churn', label: 'Churn', icon: 'trending-down', status: 'warning', target: '1.5%',
+            value: '2.1', unit: '%', delta: '-0.4pp', trend: 'down', progress: 60,
+            sparkline: [3, 2.8, 2.6, 2.5, 2.4, 2.3, 2.1],
+            byKey: {
+              '7d':  { value: '1.8', delta: '-0.1pp', progress: 75 },
+              '30d': { value: '2.1', delta: '-0.4pp', progress: 60 },
+              '90d': { value: '2.4', delta: '-0.6pp', progress: 50 },
+              YTD:   { value: '2.7', delta: '-1.1pp', progress: 38 }
+            },
+            actions: [{ action: 'toast', message: 'Drill: Churn', variant: 'warning' }]
+          },
+          {
+            id: 'sla', label: 'SLA breaches', icon: 'alert-octagon', status: 'critical',
+            value: 7, delta: '+3', trend: 'up', compareLabel: 'past 24h',
+            byKey: {
+              Today: { value: 7,   compareLabel: 'past 24h' },
+              '7d':  { value: 18,  compareLabel: 'past 7 days' },
+              '30d': { value: 47,  compareLabel: 'past 30 days' },
+              '90d': { value: 132, compareLabel: 'past 90 days' }
+            },
+            actions: [{ action: 'toast', message: 'Open SLA breach log', variant: 'error' }]
+          },
+          {
+            id: 'nps', label: 'NPS', icon: 'smile',
+            value: 64, delta: '+5', trend: 'up', compareLabel: 'vs last survey',
+            sparkline: [52, 54, 58, 60, 61, 63, 64]
+          }
         ],
+
+        // Multi-series primary chart — `series` carries two lines (Actual vs Plan).
         primaryChart: {
-          title: 'Monthly recurring revenue',
+          title: 'Recurring revenue vs. plan',
           type: 'area',
-          data: [
-            { label: 'Jan', value: 1450 }, { label: 'Feb', value: 1620 }, { label: 'Mar', value: 1810 },
-            { label: 'Apr', value: 1980 }, { label: 'May', value: 2200 }, { label: 'Jun', value: 2400 }
-          ]
+          data: {
+            Day: [
+              { label: 'Mon', series: { Actual: 320, Plan: 300 } },
+              { label: 'Tue', series: { Actual: 340, Plan: 310 } },
+              { label: 'Wed', series: { Actual: 360, Plan: 320 } },
+              { label: 'Thu', series: { Actual: 380, Plan: 330 } },
+              { label: 'Fri', series: { Actual: 410, Plan: 340 } },
+              { label: 'Sat', series: { Actual: 200, Plan: 250 } },
+              { label: 'Sun', series: { Actual: 220, Plan: 260 } }
+            ],
+            Week: [
+              { label: 'W22', series: { Actual: 2080, Plan: 2000 } },
+              { label: 'W23', series: { Actual: 2180, Plan: 2050 } },
+              { label: 'W24', series: { Actual: 2240, Plan: 2100 } },
+              { label: 'W25', series: { Actual: 2300, Plan: 2150 } },
+              { label: 'W26', series: { Actual: 2380, Plan: 2200 } },
+              { label: 'W27', series: { Actual: 2400, Plan: 2250 } }
+            ],
+            Month: [
+              { label: 'Jan', series: { Actual: 1450, Plan: 1400 } },
+              { label: 'Feb', series: { Actual: 1620, Plan: 1500 } },
+              { label: 'Mar', series: { Actual: 1810, Plan: 1620 } },
+              { label: 'Apr', series: { Actual: 1980, Plan: 1740 } },
+              { label: 'May', series: { Actual: 2200, Plan: 1860 } },
+              { label: 'Jun', series: { Actual: 2400, Plan: 2000 } }
+            ]
+          }
         },
+
+        activityTitle: 'Recent activity',
+        // Activity feed — categories auto-derive filters; unread items get bold + halo.
         activity: [
-          { id: 'a1', time: '12m ago', label: 'New deal closed: Globex ($120k)', actor: 'Alice', severity: 'success', icon: 'trophy', actions: [{ action: 'toast', message: 'Open Globex deal', variant: 'info' }] },
-          { id: 'a2', time: '38m ago', label: 'Onboarding kicked off: Initech', actor: 'Bob', severity: 'info' },
-          { id: 'a3', time: '2h ago', label: 'Churn risk flagged: Hooli', severity: 'warning', icon: 'alert-triangle', actions: [{ action: 'toast', message: 'Why is Hooli at risk?', variant: 'warning' }] },
-          { id: 'a4', time: 'Yesterday', label: 'Q1 report published', actor: 'Carol', severity: 'info' }
+          { id: 'a1', time: '12m ago', label: 'New deal closed: Globex ($120k)', actor: 'Alice', severity: 'success', icon: 'trophy', category: 'Sales', unread: true,
+            actions: [{ action: 'toast', message: 'Open Globex deal', variant: 'info' }] },
+          { id: 'a2', time: '38m ago', label: 'Onboarding kicked off: Initech', actor: 'Bob', severity: 'info', category: 'Customer success' },
+          { id: 'a3', time: '1h ago',  label: 'New signup: Vandelay Industries (Mid-market)', actor: 'Greta', severity: 'info', icon: 'user-plus', category: 'Sales' },
+          { id: 'a4', time: '2h ago',  label: 'Churn risk flagged: Hooli', severity: 'warning', icon: 'alert-triangle', category: 'Alerts', unread: true,
+            actions: [{ action: 'toast', message: 'Why is Hooli at risk?', variant: 'warning' }] },
+          { id: 'a5', time: '3h ago',  label: 'SLA breach: payment-api p95 latency 820ms', severity: 'destructive', icon: 'alert-octagon', category: 'Alerts', unread: true,
+            actions: [{ action: 'toast', message: 'Open incident', variant: 'error' }] },
+          { id: 'a6', time: '5h ago',  label: 'Expansion: Pied Piper upgraded to Enterprise (+$48k)', actor: 'Sam', severity: 'success', icon: 'arrow-up-right', category: 'Sales' },
+          { id: 'a7', time: 'Yesterday', label: 'Q1 board report published', actor: 'Carol', severity: 'info', icon: 'file-text', category: 'Reports' },
+          { id: 'a8', time: '2d ago',   label: 'Quarterly NPS survey completed (n=4,212)', actor: 'Ops', severity: 'info', icon: 'smile', category: 'Reports' }
         ],
+
+        // Three secondary breakdowns — each `data` keyed by range.
         charts: [
-          { title: 'Revenue by segment', type: 'donut', data: [{ label: 'Enterprise', value: 60 }, { label: 'Mid-market', value: 28 }, { label: 'SMB', value: 12 }] },
-          { title: 'Top regions', type: 'bar', data: [{ label: 'US', value: 1200 }, { label: 'EU', value: 720 }, { label: 'APAC', value: 480 }] }
-        ]
+          {
+            title: 'Revenue by segment', type: 'donut',
+            data: {
+              '7d':  [{ label: 'Enterprise', value: 55 }, { label: 'Mid-market', value: 30 }, { label: 'SMB', value: 15 }],
+              '30d': [{ label: 'Enterprise', value: 58 }, { label: 'Mid-market', value: 29 }, { label: 'SMB', value: 13 }],
+              '90d': [{ label: 'Enterprise', value: 60 }, { label: 'Mid-market', value: 28 }, { label: 'SMB', value: 12 }],
+              QTD:   [{ label: 'Enterprise', value: 60 }, { label: 'Mid-market', value: 28 }, { label: 'SMB', value: 12 }],
+              YTD:   [{ label: 'Enterprise', value: 63 }, { label: 'Mid-market', value: 26 }, { label: 'SMB', value: 11 }]
+            }
+          },
+          {
+            title: 'Top regions', type: 'bar',
+            data: {
+              '7d':  [{ label: 'US', value: 90 },  { label: 'EU', value: 56 },  { label: 'APAC', value: 36 },  { label: 'LATAM', value: 14 }],
+              '30d': [{ label: 'US', value: 410 }, { label: 'EU', value: 240 }, { label: 'APAC', value: 160 }, { label: 'LATAM', value: 62 }],
+              '90d': [{ label: 'US', value: 1200 },{ label: 'EU', value: 720 }, { label: 'APAC', value: 480 }, { label: 'LATAM', value: 180 }],
+              QTD:   [{ label: 'US', value: 1200 },{ label: 'EU', value: 720 }, { label: 'APAC', value: 480 }, { label: 'LATAM', value: 180 }],
+              YTD:   [{ label: 'US', value: 4400 },{ label: 'EU', value: 2600 },{ label: 'APAC', value: 1800 }, { label: 'LATAM', value: 720 }]
+            }
+          },
+          {
+            title: 'Pipeline conversion', type: 'line',
+            data: {
+              Day:   [{ label: 'Mon', value: 8 }, { label: 'Tue', value: 9 }, { label: 'Wed', value: 11 }, { label: 'Thu', value: 10 }, { label: 'Fri', value: 12 }, { label: 'Sat', value: 7 }, { label: 'Sun', value: 8 }],
+              Week:  [{ label: 'W22', value: 9 }, { label: 'W23', value: 10 }, { label: 'W24', value: 11 }, { label: 'W25', value: 12 }, { label: 'W26', value: 13 }, { label: 'W27', value: 14 }],
+              Month: [{ label: 'Jan', value: 7 }, { label: 'Feb', value: 8 }, { label: 'Mar', value: 9 }, { label: 'Apr', value: 11 }, { label: 'May', value: 12 }, { label: 'Jun', value: 14 }]
+            }
+          }
+        ],
+
+        // Top accounts table — rows swap with the active range.
+        table: {
+          title: 'Top accounts',
+          columns: [
+            { key: 'name',  label: 'Account' },
+            { key: 'plan',  label: 'Plan' },
+            { key: 'owner', label: 'Owner' },
+            { key: 'mrr',   label: 'MRR',  align: 'right' },
+            { key: 'delta', label: 'Δ',    align: 'right' },
+            { key: 'health',label: 'Health' }
+          ],
+          rows: {
+            '7d': [
+              { name: 'Globex',     plan: 'Enterprise', owner: 'Alice', mrr: '$24,000', delta: '+8%',  health: 'Healthy' },
+              { name: 'Initech',    plan: 'Mid-market', owner: 'Bob',   mrr: '$8,400',  delta: '+2%',  health: 'Healthy' },
+              { name: 'Pied Piper', plan: 'Mid-market', owner: 'Sam',   mrr: '$6,800',  delta: '+12%', health: 'Healthy' },
+              { name: 'Hooli',      plan: 'Enterprise', owner: 'Dana',  mrr: '$19,600', delta: '-3%',  health: 'At risk' }
+            ],
+            '30d': [
+              { name: 'Globex',     plan: 'Enterprise', owner: 'Alice', mrr: '$120,000', delta: '+11%', health: 'Healthy' },
+              { name: 'Initech',    plan: 'Mid-market', owner: 'Bob',   mrr: '$42,000',  delta: '+4%',  health: 'Healthy' },
+              { name: 'Hooli',      plan: 'Enterprise', owner: 'Dana',  mrr: '$98,000',  delta: '-6%',  health: 'At risk' },
+              { name: 'Pied Piper', plan: 'Mid-market', owner: 'Sam',   mrr: '$34,000',  delta: '+18%', health: 'Healthy' },
+              { name: 'Soylent',    plan: 'SMB',        owner: 'Pat',   mrr: '$6,400',   delta: '+2%',  health: 'Healthy' },
+              { name: 'Vandelay',   plan: 'Mid-market', owner: 'Greta', mrr: '$11,200',  delta: '+22%', health: 'Healthy' }
+            ],
+            '90d': [
+              { name: 'Globex',     plan: 'Enterprise', owner: 'Alice', mrr: '$360,000', delta: '+18%', health: 'Healthy' },
+              { name: 'Initech',    plan: 'Mid-market', owner: 'Bob',   mrr: '$126,000', delta: '+9%',  health: 'Healthy' },
+              { name: 'Hooli',      plan: 'Enterprise', owner: 'Dana',  mrr: '$294,000', delta: '-12%', health: 'At risk' },
+              { name: 'Pied Piper', plan: 'Mid-market', owner: 'Sam',   mrr: '$84,000',  delta: '+24%', health: 'Healthy' },
+              { name: 'Soylent',    plan: 'SMB',        owner: 'Pat',   mrr: '$19,200',  delta: '+6%',  health: 'Healthy' },
+              { name: 'Vandelay',   plan: 'Mid-market', owner: 'Greta', mrr: '$33,600',  delta: '+28%', health: 'Healthy' },
+              { name: 'Wonka Inc',  plan: 'Enterprise', owner: 'Marco', mrr: '$148,000', delta: '+7%',  health: 'Healthy' }
+            ],
+            QTD: [
+              { name: 'Globex',     plan: 'Enterprise', owner: 'Alice', mrr: '$360,000', delta: '+18%', health: 'Healthy' },
+              { name: 'Hooli',      plan: 'Enterprise', owner: 'Dana',  mrr: '$294,000', delta: '-12%', health: 'At risk' },
+              { name: 'Wonka Inc',  plan: 'Enterprise', owner: 'Marco', mrr: '$148,000', delta: '+7%',  health: 'Healthy' },
+              { name: 'Initech',    plan: 'Mid-market', owner: 'Bob',   mrr: '$126,000', delta: '+9%',  health: 'Healthy' }
+            ],
+            YTD: [
+              { name: 'Globex',     plan: 'Enterprise', owner: 'Alice', mrr: '$1.4M', delta: '+34%', health: 'Healthy' },
+              { name: 'Hooli',      plan: 'Enterprise', owner: 'Dana',  mrr: '$1.1M', delta: '-8%',  health: 'At risk' },
+              { name: 'Wonka Inc',  plan: 'Enterprise', owner: 'Marco', mrr: '$590k', delta: '+19%', health: 'Healthy' },
+              { name: 'Initech',    plan: 'Mid-market', owner: 'Bob',   mrr: '$510k', delta: '+12%', health: 'Healthy' },
+              { name: 'Pied Piper', plan: 'Mid-market', owner: 'Sam',   mrr: '$320k', delta: '+44%', health: 'Healthy' }
+            ]
+          }
+        }
       }
     }
   };
@@ -997,42 +1180,118 @@
     ui: {
       type: 'ops-dashboard',
       props: {
+        title: 'Operations',
+        subtitle: 'Production health across services & regions',
         systemStatus: 'partial-outage',
         statusMessage: 'API errors elevated in EU regions; team is investigating.',
+        regions: ['us-east', 'us-west', 'eu-west', 'eu-central', 'apac', 'sa-east'],
         services: [
-          { id: 'api', name: 'API', icon: 'server', regions: [
+          { id: 'api', name: 'API', icon: 'server', description: 'Public REST + GraphQL', regions: [
             { region: 'us-east', status: 'operational' },
             { region: 'us-west', status: 'operational' },
-            { region: 'eu-west', status: 'degraded' },
-            { region: 'apac', status: 'operational' }
+            { region: 'eu-west', status: 'degraded', note: 'p95 > 800ms' },
+            { region: 'eu-central', status: 'degraded', note: 'p95 > 600ms' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
           ] },
-          { id: 'web', name: 'Web app', icon: 'globe', regions: [
+          { id: 'web', name: 'Web app', icon: 'globe', description: 'Customer dashboard SPA', regions: [
             { region: 'us-east', status: 'operational' },
             { region: 'us-west', status: 'operational' },
             { region: 'eu-west', status: 'operational' },
-            { region: 'apac', status: 'operational' }
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
           ] },
-          { id: 'db', name: 'Database', icon: 'database', regions: [
+          { id: 'auth', name: 'Auth service', icon: 'shield', description: 'OIDC + session', regions: [
             { region: 'us-east', status: 'operational' },
             { region: 'us-west', status: 'operational' },
-            { region: 'eu-west', status: 'down' },
-            { region: 'apac', status: 'maintenance' }
+            { region: 'eu-west', status: 'operational' },
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
+          ] },
+          { id: 'db', name: 'Database', icon: 'database', description: 'Primary Postgres cluster', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'down', note: 'replica failover in progress' },
+            { region: 'eu-central', status: 'degraded', note: 'replication lag 4s' },
+            { region: 'apac', status: 'maintenance', note: 'planned upgrade until 18:00 UTC' },
+            { region: 'sa-east', status: 'operational' }
+          ] },
+          { id: 'cache', name: 'Cache', icon: 'zap', description: 'Redis cluster', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'operational' },
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'unknown' }
+          ] },
+          { id: 'search', name: 'Search', icon: 'search', description: 'Elasticsearch', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'degraded', note: 'reindex backlog' },
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
+          ] },
+          { id: 'payments', name: 'Payments', icon: 'credit-card', description: 'Stripe + internal ledger', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'operational' },
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
+          ] },
+          { id: 'queue', name: 'Job queue', icon: 'list', description: 'Worker pool + scheduled jobs', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'degraded', note: 'backlog 12k jobs' },
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
+          ] },
+          { id: 'cdn', name: 'CDN', icon: 'cloud', description: 'Static asset edge', regions: [
+            { region: 'us-east', status: 'operational' },
+            { region: 'us-west', status: 'operational' },
+            { region: 'eu-west', status: 'operational' },
+            { region: 'eu-central', status: 'operational' },
+            { region: 'apac', status: 'operational' },
+            { region: 'sa-east', status: 'operational' }
           ] }
         ],
         metrics: [
           { label: 'P95 latency', value: 184, unit: 'ms', trend: 'up', sparkline: [120, 128, 140, 165, 178, 184], color: 'oklch(0.55 0.22 25)' },
+          { label: 'P99 latency', value: 412, unit: 'ms', trend: 'up', sparkline: [240, 260, 290, 340, 380, 412], color: 'oklch(0.55 0.22 25)' },
           { label: 'Error rate', value: '0.42%', trend: 'up', sparkline: [0.1, 0.12, 0.18, 0.28, 0.36, 0.42] },
           { label: 'Requests/s', value: '12.4k', trend: 'flat', sparkline: [12, 12.1, 12.3, 12.0, 12.4, 12.4] },
-          { label: 'Active alerts', value: 3 }
+          { label: 'Apdex score', value: '0.91', trend: 'down', sparkline: [0.97, 0.96, 0.94, 0.93, 0.92, 0.91] },
+          { label: 'Active alerts', value: 7, trend: 'up' },
+          { label: 'CPU (avg)', value: '64%', trend: 'up', sparkline: [42, 48, 54, 58, 60, 64] },
+          { label: 'Saturation', value: '72%', trend: 'up', sparkline: [40, 45, 52, 60, 68, 72] }
         ],
         incidents: [
-          { id: 'i1', severity: 'sev2', title: 'EU API elevated 5xx errors', status: 'investigating', started: '14m ago', services: ['api', 'db'] },
-          { id: 'i2', severity: 'sev3', title: 'Slow DB query in audit log', status: 'identified', started: '38m ago', services: ['db'] }
+          { id: 'i1', severity: 'sev1', title: 'EU-west database primary failover', status: 'investigating', started: '6m ago', services: ['db', 'api'],
+            body: 'Replica promotion underway. Customer-facing writes failing in EU-west; reads degraded.' },
+          { id: 'i2', severity: 'sev2', title: 'API elevated 5xx rate in EU regions', status: 'identified', started: '14m ago', services: ['api'],
+            body: 'Root cause: connection pool exhaustion from downstream db failover. Pool size increase rolling out.' },
+          { id: 'i3', severity: 'sev3', title: 'Search reindex backlog in eu-west', status: 'monitoring', started: '38m ago', services: ['search'],
+            body: 'Reindex worker scaled 2× — backlog draining at ~400 docs/s.' },
+          { id: 'i4', severity: 'sev3', title: 'Job queue backlog above SLO', status: 'identified', started: '1h ago', services: ['queue'],
+            body: 'Linked to db failover. Auto-scaling triggered for worker pool.' },
+          { id: 'i5', severity: 'sev4', title: 'CDN cache hit ratio dipped on /assets/v2', status: 'resolved', started: '3h ago', services: ['cdn'],
+            body: 'Edge config rolled back. Hit ratio recovered to 96%.' },
+          { id: 'i6', severity: 'info',  title: 'Planned maintenance: APAC db upgrade', status: 'monitoring', started: '2h ago', services: ['db'],
+            body: 'Read-only window until 18:00 UTC; writes paused for ~5 minutes during cutover.' }
         ],
         deploys: [
-          { id: 'd1', label: 'api: bump v1.42.3', actor: 'Alice', time: '08:32', status: 'success', sha: 'a3f2c1' },
-          { id: 'd2', label: 'web: feature flag rollout', actor: 'Bob', time: '07:11', status: 'success', sha: '0d12bf' },
-          { id: 'd3', label: 'api: schema migration', actor: 'CI', time: 'Yesterday', status: 'reverted', sha: '7e9a8b' }
+          { id: 'd1', label: 'api: pool size bump v1.42.4',     actor: 'Alice', time: '09:14', status: 'in-progress', sha: 'b41e7f' },
+          { id: 'd2', label: 'api: bump v1.42.3',                actor: 'Alice', time: '08:32', status: 'success',     sha: 'a3f2c1' },
+          { id: 'd3', label: 'web: feature flag rollout',        actor: 'Bob',   time: '07:11', status: 'success',     sha: '0d12bf' },
+          { id: 'd4', label: 'search: shard rebalance script',   actor: 'CI',    time: '06:48', status: 'success',     sha: 'fc8a23' },
+          { id: 'd5', label: 'payments: 3DS retry tweak',        actor: 'Greta', time: 'Yesterday', status: 'success', sha: '21d9b0' },
+          { id: 'd6', label: 'auth: rotate signing keys',        actor: 'Sam',   time: 'Yesterday', status: 'success', sha: '4a7e90' },
+          { id: 'd7', label: 'api: schema migration',            actor: 'CI',    time: '2d ago',   status: 'reverted', sha: '7e9a8b' },
+          { id: 'd8', label: 'queue: priority lane',             actor: 'Dana',  time: '2d ago',   status: 'failed',   sha: '9e3411' }
         ]
       }
     }
@@ -1044,7 +1303,7 @@
       type: 'analytics-dashboard',
       props: {
         title: 'Web traffic',
-        subtitle: 'docs.acme.com',
+        subtitle: 'docs.acme.com — Last 30 days',
         dateRange: 'Last 30 days',
         headline: {
           label: 'Visitors',
@@ -1055,32 +1314,59 @@
           sparkline: [12, 14, 18, 16, 20, 22, 26, 24, 28, 32, 36, 38, 42, 48]
         },
         secondaryMetrics: [
-          { label: 'Pageviews', value: '1.6M', delta: '+18%', trend: 'up' },
-          { label: 'Avg session', value: '2m 14s', delta: '+8s', trend: 'up' },
-          { label: 'Bounce rate', value: '38%', delta: '-3pp', trend: 'down' }
+          { label: 'Pageviews',    value: '1.6M',    delta: '+18%',  trend: 'up',   sublabel: '3.3 per visit' },
+          { label: 'Avg session',  value: '2m 14s',  delta: '+8s',   trend: 'up' },
+          { label: 'Bounce rate',  value: '38%',     delta: '-3pp',  trend: 'down' },
+          { label: 'New visitors', value: '62%',     delta: '+4pp',  trend: 'up' },
+          { label: 'Signups',      value: 1284,      delta: '+182',  trend: 'up',   sublabel: '2.7% conv.' },
+          { label: 'Goal completions', value: 612,   delta: '+88',   trend: 'up',   sublabel: 'Trial start' }
         ],
         primaryChart: {
           title: 'Visitors by day',
+          subtitle: 'Daily unique visitors over the last 30 days',
           type: 'area',
-          data: Array.from({ length: 14 }, (_, i) => ({ label: `Day ${i + 1}`, value: 8000 + Math.round(Math.sin(i / 2) * 2000 + i * 1500) }))
+          data: Array.from({ length: 30 }, (_, i) => ({
+            label: `Day ${i + 1}`,
+            value: 9000 + Math.round(Math.sin(i / 3) * 2400 + i * 320 + (i > 22 ? 1200 : 0))
+          }))
         },
         breakdowns: [
-          { title: 'By source', type: 'donut', data: [{ label: 'Direct', value: 42 }, { label: 'Search', value: 31 }, { label: 'Social', value: 15 }, { label: 'Referral', value: 12 }] },
-          { title: 'By device', type: 'donut', data: [{ label: 'Desktop', value: 64 }, { label: 'Mobile', value: 30 }, { label: 'Tablet', value: 6 }] },
-          { title: 'By region', type: 'bar', data: [{ label: 'NA', value: 220 }, { label: 'EU', value: 154 }, { label: 'APAC', value: 78 }, { label: 'LATAM', value: 30 }] }
+          { title: 'By source', type: 'donut', data: [
+            { label: 'Direct', value: 38 }, { label: 'Search', value: 33 },
+            { label: 'Social', value: 14 }, { label: 'Referral', value: 10 }, { label: 'Email', value: 5 }
+          ] },
+          { title: 'By device', type: 'donut', data: [
+            { label: 'Desktop', value: 62 }, { label: 'Mobile', value: 32 }, { label: 'Tablet', value: 6 }
+          ] },
+          { title: 'By region', type: 'bar', data: [
+            { label: 'NA', value: 220 }, { label: 'EU', value: 154 },
+            { label: 'APAC', value: 78 }, { label: 'LATAM', value: 30 }, { label: 'MEA', value: 14 }
+          ] },
+          { title: 'By browser', type: 'bar', data: [
+            { label: 'Chrome', value: 58 }, { label: 'Safari', value: 22 },
+            { label: 'Firefox', value: 9 }, { label: 'Edge', value: 8 }, { label: 'Other', value: 3 }
+          ] }
         ],
         topItems: {
           title: 'Top pages',
           columns: [
-            { key: 'page', label: 'Page' },
-            { key: 'views', label: 'Views', align: 'right' },
-            { key: 'avg', label: 'Avg time', align: 'right' }
+            { key: 'page',    label: 'Page' },
+            { key: 'views',   label: 'Views',    align: 'right' },
+            { key: 'unique',  label: 'Unique',   align: 'right' },
+            { key: 'avg',     label: 'Avg time', align: 'right' },
+            { key: 'bounce',  label: 'Bounce',   align: 'right' }
           ],
           rows: [
-            { page: '/getting-started', views: '92k', avg: '3m 12s' },
-            { page: '/api', views: '64k', avg: '4m 02s' },
-            { page: '/pricing', views: '48k', avg: '1m 18s' },
-            { page: '/faq', views: '24k', avg: '0m 54s' }
+            { page: '/getting-started', views: '92k', unique: '64k', avg: '3m 12s', bounce: '24%' },
+            { page: '/api',             views: '64k', unique: '41k', avg: '4m 02s', bounce: '18%' },
+            { page: '/pricing',         views: '48k', unique: '38k', avg: '1m 18s', bounce: '42%' },
+            { page: '/docs/auth',       views: '38k', unique: '22k', avg: '2m 44s', bounce: '28%' },
+            { page: '/docs/quickstart', views: '32k', unique: '24k', avg: '5m 18s', bounce: '14%' },
+            { page: '/changelog',       views: '28k', unique: '19k', avg: '1m 02s', bounce: '52%' },
+            { page: '/faq',             views: '24k', unique: '18k', avg: '0m 54s', bounce: '61%' },
+            { page: '/blog/launch',     views: '21k', unique: '17k', avg: '2m 32s', bounce: '34%' },
+            { page: '/integrations',    views: '18k', unique: '13k', avg: '1m 48s', bounce: '38%' },
+            { page: '/security',        views: '14k', unique: '11k', avg: '2m 04s', bounce: '29%' }
           ]
         }
       }
@@ -1093,51 +1379,74 @@
       type: 'pipeline-dashboard',
       props: {
         title: 'Sales pipeline',
+        subtitle: 'Team performance and active deals',
         period: 'Q2 2026',
         quota: { label: 'Team quota', current: 1820000, target: 2500000, currency: '$', period: 'Q2 — 28 days remaining' },
         funnel: {
           title: 'Pipeline funnel',
           stages: [
-            { label: 'Leads', value: 1240 },
-            { label: 'Qualified', value: 480 },
-            { label: 'Proposal', value: 180 },
-            { label: 'Negotiation', value: 92 },
-            { label: 'Closed won', value: 38 }
+            { label: 'Leads',         value: 1240 },
+            { label: 'Qualified',     value: 480 },
+            { label: 'Discovery',     value: 320 },
+            { label: 'Proposal',      value: 180 },
+            { label: 'Negotiation',   value: 92 },
+            { label: 'Closed won',    value: 38 }
           ]
         },
         conversion: [
-          { from: 'Leads', to: 'Qualified', rate: 38.7 },
-          { from: 'Qualified', to: 'Proposal', rate: 37.5 },
-          { from: 'Proposal', to: 'Negotiation', rate: 51.1 },
-          { from: 'Negotiation', to: 'Closed won', rate: 41.3 }
+          { from: 'Leads',       to: 'Qualified',    rate: 38.7 },
+          { from: 'Qualified',   to: 'Discovery',    rate: 66.7 },
+          { from: 'Discovery',   to: 'Proposal',     rate: 56.3 },
+          { from: 'Proposal',    to: 'Negotiation',  rate: 51.1 },
+          { from: 'Negotiation', to: 'Closed won',   rate: 41.3 }
         ],
         leaderboard: {
-          title: 'Top reps',
+          title: 'Top reps — Q2',
           items: [
-            { name: 'Alex Liu', value: '$420k', delta: '+$80k', sublabel: '12 deals' },
-            { name: 'Sam Patel', value: '$380k', delta: '+$45k', sublabel: '9 deals' },
-            { name: 'Jess Tan', value: '$310k', delta: '+$22k', sublabel: '14 deals' },
-            { name: 'Rico Diaz', value: '$240k', sublabel: '8 deals' }
+            { position: 1, name: 'Alex Liu',     value: '$420k', delta: '+$80k', sublabel: '12 deals' },
+            { position: 2, name: 'Sam Patel',    value: '$380k', delta: '+$45k', sublabel: '9 deals' },
+            { position: 3, name: 'Jess Tan',     value: '$310k', delta: '+$22k', sublabel: '14 deals' },
+            { position: 4, name: 'Rico Diaz',    value: '$240k', delta: '+$12k', sublabel: '8 deals' },
+            { position: 5, name: 'Priya Sharma', value: '$215k', delta: '+$30k', sublabel: '11 deals' },
+            { position: 6, name: 'Marco Bianchi',value: '$198k', delta: '+$18k', sublabel: '7 deals' },
+            { position: 7, name: 'Hana Kim',     value: '$172k', delta: '+$24k', sublabel: '10 deals' },
+            { position: 8, name: 'Tomás Vega',   value: '$148k', delta: '+$8k',  sublabel: '6 deals' },
+            { position: 9, name: 'Lara Novak',   value: '$132k', delta: '+$14k', sublabel: '8 deals' },
+            { position: 10,name: 'Yuki Watanabe',value: '$118k',                  sublabel: '5 deals' }
           ]
         },
         deals: {
-          title: 'Recent deals',
+          title: 'Active deals',
           columns: [
-            { key: 'name', label: 'Deal' },
+            { key: 'name',  label: 'Deal' },
             { key: 'stage', label: 'Stage' },
             { key: 'value', label: 'Value', align: 'right' },
+            { key: 'prob',  label: 'Prob.', align: 'right' },
+            { key: 'close', label: 'Close' },
             { key: 'owner', label: 'Owner' }
           ],
           rows: [
-            { name: 'Globex Q2 expansion', stage: 'Negotiation', value: '$120k', owner: 'Alex Liu' },
-            { name: 'Hooli SSO add-on', stage: 'Proposal', value: '$48k', owner: 'Sam Patel' },
-            { name: 'Initech renewal', stage: 'Closed won', value: '$62k', owner: 'Jess Tan' }
+            { name: 'Globex Q2 expansion',      stage: 'Negotiation', value: '$120k', prob: '75%', close: 'Jun 14', owner: 'Alex Liu' },
+            { name: 'Hooli SSO add-on',         stage: 'Proposal',    value: '$48k',  prob: '50%', close: 'Jun 22', owner: 'Sam Patel' },
+            { name: 'Initech renewal',          stage: 'Closed won',  value: '$62k',  prob: '100%',close: 'Jun 2',  owner: 'Jess Tan' },
+            { name: 'Massive Dynamic platform', stage: 'Discovery',   value: '$240k', prob: '30%', close: 'Jul 12', owner: 'Sam Patel' },
+            { name: 'Pied Piper trial → annual',stage: 'Negotiation', value: '$84k',  prob: '70%', close: 'Jun 18', owner: 'Priya Sharma' },
+            { name: 'Wonka Inc enterprise',     stage: 'Proposal',    value: '$320k', prob: '45%', close: 'Jul 5',  owner: 'Marco Bianchi' },
+            { name: 'Soylent SMB plan',         stage: 'Qualified',   value: '$18k',  prob: '20%', close: 'Jul 28', owner: 'Hana Kim' },
+            { name: 'Vandelay add-ons',         stage: 'Negotiation', value: '$36k',  prob: '60%', close: 'Jun 28', owner: 'Rico Diaz' },
+            { name: 'Acme renewal + upsell',    stage: 'Discovery',   value: '$210k', prob: '25%', close: 'Aug 4',  owner: 'Alex Liu' },
+            { name: 'Sirius Cybernetics POC',   stage: 'Proposal',    value: '$72k',  prob: '40%', close: 'Jul 18', owner: 'Lara Novak' }
           ]
         },
         ticker: [
-          { time: '2m ago', label: 'Closed: Globex Q2 expansion', actor: 'Alex Liu', icon: 'trophy' },
-          { time: '14m ago', label: 'Demo scheduled: Massive Dynamic', actor: 'Sam Patel' },
-          { time: '38m ago', label: 'Lead qualified: Pied Piper', actor: 'Jess Tan' }
+          { time: '2m ago',  label: 'Closed: Globex Q2 expansion ($120k)',   actor: 'Alex Liu',     icon: 'trophy' },
+          { time: '14m ago', label: 'Demo scheduled: Massive Dynamic',       actor: 'Sam Patel',    icon: 'calendar' },
+          { time: '32m ago', label: 'Proposal sent: Wonka Inc enterprise',   actor: 'Marco Bianchi',icon: 'file-text' },
+          { time: '38m ago', label: 'Lead qualified: Pied Piper',            actor: 'Jess Tan',     icon: 'check-circle-2' },
+          { time: '1h ago',  label: 'Stage advanced: Hooli SSO → Negotiation',actor: 'Sam Patel',   icon: 'arrow-up-right' },
+          { time: '2h ago',  label: 'New lead: BioReactor Industries',       actor: 'Priya Sharma', icon: 'user-plus' },
+          { time: '3h ago',  label: 'Lost: Cyberdyne pilot ($45k)',          actor: 'Rico Diaz',    icon: 'x-circle' },
+          { time: '5h ago',  label: 'Demo completed: Vandelay add-ons',      actor: 'Rico Diaz',    icon: 'play' }
         ]
       }
     }
@@ -1149,45 +1458,70 @@
       type: 'project-dashboard',
       props: {
         title: 'Phoenix migration',
-        description: 'Move legacy reporting service to the new analytics platform.',
+        description: 'Move legacy reporting service to the new analytics platform with zero customer-facing downtime.',
         status: 'at-risk',
         progress: 64,
         dueDate: 'Jun 30, 2026',
         lead: { name: 'Jamie Park', role: 'Tech lead' },
         meta: [
-          { label: 'Sprint', value: '4 of 6' },
-          { label: 'Repo', value: 'acme/phoenix' },
-          { label: 'Started', value: 'Mar 4, 2026' }
+          { label: 'Sprint',  value: '4 of 6',         icon: 'flag' },
+          { label: 'Repo',    value: 'acme/phoenix',   icon: 'github' },
+          { label: 'Started', value: 'Mar 4, 2026',    icon: 'calendar' },
+          { label: 'Budget',  value: '$248k / $320k',  icon: 'dollar-sign' },
+          { label: 'Stack',   value: 'Go · ClickHouse · Kafka', icon: 'layers' },
+          { label: 'Slack',   value: '#proj-phoenix',  icon: 'message-square' }
         ],
         burndown: {
-          title: 'Sprint burndown',
+          title: 'Sprint burndown — Sprint 4',
           data: [
-            { label: 'Day 1', series: { ideal: 100, actual: 100 } },
-            { label: 'Day 3', series: { ideal: 85, actual: 92 } },
-            { label: 'Day 5', series: { ideal: 70, actual: 78 } },
-            { label: 'Day 7', series: { ideal: 55, actual: 60 } },
-            { label: 'Day 9', series: { ideal: 40, actual: 48 } },
-            { label: 'Day 11', series: { ideal: 25, actual: 32 } },
-            { label: 'Day 14', series: { ideal: 0, actual: 14 } }
+            { label: 'Day 1',  series: { ideal: 100, actual: 100 } },
+            { label: 'Day 2',  series: { ideal: 93,  actual: 96 } },
+            { label: 'Day 3',  series: { ideal: 85,  actual: 92 } },
+            { label: 'Day 4',  series: { ideal: 78,  actual: 86 } },
+            { label: 'Day 5',  series: { ideal: 70,  actual: 78 } },
+            { label: 'Day 6',  series: { ideal: 62,  actual: 70 } },
+            { label: 'Day 7',  series: { ideal: 55,  actual: 60 } },
+            { label: 'Day 8',  series: { ideal: 48,  actual: 55 } },
+            { label: 'Day 9',  series: { ideal: 40,  actual: 48 } },
+            { label: 'Day 10', series: { ideal: 32,  actual: 40 } },
+            { label: 'Day 11', series: { ideal: 25,  actual: 32 } },
+            { label: 'Day 12', series: { ideal: 18,  actual: 26 } },
+            { label: 'Day 13', series: { ideal: 9,   actual: 20 } },
+            { label: 'Day 14', series: { ideal: 0,   actual: 14 } }
           ]
         },
         breakdown: { done: 38, inProgress: 12, todo: 18, blocked: 4 },
         team: [
-          { name: 'Jamie Park', role: 'Tech lead', load: 85 },
-          { name: 'Priya Mehta', role: 'Backend', load: 110, status: 'overloaded' },
-          { name: 'Marcus Lee', role: 'Frontend', load: 70 },
-          { name: 'Emma Schmidt', role: 'QA', load: 55 }
+          { name: 'Jamie Park',    role: 'Tech lead',  load: 85,  status: 'busy' },
+          { name: 'Priya Mehta',   role: 'Backend',    load: 110, status: 'overloaded' },
+          { name: 'Marcus Lee',    role: 'Frontend',   load: 70,  status: 'busy' },
+          { name: 'Emma Schmidt',  role: 'QA',         load: 55,  status: 'available' },
+          { name: 'Diego Ramos',   role: 'Backend',    load: 92,  status: 'busy' },
+          { name: 'Anya Volkov',   role: 'SRE',        load: 78,  status: 'busy' },
+          { name: 'Ken Watanabe',  role: 'Data eng',   load: 102, status: 'overloaded' },
+          { name: 'Sofia Romano',  role: 'Designer',   load: 35,  status: 'available' },
+          { name: 'Theo Carter',   role: 'Backend',    load: 0,   status: 'off' }
         ],
         milestones: [
-          { label: 'Schema design', done: true, due: 'Mar 18' },
-          { label: 'Data backfill', done: true, due: 'Apr 15' },
-          { label: 'Dual-write rollout', due: 'May 10', overdue: true },
-          { label: 'Cutover', due: 'Jun 25' }
+          { label: 'Spec sign-off',         done: true, due: 'Mar 10' },
+          { label: 'Schema design',         done: true, due: 'Mar 18' },
+          { label: 'Data backfill',         done: true, due: 'Apr 15' },
+          { label: 'Read-path rollout',     done: true, due: 'Apr 28' },
+          { label: 'Dual-write rollout',                due: 'May 10', overdue: true },
+          { label: 'Customer beta',                     due: 'Jun 1' },
+          { label: 'Cutover',                           due: 'Jun 25' },
+          { label: 'Legacy decommission',               due: 'Jul 15' }
         ],
         updates: [
-          { time: '14m ago', label: 'Backfill validated for region us-east', actor: 'Priya Mehta', icon: 'check-circle-2', type: 'milestone' },
-          { time: '2h ago', label: 'Dual-write blocked on EU schema review', actor: 'Jamie Park', icon: 'alert-circle', type: 'risk' },
-          { time: 'Yesterday', label: 'Sprint planning notes posted', actor: 'Emma Schmidt', icon: 'file-text', type: 'doc' }
+          { time: '8m ago',   label: 'PR merged: dual-write metrics + alerts', actor: 'Diego Ramos',  icon: 'git-merge',       type: 'pr' },
+          { time: '14m ago',  label: 'Backfill validated for region us-east',  actor: 'Priya Mehta',  icon: 'check-circle-2',  type: 'milestone' },
+          { time: '1h ago',   label: 'New blocker: EU schema review pending',  actor: 'Jamie Park',   icon: 'alert-octagon',   type: 'blocker' },
+          { time: '2h ago',   label: 'Dual-write blocked on EU schema review', actor: 'Jamie Park',   icon: 'alert-circle',    type: 'risk' },
+          { time: '4h ago',   label: 'Customer beta plan posted',              actor: 'Sofia Romano', icon: 'file-text',       type: 'doc' },
+          { time: '6h ago',   label: 'Capacity test passed at 3× peak',        actor: 'Anya Volkov',  icon: 'zap',             type: 'test' },
+          { time: 'Yesterday',label: 'Sprint planning notes posted',           actor: 'Emma Schmidt', icon: 'file-text',       type: 'doc' },
+          { time: 'Yesterday',label: 'Ken added to backfill workstream',       actor: 'Jamie Park',   icon: 'user-plus',       type: 'team' },
+          { time: '2d ago',   label: 'Hotfix: corrected null-handling in v0.4',actor: 'Priya Mehta',  icon: 'wrench',          type: 'fix' }
         ]
       }
     }
