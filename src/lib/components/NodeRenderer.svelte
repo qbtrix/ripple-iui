@@ -23,7 +23,7 @@
 		hasExpressions,
 		type ResolverContext
 	} from '../core/expression-resolver.js';
-	import { getBindContract } from '../core/widget-bind-contract.js';
+	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
 
 	// Self-import for recursion (Svelte 5 pattern)
 	import Self from './NodeRenderer.svelte';
@@ -111,6 +111,12 @@
 	 * `value`/`onchange`; composites like wizard-layout override this.
 	 */
 	const bindContract = $derived(getBindContract(node.type));
+
+	// Dev-only discoverability: warn once if a `bind` is used on a widget
+	// that isn't classified in widget-bind-contract.ts.
+	$effect(() => {
+		if (node.bind) warnUnregisteredBindContract(node.type);
+	});
 
 	/**
 	 * Create event handler functions that get fresh context on each invocation.

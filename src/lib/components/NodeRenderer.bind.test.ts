@@ -1,7 +1,16 @@
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
+import { _resetBindContractWarnings, warnUnregisteredBindContract, getBindContract } from '$lib/core/widget-bind-contract.js';
+
+beforeEach(() => {
+  _resetBindContractWarnings();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 test('input with bind writes user input back to state', async () => {
   const onStateChange = vi.fn();
@@ -158,6 +167,49 @@ test('wizard finishActions resolve {state.x} at dispatch time, not render time',
   const emit = events.find((e: any) => e?.type === 'emit') as any;
   expect(emit).toBeDefined();
   expect(emit.payload).toBe('done for Ada');
+});
+
+test('order-status uses currentStep/onstepchange bind contract', () => {
+  // Regression guard: order-status only exposes `currentStep` (not `value`),
+  // so binding through the default contract would silently no-op.
+  expect(getBindContract('order-status')).toEqual({
+    prop: 'currentStep',
+    event: 'onstepchange',
+  });
+  expect(getBindContract('shipment-tracker')).toEqual({
+    prop: 'currentStep',
+    event: 'onstepchange',
+  });
+});
+
+test('warnUnregisteredBindContract fires once per unknown widget type', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  warnUnregisteredBindContract('totally-novel-widget');
+  warnUnregisteredBindContract('totally-novel-widget');
+  warnUnregisteredBindContract('another-novel-widget');
+
+  // One warning per type, even when called repeatedly.
+  expect(warn).toHaveBeenCalledTimes(2);
+  expect(warn.mock.calls[0][0]).toMatch(/totally-novel-widget/);
+  expect(warn.mock.calls[1][0]).toMatch(/another-novel-widget/);
+});
+
+test('warnUnregisteredBindContract stays silent for registered and known-default widgets', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  // Explicitly registered (non-default) contracts.
+  warnUnregisteredBindContract('checkbox');
+  warnUnregisteredBindContract('wizard-layout');
+  warnUnregisteredBindContract('popover');
+  warnUnregisteredBindContract('order-status');
+  // Known to use the default value/onchange contract.
+  warnUnregisteredBindContract('input');
+  warnUnregisteredBindContract('select');
+  warnUnregisteredBindContract('modal');
+  warnUnregisteredBindContract('slider');
+
+  expect(warn).not.toHaveBeenCalled();
 });
 
 test('on_input fires on every keystroke', async () => {

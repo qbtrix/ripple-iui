@@ -31,9 +31,89 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   checkbox: { prop: 'checked', event: 'onchange' },
   switch: { prop: 'checked', event: 'onchange' },
   'wizard-layout': { prop: 'currentStep', event: 'onstepchange' },
+  wizard: { prop: 'currentStep', event: 'onstepchange' },
   popover: { prop: 'open', event: 'onopenchange' },
+  'order-status': { prop: 'currentStep', event: 'onstepchange' },
+  'shipment-tracker': { prop: 'currentStep', event: 'onstepchange' },
+  'order-tracking': { prop: 'currentStep', event: 'onstepchange' },
 };
+
+/**
+ * Widgets that intentionally expose the default `value` / `onchange` bind
+ * surface. Listed explicitly so a newly-added widget without a registered
+ * contract surfaces a dev warning instead of silently no-op-ing in specs.
+ *
+ * Aliases are included where they map to the same component, since the
+ * renderer keys off the raw `type` string (not the resolved component).
+ */
+const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
+  // inputs
+  'input', 'textarea', 'select', 'combobox', 'autocomplete',
+  'multi-select', 'multiselect', 'tag-input',
+  'radio-group', 'radio', 'segmented', 'toggle-group',
+  'slider', 'rating', 'stars',
+  'number-input', 'numberinput', 'number',
+  'otp-input', 'otp',
+  'date-picker', 'datepicker', 'date',
+  'time-picker', 'timepicker', 'time',
+  'color-picker', 'color',
+  'file-upload', 'fileupload', 'dropzone',
+  'rich-text', 'richtext', 'wysiwyg',
+  'code-editor', 'codeeditor', 'editor',
+  'search', 'filter-bar', 'filters',
+  'location-picker', 'geo-picker', 'pick-location',
+  // selectable data
+  'tree', 'treeview', 'tree-table', 'treetable', 'nested-rows',
+  'kanban', 'board',
+  'data-grid', 'datagrid', 'grid_table',
+  'calendar',
+  'saved-views', 'views',
+  'people-picker', 'people',
+  'permission-matrix', 'permissions',
+  'org-chart', 'orgchart',
+  // open/visibility (intentionally `value: boolean` not `open`)
+  'modal', 'dialog',
+  'sheet', 'drawer',
+  'collapsible',
+  'accordion',
+  'tabs',
+  'command-palette', 'cmdk', 'command',
+  'coachmark', 'tour',
+  'notification-center', 'notifications', 'inbox',
+  'dropdown-menu', 'dropdown', 'menu',
+  'context-menu', 'contextmenu',
+  // layout
+  'master-detail', 'list-detail',
+  'sidebar', 'nav',
+]);
+
+const warnedTypes = new Set<string>();
 
 export function getBindContract(type: string): WidgetBindContract {
   return WIDGET_BIND_CONTRACTS[type] ?? DEFAULT_BIND_CONTRACT;
+}
+
+/**
+ * Dev-only discoverability check. Call from the renderer when a node
+ * declares `bind`, so widgets without an explicit contract entry surface
+ * a one-time warning instead of silently no-op-ing on consumers.
+ *
+ * Silent in production builds (gated on `import.meta.env.DEV`).
+ */
+export function warnUnregisteredBindContract(type: string): void {
+  if (!import.meta.env?.DEV) return;
+  if (WIDGET_BIND_CONTRACTS[type] || DEFAULT_BIND_WIDGETS.has(type)) return;
+  if (warnedTypes.has(type)) return;
+  warnedTypes.add(type);
+  console.warn(
+    `[ripple] widget "${type}" used with \`bind\` is not registered in widget-bind-contract.ts. ` +
+    `Assuming default contract (prop="value", event="onchange"). ` +
+    `If the widget exposes a different bind surface, add a WIDGET_BIND_CONTRACTS entry. ` +
+    `If it uses the default, add it to DEFAULT_BIND_WIDGETS to silence this warning.`
+  );
+}
+
+/** Test-only: reset the once-per-type warning memo so tests can re-assert. */
+export function _resetBindContractWarnings(): void {
+  warnedTypes.clear();
 }
