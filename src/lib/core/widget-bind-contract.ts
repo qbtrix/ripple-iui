@@ -15,6 +15,8 @@
  * heavy to pull into the rendering bundle).
  */
 
+import { DEV } from 'esm-env';
+
 export interface WidgetBindContract {
   /** Component prop that receives the resolved `bind` value. */
   prop: string;
@@ -98,10 +100,11 @@ export function getBindContract(type: string): WidgetBindContract {
  * declares `bind`, so widgets without an explicit contract entry surface
  * a one-time warning instead of silently no-op-ing on consumers.
  *
- * Silent in production builds (gated on `import.meta.env.DEV`).
+ * Silent in production builds (gated on `DEV` from `esm-env`, which works
+ * across all bundlers and unbundled consumers).
  */
 export function warnUnregisteredBindContract(type: string): void {
-  if (!import.meta.env?.DEV) return;
+  if (!DEV) return;
   if (WIDGET_BIND_CONTRACTS[type] || DEFAULT_BIND_WIDGETS.has(type)) return;
   if (warnedTypes.has(type)) return;
   warnedTypes.add(type);

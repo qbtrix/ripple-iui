@@ -35,11 +35,23 @@
    * Per-key override for KPI fields. Keyed by activeDateRange, activeGranularity,
    * or a combined "range|granularity" string. The component falls back through
    * specificity when a key isn't found.
+   *
+   * Declared standalone (not as `Pick<Kpi, ...>`) to keep the Props type
+   * inlinable during `.d.ts` emit — a Pick-of-Kpi reference forces the
+   * compiler to retain `Kpi` as a private named symbol in the public type.
    */
-  type KpiOverride = Partial<Pick<Kpi,
-    'value' | 'unit' | 'delta' | 'trend' | 'compareLabel' | 'sparkline' |
-    'sublabel' | 'status' | 'target' | 'progress'
-  >>;
+  interface KpiOverride {
+    value?: string | number;
+    unit?: string;
+    delta?: string;
+    trend?: Trend;
+    compareLabel?: string;
+    sparkline?: number[];
+    sublabel?: string;
+    status?: Status;
+    target?: string | number;
+    progress?: number;
+  }
 
   interface Kpi {
     id?: string;
