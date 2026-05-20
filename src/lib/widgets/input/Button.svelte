@@ -13,7 +13,7 @@
     hasChildren?: boolean;
     leading?: Snippet;
     trailing?: Snippet;
-    variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';
+    variant?: 'default' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';
     size?: 'sm' | 'md' | 'lg' | 'icon';
     type?: 'button' | 'submit' | 'reset';
     disabled?: boolean;
@@ -47,10 +47,11 @@
   }: Props = $props();
 
   const button = tv({
-    base: 'inline-flex items-center justify-center gap-1.5 rounded-[8px] font-medium whitespace-nowrap select-none transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50',
+    base: 'inline-flex items-center justify-center gap-1.5 rounded-[8px] font-medium whitespace-nowrap select-none cursor-pointer transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         outline: 'border border-border bg-transparent text-foreground hover:bg-muted',
         ghost: 'bg-transparent text-foreground hover:bg-muted',

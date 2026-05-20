@@ -947,6 +947,19 @@ function isUINodeSpec(v: Record<string, unknown>): boolean {
 }
 
 /**
+ * Detect an EventHandler-shaped subtree. Action objects must reach the
+ * EventDispatcher with their `{state.x}` placeholders intact so they
+ * resolve against the state at dispatch time, not at render time. If
+ * we eagerly resolve them here, `validate.condition: "{state.agreed}"`
+ * becomes the literal boolean `false` long before the user has had a
+ * chance to tick the checkbox — and the dispatcher then can't even
+ * recognise it as an expression to re-evaluate.
+ */
+function isEventHandlerSpec(v: Record<string, unknown>): boolean {
+	return typeof v.action === 'string';
+}
+
+/**
  * Resolve any value (string, object, array, or primitive).
  */
 export function resolveValue(value: unknown, context: ResolverContext): unknown {
@@ -962,6 +975,12 @@ export function resolveValue(value: unknown, context: ResolverContext): unknown 
 		const obj = value as Record<string, unknown>;
 		if (isUINodeSpec(obj)) {
 			// Leave UINode subtrees raw for downstream NodeRenderer to resolve.
+			return obj;
+		}
+		if (isEventHandlerSpec(obj)) {
+			// Leave action objects raw — the EventDispatcher resolves their
+			// fields (condition, value, message, url, body, ...) at fire time
+			// so expressions read the live state, not a snapshot from render.
 			return obj;
 		}
 		return resolveObject(obj, context);

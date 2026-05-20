@@ -23,6 +23,7 @@
 		hasExpressions,
 		type ResolverContext
 	} from '../core/expression-resolver.js';
+	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
 
 	// Self-import for recursion (Svelte 5 pattern)
 	import Self from './NodeRenderer.svelte';
@@ -103,6 +104,19 @@
 	 * Get the widget component for this node type.
 	 */
 	const WidgetComponent = $derived(getWidget(node.type));
+
+	/**
+	 * Per-widget bind contract: which prop receives the bound value and
+	 * which event fires when the widget mutates it. Defaults to
+	 * `value`/`onchange`; composites like wizard-layout override this.
+	 */
+	const bindContract = $derived(getBindContract(node.type));
+
+	// Dev-only discoverability: warn once if a `bind` is used on a widget
+	// that isn't classified in widget-bind-contract.ts.
+	$effect(() => {
+		if (node.bind) warnUnregisteredBindContract(node.type);
+	});
 
 	/**
 	 * Create event handler functions that get fresh context on each invocation.
@@ -322,10 +336,9 @@
 			...(resolvedClass !== undefined && { class: resolvedClass }),
 			...(node.style !== undefined && { style: node.style }),
 			...resolvedProps,
-			...(boundValue !== undefined && { value: boundValue }),
-			...((node.type === 'checkbox' || node.type === 'switch') && boundValue !== undefined && { checked: boundValue }),
+			...(boundValue !== undefined && { [bindContract.prop]: boundValue }),
 			...(onclick !== undefined && { onclick }),
-			...((boundPathTemplate ||onchangeUser) && { onchange }),
+			...((boundPathTemplate || onchangeUser) && { [bindContract.event]: onchange }),
 			...((boundPathTemplate ||oninputUser) && { oninput }),
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),

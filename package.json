@@ -63,6 +63,7 @@
     "driver.js": "^1.4.0",
     "echarts": "^6.0.0",
     "elkjs": "^0.11.1",
+    "esm-env": "^1.2.2",
     "frappe-gantt": "^1.2.2",
     "layerchart": "2.0.0-next.43",
     "leaflet": "^1.9.4",
