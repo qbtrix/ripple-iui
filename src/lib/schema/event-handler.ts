@@ -7,6 +7,8 @@
  *   - Converted to discriminatedUnion on `action` so each variant has its own shape
  *   - Added flow, branch, confirm, validate, delay, invoke action types
  *   - Extended api action with response_key, on_success, on_error for async chaining
+ *   - Added run_source action — host-delegated re-run of a server-side read
+ *     binding (RFC 04 — Pocket Interactivity & Data Sync)
  *   - EventHandlerOrArray still accepts either a single handler or an array for
  *     backwards compatibility with existing specs
  */
@@ -19,6 +21,8 @@ import { z } from 'zod';
  * Legacy actions:
  * - set: Update a state value
  * - api: Make an API call (host-delegated — host performs the HTTP request)
+ * - run_source: Re-run a server-side read binding (host-delegated — host
+ *   re-fetches the named source)
  * - navigate: Navigate to a URL
  * - toast: Show a toast notification
  * - emit: Emit a custom event to parent
@@ -39,6 +43,7 @@ export const EventAction = z.enum([
 	'push',
 	'remove',
 	'api',
+	'run_source',
 	'navigate',
 	'toast',
 	'emit',
@@ -157,6 +162,24 @@ export const ApiHandler: z.ZodType<ApiHandlerType> = z.lazy(() =>
 	})
 );
 
+/**
+ * `run_source` — host-delegated re-run of a server-side read binding ("source").
+ * Ripple does not fetch; it emits the event to the host's `onEvent` callback,
+ * the host re-runs the named source and returns a RippleEventResult. The
+ * dispatcher then chains on_success / on_error exactly like `api`.
+ *
+ * For backwards compatibility, hosts returning `void` are treated as a silent
+ * success with no data — no continuation receives a payload.
+ */
+export const RunSourceHandler: z.ZodType<RunSourceHandlerType> = z.lazy(() =>
+	z.object({
+		action: z.literal('run_source'),
+		source: z.string(),
+		on_success: z.array(EventHandler).optional(),
+		on_error: z.array(EventHandler).optional()
+	})
+);
+
 /** `flow` — run a list of steps sequentially. `on_error` fires on FlowAbortError. */
 export const FlowHandler: z.ZodType<FlowHandlerType> = z.lazy(() =>
 	z.object({
@@ -223,6 +246,13 @@ type ApiHandlerType = {
 	on_error?: EventHandler[];
 };
 
+type RunSourceHandlerType = {
+	action: 'run_source';
+	source: string;
+	on_success?: EventHandler[];
+	on_error?: EventHandler[];
+};
+
 type FlowHandlerType = {
 	action: 'flow';
 	steps: EventHandler[];
@@ -268,6 +298,7 @@ export const EventHandler = z.union([
 	PinHandler,
 	UnpinHandler,
 	ApiHandler,
+	RunSourceHandler,
 	FlowHandler,
 	BranchHandler,
 	ConfirmHandler,
@@ -288,6 +319,7 @@ export type EventHandler =
 	| z.infer<typeof PinHandler>
 	| z.infer<typeof UnpinHandler>
 	| ApiHandlerType
+	| RunSourceHandlerType
 	| FlowHandlerType
 	| BranchHandlerType
 	| ConfirmHandlerType

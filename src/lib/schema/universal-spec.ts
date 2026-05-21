@@ -2,6 +2,9 @@
  * @file universal-spec.ts
  * @description Universal Spec schema (Gen 2) - The unified specification for all UI intents.
  * Supports Intents, Lifecycles, and Composability.
+ * @changes
+ *   - Added optional `sources` key — server-executed read bindings (RFC 04),
+ *     preserved verbatim by ripple as opaque pass-through
  */
 
 import { z } from 'zod';
@@ -94,6 +97,11 @@ export const UniversalSpec: z.ZodType<UniversalSpecType> = z.object({
     DataFetcher // Remote data
   ]).optional(),
 
+  // Server-executed read bindings ("sources"), keyed by name (RFC 04).
+  // The server owns and runs sources; ripple never executes them — it only
+  // preserves this key verbatim so a client round-trip cannot drop it.
+  sources: z.record(z.string(), z.any()).optional(),
+
   fields: FieldMapping.optional(),
 
   // Layout Control
@@ -124,6 +132,7 @@ type UniversalSpecType = {
   description?: string;
   theme?: z.infer<typeof ThemeOverrides>;
   data?: Record<string, any> | z.infer<typeof DataFetcher>;
+  sources?: Record<string, any>;
   fields?: Record<string, string>;
   display?: z.infer<typeof DisplayHints>;
   ui?: z.infer<typeof UINode>;

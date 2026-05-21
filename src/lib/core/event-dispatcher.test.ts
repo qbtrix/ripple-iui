@@ -2,10 +2,11 @@
  * @file event-dispatcher.test.ts
  * @description Behavior specs for the Phase B multistep dispatcher.
  * Covers flow, branch, confirm, validate, delay, invoke, async api chaining,
- * the nesting depth cap, and backwards compatibility with the legacy
- * flat-array dispatch pattern.
+ * run_source chaining, the nesting depth cap, and backwards compatibility with
+ * the legacy flat-array dispatch pattern.
  * @changes
  *   - Initial creation for Phase B flow-actions feature
+ *   - Added run_source dispatch + on_success / on_error chaining tests (RFC 04)
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -21,6 +22,7 @@ import {
 import { WidgetRegistry } from './widget-registry.js';
 import type { EventHandler } from '../schema/event-handler.js';
 import type { ResolverContext } from './expression-resolver.js';
+import type { RippleEvent } from '../types.js';
 
 function setup(initial: Record<string, unknown> = {}, onEvent?: OnEventCallback) {
 	const state = createStateManager(initial);
@@ -364,6 +366,80 @@ describe('EventDispatcher — api async chaining', () => {
 		);
 		expect(seen[0].url).toBe('/api/items/42');
 		expect(seen[0].body).toEqual({ name: 'A' });
+	});
+});
+
+describe('EventDispatcher — run_source', () => {
+	it('emits a run_source event carrying the source name to the host', async () => {
+		const seen: RippleEvent[] = [];
+		const onEvent = vi.fn<OnEventCallback>(async (e) => {
+			seen.push(e);
+			return { ok: true, data: [] };
+		});
+		const { dispatcher, ctx } = setup({}, onEvent);
+
+		await dispatcher.dispatch({ action: 'run_source', source: 'prs' }, ctx());
+
+		expect(seen).toHaveLength(1);
+		expect(seen[0]).toMatchObject({ type: 'run_source', source: 'prs' });
+	});
+
+	it('on_success fires with the host data when the host returns ok:true', async () => {
+		const onEvent = vi.fn<OnEventCallback>(async () => ({
+			ok: true,
+			data: { rows: [1, 2, 3] }
+		}));
+		const { state, dispatcher, ctx } = setup({}, onEvent);
+
+		// `set` with no explicit `value` falls back to the dispatched event
+		// payload — here the host's refreshed source data.
+		await dispatcher.dispatch(
+			{
+				action: 'run_source',
+				source: 'prs',
+				on_success: [{ action: 'set', target: 'list' }]
+			},
+			ctx()
+		);
+		expect(state.get('list')).toEqual({ rows: [1, 2, 3] });
+	});
+
+	it('on_error fires and _flow_error is written when the host returns ok:false', async () => {
+		const onEvent = vi.fn<OnEventCallback>(async () => ({
+			ok: false,
+			error: { message: 'source unavailable', status: 503 }
+		}));
+		const { state, dispatcher, ctx } = setup({}, onEvent);
+
+		await dispatcher.dispatch(
+			{
+				action: 'run_source',
+				source: 'prs',
+				on_error: [{ action: 'set', target: 'failed', value: true }]
+			},
+			ctx()
+		);
+		expect(state.get(FLOW_ERROR_STATE_KEY)).toMatchObject({
+			message: 'source unavailable',
+			status: 503
+		});
+		expect(state.get('failed')).toBe(true);
+	});
+
+	it('legacy host returning void is treated as success — on_success still runs', async () => {
+		const onEvent = vi.fn<OnEventCallback>(() => undefined);
+		const { state, dispatcher, ctx } = setup({}, onEvent);
+
+		await dispatcher.dispatch(
+			{
+				action: 'run_source',
+				source: 'prs',
+				on_success: [{ action: 'set', target: 'refreshed', value: true }]
+			},
+			ctx()
+		);
+		expect(state.get('refreshed')).toBe(true);
+		expect(state.get(FLOW_ERROR_STATE_KEY)).toBeUndefined();
 	});
 });
 

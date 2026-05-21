@@ -5,6 +5,10 @@ import type { ActionSpec } from './index.js';
  * Source-of-truth: `src/lib/schema/event-handler.ts`. Drift-tested in
  * `manifest.test.ts` — every `example` here must parse against the
  * live `EventHandler` zod schema.
+ *
+ * Changes:
+ *   - Added `run_source` — host-delegated re-run of a server-side read
+ *     binding (RFC 04 — Pocket Interactivity & Data Sync).
  */
 export const manifestActions: Record<string, ActionSpec> = {
   set: {
@@ -131,6 +135,23 @@ export const manifestActions: Record<string, ActionSpec> = {
       ],
       on_error: [
         { action: 'toast', message: 'Could not save', variant: 'error' },
+      ],
+    },
+  },
+
+  run_source: {
+    description: "Re-run a server-side read binding (\"source\") by name. The host re-fetches the source; on success `on_success` runs with the fresh data, on failure `on_error` runs and the error is exposed at state path `_flow_error`. Use it to refresh a data-backed widget after a mutation.",
+    shape: {
+      action: '"run_source"',
+      source: 'string — name of the server-side source to re-run.',
+      'on_success?': 'EventHandler[] — runs with the refreshed data after a successful re-run.',
+      'on_error?': 'EventHandler[] — runs on host-reported failure.',
+    },
+    example: {
+      action: 'run_source',
+      source: 'prs',
+      on_success: [
+        { action: 'toast', message: 'Refreshed', variant: 'success' },
       ],
     },
   },

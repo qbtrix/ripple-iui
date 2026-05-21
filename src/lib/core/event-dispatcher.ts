@@ -8,6 +8,8 @@
  *   - Converted to a discriminated-union-aware dispatcher with narrowing
  *   - Added flow actions (flow, branch, confirm, validate, delay, invoke)
  *   - Added async api chaining via RippleEventResult on the OnEventCallback
+ *   - Added run_source action — host-delegated re-run of a server-side read
+ *     binding, with the same async on_success / on_error chaining as `api`
  *   - FlowAbortError for `validate` failures + flow-level error recovery
  *   - Enforces max nested flow depth to stop run-away recursion
  *   - Wires the new per-instance WidgetRegistry through the constructor
@@ -184,6 +186,9 @@ export class EventDispatcher {
 				return;
 			case 'api':
 				await this.handleApi(handler, context, depth);
+				return;
+			case 'run_source':
+				await this.handleRunSource(handler, context, depth);
 				return;
 			case 'flow':
 				await this.handleFlow(handler, context, depth, eventValue);
@@ -419,28 +424,7 @@ export class EventDispatcher {
 			event.body = resolved;
 		}
 
-		let result: RippleEventResult;
-		try {
-			const maybe = this.onEvent(event);
-			const raw = maybe && typeof (maybe as Promise<unknown>).then === 'function'
-				? await (maybe as Promise<RippleEventResult | void>)
-				: (maybe as RippleEventResult | void);
-
-			// Legacy hosts returning `void` are treated as silent success.
-			if (raw === undefined || raw === null) {
-				result = { ok: true, data: undefined };
-			} else {
-				result = raw as RippleEventResult;
-			}
-		} catch (err) {
-			// A host throwing is a transport-level failure — surface it as an error result.
-			result = {
-				ok: false,
-				error: {
-					message: err instanceof Error ? err.message : String(err)
-				}
-			};
-		}
+		const result = await this.callHost(event);
 
 		if (result.ok) {
 			if (handler.response_key && result.data !== undefined) {
@@ -464,6 +448,82 @@ export class EventDispatcher {
 					depth
 				);
 			}
+		}
+	}
+
+	/**
+	 * `run_source` — host-delegated re-run of a server-side read binding.
+	 * Ripple does not fetch; it emits a `run_source` event and lets the host
+	 * re-run the named source. Result handling mirrors `handleApi` exactly:
+	 * on success the host's data flows into `on_success`, on failure the error
+	 * is written to `_flow_error` and `on_error` runs. A legacy `void` host
+	 * return is treated as a silent success with no data.
+	 */
+	private async handleRunSource(
+		handler: Extract<EventHandler, { action: 'run_source' }>,
+		context: ResolverContext,
+		depth: number
+	): Promise<void> {
+		if (!this.onEvent) return;
+
+		const event: RippleEvent = {
+			type: 'run_source',
+			source: handler.source
+		};
+
+		const result = await this.callHost(event);
+
+		if (result.ok) {
+			if (handler.on_success && handler.on_success.length > 0) {
+				await this.runHandlers(
+					handler.on_success,
+					this.freshContext(context),
+					result.data,
+					depth
+				);
+			}
+		} else {
+			this.stateManager.set(
+				FLOW_ERROR_STATE_KEY,
+				result.error ?? { message: 'run_source failed' }
+			);
+			if (handler.on_error && handler.on_error.length > 0) {
+				await this.runHandlers(
+					handler.on_error,
+					this.freshContext(context),
+					result.error,
+					depth
+				);
+			}
+		}
+	}
+
+	/**
+	 * Emit an event to the host and normalize the reply into a RippleEventResult.
+	 * Shared by `handleApi` and `handleRunSource`. Legacy hosts returning `void`
+	 * are treated as a silent success with no data; a host that throws becomes a
+	 * transport-level error result. Caller must have verified `this.onEvent`.
+	 */
+	private async callHost(event: RippleEvent): Promise<RippleEventResult> {
+		try {
+			const maybe = this.onEvent!(event);
+			const raw = maybe && typeof (maybe as Promise<unknown>).then === 'function'
+				? await (maybe as Promise<RippleEventResult | void>)
+				: (maybe as RippleEventResult | void);
+
+			// Legacy hosts returning `void` are treated as silent success.
+			if (raw === undefined || raw === null) {
+				return { ok: true, data: undefined };
+			}
+			return raw as RippleEventResult;
+		} catch (err) {
+			// A host throwing is a transport-level failure — surface it as an error result.
+			return {
+				ok: false,
+				error: {
+					message: err instanceof Error ? err.message : String(err)
+				}
+			};
 		}
 	}
 
