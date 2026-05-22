@@ -10,6 +10,10 @@
  *   - Added async api chaining via RippleEventResult on the OnEventCallback
  *   - Added run_source action — host-delegated re-run of a server-side read
  *     binding, with the same async on_success / on_error chaining as `api`
+ *   - Added call_binding action — host-delegated invocation of a server-side
+ *     write binding; resolves {state.x}/{item.id} in path/params client-side
+ *     before emitting, then chains on_success / on_error like run_source
+ *     (RFC 05 M2a — Write actions core)
  *   - FlowAbortError for `validate` failures + flow-level error recovery
  *   - Enforces max nested flow depth to stop run-away recursion
  *   - Wires the new per-instance WidgetRegistry through the constructor
@@ -189,6 +193,9 @@ export class EventDispatcher {
 				return;
 			case 'run_source':
 				await this.handleRunSource(handler, context, depth);
+				return;
+			case 'call_binding':
+				await this.handleCallBinding(handler, context, depth);
 				return;
 			case 'flow':
 				await this.handleFlow(handler, context, depth, eventValue);
@@ -499,10 +506,81 @@ export class EventDispatcher {
 	}
 
 	/**
+	 * `call_binding` — host-delegated invocation of a named server-side write
+	 * binding (the write-action twin of `run_source`). Ripple does not make the
+	 * HTTP call; it FIRST resolves `{state.x}` / `{item.id}` expressions in
+	 * `path` and in each value of `params` client-side — exactly what
+	 * `handleApi` does for `url` / `body` — then emits a `call_binding` event
+	 * and lets the host perform the write. Result handling mirrors
+	 * `handleRunSource` / `handleApi`: on success the host's data flows into
+	 * `on_success`, on failure the error is written to `_flow_error` and
+	 * `on_error` runs. A legacy `void` host return is a silent success.
+	 *
+	 * `method` is intentionally not part of the handler — the HTTP verb is read
+	 * from the persisted spec on the server; the client never names the verb.
+	 */
+	private async handleCallBinding(
+		handler: Extract<EventHandler, { action: 'call_binding' }>,
+		context: ResolverContext,
+		depth: number
+	): Promise<void> {
+		if (!this.onEvent) return;
+
+		const event: RippleEvent = {
+			type: 'call_binding',
+			binding: handler.binding
+		};
+
+		// Resolve `{state.x}` / `{item.id}` in the path before the call leaves
+		// the browser — identical to how `handleApi` resolves `url`.
+		if (handler.path !== undefined) {
+			event.path = resolveString(handler.path, context) as string;
+		}
+
+		// Resolve each param value the same way `handleApi` resolves `body` —
+		// but via `resolveValue` so nested objects / arrays / non-string values
+		// are handled too.
+		if (handler.params) {
+			const resolved: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries(handler.params)) {
+				resolved[key] = resolveValue(value, context);
+			}
+			event.params = resolved;
+		}
+
+		const result = await this.callHost(event);
+
+		if (result.ok) {
+			if (handler.on_success && handler.on_success.length > 0) {
+				await this.runHandlers(
+					handler.on_success,
+					this.freshContext(context),
+					result.data,
+					depth
+				);
+			}
+		} else {
+			this.stateManager.set(
+				FLOW_ERROR_STATE_KEY,
+				result.error ?? { message: 'call_binding failed' }
+			);
+			if (handler.on_error && handler.on_error.length > 0) {
+				await this.runHandlers(
+					handler.on_error,
+					this.freshContext(context),
+					result.error,
+					depth
+				);
+			}
+		}
+	}
+
+	/**
 	 * Emit an event to the host and normalize the reply into a RippleEventResult.
-	 * Shared by `handleApi` and `handleRunSource`. Legacy hosts returning `void`
-	 * are treated as a silent success with no data; a host that throws becomes a
-	 * transport-level error result. Caller must have verified `this.onEvent`.
+	 * Shared by `handleApi`, `handleRunSource`, and `handleCallBinding`. Legacy
+	 * hosts returning `void` are treated as a silent success with no data; a
+	 * host that throws becomes a transport-level error result. Caller must have
+	 * verified `this.onEvent`.
 	 */
 	private async callHost(event: RippleEvent): Promise<RippleEventResult> {
 		try {

@@ -9,6 +9,8 @@ import type { ActionSpec } from './index.js';
  * Changes:
  *   - Added `run_source` — host-delegated re-run of a server-side read
  *     binding (RFC 04 — Pocket Interactivity & Data Sync).
+ *   - Added `call_binding` — host-delegated invocation of a server-side
+ *     write binding (RFC 05 M2a — Write actions core).
  */
 export const manifestActions: Record<string, ActionSpec> = {
   set: {
@@ -152,6 +154,30 @@ export const manifestActions: Record<string, ActionSpec> = {
       source: 'prs',
       on_success: [
         { action: 'toast', message: 'Refreshed', variant: 'success' },
+      ],
+    },
+  },
+
+  call_binding: {
+    description: "Invoke a named server-side write binding. The host performs the write; `path` / `params` support {state.x} expressions, resolved before the call. On success `on_success` runs with the result; on failure `on_error` runs and the error is exposed at state path `_flow_error`. The HTTP verb lives in the spec — never name it here.",
+    shape: {
+      action: '"call_binding"',
+      binding: 'string — name of the server-side write binding to invoke.',
+      'path?': 'string — path segment for the binding. Supports {state.x}/{item.id} interpolation.',
+      'params?': 'object — parameter map for the write. Values support {state.x}/{item.id} expressions.',
+      'on_success?': 'EventHandler[] — runs with the result data after a successful write.',
+      'on_error?': 'EventHandler[] — runs on host-reported failure.',
+    },
+    example: {
+      action: 'call_binding',
+      binding: 'toggle_task',
+      path: '{state.selectedId}',
+      params: { done: true },
+      on_success: [
+        { action: 'toast', message: 'Saved', variant: 'success' },
+      ],
+      on_error: [
+        { action: 'toast', message: 'Could not save', variant: 'error' },
       ],
     },
   },

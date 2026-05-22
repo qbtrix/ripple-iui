@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.2.0",
-  "generatedAt": "2026-05-19T12:07:25.132Z",
+  "generatedAt": "2026-05-22T09:24:28.814Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -203,6 +203,59 @@
           {
             "action": "toast",
             "message": "Added",
+            "variant": "success"
+          }
+        ],
+        "on_error": [
+          {
+            "action": "toast",
+            "message": "Could not save",
+            "variant": "error"
+          }
+        ]
+      }
+    },
+    "run_source": {
+      "description": "Re-run a server-side read binding (\"source\") by name. The host re-fetches the source; on success `on_success` runs with the fresh data, on failure `on_error` runs and the error is exposed at state path `_flow_error`. Use it to refresh a data-backed widget after a mutation.",
+      "shape": {
+        "action": "\"run_source\"",
+        "source": "string — name of the server-side source to re-run.",
+        "on_success?": "EventHandler[] — runs with the refreshed data after a successful re-run.",
+        "on_error?": "EventHandler[] — runs on host-reported failure."
+      },
+      "example": {
+        "action": "run_source",
+        "source": "prs",
+        "on_success": [
+          {
+            "action": "toast",
+            "message": "Refreshed",
+            "variant": "success"
+          }
+        ]
+      }
+    },
+    "call_binding": {
+      "description": "Invoke a named server-side write binding. The host performs the write; `path` / `params` support {state.x} expressions, resolved before the call. On success `on_success` runs with the result; on failure `on_error` runs and the error is exposed at state path `_flow_error`. The HTTP verb lives in the spec — never name it here.",
+      "shape": {
+        "action": "\"call_binding\"",
+        "binding": "string — name of the server-side write binding to invoke.",
+        "path?": "string — path segment for the binding. Supports {state.x}/{item.id} interpolation.",
+        "params?": "object — parameter map for the write. Values support {state.x}/{item.id} expressions.",
+        "on_success?": "EventHandler[] — runs with the result data after a successful write.",
+        "on_error?": "EventHandler[] — runs on host-reported failure."
+      },
+      "example": {
+        "action": "call_binding",
+        "binding": "toggle_task",
+        "path": "{state.selectedId}",
+        "params": {
+          "done": true
+        },
+        "on_success": [
+          {
+            "action": "toast",
+            "message": "Saved",
             "variant": "success"
           }
         ],
