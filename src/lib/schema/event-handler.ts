@@ -9,6 +9,8 @@
  *   - Extended api action with response_key, on_success, on_error for async chaining
  *   - Added run_source action — host-delegated re-run of a server-side read
  *     binding (RFC 04 — Pocket Interactivity & Data Sync)
+ *   - Added call_binding action — host-delegated write-action twin of
+ *     run_source; invokes a named server-side write binding (RFC 05 M2a)
  *   - EventHandlerOrArray still accepts either a single handler or an array for
  *     backwards compatibility with existing specs
  */
@@ -23,6 +25,8 @@ import { z } from 'zod';
  * - api: Make an API call (host-delegated — host performs the HTTP request)
  * - run_source: Re-run a server-side read binding (host-delegated — host
  *   re-fetches the named source)
+ * - call_binding: Invoke a named server-side write binding (host-delegated —
+ *   host performs the write; the verb lives in the persisted spec)
  * - navigate: Navigate to a URL
  * - toast: Show a toast notification
  * - emit: Emit a custom event to parent
@@ -44,6 +48,7 @@ export const EventAction = z.enum([
 	'remove',
 	'api',
 	'run_source',
+	'call_binding',
 	'navigate',
 	'toast',
 	'emit',
@@ -180,6 +185,32 @@ export const RunSourceHandler: z.ZodType<RunSourceHandlerType> = z.lazy(() =>
 	})
 );
 
+/**
+ * `call_binding` — host-delegated invocation of a named server-side write
+ * binding. The write-action twin of `run_source`: ripple does not make the
+ * HTTP call, it emits a `call_binding` event to the host's `onEvent` callback,
+ * the host performs the write and returns a RippleEventResult. The dispatcher
+ * resolves `{state.x}` / `{item.id}` in `path` and `params` client-side before
+ * the event leaves the browser (exactly like `api` resolves `url` / `body`),
+ * then chains on_success / on_error exactly like `run_source` and `api`.
+ *
+ * NOTE: `method` is deliberately absent — the HTTP verb is read from the
+ * persisted spec on the server; the client never names the verb.
+ *
+ * For backwards compatibility, hosts returning `void` are treated as a silent
+ * success with no data — no continuation receives a payload.
+ */
+export const CallBindingHandler: z.ZodType<CallBindingHandlerType> = z.lazy(() =>
+	z.object({
+		action: z.literal('call_binding'),
+		binding: z.string(),
+		path: z.string().optional(),
+		params: z.record(z.string(), z.any()).optional(),
+		on_success: z.array(EventHandler).optional(),
+		on_error: z.array(EventHandler).optional()
+	})
+);
+
 /** `flow` — run a list of steps sequentially. `on_error` fires on FlowAbortError. */
 export const FlowHandler: z.ZodType<FlowHandlerType> = z.lazy(() =>
 	z.object({
@@ -253,6 +284,15 @@ type RunSourceHandlerType = {
 	on_error?: EventHandler[];
 };
 
+type CallBindingHandlerType = {
+	action: 'call_binding';
+	binding: string;
+	path?: string;
+	params?: Record<string, unknown>;
+	on_success?: EventHandler[];
+	on_error?: EventHandler[];
+};
+
 type FlowHandlerType = {
 	action: 'flow';
 	steps: EventHandler[];
@@ -299,6 +339,7 @@ export const EventHandler = z.union([
 	UnpinHandler,
 	ApiHandler,
 	RunSourceHandler,
+	CallBindingHandler,
 	FlowHandler,
 	BranchHandler,
 	ConfirmHandler,
@@ -320,6 +361,7 @@ export type EventHandler =
 	| z.infer<typeof UnpinHandler>
 	| ApiHandlerType
 	| RunSourceHandlerType
+	| CallBindingHandlerType
 	| FlowHandlerType
 	| BranchHandlerType
 	| ConfirmHandlerType
