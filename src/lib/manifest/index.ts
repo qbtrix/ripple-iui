@@ -55,6 +55,7 @@ import { diffEntry } from './entries/diff.js';
 import { discoverCardEntry } from './entries/discover-card.js';
 import { dropdownMenuEntry } from './entries/dropdown-menu.js';
 import { eachEntry } from './entries/each.js';
+import { embedEntry } from './entries/embed.js';
 import { emptyStateEntry } from './entries/empty-state.js';
 import { entityDetailEntry } from './entries/entity-detail.js';
 import { execDashboardEntry } from './entries/exec-dashboard.js';
@@ -93,6 +94,7 @@ import { masterDetailEntry } from './entries/master-detail.js';
 import { mentionEntry } from './entries/mention.js';
 import { metricEntry } from './entries/metric.js';
 import { modalEntry } from './entries/modal.js';
+import { modelViewerEntry } from './entries/model-viewer.js';
 import { multiSelectEntry } from './entries/multi-select.js';
 import { newsCardEntry } from './entries/news-card.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
@@ -359,6 +361,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   discoverCardEntry,
   dropdownMenuEntry,
   eachEntry,
+  embedEntry,
   emptyStateEntry,
   entityDetailEntry,
   execDashboardEntry,
@@ -397,6 +400,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   mentionEntry,
   metricEntry,
   modalEntry,
+  modelViewerEntry,
   multiSelectEntry,
   newsCardEntry,
   notificationCenterEntry,

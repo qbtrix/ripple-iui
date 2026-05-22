@@ -10,6 +10,9 @@
     - Fixed: Use self-import instead of deprecated svelte:self
     - Wired on_focus and on_blur handlers through widget props
     - Warn on unknown slot names (non-blocking, aids spec debugging)
+    - 2026-05-22: unknown-widget branch fails loud — shows the node id and a
+      clear "not in the catalog" message instead of a bare red box
+      (Increment 5 catalog-as-allowlist).
 -->
 <script lang="ts">
 	import { getContext } from 'svelte';
@@ -387,9 +390,23 @@
 			{/snippet}
 		</WidgetComponent>
 	{:else}
-		<!-- Unknown widget type -->
-		<div class="text-red-500 p-2 border border-red-300 rounded bg-red-50">
-			Unknown widget type: {node.type}
+		<!--
+			Unknown widget type — the node's `type` is not in the widget catalog.
+			Fail loud: surface the offending type and the node id so the spec
+			author (or the catalog gate) can pinpoint it.
+		-->
+		<div
+			class="text-red-500 p-2 border border-red-300 rounded bg-red-50 text-sm"
+			role="alert"
+			data-ripple-unknown-widget={node.type}
+		>
+			<strong>Widget type "{node.type}" isn't in the catalog.</strong>
+			{#if node.id}
+				<span class="block opacity-80">node id: {node.id}</span>
+			{/if}
+			<span class="block opacity-80">
+				Use a registered widget type, or register a custom widget before mount.
+			</span>
 		</div>
 	{/if}
 {/if}

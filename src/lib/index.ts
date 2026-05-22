@@ -1,3 +1,6 @@
+// Updated 2026-05-22: export validateCatalog so hosts can gate a spec
+// against the widget catalog before mount (Increment 5 catalog-as-allowlist).
+
 // Main component
 export { default as Ripple } from './Ripple.svelte';
 
@@ -23,6 +26,11 @@ export {
   type ResolverContext
 } from './core/expression-resolver.js';
 export { normalizeSpec } from './core/normalizer.js';
+export {
+  validateCatalog,
+  type UnknownNode,
+  type ValidateCatalogOptions
+} from './core/validate-catalog.js';
 export { newNodeId, isValidNodeId, ensureNodeIds } from './core/spec-id.js';
 export {
   findById,
