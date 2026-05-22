@@ -1,6 +1,10 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
-  Updated: 2026-04-21 — Flow actions wiring: instantiate a per-instance
+  Updated: 2026-05-22 — Opt-in catalog gate: when `checkCatalog` is true,
+  Ripple runs `validateCatalog` on the spec before mount and warns about any
+  out-of-catalog node types. Non-breaking — it never blocks rendering;
+  NodeRenderer still shows its loud red box per unknown node (Increment 5).
+  Previous (2026-04-21): Flow actions wiring — instantiate a per-instance
   WidgetRegistry, expose via 'ui-widget-registry' context, thread to the
   EventDispatcher, and auto-mount the ConfirmDialog overlay so any confirm
   action surfaces without extra spec.
@@ -18,6 +22,7 @@
   import { createWidgetRegistry } from './core/widget-registry.js';
   import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
+  import { validateCatalog } from './core/validate-catalog.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
   import DashboardRenderer from './intent/DashboardRenderer.svelte';
@@ -34,6 +39,15 @@
     onEvent?: OnEventCallback;
     onSpecChanged?: (spec: DashboardSpec) => void;
     onStateChange?: (path: string, value: unknown, state: Record<string, unknown>) => void;
+    /**
+     * Opt-in catalog gate. When true, Ripple runs `validateCatalog` on the
+     * spec before mount and `console.warn`s any out-of-catalog node types.
+     * Non-breaking — rendering is never blocked; NodeRenderer still shows a
+     * loud red box per unknown node.
+     */
+    checkCatalog?: boolean;
+    /** Extra widget types to treat as known when `checkCatalog` is on. */
+    extraWidgetTypes?: string[];
     class?: string;
     style?: string;
   }
@@ -46,6 +60,8 @@
     onEvent,
     onSpecChanged,
     onStateChange,
+    checkCatalog = false,
+    extraWidgetTypes,
     class: className = '',
     style
   }: Props = $props();
@@ -169,6 +185,28 @@
   });
 
   const streamingError = $derived(streaming?.error ?? null);
+
+  // Opt-in catalog gate. Runs whenever the spec changes; warns once per
+  // distinct set of unknown types. Never blocks render — NodeRenderer's
+  // per-node red box is the visible signal; this is the host-side heads-up.
+  let lastCatalogWarning = '';
+  $effect(() => {
+    if (!checkCatalog) return;
+    const tree = (spec as { ui?: unknown }).ui;
+    if (!tree || typeof tree !== 'object') return;
+    const unknown = validateCatalog(spec as any, { extraWidgetTypes });
+    if (unknown.length === 0) {
+      lastCatalogWarning = '';
+      return;
+    }
+    const signature = unknown.map((u) => `${u.path}:${u.type}`).join(',');
+    if (signature === lastCatalogWarning) return;
+    lastCatalogWarning = signature;
+    console.warn(
+      `[Ripple] ${unknown.length} node(s) use a widget type not in the catalog:`,
+      unknown
+    );
+  });
 </script>
 
 <div

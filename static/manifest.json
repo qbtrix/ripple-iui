@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.2.0",
-  "generatedAt": "2026-05-22T09:24:28.814Z",
+  "generatedAt": "2026-05-22T12:25:53.778Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -3888,6 +3888,61 @@
             }
           }
         ]
+      }
+    },
+    {
+      "type": "embed",
+      "category": "media",
+      "description": "Sandboxed iframe escape hatch — embeds a remote https URL or an inline srcdoc document. The iframe sandbox is renderer-controlled; the spec cannot widen it. Frame runs at an opaque origin.",
+      "props": {
+        "mode": {
+          "type": "\"url\" | \"srcdoc\"",
+          "required": true,
+          "description": "Embed a remote page (`url`) or an inline document (`srcdoc`)."
+        },
+        "url": {
+          "type": "string",
+          "required": false,
+          "description": "Remote page URL — used when mode=url. Must be https://."
+        },
+        "srcdoc": {
+          "type": "string",
+          "required": false,
+          "description": "Inline HTML document — used when mode=srcdoc. Capped at 64KB."
+        },
+        "title": {
+          "type": "string",
+          "required": true,
+          "description": "Accessible title for the iframe."
+        },
+        "height": {
+          "type": "number",
+          "required": false,
+          "description": "Fixed height in px. Ignored when aspectRatio is set."
+        },
+        "aspectRatio": {
+          "type": "string",
+          "required": false,
+          "description": "Aspect ratio such as \"16 / 9\". Wins over height."
+        },
+        "allow": {
+          "type": "string[]",
+          "required": false,
+          "description": "Permissions-policy tokens. Only fullscreen, autoplay, encrypted-media, picture-in-picture are honored; anything else is dropped."
+        }
+      },
+      "example": {
+        "type": "embed",
+        "props": {
+          "mode": "url",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          "title": "Embedded video",
+          "aspectRatio": "16 / 9",
+          "allow": [
+            "fullscreen",
+            "encrypted-media"
+          ]
+        }
       }
     },
     {
@@ -7966,6 +8021,67 @@
               ]
             }
           ]
+        }
+      }
+    },
+    {
+      "type": "model-viewer",
+      "category": "media",
+      "description": "Declarative 3D model viewer for GLB/GLTF assets — orbit controls, AR, and environment lighting, all driven by props. The viewer module is lazy-loaded on first use.",
+      "props": {
+        "src": {
+          "type": "string",
+          "required": true,
+          "description": "GLB or GLTF model URL."
+        },
+        "poster": {
+          "type": "string",
+          "required": false,
+          "description": "Image shown before the model loads."
+        },
+        "alt": {
+          "type": "string",
+          "required": false,
+          "description": "Accessible description of the model."
+        },
+        "cameraControls": {
+          "type": "boolean",
+          "required": false,
+          "description": "Allow mouse / touch orbit and zoom. Default true."
+        },
+        "autoRotate": {
+          "type": "boolean",
+          "required": false,
+          "description": "Slowly rotate the model when idle. Default false."
+        },
+        "ar": {
+          "type": "boolean",
+          "required": false,
+          "description": "Enable the \"View in your space\" AR affordance where supported."
+        },
+        "environmentImage": {
+          "type": "string",
+          "required": false,
+          "description": "URL of an HDR / image-based lighting environment."
+        },
+        "exposure": {
+          "type": "number",
+          "required": false,
+          "description": "Scene exposure (1 = neutral)."
+        },
+        "shadowIntensity": {
+          "type": "number",
+          "required": false,
+          "description": "Strength of the contact shadow under the model (0–1)."
+        }
+      },
+      "example": {
+        "type": "model-viewer",
+        "props": {
+          "src": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+          "alt": "A 3D model of an astronaut",
+          "cameraControls": true,
+          "autoRotate": true
         }
       }
     },
