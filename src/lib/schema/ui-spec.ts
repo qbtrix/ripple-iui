@@ -5,6 +5,8 @@
  * @changes
  *   - Initial creation with UINode, DataFetcher, and UISpec schemas
  *   - Recursive UINode definition for nested component trees
+ *   - Added optional `sources` key — server-executed read bindings (RFC 04),
+ *     preserved verbatim by ripple as opaque pass-through
  */
 
 import { z } from 'zod';
@@ -166,6 +168,13 @@ export const UISpec = z.object({
 
 	/** Data fetchers keyed by name */
 	data: z.record(z.string(), DataFetcher).optional(),
+
+	/**
+	 * Server-executed read bindings ("sources"), keyed by name (RFC 04).
+	 * The server owns and runs sources; ripple never executes them — it only
+	 * preserves this key verbatim so a client round-trip cannot drop it.
+	 */
+	sources: z.record(z.string(), z.any()).optional(),
 
 	/** The UI tree (required) */
 	ui: UINode,

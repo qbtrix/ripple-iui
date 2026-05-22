@@ -1,3 +1,12 @@
+/**
+ * @file normalizer.ts
+ * @description Lightweight spec normalizer — coerces any spec input into a
+ * UniversalSpec without Zod validation.
+ * @changes
+ *   - Preserve the top-level `sources` key on legacy UISpec normalization so a
+ *     client round-trip does not silently drop server-owned sources (RFC 04).
+ */
+
 import type { UniversalSpec } from '../schema/universal-spec.js';
 
 /**
@@ -29,6 +38,9 @@ export function normalizeSpec(input: any): UniversalSpec {
       lifecycle: input.lifecycle ?? { type: 'ephemeral' },
       ui: input.ui,
       data: input.data,
+      // `sources` is server-executed (RFC 04) — ripple treats it as opaque
+      // pass-through, never dropping it on a client round-trip.
+      sources: input.sources,
       state: input.state,
       theme: input.theme,
       selection: 'none'
