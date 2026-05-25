@@ -185,6 +185,12 @@ interface FeedItem {
 
 ## Input Widgets
 
+> **Binding contract.** Each input below uses a specific prop / event
+> pair for two-way `bind`. The runtime source of truth is
+> `src/lib/core/widget-bind-contract.ts`; see
+> [State Management → Per-widget bind contract](./state-management.md#per-widget-bind-contract)
+> for the full table and how to register a new one.
+
 ### `button`
 
 Interactive button.
