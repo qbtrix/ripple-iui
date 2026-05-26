@@ -203,6 +203,160 @@ on" behavior for specs that never opted into chaining.
 }
 ```
 
+## Server-binding actions
+
+> [!NOTE]
+> **Status (2026-05-25):** shipped — `run_source`, `call_binding`, and `invoke_tool` landed in PRs ripple#40, #41, #43. This doc was lagging; updated to match runtime.
+
+`api` is the generic "fire an HTTP request the host owns" verb. Three
+sibling verbs delegate to host-side primitives instead of a raw URL —
+the spec names a server-side entity, the host resolves it, and the
+dispatcher chains continuations the same way `api` does. The HTTP verb
+and endpoint never appear in the spec; only the entity name does.
+
+All three follow the same result protocol: the host's `onEvent` returns
+a `RippleEventResult`; on `ok` the result data is handed to
+`on_success`; on failure the error is written to `state._flow_error`
+and `on_error` runs. Hosts returning `void` are treated as a silent
+success (no `on_error` fires), same as `api`.
+
+### `run_source`
+
+Re-run a server-side read binding ("source") by name. The host
+re-fetches the named source on demand. Use it to refresh a data-backed
+widget after a mutation, on a "Refresh" button, or on an interval.
+
+```json
+{
+  "action": "run_source",
+  "source": "prs",
+  "on_success": [
+    { "action": "toast", "message": "Refreshed.", "variant": "success" }
+  ],
+  "on_error": [
+    { "action": "toast", "message": "Could not refresh.", "variant": "error" }
+  ]
+}
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `action` | `"run_source"` | yes | Discriminator. |
+| `source` | `string` | yes | Name of the server-side source to re-run. |
+| `on_success` | `EventHandler[]` | no | Runs with the refreshed data after a successful re-run. |
+| `on_error` | `EventHandler[]` | no | Runs on host-reported failure. The error sits at `state._flow_error`. |
+
+There is no `params` / `body` / `path` field on `run_source` — the
+source is identified by name only; any params it needs live in the
+binding definition on the server. If the host returns `ok: false`, the
+error is written to `state._flow_error` with the shape
+`{ message, status?, body? }` and `on_error` runs. A bad source name is
+a host-side failure (typically `{ message: "source not found" }`) — the
+dispatcher doesn't validate names client-side.
+
+**When to use vs `api`.** Reach for `run_source` whenever the host
+already has the read defined as a named binding — the spec stays
+declarative and the URL / verb / auth all stay server-side. Use raw
+`api` only for ad-hoc requests that haven't been promoted to a binding.
+
+### `call_binding`
+
+Invoke a named server-side write binding. The write-action twin of
+`run_source`: the spec names the binding, the host performs the write.
+The HTTP verb is read from the persisted spec on the server — the
+client never names it.
+
+```json
+{
+  "action": "call_binding",
+  "binding": "toggle_task",
+  "path": "{state.selectedId}",
+  "params": { "done": true },
+  "on_success": [
+    { "action": "toast", "message": "Saved.", "variant": "success" }
+  ],
+  "on_error": [
+    { "action": "toast", "message": "Could not save.", "variant": "error" }
+  ]
+}
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `action` | `"call_binding"` | yes | Discriminator. |
+| `binding` | `string` | yes | Name of the server-side write binding to invoke. |
+| `path` | `string` | no | Path segment for the binding. Supports `{state.x}` / `{item.id}` interpolation. |
+| `params` | `object` | no | Parameter map for the write. Values support `{state.x}` / `{item.id}` expressions (including nested objects / arrays). |
+| `on_success` | `EventHandler[]` | no | Runs with the result data after a successful write. |
+| `on_error` | `EventHandler[]` | no | Runs on host-reported failure. |
+
+`path` and each value of `params` are resolved client-side before the
+event leaves the browser — exactly like `api` resolves `url` and `body`
+— so the server never sees a raw `{state.x}` expression. If the host
+returns `ok: false` the error is written to `state._flow_error` and
+`on_error` runs.
+
+`method` is deliberately absent from this handler. The HTTP verb lives
+in the persisted binding on the server and is the server's decision,
+not the client's. If a spec needs to pick the verb, that's an `api`
+call, not a `call_binding`.
+
+**When to use vs `api`.** Use `call_binding` whenever the host has the
+write declared as a named binding (RFC 05 — Pocket Write Actions).
+That's the path that respects the spec's bound persona, the binding's
+own auth + audit trail, and the server-side verb. Use raw `api` only
+for one-off requests that aren't durable enough to live as a binding.
+
+### `invoke_tool`
+
+Invoke a named server-side tool (WebFetch, Composio integrations, etc.)
+by tool id + resolved args. The click-driven sibling of `run_source` /
+`call_binding`: where `run_source` re-runs a declared read and
+`call_binding` runs a declared write, `invoke_tool` runs a tool that
+isn't fronted by a binding at all. The host POSTs to
+`/pockets/{id}/tools/run` with the tool name + args.
+
+```json
+{
+  "action": "invoke_tool",
+  "tool": "WebFetch",
+  "args": { "url": "https://api.example.com/feed" },
+  "on_success": [
+    { "action": "set", "target": "feed" },
+    { "action": "toast", "message": "Refreshed.", "variant": "success" }
+  ],
+  "on_error": [
+    { "action": "toast", "message": "Could not refresh.", "variant": "error" }
+  ]
+}
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `action` | `"invoke_tool"` | yes | Discriminator. |
+| `tool` | `string` | yes | Id of the server-side tool to invoke (e.g. `"WebFetch"`, `"GMAIL_FETCH_EMAILS"`). |
+| `args` | `object` | no | Argument map for the tool. Values support `{state.x}` / `{item.id}` expressions, including nested objects / arrays. |
+| `on_success` | `EventHandler[]` | no | Runs with the result data after a successful invocation. |
+| `on_error` | `EventHandler[]` | no | Runs on host-reported failure. |
+
+Each value of `args` is resolved client-side before the event is
+emitted — same contract as `call_binding.params`. The server never
+sees a raw expression.
+
+Tools are gated by an allowlist on the host. A spec asking for a tool
+the pocket can't run gets back
+`{ ok: false, error: { message: "tool not allowlisted", status: 403 } }`,
+the error lands in `state._flow_error`, and `on_error` fires. The
+dispatcher does not validate tool names client-side; the host is the
+authority.
+
+**When to use vs `call_binding`.** Use `call_binding` when the action
+is a named write binding declared on the pocket (RFC 05). Use
+`invoke_tool` when the data comes from a registered tool that doesn't
+have a binding wrapper — typically a one-off integration call from a
+Refresh button. If both routes exist, prefer `call_binding`: bindings
+are durable, audited, and persona-aware.
+
 ## Reserved state keys
 
 Phase B introduces two reserved top-level state keys. Don't bind widgets
