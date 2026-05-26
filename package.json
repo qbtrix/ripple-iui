@@ -51,7 +51,7 @@
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.41.1",
-    "@lucide/svelte": "^1.0.1",
+    "@lucide/svelte": "1.16.0",
     "@tiptap/core": "^3.22.5",
     "@tiptap/pm": "^3.22.5",
     "@tiptap/starter-kit": "^3.22.5",
