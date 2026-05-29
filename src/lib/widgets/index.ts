@@ -10,7 +10,8 @@ import { If, Each } from './control/index.js';
 import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
-  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard
+  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
+  AskUserQuestions,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -226,6 +227,10 @@ const defaultRegistry: WidgetMap = {
   'form-layout': FormLayout,
   'wizard-layout': WizardLayout,
   wizard: WizardLayout,
+  'ask-user-questions': AskUserQuestions,
+  ask_user_questions: AskUserQuestions,
+  'user-questions': AskUserQuestions,
+  questionnaire: AskUserQuestions,
   'checklist-layout': ChecklistLayout,
   checklist: ChecklistLayout,
   'report-layout': ReportLayout,
@@ -345,5 +350,6 @@ export {
   AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
+  AskUserQuestions,
   ModelViewer, Embed
 };
