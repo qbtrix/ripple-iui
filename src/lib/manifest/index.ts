@@ -12,6 +12,7 @@ import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
 import { apiKeyEntry } from './entries/api-key.js';
 import { appShellEntry } from './entries/app-shell.js';
+import { askUserQuestionsEntry } from './entries/ask-user-questions.js';
 import { articleMetaEntry } from './entries/article-meta.js';
 import { auditLogEntry } from './entries/audit-log.js';
 import { avatarEntry } from './entries/avatar.js';
@@ -317,6 +318,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   alertEntry,
   analystBarEntry,
   apiKeyEntry,
+  askUserQuestionsEntry,
   appShellEntry,
   articleMetaEntry,
   auditLogEntry,
