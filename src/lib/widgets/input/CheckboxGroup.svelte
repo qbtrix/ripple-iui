@@ -4,13 +4,30 @@
   @description Multi-select checkbox group with Fluid Functionalism's signature
     "moving highlight" — a single background element that GLIDES between items as
     you hover, plus merged backgrounds that span contiguous checked runs. Ported
-    faithfully from FF (github.com/mickadesign/fluid-functionalism, MIT). The
-    glide is reproduced on OUR motion primitive: a CSS transition on the
-    highlight's top/left/width/height, timed by `ffTokenToCssTiming` reading the
-    FF spring TOKENS (`FF_SPRING_TOKENS.fast` 80ms for the hover glide,
-    `.moderate` 160ms for the merged-selection morph). No JS animation engine is
-    imported — the whole interaction is positional CSS transition + an active-
-    index hover tracker (FF's useProximityHover logic, ported component-internal).
+    faithfully from FF (github.com/mickadesign/fluid-functionalism, MIT).
+
+    The hover highlight + focus ring are now driven by the GENERIC
+    `movingIndicator` primitive (src/lib/motion/moving-indicator.ts) — the same
+    measure-and-spring-highlight this widget originally implemented internally,
+    extracted so tabs / segmented controls / menus reuse it. Each indicator is a
+    `use:movingIndicator` action that measures the active item's transform-immune
+    offset box and glides the box via inline top/left/width/height on an FF spring
+    token (hover = `fast` 80ms; focus ring = `fast` too). The widget still owns
+    the active-index hover tracking (FF's useProximityHover nearest-on-y logic)
+    and the merged-run geometry — the latter fed by the SAME measure loop via the
+    primitive's `onMeasure` hook, so there is one measure pass, not two.
+
+    HOVER-ON-SELECTED RULE (the bug fix): the hover highlight tracks ONLY
+    UNSELECTED rows. Hovering a row that is inside the merged selected block shows
+    NO separate hover highlight (previously a `bg-muted` box painted on top of the
+    `bg-accent` selected block — a doubled highlight). The hover indicator's
+    `active` resolver returns the active index only when that row is UNCHECKED,
+    else null → the highlight hides. The merged selected background still dims to
+    0.8 while an unchecked row is hovered (FF parity: the hover action reads as the
+    foreground, the selection recedes). This matches FF's visible outcome — FF's
+    hover + selected are low-opacity same-color overlays that never read as
+    doubled; we get the same crisp result with our solid theme tokens by gating
+    the hover highlight off selected rows outright.
 
     NOTE on top/left/width/height vs transform: the usual perf guardrail says
     "animate transform/opacity only." Here we animate the positional box ON
@@ -23,16 +40,24 @@
     (github.com/mickadesign/fluid-functionalism, MIT). FF drives the highlight via
     Framer Motion springing top/left/width/height of an absolutely-positioned
     motion.div between measured item rects; we reproduce the identical glide with a
-    CSS transition on those same properties using our FF-tuned tokens. Item rects,
-    contiguous-run merging, nearest-on-axis active detection, variable-font-weight
-    labels, and the focus ring are all faithful to the FF source.
+    CSS transition on those same properties using our FF-tuned tokens, now through
+    the shared `movingIndicator` action. Contiguous-run merging, nearest-on-axis
+    active detection, variable-font-weight labels, and the focus ring stay
+    faithful to the FF source.
   @created 2026-05-30 — RFC 12 premium pack: FF checkbox-group port (PR #45).
+  @changes
+    - 2026-05-30 (RFC 12 moving-indicator): refactored the hover highlight + focus
+      ring onto the generic `movingIndicator` primitive (DRY). FIXED the doubled-
+      highlight bug — the hover highlight no longer paints inside the merged
+      selected block; it tracks UNSELECTED rows only (FF's hover-on-selected rule).
 -->
+
 <script lang="ts">
   import { Checkbox as CheckboxPrimitive } from '$lib/components/ui/checkbox/index.js';
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
   import { FF_SPRING_TOKENS, ffTokenToCssTiming } from '$lib/motion/presets.js';
+  import { movingIndicator, type IndicatorRect } from '$lib/motion/moving-indicator.js';
 
   type Option = { value: string | number; label: string; disabled?: boolean };
 
@@ -77,22 +102,24 @@
 
   // ── Timing — read straight from OUR motion primitive's FF tokens ──────────
   // FF drives the hover highlight with springs.fast (80ms, no bounce) and the
-  // merged-selection background with springs.moderate (160ms, bounce 0.15). We
-  // map those tokens to a CSS transition that HONORS the authored duration via
-  // ffTokenToCssTiming — the sub-100ms snap IS the "Apple-level" feel.
-  const HOVER = ffTokenToCssTiming(FF_SPRING_TOKENS.fast); // { 80, decelerate }
+  // merged-selection background with springs.moderate (160ms, bounce 0.15). The
+  // hover highlight + focus ring now glide via the shared `movingIndicator`
+  // action (which times itself from the FF token we hand it). The MERGED runs are
+  // N boxes (one per contiguous run), not a single moving box, so they keep their
+  // own CSS transition string here, on the moderate (160ms) overshoot timing.
+  const HOVER = ffTokenToCssTiming(FF_SPRING_TOKENS.fast); // { 80, decelerate } — label color
   const MERGED = ffTokenToCssTiming(FF_SPRING_TOKENS.moderate); // { 160, overshoot }
-  // The properties that GLIDE. Animating top/left/width/height (NOT transform)
-  // is what makes the highlight travel between item rects — exactly FF's choice.
-  const hoverGlide = `top ${HOVER.durationMs}ms ${HOVER.easing}, left ${HOVER.durationMs}ms ${HOVER.easing}, width ${HOVER.durationMs}ms ${HOVER.easing}, height ${HOVER.durationMs}ms ${HOVER.easing}, opacity 80ms ${HOVER.easing}`;
   const mergedGlide = `top ${MERGED.durationMs}ms ${MERGED.easing}, left ${MERGED.durationMs}ms ${MERGED.easing}, width ${MERGED.durationMs}ms ${MERGED.easing}, height ${MERGED.durationMs}ms ${MERGED.easing}, opacity 80ms ${HOVER.easing}`;
 
-  // ── Item rect measurement (FF's useProximityHover, component-internal) ────
-  // FF measures each item's offset box (transform-immune) and tracks an
-  // activeIndex = the item the cursor is over, else the nearest on the y-axis.
-  // We port that exactly: the highlight reads itemRects[activeIndex] and its CSS
-  // transition glides it from the previous rect to the new one.
-  interface Rect { top: number; left: number; width: number; height: number; }
+  // ── Item rect measurement ─────────────────────────────────────────────────
+  // The `movingIndicator` action measures internally to POSITION the hover
+  // highlight + focus ring. The widget keeps its OWN lightweight measure for two
+  // distinct geometry consumers the indicators don't serve: (a) the nearest-on-y
+  // HIT TEST that maps the cursor → activeIndex, which must have item boxes
+  // BEFORE any indicator mounts; (b) the MERGED-run spans (N boxes, not a moving
+  // indicator). Both read the same transform-immune offset* boxes the primitive
+  // uses, so the geometry is identical — they're just different readers.
+  type Rect = IndicatorRect;
 
   let container: HTMLDivElement | null = $state(null);
   const itemEls: (HTMLElement | null)[] = [];
@@ -189,11 +216,17 @@
       .filter((r): r is NonNullable<typeof r> => r !== null);
   });
 
-  const activeRect = $derived(activeIndex !== null ? itemRects[activeIndex] : null);
-  const focusRect = $derived(focusedIndex !== null ? itemRects[focusedIndex] : null);
   // FF dims the merged background to 0.8 while hovering an UNchecked item, so the
   // hover highlight reads as the foreground action.
   const hoveringUnchecked = $derived(activeIndex !== null && !checkedIndices.has(activeIndex));
+  // THE BUG FIX (hover-on-selected rule): the hover highlight tracks UNSELECTED
+  // rows only. When the cursor is over a CHECKED row (inside the merged selected
+  // block) this resolves to null → the moving indicator hides, so no doubled
+  // highlight paints inside the selection. Fed to the hover indicator's `active`.
+  const hoverActiveIndex = $derived(hoveringUnchecked ? activeIndex : null);
+
+  // Enumerate the item elements for the indicators (re-read each apply).
+  const enumerateItems = () => itemEls;
 
   function toggle(opt: Option, i: number) {
     if (disabled || opt.disabled) return;
@@ -239,7 +272,9 @@
     onpointerleave={onPointerLeave}
   >
     <!-- Merged selected backgrounds (one per contiguous checked run). Behind the
-         items (z-0). top/left/width/height glide via the MERGED (160ms) timing. -->
+         items (z-0). top/left/width/height glide via the MERGED (160ms) timing.
+         These are N boxes (one per run), so they stay a manual transition rather
+         than the single-box moving indicator. -->
     {#each mergedRuns as run (run.key)}
       <div
         class="absolute rounded-2xl bg-accent pointer-events-none z-0"
@@ -248,23 +283,42 @@
       ></div>
     {/each}
 
-    <!-- Hover highlight — the single element that GLIDES between items. Reads the
-         active item's rect; its CSS transition on top/left/width/height carries
-         it from the previous item to the hovered one (FF's moving highlight). -->
-    {#if activeRect}
+    <!-- Hover highlight — the single element that GLIDES between UNSELECTED rows,
+         driven by the generic movingIndicator primitive. It mounts only while an
+         UNCHECKED row is active (hoverActiveIndex !== null), so it never paints
+         inside the merged selected block (the doubled-highlight bug fix). The
+         primitive measures the active row's offset box and glides this element's
+         top/left/width/height to it on the FF `fast` (80ms) token. -->
+    {#if hoverActiveIndex !== null}
       <div
         class="absolute rounded-[20px] bg-muted pointer-events-none z-0"
-        style="top:{activeRect.top}px; left:{activeRect.left}px; width:{activeRect.width}px; height:{activeRect.height}px; transition:{prefersReduced ? 'none' : hoverGlide}; will-change:top,left,width,height;"
         data-checkbox-group-highlight
+        use:movingIndicator={{
+          container: () => container,
+          items: enumerateItems,
+          active: hoverActiveIndex,
+          token: FF_SPRING_TOKENS.fast,
+          axis: 'both',
+          reducedMotion: prefersReduced
+        }}
       ></div>
     {/if}
 
-    <!-- Focus ring — sits 2px outside the focused item, also glides (HOVER timing). -->
-    {#if focusRect}
+    <!-- Focus ring — sits 2px OUTSIDE the focused item (inset: -2), also glides on
+         the FF `fast` token via the same primitive. Mounts only while focused. -->
+    {#if focusedIndex !== null}
       <div
         class="absolute rounded-[22px] pointer-events-none z-20 border border-[hsl(var(--ring))]"
-        style="top:{focusRect.top - 2}px; left:{focusRect.left - 2}px; width:{focusRect.width + 4}px; height:{focusRect.height + 4}px; transition:{prefersReduced ? 'none' : hoverGlide};"
         data-checkbox-group-focus
+        use:movingIndicator={{
+          container: () => container,
+          items: enumerateItems,
+          active: focusedIndex,
+          token: FF_SPRING_TOKENS.fast,
+          axis: 'both',
+          inset: -2,
+          reducedMotion: prefersReduced
+        }}
       ></div>
     {/if}
 
