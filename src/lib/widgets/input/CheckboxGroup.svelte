@@ -11,6 +11,14 @@
     `.moderate` 160ms for the merged-selection morph). No JS animation engine is
     imported — the whole interaction is positional CSS transition + an active-
     index hover tracker (FF's useProximityHover logic, ported component-internal).
+
+    NOTE on top/left/width/height vs transform: the usual perf guardrail says
+    "animate transform/opacity only." Here we animate the positional box ON
+    PURPOSE — it's exactly what FF does, and it's the correct choice: the
+    highlight must morph its WIDTH/HEIGHT to each item's rect (items can differ in
+    width), and a translate+scale would warp the rounded corners and any contents.
+    The cost is bounded: a handful of items, pointer-driven (never scroll/looped),
+    with `will-change` hinting the compositor. Faithful feel beats the rule here.
   @provenance Mechanism + timing ported from Fluid Functionalism's checkbox-group
     (github.com/mickadesign/fluid-functionalism, MIT). FF drives the highlight via
     Framer Motion springing top/left/width/height of an absolutely-positioned
@@ -235,7 +243,7 @@
     {#each mergedRuns as run (run.key)}
       <div
         class="absolute rounded-2xl bg-accent pointer-events-none z-0"
-        style="top:{run.top}px; left:{run.left}px; width:{run.width}px; height:{run.height}px; opacity:{hoveringUnchecked ? 0.8 : 1}; transition:{prefersReduced ? 'none' : mergedGlide};"
+        style="top:{run.top}px; left:{run.left}px; width:{run.width}px; height:{run.height}px; opacity:{hoveringUnchecked ? 0.8 : 1}; transition:{prefersReduced ? 'none' : mergedGlide}; will-change:top,left,width,height;"
         data-checkbox-group-merged
       ></div>
     {/each}
@@ -246,7 +254,7 @@
     {#if activeRect}
       <div
         class="absolute rounded-[20px] bg-muted pointer-events-none z-0"
-        style="top:{activeRect.top}px; left:{activeRect.left}px; width:{activeRect.width}px; height:{activeRect.height}px; transition:{prefersReduced ? 'none' : hoverGlide};"
+        style="top:{activeRect.top}px; left:{activeRect.left}px; width:{activeRect.width}px; height:{activeRect.height}px; transition:{prefersReduced ? 'none' : hoverGlide}; will-change:top,left,width,height;"
         data-checkbox-group-highlight
       ></div>
     {/if}
