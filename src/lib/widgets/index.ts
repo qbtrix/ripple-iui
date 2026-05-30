@@ -28,7 +28,7 @@ import {
 } from './vertical/index.js';
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
-import { Navbar } from './marketing/index.js';
+import { Navbar, Footer } from './marketing/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -303,6 +303,7 @@ const defaultRegistry: WidgetMap = {
   parallax: Parallax,
   // Marketing — landing-page widget pack (RFC 12)
   navbar: Navbar,
+  footer: Footer,
   // Aliases
   label: Text,
 };
@@ -356,5 +357,5 @@ export {
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed,
   Reveal, Parallax,
-  Navbar
+  Navbar, Footer
 };

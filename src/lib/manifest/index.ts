@@ -68,6 +68,7 @@ import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flexEntry } from './entries/flex.js';
 import { followUpEntry } from './entries/follow-up.js';
+import { footerEntry } from './entries/footer.js';
 import { formEntry } from './entries/form.js';
 import { formLayoutEntry } from './entries/form-layout.js';
 import { funnelEntry } from './entries/funnel.js';
@@ -380,6 +381,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   filterBarEntry,
   flexEntry,
   followUpEntry,
+  footerEntry,
   formEntry,
   formLayoutEntry,
   funnelEntry,

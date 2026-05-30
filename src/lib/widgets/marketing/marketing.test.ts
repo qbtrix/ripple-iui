@@ -26,3 +26,13 @@ describe('Navbar', () => {
     expect(container.querySelector('[data-ripple-motion]')).not.toBeNull();
   });
 });
+
+describe('Footer', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('footer'); });
+  it('renders columns of links and a copyright', () => {
+    const { getByText } = r({ type: 'footer', props: { copyright: '© 2026 BrightSmile', columns: [{ title: 'Company', links: [{ label: 'About', href: '#' }] }] } });
+    expect(getByText('© 2026 BrightSmile')).toBeInTheDocument();
+    expect(getByText('Company')).toBeInTheDocument();
+    expect(getByText('About')).toBeInTheDocument();
+  });
+});
