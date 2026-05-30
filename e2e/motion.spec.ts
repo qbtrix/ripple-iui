@@ -12,11 +12,20 @@
 //     3. Animate — clicking "Fire animate action" must change a visible target
 //        element's computed style (the pulse must actually move pixels).
 // @created 2026-05-30 — PR #45 motion runtime close-out (real-browser proof).
+// @changes
+//   - 2026-05-30 (PR #45 motion degrade-to-visible fix): added assertion 4 — the
+//     /showcase/marketing HERO must END VISIBLE (computed opacity ~1, title text
+//     visible) after hydration. The hero's enter is a spring preset (`snappy`),
+//     which compileMotion routed to Tier 1; if loadAnimate() resolved null or
+//     animate() threw, the old Tier-1 enter branch `return`ed and left the node
+//     stuck at its from-frame (opacity:0, translateY(24px)) FOREVER — an invisible
+//     hero. This assertion is the real-browser tripwire for that regression class.
 //
 // History note: assertions 2 + 3 were written to FAIL against the pre-fix code
 // (parallax inert on the unregistered-custom-property CSS path; animate emitted
 // an event carrying target:undefined/motion:undefined and no runtime moved
-// anything). Assertion 1 already passed after the wrapper-box fix.
+// anything). Assertion 1 already passed after the wrapper-box fix. Assertion 4
+// was written to FAIL against the pre-degrade code (hero stuck at opacity 0).
 import { test, expect, type Page } from '@playwright/test';
 
 /** Parse the translateY (px) out of a computed `transform` matrix or 'none'. */
@@ -43,6 +52,16 @@ async function gotoMotion(page: Page) {
 	// stagger row (the wrapper carries data-ripple-motion). Without hydration the
 	// inline from-state styles are not yet present.
 	await page.waitForSelector('#stagger [data-ripple-motion]');
+}
+
+/** The hero's title text — a stable selector that does not depend on motion. */
+const HERO_TITLE = 'Power your home with the sun by next season';
+
+async function gotoMarketing(page: Page) {
+	await page.goto('/showcase/marketing');
+	// Wait until Svelte has hydrated — the hero is wrapped by withMotion, so the
+	// wrapper carries data-ripple-motion once the action attaches.
+	await page.waitForSelector('[data-ripple-motion]');
 }
 
 test.describe('motion primitive — real Chromium', () => {
@@ -132,5 +151,46 @@ test.describe('motion primitive — real Chromium', () => {
 				{ timeout: 3000, intervals: [50, 50, 50, 100, 100, 200] },
 			)
 			.toBe('changed');
+	});
+});
+
+// ── 4. Hero degrades to VISIBLE, never invisible ─────────────────────────────
+// The /showcase/marketing hero declares `enter: { opacity: 0, y: 24 }` with the
+// `snappy` SPRING preset, so compileMotion routes the enter to Tier 1. SSR paints
+// the resting (visible) frame; on hydrate the action arms the from-frame
+// (opacity:0, translateY(24px)) then must reveal back to rest. The bug: if the
+// Tier-1 engine failed to load / the animate call threw, the old code left the
+// node stuck at opacity 0 FOREVER — an invisible hero. The guarantee under test:
+// an entered element ALWAYS ends visible regardless of the engine.
+test.describe('marketing hero — degrades to visible, never hidden', () => {
+	test('hero ends opacity ~1 (visible) and its title is shown after hydration', async ({ page }) => {
+		await gotoMarketing(page);
+
+		// The hero is wrapped by withMotion; the wrapper box carries the inline
+		// opacity/transform. The title <h1> lives inside it.
+		const heroWrapper = page
+			.locator('[data-ripple-motion]')
+			.filter({ hasText: HERO_TITLE })
+			.first();
+		await expect(heroWrapper).toBeVisible();
+
+		// After hydration + the entrance settles, the wrapper's computed opacity
+		// must be ~1. A stuck hero (engine missing / animate failed) reports 0.
+		await expect
+			.poll(
+				async () => {
+					return heroWrapper.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+				},
+				{ timeout: 4000, intervals: [50, 100, 100, 200, 300] },
+			)
+			.toBeGreaterThan(0.9);
+
+		// And it must have animated home — translateY back to ~0 (no residual rise).
+		const ty = await heroWrapper.evaluate((el) => getComputedStyle(el).transform);
+		expect(Math.abs(translateYFromTransform(ty))).toBeLessThan(2);
+
+		// The title text itself must be visible to a user (Playwright's visibility
+		// check folds in opacity:0 / zero-size — a redundant, user-facing tripwire).
+		await expect(page.getByText(HERO_TITLE)).toBeVisible();
 	});
 });
