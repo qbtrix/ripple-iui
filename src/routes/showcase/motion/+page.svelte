@@ -1,11 +1,18 @@
 <!--
   Created: 2026-05-30 — RFC 12 motion-primitive showcase. Renders declarative
   Ripple specs that exercise the node-level `motion` field so the captain can
-  SEE the motion: staggered fade-up-on-scroll cards (motion.inView +
-  motion.stagger), a magnetic/spring hover CTA (motion.hover/tap, `bouncy`),
+  SEE the motion: staggered fade-up-on-scroll cards (motion.inView + per-card
+  transition.delay), a magnetic/spring hover CTA (motion.hover/tap, `bouncy`),
   the `reveal` + `parallax` sugar widgets, and a button that fires the
   `animate` action. Each panel is one <Ripple {spec} onEvent={...} />, matching
   the card/stat/flow sub-route pattern.
+  Changes:
+    - 2026-05-30 (PR #45 motion runtime close-out): the staggered cards and the
+      parallax demo now animate for real. The cascade is driven by per-card
+      transition.delay in SECONDS (delay: i * 0.12 → 0/120/240/360ms) — FIX 2 —
+      and each card now both fades AND rises because inView arms the full
+      from-state (FIX 1). The parallax panel is powered by the new motion.scroll
+      runtime (FIX 3: CSS animation-timeline: view() + IO/rAF fallback).
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -21,8 +28,9 @@
 
   // ── 1. Staggered fade-up on scroll ──────────────────────────────
   // Each card carries an inView motion (fade + rise) plus a per-card delay so
-  // the row cascades in. `stagger` lives on the node; the increasing delay is
-  // what the eye reads as the cascade.
+  // the row cascades in. The cascade is the increasing transition.delay (in
+  // SECONDS) across the four cards — NOT the parent-orchestrated `stagger`
+  // field. inView arms the full from-state, so each card fades AND rises.
   const STEPS = [
     { n: '01', title: 'Describe', body: 'Tell the agent what you want in plain language.' },
     { n: '02', title: 'Generate', body: 'Ripple compiles a spec into live Svelte UI.' },

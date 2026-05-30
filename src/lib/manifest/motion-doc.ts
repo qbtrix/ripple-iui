@@ -12,6 +12,9 @@
 //     MotionInput (author shape) instead of the post-parse Motion, so the
 //     reduceMotion-less literals below type-check without a redundant default;
 //     dropped the now-unneeded `as Motion['inView']` cast on section-reveal.
+//   - 2026-05-30 (PR #45 motion runtime close-out): documented that
+//     `transition.delay` is in SECONDS (Framer-style); added a `stagger-cascade`
+//     example so the LLM knows the per-card-delay idiom that drives a cascade.
 
 import type { MotionInput } from '../schema/motion.js';
 import type { WidgetManifestEntry } from './index.js';
@@ -32,7 +35,8 @@ export const motionDoc: MotionDoc = {
     'Add a `motion` field to ANY node (sibling to props/class/style, never inside props) to animate it. ' +
     'Vocabulary: enter/exit, hover/tap/focus, inView (reveal on scroll), scroll (parallax), stagger, ' +
     'and transition (use a semantic preset — never raw numbers). MotionState channels are GPU-safe only ' +
-    '(opacity, x, y, scale, rotate, blur). Reduced-motion and SSR are handled by the runtime — do not add them.',
+    '(opacity, x, y, scale, rotate, blur). transition.delay is in SECONDS (e.g. 0.12 = 120ms); cascade a ' +
+    'row by giving each child delay = index * 0.12. Reduced-motion and SSR are handled by the runtime — do not add them.',
   budgetRule:
     'MOTION BUDGET: animate entrances and the PRIMARY call-to-action only. Leave everything else at rest. ' +
     'Default transition is `snappy`. Over-animating reads as cheap — restraint reads as premium.',
@@ -47,6 +51,8 @@ export const motionDoc: MotionDoc = {
     { name: 'hero-entrance', description: 'Fade + rise on load.', motion: { enter: { opacity: 0, y: 24 }, transition: { preset: 'snappy' } } },
     { name: 'cta-hover', description: 'Lift the primary button on hover.', motion: { hover: { y: -2, scale: 1.02 }, transition: { preset: 'snappy' } } },
     { name: 'section-reveal', description: 'Reveal a section as it scrolls into view.', motion: { inView: { opacity: 0, y: 32, once: true }, transition: { preset: 'smooth' } } },
+    { name: 'stagger-cascade', description: 'Per-card cascade: each card fades+rises on scroll, offset by its index. delay is SECONDS.', motion: { inView: { opacity: 0, y: 28, once: true }, transition: { preset: 'smooth', delay: 0.24 } } },
+    { name: 'parallax-drift', description: 'Continuous parallax: contents drift on scroll bound to the view range.', motion: { scroll: { property: 'y', from: 40, to: -40, range: 'cover' } } },
   ],
   recipes: [
     {
