@@ -1,5 +1,9 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
+  Updated: 2026-05-30 (PR #45 animate runtime) — bind:this on the ripple-root and
+  pass a lazy `() => rootEl` resolver into the EventDispatcher so the `animate`
+  action can locate its target node (by widget id) inside THIS instance's subtree
+  and run the built-in pulse, correctly scoped (never reaching a sibling render).
   Updated: 2026-05-30 — apply spec.theme to the ripple-root via
   themeToStyleString (RFC 12 white-label — Ripple previously parsed theme but
   never applied it). The host `style` prop and the theme vars are merged on the
@@ -107,7 +111,17 @@
     return onEvent?.(event);
   };
 
-  const eventDispatcher = createEventDispatcher(stateManager, chainedOnEvent, widgetRegistry);
+  // Root element ref — lets the dispatcher's `animate` action find its target
+  // node (by widget id) inside THIS Ripple instance's subtree, so the built-in
+  // pulse is correctly scoped and never reaches into a sibling render. Read
+  // lazily (closure) because the dispatcher is constructed before mount.
+  let rootEl = $state<HTMLElement | undefined>(undefined);
+  const eventDispatcher = createEventDispatcher(
+    stateManager,
+    chainedOnEvent,
+    widgetRegistry,
+    () => rootEl
+  );
   let dataStore = $state<Record<string, unknown>>({});
 
   // Sync external state prop changes into the stateManager reactively.
@@ -219,6 +233,7 @@
 </script>
 
 <div
+  bind:this={rootEl}
   class="ripple-root {className}"
   style={[style, themeStyle].filter(Boolean).join('; ')}
   data-ripple-version={spec.version}

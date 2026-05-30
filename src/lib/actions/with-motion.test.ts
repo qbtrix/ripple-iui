@@ -10,7 +10,7 @@
 //     transition.delay (SECONDS) wires into the Tier-0 transition-delay on both
 //     enter and inView. FIX 3 — motion.scroll wires scroll-bound styling/observer.
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { withMotion } from './with-motion.js';
+import { withMotion, playMotion } from './with-motion.js';
 import type { Motion } from '../schema/motion.js';
 
 function makeEl(): HTMLElement {
@@ -125,6 +125,40 @@ describe('withMotion action', () => {
       el.style.getPropertyValue('animation-timeline') !== '';
     expect(wired).toBe(true);
     handle?.destroy?.();
+  });
+
+  // ── playMotion: the one-shot imperative player (the `animate` runtime) ─────
+  it('playMotion pulses the node toward the first present interaction frame', () => {
+    const el = makeEl();
+    // No WAAPI in jsdom → fallback toggles the peak frame onto the inline style.
+    const played = playMotion(el, { enter: { scale: 1.35, y: -14 }, transition: { preset: 'bouncy' } } as Motion);
+    expect(played).toBe(true);
+    expect(el.style.transform).toMatch(/scale\(1\.35\)/);
+    expect(el.style.transform).toMatch(/translateY\(-14px\)/);
+  });
+
+  it('playMotion picks hover when there is no enter frame', () => {
+    const el = makeEl();
+    playMotion(el, { hover: { scale: 1.1 } } as Motion);
+    expect(el.style.transform).toMatch(/scale\(1\.1\)/);
+  });
+
+  it('playMotion returns false when the motion carries no animatable frame', () => {
+    const el = makeEl();
+    expect(playMotion(el, { transition: { preset: 'smooth' } } as Motion)).toBe(false);
+    expect(playMotion(el, undefined)).toBe(false);
+  });
+
+  it('playMotion reduced-motion drops the transform to an opacity-only blink', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({
+      matches: q.includes('reduce'), media: q, addEventListener() {}, removeEventListener() {},
+      addListener() {}, removeListener() {}, onchange: null, dispatchEvent() { return false; },
+    }));
+    const el = makeEl();
+    playMotion(el, { enter: { scale: 1.4, y: -20, opacity: 0.4 } } as Motion);
+    // The scale / translate are stripped under reduced-motion; only opacity moves.
+    expect(/scale|translate/.test(el.style.transform)).toBe(false);
+    vi.unstubAllGlobals();
   });
 
   // ── BONUS: opt-in debug logging gated behind the global flag ──────────────

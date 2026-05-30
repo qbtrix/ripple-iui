@@ -24,6 +24,13 @@
 //     * BONUS — opt-in debug logging gated behind globalThis.__RIPPLE_MOTION_DEBUG__
 //       (off by default): action attached, inView armed, IO fired, reveal applied,
 //       enter run, scroll wired.
+//   - 2026-05-30 (PR #45 animate runtime): export `playMotion(node, motion)` — the
+//     one-shot imperative player the `animate` event-action drives. It pulses a
+//     target node rest -> peak -> rest where `peak` is the motion's first present
+//     interaction frame (enter/hover/tap/focus/inView), reusing the engine channel
+//     builder. Prefers the Web Animations API (real keyframe pulse in browsers);
+//     falls back to an inline-style transition toggle where WAAPI is absent (so
+//     jsdom unit tests still observe the transform mutate). Honors reduced-motion.
 
 import type { Motion, MotionState } from '../schema/motion.js';
 import { compileMotion, stateToStyle } from '../motion/engine.js';
@@ -332,4 +339,100 @@ function wireScroll(node: HTMLElement, scroll: NonNullable<Motion['scroll']>): (
     io?.disconnect();
     node.dataset.rippleScroll = '';
   };
+}
+
+// ── imperative one-shot player (the `animate` event-action runtime) ───────────
+
+/** Build a WAAPI keyframe object (transform/opacity/filter) from a MotionState. */
+function stateToKeyframe(state: MotionState): Keyframe {
+  const transforms: string[] = [];
+  if (state.x !== undefined) transforms.push(`translateX(${typeof state.x === 'number' ? state.x + 'px' : state.x})`);
+  if (state.y !== undefined) transforms.push(`translateY(${typeof state.y === 'number' ? state.y + 'px' : state.y})`);
+  if (typeof state.scale === 'number') transforms.push(`scale(${state.scale})`);
+  if (typeof state.rotate === 'number') transforms.push(`rotate(${state.rotate}deg)`);
+  const frame: Keyframe = {};
+  if (transforms.length) frame.transform = transforms.join(' ');
+  if (typeof state.opacity === 'number') frame.opacity = String(state.opacity);
+  if (typeof state.blur === 'number') frame.filter = `blur(${state.blur}px)`;
+  return frame;
+}
+
+/**
+ * The single "peak" frame an imperative `animate` pulses toward. We take the
+ * FIRST present interaction frame in a fixed precedence so an author can write
+ * the gesture under whichever key reads best (`enter`, then `hover`, `tap`,
+ * `focus`, finally the inView from-state). Returns null when none carry channels.
+ */
+function peakState(m: Motion): MotionState | null {
+  const candidates: Array<MotionState | undefined> = [m.enter, m.hover, m.tap, m.focus, m.inView];
+  for (const c of candidates) {
+    if (c && Object.keys(stateToKeyframe(c)).length > 0) return c;
+  }
+  return null;
+}
+
+/**
+ * Imperative one-shot animation — the runtime behind the `animate` event-action.
+ * Pulses `node` rest -> peak -> rest, where `peak` is the motion's first present
+ * interaction frame. Client-only (no-op without a DOM). Honors reduced-motion by
+ * dropping transforms to an opacity-only blink. Returns true if it played, false
+ * if there was nothing to animate (lets the caller fall back to host handling).
+ *
+ * Prefers the Web Animations API for a real, composited keyframe pulse. Where
+ * `element.animate` is unavailable (older engine / jsdom unit env) it toggles the
+ * peak frame onto the inline style with a CSS transition and clears it after the
+ * duration — enough for a unit test to observe the transform actually mutate.
+ */
+export function playMotion(node: HTMLElement, raw: Motion | undefined): boolean {
+  if (!node || !raw || typeof window === 'undefined') return false;
+  const motion = prefersReduced() ? rewriteForReducedMotion(raw) : raw;
+  const peak = peakState(motion);
+  if (!peak) {
+    dbg('playMotion: no peak frame', motion);
+    return false;
+  }
+  const keyframe = stateToKeyframe(peak);
+
+  // Timing from the transition preset / explicit values (same resolution the
+  // declarative path uses). Springs collapse to their token duration here — a
+  // one-shot pulse does not need full spring physics to read as alive.
+  const physics = motion.transition?.preset ? resolvePreset(motion.transition.preset) : undefined;
+  const durationMs =
+    physics && physics.type === 'tween'
+      ? physics.duration
+      : motion.transition?.duration ?? 320;
+  const easing = resolveEasing(motion.transition?.easing);
+  const delayMs = (motion.transition?.delay ?? 0) * 1000;
+  // A pulse is out-and-back, so each leg gets half the budget (min floor so it
+  // is always visible). The total stays close to the author's intent.
+  const legMs = Math.max(120, durationMs);
+
+  dbg('playMotion: peak', { peak, durationMs, delayMs });
+
+  if (typeof node.animate === 'function') {
+    node.animate(
+      [
+        { transform: 'none', opacity: '1', filter: 'none' },
+        { ...keyframe, offset: 0.5 },
+        { transform: 'none', opacity: '1', filter: 'none' },
+      ],
+      { duration: legMs * 2, delay: delayMs, easing, fill: 'none' },
+    );
+    return true;
+  }
+
+  // --- WAAPI-less fallback: toggle the peak frame on, then clear it -----------
+  const prevTransition = node.style.transition;
+  node.style.transition = `transform ${legMs}ms ${easing}, opacity ${legMs}ms ${easing}, filter ${legMs}ms ${easing}`;
+  if (keyframe.transform) node.style.transform = String(keyframe.transform);
+  if (keyframe.opacity) node.style.opacity = String(keyframe.opacity);
+  if (keyframe.filter) node.style.filter = String(keyframe.filter);
+  const clear = () => {
+    node.style.transform = 'none';
+    node.style.opacity = '';
+    node.style.filter = '';
+    node.style.transition = prevTransition;
+  };
+  if (typeof setTimeout === 'function') setTimeout(clear, legMs);
+  return true;
 }

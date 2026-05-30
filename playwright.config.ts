@@ -33,16 +33,18 @@ export default defineConfig({
 			use: { ...devices['Desktop Chrome'] },
 		},
 	],
-	// Boot the real app. `vite preview` after a build is the production-like path
-	// (the CSS scroll-timeline path behaves closest to prod there); `bun run dev`
-	// also works and is faster. We use the dev server so no build step is needed
-	// to run the smoke-test locally; the assertions are on computed style, which
-	// is identical either way.
+	// Boot the real app against a PRODUCTION build + `vite preview`. We learned the
+	// hard way that the dev server's HMR can serve a stale client module graph
+	// after a deep edit (e.g. a dispatcher/NodeRenderer change), so a click wired
+	// in fresh SSR silently does nothing client-side — the exact "looks wired,
+	// doesn't fire" trap. `vite build` then `vite preview` is deterministic (no
+	// HMR), and it is also the production-like path where the motion runtime
+	// behaves closest to a deployed site. The build adds ~25s to cold start.
 	webServer: {
-		command: `bun run dev --port ${PORT} --strictPort`,
+		command: `bunx vite build && bunx vite preview --port ${PORT} --strictPort`,
 		url: `http://localhost:${PORT}/showcase/motion`,
 		reuseExistingServer: !process.env.CI,
-		timeout: 120_000,
+		timeout: 180_000,
 	},
 	// One retry locally smooths over a cold-start flake; the assertions are
 	// deterministic computed-style reads, so a green run is a real green run.

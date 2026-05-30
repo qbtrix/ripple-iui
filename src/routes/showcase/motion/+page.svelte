@@ -12,7 +12,14 @@
       transition.delay in SECONDS (delay: i * 0.12 → 0/120/240/360ms) — FIX 2 —
       and each card now both fades AND rises because inView arms the full
       from-state (FIX 1). The parallax panel is powered by the new motion.scroll
-      runtime (FIX 3: CSS animation-timeline: view() + IO/rAF fallback).
+      runtime (FIX 3: IO/scroll-rAF translateY every frame, the robust path).
+    - 2026-05-30 (PR #45 animate runtime): the `animate` action now VISIBLY moves
+      a target. The button was re-authored per the AnimateHandler schema
+      ({ action, target, motion }) — the old { action: 'animate', name: 'pulse' }
+      was wrong (`name` is not a field, so target + motion arrived undefined). It
+      now targets a card by id ('animate-target') and the dispatcher's runtime
+      pulses that node through the shared withMotion engine, so the click moves
+      pixels with no host code. The host still echoes the event below.
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -159,22 +166,42 @@
   };
 
   // ── 5. The `animate` action ─────────────────────────────────────
-  // on_click fires the host-delegated `animate` action. The host (this page)
-  // receives it via onEvent and echoes it below — proving the action round-trips.
+  // on_click fires the `animate` action against a target widget BY ID. The
+  // runtime locates that node (id: 'animate-target') and pulses it via the
+  // shared withMotion engine — so the click VISIBLY moves the badge on screen
+  // with no host code. The host (this page) ALSO receives the event via onEvent
+  // and echoes it below, proving the action both animates AND round-trips.
+  //
+  // AUTHORED PER THE AnimateHandler SCHEMA: `{ action, target, motion }`. The
+  // earlier `{ action: 'animate', name: 'pulse' }` was wrong — `name` is not a
+  // field, so target + motion arrived undefined and nothing animated.
   const animateActionSpec = {
     version: '1.0' as const,
     ui: {
       type: 'flex',
-      props: { direction: 'column', gap: '12px', align: 'start' },
+      props: { direction: 'column', gap: '16px', align: 'start' },
       children: [
         {
           type: 'button',
           props: { label: 'Fire animate action', icon: 'sparkles' },
-          on_click: { action: 'animate', name: 'pulse' },
+          // Pulse the target: pop up + scale, bouncy spring on the return.
+          on_click: {
+            action: 'animate',
+            target: 'animate-target',
+            motion: { enter: { scale: 1.35, y: -14 }, transition: { preset: 'bouncy' } },
+          },
           // also give the button itself a tactile hover so the trigger feels alive
           motion: { hover: { scale: 1.04 }, tap: { scale: 0.96 }, transition: { preset: 'snappy' } },
         },
-        { type: 'text', props: { text: 'The `animate` action is host-delegated (like `navigate`). Click it and the host echoes the event below.', size: 'sm' }, class: 'text-muted-foreground' },
+        // The animation target. Its id is what the `animate` action above resolves
+        // and pulses. A small card so the motion is unmistakable on screen.
+        {
+          type: 'card',
+          id: 'animate-target',
+          props: { title: 'Pulse me', description: 'Click the button — I scale + pop, then settle back.' },
+          class: 'inline-block',
+        },
+        { type: 'text', props: { text: 'The `animate` action targets the badge by id and pulses it through the runtime — no host code. The host also echoes the event below.', size: 'sm' }, class: 'text-muted-foreground' },
       ],
     },
   };
