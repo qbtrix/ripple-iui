@@ -9,6 +9,12 @@
       staggered cascade (inView full from-state + per-card transition.delay in
       SECONDS), the motion.scroll parallax runtime, the opt-in debug flag
       (window.__RIPPLE_MOTION_DEBUG__), and the remaining motion.stagger gap.
+    - 2026-05-30 (PR #45 parallax + animate close-out): added the AUTOMATED
+      real-browser smoke-test (Playwright + Chromium) that is now the durable
+      arbiter for this failure class; documented the now-working `animate` action
+      runtime (it pulses a target by id with no host code) and corrected the
+      parallax section (the scroll runtime is a robust IO/scroll-rAF loop — the
+      inert CSS animation-timeline: view() path was removed).
 -->
 
 # Motion smoke test (catch "green tests, no visible animation")
@@ -22,6 +28,49 @@ had nowhere to paint. jsdom never renders, so the suite stayed green.
 This is a 2-minute eyes-on check. Run it after any change to the motion engine,
 the `withMotion` action, the `NodeRenderer` motion wrapper, or the sugar widgets
 (`Reveal`, `Parallax`).
+
+## The automated real-browser smoke-test (Playwright) — run this first
+
+The eyes-on pass below is still useful, but the durable arbiter is now an
+automated Playwright suite that drives a **real Chromium** against the app and
+asserts on **computed styles** — the only signal that reliably catches "green
+unit tests, dead pixels." It lives in `e2e/motion.spec.ts` and covers the three
+showcase motions: the staggered cascade, the parallax drift, and the `animate`
+click.
+
+```bash
+# One-time: install the Chromium binary into the shared ms-playwright cache.
+# (It is NOT vendored into the repo. The @playwright/test dep is already pinned.)
+bunx playwright install chromium
+
+# Run the browser smoke-test. The Playwright config boots the app for you via
+# `vite build && vite preview` (a production build), so no separate server step.
+bun run test:e2e
+# …or directly:
+bunx playwright test
+```
+
+What it asserts, per motion (these are the regression tripwires):
+
+1. **Staggered cards** — scroll the row in; a card's computed `opacity` goes
+   0 → 1 and its computed `transform` returns from `translateY(28px)` to rest.
+2. **Parallax** — the parallax card's computed `transform` (translateY) **changes
+   across scroll positions** (it must drift, not sit at `transform: none`).
+3. **`animate`** — clicking "Fire animate action" **changes the target element's
+   computed transform** (the pulse moves pixels).
+
+> **Why a production build, not the dev server?** We hit a dev-server-specific
+> trap while fixing `animate`: after a deep edit to the dispatcher / NodeRenderer,
+> Vite's HMR served a **stale client module graph** — the click was wired in fresh
+> SSR but silently dead client-side, the same green-looks-wired/broken-in-browser
+> failure this guide is about. `vite build` + `vite preview` is deterministic (no
+> HMR) and is how the proof goes green. If you must point the suite at the dev
+> server, do a hard reload and be suspicious of any "wired but inert" result.
+
+If a Playwright assertion fails, the run drops a trace
+(`test-results/.../trace.zip`); open it with `npx playwright show-trace <zip>` to
+watch the exact frames. The `__RIPPLE_MOTION_DEBUG__` flag below also works under
+Playwright (set it via an init script) to trace the action lifecycle.
 
 ## Before you start
 
@@ -39,7 +88,7 @@ Open each and watch:
 
 | Route | What must visibly happen |
 |-------|--------------------------|
-| `/showcase/motion` | The "Describe → Generate → Refine → Ship" cards **fade AND rise in sequence** (each card both drops its opacity-0 and slides up from +28px) as they scroll into view, **cascading** one after another (~120ms apart). The CTA button **scales/springs on hover and tap**. The `reveal` panels slide in on scroll; the `parallax` panel **drifts vertically as you scroll**. |
+| `/showcase/motion` | The "Describe → Generate → Refine → Ship" cards **fade AND rise in sequence** (each card both drops its opacity-0 and slides up from +28px) as they scroll into view, **cascading** one after another (~120ms apart). The CTA button **scales/springs on hover and tap**. The `reveal` panels slide in on scroll; the `parallax` panel **drifts vertically as you scroll**. Clicking **"Fire animate action"** makes the target card **pop (scale + lift, bouncy)** — the `animate` runtime pulses it by id with no host code. |
 | `/showcase/marketing` | Section/hero blocks **animate in on scroll**; hover states on cards/buttons respond. |
 | `/showcase/premium` | Premium widgets (bento, text effects) **animate**, not snap. |
 
@@ -58,11 +107,14 @@ any of them does NOT happen, motion regressed:
    offset 0 / 120 / 240 / 360 ms. If they all enter simultaneously, the delay is
    not being wired into `transition-delay`.
 3. **The parallax panel drifts on scroll** — the `parallax` sugar (a
-   `motion.scroll`) binds vertical translate to the element's view progress.
-   Where the browser supports `animation-timeline: view()` it runs as a
-   compositor-driven CSS animation; otherwise it falls back to an
-   IntersectionObserver + scroll-rAF loop. A static panel means `motion.scroll`
-   is inert.
+   `motion.scroll`) binds vertical translate to the element's view progress via
+   an IntersectionObserver + scroll-rAF loop that writes `transform:
+   translateY(...)` every frame. (An earlier cut tried a compositor-driven CSS
+   `animation-timeline: view()` path, but it animated an *unregistered*
+   `--ripple-scroll` custom property — which interpolates discretely per the CSS
+   spec — so the card sat frozen at `transform: none`. That path was removed; the
+   rAF loop is the single robust path now.) A static panel means `motion.scroll`
+   regressed — the Playwright parallax assertion is the tripwire.
 
 ### Trigger the motion
 
@@ -105,7 +157,9 @@ point, with the motion config attached:
 - `inView armed` (+ the from-state)
 - `IntersectionObserver fired` (+ `isIntersecting`)
 - `reveal applied`
-- `scroll wired` (+ `{ mode: 'css' | 'fallback', ...scroll }`)
+- `scroll wired` (+ `{ mode: 'raf', ...scroll }` — the robust scroll-rAF path)
+- `playMotion: peak` (+ the chosen peak frame) — the `animate` runtime, logged
+  when an `animate` action fires and pulses its target
 
 If you set the flag and see **no `action attached` line** for an element you
 expect to animate, the action never reached it — check that the node carries a
@@ -155,10 +209,12 @@ critical path: the `/showcase/motion` cascade is built from per-card
 you author `motion.stagger` today it is silently ignored — use per-child
 `transition.delay` instead. Implementing parent stagger is a follow-up.
 
-## Quick DOM-level confirmation (no browser)
+## Quick DOM-level confirmation (jsdom — fast, but not pixels)
 
-The repo ships no Playwright, so unit tests cannot repaint pixels. The strongest
-non-browser proofs live in
+The Playwright suite above is the real pixel-level proof. These jsdom tests are
+the fast inner-loop complement — they catch the wiring regressions without
+booting a browser, but remember: **jsdom never repaints**, so a green jsdom run
+is necessary, not sufficient. The strongest jsdom proofs live in
 `src/lib/components/NodeRenderer.motion.animates.test.ts`:
 
 - It renders a motion spec through `NodeRenderer`, asserts the wrapper is a box
@@ -172,7 +228,11 @@ non-browser proofs live in
   rise + cascade all wire through.
 
 `src/lib/widgets/motion/sugar.test.ts` additionally asserts the `parallax` sugar
-tags its wrapper as scroll-wired, proving `motion.scroll` is no longer inert.
+tags its wrapper scroll-wired (`data-ripple-scroll="raf"`), proving
+`motion.scroll` is no longer inert.
+`src/lib/core/event-dispatcher.animate.test.ts` asserts the `animate` runtime
+finds a target node by id and pulses it (the inline transform mutates), and
+`src/lib/actions/with-motion.test.ts` covers `playMotion` directly.
 
-Full visual confirmation (a browser computing the transform and repainting)
-still needs the eyes-on pass above.
+For the authoritative "does it actually paint" answer, run the Playwright suite
+(`bun run test:e2e`) or do the eyes-on pass above.
