@@ -19,6 +19,14 @@
 //     (it collapsed the box to a zero matrix), so the reliable, can't-fail-to-
 //     load CSS path is now the default for declarative entrances. Bounce maps
 //     to a back-ease overshoot; zero-bounce maps to a clean decelerate.
+//   - 2026-05-30 (PR #45 checkbox-group port): added `ffTokenToCssTiming` —
+//     maps an FF spring TOKEN ({ duration, bounce }) to a CSS transition that
+//     HONORS the token's authored duration (80/160/240ms), unlike
+//     springToCssTiming which clamps to a 220ms floor. The checkbox-group's
+//     signature 80ms hover glide needs FF's exact short duration, so the
+//     positional (top/left/width/height) glide reads from this. Same bounce→
+//     easing language as springToCssTiming (overshoot cubic-bezier vs M3
+//     decelerate) so the easing vocabulary stays consistent across the pack.
 
 import type { Transition } from '../schema/motion.js';
 
@@ -98,5 +106,34 @@ export function springToCssTiming(
       ? `cubic-bezier(0.34, ${(1.3 + bounce * 0.9).toFixed(3)}, 0.4, 1)`
       : EASING_CUBIC_BEZIER.decelerate;
 
+  return { durationMs, easing };
+}
+
+/**
+ * Map a Fluid Functionalism spring TOKEN to a CSS transition, honoring the
+ * token's AUTHORED duration (in seconds → ms) rather than re-deriving it.
+ *
+ * Why this exists separately from `springToCssTiming`: that helper applies a
+ * 220ms perceptual floor, which is correct for an entrance but WRONG for FF's
+ * signature interaction glides. FF drives its moving-highlight backgrounds with
+ * `springs.fast` (duration 0.08 = 80ms) and `springs.moderate` (0.16 = 160ms);
+ * the snap below ~100ms IS the "Apple-level" feel. Clamping it to 220ms makes
+ * the highlight feel laggy. So when a widget reproduces an FF interaction on a
+ * CSS transition (e.g. CheckboxGroup gliding a positioned highlight's
+ * top/left/width/height), it reads timing from HERE, not the entrance helper.
+ *
+ * The bounce→easing mapping is identical to `springToCssTiming` so the easing
+ * vocabulary is consistent across the whole pack: bounce>0 → a `back`-style
+ * overshoot cubic-bezier (the spring "kiss past then settle"); bounce≈0 → the
+ * M3 decelerate curve (clean, no overshoot — matches FF restraint).
+ */
+export function ffTokenToCssTiming(
+  token: { duration: number; bounce: number },
+): { durationMs: number; easing: string } {
+  const durationMs = Math.round(token.duration * 1000);
+  const easing =
+    token.bounce > 0
+      ? `cubic-bezier(0.34, ${(1.3 + token.bounce * 0.9).toFixed(3)}, 0.4, 1)`
+      : EASING_CUBIC_BEZIER.decelerate;
   return { durationMs, easing };
 }
