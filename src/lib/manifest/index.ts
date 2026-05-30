@@ -65,6 +65,7 @@ import { emptyStateEntry } from './entries/empty-state.js';
 import { entityDetailEntry } from './entries/entity-detail.js';
 import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
+import { featureGridEntry } from './entries/feature-grid.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flexEntry } from './entries/flex.js';
@@ -380,6 +381,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   entityDetailEntry,
   execDashboardEntry,
   errorStateEntry,
+  featureGridEntry,
   fileUploadEntry,
   filterBarEntry,
   flexEntry,

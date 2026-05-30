@@ -58,3 +58,15 @@ describe('Testimonial', () => {
     expect(getByText('Owner, BrightSmile')).toBeInTheDocument();
   });
 });
+
+describe('FeatureGrid', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('feature-grid'); });
+  it('renders each feature title + description', () => {
+    const { getByText } = r({ type: 'feature-grid', props: { columns: 2, features: [
+      { title: 'Fast', description: 'Edge-served.' }, { title: 'Owned', description: 'Your domain.' },
+    ] } });
+    expect(getByText('Fast')).toBeInTheDocument();
+    expect(getByText('Edge-served.')).toBeInTheDocument();
+    expect(getByText('Owned')).toBeInTheDocument();
+  });
+});

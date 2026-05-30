@@ -28,7 +28,7 @@ import {
 } from './vertical/index.js';
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
-import { Navbar, Footer, Cta, Testimonial } from './marketing/index.js';
+import { Navbar, Footer, Cta, Testimonial, FeatureGrid } from './marketing/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -307,6 +307,8 @@ const defaultRegistry: WidgetMap = {
   cta: Cta,
   'call-to-action': Cta,
   testimonial: Testimonial,
+  'feature-grid': FeatureGrid,
+  features: FeatureGrid,
   // Aliases
   label: Text,
 };
@@ -360,5 +362,5 @@ export {
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed,
   Reveal, Parallax,
-  Navbar, Footer, Cta, Testimonial
+  Navbar, Footer, Cta, Testimonial, FeatureGrid
 };

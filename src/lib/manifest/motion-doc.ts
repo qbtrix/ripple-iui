@@ -4,10 +4,10 @@
 //   the vocabulary, the semantic presets, the "motion budget" taste rule, and
 //   named recipes the generator can lift. Shipped inside the manifest so the
 //   field is documented alongside the widget catalog.
-//   NOTE: the reveal-section recipe uses grid/card (both in the catalog today);
-//   when Phase 3 ships `feature-grid` the inner node can swap back to it.
 // @created 2026-05-30 — RFC 12 animation primitive.
 // @changes
+//   - 2026-05-30 (Task 3.5): reveal-section recipe inner node swapped from
+//     grid/card back to the now-shipped `feature-grid` marketing widget.
 //   - 2026-05-30 (Task 1.13 close-out): doc `examples[].motion` is typed
 //     MotionInput (author shape) instead of the post-parse Motion, so the
 //     reduceMotion-less literals below type-check without a redundant default;
@@ -57,11 +57,11 @@ export const motionDoc: MotionDoc = {
         props: { direction: 'up' },
         children: [
           { type: 'section', props: { title: 'How it works', description: 'Three steps.' }, children: [
-            { type: 'grid', props: { columns: 3, gap: '16px' }, children: [
-              { type: 'card', props: { title: 'Build', description: 'Describe it in chat.' } },
-              { type: 'card', props: { title: 'Publish', description: 'One click to the edge.' } },
-              { type: 'card', props: { title: 'Edit forever', description: 'Keep changing it by chat.' } },
-            ] },
+            { type: 'feature-grid', props: { columns: 3, features: [
+              { title: 'Build', description: 'Describe it in chat.' },
+              { title: 'Publish', description: 'One click to the edge.' },
+              { title: 'Edit forever', description: 'Keep changing it by chat.' },
+            ] } },
           ] },
         ],
       },
