@@ -48,6 +48,7 @@ import { comparisonLayoutEntry } from './entries/comparison-layout.js';
 import { comparisonTableEntry } from './entries/comparison-table.js';
 import { confirmDialogEntry } from './entries/confirm-dialog.js';
 import { containerEntry } from './entries/container.js';
+import { ctaEntry } from './entries/cta.js';
 import { contextMenuEntry } from './entries/context-menu.js';
 import { copyEntry } from './entries/copy.js';
 import { dashboardEntry } from './entries/dashboard.js';
@@ -361,6 +362,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   comparisonTableEntry,
   confirmDialogEntry,
   containerEntry,
+  ctaEntry,
   contextMenuEntry,
   copyEntry,
   dashboardEntry,

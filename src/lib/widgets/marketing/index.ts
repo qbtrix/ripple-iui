@@ -2,3 +2,4 @@
 // @created 2026-05-30 — RFC 12.
 export { default as Navbar } from './Navbar.svelte';
 export { default as Footer } from './Footer.svelte';
+export { default as Cta } from './Cta.svelte';

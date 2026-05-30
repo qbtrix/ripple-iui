@@ -36,3 +36,15 @@ describe('Footer', () => {
     expect(getByText('About')).toBeInTheDocument();
   });
 });
+
+describe('CTA', () => {
+  it('is registered (cta + call-to-action alias)', () => {
+    const t = getWidgetTypes();
+    expect(t).toContain('cta');
+  });
+  it('renders headline + button', () => {
+    const { getByText } = r({ type: 'cta', props: { headline: 'Ready to book?', button: 'Book now', href: '#book' } });
+    expect(getByText('Ready to book?')).toBeInTheDocument();
+    expect(getByText('Book now')).toBeInTheDocument();
+  });
+});
