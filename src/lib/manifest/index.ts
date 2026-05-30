@@ -16,6 +16,7 @@ import { manifestActions } from './actions.js';
 import { accordionEntry } from './entries/accordion.js';
 import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
+import { animatedBeamEntry } from './entries/animated-beam.js';
 import { apiKeyEntry } from './entries/api-key.js';
 import { appShellEntry } from './entries/app-shell.js';
 import { articleMetaEntry } from './entries/article-meta.js';
@@ -337,6 +338,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   accordionEntry,
   alertEntry,
   analystBarEntry,
+  animatedBeamEntry,
   apiKeyEntry,
   appShellEntry,
   articleMetaEntry,

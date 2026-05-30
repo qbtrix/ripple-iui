@@ -4,3 +4,4 @@
 export { default as Marquee } from './Marquee.svelte';
 export { default as BorderBeam } from './BorderBeam.svelte';
 export { default as Shimmer } from './Shimmer.svelte';
+export { default as AnimatedBeam } from './AnimatedBeam.svelte';

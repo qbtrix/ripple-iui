@@ -52,3 +52,11 @@ describe('Shimmer', () => {
     expect(getByText('loading…')).toBeTruthy();
   });
 });
+
+describe('AnimatedBeam', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('animated-beam'); });
+  it('renders an <svg> beam', () => {
+    const { container } = r({ type: 'animated-beam', props: { duration: 4 } });
+    expect(container.querySelector('svg')).not.toBeNull();
+  });
+});
