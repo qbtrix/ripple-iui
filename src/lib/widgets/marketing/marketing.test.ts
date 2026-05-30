@@ -9,7 +9,9 @@ import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
 import { getWidgetTypes } from '$lib/widgets/index.js';
+import { validateCatalog } from '$lib/core/validate-catalog.js';
 import type { UINode } from '$lib/schema/ui-spec.js';
+import type { Motion, MotionInput } from '$lib/schema/motion.js';
 
 const r = (ui: UINode) => render(Ripple, { props: { spec: { ui } } });
 
@@ -22,7 +24,7 @@ describe('Navbar', () => {
     expect(getByText('Contact')).toBeInTheDocument();
   });
   it('is motion-aware (gets a wrapper when a motion field is present)', () => {
-    const { container } = r({ type: 'navbar', props: { brand: 'X', links: [] }, motion: { enter: { opacity: 0, y: -12 } } });
+    const { container } = r({ type: 'navbar', props: { brand: 'X', links: [] }, motion: ({ enter: { opacity: 0, y: -12 } } satisfies MotionInput) as Motion });
     expect(container.querySelector('[data-ripple-motion]')).not.toBeNull();
   });
 });
@@ -95,5 +97,13 @@ describe('LogoCloud', () => {
     expect(getByText('Trusted by')).toBeInTheDocument();
     expect(container.querySelectorAll('img').length).toBe(2);
     expect(container.querySelector('img[alt="Acme"]')).not.toBeNull();
+  });
+});
+
+describe('marketing catalog coverage', () => {
+  it('every marketing type is known to validateCatalog (no unknown-widget errors)', () => {
+    for (const type of ['navbar', 'footer', 'cta', 'testimonial', 'feature-grid', 'newsletter', 'logo-cloud']) {
+      expect(validateCatalog({ type, props: {} } as UINode)).toEqual([]);
+    }
   });
 });

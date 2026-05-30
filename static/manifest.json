@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
-  "version": "0.3.0",
-  "generatedAt": "2026-05-30T08:54:03.309Z",
+  "version": "0.4.0",
+  "generatedAt": "2026-05-30T09:17:11.111Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -484,34 +484,24 @@
               },
               "children": [
                 {
-                  "type": "grid",
+                  "type": "feature-grid",
                   "props": {
                     "columns": 3,
-                    "gap": "16px"
-                  },
-                  "children": [
-                    {
-                      "type": "card",
-                      "props": {
+                    "features": [
+                      {
                         "title": "Build",
                         "description": "Describe it in chat."
-                      }
-                    },
-                    {
-                      "type": "card",
-                      "props": {
+                      },
+                      {
                         "title": "Publish",
                         "description": "One click to the edge."
-                      }
-                    },
-                    {
-                      "type": "card",
-                      "props": {
+                      },
+                      {
                         "title": "Edit forever",
                         "description": "Keep changing it by chat."
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               ]
             }
@@ -3266,6 +3256,48 @@
       }
     },
     {
+      "type": "cta",
+      "category": "layout",
+      "description": "Call-to-action band: a headline, optional subtext, and one button. Aliased as call-to-action. Use to drive the page conversion.",
+      "props": {
+        "headline": {
+          "type": "string",
+          "required": true,
+          "description": "The primary line."
+        },
+        "subtext": {
+          "type": "string",
+          "required": false,
+          "description": "Supporting copy."
+        },
+        "button": {
+          "type": "string",
+          "required": false,
+          "description": "Button label."
+        },
+        "href": {
+          "type": "string",
+          "required": false,
+          "description": "Button destination."
+        },
+        "align": {
+          "type": "\"left\" | \"center\"",
+          "required": false,
+          "description": "Content alignment. Default \"center\"."
+        }
+      },
+      "example": {
+        "type": "cta",
+        "props": {
+          "headline": "Ready for a brighter smile?",
+          "subtext": "Book your first visit in under a minute.",
+          "button": "Book now",
+          "href": "#book",
+          "align": "center"
+        }
+      }
+    },
+    {
       "type": "context-menu",
       "category": "overlay",
       "description": "Right-click context menu with items, icons, shortcuts, and separators.",
@@ -5567,6 +5599,43 @@
       }
     },
     {
+      "type": "feature-grid",
+      "category": "layout",
+      "description": "Responsive grid of feature cells (title + description). Aliased as features. Use to lay out product benefits on a landing page.",
+      "props": {
+        "features": {
+          "type": "Array<{ title: string; description?: string; icon?: string }>",
+          "required": true,
+          "description": "Feature cells."
+        },
+        "columns": {
+          "type": "2 | 3 | 4",
+          "required": false,
+          "description": "Columns on md+. Default 3."
+        }
+      },
+      "example": {
+        "type": "feature-grid",
+        "props": {
+          "columns": 3,
+          "features": [
+            {
+              "title": "Edge-fast",
+              "description": "Served from the closest edge node."
+            },
+            {
+              "title": "You own it",
+              "description": "Your domain, your brand, your data."
+            },
+            {
+              "title": "Edit by chat",
+              "description": "Change anything just by asking."
+            }
+          ]
+        }
+      }
+    },
+    {
       "type": "file-upload",
       "category": "input",
       "description": "Drag-and-drop file upload with file list display, accept-type filtering, and size limits.",
@@ -5849,6 +5918,57 @@
         "props": {
           "placeholder": "Ask follow-up",
           "event": "follow-up"
+        }
+      }
+    },
+    {
+      "type": "footer",
+      "category": "layout",
+      "description": "Marketing footer: columns of links plus a copyright line. Use at the bottom of a landing page.",
+      "props": {
+        "columns": {
+          "type": "Array<{ title: string; links: Array<{ label: string; href: string }> }>",
+          "required": false,
+          "description": "Footer link columns."
+        },
+        "copyright": {
+          "type": "string",
+          "required": false,
+          "description": "Copyright / legal line."
+        }
+      },
+      "example": {
+        "type": "footer",
+        "props": {
+          "columns": [
+            {
+              "title": "Company",
+              "links": [
+                {
+                  "label": "About",
+                  "href": "#about"
+                },
+                {
+                  "label": "Careers",
+                  "href": "#careers"
+                }
+              ]
+            },
+            {
+              "title": "Legal",
+              "links": [
+                {
+                  "label": "Privacy",
+                  "href": "#privacy"
+                },
+                {
+                  "label": "Terms",
+                  "href": "#terms"
+                }
+              ]
+            }
+          ],
+          "copyright": "© 2026 Bright Smile Dental"
         }
       }
     },
@@ -7593,6 +7713,43 @@
       }
     },
     {
+      "type": "logo-cloud",
+      "category": "display",
+      "description": "Row of client / partner logos with an optional heading. Grayscale by default, color on hover. Aliased as logos. Use for social proof.",
+      "props": {
+        "heading": {
+          "type": "string",
+          "required": false,
+          "description": "Optional eyebrow heading, e.g. \"Trusted by\"."
+        },
+        "logos": {
+          "type": "Array<{ src: string; alt: string; href?: string }>",
+          "required": false,
+          "description": "Logo images."
+        }
+      },
+      "example": {
+        "type": "logo-cloud",
+        "props": {
+          "heading": "Trusted by clinics across the city",
+          "logos": [
+            {
+              "src": "/logos/acme.svg",
+              "alt": "Acme"
+            },
+            {
+              "src": "/logos/globex.svg",
+              "alt": "Globex"
+            },
+            {
+              "src": "/logos/initech.svg",
+              "alt": "Initech"
+            }
+          ]
+        }
+      }
+    },
+    {
       "type": "map",
       "category": "data",
       "description": "Leaflet-backed interactive map. Renders markers, polyline paths, polygon geofences, and live trackers (smoothly interpolated moving markers with optional trails). No API key needed for default tiles.",
@@ -8347,6 +8504,57 @@
       }
     },
     {
+      "type": "navbar",
+      "category": "layout",
+      "description": "Marketing top navigation: brand, links, and an optional CTA button. Sticky-capable. Use at the top of a landing page.",
+      "props": {
+        "brand": {
+          "type": "string",
+          "required": false,
+          "description": "Brand / site name."
+        },
+        "links": {
+          "type": "Array<{ label: string; href: string }>",
+          "required": false,
+          "description": "Nav links."
+        },
+        "cta": {
+          "type": "string",
+          "required": false,
+          "description": "CTA button label."
+        },
+        "ctaHref": {
+          "type": "string",
+          "required": false,
+          "description": "CTA destination."
+        },
+        "sticky": {
+          "type": "boolean",
+          "required": false,
+          "description": "Stick to the top on scroll. Default false."
+        }
+      },
+      "example": {
+        "type": "navbar",
+        "props": {
+          "brand": "Bright Smile Dental",
+          "links": [
+            {
+              "label": "Services",
+              "href": "#services"
+            },
+            {
+              "label": "About",
+              "href": "#about"
+            }
+          ],
+          "cta": "Book now",
+          "ctaHref": "#book",
+          "sticky": true
+        }
+      }
+    },
+    {
       "type": "news-card",
       "category": "research",
       "description": "News article card with headline, source, timestamp, sentiment tag, and optional thumbnail.",
@@ -8390,6 +8598,54 @@
           "time": "2 hours ago",
           "sentiment": "bearish",
           "url": "https://ft.com/article"
+        }
+      }
+    },
+    {
+      "type": "newsletter",
+      "category": "input",
+      "description": "Email-capture band: heading, subtext, email field, submit button. Aliased as email-capture. Emits the entered email via on_submit.",
+      "props": {
+        "heading": {
+          "type": "string",
+          "required": false,
+          "description": "Headline above the field."
+        },
+        "subtext": {
+          "type": "string",
+          "required": false,
+          "description": "Supporting copy."
+        },
+        "placeholder": {
+          "type": "string",
+          "required": false,
+          "description": "Input placeholder. Default \"you@example.com\"."
+        },
+        "button": {
+          "type": "string",
+          "required": false,
+          "description": "Submit button label. Default \"Subscribe\"."
+        }
+      },
+      "events": {
+        "on_submit": {
+          "type": "EventHandler",
+          "required": false,
+          "description": "Fires with the entered email on submit."
+        }
+      },
+      "example": {
+        "type": "newsletter",
+        "props": {
+          "heading": "Stay in the loop",
+          "subtext": "Tips and offers, no spam.",
+          "placeholder": "you@email.com",
+          "button": "Subscribe"
+        },
+        "on_submit": {
+          "action": "emit",
+          "target": "subscribe",
+          "value": "{state.email}"
         }
       }
     },
@@ -12751,6 +13007,41 @@
               "type": "stdout"
             }
           ]
+        }
+      }
+    },
+    {
+      "type": "testimonial",
+      "category": "display",
+      "description": "A single customer testimonial card: quote, author, role, optional avatar. Use for social proof on a landing page.",
+      "props": {
+        "quote": {
+          "type": "string",
+          "required": true,
+          "description": "The testimonial text."
+        },
+        "author": {
+          "type": "string",
+          "required": false,
+          "description": "Person quoted."
+        },
+        "role": {
+          "type": "string",
+          "required": false,
+          "description": "Their role / company."
+        },
+        "avatar": {
+          "type": "string",
+          "required": false,
+          "description": "Avatar image URL."
+        }
+      },
+      "example": {
+        "type": "testimonial",
+        "props": {
+          "quote": "Booking went from a phone-tag headache to one tap.",
+          "author": "Dr. Lee",
+          "role": "Owner, Bright Smile Dental"
         }
       }
     },
