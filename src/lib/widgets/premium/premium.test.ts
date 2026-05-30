@@ -81,3 +81,18 @@ describe('Spotlight', () => {
     expect(getByText('follow me')).toBeTruthy();
   });
 });
+
+describe('BentoGrid', () => {
+  it('is registered (and aliased bento)', () => {
+    expect(getWidgetTypes()).toContain('bento-grid');
+    expect(getWidgetTypes()).toContain('bento');
+  });
+  it('renders each item title', () => {
+    const { getByText } = r({ type: 'bento-grid', props: { items: [
+      { title: 'Fast', description: 'Edge-deployed.' },
+      { title: 'Branded', span: 2 },
+    ] } });
+    expect(getByText('Fast')).toBeTruthy();
+    expect(getByText('Branded')).toBeTruthy();
+  });
+});

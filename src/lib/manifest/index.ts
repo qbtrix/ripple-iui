@@ -25,6 +25,7 @@ import { auroraEntry } from './entries/aurora.js';
 import { avatarEntry } from './entries/avatar.js';
 import { avatarGroupEntry } from './entries/avatar-group.js';
 import { badgeEntry } from './entries/badge.js';
+import { bentoGridEntry } from './entries/bento-grid.js';
 import { borderBeamEntry } from './entries/border-beam.js';
 import { breadcrumbEntry } from './entries/breadcrumb.js';
 import { bulkActionBarEntry } from './entries/bulk-action-bar.js';
@@ -349,6 +350,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   avatarEntry,
   avatarGroupEntry,
   badgeEntry,
+  bentoGridEntry,
   borderBeamEntry,
   breadcrumbEntry,
   bulkActionBarEntry,
