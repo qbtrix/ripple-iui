@@ -35,3 +35,11 @@ describe('Marquee', () => {
     expect(container.querySelectorAll('[data-marquee-track]').length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe('BorderBeam', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('border-beam'); });
+  it('renders a [data-border-beam] element over its children', () => {
+    const { container } = r({ type: 'border-beam', children: [{ type: 'text', props: { text: 'card body' } }] });
+    expect(container.querySelector('[data-border-beam]')).not.toBeNull();
+  });
+});

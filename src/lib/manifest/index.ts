@@ -23,6 +23,7 @@ import { auditLogEntry } from './entries/audit-log.js';
 import { avatarEntry } from './entries/avatar.js';
 import { avatarGroupEntry } from './entries/avatar-group.js';
 import { badgeEntry } from './entries/badge.js';
+import { borderBeamEntry } from './entries/border-beam.js';
 import { breadcrumbEntry } from './entries/breadcrumb.js';
 import { bulkActionBarEntry } from './entries/bulk-action-bar.js';
 import { buttonEntry } from './entries/button.js';
@@ -342,6 +343,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   avatarEntry,
   avatarGroupEntry,
   badgeEntry,
+  borderBeamEntry,
   breadcrumbEntry,
   bulkActionBarEntry,
   buttonEntry,

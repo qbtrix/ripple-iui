@@ -30,7 +30,7 @@ import {
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
 import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud } from './marketing/index.js';
-import { Marquee } from './premium/index.js';
+import { Marquee, BorderBeam } from './premium/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -317,6 +317,7 @@ const defaultRegistry: WidgetMap = {
   logos: LogoCloud,
   // Premium — MIT-ported animation pack (RFC 12)
   marquee: Marquee,
+  'border-beam': BorderBeam,
   // Aliases
   label: Text,
 };
@@ -371,5 +372,5 @@ export {
   ModelViewer, Embed,
   Reveal, Parallax,
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud,
-  Marquee
+  Marquee, BorderBeam
 };
