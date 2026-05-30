@@ -185,9 +185,19 @@ test.describe('marketing hero — degrades to visible, never hidden', () => {
 			)
 			.toBeGreaterThan(0.9);
 
-		// And it must have animated home — translateY back to ~0 (no residual rise).
-		const ty = await heroWrapper.evaluate((el) => getComputedStyle(el).transform);
-		expect(Math.abs(translateYFromTransform(ty))).toBeLessThan(2);
+		// And it must have animated HOME — translateY back to ~0 (no residual
+		// rise). POLL this rather than read it once: the spring-like CSS easing can
+		// still be settling (or briefly overshooting) when opacity crosses 0.9, so
+		// a single read races the transition. The invariant is the SETTLED value.
+		await expect
+			.poll(
+				async () => {
+					const t = await heroWrapper.evaluate((el) => getComputedStyle(el).transform);
+					return Math.abs(translateYFromTransform(t));
+				},
+				{ timeout: 4000, intervals: [50, 100, 100, 200, 300] },
+			)
+			.toBeLessThan(2);
 
 		// The title text itself must be visible to a user (Playwright's visibility
 		// check folds in opacity:0 / zero-size — a redundant, user-facing tripwire).
