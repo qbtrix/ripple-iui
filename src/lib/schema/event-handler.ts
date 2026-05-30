@@ -13,6 +13,10 @@
  *     run_source; invokes a named server-side write binding (RFC 05 M2a)
  *   - Added animate action — host-delegated imperative animation trigger on a
  *     target node by id, carrying a node-level Motion directive (RFC 12)
+ *   - Added invoke_tool action — host-delegated invocation of a named
+ *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
+ *     args; the click-driven sibling of run_source / call_binding for
+ *     home-pocket button refresh (#1206 part a)
  *   - EventHandlerOrArray still accepts either a single handler or an array for
  *     backwards compatibility with existing specs
  */
@@ -30,6 +34,9 @@ import { Motion } from './motion.js';
  *   re-fetches the named source)
  * - call_binding: Invoke a named server-side write binding (host-delegated —
  *   host performs the write; the verb lives in the persisted spec)
+ * - invoke_tool: Invoke a named server-side tool by id with resolved args
+ *   (host-delegated — the host POSTs to `/pockets/{id}/tools/run` with the
+ *   tool name + args; click-driven sibling of run_source / call_binding)
  * - navigate: Navigate to a URL
  * - toast: Show a toast notification
  * - emit: Emit a custom event to parent
@@ -52,6 +59,7 @@ export const EventAction = z.enum([
 	'api',
 	'run_source',
 	'call_binding',
+	'invoke_tool',
 	'navigate',
 	'toast',
 	'emit',
@@ -215,6 +223,31 @@ export const CallBindingHandler: z.ZodType<CallBindingHandlerType> = z.lazy(() =
 	})
 );
 
+/**
+ * `invoke_tool` — host-delegated invocation of a named server-side tool
+ * (WebFetch, Composio, etc.) by tool id + resolved args. The click-driven
+ * sibling of `run_source` (read-only fetch) and `call_binding` (named
+ * write binding); the home grid's `onEvent` plumbing POSTs to
+ * `/pockets/{id}/tools/run` and the dispatcher chains `on_success` /
+ * `on_error` with the result exactly like `run_source` / `call_binding`.
+ *
+ * The dispatcher resolves `{state.x}` / `{item.id}` inside each value of
+ * `args` client-side before emitting (same contract as `call_binding`
+ * resolves `path` / `params`), so the server never sees expressions.
+ *
+ * For backwards compatibility, hosts returning `void` are treated as a
+ * silent success with no data — no continuation receives a payload.
+ */
+export const InvokeToolHandler: z.ZodType<InvokeToolHandlerType> = z.lazy(() =>
+	z.object({
+		action: z.literal('invoke_tool'),
+		tool: z.string(),
+		args: z.record(z.string(), z.any()).optional(),
+		on_success: z.array(EventHandler).optional(),
+		on_error: z.array(EventHandler).optional()
+	})
+);
+
 /** `flow` — run a list of steps sequentially. `on_error` fires on FlowAbortError. */
 export const FlowHandler: z.ZodType<FlowHandlerType> = z.lazy(() =>
 	z.object({
@@ -304,6 +337,14 @@ type CallBindingHandlerType = {
 	on_error?: EventHandler[];
 };
 
+type InvokeToolHandlerType = {
+	action: 'invoke_tool';
+	tool: string;
+	args?: Record<string, unknown>;
+	on_success?: EventHandler[];
+	on_error?: EventHandler[];
+};
+
 type FlowHandlerType = {
 	action: 'flow';
 	steps: EventHandler[];
@@ -351,6 +392,7 @@ export const EventHandler = z.union([
 	ApiHandler,
 	RunSourceHandler,
 	CallBindingHandler,
+	InvokeToolHandler,
 	FlowHandler,
 	BranchHandler,
 	ConfirmHandler,
@@ -374,6 +416,7 @@ export type EventHandler =
 	| ApiHandlerType
 	| RunSourceHandlerType
 	| CallBindingHandlerType
+	| InvokeToolHandlerType
 	| FlowHandlerType
 	| BranchHandlerType
 	| ConfirmHandlerType

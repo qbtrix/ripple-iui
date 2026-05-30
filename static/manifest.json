@@ -268,6 +268,41 @@
         ]
       }
     },
+    "invoke_tool": {
+      "description": "Invoke a named server-side tool (WebFetch / Composio / etc.) with resolved args. The host POSTs to /pockets/{id}/tools/run with the tool name + args; `args` values support {state.x}/{item.id} expressions, resolved before the call. On success `on_success` runs with the result; on failure `on_error` runs and the error is exposed at state path `_flow_error`. Use it on a Refresh button when the data comes from a tool rather than a declared source.",
+      "shape": {
+        "action": "\"invoke_tool\"",
+        "tool": "string — id of the server-side tool to invoke (e.g. \"WebFetch\", \"GMAIL_FETCH_EMAILS\").",
+        "args?": "object — argument map for the tool. Values support {state.x}/{item.id} expressions.",
+        "on_success?": "EventHandler[] — runs with the result data after a successful invocation.",
+        "on_error?": "EventHandler[] — runs on host-reported failure."
+      },
+      "example": {
+        "action": "invoke_tool",
+        "tool": "WebFetch",
+        "args": {
+          "url": "https://api.example.com/feed"
+        },
+        "on_success": [
+          {
+            "action": "set",
+            "target": "feed"
+          },
+          {
+            "action": "toast",
+            "message": "Refreshed",
+            "variant": "success"
+          }
+        ],
+        "on_error": [
+          {
+            "action": "toast",
+            "message": "Could not refresh",
+            "variant": "error"
+          }
+        ]
+      }
+    },
     "flow": {
       "description": "Run a list of handlers sequentially. If any step throws `FlowAbortError` (e.g. failed `validate`), `on_error` runs.",
       "shape": {
@@ -706,6 +741,137 @@
           "description": "Use in production.",
           "value": "sk_live_9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4",
           "revealLast": 4
+        }
+      }
+    },
+    {
+      "type": "ask-user-questions",
+      "category": "composite",
+      "description": "Stepped multi-choice question flow with numbered options (1-9 shortcuts), single/multi-select, optional \"Other\" free-text, and skip/back. On complete, fires completeActions with a human-readable answer summary as the event value.",
+      "props": {
+        "questions": {
+          "type": "Array<{ title: string; options: Array<{ title: string; description?: string }>; multiSelect?: boolean; allowOther?: boolean; otherPlaceholder?: string; skippable?: boolean; nextLabel?: string; layout?: \"inline\" | \"stacked\" }>",
+          "required": true,
+          "description": "Ordered questions. Each needs `title` + `options` (each option `title`, optional `description`). `multiSelect` shows a Continue button (single-select auto-advances). `allowOther` adds a free-text row. `layout` \"stacked\" puts description below title."
+        },
+        "currentIndex": {
+          "type": "number",
+          "required": false,
+          "description": "Bound active question index. Use top-level `bind` to two-way bind to a state path."
+        },
+        "answers": {
+          "type": "Record<string, { questionId: string; selectedTitles: string[]; otherText?: string; skipped?: boolean }>",
+          "required": false,
+          "description": "Bound answers map keyed by question id. Use top-level `bind` to persist answers to state."
+        },
+        "skipLabel": {
+          "type": "string",
+          "required": false,
+          "description": "Skip button label. Default \"Skip\"."
+        },
+        "completeActions": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "Dispatched when the final question is answered. The formatted answer summary is passed as the event value — pair with `{ action: \"emit\", target: \"chat.send\" }` to send it as the next chat message (no explicit value needed)."
+        },
+        "skipActions": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "Dispatched when a question is skipped. Event value is the skipped question id."
+        },
+        "changeActions": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "Dispatched on every answer mutation. Event value is the full answers map."
+        }
+      },
+      "example": {
+        "type": "ask-user-questions",
+        "props": {
+          "questions": [
+            {
+              "title": "Which coffee?",
+              "options": [
+                {
+                  "title": "Espresso"
+                },
+                {
+                  "title": "Latte",
+                  "description": "Steamed milk"
+                },
+                {
+                  "title": "Cold brew"
+                }
+              ]
+            },
+            {
+              "title": "Pick any toppings",
+              "multiSelect": true,
+              "allowOther": true,
+              "layout": "stacked",
+              "options": [
+                {
+                  "title": "Cinnamon"
+                },
+                {
+                  "title": "Vanilla syrup"
+                }
+              ]
+            }
+          ],
+          "completeActions": {
+            "action": "emit",
+            "target": "chat.send"
+          }
+        }
+      },
+      "pocket": {
+        "state": {
+          "coffeeIndex": 0,
+          "coffeeAnswers": {}
+        },
+        "ui": {
+          "type": "ask-user-questions",
+          "bind": "state.coffeeIndex",
+          "props": {
+            "questions": [
+              {
+                "title": "Which coffee?",
+                "options": [
+                  {
+                    "title": "Espresso"
+                  },
+                  {
+                    "title": "Latte"
+                  },
+                  {
+                    "title": "Cold brew"
+                  }
+                ]
+              },
+              {
+                "title": "How many?",
+                "options": [
+                  {
+                    "title": "One"
+                  },
+                  {
+                    "title": "Two"
+                  },
+                  {
+                    "title": "A whole pot"
+                  }
+                ]
+              }
+            ],
+            "completeActions": [
+              {
+                "action": "toast",
+                "message": "Order placed",
+                "variant": "success"
+              }
+            ]
+          }
         }
       }
     },

@@ -19,6 +19,7 @@ import { analystBarEntry } from './entries/analyst-bar.js';
 import { animatedBeamEntry } from './entries/animated-beam.js';
 import { apiKeyEntry } from './entries/api-key.js';
 import { appShellEntry } from './entries/app-shell.js';
+import { askUserQuestionsEntry } from './entries/ask-user-questions.js';
 import { articleMetaEntry } from './entries/article-meta.js';
 import { auditLogEntry } from './entries/audit-log.js';
 import { auroraEntry } from './entries/aurora.js';
@@ -344,6 +345,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   analystBarEntry,
   animatedBeamEntry,
   apiKeyEntry,
+  askUserQuestionsEntry,
   appShellEntry,
   articleMetaEntry,
   auditLogEntry,

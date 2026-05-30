@@ -23,6 +23,10 @@
  *     supplied by Ripple.svelte) and pulses it via `playMotion`, so clicking an
  *     `animate` trigger moves the target on screen with NO host code. It still
  *     emits the `animate` event afterward so observers/hosts can react or override.
+ *   - Added invoke_tool action — host-delegated invocation of a named
+ *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
+ *     args; click-driven sibling of run_source / call_binding for the new
+ *     `POST /pockets/{id}/tools/run` wire (#1206 part a)
  *   - FlowAbortError for `validate` failures + flow-level error recovery
  *   - Enforces max nested flow depth to stop run-away recursion
  *   - Wires the new per-instance WidgetRegistry through the constructor
@@ -215,6 +219,9 @@ export class EventDispatcher {
 				return;
 			case 'call_binding':
 				await this.handleCallBinding(handler, context, depth);
+				return;
+			case 'invoke_tool':
+				await this.handleInvokeTool(handler, context, depth);
 				return;
 			case 'flow':
 				await this.handleFlow(handler, context, depth, eventValue);
@@ -654,11 +661,75 @@ export class EventDispatcher {
 	}
 
 	/**
+	 * `invoke_tool` — host-delegated invocation of a named server-side tool
+	 * (WebFetch, Composio, etc.) by tool id + resolved args. Click-driven
+	 * sibling of `run_source` / `call_binding`: ripple does not run the tool,
+	 * it FIRST resolves `{state.x}` / `{item.id}` expressions in each value of
+	 * `args` client-side (the same way `handleCallBinding` resolves `params`),
+	 * then emits an `invoke_tool` event and lets the host POST to the new
+	 * `/pockets/{id}/tools/run` wire. Result handling mirrors `handleCallBinding`
+	 * / `handleRunSource`: on success the host's data flows into `on_success`,
+	 * on failure the error is written to `_flow_error` and `on_error` runs. A
+	 * legacy `void` host return is a silent success.
+	 */
+	private async handleInvokeTool(
+		handler: Extract<EventHandler, { action: 'invoke_tool' }>,
+		context: ResolverContext,
+		depth: number
+	): Promise<void> {
+		if (!this.onEvent) return;
+
+		const event: RippleEvent = {
+			type: 'invoke_tool',
+			tool: handler.tool
+		};
+
+		// Resolve each arg value before the call leaves the browser — identical
+		// to how `handleCallBinding` resolves each `params` value. `resolveValue`
+		// handles nested objects / arrays / non-string values so an arg like
+		// `count: 5` or `filter: { open: true }` passes through unchanged while
+		// `query: '{state.draft}'` resolves to the live state value.
+		if (handler.args) {
+			const resolved: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries(handler.args)) {
+				resolved[key] = resolveValue(value, context);
+			}
+			event.args = resolved;
+		}
+
+		const result = await this.callHost(event);
+
+		if (result.ok) {
+			if (handler.on_success && handler.on_success.length > 0) {
+				await this.runHandlers(
+					handler.on_success,
+					this.freshContext(context),
+					result.data,
+					depth
+				);
+			}
+		} else {
+			this.stateManager.set(
+				FLOW_ERROR_STATE_KEY,
+				result.error ?? { message: 'invoke_tool failed' }
+			);
+			if (handler.on_error && handler.on_error.length > 0) {
+				await this.runHandlers(
+					handler.on_error,
+					this.freshContext(context),
+					result.error,
+					depth
+				);
+			}
+		}
+	}
+
+	/**
 	 * Emit an event to the host and normalize the reply into a RippleEventResult.
-	 * Shared by `handleApi`, `handleRunSource`, and `handleCallBinding`. Legacy
-	 * hosts returning `void` are treated as a silent success with no data; a
-	 * host that throws becomes a transport-level error result. Caller must have
-	 * verified `this.onEvent`.
+	 * Shared by `handleApi`, `handleRunSource`, `handleCallBinding`, and
+	 * `handleInvokeTool`. Legacy hosts returning `void` are treated as a silent
+	 * success with no data; a host that throws becomes a transport-level error
+	 * result. Caller must have verified `this.onEvent`.
 	 */
 	private async callHost(event: RippleEvent): Promise<RippleEventResult> {
 		try {
