@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
-  "version": "0.4.0",
-  "generatedAt": "2026-05-30T09:17:11.111Z",
+  "version": "0.5.0",
+  "generatedAt": "2026-05-30T09:41:24.362Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -629,6 +629,41 @@
       }
     },
     {
+      "type": "animated-beam",
+      "category": "display",
+      "description": "An SVG curve with a flowing gradient pulse connecting two points (pure SVG/CSS). Use to suggest a connection or data flow in a diagram.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per flow. Default 4."
+        },
+        "curvature": {
+          "type": "number",
+          "required": false,
+          "description": "Arc height in viewBox units (negative bows up). Default -40."
+        },
+        "gradientStart": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient start colour. Default #18CCFC."
+        },
+        "gradientStop": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient stop colour. Default #AE48FF."
+        }
+      },
+      "example": {
+        "type": "animated-beam",
+        "props": {
+          "duration": 4,
+          "curvature": -50
+        },
+        "class": "h-24 text-muted-foreground"
+      }
+    },
+    {
       "type": "api-key",
       "category": "vertical",
       "description": "Secret key display with mask/reveal toggle, copy button, and optional rotate action.",
@@ -924,6 +959,35 @@
       }
     },
     {
+      "type": "aurora",
+      "category": "layout",
+      "description": "Wraps children over a soft, drifting multi-gradient aurora backdrop (pure CSS). Aliased aurora-background. Use as a hero or section background.",
+      "props": {
+        "colors": {
+          "type": "string[]",
+          "required": false,
+          "description": "Gradient stop colours driving the aurora. Default blue/violet/teal."
+        },
+        "speed": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per drift cycle (lower = faster). Default 12."
+        }
+      },
+      "example": {
+        "type": "aurora",
+        "class": "min-h-[320px] flex items-center justify-center p-12",
+        "children": [
+          {
+            "type": "heading",
+            "props": {
+              "text": "Sites that move"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "avatar",
       "category": "display",
       "description": "Circular avatar with image fallback to initials.",
@@ -1022,6 +1086,83 @@
           "text": "Active",
           "variant": "success"
         }
+      }
+    },
+    {
+      "type": "bento-grid",
+      "category": "layout",
+      "description": "A bento/masonry feature grid where cells span 1-3 columns for a varied layout. Aliased bento. Use for a feature showcase or product grid.",
+      "props": {
+        "items": {
+          "type": "Array<{ title: string; description?: string; span?: 1 | 2 | 3 }>",
+          "required": false,
+          "description": "Declarative cells. Omit to supply your own via children."
+        },
+        "columns": {
+          "type": "number",
+          "required": false,
+          "description": "Column count. Default 3."
+        }
+      },
+      "example": {
+        "type": "bento-grid",
+        "props": {
+          "columns": 3,
+          "items": [
+            {
+              "title": "Edge-fast",
+              "description": "Deployed worldwide.",
+              "span": 2
+            },
+            {
+              "title": "White-label",
+              "description": "Your brand, end to end."
+            },
+            {
+              "title": "No infra",
+              "description": "We host it."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "border-beam",
+      "category": "display",
+      "description": "Wraps children in a card-like box with a gradient beam orbiting its border (pure CSS). Use to draw attention to a featured card or CTA.",
+      "props": {
+        "size": {
+          "type": "number",
+          "required": false,
+          "description": "Beam thickness in px. Default 1.5."
+        },
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per orbit. Default 8."
+        },
+        "colorFrom": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient start colour. Default #ffaa40."
+        },
+        "colorTo": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient end colour. Default #9c40ff."
+        }
+      },
+      "example": {
+        "type": "border-beam",
+        "class": "rounded-xl border bg-card p-6",
+        "children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "Featured plan"
+            }
+          }
+        ]
       }
     },
     {
@@ -7970,6 +8111,63 @@
       }
     },
     {
+      "type": "marquee",
+      "category": "display",
+      "description": "Seamless scrolling row/column of its children (logos, badges, quotes). Pure-CSS loop, pauses on hover. Use for logo strips and ticker rows.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per loop. Default 30."
+        },
+        "pauseOnHover": {
+          "type": "boolean",
+          "required": false,
+          "description": "Pause the scroll on hover. Default true."
+        },
+        "reverse": {
+          "type": "boolean",
+          "required": false,
+          "description": "Reverse the scroll direction. Default false."
+        },
+        "direction": {
+          "type": "'horizontal' | 'vertical'",
+          "required": false,
+          "description": "Scroll axis. Default horizontal."
+        }
+      },
+      "example": {
+        "type": "marquee",
+        "props": {
+          "duration": 24,
+          "pauseOnHover": true
+        },
+        "children": [
+          {
+            "type": "image",
+            "props": {
+              "src": "/logos/acme.svg",
+              "alt": "Acme"
+            }
+          },
+          {
+            "type": "image",
+            "props": {
+              "src": "/logos/globex.svg",
+              "alt": "Globex"
+            }
+          },
+          {
+            "type": "image",
+            "props": {
+              "src": "/logos/initech.svg",
+              "alt": "Initech"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "master-detail",
       "category": "layout",
       "description": "List on left, detail view on right. Selected item flows into detail spec via loop context.",
@@ -12168,6 +12366,35 @@
       }
     },
     {
+      "type": "shimmer",
+      "category": "display",
+      "description": "Sweeps a moving highlight band across its children (pure CSS). Use on a CTA label, a \"new\" badge, or skeleton text to draw the eye.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per sweep. Default 2."
+        },
+        "width": {
+          "type": "string",
+          "required": false,
+          "description": "Highlight band width (CSS length). Default 100px."
+        }
+      },
+      "example": {
+        "type": "shimmer",
+        "class": "text-lg font-semibold",
+        "children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "Get early access"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "sidebar",
       "category": "layout",
       "description": "Navigation sidebar with grouped items, icons, badges, and optional footer. Pair with app-shell.",
@@ -12589,6 +12816,35 @@
             "type": "text",
             "props": {
               "text": "Right detail view"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "spotlight",
+      "category": "layout",
+      "description": "Wraps children with a radial highlight that follows the cursor on hover (CSS, client-only pointer wiring). Use on a hero or feature card.",
+      "props": {
+        "size": {
+          "type": "string",
+          "required": false,
+          "description": "Highlight diameter (CSS length). Default 300px."
+        },
+        "color": {
+          "type": "string",
+          "required": false,
+          "description": "Highlight colour. Default a translucent white."
+        }
+      },
+      "example": {
+        "type": "spotlight",
+        "class": "rounded-xl border bg-card p-10",
+        "children": [
+          {
+            "type": "heading",
+            "props": {
+              "text": "Hover to light it up"
             }
           }
         ]
@@ -13082,6 +13338,42 @@
           "text": "Total revenue this quarter.",
           "size": "sm"
         }
+      }
+    },
+    {
+      "type": "text-effect",
+      "category": "display",
+      "description": "Reveals text per word or character with a staggered animation (pure CSS). Aliased animated-text. Use for hero headlines and eyebrow text.",
+      "props": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "description": "The text to animate."
+        },
+        "effect": {
+          "type": "'gradient' | 'fade-in' | 'shimmer'",
+          "required": false,
+          "description": "Reveal effect. Default fade-in."
+        },
+        "by": {
+          "type": "'word' | 'char'",
+          "required": false,
+          "description": "Split granularity. Default word."
+        },
+        "stagger": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds between each unit. Default 0.05."
+        }
+      },
+      "example": {
+        "type": "text-effect",
+        "props": {
+          "text": "Build. Brand. Ship.",
+          "effect": "gradient",
+          "by": "word"
+        },
+        "class": "text-4xl font-bold"
       }
     },
     {
