@@ -7,7 +7,7 @@ import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
+import { Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
 import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, Map as MapWidget } from './data/index.js';
 import { If, Each } from './control/index.js';
 import {
@@ -104,6 +104,8 @@ const defaultRegistry: WidgetMap = {
   input: Input,
   select: Select,
   checkbox: Checkbox,
+  'checkbox-group': CheckboxGroup,
+  'checkbox-list': CheckboxGroup,
   switch: Switch,
   textarea: Textarea,
   slider: Slider,
@@ -367,7 +369,7 @@ export {
   Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible, DropdownMenu,
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock,
-  Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
+  Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
   NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker,
   Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, MapWidget,
   ProgressRing, Mention, LinkPreview, Qr, Diff, Terminal, If, Each,

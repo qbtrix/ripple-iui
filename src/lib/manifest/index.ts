@@ -37,6 +37,7 @@ import { calloutEntry } from './entries/callout.js';
 import { cardEntry } from './entries/card.js';
 import { chartEntry } from './entries/chart.js';
 import { checkboxEntry } from './entries/checkbox.js';
+import { checkboxGroupEntry } from './entries/checkbox-group.js';
 import { chipEntry } from './entries/chip.js';
 import { citationEntry } from './entries/citation.js';
 import { coachmarkEntry } from './entries/coachmark.js';
@@ -364,6 +365,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   cardEntry,
   chartEntry,
   checkboxEntry,
+  checkboxGroupEntry,
   chipEntry,
   citationEntry,
   coachmarkEntry,
