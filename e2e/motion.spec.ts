@@ -13,6 +13,11 @@
 //        element's computed style (the pulse must actually move pixels).
 // @created 2026-05-30 — PR #45 motion runtime close-out (real-browser proof).
 // @changes
+//   - 2026-05-30 (PR #45 checkbox-group port): added assertion 5 — on
+//     /showcase/checkbox-group, hovering row A then row B must MOVE the gliding
+//     highlight (its computed `top` changes between rows). This is the real-
+//     browser proof of the FF "moving highlight": jsdom has no layout, so the
+//     glide cannot be measured there; only Chromium reports a real computed box.
 //   - 2026-05-30 (PR #45 motion degrade-to-visible fix): added assertion 4 — the
 //     /showcase/marketing HERO must END VISIBLE (computed opacity ~1, title text
 //     visible) after hydration. The hero's enter is a spring preset (`snappy`),
@@ -202,5 +207,79 @@ test.describe('marketing hero — degrades to visible, never hidden', () => {
 		// The title text itself must be visible to a user (Playwright's visibility
 		// check folds in opacity:0 / zero-size — a redundant, user-facing tripwire).
 		await expect(page.getByText(HERO_TITLE)).toBeVisible();
+	});
+});
+
+// ── 5. CheckboxGroup — the gliding highlight actually MOVES between items ─────
+// The Fluid-Functionalism port renders a single highlight element whose
+// top/left/width/height GLIDE (CSS transition, FF-fast 80ms) to the hovered
+// item's rect. The whole point of the port is that the highlight TRAVELS — so
+// the durable proof is: hover row A, read the highlight's computed `top`; hover
+// row B, and the computed `top` must CHANGE. jsdom can't show this (no layout),
+// which is exactly why it lives here in real Chromium.
+test.describe('checkbox-group — the highlight glides between items', () => {
+	test('hovering row A then row B moves the highlight (computed top changes)', async ({ page }) => {
+		await page.goto('/showcase/checkbox-group');
+
+		// The first group's rows. Wait for hydration (the rows carry the
+		// data-checkbox-group-item attribute the client renders).
+		const firstGroup = page.locator('[role="group"]').first();
+		await expect(firstGroup).toBeVisible();
+		const rows = firstGroup.locator('[data-checkbox-group-item]');
+		await expect(rows.first()).toBeVisible();
+		const count = await rows.count();
+		expect(count).toBeGreaterThanOrEqual(3);
+
+		// Read the gliding highlight's computed `top` (px). The element only
+		// mounts while an item is active, so we hover first, then poll for it.
+		const readHighlightTop = async (): Promise<number | null> => {
+			return firstGroup.evaluate((g) => {
+				const hl = g.querySelector('[data-checkbox-group-highlight]') as HTMLElement | null;
+				if (!hl) return null;
+				// `top` is set inline (px) and is what the CSS transition animates.
+				const top = getComputedStyle(hl).top;
+				return parseFloat(top);
+			});
+		};
+
+		// Hover the FIRST row, wait for the highlight to mount + settle, capture top.
+		await rows.nth(0).hover();
+		await expect.poll(readHighlightTop, { timeout: 3000 }).not.toBeNull();
+		// Let the 80ms glide settle before sampling.
+		await page.waitForTimeout(200);
+		const topA = await readHighlightTop();
+
+		// Hover the LAST row — the highlight must glide DOWN to it. Poll the
+		// computed top until it differs from topA (the transition is animating).
+		await rows.nth(count - 1).hover();
+		await expect
+			.poll(
+				async () => {
+					const now = await readHighlightTop();
+					return now !== null && topA !== null && Math.abs(now - topA) > 2 ? 'moved' : 'same';
+				},
+				{ timeout: 3000, intervals: [50, 50, 100, 100, 200, 300] },
+			)
+			.toBe('moved');
+
+		// Capture the settled top on row B and assert a real, sizeable delta — the
+		// highlight travelled the height of several rows, not a sub-pixel jitter.
+		await page.waitForTimeout(200);
+		const topB = await readHighlightTop();
+		expect(topA, 'highlight top on row A').not.toBeNull();
+		expect(topB, 'highlight top on row B').not.toBeNull();
+		expect(
+			Math.abs((topB as number) - (topA as number)),
+			`highlight top A=${topA} B=${topB} — it must glide between the rows`,
+		).toBeGreaterThan(20);
+	});
+
+	test('the showcase route renders the group (build + preview smoke)', async ({ page }) => {
+		await page.goto('/showcase/checkbox-group');
+		await expect(page.getByRole('heading', { name: /checkbox group/i })).toBeVisible();
+		// The notifications group rendered its rows through the registry. The row
+		// exposes role=checkbox with an aria-label — a single, unambiguous match
+		// (getByText would also hit the invisible width-reserving label twin).
+		await expect(page.getByRole('checkbox', { name: 'Mentions & replies' })).toBeVisible();
 	});
 });
