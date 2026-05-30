@@ -9,14 +9,30 @@
 //     FULL from-state (opacity + transform + filter), not opacity alone. FIX 2 —
 //     transition.delay (SECONDS) wires into the Tier-0 transition-delay on both
 //     enter and inView. FIX 3 — motion.scroll wires scroll-bound styling/observer.
+//   - 2026-05-30 (PR #45 degrade-to-visible fix): DEGRADE-TO-VISIBLE coverage. A
+//     spring-preset enter now lands at rest via the Tier-0 CSS path BY DEFAULT
+//     (it must end transform:none + opacity:'' — visible, never the collapsed
+//     zero-matrix). And when the opt-in Tier-1 enter path is on, the node STILL
+//     ends visible whether loadAnimate() resolves null OR animate() throws —
+//     mocking load-tier1 proves the engine-missing path can't strand it hidden.
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { withMotion, playMotion } from './with-motion.js';
+import * as loadTier1 from '../motion/load-tier1.js';
 import type { Motion } from '../schema/motion.js';
 
 function makeEl(): HTMLElement {
   const el = document.createElement('div');
   document.body.appendChild(el);
   return el;
+}
+
+/** Resolve after the enter's double-rAF AND any pending microtasks (the Tier-1
+ *  fallback chains a `.then`/`.catch` off loadAnimate()). */
+async function settleEnter(): Promise<void> {
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+  // Flush the loadAnimate() promise chain (and its fallback) a couple of ticks.
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 describe('withMotion action', () => {
@@ -91,6 +107,61 @@ describe('withMotion action', () => {
     // 0.12s author intent -> 120ms on the CSS path.
     expect(el.style.transitionDelay).toMatch(/120ms|0\.12s/);
     handle?.destroy?.();
+  });
+
+  // ── DEGRADE-TO-VISIBLE: an entered element ALWAYS ends visible ─────────────
+  // The invisible-hero regression class: a spring-preset enter must NOT depend on
+  // a JS engine to become visible. These tests assert the resting (visible) state
+  // is reached on the Tier-0 path by default, and on the opt-in Tier-1 path even
+  // when the engine is unavailable or throws.
+
+  it('spring-preset enter lands at REST (visible) by default — no JS engine needed', async () => {
+    const el = makeEl();
+    // `snappy` is a SPRING preset → the old code routed this to Tier 1 and asked
+    // motion.dev to spring toward transform:'none', collapsing the box to a zero
+    // matrix. The default path is now pure Tier-0 CSS: it must end at rest.
+    const handle = withMotion(el, { enter: { opacity: 0, y: 24 }, transition: { preset: 'snappy' } } as Motion);
+    // From-frame armed on mount: opacity 0 + translateY(24px).
+    expect(el.style.opacity).toBe('0');
+    expect(el.style.transform).toMatch(/translateY\(24px\)/);
+    await settleEnter();
+    // Settled VISIBLE: transform cleared to none, opacity cleared to inherit (1).
+    expect(el.style.transform).toBe('none');
+    expect(el.style.opacity).toBe('');
+    handle?.destroy?.();
+  });
+
+  it('opt-in Tier-1 enter STILL ends visible when loadAnimate() resolves null', async () => {
+    // Engine unavailable / import hiccup — loadAnimate resolves null. The node
+    // must NOT be left stuck in the hidden from-frame.
+    const spy = vi.spyOn(loadTier1, 'loadAnimate').mockResolvedValue(null);
+    (globalThis as Record<string, unknown>).__RIPPLE_TIER1_ENTER__ = true;
+    const el = makeEl();
+    const handle = withMotion(el, { enter: { opacity: 0, y: 24 }, transition: { preset: 'snappy' } } as Motion);
+    await settleEnter();
+    expect(spy).toHaveBeenCalled();
+    // Degraded to the Tier-0 reveal: visible at rest.
+    expect(el.style.transform).toBe('none');
+    expect(el.style.opacity).toBe('');
+    handle?.destroy?.();
+    delete (globalThis as Record<string, unknown>).__RIPPLE_TIER1_ENTER__;
+    spy.mockRestore();
+  });
+
+  it('opt-in Tier-1 enter STILL ends visible when animate() throws', async () => {
+    // The engine loads but the animate call throws — must fall back to visible.
+    const spy = vi.spyOn(loadTier1, 'loadAnimate').mockResolvedValue((() => {
+      throw new Error('boom');
+    }) as unknown as Awaited<ReturnType<typeof loadTier1.loadAnimate>>);
+    (globalThis as Record<string, unknown>).__RIPPLE_TIER1_ENTER__ = true;
+    const el = makeEl();
+    const handle = withMotion(el, { enter: { opacity: 0, y: 24 }, transition: { preset: 'snappy' } } as Motion);
+    await settleEnter();
+    expect(el.style.transform).toBe('none');
+    expect(el.style.opacity).toBe('');
+    handle?.destroy?.();
+    delete (globalThis as Record<string, unknown>).__RIPPLE_TIER1_ENTER__;
+    spy.mockRestore();
   });
 
   it('inView wires transition.delay (seconds) into a non-zero transition-delay on reveal', () => {
