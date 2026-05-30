@@ -48,3 +48,13 @@ describe('CTA', () => {
     expect(getByText('Book now')).toBeInTheDocument();
   });
 });
+
+describe('Testimonial', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('testimonial'); });
+  it('renders the quote, author, and role', () => {
+    const { getByText } = r({ type: 'testimonial', props: { quote: 'Changed how we work.', author: 'Dr. Lee', role: 'Owner, BrightSmile' } });
+    expect(getByText(/Changed how we work/)).toBeInTheDocument();
+    expect(getByText('Dr. Lee')).toBeInTheDocument();
+    expect(getByText('Owner, BrightSmile')).toBeInTheDocument();
+  });
+});

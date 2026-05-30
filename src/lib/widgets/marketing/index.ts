@@ -3,3 +3,4 @@
 export { default as Navbar } from './Navbar.svelte';
 export { default as Footer } from './Footer.svelte';
 export { default as Cta } from './Cta.svelte';
+export { default as Testimonial } from './Testimonial.svelte';
