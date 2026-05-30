@@ -3,8 +3,14 @@
 // @description Semantic-preset → physics map and easing-keyword → M3
 //   cubic-bezier map. The LLM picks intent (snappy/smooth/…); these tables
 //   carry the numbers. Pure data + lookups — no DOM, no window. SSR-safe.
-//   The Fluid-Functionalism-tuned spring token table is wired in Phase 2.
+// @provenance Spring tuning ported from Fluid Functionalism
+//   (github.com/mickadesign/fluid-functionalism, MIT) — systems only, no
+//   component code.
 // @created 2026-05-30 — RFC 12 animation primitive.
+// @changes
+//   - Phase 2 (Task 2.1): tuned the preset durations to the FF spring tokens
+//     (instant/smooth/gentle: 100/250/400 → 80/160/240) and added the
+//     FF_SPRING_TOKENS table so the whole pack reads premium-restrained.
 
 import type { Transition } from '../schema/motion.js';
 
@@ -12,12 +18,23 @@ export type ResolvedPhysics =
   | { type: 'tween'; duration: number; easing: NonNullable<Transition['easing']> }
   | { type: 'spring'; stiffness: number; damping: number; bounce: number };
 
+/**
+ * Fluid Functionalism spring tokens (MIT — github.com/mickadesign/fluid-functionalism).
+ * FF's restraint: short durations, near-zero bounce. The presets below are tuned
+ * to these so the whole pack reads as premium-restrained, not bouncy.
+ */
+export const FF_SPRING_TOKENS = {
+  fast: { duration: 0.08, bounce: 0 },
+  moderate: { duration: 0.16, bounce: 0.15 },
+  slow: { duration: 0.24, bounce: 0.15 },
+} as const;
+
 const PRESETS: Record<NonNullable<Transition['preset']>, ResolvedPhysics> = {
-  instant: { type: 'tween', duration: 100, easing: 'standard' },
-  snappy: { type: 'spring', stiffness: 400, damping: 30, bounce: 0.1 },
-  smooth: { type: 'tween', duration: 250, easing: 'decelerate' },
-  gentle: { type: 'tween', duration: 400, easing: 'standard' },
-  bouncy: { type: 'spring', stiffness: 300, damping: 18, bounce: 0.4 },
+  instant: { type: 'tween', duration: 80, easing: 'standard' },           // FF fast
+  snappy: { type: 'spring', stiffness: 400, damping: 30, bounce: 0.1 },   // lively, FF-restrained
+  smooth: { type: 'tween', duration: 160, easing: 'decelerate' },         // FF moderate
+  gentle: { type: 'tween', duration: 240, easing: 'standard' },           // FF slow
+  bouncy: { type: 'spring', stiffness: 300, damping: 18, bounce: 0.4 },   // the one playful preset
 };
 
 export function resolvePreset(preset: NonNullable<Transition['preset']>): ResolvedPhysics {
