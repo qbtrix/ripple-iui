@@ -2,6 +2,8 @@
 // against the widget catalog before mount (Increment 5 catalog-as-allowlist).
 // Updated 2026-05-30 (Phase 2): export withMotion + the Fluid Functionalism
 // systems layer (variable-font-weight, proximity-hover, elevation ladder).
+// Updated 2026-05-30 (Phase 4): export themeToCssVars + themeToStyleString
+// (the white-label theme-applier).
 
 // Main component
 export { default as Ripple } from './Ripple.svelte';
@@ -28,6 +30,7 @@ export {
   type ResolverContext
 } from './core/expression-resolver.js';
 export { normalizeSpec } from './core/normalizer.js';
+export { themeToCssVars, themeToStyleString } from './core/theme-applier.js';
 export {
   validateCatalog,
   type UnknownNode,

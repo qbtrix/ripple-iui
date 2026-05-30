@@ -19,3 +19,31 @@ describe('ThemeOverrides font + logo tokens', () => {
     expect(ThemeOverrides.safeParse({ colors: { primary: '#1d4ed8' }, radius: '0.75rem' }).success).toBe(true);
   });
 });
+
+import { themeToCssVars, themeToStyleString } from './theme-applier.js';
+
+describe('themeToCssVars', () => {
+  it('maps color tokens to --token and --ripple-* custom properties', () => {
+    const vars = themeToCssVars({ colors: { primary: '#1d4ed8', background: '#fff' } });
+    expect(vars['--primary']).toBe('#1d4ed8');
+    expect(vars['--background']).toBe('#fff');
+  });
+  it('maps radius to --radius', () => {
+    expect(themeToCssVars({ radius: '0.75rem' })['--radius']).toBe('0.75rem');
+  });
+  it('maps fonts to --ripple-font-* vars', () => {
+    const vars = themeToCssVars({ fonts: { sans: 'Inter', heading: 'Fraunces' } });
+    expect(vars['--ripple-font-sans']).toBe('Inter');
+    expect(vars['--ripple-font-heading']).toBe('Fraunces');
+  });
+  it('returns an empty map for an empty theme', () => {
+    expect(themeToCssVars({})).toEqual({});
+    expect(themeToCssVars(undefined)).toEqual({});
+  });
+  it('themeToStyleString serializes to a CSS declaration string', () => {
+    const s = themeToStyleString({ colors: { primary: '#000' }, radius: '1rem' });
+    expect(s).toContain('--primary: #000');
+    expect(s).toContain('--radius: 1rem');
+    expect(s.trim().endsWith(';')).toBe(true);
+  });
+});
