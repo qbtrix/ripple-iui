@@ -2,6 +2,7 @@
 // Updated 2026-05-22: registered the `media/` escape-hatch widgets — ModelViewer (declarative 3D, type `model-viewer`/`3d`/`model`) and Embed (sandboxed iframe, type `embed`/`iframe`) for Increment 5.
 // Updated 2026-05-30: registered the `motion/` sugar widgets — Reveal (type `reveal`) and Parallax (type `parallax`), which desugar to a motion field (RFC 12 animation primitive).
 // Updated 2026-05-30: registered the `marketing/` widget pack — Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud (+ aliases) for the RFC 12 landing-page pack (Phase 3).
+// Updated 2026-05-30: registered the `premium/` MIT-ported pack — Marquee (Phase 4); remaining ports (BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect) land alongside.
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
@@ -29,6 +30,7 @@ import {
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
 import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud } from './marketing/index.js';
+import { Marquee } from './premium/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -313,6 +315,8 @@ const defaultRegistry: WidgetMap = {
   'email-capture': Newsletter,
   'logo-cloud': LogoCloud,
   logos: LogoCloud,
+  // Premium — MIT-ported animation pack (RFC 12)
+  marquee: Marquee,
   // Aliases
   label: Text,
 };
@@ -366,5 +370,6 @@ export {
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed,
   Reveal, Parallax,
-  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud
+  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud,
+  Marquee
 };

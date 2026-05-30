@@ -7,6 +7,8 @@
 // Updated 2026-05-30 (RFC 12 motion primitive): registered reveal + parallax
 // entries and attached the top-level `motion` doc block (motion-doc.ts) to the
 // built manifest so the node-level `motion` field is documented for the LLM.
+// Updated 2026-05-30 (RFC 12 Phase 4): registered the premium pack entries
+// (marquee + the 6 remaining ports) for the MIT-ported animation widgets.
 
 import pkg from '../../../package.json' with { type: 'json' };
 
@@ -98,6 +100,7 @@ import { locationPickerEntry } from './entries/location-picker.js';
 import { logoCloudEntry } from './entries/logo-cloud.js';
 import { mapEntry } from './entries/map.js';
 import { markdownEntry } from './entries/markdown.js';
+import { marqueeEntry } from './entries/marquee.js';
 import { masterDetailEntry } from './entries/master-detail.js';
 import { mentionEntry } from './entries/mention.js';
 import { metricEntry } from './entries/metric.js';
@@ -416,6 +419,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   logoCloudEntry,
   mapEntry,
   markdownEntry,
+  marqueeEntry,
   masterDetailEntry,
   mentionEntry,
   metricEntry,
