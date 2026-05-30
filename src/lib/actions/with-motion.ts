@@ -7,6 +7,25 @@
 //   Tier 0 = CSS transition; Tier 1 = motion.dev via the lazy loader.
 // @created 2026-05-30 — RFC 12 animation primitive.
 // @changes
+//   - 2026-05-30 (PR #45 motion degrade-to-visible fix): motion ALWAYS degrades to
+//     VISIBLE, never invisible. ROOT CAUSE: a spring-preset `enter` (e.g. the
+//     /showcase/marketing hero, `{opacity:0,y:24}` + `snappy`) was routed to Tier 1
+//     and asked motion.dev to spring toward `{opacity:1, transform:'none'}`.
+//     motion.dev cannot spring-interpolate the `transform:'none'` keyword: it
+//     collapsed the box to `matrix(0,0,0,0,0,0)` (opacity reached 1 but the element
+//     became a zero-size, invisible box) and never recovered — a tall empty hero gap.
+//     FIX: (a) `enter` now runs on the reliable Tier-0 CSS transition BY DEFAULT
+//     (CSS interpolates `transform:'none'` cleanly and can never fail to load); a
+//     spring preset is approximated with a spring-like CSS easing via
+//     springToCssTiming. (b) Added `revealToRest` — the single canonical
+//     degrade-to-visible reveal — and `safeTier1Reveal`, a belt-and-suspenders
+//     wrapper that lands the Tier-0 reveal FIRST, then layers motion.dev on top and
+//     falls back to Tier-0 if loadAnimate() is null OR animate() throws OR the
+//     promise rejects (the `.then` carries a `.catch`). It NEVER `return`s leaving
+//     the node hidden, and animates per-channel rest (x:0,y:0,scale:1) — never the
+//     broken `transform:'none'` keyword. The Tier-1 enter enhancement is opt-in
+//     behind `window.__RIPPLE_TIER1_ENTER__` (off by default). inView reuses the
+//     same `revealToRest` so the two reveal paths can't drift.
 //   - 2026-05-30 (PR #45 motion runtime close-out):
 //     * FIX 1 — inView now arms the FULL "from" state (opacity + transform from
 //       x/y/scale/rotate + filter from blur), reusing the engine's stateToStyle
@@ -41,7 +60,7 @@
 import type { Motion, MotionState } from '../schema/motion.js';
 import { compileMotion, stateToStyle } from '../motion/engine.js';
 import { rewriteForReducedMotion } from '../motion/reduce-motion.js';
-import { resolvePreset, resolveEasing } from '../motion/presets.js';
+import { resolvePreset, resolveEasing, springToCssTiming } from '../motion/presets.js';
 import { loadAnimate, loadInView } from '../motion/load-tier1.js';
 
 function prefersReduced(): boolean {
@@ -89,9 +108,23 @@ export function withMotion(node: HTMLElement, raw: Motion | undefined) {
   dbg('action attached', motion);
 
   // --- transition timing for Tier 0 (CSS) ---
+  // A spring PRESET (or an explicit spring) is approximated as a CSS duration +
+  // spring-like easing via springToCssTiming. This lets the reliable Tier-0 CSS
+  // path render a spring-preset entrance without requiring motion.dev (which
+  // could not interpolate a `transform:'none'` spring target and collapsed the
+  // box to a zero matrix — the invisible-hero bug). Tweens keep their preset ms.
   const physics = motion.transition?.preset ? resolvePreset(motion.transition.preset) : undefined;
-  const durationMs = physics && physics.type === 'tween' ? physics.duration : (motion.transition?.duration ?? 300);
-  const easing = resolveEasing(motion.transition?.easing);
+  const explicitSpring =
+    motion.transition?.type === 'spring' ? motion.transition : undefined;
+  const springPhysics =
+    physics && physics.type === 'spring' ? physics : explicitSpring;
+  const springTiming = springPhysics ? springToCssTiming(springPhysics) : undefined;
+  const durationMs = springTiming
+    ? springTiming.durationMs
+    : physics && physics.type === 'tween'
+      ? physics.duration
+      : (motion.transition?.duration ?? 300);
+  const easing = springTiming ? springTiming.easing : resolveEasing(motion.transition?.easing);
   // UNIT: transition.delay is SECONDS (Framer-style). Tier-0 CSS wants ms.
   const delaySeconds = motion.transition?.delay ?? 0;
   const delayMs = delaySeconds * 1000;
@@ -109,27 +142,91 @@ export function withMotion(node: HTMLElement, raw: Motion | undefined) {
     if (delayMs) el.style.transitionDelay = `${delayMs}ms`;
   };
 
+  /**
+   * The GUARANTEED-VISIBLE reveal (Tier 0). Sets the CSS transition and clears
+   * every channel back to its resting/visible state: `transform:'none'`,
+   * `opacity:''` (inherit the stylesheet's value, i.e. 1), `filter:''`. This is
+   * the single source of truth for "land the element at rest" and the universal
+   * degrade target — every path that could otherwise strand the node hidden
+   * funnels here. CSS interpolates `transform:'none'` cleanly (no zero matrix),
+   * and the engine can never fail to load, so this can't leave the node hidden.
+   */
+  const revealToRest = (el: HTMLElement) => {
+    setTransition(el, ['transform', 'opacity', 'filter']);
+    el.style.transform = 'none';
+    el.style.opacity = '';
+    el.style.filter = '';
+  };
+
+  /**
+   * Belt-and-suspenders Tier-1 reveal. Attempts a motion.dev animation, but is
+   * SAFE BY CONSTRUCTION: it FIRST lands the element at rest via the Tier-0 CSS
+   * reveal (so it is visible no matter what), then layers motion.dev on top as a
+   * progressive enhancement. If `loadAnimate()` resolves null, or `animate()`
+   * throws, or the promise rejects, the CSS reveal has already run — the node is
+   * visible. It NEVER `return`s leaving the node hidden, and the `.then` carries a
+   * `.catch`. This is the canonical wrapper for ANY future Tier-1 reveal path;
+   * `loadAnimate` must only ever be reached through a guard like this one.
+   *
+   * It is intentionally NOT on the default enter path (enter is pure Tier-0 — see
+   * below). It is gated behind an opt-in runtime flag so the spring-enhanced JS
+   * path can be A/B'd without risking the invisible-hero regression class.
+   */
+  const safeTier1Reveal = (el: HTMLElement) => {
+    // Guaranteed-visible floor FIRST — CSS lands the element at rest regardless
+    // of whether motion.dev loads or the animate call succeeds.
+    revealToRest(el);
+    loadAnimate()
+      .then((animate) => {
+        if (!animate) {
+          // Engine unavailable — the CSS reveal above already made it visible.
+          dbg('safeTier1Reveal: engine null, kept Tier-0 reveal');
+          revealToRest(el);
+          return;
+        }
+        try {
+          const opts = springPhysics
+            ? { type: 'spring', stiffness: springPhysics.stiffness, damping: springPhysics.damping, delay: delaySeconds }
+            : { duration: durationMs / 1000, delay: delaySeconds };
+          // Animate to the per-channel rest values, NEVER the `transform:'none'`
+          // keyword (motion.dev cannot spring-interpolate it — it collapses the
+          // box to a zero matrix). 0 px/scale 1 are the explicit rest targets.
+          animate(el, { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }, opts);
+        } catch (err) {
+          dbg('safeTier1Reveal: animate threw, fell back to Tier-0', err);
+          revealToRest(el);
+        }
+      })
+      .catch((err) => {
+        // Import hiccup / rejected promise — degrade to the visible Tier-0 reveal.
+        dbg('safeTier1Reveal: loadAnimate rejected, fell back to Tier-0', err);
+        revealToRest(el);
+      });
+  };
+
   // --- enter: paint initial frame, then animate to resting on next frame ---
+  // DEGRADE-TO-VISIBLE GUARANTEE: an entered element ALWAYS ends in its resting
+  // (visible) state. A declarative entrance (fade / rise / scale to rest) is a
+  // Tier-0 CSS job — CSS interpolates `transform:'none'` cleanly and can never
+  // fail to load. So enter runs on the reliable Tier-0 path BY DEFAULT, even for
+  // a spring preset (its physics are approximated as a spring-like CSS easing via
+  // springToCssTiming above). This replaces the old Tier-1 motion.dev enter,
+  // which could not spring-interpolate `transform:'none'` and collapsed the box
+  // to `matrix(0,0,0,0,0,0)` — opacity reached 1 but the element was a zero-size
+  // (invisible) box forever.
+  //
+  // The Tier-1 motion.dev spring is available as an OPT-IN enhancement behind
+  // `window.__RIPPLE_TIER1_ENTER__` (off by default), and even then it runs
+  // through safeTier1Reveal, which lands the Tier-0 reveal first — so it can
+  // never reintroduce the invisible hero. The default path is the bulletproof one.
   if (motion.enter) {
     node.style.cssText += ';' + plan.initialStyle;
+    const tier1EnterOptIn =
+      plan.tier === 1 && !!(globalThis as Record<string, unknown>).__RIPPLE_TIER1_ENTER__;
     const runEnter = () => {
       dbg('enter run');
-      if (plan.tier === 1) {
-        loadAnimate().then((animate) => {
-          if (!animate) return;
-          const spring = physics && physics.type === 'spring' ? physics : (motion.transition?.type === 'spring' ? motion.transition : undefined);
-          // motion.dev's delay is in SECONDS too — pass delaySeconds straight through.
-          const opts = spring
-            ? { type: 'spring', stiffness: (spring as { stiffness?: number }).stiffness, damping: (spring as { damping?: number }).damping, delay: delaySeconds }
-            : { duration: durationMs / 1000, delay: delaySeconds };
-          animate(node, { opacity: 1, transform: 'none' }, opts);
-        });
-      } else {
-        setTransition(node, ['transform', 'opacity', 'filter']);
-        node.style.transform = 'none';
-        node.style.opacity = '';
-        node.style.filter = '';
-      }
+      if (tier1EnterOptIn) safeTier1Reveal(node);
+      else revealToRest(node);
     };
     const id = requestAnimationFrame(() => requestAnimationFrame(runEnter));
     cleanups.push(() => cancelAnimationFrame(id));
@@ -154,11 +251,10 @@ export function withMotion(node: HTMLElement, raw: Motion | undefined) {
     else if (typeof fromState.opacity === 'number') node.style.opacity = String(fromState.opacity);
     dbg('inView armed', fromState);
 
+    // Reuse the single canonical degrade-to-visible reveal so inView and enter
+    // can never drift apart on "land at rest".
     const reveal = () => {
-      setTransition(node, ['transform', 'opacity', 'filter']);
-      node.style.transform = 'none';
-      node.style.opacity = '';
-      node.style.filter = '';
+      revealToRest(node);
       dbg('reveal applied');
     };
 
