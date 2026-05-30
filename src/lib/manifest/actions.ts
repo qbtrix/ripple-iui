@@ -11,6 +11,10 @@ import type { ActionSpec } from './index.js';
  *     binding (RFC 04 — Pocket Interactivity & Data Sync).
  *   - Added `call_binding` — host-delegated invocation of a server-side
  *     write binding (RFC 05 M2a — Write actions core).
+ *   - Added `invoke_tool` — host-delegated invocation of a named
+ *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
+ *     args; click-driven sibling of run_source / call_binding for the new
+ *     `POST /pockets/{id}/tools/run` wire (#1206 part a).
  */
 export const manifestActions: Record<string, ActionSpec> = {
   set: {
@@ -178,6 +182,29 @@ export const manifestActions: Record<string, ActionSpec> = {
       ],
       on_error: [
         { action: 'toast', message: 'Could not save', variant: 'error' },
+      ],
+    },
+  },
+
+  invoke_tool: {
+    description: "Invoke a named server-side tool (WebFetch / Composio / etc.) with resolved args. The host POSTs to /pockets/{id}/tools/run with the tool name + args; `args` values support {state.x}/{item.id} expressions, resolved before the call. On success `on_success` runs with the result; on failure `on_error` runs and the error is exposed at state path `_flow_error`. Use it on a Refresh button when the data comes from a tool rather than a declared source.",
+    shape: {
+      action: '"invoke_tool"',
+      tool: 'string — id of the server-side tool to invoke (e.g. "WebFetch", "GMAIL_FETCH_EMAILS").',
+      'args?': 'object — argument map for the tool. Values support {state.x}/{item.id} expressions.',
+      'on_success?': 'EventHandler[] — runs with the result data after a successful invocation.',
+      'on_error?': 'EventHandler[] — runs on host-reported failure.',
+    },
+    example: {
+      action: 'invoke_tool',
+      tool: 'WebFetch',
+      args: { url: 'https://api.example.com/feed' },
+      on_success: [
+        { action: 'set', target: 'feed' },
+        { action: 'toast', message: 'Refreshed', variant: 'success' },
+      ],
+      on_error: [
+        { action: 'toast', message: 'Could not refresh', variant: 'error' },
       ],
     },
   },
