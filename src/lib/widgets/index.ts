@@ -388,6 +388,6 @@ export {
   ModelViewer, Embed,
   Reveal, Parallax,
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud,
-  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect
+  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   AskUserQuestions
 };
