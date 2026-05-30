@@ -70,3 +70,20 @@ describe('FeatureGrid', () => {
     expect(getByText('Owned')).toBeInTheDocument();
   });
 });
+
+describe('Newsletter', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('newsletter'); });
+  it('renders an email input and a submit button', () => {
+    const { getByPlaceholderText, getByText } = r({ type: 'newsletter', props: { placeholder: 'you@email.com', button: 'Subscribe', heading: 'Stay in the loop' } });
+    expect(getByText('Stay in the loop')).toBeInTheDocument();
+    expect(getByPlaceholderText('you@email.com')).toBeInTheDocument();
+    expect(getByText('Subscribe')).toBeInTheDocument();
+  });
+  it('submitting the form does not throw and prevents default navigation', async () => {
+    const { container } = r({ type: 'newsletter', props: { button: 'Go' }, on_submit: { action: 'toast', message: 'Subscribed' } });
+    const form = container.querySelector('form')!;
+    const ev = new Event('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(true);
+  });
+});

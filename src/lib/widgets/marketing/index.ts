@@ -5,3 +5,4 @@ export { default as Footer } from './Footer.svelte';
 export { default as Cta } from './Cta.svelte';
 export { default as Testimonial } from './Testimonial.svelte';
 export { default as FeatureGrid } from './FeatureGrid.svelte';
+export { default as Newsletter } from './Newsletter.svelte';

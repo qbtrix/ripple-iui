@@ -106,6 +106,7 @@ import { motionDoc, type MotionDoc } from './motion-doc.js';
 import { multiSelectEntry } from './entries/multi-select.js';
 import { navbarEntry } from './entries/navbar.js';
 import { newsCardEntry } from './entries/news-card.js';
+import { newsletterEntry } from './entries/newsletter.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
 import { opsDashboardEntry } from './entries/ops-dashboard.js';
@@ -421,6 +422,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   multiSelectEntry,
   navbarEntry,
   newsCardEntry,
+  newsletterEntry,
   notificationCenterEntry,
   numberInputEntry,
   opsDashboardEntry,
