@@ -11,6 +11,11 @@
 //     author shape) instead of the post-parse Motion. The compiler is pure and
 //     never reads `reduceMotion`, so author literals (reduceMotion-less) and the
 //     action's already-parsed Motion both satisfy it. MotionPlan.motion follows.
+//   - 2026-05-30 (PR #45 motion runtime close-out): export `stateToStyle` so the
+//     withMotion action reuses the SAME initial-frame builder for the inView
+//     from-state (FIX 1) instead of duplicating the opacity-only logic. The
+//     inView from-state is now a full transform+opacity+filter frame, identical
+//     to how the enter "from" frame is built.
 
 import type { MotionInput, MotionState, Transition } from '../schema/motion.js';
 import { resolvePreset } from './presets.js';
@@ -31,8 +36,12 @@ function offset(value: number | string | undefined): string | null {
   return typeof value === 'number' ? `${value}px` : value;
 }
 
-/** Build a transform+opacity+filter style string from a MotionState. */
-function stateToStyle(state: MotionState | undefined): string {
+/**
+ * Build a transform+opacity+filter style string from a MotionState. Exported so
+ * the withMotion action arms the inView from-state with the SAME builder used
+ * for the enter "from" frame (FIX 1) — no duplicated opacity-only logic.
+ */
+export function stateToStyle(state: MotionState | undefined): string {
   if (!state) return '';
   const parts: string[] = [];
   const transforms: string[] = [];
