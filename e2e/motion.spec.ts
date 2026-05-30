@@ -13,6 +13,17 @@
 //        element's computed style (the pulse must actually move pixels).
 // @created 2026-05-30 — PR #45 motion runtime close-out (real-browser proof).
 // @changes
+//   - 2026-05-30 (RFC 12 moving-indicator): added assertions 6 + 7.
+//     * 6 — the DOUBLED-HIGHLIGHT BUG IS GONE: on /showcase/checkbox-group's
+//       merge panel (two rows start selected as one merged block), hovering a
+//       SELECTED row must NOT mount a hover highlight inside the selected block,
+//       while hovering an UNSELECTED row still does. The real-browser proof of
+//       the FF hover-on-selected rule (jsdom can't position the highlight, so
+//       the "is it inside the selected block" geometry is Chromium-only).
+//     * 7 — the SECOND CONSUMER glides: on /showcase/moving-indicator the
+//       segmented control's pill (driven by the same movingIndicator primitive,
+//       active source = selection) must MOVE its computed `left` when a different
+//       segment is selected. Proves the primitive drives a different widget.
 //   - 2026-05-30 (PR #45 checkbox-group port): added assertion 5 — on
 //     /showcase/checkbox-group, hovering row A then row B must MOVE the gliding
 //     highlight (its computed `top` changes between rows). This is the real-
@@ -228,10 +239,17 @@ test.describe('checkbox-group — the highlight glides between items', () => {
 		const rows = firstGroup.locator('[data-checkbox-group-item]');
 		await expect(rows.first()).toBeVisible();
 		const count = await rows.count();
-		expect(count).toBeGreaterThanOrEqual(3);
+		expect(count).toBeGreaterThanOrEqual(4);
+
+		// The hover highlight tracks UNSELECTED rows only (the hover-on-selected
+		// rule — see assertion 6). The glide panel starts with row 0 ("Mentions &
+		// replies") CHECKED, so we glide between two UNSELECTED rows — row 1 and the
+		// last row — to prove the travel without hitting a suppressed (selected) row.
+		const ROW_A = 1;
+		const ROW_B = count - 1;
 
 		// Read the gliding highlight's computed `top` (px). The element only
-		// mounts while an item is active, so we hover first, then poll for it.
+		// mounts while an UNSELECTED item is active, so we hover first, then poll.
 		const readHighlightTop = async (): Promise<number | null> => {
 			return firstGroup.evaluate((g) => {
 				const hl = g.querySelector('[data-checkbox-group-highlight]') as HTMLElement | null;
@@ -242,16 +260,16 @@ test.describe('checkbox-group — the highlight glides between items', () => {
 			});
 		};
 
-		// Hover the FIRST row, wait for the highlight to mount + settle, capture top.
-		await rows.nth(0).hover();
+		// Hover the first UNSELECTED row, wait for the highlight to mount + settle.
+		await rows.nth(ROW_A).hover();
 		await expect.poll(readHighlightTop, { timeout: 3000 }).not.toBeNull();
 		// Let the 80ms glide settle before sampling.
 		await page.waitForTimeout(200);
 		const topA = await readHighlightTop();
 
-		// Hover the LAST row — the highlight must glide DOWN to it. Poll the
-		// computed top until it differs from topA (the transition is animating).
-		await rows.nth(count - 1).hover();
+		// Hover the LAST (unselected) row — the highlight must glide DOWN to it. Poll
+		// the computed top until it differs from topA (the transition is animating).
+		await rows.nth(ROW_B).hover();
 		await expect
 			.poll(
 				async () => {
@@ -281,5 +299,104 @@ test.describe('checkbox-group — the highlight glides between items', () => {
 		// exposes role=checkbox with an aria-label — a single, unambiguous match
 		// (getByText would also hit the invisible width-reserving label twin).
 		await expect(page.getByRole('checkbox', { name: 'Mentions & replies' })).toBeVisible();
+	});
+});
+
+// ── 6. The doubled-highlight bug is GONE ─────────────────────────────────────
+// The merge panel on /showcase/checkbox-group starts with a contiguous run
+// SELECTED (a merged rounded block). The captain's bug: hovering a row INSIDE
+// that selected block painted a second hover highlight on top of the selection.
+// The fix (FF's hover-on-selected rule): the hover highlight tracks UNSELECTED
+// rows only. So hovering a SELECTED row must NOT mount a hover highlight, while
+// hovering an UNSELECTED row still must. jsdom can't position the highlight, so
+// the "is there a hover highlight inside the selected block" check is real-
+// browser-only — exactly what belongs here.
+test.describe('checkbox-group — no doubled highlight on a selected row', () => {
+	test('hovering a SELECTED row paints NO hover highlight; an unselected row still does', async ({ page }) => {
+		await page.goto('/showcase/moving-indicator');
+
+		// The checkbox panel here is "Token scopes" with rows repo+workflow checked
+		// (a merged block at indices 0,1). A single, unambiguous group on the page.
+		const group = page.locator('[role="group"]').first();
+		await expect(group).toBeVisible();
+		const rows = group.locator('[data-checkbox-group-item]');
+		await expect(rows.first()).toBeVisible();
+
+		// Sanity: the merged selected background is present (the selection renders).
+		await expect(group.locator('[data-checkbox-group-merged]').first()).toBeVisible();
+
+		const highlightCount = async (): Promise<number> =>
+			group.locator('[data-checkbox-group-highlight]').count();
+
+		// Hover a SELECTED row (index 0 = "Repository access", inside the block).
+		await rows.nth(0).hover();
+		// Give any (erroneous) highlight time to mount + the glide to settle.
+		await page.waitForTimeout(200);
+		// THE BUG-GONE ASSERTION: no hover highlight mounted over the selected row.
+		expect(
+			await highlightCount(),
+			'a hover highlight painted inside the selected block — the doubled-highlight bug is back',
+		).toBe(0);
+
+		// Now hover an UNSELECTED row (index 3 = "Webhook delivery") — the hover
+		// highlight MUST appear there (the affordance still works off the selection).
+		await rows.nth(3).hover();
+		await expect
+			.poll(highlightCount, { timeout: 3000, intervals: [50, 50, 100, 100, 200] })
+			.toBe(1);
+
+		// And moving BACK onto a selected row (index 1) must remove it again — the
+		// highlight never lives inside the selected block.
+		await rows.nth(1).hover();
+		await expect
+			.poll(highlightCount, { timeout: 3000, intervals: [50, 50, 100, 100, 200] })
+			.toBe(0);
+	});
+});
+
+// ── 7. The SECOND CONSUMER glides ────────────────────────────────────────────
+// The segmented control on /showcase/moving-indicator is driven by the SAME
+// movingIndicator primitive as the checkbox-group, but with active source =
+// SELECTION. The proof of genericity: selecting a different segment must MOVE
+// the pill's computed `left` (it glides horizontally to the new segment). Only
+// Chromium reports a real computed box, so this is a real-browser assertion.
+test.describe('moving-indicator — the segmented-control pill glides on selection', () => {
+	test('selecting a different segment moves the pill (computed left changes)', async ({ page }) => {
+		await page.goto('/showcase/moving-indicator');
+
+		// The first segmented control ("View": Board / Timeline / Calendar / Table).
+		const tablist = page.locator('[role="tablist"]').first();
+		await expect(tablist).toBeVisible();
+		const pill = tablist.locator('[data-segmented-pill]');
+		await expect(pill).toBeVisible();
+		const tabs = tablist.locator('[role="tab"]');
+
+		const readPillLeft = async (): Promise<number> =>
+			pill.evaluate((el) => parseFloat(getComputedStyle(el).left));
+
+		// Pill starts under the first segment (Board). Capture its left.
+		await page.waitForTimeout(200);
+		const leftA = await readPillLeft();
+
+		// Select the LAST segment (Table) — the pill must glide right to it.
+		await tabs.last().click();
+		await expect
+			.poll(
+				async () => {
+					const now = await readPillLeft();
+					return Math.abs(now - leftA) > 2 ? 'moved' : 'same';
+				},
+				{ timeout: 3000, intervals: [50, 50, 100, 100, 200, 300] },
+			)
+			.toBe('moved');
+
+		// Settle and assert a real, sizeable delta — the pill travelled across
+		// several segments, not a sub-pixel jitter.
+		await page.waitForTimeout(200);
+		const leftB = await readPillLeft();
+		expect(
+			Math.abs(leftB - leftA),
+			`segmented pill left A=${leftA} B=${leftB} — it must glide between segments`,
+		).toBeGreaterThan(20);
 	});
 });
