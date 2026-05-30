@@ -1,5 +1,7 @@
 // Updated 2026-05-22: export validateCatalog so hosts can gate a spec
 // against the widget catalog before mount (Increment 5 catalog-as-allowlist).
+// Updated 2026-05-30 (Phase 2): export withMotion + the Fluid Functionalism
+// systems layer (variable-font-weight, proximity-hover, elevation ladder).
 
 // Main component
 export { default as Ripple } from './Ripple.svelte';
@@ -80,6 +82,14 @@ export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 
 // Actions
 export { reorderable, type ReorderableOptions } from './actions/reorderable.js';
+export { withMotion } from './actions/index.js';
+
+// Fluid Functionalism systems layer (MIT)
+export {
+  wghtStyle, animateWght,
+  proximity, proximityHover,
+  nextElevation, surfaceVar, currentElevation, provideElevation, ELEVATION_MAX,
+} from './systems/index.js';
 
 // Types
 export type { RippleEvent, RippleEventResult } from './types.js';
