@@ -60,3 +60,15 @@ describe('AnimatedBeam', () => {
     expect(container.querySelector('svg')).not.toBeNull();
   });
 });
+
+describe('Aurora', () => {
+  it('is registered (and aliased aurora-background)', () => {
+    expect(getWidgetTypes()).toContain('aurora');
+    expect(getWidgetTypes()).toContain('aurora-background');
+  });
+  it('renders a [data-aurora] backdrop behind its children', () => {
+    const { container, getByText } = r({ type: 'aurora', children: [{ type: 'text', props: { text: 'hero copy' } }] });
+    expect(container.querySelector('[data-aurora]')).not.toBeNull();
+    expect(getByText('hero copy')).toBeTruthy();
+  });
+});
