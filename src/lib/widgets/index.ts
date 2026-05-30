@@ -1,6 +1,7 @@
 // Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 // Updated 2026-05-22: registered the `media/` escape-hatch widgets — ModelViewer (declarative 3D, type `model-viewer`/`3d`/`model`) and Embed (sandboxed iframe, type `embed`/`iframe`) for Increment 5.
 // Updated 2026-05-30: registered the `motion/` sugar widgets — Reveal (type `reveal`) and Parallax (type `parallax`), which desugar to a motion field (RFC 12 animation primitive).
+// Updated 2026-05-30: registered the `marketing/` widget pack — Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud (+ aliases) for the RFC 12 landing-page pack (Phase 3).
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
@@ -27,6 +28,7 @@ import {
 } from './vertical/index.js';
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
+import { Navbar } from './marketing/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -299,6 +301,8 @@ const defaultRegistry: WidgetMap = {
   // Motion — sugar widgets (RFC 12 animation primitive)
   reveal: Reveal,
   parallax: Parallax,
+  // Marketing — landing-page widget pack (RFC 12)
+  navbar: Navbar,
   // Aliases
   label: Text,
 };
@@ -351,5 +355,6 @@ export {
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed,
-  Reveal, Parallax
+  Reveal, Parallax,
+  Navbar
 };

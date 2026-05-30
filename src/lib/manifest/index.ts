@@ -101,6 +101,7 @@ import { modalEntry } from './entries/modal.js';
 import { modelViewerEntry } from './entries/model-viewer.js';
 import { motionDoc, type MotionDoc } from './motion-doc.js';
 import { multiSelectEntry } from './entries/multi-select.js';
+import { navbarEntry } from './entries/navbar.js';
 import { newsCardEntry } from './entries/news-card.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
@@ -411,6 +412,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   modalEntry,
   modelViewerEntry,
   multiSelectEntry,
+  navbarEntry,
   newsCardEntry,
   notificationCenterEntry,
   numberInputEntry,
