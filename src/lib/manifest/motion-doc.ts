@@ -7,8 +7,13 @@
 //   NOTE: the reveal-section recipe uses grid/card (both in the catalog today);
 //   when Phase 3 ships `feature-grid` the inner node can swap back to it.
 // @created 2026-05-30 — RFC 12 animation primitive.
+// @changes
+//   - 2026-05-30 (Task 1.13 close-out): doc `examples[].motion` is typed
+//     MotionInput (author shape) instead of the post-parse Motion, so the
+//     reduceMotion-less literals below type-check without a redundant default;
+//     dropped the now-unneeded `as Motion['inView']` cast on section-reveal.
 
-import type { Motion } from '../schema/motion.js';
+import type { MotionInput } from '../schema/motion.js';
 import type { WidgetManifestEntry } from './index.js';
 
 export interface MotionDoc {
@@ -17,7 +22,7 @@ export interface MotionDoc {
   /** The taste guardrail — the single most important rule for the LLM. */
   budgetRule: string;
   presets: Record<string, string>;
-  examples: Array<{ name: string; description: string; motion: Motion }>;
+  examples: Array<{ name: string; description: string; motion: MotionInput }>;
   recipes: Array<{ name: string; description: string; ui: WidgetManifestEntry['example'] }>;
 }
 
@@ -41,7 +46,7 @@ export const motionDoc: MotionDoc = {
   examples: [
     { name: 'hero-entrance', description: 'Fade + rise on load.', motion: { enter: { opacity: 0, y: 24 }, transition: { preset: 'snappy' } } },
     { name: 'cta-hover', description: 'Lift the primary button on hover.', motion: { hover: { y: -2, scale: 1.02 }, transition: { preset: 'snappy' } } },
-    { name: 'section-reveal', description: 'Reveal a section as it scrolls into view.', motion: { inView: { opacity: 0, y: 32, once: true } as Motion['inView'], transition: { preset: 'smooth' } } },
+    { name: 'section-reveal', description: 'Reveal a section as it scrolls into view.', motion: { inView: { opacity: 0, y: 32, once: true }, transition: { preset: 'smooth' } } },
   ],
   recipes: [
     {

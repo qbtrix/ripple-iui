@@ -6,8 +6,13 @@
 //   (pre-animation) frame as inline-style strings.
 //   Tier 0 = Svelte built-ins / CSS. Tier 1 = motion.dev vanilla core (lazy).
 // @created 2026-05-30 — RFC 12 animation primitive.
+// @changes
+//   - 2026-05-30 (Task 1.13 close-out): compileMotion accepts MotionInput (the
+//     author shape) instead of the post-parse Motion. The compiler is pure and
+//     never reads `reduceMotion`, so author literals (reduceMotion-less) and the
+//     action's already-parsed Motion both satisfy it. MotionPlan.motion follows.
 
-import type { Motion, MotionState, Transition } from '../schema/motion.js';
+import type { MotionInput, MotionState, Transition } from '../schema/motion.js';
 import { resolvePreset } from './presets.js';
 
 export interface MotionPlan {
@@ -18,7 +23,7 @@ export interface MotionPlan {
   /** The pre-animation frame (enter "from"), applied on mount before animating. */
   initialStyle: string;
   /** The validated motion (already reduce-rewritten by the caller if needed). */
-  motion: Motion;
+  motion: MotionInput;
 }
 
 function offset(value: number | string | undefined): string | null {
@@ -48,7 +53,7 @@ function isSpring(transition: Transition | undefined): boolean {
   return false;
 }
 
-export function compileMotion(motion: Motion): MotionPlan {
+export function compileMotion(motion: MotionInput): MotionPlan {
   // Tier 1 triggers: spring physics, stagger, or a spring inView.
   const needsTier1 =
     isSpring(motion.transition) ||

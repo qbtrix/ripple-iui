@@ -7,10 +7,16 @@
 //   NodeRenderer.motion.ssr.test.ts (runs under server resolve conditions —
 //   svelte/server cannot drive the browser-built component this project pins).
 // @created 2026-05-30 — RFC 12 animation primitive, Task 1.8.
+// @changes
+//   - 2026-05-30 (Task 1.13 close-out): the enter-only literal is authored as
+//     MotionInput (reduceMotion supplied by its schema default) and adapted to
+//     the node's parsed Motion field via `satisfies`, so it type-checks without
+//     hand-writing the runtime-defaulted reduceMotion.
 import { render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
 import type { UINode } from '$lib/schema/ui-spec.js';
+import type { Motion, MotionInput } from '$lib/schema/motion.js';
 
 function renderSpec(ui: UINode) {
   return render(Ripple, { props: { spec: { ui } } });
@@ -21,7 +27,7 @@ describe('NodeRenderer motion wiring', () => {
     const { container } = renderSpec({
       type: 'hero',
       props: { title: 'Hi' },
-      motion: { enter: { opacity: 0, y: 20 }, transition: { preset: 'smooth' } },
+      motion: ({ enter: { opacity: 0, y: 20 }, transition: { preset: 'smooth' } } satisfies MotionInput) as Motion,
     });
     expect(container.querySelector('[data-ripple-motion]')).not.toBeNull();
   });
