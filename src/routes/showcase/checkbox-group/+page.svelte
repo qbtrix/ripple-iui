@@ -10,10 +10,19 @@
       2. Merged backgrounds — a build-your-box group. Check adjacent items and
          their selected backgrounds MERGE into one rounded shape (FF's signature);
          the merged shape morphs on the 160ms FF-moderate spring-overshoot timing.
+         HOVER an already-checked row inside the merged block: no separate hover
+         highlight paints (the doubled-highlight bug is fixed — the hover highlight
+         tracks unselected rows only, FF's hover-on-selected rule).
       3. States — disabled group + per-item disabled, proving the affordances.
-    Matches the /showcase/motion sub-route pattern (header + nav + sectioned
-    <Ripple> panels). Linked from the showcase index sub-route strip.
+    The hover highlight + focus ring are now driven by the generic
+    `movingIndicator` primitive (see /showcase/moving-indicator for the same
+    primitive driving a segmented control). Matches the /showcase/motion sub-route
+    pattern (header + nav + sectioned <Ripple> panels). Linked from the showcase
+    index sub-route strip.
   @created 2026-05-30 — RFC 12 premium pack: FF checkbox-group port (PR #45).
+  @changes
+    - 2026-05-30 (RFC 12 moving-indicator): copy notes the hover-on-selected bug
+      fix; added a link to the /showcase/moving-indicator genericity demo.
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -72,7 +81,7 @@
       children: [
         {
           type: 'text',
-          props: { text: 'Check two neighbouring rows — their selected backgrounds merge into one shape.', size: 'sm' },
+          props: { text: 'Check two neighbouring rows — their backgrounds merge into one shape. Now hover that merged block: no second highlight paints inside it (the hover highlight tracks unselected rows only).', size: 'sm' },
           class: 'text-muted-foreground'
         },
         {
@@ -145,6 +154,7 @@
       <a href="#glide">The glide</a>
       <a href="#merge">Merged backgrounds</a>
       <a href="#states">States</a>
+      <a href="/showcase/moving-indicator">Moving-indicator primitive →</a>
       <a href="/showcase/motion">← Motion primitive</a>
     </nav>
     <p class="last-event">Last host event: <strong>{lastEvent}</strong></p>

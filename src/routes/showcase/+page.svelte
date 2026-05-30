@@ -5325,6 +5325,7 @@
 <nav class="subroute-nav" aria-label="Showcase sub-routes">
   <span class="subroute-nav-label">Pages</span>
   <a href="/showcase/motion">Motion</a>
+  <a href="/showcase/moving-indicator">Moving indicator</a>
   <a href="/showcase/checkbox-group">Checkbox group</a>
   <a href="/showcase/marketing">Marketing pack</a>
   <a href="/showcase/premium">Premium pack</a>
