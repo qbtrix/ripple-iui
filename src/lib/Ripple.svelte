@@ -1,5 +1,9 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
+  Updated: 2026-05-30 — apply spec.theme to the ripple-root via
+  themeToStyleString (RFC 12 white-label — Ripple previously parsed theme but
+  never applied it). The host `style` prop and the theme vars are merged on the
+  root div.
   Updated: 2026-05-22 — Opt-in catalog gate: when `checkCatalog` is true,
   Ripple runs `validateCatalog` on the spec before mount and warns about any
   out-of-catalog node types. Non-breaking — it never blocks rendering;
@@ -22,6 +26,7 @@
   import { createWidgetRegistry } from './core/widget-registry.js';
   import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
+  import { themeToStyleString } from './core/theme-applier.js';
   import { validateCatalog } from './core/validate-catalog.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
@@ -68,6 +73,10 @@
 
   const resolvedSpec = $derived(streaming?.current ?? rawSpec);
   const spec = $derived(normalizeSpec(resolvedSpec));
+
+  // White-label keystone (RFC 12): emit spec.theme as CSS custom properties on
+  // the ripple-root so a host's brand applies with no per-site CSS authoring.
+  const themeStyle = $derived(themeToStyleString((spec as { theme?: unknown }).theme as never));
 
   const mergedInitialState = $derived({
     ...((spec as any).state ?? {}),
@@ -211,7 +220,7 @@
 
 <div
   class="ripple-root {className}"
-  {style}
+  style={[style, themeStyle].filter(Boolean).join('; ')}
   data-ripple-version={spec.version}
   data-ripple-intent={spec.intent}
   data-ripple-streaming={streaming ? (streaming.done ? 'done' : 'active') : undefined}
