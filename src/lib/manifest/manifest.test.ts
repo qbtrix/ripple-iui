@@ -4,6 +4,8 @@ import { getWidgetTypes } from '../widgets/index.js';
 import { EventHandler, EventAction } from '../schema/event-handler.js';
 import { UISpec, UINode } from '../schema/ui-spec.js';
 import { manifestActions } from './actions.js';
+import { Motion } from '../schema/motion.js';
+import { motionDoc } from './motion-doc.js';
 
 describe('widget manifest', () => {
   it('has at least one entry registered', () => {
@@ -231,5 +233,34 @@ describe('manifest pockets', () => {
       }
     }
     expect(failures).toEqual([]);
+  });
+});
+
+describe('manifest motion documentation', () => {
+  it('reveal and parallax have manifest entries', () => {
+    const types = manifestEntries.map((e) => e.type);
+    expect(types).toContain('reveal');
+    expect(types).toContain('parallax');
+  });
+
+  it('buildManifest exposes a motion doc block', () => {
+    const m = buildManifest() as ReturnType<typeof buildManifest> & { motion?: typeof motionDoc };
+    expect(m.motion).toBeTruthy();
+    expect(m.motion!.field).toBe('motion');
+    expect(m.motion!.budgetRule.length).toBeGreaterThan(0);
+  });
+
+  it('the reveal-section recipe ui parses against UINode', async () => {
+    const { UINode } = await import('../schema/ui-spec.js');
+    const recipe = motionDoc.recipes.find((r) => r.name === 'reveal-section');
+    expect(recipe).toBeTruthy();
+    expect(UINode.safeParse(recipe!.ui).success).toBe(true);
+  });
+
+  it('every motion-doc example motion parses against the Motion schema', () => {
+    for (const ex of motionDoc.examples) {
+      const r = Motion.safeParse(ex.motion);
+      expect(r.success, `${ex.name} failed: ${r.success ? '' : JSON.stringify(r.error.issues)}`).toBe(true);
+    }
   });
 });

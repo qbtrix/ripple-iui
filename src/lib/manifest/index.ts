@@ -3,6 +3,10 @@
 //
 // Per-widget entries live in ./entries/<kebab-type>.ts. Adding a new widget
 // requires both a new entry file AND adding the import + array entry below.
+//
+// Updated 2026-05-30 (RFC 12 motion primitive): registered reveal + parallax
+// entries and attached the top-level `motion` doc block (motion-doc.ts) to the
+// built manifest so the node-level `motion` field is documented for the LLM.
 
 import pkg from '../../../package.json' with { type: 'json' };
 
@@ -95,6 +99,7 @@ import { mentionEntry } from './entries/mention.js';
 import { metricEntry } from './entries/metric.js';
 import { modalEntry } from './entries/modal.js';
 import { modelViewerEntry } from './entries/model-viewer.js';
+import { motionDoc, type MotionDoc } from './motion-doc.js';
 import { multiSelectEntry } from './entries/multi-select.js';
 import { newsCardEntry } from './entries/news-card.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
@@ -104,6 +109,7 @@ import { orderStatusEntry } from './entries/order-status.js';
 import { orgChartEntry } from './entries/org-chart.js';
 import { otpInputEntry } from './entries/otp-input.js';
 import { pageHeaderEntry } from './entries/page-header.js';
+import { parallaxEntry } from './entries/parallax.js';
 import { peoplePickerEntry } from './entries/people-picker.js';
 import { pipelineDashboardEntry } from './entries/pipeline-dashboard.js';
 import { permissionMatrixEntry } from './entries/permission-matrix.js';
@@ -119,6 +125,7 @@ import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
 import { reportLayoutEntry } from './entries/report-layout.js';
+import { revealEntry } from './entries/reveal.js';
 import { richTextEntry } from './entries/rich-text.js';
 import { rippleFrameEntry } from './entries/ripple-frame.js';
 import { sankeyEntry } from './entries/sankey.js';
@@ -284,6 +291,8 @@ export interface WidgetManifest {
   spec: SpecEnvelope;
   /** Grammar reference for every EventAction variant the dispatcher accepts. */
   actions: Record<string, ActionSpec>;
+  /** LLM-facing documentation for the node-level `motion` field (RFC 12). */
+  motion: MotionDoc;
   widgets: WidgetManifestEntry[];
 }
 
@@ -410,6 +419,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
+  parallaxEntry,
   peoplePickerEntry,
   pipelineDashboardEntry,
   permissionMatrixEntry,
@@ -425,6 +435,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   rangeBarEntry,
   ratingEntry,
   reportLayoutEntry,
+  revealEntry,
   richTextEntry,
   rippleFrameEntry,
   sankeyEntry,
@@ -477,6 +488,7 @@ export function buildManifest(): WidgetManifest {
     generatedAt: new Date().toISOString(),
     spec: specEnvelope,
     actions: manifestActions,
+    motion: motionDoc,
     widgets: manifestEntries,
   };
 }

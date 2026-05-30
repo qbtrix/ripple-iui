@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.2.0",
-  "generatedAt": "2026-05-22T12:25:53.778Z",
+  "generatedAt": "2026-05-30T08:40:52.744Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -394,7 +394,131 @@
         "target": "searchInput",
         "method": "focus"
       }
+    },
+    "animate": {
+      "description": "Imperatively trigger a motion on a target node by id (host-delegated). Use sparingly — most animation belongs in the node-level `motion` field, not an action.",
+      "shape": {
+        "action": "\"animate\"",
+        "target": "string — id of the node to animate.",
+        "motion": "object — a motion directive (see the motion field schema), e.g. { tap: { scale: 0.96 } }."
+      },
+      "example": {
+        "action": "animate",
+        "target": "cta",
+        "motion": {
+          "tap": {
+            "scale": 0.96
+          }
+        }
+      }
     }
+  },
+  "motion": {
+    "field": "motion",
+    "description": "Add a `motion` field to ANY node (sibling to props/class/style, never inside props) to animate it. Vocabulary: enter/exit, hover/tap/focus, inView (reveal on scroll), scroll (parallax), stagger, and transition (use a semantic preset — never raw numbers). MotionState channels are GPU-safe only (opacity, x, y, scale, rotate, blur). Reduced-motion and SSR are handled by the runtime — do not add them.",
+    "budgetRule": "MOTION BUDGET: animate entrances and the PRIMARY call-to-action only. Leave everything else at rest. Default transition is `snappy`. Over-animating reads as cheap — restraint reads as premium.",
+    "presets": {
+      "instant": "tween 100ms — micro-feedback.",
+      "snappy": "spring, lively but controlled — the default for entrances and CTAs.",
+      "smooth": "tween 250ms decelerate — section reveals.",
+      "gentle": "tween 400ms — large hero elements.",
+      "bouncy": "spring with overshoot — playful accents, use rarely."
+    },
+    "examples": [
+      {
+        "name": "hero-entrance",
+        "description": "Fade + rise on load.",
+        "motion": {
+          "enter": {
+            "opacity": 0,
+            "y": 24
+          },
+          "transition": {
+            "preset": "snappy"
+          }
+        }
+      },
+      {
+        "name": "cta-hover",
+        "description": "Lift the primary button on hover.",
+        "motion": {
+          "hover": {
+            "y": -2,
+            "scale": 1.02
+          },
+          "transition": {
+            "preset": "snappy"
+          }
+        }
+      },
+      {
+        "name": "section-reveal",
+        "description": "Reveal a section as it scrolls into view.",
+        "motion": {
+          "inView": {
+            "opacity": 0,
+            "y": 32,
+            "once": true
+          },
+          "transition": {
+            "preset": "smooth"
+          }
+        }
+      }
+    ],
+    "recipes": [
+      {
+        "name": "reveal-section",
+        "description": "A section whose heading and cards rise into view on scroll. The canonical landing-page reveal.",
+        "ui": {
+          "type": "reveal",
+          "props": {
+            "direction": "up"
+          },
+          "children": [
+            {
+              "type": "section",
+              "props": {
+                "title": "How it works",
+                "description": "Three steps."
+              },
+              "children": [
+                {
+                  "type": "grid",
+                  "props": {
+                    "columns": 3,
+                    "gap": "16px"
+                  },
+                  "children": [
+                    {
+                      "type": "card",
+                      "props": {
+                        "title": "Build",
+                        "description": "Describe it in chat."
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "props": {
+                        "title": "Publish",
+                        "description": "One click to the edge."
+                      }
+                    },
+                    {
+                      "type": "card",
+                      "props": {
+                        "title": "Edit forever",
+                        "description": "Keep changing it by chat."
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
   },
   "widgets": [
     {
@@ -9375,6 +9499,33 @@
       }
     },
     {
+      "type": "parallax",
+      "category": "layout",
+      "description": "Container whose contents drift vertically as the page scrolls. Sugar over a scroll motion. Use sparingly for depth on hero imagery.",
+      "props": {
+        "distance": {
+          "type": "number",
+          "required": false,
+          "description": "Vertical drift in px across the scroll range. Default 60."
+        }
+      },
+      "example": {
+        "type": "parallax",
+        "props": {
+          "distance": 60
+        },
+        "children": [
+          {
+            "type": "image",
+            "props": {
+              "src": "/hero.jpg",
+              "alt": "Backdrop"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "people-picker",
       "category": "vertical",
       "description": "Combobox for selecting people from a searchable directory. Shows name, email, optional role badge.",
@@ -10955,6 +11106,38 @@
             "type": "text",
             "props": {
               "text": "Findings indicate strong access-control posture with three medium-risk items."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "reveal",
+      "category": "layout",
+      "description": "Container that animates its children into view on scroll. Sugar over an inView motion. Use to reveal sections as the visitor scrolls a landing page.",
+      "props": {
+        "direction": {
+          "type": "\"up\" | \"down\" | \"left\" | \"right\" | \"fade\"",
+          "required": false,
+          "description": "Travel direction. Default \"up\"."
+        },
+        "once": {
+          "type": "boolean",
+          "required": false,
+          "description": "Reveal only the first time it enters view. Default true."
+        }
+      },
+      "example": {
+        "type": "reveal",
+        "props": {
+          "direction": "up"
+        },
+        "children": [
+          {
+            "type": "hero",
+            "props": {
+              "title": "We build for the long tail",
+              "align": "center"
             }
           }
         ]
