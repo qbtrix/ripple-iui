@@ -7,10 +7,12 @@
  *   - Recursive UINode definition for nested component trees
  *   - Added optional `sources` key — server-executed read bindings (RFC 04),
  *     preserved verbatim by ripple as opaque pass-through
+ *   - Added node-level `motion` field (RFC 12 animation primitive).
  */
 
 import { z } from 'zod';
 import { EventHandlerOrArray } from './event-handler.js';
+import { Motion } from './motion.js';
 
 /**
  * Data fetcher for loading external data.
@@ -66,6 +68,9 @@ const UINodeBase = z.object({
 
 	/** Inline styles */
 	style: z.record(z.string(), z.string()).optional(),
+
+	/** Declarative animation — node-level, sibling to class/style. See schema/motion.ts. */
+	motion: Motion.optional(),
 
 	/** Named snippet slot to route this child into on its parent widget
 	 *  (e.g., 'header' or 'footer' on a Card). Ignored for parents without that slot. */
