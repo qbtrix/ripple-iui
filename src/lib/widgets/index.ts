@@ -28,7 +28,7 @@ import {
 } from './vertical/index.js';
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
-import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter } from './marketing/index.js';
+import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud } from './marketing/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -311,6 +311,8 @@ const defaultRegistry: WidgetMap = {
   features: FeatureGrid,
   newsletter: Newsletter,
   'email-capture': Newsletter,
+  'logo-cloud': LogoCloud,
+  logos: LogoCloud,
   // Aliases
   label: Text,
 };
@@ -364,5 +366,5 @@ export {
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed,
   Reveal, Parallax,
-  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter
+  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud
 };

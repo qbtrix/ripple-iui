@@ -95,6 +95,7 @@ import { kvTableEntry } from './entries/kv-table.js';
 import { linkPreviewEntry } from './entries/link-preview.js';
 import { loadingEntry } from './entries/loading.js';
 import { locationPickerEntry } from './entries/location-picker.js';
+import { logoCloudEntry } from './entries/logo-cloud.js';
 import { mapEntry } from './entries/map.js';
 import { markdownEntry } from './entries/markdown.js';
 import { masterDetailEntry } from './entries/master-detail.js';
@@ -412,6 +413,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   linkPreviewEntry,
   loadingEntry,
   locationPickerEntry,
+  logoCloudEntry,
   mapEntry,
   markdownEntry,
   masterDetailEntry,

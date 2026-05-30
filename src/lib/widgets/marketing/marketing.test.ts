@@ -87,3 +87,13 @@ describe('Newsletter', () => {
     expect(ev.defaultPrevented).toBe(true);
   });
 });
+
+describe('LogoCloud', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('logo-cloud'); });
+  it('renders a heading and each logo image', () => {
+    const { getByText, container } = r({ type: 'logo-cloud', props: { heading: 'Trusted by', logos: [{ src: '/a.svg', alt: 'Acme' }, { src: '/b.svg', alt: 'Globex' }] } });
+    expect(getByText('Trusted by')).toBeInTheDocument();
+    expect(container.querySelectorAll('img').length).toBe(2);
+    expect(container.querySelector('img[alt="Acme"]')).not.toBeNull();
+  });
+});
