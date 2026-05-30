@@ -8,6 +8,7 @@
  *   - Added optional `sources` key — server-executed read bindings (RFC 04),
  *     preserved verbatim by ripple as opaque pass-through
  *   - Added node-level `motion` field (RFC 12 animation primitive).
+ *   - Added font + logo tokens to ThemeOverrides (RFC 12 white-label theme-applier).
  */
 
 import { z } from 'zod';
@@ -155,7 +156,20 @@ export const ThemeOverrides = z.object({
 	/** Border radius (e.g., "0.5rem") */
 	radius: z.string().optional(),
 	/** Dark mode preference */
-	mode: z.enum(['light', 'dark', 'system']).optional()
+	mode: z.enum(['light', 'dark', 'system']).optional(),
+	/** Font-family tokens — emitted as CSS vars (--ripple-font-*). */
+	fonts: z.object({
+		sans: z.string().optional(),
+		serif: z.string().optional(),
+		mono: z.string().optional(),
+		heading: z.string().optional()
+	}).optional(),
+	/** Brand logo — surfaced to widgets (e.g. Navbar) and emitted as --ripple-logo*. */
+	logo: z.object({
+		src: z.string(),
+		alt: z.string().optional(),
+		darkSrc: z.string().optional()
+	}).optional()
 });
 
 export type ThemeOverrides = z.infer<typeof ThemeOverrides>;
