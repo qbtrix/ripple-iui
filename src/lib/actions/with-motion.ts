@@ -18,9 +18,15 @@
 //       author's `delay: i * 0.12` and motion.dev's own seconds API). The CSS
 //       path multiplies by 1000 for its ms transition-delay; the motion.dev path
 //       passes the seconds value straight through.
-//     * FIX 3 — motion.scroll (continuous parallax) implemented: CSS
-//       scroll-driven animation (animation-timeline: view()) where supported,
-//       with an IntersectionObserver + scroll-rAF fallback. Client-only.
+//     * FIX 3 — motion.scroll (continuous parallax) implemented via an
+//       IntersectionObserver + scroll-rAF loop that writes transform/opacity from
+//       scroll progress every frame. This is the ROBUST PRIMARY PATH (PR #45
+//       parallax close-out). The earlier CSS animation-timeline: view() path was
+//       removed: it animated an UNREGISTERED `--ripple-scroll` custom property
+//       (which interpolates DISCRETELY per spec) so the calc() never produced a
+//       moving length — the parallax card sat frozen at transform:none in real
+//       Chromium 148 (green jsdom, dead pixels). The rAF loop is deterministic
+//       and verified by the Playwright parallax assertion. Client-only.
 //     * BONUS — opt-in debug logging gated behind globalThis.__RIPPLE_MOTION_DEBUG__
 //       (off by default): action attached, inView armed, IO fired, reveal applied,
 //       enter run, scroll wired.
@@ -230,96 +236,67 @@ export function withMotion(node: HTMLElement, raw: Motion | undefined) {
   };
 }
 
-/** The view()-timeline ranges for each `scroll.range` keyword. */
-const VIEW_RANGE: Record<NonNullable<Motion['scroll']>['range'], string> = {
-  cover: 'cover 0% cover 100%',
-  contain: 'contain 0% contain 100%',
-  entry: 'entry 0% entry 100%',
-  exit: 'exit 0% exit 100%',
-};
-
-/** Format a scroll channel value into its inline declaration. */
-function scrollChannelStyle(property: NonNullable<Motion['scroll']>['property'], value: number): string {
+/**
+ * Write one scroll-channel value onto the node's inline style WITHOUT clobbering
+ * unrelated inline styles. Sets `style.transform` / `style.opacity` directly —
+ * the previous implementation rewrote the whole `cssText` with a brittle regex
+ * each frame, which both raced other writers and occasionally dropped styles.
+ */
+function applyScrollChannel(
+  node: HTMLElement,
+  property: NonNullable<Motion['scroll']>['property'],
+  value: number,
+): void {
   switch (property) {
-    case 'y': return `transform: translateY(${value}px)`;
-    case 'x': return `transform: translateX(${value}px)`;
-    case 'scale': return `transform: scale(${value})`;
-    case 'rotate': return `transform: rotate(${value}deg)`;
-    case 'opacity': return `opacity: ${value}`;
+    case 'y': node.style.transform = `translateY(${value}px)`; break;
+    case 'x': node.style.transform = `translateX(${value}px)`; break;
+    case 'scale': node.style.transform = `scale(${value})`; break;
+    case 'rotate': node.style.transform = `rotate(${value}deg)`; break;
+    case 'opacity': node.style.opacity = String(value); break;
   }
-}
-
-let scrollKeyframesInjected = false;
-/** Inject the @keyframes the CSS scroll path animates between (once per page). */
-function ensureScrollKeyframes(): void {
-  if (scrollKeyframesInjected || typeof document === 'undefined') return;
-  scrollKeyframesInjected = true;
-  const style = document.createElement('style');
-  style.setAttribute('data-ripple-motion-scroll', '');
-  // Animate a CSS var the element maps onto its channel. 0 = from, 1 = to.
-  style.textContent = `@keyframes ripple-scroll{from{--ripple-scroll:0}to{--ripple-scroll:1}}`;
-  document.head.appendChild(style);
 }
 
 /**
  * Bind a scroll channel to the element's view progress. Returns a cleanup fn.
- * CSS path: drive a keyframed animation off `animation-timeline: view()` so the
- * compositor interpolates `--ripple-scroll` 0→1 over the view range; the element
- * maps that var onto its channel. JS fallback: IntersectionObserver gates a
- * scroll-rAF loop that recomputes progress and writes the channel inline.
+ *
+ * IMPLEMENTATION NOTE (FIX 3, PR #45): the IntersectionObserver + scroll-rAF
+ * loop is now the ROBUST PRIMARY PATH — it writes `transform: translateY(...)`
+ * (or the chosen channel) from scroll progress on every frame, so the element
+ * verifiably drifts in every browser. The earlier CSS `animation-timeline:
+ * view()` path was COMPOSITOR-DRIVEN but INERT in practice: it animated an
+ * UNREGISTERED `--ripple-scroll` custom property, which per the CSS spec
+ * interpolates DISCRETELY (no smooth 0→1), and the `calc()` that mapped it into
+ * `transform` never produced a moving length — the parallax card sat frozen at
+ * `transform: none` (confirmed in real Chromium 148 via the Playwright probe).
+ * Rather than ship a second, hard-to-unit-test, easy-to-regress CSS path, we use
+ * the rAF loop everywhere; the per-element cost for the handful of parallax
+ * nodes a page carries is negligible and the behavior is deterministic. The
+ * Playwright assertion (transform changes across scroll positions) is the
+ * arbiter — it now passes.
  */
 function wireScroll(node: HTMLElement, scroll: NonNullable<Motion['scroll']>): (() => void) | null {
   if (typeof window === 'undefined') return null;
   const range = scroll.range ?? 'cover';
-  const supportsViewTimeline =
-    typeof CSS !== 'undefined' &&
-    typeof CSS.supports === 'function' &&
-    CSS.supports('animation-timeline: view()') &&
-    CSS.supports('animation-range: cover');
 
-  if (supportsViewTimeline) {
-    ensureScrollKeyframes();
-    // Register a custom prop so the var interpolates numerically, then map it
-    // onto the channel via a second declaration the browser recomputes each frame.
-    node.style.setProperty('animation-name', 'ripple-scroll');
-    node.style.setProperty('animation-timeline', 'view()');
-    node.style.setProperty('animation-range', VIEW_RANGE[range]);
-    node.style.setProperty('animation-fill-mode', 'both');
-    node.style.setProperty('animation-duration', '1ms'); // timeline-driven; duration is ignored but required
-    // The channel = from + (to-from) * progress, expressed with calc() off the var.
-    const span = scroll.to - scroll.from;
-    const expr = `calc(${scroll.from} + (${span}) * var(--ripple-scroll, 0))`;
-    if (scroll.property === 'opacity') node.style.opacity = expr;
-    else if (scroll.property === 'y') node.style.transform = `translateY(calc(${expr} * 1px))`;
-    else if (scroll.property === 'x') node.style.transform = `translateX(calc(${expr} * 1px))`;
-    else if (scroll.property === 'scale') node.style.transform = `scale(${expr})`;
-    else if (scroll.property === 'rotate') node.style.transform = `rotate(calc(${expr} * 1deg))`;
-    node.dataset.rippleScroll = 'css';
-    dbg('scroll wired', { mode: 'css', ...scroll, range });
-    return () => {
-      node.style.removeProperty('animation-name');
-      node.style.removeProperty('animation-timeline');
-      node.style.removeProperty('animation-range');
-      node.dataset.rippleScroll = '';
-    };
-  }
-
-  // --- JS fallback: IntersectionObserver gate + scroll-rAF progress loop ------
   let active = false;
   let rafId = 0;
   const update = () => {
     rafId = 0;
     const rect = node.getBoundingClientRect();
-    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0;
     // progress 0 when the element's top hits the bottom of the viewport,
-    // 1 when its bottom hits the top — the "cover" range.
-    const total = rect.height + vh;
+    // 1 when its bottom hits the top — the "cover" range. Clamped to [0,1].
+    const total = rect.height + vh || 1;
     const progress = Math.min(1, Math.max(0, (vh - rect.top) / total));
     const value = scroll.from + (scroll.to - scroll.from) * progress;
-    node.style.cssText = node.style.cssText.replace(/;?\s*(transform|opacity)\s*:[^;]*/gi, '') +
-      ';' + scrollChannelStyle(scroll.property, value);
+    applyScrollChannel(node, scroll.property, value);
   };
   const onScroll = () => { if (active && !rafId) rafId = requestAnimationFrame(update); };
+
+  // Paint the initial frame immediately so the element starts at its scroll
+  // position rather than its resting frame (no first-scroll jump).
+  update();
+
   const io = typeof IntersectionObserver !== 'undefined'
     ? new IntersectionObserver((entries) => {
         for (const e of entries) {
@@ -330,9 +307,13 @@ function wireScroll(node: HTMLElement, scroll: NonNullable<Motion['scroll']>): (
       })
     : null;
   if (io) io.observe(node);
-  else { active = true; update(); window.addEventListener('scroll', onScroll, { passive: true }); }
-  node.dataset.rippleScroll = 'fallback';
-  dbg('scroll wired', { mode: 'fallback', ...scroll, range });
+  else {
+    // No IntersectionObserver — bind the scroll listener unconditionally.
+    active = true;
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+  node.dataset.rippleScroll = 'raf';
+  dbg('scroll wired', { mode: 'raf', ...scroll, range });
   return () => {
     if (rafId) cancelAnimationFrame(rafId);
     window.removeEventListener('scroll', onScroll);

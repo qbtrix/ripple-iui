@@ -7,7 +7,10 @@
 // @changes
 //   - 2026-05-30 (PR #45 motion runtime close-out): parallax now wires the
 //     motion.scroll runtime (FIX 3) instead of rendering inert — assert the
-//     rendered wrapper is tagged scroll-wired (CSS or fallback path).
+//     rendered wrapper is tagged scroll-wired.
+//   - 2026-05-30 (PR #45 parallax close-out): the scroll runtime is now a single
+//     robust IO/scroll-rAF path tagged 'raf' (the inert CSS view-timeline path
+//     was removed) — assertion updated to expect 'raf'.
 import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
@@ -36,13 +39,14 @@ describe('motion sugar widgets', () => {
 
   it('parallax wires the scroll runtime (no longer inert)', () => {
     // FIX 3: the parallax sugar desugars to a motion.scroll; the withMotion
-    // action must tag the wrapper as scroll-wired (CSS scroll-timeline path or
-    // the IO/rAF fallback). Before FIX 3 there was no scroll branch at all.
+    // action wires the robust IO/scroll-rAF loop and tags the wrapper 'raf'.
+    // Before FIX 3 there was no scroll branch at all; the inert CSS view-timeline
+    // path that briefly followed was removed in the parallax close-out.
     const { container } = render(Ripple, {
       props: { spec: { ui: { type: 'parallax', props: { distance: 50 }, children: [{ type: 'text', props: { text: 'drifts' } }] } } },
     });
     const wrapper = container.querySelector('[data-ripple-motion]') as HTMLElement | null;
     expect(wrapper).not.toBeNull();
-    expect(wrapper!.dataset.rippleScroll === 'css' || wrapper!.dataset.rippleScroll === 'fallback').toBe(true);
+    expect(wrapper!.dataset.rippleScroll).toBe('raf');
   });
 });

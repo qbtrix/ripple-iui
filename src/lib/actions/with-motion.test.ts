@@ -112,18 +112,25 @@ describe('withMotion action', () => {
     vi.unstubAllGlobals();
   });
 
-  // ── FIX 3: motion.scroll wires scroll-bound styling/observer ───────────────
-  it('motion.scroll wires the scroll-bound styling (CSS scroll-timeline or observer)', () => {
+  // ── FIX 3: motion.scroll wires the robust rAF scroll path ──────────────────
+  it('motion.scroll wires the rAF scroll path and tags the element', () => {
     const el = makeEl();
     const handle = withMotion(el, { scroll: { property: 'y', from: 60, to: -60, range: 'cover' } } as Motion);
-    // Either the CSS scroll-driven path set animation-timeline: view() + a
-    // keyframed animation, OR the rAF fallback registered a scroll listener and
-    // marked the element. In both cases the element must be tagged as scroll-wired.
-    const wired =
-      el.dataset.rippleScroll === 'css' ||
-      el.dataset.rippleScroll === 'fallback' ||
-      el.style.getPropertyValue('animation-timeline') !== '';
-    expect(wired).toBe(true);
+    // The IntersectionObserver + scroll-rAF loop is now the single robust path
+    // (the inert CSS view-timeline path was removed — see wireScroll). The
+    // element must be tagged scroll-wired.
+    expect(el.dataset.rippleScroll).toBe('raf');
+    handle?.destroy?.();
+  });
+
+  it('motion.scroll paints an initial transform frame from the scroll progress', () => {
+    const el = makeEl();
+    // jsdom getBoundingClientRect returns zeros, so progress resolves to a
+    // deterministic value and the channel is written immediately — the point is
+    // that SOMETHING lands on transform synchronously (no first-scroll jump),
+    // not the exact px. A `y` channel writes translateY.
+    const handle = withMotion(el, { scroll: { property: 'y', from: 80, to: -80, range: 'cover' } } as Motion);
+    expect(el.style.transform).toMatch(/translateY\(/);
     handle?.destroy?.();
   });
 
