@@ -158,6 +158,7 @@ import { sourceCardEntry } from './entries/source-card.js';
 import { sourcesBarEntry } from './entries/sources-bar.js';
 import { sparklineEntry } from './entries/sparkline.js';
 import { splitEntry } from './entries/split.js';
+import { spotlightEntry } from './entries/spotlight.js';
 import { statEntry } from './entries/stat.js';
 import { statusDotEntry } from './entries/status-dot.js';
 import { stepsEntry } from './entries/steps.js';
@@ -480,6 +481,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   sourcesBarEntry,
   sparklineEntry,
   splitEntry,
+  spotlightEntry,
   statEntry,
   statusDotEntry,
   stepsEntry,

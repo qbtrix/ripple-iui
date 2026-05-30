@@ -72,3 +72,12 @@ describe('Aurora', () => {
     expect(getByText('hero copy')).toBeTruthy();
   });
 });
+
+describe('Spotlight', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('spotlight'); });
+  it('renders a [data-spotlight] element wrapping its children', () => {
+    const { container, getByText } = r({ type: 'spotlight', children: [{ type: 'text', props: { text: 'follow me' } }] });
+    expect(container.querySelector('[data-spotlight]')).not.toBeNull();
+    expect(getByText('follow me')).toBeTruthy();
+  });
+});

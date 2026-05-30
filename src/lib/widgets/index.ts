@@ -30,7 +30,7 @@ import {
 import { ModelViewer, Embed } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
 import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud } from './marketing/index.js';
-import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora } from './premium/index.js';
+import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight } from './premium/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -322,6 +322,7 @@ const defaultRegistry: WidgetMap = {
   'animated-beam': AnimatedBeam,
   aurora: Aurora,
   'aurora-background': Aurora,
+  spotlight: Spotlight,
   // Aliases
   label: Text,
 };
@@ -376,5 +377,5 @@ export {
   ModelViewer, Embed,
   Reveal, Parallax,
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud,
-  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora
+  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight
 };
