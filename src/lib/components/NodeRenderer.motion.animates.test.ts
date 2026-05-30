@@ -15,6 +15,12 @@
 //   pixels) still needs Playwright, which this repo does not ship — see
 //   docs/motion-smoke-test.md for the manual browser check.
 // @created 2026-05-30 — PR #45 motion-wrapper box fix.
+// @changes
+//   - 2026-05-30 (PR #45 motion runtime close-out): added the staggered-card
+//     proof — renders the EXACT /showcase/motion staggerSpec shape (inView
+//     {opacity:0,y:28} + transition.delay in seconds) through Ripple and asserts
+//     a card wrapper carries BOTH the initial translateY AND a per-card
+//     transition-delay. This is the DOM-level proof that the cascade works.
 import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
@@ -61,5 +67,39 @@ describe('NodeRenderer motion — actually animates (end-to-end)', () => {
     // withMotion paints the "from" opacity synchronously on mount; it can only
     // be visible because the wrapper is a real box.
     expect(wrapper!.style.opacity).toBe('0');
+  });
+
+  // The showcase staggered-card proof: a card authored EXACTLY like
+  // /showcase/motion (inView fade+rise + a per-card delay in seconds) must mount
+  // with BOTH the initial translateY (it rises, not just fades) AND a non-zero
+  // transition-delay (the cascade). This is the DOM-level proof for FIX 1+2.
+  it('a staggered card mounts with the initial translateY AND a per-card transition-delay', () => {
+    // index 2 of the showcase row → delay = 2 * 0.12 = 0.24s = 240ms.
+    const { container } = renderSpec({
+      type: 'card',
+      props: { title: '03 · Refine' },
+      motion: ({
+        inView: { opacity: 0, y: 28, once: true, amount: 0.2 },
+        transition: { preset: 'smooth', delay: 0.24 },
+      } satisfies MotionInput) as Motion,
+      children: [{ type: 'text', props: { text: 'body', size: 'sm' } }],
+    });
+    const wrapper = container.querySelector('[data-ripple-motion]') as HTMLElement | null;
+    expect(wrapper).not.toBeNull();
+    // Must be a transformable box (not display:contents) or the styles paint nothing.
+    expect(wrapper!.style.display).not.toBe('contents');
+    // FIX 1: the from-state is the FULL frame — opacity AND the rise.
+    expect(wrapper!.style.opacity).toBe('0');
+    expect(wrapper!.style.transform).toMatch(/translateY\(28px\)/);
+    // FIX 2: reveal carries the per-card delay (240ms). Fire the observer if one
+    // was registered; otherwise the no-IO fallback reveals on rAF — wait for it.
+    wrapper!.dispatchEvent(new Event('x')); // no-op to keep types happy
+    return new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        // After reveal, the from-state has transitioned out and the delay is set.
+        expect(wrapper!.style.transitionDelay).toMatch(/240ms|0\.24s/);
+        resolve();
+      }));
+    });
   });
 });

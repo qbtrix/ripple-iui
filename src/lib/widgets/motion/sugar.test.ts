@@ -4,6 +4,10 @@
 //   catalog, render their children, and reveal renders a [data-ripple-motion]
 //   marker (it applies withMotion to itself, independent of node.motion).
 // @created 2026-05-30 — RFC 12 animation primitive, Task 1.11 (sugar widgets).
+// @changes
+//   - 2026-05-30 (PR #45 motion runtime close-out): parallax now wires the
+//     motion.scroll runtime (FIX 3) instead of rendering inert — assert the
+//     rendered wrapper is tagged scroll-wired (CSS or fallback path).
 import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
@@ -28,5 +32,17 @@ describe('motion sugar widgets', () => {
       props: { spec: { ui: { type: 'parallax', children: [{ type: 'text', props: { text: 'floats' } }] } } },
     });
     expect(getByText('floats')).toBeInTheDocument();
+  });
+
+  it('parallax wires the scroll runtime (no longer inert)', () => {
+    // FIX 3: the parallax sugar desugars to a motion.scroll; the withMotion
+    // action must tag the wrapper as scroll-wired (CSS scroll-timeline path or
+    // the IO/rAF fallback). Before FIX 3 there was no scroll branch at all.
+    const { container } = render(Ripple, {
+      props: { spec: { ui: { type: 'parallax', props: { distance: 50 }, children: [{ type: 'text', props: { text: 'drifts' } }] } } },
+    });
+    const wrapper = container.querySelector('[data-ripple-motion]') as HTMLElement | null;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper!.dataset.rippleScroll === 'css' || wrapper!.dataset.rippleScroll === 'fallback').toBe(true);
   });
 });
