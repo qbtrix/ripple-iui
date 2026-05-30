@@ -13,6 +13,8 @@
     - 2026-05-22: unknown-widget branch fails loud — shows the node id and a
       clear "not in the catalog" message instead of a bare red box
       (Increment 5 catalog-as-allowlist).
+    - 2026-05-30: wrap the widget branch in use:withMotion when node.motion is
+      set (RFC 12 motion primitive); motion-free specs unchanged.
 -->
 <script lang="ts">
 	import { getContext } from 'svelte';
@@ -27,6 +29,7 @@
 		type ResolverContext
 	} from '../core/expression-resolver.js';
 	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
+	import { withMotion } from '../actions/index.js';
 
 	// Self-import for recursion (Svelte 5 pattern)
 	import Self from './NodeRenderer.svelte';
@@ -375,20 +378,39 @@
 				<Self node={child} {loopContext} />
 			{/each}
 		{/snippet}
-		<WidgetComponent
-			{...widgetProps}
-			header={headerKids.length > 0 ? headerSnippet : undefined}
-			footer={footerKids.length > 0 ? footerSnippet : undefined}
-			sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
-			topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
-			actions={actionsKids.length > 0 ? actionsSnippet : undefined}
-		>
-			{#snippet children()}
-				{#each defaultKids as child, i (child.id ?? i)}
-					<Self node={child} {loopContext} />
-				{/each}
-			{/snippet}
-		</WidgetComponent>
+		{#if node.motion}
+			<div data-ripple-motion style="display: contents" use:withMotion={node.motion}>
+				<WidgetComponent
+					{...widgetProps}
+					header={headerKids.length > 0 ? headerSnippet : undefined}
+					footer={footerKids.length > 0 ? footerSnippet : undefined}
+					sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
+					topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
+					actions={actionsKids.length > 0 ? actionsSnippet : undefined}
+				>
+					{#snippet children()}
+						{#each defaultKids as child, i (child.id ?? i)}
+							<Self node={child} {loopContext} />
+						{/each}
+					{/snippet}
+				</WidgetComponent>
+			</div>
+		{:else}
+			<WidgetComponent
+				{...widgetProps}
+				header={headerKids.length > 0 ? headerSnippet : undefined}
+				footer={footerKids.length > 0 ? footerSnippet : undefined}
+				sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
+				topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
+				actions={actionsKids.length > 0 ? actionsSnippet : undefined}
+			>
+				{#snippet children()}
+					{#each defaultKids as child, i (child.id ?? i)}
+						<Self node={child} {loopContext} />
+					{/each}
+				{/snippet}
+			</WidgetComponent>
+		{/if}
 	{:else}
 		<!--
 			Unknown widget type — the node's `type` is not in the widget catalog.
