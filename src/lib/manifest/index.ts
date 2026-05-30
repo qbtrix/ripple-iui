@@ -147,6 +147,7 @@ import { selectEntry } from './entries/select.js';
 import { separatorEntry } from './entries/separator.js';
 import { settingsListEntry } from './entries/settings-list.js';
 import { sheetEntry } from './entries/sheet.js';
+import { shimmerEntry } from './entries/shimmer.js';
 import { sidebarEntry } from './entries/sidebar.js';
 import { skeletonEntry } from './entries/skeleton.js';
 import { sliderEntry } from './entries/slider.js';
@@ -466,6 +467,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   separatorEntry,
   settingsListEntry,
   sheetEntry,
+  shimmerEntry,
   sidebarEntry,
   skeletonEntry,
   sliderEntry,

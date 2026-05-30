@@ -43,3 +43,12 @@ describe('BorderBeam', () => {
     expect(container.querySelector('[data-border-beam]')).not.toBeNull();
   });
 });
+
+describe('Shimmer', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('shimmer'); });
+  it('renders a [data-shimmer] element wrapping its children', () => {
+    const { container, getByText } = r({ type: 'shimmer', children: [{ type: 'text', props: { text: 'loading…' } }] });
+    expect(container.querySelector('[data-shimmer]')).not.toBeNull();
+    expect(getByText('loading…')).toBeTruthy();
+  });
+});
