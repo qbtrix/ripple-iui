@@ -14,6 +14,9 @@
  *     write binding; resolves {state.x}/{item.id} in path/params client-side
  *     before emitting, then chains on_success / on_error like run_source
  *     (RFC 05 M2a — Write actions core)
+ *   - Added animate action — host-delegated imperative animation trigger;
+ *     emits an `animate` RippleEvent carrying target + motion, like navigate
+ *     (RFC 12 — animation primitive)
  *   - FlowAbortError for `validate` failures + flow-level error recovery
  *   - Enforces max nested flow depth to stop run-away recursion
  *   - Wires the new per-instance WidgetRegistry through the constructor
@@ -186,6 +189,7 @@ export class EventDispatcher {
 			case 'emit':
 			case 'pin':
 			case 'unpin':
+			case 'animate':
 				this.emitExternal(handler, context, eventValue);
 				return;
 			case 'api':
@@ -365,7 +369,7 @@ export class EventDispatcher {
 	private emitExternal(
 		handler: Extract<
 			EventHandler,
-			{ action: 'navigate' | 'toast' | 'emit' | 'pin' | 'unpin' }
+			{ action: 'navigate' | 'toast' | 'emit' | 'pin' | 'unpin' | 'animate' }
 		>,
 		context: ResolverContext,
 		eventValue?: unknown
@@ -403,6 +407,11 @@ export class EventDispatcher {
 			let value = handler.value !== undefined ? handler.value : eventValue;
 			if (typeof value === 'string') value = resolveString(value, context);
 			event.payload = value;
+		}
+
+		if (handler.action === 'animate') {
+			event.target = handler.target;
+			(event as { motion?: unknown }).motion = handler.motion;
 		}
 
 		this.onEvent(event);

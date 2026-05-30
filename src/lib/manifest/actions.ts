@@ -11,6 +11,8 @@ import type { ActionSpec } from './index.js';
  *     binding (RFC 04 — Pocket Interactivity & Data Sync).
  *   - Added `call_binding` — host-delegated invocation of a server-side
  *     write binding (RFC 05 M2a — Write actions core).
+ *   - Added `animate` — host-delegated imperative animation trigger on a
+ *     target node by id (RFC 12 — animation primitive).
  */
 export const manifestActions: Record<string, ActionSpec> = {
   set: {
@@ -273,5 +275,15 @@ export const manifestActions: Record<string, ActionSpec> = {
       'args?': 'any[]',
     },
     example: { action: 'invoke', target: 'searchInput', method: 'focus' },
+  },
+
+  animate: {
+    description: "Imperatively trigger a motion on a target node by id (host-delegated). Use sparingly — most animation belongs in the node-level `motion` field, not an action.",
+    shape: {
+      action: '"animate"',
+      target: 'string — id of the node to animate.',
+      motion: 'object — a motion directive (see the motion field schema), e.g. { tap: { scale: 0.96 } }.',
+    },
+    example: { action: 'animate', target: 'cta', motion: { tap: { scale: 0.96 } } },
   },
 };
