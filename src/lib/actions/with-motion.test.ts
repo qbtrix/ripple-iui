@@ -4,6 +4,11 @@
 //   returns destroy, paints the enter "from" frame on mount, honors
 //   prefers-reduced-motion (opacity-only), and attaches hover listeners.
 // @created 2026-05-30 — RFC 12 animation primitive, Task 1.7.
+// @changes
+//   - 2026-05-30 (PR #45 motion runtime close-out): FIX 1 — inView arms with the
+//     FULL from-state (opacity + transform + filter), not opacity alone. FIX 2 —
+//     transition.delay (SECONDS) wires into the Tier-0 transition-delay on both
+//     enter and inView. FIX 3 — motion.scroll wires scroll-bound styling/observer.
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { withMotion } from './with-motion.js';
 import type { Motion } from '../schema/motion.js';
@@ -53,5 +58,89 @@ describe('withMotion action', () => {
     expect(el.style.transform).toMatch(/scale\(1\.1\)/);
     el.dispatchEvent(new MouseEvent('mouseleave'));
     handle?.destroy?.();
+  });
+
+  // ── FIX 1: inView arms with the FULL from-state (opacity + transform) ──────
+  it('inView arms the FULL from-state — opacity AND translateY, not opacity alone', () => {
+    const el = makeEl();
+    const handle = withMotion(el, { inView: { opacity: 0, y: 28 } } as Motion);
+    // The initial inline style must carry BOTH the fade and the rise.
+    expect(el.style.opacity).toBe('0');
+    expect(el.style.transform).toMatch(/translateY\(28px\)/);
+    handle?.destroy?.();
+  });
+
+  it('inView arms x / scale / blur channels too (full from-state, not just y)', () => {
+    const el = makeEl();
+    const handle = withMotion(el, { inView: { opacity: 0, x: -16, scale: 0.9, blur: 4 } } as Motion);
+    expect(el.style.transform).toMatch(/translateX\(-16px\)/);
+    expect(el.style.transform).toMatch(/scale\(0\.9\)/);
+    expect(el.style.filter).toMatch(/blur\(4px\)/);
+    handle?.destroy?.();
+  });
+
+  // ── FIX 2: transition.delay (SECONDS) -> non-zero transition-delay ─────────
+  it('enter wires transition.delay (seconds) into a non-zero transition-delay', async () => {
+    const el = makeEl();
+    const handle = withMotion(el, { enter: { opacity: 0, y: 20 }, transition: { preset: 'smooth', delay: 0.12 } } as Motion);
+    // The enter runs on a double-rAF; wait for it, then read transition-delay.
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+    expect(el.style.transitionDelay).not.toBe('');
+    expect(el.style.transitionDelay).not.toBe('0s');
+    expect(el.style.transitionDelay).not.toBe('0ms');
+    // 0.12s author intent -> 120ms on the CSS path.
+    expect(el.style.transitionDelay).toMatch(/120ms|0\.12s/);
+    handle?.destroy?.();
+  });
+
+  it('inView wires transition.delay (seconds) into a non-zero transition-delay on reveal', () => {
+    const el = makeEl();
+    type IOCb = (entries: Array<{ isIntersecting: boolean; target: Element }>) => void;
+    const holder: { cb: IOCb | null } = { cb: null };
+    class FakeIO {
+      constructor(cb: IOCb) { holder.cb = cb; }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal('IntersectionObserver', FakeIO as unknown as typeof IntersectionObserver);
+    const handle = withMotion(el, { inView: { opacity: 0, y: 28 }, transition: { preset: 'smooth', delay: 0.24 } } as Motion);
+    // Fire the observer with an intersecting entry.
+    holder.cb?.([{ isIntersecting: true, target: el }]);
+    expect(el.style.transitionDelay).toMatch(/240ms|0\.24s/);
+    handle?.destroy?.();
+    vi.unstubAllGlobals();
+  });
+
+  // ── FIX 3: motion.scroll wires scroll-bound styling/observer ───────────────
+  it('motion.scroll wires the scroll-bound styling (CSS scroll-timeline or observer)', () => {
+    const el = makeEl();
+    const handle = withMotion(el, { scroll: { property: 'y', from: 60, to: -60, range: 'cover' } } as Motion);
+    // Either the CSS scroll-driven path set animation-timeline: view() + a
+    // keyframed animation, OR the rAF fallback registered a scroll listener and
+    // marked the element. In both cases the element must be tagged as scroll-wired.
+    const wired =
+      el.dataset.rippleScroll === 'css' ||
+      el.dataset.rippleScroll === 'fallback' ||
+      el.style.getPropertyValue('animation-timeline') !== '';
+    expect(wired).toBe(true);
+    handle?.destroy?.();
+  });
+
+  // ── BONUS: opt-in debug logging gated behind the global flag ──────────────
+  it('logs to console when __RIPPLE_MOTION_DEBUG__ is on, silent when off', () => {
+    const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    // off by default
+    const off = withMotion(makeEl(), { enter: { opacity: 0 } } as Motion);
+    const calledWhileOff = spy.mock.calls.length;
+    off?.destroy?.();
+    expect(calledWhileOff).toBe(0);
+    // on
+    (globalThis as Record<string, unknown>).__RIPPLE_MOTION_DEBUG__ = true;
+    const on = withMotion(makeEl(), { enter: { opacity: 0 } } as Motion);
+    expect(spy.mock.calls.length).toBeGreaterThan(0);
+    on?.destroy?.();
+    delete (globalThis as Record<string, unknown>).__RIPPLE_MOTION_DEBUG__;
+    spy.mockRestore();
   });
 });
