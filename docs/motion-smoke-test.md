@@ -15,6 +15,11 @@
       runtime (it pulses a target by id with no host code) and corrected the
       parallax section (the scroll runtime is a robust IO/scroll-rAF loop — the
       inert CSS animation-timeline: view() path was removed).
+    - 2026-05-30 (PR #45 degrade-to-visible fix): documented the core guarantee —
+      "motion degrades to visible, never hidden" — and the spring-preset enter
+      that exposed it (the invisible-hero bug on /showcase/marketing). Added the
+      Playwright hero-visibility assertion and the jsdom degrade tests to the
+      tripwire lists.
 -->
 
 # Motion smoke test (catch "green tests, no visible animation")
@@ -28,6 +33,44 @@ had nowhere to paint. jsdom never renders, so the suite stayed green.
 This is a 2-minute eyes-on check. Run it after any change to the motion engine,
 the `withMotion` action, the `NodeRenderer` motion wrapper, or the sugar widgets
 (`Reveal`, `Parallax`).
+
+## The core guarantee: motion degrades to VISIBLE, never hidden
+
+A motion can hide an element before it animates it in — an `enter` arms a
+"from" frame (`opacity:0`, `translateY(24px)`) on hydrate, then reveals it to
+rest. **The non-negotiable invariant: an entered element ALWAYS ends in its
+resting (visible) state, no matter what.** If the reveal step ever fails to land,
+the element is stranded hidden forever — SSR painted it, hydrate hid it, the
+reveal never came. That is the worst failure this primitive can have: not "no
+animation" but "no content."
+
+This bit us once. The `/showcase/marketing` hero declares
+`enter: { opacity: 0, y: 24 }` with the **`snappy` spring preset**. A spring
+preset used to route the `enter` to Tier 1 (motion.dev), which was asked to
+spring toward `{ opacity: 1, transform: 'none' }`. **motion.dev cannot
+spring-interpolate the `transform:'none'` keyword** — it collapsed the box to
+`matrix(0,0,0,0,0,0)`, so opacity reached 1 but the element became a zero-size,
+invisible box and never recovered. The hero rendered as a tall empty gap.
+
+How the runtime now guarantees visibility:
+
+1. **`enter` runs on the reliable Tier-0 CSS transition by default** — even for
+   a spring preset (its physics are approximated as a spring-like CSS easing).
+   CSS interpolates `transform:'none'` cleanly and can never fail to load. A
+   fade/rise entrance never needed a JS spring; the Tier-1/motion.dev path is
+   reserved for things CSS genuinely can't do (gesture physics, scroll-linked).
+2. **Belt-and-suspenders for any Tier-1 reveal** — `revealToRest` is the single
+   canonical "land at rest" helper, and `safeTier1Reveal` lands that Tier-0
+   reveal *first*, then layers motion.dev on top. If `loadAnimate()` resolves
+   null, or `animate()` throws, or the promise rejects, the element is already
+   visible. No reveal path ever `return`s leaving the node hidden.
+3. **The opt-in Tier-1 enter** (`window.__RIPPLE_TIER1_ENTER__`, off by default)
+   only ever runs through `safeTier1Reveal`, and animates per-channel rest
+   (`x:0, y:0, scale:1`) — never the broken `transform:'none'` keyword.
+
+The Playwright hero assertion (below) and the jsdom degrade tests in
+`src/lib/actions/with-motion.test.ts` are the tripwires. If you change the enter
+path, they must stay green.
 
 ## The automated real-browser smoke-test (Playwright) — run this first
 
@@ -58,6 +101,11 @@ What it asserts, per motion (these are the regression tripwires):
    across scroll positions** (it must drift, not sit at `transform: none`).
 3. **`animate`** — clicking "Fire animate action" **changes the target element's
    computed transform** (the pulse moves pixels).
+4. **Marketing hero degrades to visible** — on `/showcase/marketing`, the hero
+   (a `snappy` spring-preset `enter`) **ends computed `opacity` ~1 with its
+   transform back at rest** and its title text visible. This is the
+   invisible-hero tripwire: a stuck hero reports a collapsed transform / opacity
+   that never recovers.
 
 > **Why a production build, not the dev server?** We hit a dev-server-specific
 > trap while fixing `animate`: after a deep edit to the dispatcher / NodeRenderer,
@@ -232,7 +280,12 @@ tags its wrapper scroll-wired (`data-ripple-scroll="raf"`), proving
 `motion.scroll` is no longer inert.
 `src/lib/core/event-dispatcher.animate.test.ts` asserts the `animate` runtime
 finds a target node by id and pulses it (the inline transform mutates), and
-`src/lib/actions/with-motion.test.ts` covers `playMotion` directly.
+`src/lib/actions/with-motion.test.ts` covers `playMotion` directly plus the
+**degrade-to-visible** guarantee: a `snappy` spring-preset `enter` lands at rest
+(`transform:none`, `opacity:''`) on the default Tier-0 path, and the opt-in
+Tier-1 path still ends visible when `loadAnimate()` resolves null OR `animate()`
+throws (both mocked). These are the unit-level tripwires for the invisible-hero
+class — the Playwright hero assertion is the pixel-level one.
 
 For the authoritative "does it actually paint" answer, run the Playwright suite
 (`bun run test:e2e`) or do the eyes-on pass above.
