@@ -8,6 +8,9 @@
 //   `svelte/server` can drive the SERVER build of a component (the browser
 //   build throws effect_orphan when the server renderer touches a top-level
 //   $effect). This is what makes the load-bearing SSR final-frame test real.
+// Updated: 2026-05-30 — RFC 12 motion, Task 1.10: also scan scripts/ for the
+//   build-tooling lint-gate test (check-no-toplevel-anim-imports.test.ts) so
+//   the workerd-SSR contract gate is asserted as part of `bun run test`.
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
@@ -28,7 +31,7 @@ export default defineConfig({
         },
         test: {
           name: 'client',
-          include: ['src/**/*.{test,spec}.ts'],
+          include: ['src/**/*.{test,spec}.ts', 'scripts/**/*.{test,spec}.ts'],
           exclude: ['src/**/*.ssr.{test,spec}.ts'],
           globals: true,
           environment: 'jsdom',
