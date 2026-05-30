@@ -5,8 +5,6 @@
 //   widget appends a describe block here (registered + one render assertion).
 // @created 2026-05-30 — RFC 12 premium pack (Phase 4).
 import { render } from '@testing-library/svelte';
-import { readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
 import { getWidgetTypes } from '$lib/widgets/index.js';
@@ -14,15 +12,17 @@ import type { UINode } from '$lib/schema/ui-spec.js';
 
 const r = (ui: UINode) => render(Ripple, { props: { spec: { ui } } });
 
+// Read every premium .svelte source as a raw string via Vite's glob import —
+// no node built-ins (keeps svelte-check clean; works on the Vite/esbuild runner).
+const premiumSources = import.meta.glob('./*.svelte', { eager: true, query: '?raw', import: 'default' }) as Record<string, string>;
+
 describe('premium provenance', () => {
   it('every premium .svelte file carries an MIT @provenance header', () => {
-    const dir = resolve(__dirname);
-    const files = readdirSync(dir).filter((f) => f.endsWith('.svelte'));
+    const files = Object.entries(premiumSources);
     expect(files.length).toBeGreaterThan(0);
-    for (const f of files) {
-      const src = readFileSync(resolve(dir, f), 'utf-8');
-      expect(src, `${f} missing @provenance`).toMatch(/@provenance/);
-      expect(src, `${f} missing MIT`).toMatch(/MIT/);
+    for (const [path, src] of files) {
+      expect(src, `${path} missing @provenance`).toMatch(/@provenance/);
+      expect(src, `${path} missing MIT`).toMatch(/MIT/);
     }
   });
 });
