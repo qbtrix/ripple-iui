@@ -96,3 +96,17 @@ describe('BentoGrid', () => {
     expect(getByText('Branded')).toBeTruthy();
   });
 });
+
+describe('TextEffect', () => {
+  it('is registered (and aliased animated-text)', () => {
+    expect(getWidgetTypes()).toContain('text-effect');
+    expect(getWidgetTypes()).toContain('animated-text');
+  });
+  it('renders the full text content split into spans', () => {
+    const { container } = r({ type: 'text-effect', props: { text: 'Ship it fast', by: 'word' } });
+    const root = container.querySelector('[data-text-effect]') as HTMLElement;
+    expect(root).not.toBeNull();
+    expect(root.querySelectorAll('span').length).toBeGreaterThanOrEqual(3);
+    expect(root.textContent?.replace(/\s+/g, ' ').trim()).toBe('Ship it fast');
+  });
+});

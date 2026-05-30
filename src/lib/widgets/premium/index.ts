@@ -8,3 +8,4 @@ export { default as AnimatedBeam } from './AnimatedBeam.svelte';
 export { default as Aurora } from './Aurora.svelte';
 export { default as Spotlight } from './Spotlight.svelte';
 export { default as BentoGrid } from './BentoGrid.svelte';
+export { default as TextEffect } from './TextEffect.svelte';

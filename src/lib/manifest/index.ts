@@ -169,6 +169,7 @@ import { tabsEntry } from './entries/tabs.js';
 import { testimonialEntry } from './entries/testimonial.js';
 import { terminalEntry } from './entries/terminal.js';
 import { textEntry } from './entries/text.js';
+import { textEffectEntry } from './entries/text-effect.js';
 import { textareaEntry } from './entries/textarea.js';
 import { tickerEntry } from './entries/ticker.js';
 import { timelineEntry } from './entries/timeline.js';
@@ -493,6 +494,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   terminalEntry,
   testimonialEntry,
   textEntry,
+  textEffectEntry,
   textareaEntry,
   tickerEntry,
   timelineEntry,
