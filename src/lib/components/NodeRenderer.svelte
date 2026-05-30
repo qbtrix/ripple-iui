@@ -15,6 +15,21 @@
       (Increment 5 catalog-as-allowlist).
     - 2026-05-30: wrap the widget branch in use:withMotion when node.motion is
       set (RFC 12 motion primitive); motion-free specs unchanged.
+    - 2026-05-30 (PR #45 motion-wrapper box fix): the motion wrapper was
+      `display: contents`, which generates NO box — so the transform/opacity/
+      filter withMotion writes onto it painted nothing (motion ran but never
+      animated). Changed the wrapper to `class="block"` (a real layout box),
+      matching the working reveal/parallax sugar widgets that DO animate.
+-->
+<!--
+  LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
+  default — the RFC-12 marketing/premium widgets are block-level sections,
+  cards, and buttons, and a block box is what makes the transform actually
+  paint. The one trade-off: a node.motion on an intrinsically inline widget
+  (e.g. a bare inline span) now sits in a block box, which can change its
+  inline flow. Inline-level motion targets should prefer the sugar widgets or
+  carry their own display override; revisit with an inline variant if a real
+  inline-widget motion case shows up.
 -->
 <script lang="ts">
 	import { getContext } from 'svelte';
@@ -379,7 +394,15 @@
 			{/each}
 		{/snippet}
 		{#if node.motion}
-			<div data-ripple-motion style="display: contents" use:withMotion={node.motion}>
+			<!--
+				The motion wrapper MUST be a real layout box (block), not
+				`display: contents`. `display: contents` generates no box, so the
+				transform/opacity/filter withMotion sets here would paint nothing
+				(the motion runs but never animates). `block` matches the working
+				reveal/parallax sugar widgets. See the LAYOUT CAVEAT at the top of
+				this file for the inline-widget trade-off.
+			-->
+			<div data-ripple-motion class="block" use:withMotion={node.motion}>
 				<WidgetComponent
 					{...widgetProps}
 					header={headerKids.length > 0 ? headerSnippet : undefined}
