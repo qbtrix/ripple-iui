@@ -1,6 +1,18 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
-  Updated: 2026-05-22 — Opt-in catalog gate: when `checkCatalog` is true,
+  Updated: 2026-05-31 — Chain Flow auto-detection on EVERY surface (RFC 13,
+  completes PR #49). The base renderer now detects a chain spec via `isFlowSpec`
+  and hosts it in a `FlowRunner` (so a multi-step flow advances client-side in a
+  Pocket / dashboard / any non-chat surface, not just paw-enterprise's chat
+  frame). `unwrapFlowRoot` hands FlowRunner the actual chain root, unwrapping the
+  `{version, ui:<root>}` envelope that `start_flow` emits. Added a `flowHosted`
+  prop (default false) as the RECURSION GUARD: FlowRunner mounts an inner
+  `<Ripple flowHosted={true}>` per step, and since a non-terminal step still
+  carries its onward chain fields, that flag stops the inner Ripple from
+  re-detecting the step as a flow and nesting a second FlowRunner. A terminal
+  step's completion is forwarded to this component's `onComplete` prop. The
+  non-flow path is untouched — byte-identical output for plain specs.
+  Previous (2026-05-22): Opt-in catalog gate: when `checkCatalog` is true,
   Ripple runs `validateCatalog` on the spec before mount and warns about any
   out-of-catalog node types. Non-breaking — it never blocks rendering;
   NodeRenderer still shows its loud red box per unknown node (Increment 5).
@@ -23,12 +35,15 @@
   import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
   import { validateCatalog } from './core/validate-catalog.js';
+  import { isFlowSpec, unwrapFlowRoot } from './core/flow-spec.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
   import DashboardRenderer from './intent/DashboardRenderer.svelte';
+  import FlowRunner from './intent/FlowRunner.svelte';
   import Skeleton from './widgets/display/Skeleton.svelte';
   import ConfirmDialog from './widgets/overlay/ConfirmDialog.svelte';
   import type { DashboardSpec } from './intent/dashboard-manager.svelte.js';
+  import type { TerminalResult } from './intent/chain-executor.svelte.js';
   import type { RippleEvent } from './types.js';
 
   interface Props {
@@ -39,6 +54,22 @@
     onEvent?: OnEventCallback;
     onSpecChanged?: (spec: DashboardSpec) => void;
     onStateChange?: (path: string, value: unknown, state: Record<string, unknown>) => void;
+    /**
+     * Fired when a hosted Chain Flow reaches a terminal step — the step's
+     * `onComplete` FlowAction plus the full accumulated payload (RFC 13). Only
+     * meaningful when `spec` is a flow; ignored for plain specs. Forwarded
+     * straight from the `FlowRunner` this renderer mounts.
+     */
+    onComplete?: (result: TerminalResult) => void;
+    /**
+     * RECURSION GUARD for Chain Flows. `FlowRunner` mounts one inner `<Ripple>`
+     * per step with `flowHosted={true}`; a non-terminal step still carries its
+     * onward `chain`/`chain_map`, so without this flag the inner Ripple would
+     * re-detect the step as a flow and nest a second `FlowRunner` forever. When
+     * true, flow auto-detection is skipped and the step's node tree renders as a
+     * plain spec. Host callers never set this — it is internal wiring.
+     */
+    flowHosted?: boolean;
     /**
      * Opt-in catalog gate. When true, Ripple runs `validateCatalog` on the
      * spec before mount and `console.warn`s any out-of-catalog node types.
@@ -60,6 +91,8 @@
     onEvent,
     onSpecChanged,
     onStateChange,
+    onComplete,
+    flowHosted = false,
     checkCatalog = false,
     extraWidgetTypes,
     class: className = '',
@@ -68,6 +101,18 @@
 
   const resolvedSpec = $derived(streaming?.current ?? rawSpec);
   const spec = $derived(normalizeSpec(resolvedSpec));
+
+  // Chain Flow auto-detection (RFC 13, every-surface). A chain spec is hosted in
+  // a `FlowRunner` so it advances client-side; a plain spec renders as before.
+  // `flowHosted` is the recursion guard — FlowRunner's per-step inner <Ripple>
+  // sets it, so a non-terminal step (which still carries its onward chain
+  // fields) is rendered as a plain node tree instead of nesting another runner.
+  // `unwrapFlowRoot` returns the actual chain root: `spec` itself, or its inner
+  // `ui` node for the `{version, ui:<root>}` envelope `start_flow` emits (which
+  // FlowRunner needs because it reads `chain`/`chain_map` off the TOP of its
+  // spec). Detection runs on the normalized `spec` so all arrival shapes agree.
+  const isFlow = $derived(!flowHosted && isFlowSpec(spec));
+  const flowRoot = $derived(isFlow ? unwrapFlowRoot<UniversalSpec>(spec) : null);
 
   const mergedInitialState = $derived({
     ...((spec as any).state ?? {}),
@@ -209,6 +254,19 @@
   });
 </script>
 
+{#if isFlow && flowRoot}
+  <!--
+    Chain Flow (RFC 13): host the spec in a FlowRunner so it advances
+    client-side on this surface. `flowRoot` is the unwrapped chain root (the
+    inner `ui` node for a `{version, ui:<root>}` envelope). FlowRunner mounts a
+    per-step inner <Ripple flowHosted={true}>, so the recursion guard above
+    keeps detection from re-engaging on a still-chain-bearing step. Terminal
+    completion forwards to this component's `onComplete`. This branch replaces
+    the normal `.ripple-root` tree entirely; the non-flow path below is
+    untouched (byte-identical output for plain specs).
+  -->
+  <FlowRunner spec={flowRoot} {onComplete} {onEvent} state={initialStateOverride} class={className} />
+{:else}
 <div
   class="ripple-root {className}"
   {style}
@@ -237,3 +295,4 @@
   <!-- Always-present confirm dialog — surfaces when the dispatcher writes a pending confirm. -->
   <ConfirmDialog />
 </div>
+{/if}
