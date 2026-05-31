@@ -399,7 +399,13 @@ export class EventDispatcher {
 
 		if (handler.action === 'emit') {
 			let value = handler.value !== undefined ? handler.value : eventValue;
-			if (typeof value === 'string') value = resolveString(value, context);
+			// Resolve `{state.x}` placeholders anywhere in the payload — not just a
+			// top-level string. A Chain Flow step emits `flow.next` with a value
+			// like `{ formData: { workspace: '{state.workspace}' } }`, so the
+			// nested expression must resolve before it reaches the host/runner.
+			// resolveValue is a no-op for a plain (expression-free) value, so this
+			// stays backward-compatible with existing string/object payloads.
+			value = resolveValue(value, context);
 			event.name = handler.target;
 			if (handler.target) event.target = handler.target;
 			event.payload = value;
