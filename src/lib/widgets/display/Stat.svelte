@@ -1,3 +1,8 @@
+<!--
+  Stat.svelte — single metric display (label + formatted value + optional delta).
+  Change: formatValue now guards non-finite coercions (undefined/null/object)
+  and renders blank instead of the literal "NaN". Strings still pass through.
+-->
 <script lang="ts">
   import { tv } from 'tailwind-variants';
   import { cn } from '$lib/utils.js';
@@ -42,7 +47,15 @@
   }: Props = $props();
 
   function formatValue(v: number | string): string {
+    // Strings pass through untouched (existing behavior): a numeric string
+    // like "125000" (httpbin echoes query params as strings) renders as
+    // "125000", and a non-numeric string ("pending") renders verbatim.
     if (typeof v === 'string') return v;
+    // Guard against undefined / null / objects — a binding resolving to a
+    // non-number (e.g. before an async source hydrates, or a missing response
+    // field). Intl.NumberFormat.format() would coerce these to NaN and paint
+    // the literal "NaN"; a widget must never do that. Render blank instead.
+    if (typeof v !== 'number' || !Number.isFinite(v)) return '';
     const opts: Intl.NumberFormatOptions = {};
     if (precision !== undefined) {
       opts.minimumFractionDigits = precision;
