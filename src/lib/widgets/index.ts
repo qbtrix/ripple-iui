@@ -1,5 +1,6 @@
 // Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 // Updated 2026-05-22: registered the `media/` escape-hatch widgets — ModelViewer (declarative 3D, type `model-viewer`/`3d`/`model`) and Embed (sandboxed iframe, type `embed`/`iframe`) for Increment 5.
+// Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`/`pomodoro`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
@@ -25,7 +26,8 @@ import {
   PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
   BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines
 } from './vertical/index.js';
-import { ModelViewer, Embed } from './media/index.js';
+import { ModelViewer, Embed, AudioPlayer, VideoPlayer } from './media/index.js';
+import { TodoList, DrawingCanvas, Timer, Flashcard } from './interactive/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -299,6 +301,24 @@ const defaultRegistry: WidgetMap = {
   model: ModelViewer,
   embed: Embed,
   iframe: Embed,
+  // Media — native players (composite consumer widgets, 2026-05-31)
+  audio: AudioPlayer,
+  'audio-player': AudioPlayer,
+  video: VideoPlayer,
+  'video-player': VideoPlayer,
+  // Interactive — self-contained consumer widgets (2026-05-31)
+  'todo-list': TodoList,
+  todo: TodoList,
+  todos: TodoList,
+  'drawing-canvas': DrawingCanvas,
+  drawing: DrawingCanvas,
+  canvas: DrawingCanvas,
+  sketchpad: DrawingCanvas,
+  timer: Timer,
+  countdown: Timer,
+  pomodoro: Timer,
+  flashcard: Flashcard,
+  'flip-card': Flashcard,
   // Aliases
   label: Text,
 };
@@ -351,5 +371,6 @@ export {
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   AskUserQuestions,
-  ModelViewer, Embed
+  ModelViewer, Embed, AudioPlayer, VideoPlayer,
+  TodoList, DrawingCanvas, Timer, Flashcard
 };
