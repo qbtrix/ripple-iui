@@ -1,6 +1,12 @@
 <!--
   FlowRunner.svelte — Chain Flow host (RFC 13 M1).
   Created 2026-05-31.
+  Updated 2026-05-31 — RECURSION GUARD: the per-step inner `<Ripple>` now mounts
+  with `flowHosted={true}`. Now that the base `<Ripple>` auto-detects chain specs
+  (PR #49 every-surface fix), a non-terminal step still carries its onward
+  `chain`/`chain_map`, so without this flag the inner Ripple would re-detect the
+  step as a flow and nest a SECOND FlowRunner — infinite recursion / hang. The
+  flag makes the inner Ripple skip detection and render just that step's tree.
 
   Drives a `ChainExecutor` over a nested `chain`/`chain_map` `UniversalSpec`
   tree and renders the current step with the standard `<Ripple>` renderer, so a
@@ -138,6 +144,12 @@
 
 <div class="flow-runner {className}" data-flow-step={currentSpec.flowId ?? currentSpec.id ?? currentSpec.intent}>
 	{#key stepKey}
-		<Ripple spec={currentSpec} {state} onEvent={handleEvent} />
+		<!--
+		  flowHosted={true} is the recursion guard: a non-terminal step still
+		  carries its onward chain/chain_map, so the base <Ripple>'s flow
+		  auto-detection would otherwise mount a nested FlowRunner here. The flag
+		  makes this inner Ripple render just the step's node tree.
+		-->
+		<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
 	{/key}
 </div>

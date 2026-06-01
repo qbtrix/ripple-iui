@@ -14,6 +14,11 @@
  *   refreshes — same shape, same fields, so the two stay in lockstep.
  *
  * @changes
+ *   - Wired the every-surface host: added `unwrapFlowRoot`, the companion to
+ *     `isFlowSpec`, so `<Ripple>` can hand `FlowRunner` the actual chain root.
+ *     `FlowRunner` reads `chain`/`chain_map` off the TOP of its spec, so when a
+ *     flow arrives wrapped as `{version, ui:<root>}` (the start_flow / chat
+ *     shape) `<Ripple>` must pass the inner `ui` node, not the envelope.
  *   - Created for the every-surface fix: lifted the predicate out of
  *     paw-enterprise's flow-terminal.ts so `<Ripple>` can auto-detect a chain
  *     spec and mount `FlowRunner` itself, instead of only paw-enterprise's
@@ -39,4 +44,23 @@ export function isFlowSpec(spec: unknown): boolean {
   const ui = (spec as Record<string, unknown>).ui;
   if (ui && typeof ui === 'object' && hasFlowFields(ui as Record<string, unknown>)) return true;
   return false;
+}
+
+/**
+ * The actual chain root inside `spec`, for handing to `FlowRunner` (which reads
+ * `chain`/`chain_map` off the TOP of the spec it gets). Mirrors `isFlowSpec`'s
+ * shallow detection:
+ *   - `spec` itself carries flow fields → `spec` is the root;
+ *   - else a one-level-down `ui` node carries them (the `{version, ui:<root>}`
+ *     envelope `start_flow` emits) → that `ui` node is the root;
+ *   - else `null` (not a flow — caller renders the spec as before).
+ * Returning the inner node for the wrapped shape is the whole fix: passing the
+ * envelope would leave `FlowRunner` with no `chain`/`chain_map` to walk.
+ */
+export function unwrapFlowRoot<T = unknown>(spec: unknown): T | null {
+  if (!spec || typeof spec !== 'object') return null;
+  if (hasFlowFields(spec as Record<string, unknown>)) return spec as T;
+  const ui = (spec as Record<string, unknown>).ui;
+  if (ui && typeof ui === 'object' && hasFlowFields(ui as Record<string, unknown>)) return ui as T;
+  return null;
 }
