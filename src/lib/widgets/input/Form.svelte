@@ -41,6 +41,16 @@
     validateOn?: 'submit' | 'change';
     /** Force validation now. (Set to a counter to retrigger.) */
     revalidate?: number;
+    /**
+     * Native form target. When `action` is set the form submits the browser way
+     * (a real `<form method action>` POST/GET), so the page works with NO client
+     * JS — required for static / prerendered hosts (paw-sites, RFC 12 A1). When
+     * `action` is absent, the form keeps its client-side behaviour: it
+     * `preventDefault`s, validates, and calls `onsubmit` (the in-app default).
+     */
+    action?: string;
+    /** HTTP method for the native form. Only used when `action` is set. */
+    method?: 'post' | 'get' | 'POST' | 'GET';
     onsubmit?: () => void;
     onvalidate?: (info: { valid: boolean; errors: Record<string, string> }) => void;
     children?: Snippet;
@@ -55,10 +65,16 @@
     validTarget = 'valid',
     validateOn = 'submit',
     revalidate = 0,
+    action,
+    method = 'post',
     onsubmit,
     onvalidate,
     children
   }: Props = $props();
+
+  // Native-submit mode: a real browser POST/GET, no JS required. Opt-in via
+  // `action`. Without it we keep the client-side validate-then-callback flow.
+  const native = $derived(typeof action === 'string' && action.length > 0);
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
@@ -141,8 +157,16 @@
   });
 
   function handleSubmit(e: Event) {
-    e.preventDefault();
     const { valid } = runValidation();
+    if (native) {
+      // Let the browser perform the real POST/GET — but block it if validation
+      // fails so client-side rules still gate a native submit.
+      if (!valid) e.preventDefault();
+      else onsubmit?.();
+      return;
+    }
+    // Client-side mode: never navigate; validate, then hand off to the callback.
+    e.preventDefault();
     if (valid) onsubmit?.();
   }
 </script>
@@ -151,6 +175,8 @@
   {id}
   class={cn('flex flex-col gap-3', className)}
   style={styleString}
+  action={native ? action : undefined}
+  method={native ? method : undefined}
   onsubmit={handleSubmit}
   novalidate
 >
