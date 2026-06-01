@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.3.1",
-  "generatedAt": "2026-05-30T04:45:20.321Z",
+  "generatedAt": "2026-05-31T07:32:15.209Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -13762,6 +13762,312 @@
               "to": "3"
             }
           ]
+        }
+      }
+    },
+    {
+      "type": "todo-list",
+      "category": "interactive",
+      "description": "Editable todo list: add, toggle, delete, and filter tasks. Two-way binds an array of {id,text,done} items via the default value/onchange surface.",
+      "props": {
+        "bind": {
+          "type": "string",
+          "required": false,
+          "description": "Two-way state path holding the item array, e.g. \"{state.tasks}\"."
+        },
+        "value": {
+          "type": "{id,text,done}[]",
+          "required": false,
+          "description": "Items when not bound."
+        },
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Heading text. Default \"Todo List\"."
+        },
+        "placeholder": {
+          "type": "string",
+          "required": false,
+          "description": "Add-input placeholder."
+        }
+      },
+      "events": {
+        "on_change": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired with the new item array when items change."
+        }
+      },
+      "example": {
+        "type": "todo-list",
+        "props": {
+          "title": "My Tasks"
+        },
+        "bind": "state.tasks"
+      },
+      "pocket": {
+        "state": {
+          "tasks": [
+            {
+              "id": "t-1",
+              "text": "Draft the proposal",
+              "done": false
+            },
+            {
+              "id": "t-2",
+              "text": "Review the budget",
+              "done": true
+            }
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "todo-list",
+              "props": {
+                "title": "My Tasks"
+              },
+              "bind": "state.tasks"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "drawing-canvas",
+      "category": "interactive",
+      "description": "Canvas 2D drawing pad with brush, eraser, color, size, undo/redo, clear, and PNG export. Supports mouse and touch. Exports via the on_save event.",
+      "props": {
+        "width": {
+          "type": "number",
+          "required": false,
+          "description": "Canvas width in px. Default 400."
+        },
+        "height": {
+          "type": "number",
+          "required": false,
+          "description": "Canvas height in px. Default 300."
+        },
+        "backgroundColor": {
+          "type": "string",
+          "required": false,
+          "description": "Background fill. Default \"#ffffff\"."
+        },
+        "initialImage": {
+          "type": "string",
+          "required": false,
+          "description": "Data URL pre-loaded onto the canvas."
+        }
+      },
+      "events": {
+        "on_save": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired with a PNG data URL when the user exports."
+        }
+      },
+      "example": {
+        "type": "drawing-canvas",
+        "props": {
+          "width": 400,
+          "height": 300,
+          "backgroundColor": "#ffffff"
+        }
+      }
+    },
+    {
+      "type": "timer",
+      "category": "interactive",
+      "description": "Pomodoro-style countdown timer with start, pause, reset, a progress bar, and duration presets. Fires on_complete when it reaches zero.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Duration in minutes. Default 25."
+        },
+        "label": {
+          "type": "string",
+          "required": false,
+          "description": "Label above the countdown."
+        },
+        "presets": {
+          "type": "number[]",
+          "required": false,
+          "description": "Quick-pick durations in minutes. Default [5,15,25,45]."
+        }
+      },
+      "events": {
+        "on_complete": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired when the countdown reaches zero."
+        }
+      },
+      "example": {
+        "type": "timer",
+        "props": {
+          "duration": 25,
+          "label": "Focus Timer",
+          "presets": [
+            5,
+            15,
+            25,
+            45
+          ]
+        }
+      }
+    },
+    {
+      "type": "flashcard",
+      "category": "interactive",
+      "description": "Study flashcard with a 3D flip between a question (front) and answer (back), plus \"Got it\" and \"Needs review\" actions for spaced repetition.",
+      "props": {
+        "front": {
+          "type": "string",
+          "required": true,
+          "description": "Question / front text."
+        },
+        "back": {
+          "type": "string",
+          "required": true,
+          "description": "Answer / back text."
+        },
+        "category": {
+          "type": "string",
+          "required": false,
+          "description": "Topic label shown above the card."
+        },
+        "index": {
+          "type": "string",
+          "required": false,
+          "description": "Position label, e.g. \"3 of 10\"."
+        }
+      },
+      "events": {
+        "on_flip": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired with the new flip state."
+        },
+        "on_correct": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired when marked correct."
+        },
+        "on_incorrect": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired when marked for review."
+        }
+      },
+      "example": {
+        "type": "flashcard",
+        "props": {
+          "front": "What is the capital of France?",
+          "back": "Paris",
+          "category": "Geography",
+          "index": "1 of 10"
+        }
+      }
+    },
+    {
+      "type": "audio",
+      "category": "media",
+      "description": "Audio player over a native audio element: play/pause, seek, volume/mute, skip ±10s, with cover art and title. Optional decorative bar strip.",
+      "props": {
+        "src": {
+          "type": "string",
+          "required": true,
+          "description": "Audio source URL."
+        },
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Track title. Default \"Audio Track\"."
+        },
+        "artist": {
+          "type": "string",
+          "required": false,
+          "description": "Artist / author line."
+        },
+        "cover": {
+          "type": "string",
+          "required": false,
+          "description": "Cover art image URL."
+        },
+        "autoplay": {
+          "type": "boolean",
+          "required": false,
+          "description": "Start playing on mount."
+        },
+        "showWaveform": {
+          "type": "boolean",
+          "required": false,
+          "description": "Render a static decorative bar strip."
+        }
+      },
+      "example": {
+        "type": "audio",
+        "props": {
+          "src": "https://example.com/track.mp3",
+          "title": "Ambient Loop",
+          "artist": "Unknown",
+          "showWaveform": true
+        }
+      }
+    },
+    {
+      "type": "video",
+      "category": "media",
+      "description": "Video player over a native video element: play/pause, seek, volume/mute, auto-hiding controls, fullscreen, and picture-in-picture.",
+      "props": {
+        "src": {
+          "type": "string",
+          "required": true,
+          "description": "Video source URL."
+        },
+        "poster": {
+          "type": "string",
+          "required": false,
+          "description": "Poster image shown before playback."
+        },
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Title overlaid on the controls bar."
+        },
+        "autoplay": {
+          "type": "boolean",
+          "required": false,
+          "description": "Start playing on mount."
+        },
+        "muted": {
+          "type": "boolean",
+          "required": false,
+          "description": "Start muted."
+        },
+        "loop": {
+          "type": "boolean",
+          "required": false,
+          "description": "Loop playback."
+        },
+        "controls": {
+          "type": "boolean",
+          "required": false,
+          "description": "Show the custom controls bar. Default true."
+        }
+      },
+      "example": {
+        "type": "video",
+        "props": {
+          "src": "https://example.com/clip.mp4",
+          "poster": "https://example.com/poster.jpg",
+          "title": "Demo Clip"
         }
       }
     }
