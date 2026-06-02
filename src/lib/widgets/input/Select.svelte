@@ -1,3 +1,6 @@
+<!-- Updated: 2026-06-02 — pass a `name` to Select.Root so bits-ui renders a
+     hidden form input; a static <form action> POST then submits the selected
+     value with JS off (ripple-iui #54). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
@@ -12,12 +15,14 @@
     options?: (string | { value: string; label: string })[];
     label?: string;
     disabled?: boolean;
+    /** Field name for native form submission. Defaults to the bind path via NodeRenderer. */
+    name?: string;
     onchange?: (value?: unknown) => void;
   }
 
   let {
     id, class: className, style, value = '', placeholder = 'Select...',
-    options = [], label, disabled = false, onchange
+    options = [], label, disabled = false, name, onchange
   }: Props = $props();
 
   // Mirror value into a local $state so the inner shadcn Select (which uses
@@ -64,6 +69,7 @@
     bind:value={internalValue}
     onValueChange={handleChange}
     {disabled}
+    {name}
   >
     <Select.Trigger {id} class={cn('w-full', className)} style={styleString}>
       {selectedLabel}
