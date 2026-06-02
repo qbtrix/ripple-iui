@@ -1,4 +1,6 @@
-<!-- src/lib/widgets/input/NumberInput.svelte -->
+<!-- src/lib/widgets/input/NumberInput.svelte
+     Updated: 2026-06-02 — render a `name` on the native input so a static
+     <form action> POST submits the value with JS off (ripple-iui #54). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import MinusIcon from '@lucide/svelte/icons/minus';
@@ -16,6 +18,8 @@
     step?: number;
     placeholder?: string;
     disabled?: boolean;
+    /** Field name for native form submission. Defaults to the bind path via NodeRenderer. */
+    name?: string;
     /** Format the input text — useful for currency, percentages, etc. */
     formatter?: (v: number) => string;
     /** Parse user input back into a number. */
@@ -34,6 +38,7 @@
     step = 1,
     placeholder,
     disabled = false,
+    name,
     formatter,
     parser,
     onchange
@@ -102,6 +107,7 @@
     </button>
     <input
       {id}
+      {name}
       type="text"
       inputmode="decimal"
       aria-label={label}
