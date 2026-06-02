@@ -24,6 +24,7 @@
 		resolveString,
 		evaluateCondition,
 		hasExpressions,
+		withFlowContext,
 		type ResolverContext
 	} from '../core/expression-resolver.js';
 	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
@@ -45,6 +46,12 @@
 	const eventDispatcher = getContext<EventDispatcher>('ui-events');
 	const dataStore = getContext<Record<string, unknown>>('ui-data');
 	const getWidget = getContext<(type: string) => any>('ui-widget-resolver');
+	// RFC 13: optional Chain Flow context accessor. When a host renders a flow,
+	// it provides `setContext('ui-flow-context', () => chainExecutor.context)`,
+	// layering the flow's accumulated `<flowId>_selection`/`_formData` keys onto
+	// the `state` scope so a later step can pre-fill from an earlier one. Read as
+	// a getter so it tracks the executor's reactive `$state` context.
+	const getFlowContext = getContext<(() => Record<string, unknown>) | undefined>('ui-flow-context');
 
 	/**
 	 * Build the resolver context for expression evaluation.
@@ -52,11 +59,13 @@
 	 * will track property access during derived computations.
 	 */
 	function getResolverContext(): ResolverContext {
-		return {
+		const ctx: ResolverContext = {
 			state: stateManager.state,
 			data: dataStore ?? {},
 			...loopContext
 		};
+		// Layer the flow's accumulated context onto `state` (a no-op when absent).
+		return getFlowContext ? withFlowContext(ctx, getFlowContext()) : ctx;
 	}
 
 	/**
