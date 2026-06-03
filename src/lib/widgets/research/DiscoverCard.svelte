@@ -51,8 +51,8 @@
     flex-direction: column;
     border-radius: 10px;
     overflow: hidden;
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--card));
+    border: 1px solid var(--border);
+    background: var(--card);
     min-width: 180px;
     max-width: 240px;
     flex-shrink: 0;
@@ -62,8 +62,8 @@
     cursor: pointer;
   }
   .rdisc[role='button']:hover {
-    border-color: hsl(var(--primary) / 0.4);
-    box-shadow: 0 2px 8px hsl(var(--primary) / 0.06);
+    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--primary) 6%, transparent);
   }
   .rdisc-img-wrap {
     width: 100%;
@@ -85,7 +85,7 @@
     font-size: 13px;
     font-weight: 600;
     line-height: 1.35;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -96,7 +96,7 @@
   .rdisc-desc {
     font-size: 11px;
     line-height: 1.4;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -106,7 +106,7 @@
   }
   .rdisc-source {
     font-size: 10px;
-    color: hsl(var(--muted-foreground) / 0.7);
+    color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
     margin-top: 2px;
   }
 </style>

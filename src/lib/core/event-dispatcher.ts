@@ -8,6 +8,16 @@
  *   - Converted to a discriminated-union-aware dispatcher with narrowing
  *   - Added flow actions (flow, branch, confirm, validate, delay, invoke)
  *   - Added async api chaining via RippleEventResult on the OnEventCallback
+ *   - Added run_source action — host-delegated re-run of a server-side read
+ *     binding, with the same async on_success / on_error chaining as `api`
+ *   - Added call_binding action — host-delegated invocation of a server-side
+ *     write binding; resolves {state.x}/{item.id} in path/params client-side
+ *     before emitting, then chains on_success / on_error like run_source
+ *     (RFC 05 M2a — Write actions core)
+ *   - Added invoke_tool action — host-delegated invocation of a named
+ *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
+ *     args; click-driven sibling of run_source / call_binding for the new
+ *     `POST /pockets/{id}/tools/run` wire (#1206 part a)
  *   - FlowAbortError for `validate` failures + flow-level error recovery
  *   - Enforces max nested flow depth to stop run-away recursion
  *   - Wires the new per-instance WidgetRegistry through the constructor
@@ -20,6 +30,7 @@ import type {
 import type { StateManager } from './state-manager.svelte.js';
 import {
 	resolveString,
+	resolveValue,
 	evaluateCondition,
 	type ResolverContext
 } from './expression-resolver.js';
@@ -107,11 +118,14 @@ export class EventDispatcher {
 		context: ResolverContext,
 		eventValue?: unknown
 	): Promise<void> {
+		// Expose the event payload to expressions via the `{event}` template
+		// (e.g. `value: '{event}'` on a handler). Done once at the top level so
+		// nested flow/branch handlers also see it without manual threading.
+		const ctx: ResolverContext = { ...context, event: eventValue };
 		try {
-			await this.runHandlers(handler, context, eventValue, 0);
+			await this.runHandlers(handler, ctx, eventValue, 0);
 		} catch (err) {
 			if (err instanceof FlowAbortError) {
-				// Expected control-flow signal. Swallow at the top level.
 				return;
 			}
 			throw err;
@@ -159,6 +173,15 @@ export class EventDispatcher {
 			case 'set':
 				this.handleSet(handler, context, eventValue);
 				return;
+			case 'toggle':
+				this.handleToggle(handler, context, eventValue);
+				return;
+			case 'push':
+				this.handlePush(handler, context, eventValue);
+				return;
+			case 'remove':
+				this.handleRemove(handler, context, eventValue);
+				return;
 			case 'open':
 				this.handleOpen(handler);
 				return;
@@ -172,11 +195,20 @@ export class EventDispatcher {
 			case 'api':
 				await this.handleApi(handler, context, depth);
 				return;
+			case 'run_source':
+				await this.handleRunSource(handler, context, depth);
+				return;
+			case 'call_binding':
+				await this.handleCallBinding(handler, context, depth);
+				return;
+			case 'invoke_tool':
+				await this.handleInvokeTool(handler, context, depth);
+				return;
 			case 'flow':
-				await this.handleFlow(handler, context, depth);
+				await this.handleFlow(handler, context, depth, eventValue);
 				return;
 			case 'branch':
-				await this.handleBranch(handler, context, depth);
+				await this.handleBranch(handler, context, depth, eventValue);
 				return;
 			case 'confirm':
 				await this.handleConfirm(handler, context, depth);
@@ -200,22 +232,141 @@ export class EventDispatcher {
 
 	// -- primitive actions ---------------------------------------------------
 
+	/**
+	 * Resolve `{...}` placeholders in a target path. Lets specs do
+	 * `target: 'issues.{i}.status'` to mutate the i-th item in a loop.
+	 */
+	private resolveTarget(target: string, context: ResolverContext): string {
+		if (!target.includes('{')) return target;
+		const result = resolveString(target, context);
+		return typeof result === 'string' ? result : String(result ?? '');
+	}
+
 	private handleSet(
 		handler: Extract<EventHandler, { action: 'set' }>,
 		context: ResolverContext,
 		eventValue?: unknown
 	): void {
 		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
 		let value = handler.value !== undefined ? handler.value : eventValue;
-		if (typeof value === 'string') {
-			value = resolveString(value, context);
-		}
-		this.stateManager.set(handler.target, value);
+		// Resolve `{...}` expressions inside strings, arrays, and object values.
+		value = resolveValue(value, context);
+		this.stateManager.set(target, value);
 	}
 
 	private handleOpen(handler: Extract<EventHandler, { action: 'open' }>): void {
 		if (!handler.target) return;
 		this.stateManager.set(handler.target, true);
+	}
+
+	/**
+	 * `toggle` — semantics depend on the target's current type:
+	 *  - boolean (or undefined): flip to !current
+	 *  - array: toggle membership of `value` (add if absent, remove if present)
+	 *  - other: warn and noop
+	 */
+	private handleToggle(
+		handler: Extract<EventHandler, { action: 'toggle' }>,
+		context: ResolverContext,
+		eventValue?: unknown
+	): void {
+		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
+
+		let value = handler.value !== undefined ? handler.value : eventValue;
+		value = resolveValue(value, context);
+
+		const current = this.stateManager.get(target);
+
+		if (Array.isArray(current)) {
+			if (value === undefined) {
+				console.warn(`EventDispatcher: toggle on array target "${target}" requires a value.`);
+				return;
+			}
+			const idx = current.indexOf(value);
+			const next = idx >= 0 ? current.filter((_, i) => i !== idx) : [...current, value];
+			this.stateManager.set(target, next);
+			return;
+		}
+
+		if (typeof current === 'boolean' || current === undefined || current === null) {
+			this.stateManager.set(target, !current);
+			return;
+		}
+
+		console.warn(
+			`EventDispatcher: toggle on non-boolean / non-array target "${target}" (was ${typeof current}) — no-op.`
+		);
+	}
+
+	/** `push` — append `value` to the array at `target`. Creates an array if missing. */
+	private handlePush(
+		handler: Extract<EventHandler, { action: 'push' }>,
+		context: ResolverContext,
+		eventValue?: unknown
+	): void {
+		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
+
+		let value = handler.value !== undefined ? handler.value : eventValue;
+		value = resolveValue(value, context);
+		if (value === undefined) return;
+
+		const current = this.stateManager.get(target);
+		if (current === undefined || current === null) {
+			this.stateManager.set(target, [value]);
+			return;
+		}
+		if (!Array.isArray(current)) {
+			console.warn(
+				`EventDispatcher: push on non-array target "${target}" (was ${typeof current}) — no-op.`
+			);
+			return;
+		}
+		this.stateManager.set(target, [...current, value]);
+	}
+
+	/** `remove` — remove an array item by `index` or by equality match on `value`. */
+	private handleRemove(
+		handler: Extract<EventHandler, { action: 'remove' }>,
+		context: ResolverContext,
+		eventValue?: unknown
+	): void {
+		if (!handler.target) return;
+		const target = this.resolveTarget(handler.target, context);
+
+		const current = this.stateManager.get(target);
+		if (!Array.isArray(current)) {
+			console.warn(
+				`EventDispatcher: remove on non-array target "${target}" (was ${typeof current}) — no-op.`
+			);
+			return;
+		}
+
+		if (typeof handler.index === 'number') {
+			const next = current.filter((_, i) => i !== handler.index);
+			this.stateManager.set(target, next);
+			return;
+		}
+
+		let value = handler.value !== undefined ? handler.value : eventValue;
+		value = resolveValue(value, context);
+		if (value === undefined) return;
+
+		// Primitive values: indexOf is fine. Objects: match by deep equality
+		// (JSON-stringify compare) so `value: '{loopItem}'` works.
+		let idx: number;
+		if (typeof value === 'object' && value !== null) {
+			const target_ = JSON.stringify(value);
+			idx = current.findIndex((item) => {
+				try { return JSON.stringify(item) === target_; } catch { return false; }
+			});
+		} else {
+			idx = current.indexOf(value);
+		}
+		if (idx < 0) return;
+		this.stateManager.set(target, current.filter((_, i) => i !== idx));
 	}
 
 	private emitExternal(
@@ -233,7 +384,12 @@ export class EventDispatcher {
 		};
 
 		if (handler.action === 'navigate') {
-			event.url = resolveString(handler.url, context) as string;
+			// Defensive fallback: LLM-generated specs occasionally emit
+			// `target` instead of `url` for navigate (cross-contamination
+			// from the emit/pin/unpin shape). Accept either so the click
+			// still works; the prompt teaches `url` going forward.
+			const rawUrl = handler.url ?? (handler as { target?: string }).target;
+			event.url = rawUrl ? (resolveString(rawUrl, context) as string) : '';
 		}
 
 		if (handler.action === 'toast') {
@@ -243,7 +399,13 @@ export class EventDispatcher {
 
 		if (handler.action === 'emit') {
 			let value = handler.value !== undefined ? handler.value : eventValue;
-			if (typeof value === 'string') value = resolveString(value, context);
+			// Resolve `{state.x}` placeholders anywhere in the payload — not just a
+			// top-level string. A Chain Flow step emits `flow.next` with a value
+			// like `{ formData: { workspace: '{state.workspace}' } }`, so the
+			// nested expression must resolve before it reaches the host/runner.
+			// resolveValue is a no-op for a plain (expression-free) value, so this
+			// stays backward-compatible with existing string/object payloads.
+			value = resolveValue(value, context);
 			event.name = handler.target;
 			if (handler.target) event.target = handler.target;
 			event.payload = value;
@@ -282,28 +444,7 @@ export class EventDispatcher {
 			event.body = resolved;
 		}
 
-		let result: RippleEventResult;
-		try {
-			const maybe = this.onEvent(event);
-			const raw = maybe && typeof (maybe as Promise<unknown>).then === 'function'
-				? await (maybe as Promise<RippleEventResult | void>)
-				: (maybe as RippleEventResult | void);
-
-			// Legacy hosts returning `void` are treated as silent success.
-			if (raw === undefined || raw === null) {
-				result = { ok: true, data: undefined };
-			} else {
-				result = raw as RippleEventResult;
-			}
-		} catch (err) {
-			// A host throwing is a transport-level failure — surface it as an error result.
-			result = {
-				ok: false,
-				error: {
-					message: err instanceof Error ? err.message : String(err)
-				}
-			};
-		}
+		const result = await this.callHost(event);
 
 		if (result.ok) {
 			if (handler.response_key && result.data !== undefined) {
@@ -330,12 +471,224 @@ export class EventDispatcher {
 		}
 	}
 
+	/**
+	 * `run_source` — host-delegated re-run of a server-side read binding.
+	 * Ripple does not fetch; it emits a `run_source` event and lets the host
+	 * re-run the named source. Result handling mirrors `handleApi` exactly:
+	 * on success the host's data flows into `on_success`, on failure the error
+	 * is written to `_flow_error` and `on_error` runs. A legacy `void` host
+	 * return is treated as a silent success with no data.
+	 */
+	private async handleRunSource(
+		handler: Extract<EventHandler, { action: 'run_source' }>,
+		context: ResolverContext,
+		depth: number
+	): Promise<void> {
+		if (!this.onEvent) return;
+
+		const event: RippleEvent = {
+			type: 'run_source',
+			source: handler.source
+		};
+
+		const result = await this.callHost(event);
+
+		if (result.ok) {
+			if (handler.on_success && handler.on_success.length > 0) {
+				await this.runHandlers(
+					handler.on_success,
+					this.freshContext(context),
+					result.data,
+					depth
+				);
+			}
+		} else {
+			this.stateManager.set(
+				FLOW_ERROR_STATE_KEY,
+				result.error ?? { message: 'run_source failed' }
+			);
+			if (handler.on_error && handler.on_error.length > 0) {
+				await this.runHandlers(
+					handler.on_error,
+					this.freshContext(context),
+					result.error,
+					depth
+				);
+			}
+		}
+	}
+
+	/**
+	 * `call_binding` — host-delegated invocation of a named server-side write
+	 * binding (the write-action twin of `run_source`). Ripple does not make the
+	 * HTTP call; it FIRST resolves `{state.x}` / `{item.id}` expressions in
+	 * `path` and in each value of `params` client-side — exactly what
+	 * `handleApi` does for `url` / `body` — then emits a `call_binding` event
+	 * and lets the host perform the write. Result handling mirrors
+	 * `handleRunSource` / `handleApi`: on success the host's data flows into
+	 * `on_success`, on failure the error is written to `_flow_error` and
+	 * `on_error` runs. A legacy `void` host return is a silent success.
+	 *
+	 * `method` is intentionally not part of the handler — the HTTP verb is read
+	 * from the persisted spec on the server; the client never names the verb.
+	 */
+	private async handleCallBinding(
+		handler: Extract<EventHandler, { action: 'call_binding' }>,
+		context: ResolverContext,
+		depth: number
+	): Promise<void> {
+		if (!this.onEvent) return;
+
+		const event: RippleEvent = {
+			type: 'call_binding',
+			binding: handler.binding
+		};
+
+		// Resolve `{state.x}` / `{item.id}` in the path before the call leaves
+		// the browser — identical to how `handleApi` resolves `url`.
+		if (handler.path !== undefined) {
+			event.path = resolveString(handler.path, context) as string;
+		}
+
+		// Resolve each param value the same way `handleApi` resolves `body` —
+		// but via `resolveValue` so nested objects / arrays / non-string values
+		// are handled too.
+		if (handler.params) {
+			const resolved: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries(handler.params)) {
+				resolved[key] = resolveValue(value, context);
+			}
+			event.params = resolved;
+		}
+
+		const result = await this.callHost(event);
+
+		if (result.ok) {
+			if (handler.on_success && handler.on_success.length > 0) {
+				await this.runHandlers(
+					handler.on_success,
+					this.freshContext(context),
+					result.data,
+					depth
+				);
+			}
+		} else {
+			this.stateManager.set(
+				FLOW_ERROR_STATE_KEY,
+				result.error ?? { message: 'call_binding failed' }
+			);
+			if (handler.on_error && handler.on_error.length > 0) {
+				await this.runHandlers(
+					handler.on_error,
+					this.freshContext(context),
+					result.error,
+					depth
+				);
+			}
+		}
+	}
+
+	/**
+	 * `invoke_tool` — host-delegated invocation of a named server-side tool
+	 * (WebFetch, Composio, etc.) by tool id + resolved args. Click-driven
+	 * sibling of `run_source` / `call_binding`: ripple does not run the tool,
+	 * it FIRST resolves `{state.x}` / `{item.id}` expressions in each value of
+	 * `args` client-side (the same way `handleCallBinding` resolves `params`),
+	 * then emits an `invoke_tool` event and lets the host POST to the new
+	 * `/pockets/{id}/tools/run` wire. Result handling mirrors `handleCallBinding`
+	 * / `handleRunSource`: on success the host's data flows into `on_success`,
+	 * on failure the error is written to `_flow_error` and `on_error` runs. A
+	 * legacy `void` host return is a silent success.
+	 */
+	private async handleInvokeTool(
+		handler: Extract<EventHandler, { action: 'invoke_tool' }>,
+		context: ResolverContext,
+		depth: number
+	): Promise<void> {
+		if (!this.onEvent) return;
+
+		const event: RippleEvent = {
+			type: 'invoke_tool',
+			tool: handler.tool
+		};
+
+		// Resolve each arg value before the call leaves the browser — identical
+		// to how `handleCallBinding` resolves each `params` value. `resolveValue`
+		// handles nested objects / arrays / non-string values so an arg like
+		// `count: 5` or `filter: { open: true }` passes through unchanged while
+		// `query: '{state.draft}'` resolves to the live state value.
+		if (handler.args) {
+			const resolved: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries(handler.args)) {
+				resolved[key] = resolveValue(value, context);
+			}
+			event.args = resolved;
+		}
+
+		const result = await this.callHost(event);
+
+		if (result.ok) {
+			if (handler.on_success && handler.on_success.length > 0) {
+				await this.runHandlers(
+					handler.on_success,
+					this.freshContext(context),
+					result.data,
+					depth
+				);
+			}
+		} else {
+			this.stateManager.set(
+				FLOW_ERROR_STATE_KEY,
+				result.error ?? { message: 'invoke_tool failed' }
+			);
+			if (handler.on_error && handler.on_error.length > 0) {
+				await this.runHandlers(
+					handler.on_error,
+					this.freshContext(context),
+					result.error,
+					depth
+				);
+			}
+		}
+	}
+
+	/**
+	 * Emit an event to the host and normalize the reply into a RippleEventResult.
+	 * Shared by `handleApi`, `handleRunSource`, `handleCallBinding`, and
+	 * `handleInvokeTool`. Legacy hosts returning `void` are treated as a silent
+	 * success with no data; a host that throws becomes a transport-level error
+	 * result. Caller must have verified `this.onEvent`.
+	 */
+	private async callHost(event: RippleEvent): Promise<RippleEventResult> {
+		try {
+			const maybe = this.onEvent!(event);
+			const raw = maybe && typeof (maybe as Promise<unknown>).then === 'function'
+				? await (maybe as Promise<RippleEventResult | void>)
+				: (maybe as RippleEventResult | void);
+
+			// Legacy hosts returning `void` are treated as silent success.
+			if (raw === undefined || raw === null) {
+				return { ok: true, data: undefined };
+			}
+			return raw as RippleEventResult;
+		} catch (err) {
+			// A host throwing is a transport-level failure — surface it as an error result.
+			return {
+				ok: false,
+				error: {
+					message: err instanceof Error ? err.message : String(err)
+				}
+			};
+		}
+	}
+
 	// -- composite flow actions ---------------------------------------------
 
 	private async handleFlow(
 		handler: Extract<EventHandler, { action: 'flow' }>,
 		context: ResolverContext,
-		depth: number
+		depth: number,
+		eventValue?: unknown
 	): Promise<void> {
 		const nextDepth = depth + 1;
 		if (nextDepth > MAX_FLOW_DEPTH) {
@@ -346,7 +699,7 @@ export class EventDispatcher {
 
 		try {
 			for (const step of handler.steps) {
-				await this.dispatchSingle(step, context, undefined, nextDepth);
+				await this.dispatchSingle(step, context, eventValue, nextDepth);
 			}
 		} catch (err) {
 			if (err instanceof FlowAbortError) {
@@ -375,12 +728,13 @@ export class EventDispatcher {
 	private async handleBranch(
 		handler: Extract<EventHandler, { action: 'branch' }>,
 		context: ResolverContext,
-		depth: number
+		depth: number,
+		eventValue?: unknown
 	): Promise<void> {
 		const condition = evaluateCondition(handler.if, this.freshContext(context));
 		const branch = condition ? handler.then : handler.else;
 		if (!branch || branch.length === 0) return;
-		await this.runHandlers(branch, this.freshContext(context), undefined, depth);
+		await this.runHandlers(branch, this.freshContext(context), eventValue, depth);
 	}
 
 	private async handleConfirm(

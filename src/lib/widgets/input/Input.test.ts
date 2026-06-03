@@ -114,3 +114,11 @@ test('no prefix slot rendered when prefix snippet is not provided', () => {
   const { container } = render(Input, { props: { placeholder: 'x' } });
   expect(container.querySelector('[data-slot="input-prefix"]')).toBeNull();
 });
+
+test('onchange fires on every keystroke (live updates)', async () => {
+  const onchange = vi.fn();
+  render(Input, { props: { placeholder: 'live', onchange } });
+  await userEvent.type(screen.getByPlaceholderText('live'), 'abc');
+  expect(onchange).toHaveBeenCalledTimes(3);
+  expect(onchange.mock.calls.at(-1)![0]).toBe('abc');
+});

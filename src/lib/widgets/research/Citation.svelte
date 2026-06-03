@@ -18,7 +18,7 @@
   }
 
   let {
-    source, color = 'hsl(var(--primary))', favicon, number,
+    source, color = 'var(--primary)', favicon, number,
     url, class: className, onclick
   }: Props = $props();
 
@@ -51,7 +51,7 @@
     gap: 3px;
     padding: 1px 6px;
     border-radius: 4px;
-    background: hsl(var(--muted) / 0.5);
+    background: color-mix(in oklab, var(--muted) 50%, transparent);
     font-size: 11px;
     line-height: 1.4;
     vertical-align: baseline;
@@ -62,7 +62,7 @@
     cursor: pointer;
   }
   .rcite[role='button']:hover {
-    background: hsl(var(--muted));
+    background: var(--muted);
   }
   .rcite-dot {
     width: 8px;
@@ -78,12 +78,12 @@
     object-fit: contain;
   }
   .rcite-name {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-weight: 500;
   }
   .rcite-num {
     font-size: 9px;
-    color: hsl(var(--muted-foreground) / 0.7);
+    color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
     margin-left: 1px;
   }
 </style>

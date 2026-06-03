@@ -18,7 +18,7 @@
   }
 
   let {
-    source, title, color = 'hsl(var(--primary))',
+    source, title, color = 'var(--primary)',
     favicon, url, class: className, onclick
   }: Props = $props();
 
@@ -50,9 +50,9 @@
     flex-direction: column;
     gap: 6px;
     padding: 12px;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 10px;
-    background: hsl(var(--card));
+    background: var(--card);
     min-width: 160px;
     max-width: 200px;
     flex-shrink: 0;
@@ -62,8 +62,8 @@
     cursor: pointer;
   }
   .rsrc-card[role='button']:hover {
-    border-color: hsl(var(--primary) / 0.4);
-    box-shadow: 0 1px 4px hsl(var(--primary) / 0.08);
+    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+    box-shadow: 0 1px 4px color-mix(in oklab, var(--primary) 8%, transparent);
   }
   .rsrc-card-head {
     display: flex;
@@ -86,7 +86,7 @@
   .rsrc-card-source {
     font-size: 11px;
     font-weight: 500;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -94,7 +94,7 @@
   .rsrc-card-title {
     font-size: 13px;
     line-height: 1.4;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;

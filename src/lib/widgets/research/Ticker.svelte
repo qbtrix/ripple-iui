@@ -44,13 +44,13 @@
     gap: 0;
     padding: 8px 12px;
     border-radius: 8px;
-    background: hsl(var(--muted) / 0.25);
+    background: color-mix(in oklab, var(--muted) 25%, transparent);
     overflow-x: auto;
   }
   .rtick-sep {
     width: 1px;
     height: 24px;
-    background: hsl(var(--border));
+    background: var(--border);
     flex-shrink: 0;
     margin: 0 14px;
   }
@@ -63,7 +63,7 @@
   .rtick-sym {
     font-size: 12px;
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     letter-spacing: 0.02em;
   }
   .rtick-price {
@@ -71,7 +71,7 @@
     font-weight: 600;
     font-family: "JetBrains Mono Variable", "SF Mono", ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
   .rtick-chg {
     font-size: 11px;

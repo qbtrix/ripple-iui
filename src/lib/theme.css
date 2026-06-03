@@ -1,0 +1,50 @@
+/* Ripple theme tokens.
+   Hosts may override any --ripple-* custom property in a scoped selector
+   (e.g. `.my-context .ripple-root { --ripple-surface: transparent; }`)
+   to retheme Ripple per render context without polluting the global
+   shadcn token set. Defaults below cascade from the host's shadcn tokens
+   so doing nothing keeps the existing look. */
+
+:root {
+  --ripple-surface: var(--card);
+  --ripple-surface-foreground: var(--card-foreground);
+  --ripple-muted: var(--muted);
+  --ripple-muted-foreground: var(--muted-foreground);
+  --ripple-accent: var(--primary);
+  --ripple-accent-foreground: var(--primary-foreground);
+  --ripple-border: var(--border);
+  --ripple-ring: var(--ring);
+  --ripple-success: oklch(0.72 0.17 155);
+  --ripple-success-foreground: oklch(1 0 0);
+  --ripple-warning: oklch(0.80 0.16 80);
+  --ripple-warning-foreground: oklch(0.15 0 0);
+  --ripple-error: oklch(0.65 0.22 25);
+  --ripple-error-foreground: oklch(1 0 0);
+  --ripple-info: oklch(0.70 0.12 250);
+  --ripple-info-foreground: oklch(1 0 0);
+  --ripple-input: var(--background);
+  --ripple-input-foreground: var(--foreground);
+  --ripple-radius: var(--radius);
+}
+
+@theme inline {
+  --color-ripple-surface: var(--ripple-surface);
+  --color-ripple-surface-foreground: var(--ripple-surface-foreground);
+  --color-ripple-muted: var(--ripple-muted);
+  --color-ripple-muted-foreground: var(--ripple-muted-foreground);
+  --color-ripple-accent: var(--ripple-accent);
+  --color-ripple-accent-foreground: var(--ripple-accent-foreground);
+  --color-ripple-border: var(--ripple-border);
+  --color-ripple-ring: var(--ripple-ring);
+  --color-ripple-success: var(--ripple-success);
+  --color-ripple-success-foreground: var(--ripple-success-foreground);
+  --color-ripple-warning: var(--ripple-warning);
+  --color-ripple-warning-foreground: var(--ripple-warning-foreground);
+  --color-ripple-error: var(--ripple-error);
+  --color-ripple-error-foreground: var(--ripple-error-foreground);
+  --color-ripple-info: var(--ripple-info);
+  --color-ripple-info-foreground: var(--ripple-info-foreground);
+  --color-ripple-input: var(--ripple-input);
+  --color-ripple-input-foreground: var(--ripple-input-foreground);
+  --radius-ripple: var(--ripple-radius);
+}

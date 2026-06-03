@@ -30,7 +30,7 @@
   const sentimentConfig: Record<string, { label: string; color: string; bg: string }> = {
     bullish: { label: 'Bullish', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
     bearish: { label: 'Bearish', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-    neutral: { label: 'Neutral', color: 'hsl(var(--muted-foreground))', bg: 'hsl(var(--muted) / 0.3)' },
+    neutral: { label: 'Neutral', color: 'var(--muted-foreground)', bg: 'color-mix(in oklab, var(--muted) 30%, transparent)' },
   };
 </script>
 
@@ -69,7 +69,7 @@
     align-items: flex-start;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
     transition: background 0.12s;
   }
   .rnews:last-child {
@@ -79,7 +79,7 @@
     cursor: pointer;
   }
   .rnews[role='button']:hover {
-    background: hsl(var(--muted) / 0.15);
+    background: color-mix(in oklab, var(--muted) 15%, transparent);
   }
   .rnews-body {
     flex: 1;
@@ -100,15 +100,15 @@
   .rnews-source {
     font-size: 11px;
     font-weight: 600;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
   }
   .rnews-dot {
     font-size: 10px;
-    color: hsl(var(--muted-foreground) / 0.5);
+    color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
   }
   .rnews-time {
     font-size: 11px;
-    color: hsl(var(--muted-foreground) / 0.7);
+    color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
   }
   .rnews-sentiment {
     font-size: 10px;
@@ -121,7 +121,7 @@
     font-size: 13px;
     font-weight: 600;
     line-height: 1.4;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;

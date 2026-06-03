@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
 
   interface TimelineEvent {
     /** Date or time label */
@@ -18,15 +19,23 @@
     events: TimelineEvent[];
     /** Max events to show before truncating */
     maxItems?: number;
+    /** Visual density. 'compact' hides the rail, tightens spacing — use for activity streams. */
+    density?: 'comfortable' | 'compact';
     class?: string;
   }
 
-  let { events = [], maxItems, class: className }: Props = $props();
+  let {
+    events: rawEvents = [],
+    maxItems,
+    density = 'comfortable',
+    class: className,
+  }: Props = $props();
 
+  const events = $derived(safeArray<TimelineEvent>(rawEvents, { widget: 'timeline', key: 'events' }));
   const visible = $derived(maxItems ? events.slice(0, maxItems) : events);
 
   const typeColors: Record<string, string> = {
-    default: 'hsl(var(--muted-foreground))',
+    default: 'var(--muted-foreground)',
     success: '#22c55e',
     warning: '#f59e0b',
     error: '#ef4444',
@@ -39,7 +48,7 @@
   }
 </script>
 
-<div class={cn('rtl', className)}>
+<div class={cn('rtl', density === 'compact' && 'rtl--compact', className)}>
   {#each visible as ev, i}
     <div class="rtl-item">
       <div class="rtl-rail">
@@ -85,12 +94,12 @@
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
-    box-shadow: 0 0 0 2px hsl(var(--card));
+    box-shadow: 0 0 0 2px var(--card);
   }
   .rtl-line {
     width: 1.5px;
     flex: 1;
-    background: hsl(var(--border));
+    background: var(--border);
     min-height: 12px;
   }
   .rtl-content {
@@ -101,7 +110,7 @@
     display: block;
     font-size: 10px;
     font-weight: 600;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-bottom: 2px;
@@ -111,19 +120,30 @@
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     line-height: 1.35;
   }
   .rtl-detail {
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     line-height: 1.45;
     margin: 3px 0 0;
   }
   .rtl-more {
     font-size: 11px;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     padding-left: 24px;
     font-weight: 500;
   }
+
+  /* Compact density — activity-stream layout. No rail, tighter rows, smaller dot. */
+  .rtl--compact .rtl-rail { padding-top: 6px; }
+  .rtl--compact .rtl-dot {
+    width: 6px;
+    height: 6px;
+    box-shadow: none;
+  }
+  .rtl--compact .rtl-line { display: none; }
+  .rtl--compact .rtl-content { padding-bottom: 4px; }
+  .rtl--compact .rtl-title { font-size: 12px; }
 </style>

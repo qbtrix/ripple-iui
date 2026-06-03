@@ -10,6 +10,13 @@
     - Fixed: Use self-import instead of deprecated svelte:self
     - Wired on_focus and on_blur handlers through widget props
     - Warn on unknown slot names (non-blocking, aids spec debugging)
+    - 2026-05-22: unknown-widget branch fails loud — shows the node id and a
+      clear "not in the catalog" message instead of a bare red box
+      (Increment 5 catalog-as-allowlist).
+    - 2026-06-02: derive a form-field `name` for input widgets — explicit
+      `props.name` wins, else fall back to the resolved `bind` path — so a
+      native <form action> POST carries field values with JS disabled
+      (ripple-iui #54).
 -->
 <script lang="ts">
 	import { getContext } from 'svelte';
@@ -21,8 +28,10 @@
 		resolveString,
 		evaluateCondition,
 		hasExpressions,
+		withFlowContext,
 		type ResolverContext
 	} from '../core/expression-resolver.js';
+	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
 
 	// Self-import for recursion (Svelte 5 pattern)
 	import Self from './NodeRenderer.svelte';
@@ -41,6 +50,12 @@
 	const eventDispatcher = getContext<EventDispatcher>('ui-events');
 	const dataStore = getContext<Record<string, unknown>>('ui-data');
 	const getWidget = getContext<(type: string) => any>('ui-widget-resolver');
+	// RFC 13: optional Chain Flow context accessor. When a host renders a flow,
+	// it provides `setContext('ui-flow-context', () => chainExecutor.context)`,
+	// layering the flow's accumulated `<flowId>_selection`/`_formData` keys onto
+	// the `state` scope so a later step can pre-fill from an earlier one. Read as
+	// a getter so it tracks the executor's reactive `$state` context.
+	const getFlowContext = getContext<(() => Record<string, unknown>) | undefined>('ui-flow-context');
 
 	/**
 	 * Build the resolver context for expression evaluation.
@@ -48,11 +63,13 @@
 	 * will track property access during derived computations.
 	 */
 	function getResolverContext(): ResolverContext {
-		return {
+		const ctx: ResolverContext = {
 			state: stateManager.state,
 			data: dataStore ?? {},
 			...loopContext
 		};
+		// Layer the flow's accumulated context onto `state` (a no-op when absent).
+		return getFlowContext ? withFlowContext(ctx, getFlowContext()) : ctx;
 	}
 
 	/**
@@ -105,6 +122,19 @@
 	const WidgetComponent = $derived(getWidget(node.type));
 
 	/**
+	 * Per-widget bind contract: which prop receives the bound value and
+	 * which event fires when the widget mutates it. Defaults to
+	 * `value`/`onchange`; composites like wizard-layout override this.
+	 */
+	const bindContract = $derived(getBindContract(node.type));
+
+	// Dev-only discoverability: warn once if a `bind` is used on a widget
+	// that isn't classified in widget-bind-contract.ts.
+	$effect(() => {
+		if (node.bind) warnUnregisteredBindContract(node.type);
+	});
+
+	/**
 	 * Create event handler functions that get fresh context on each invocation.
 	 */
 	function createEventHandler(handler: EventHandlerOrArray | undefined) {
@@ -118,10 +148,83 @@
 
 	// Event handlers are computed once but context is fresh on each call
 	const onclick = createEventHandler(node.on_click);
-	const onchange = createEventHandler(node.on_change);
 	const onsubmit = createEventHandler(node.on_submit);
 	const onfocus = createEventHandler(node.on_focus);
 	const onblur = createEventHandler(node.on_blur);
+	const oninputUser = createEventHandler(node.on_input);
+
+	/**
+	 * Build handlers for any other `on_*` keys on the node (e.g. on_close, on_resize,
+	 * on_navigate, on_select). The well-known events above are wired explicitly
+	 * because they participate in two-way binding or have special semantics; the
+	 * rest are passed through generically as `on<event>` props.
+	 */
+	const KNOWN_ON_KEYS = new Set([
+		'on_click', 'on_change', 'on_input', 'on_submit', 'on_focus', 'on_blur'
+	]);
+	const extraHandlers = $derived.by<Record<string, (v?: unknown) => unknown>>(() => {
+		const out: Record<string, (v?: unknown) => unknown> = {};
+		const raw = node as unknown as Record<string, unknown>;
+		for (const key of Object.keys(raw)) {
+			if (!key.startsWith('on_') || KNOWN_ON_KEYS.has(key)) continue;
+			const handler = createEventHandler(raw[key] as EventHandlerOrArray);
+			if (!handler) continue;
+			// on_close → onclose, on_open_change → onopenchange
+			const propName = 'on' + key.slice(3).replace(/_/g, '');
+			out[propName] = handler;
+		}
+		return out;
+	});
+
+	// `bind` may itself contain `{...}` placeholders (e.g. `lines.{i}.qty`)
+	// that reference loop-local variables. This template is resolved per
+	// invocation of onchange / oninput so the path picks up the current
+	// loop context.
+	const boundPathTemplate = $derived.by(() => {
+		if (!node.bind) return null;
+		const stripped = node.bind.replace(/^\{|\}$/g, '').trim();
+		return stripped.replace(/^state\./, '');
+	});
+
+	function resolveBoundPath(): string | null {
+		const tpl = boundPathTemplate;
+		if (!tpl) return null;
+		if (!tpl.includes('{')) return tpl;
+		const result = resolveString(tpl, getResolverContext());
+		return typeof result === 'string' ? result : String(result ?? '');
+	}
+
+	/**
+	 * Form-field name for input widgets, so a native `<form action>` POST
+	 * (Form.svelte's static-host mode) carries the field with JS disabled —
+	 * the browser only submits controls that have a `name`.
+	 *
+	 * Priority: an explicit `name` in the spec props wins; otherwise we fall
+	 * back to the resolved `bind` path. Form.svelte validates and serializes
+	 * by state-path key, so defaulting `name` to the bind path lines the
+	 * POSTed body keys up with the form's field rules with no extra config.
+	 *
+	 * Loop placeholders (`lines.{i}.qty`) are resolved against the current
+	 * loop context, matching the bound value/onchange wiring above.
+	 */
+	const resolvedName = $derived.by(() => {
+		const explicit = resolvedProps.name;
+		if (typeof explicit === 'string' && explicit.length > 0) return explicit;
+		return resolveBoundPath() ?? undefined;
+	});
+
+	const onchangeUser = createEventHandler(node.on_change);
+	const onchange = (eventValue?: unknown) => {
+		const path = resolveBoundPath();
+		if (path) stateManager.set(path, eventValue);
+		return onchangeUser?.(eventValue);
+	};
+
+	const oninput = (eventValue?: unknown) => {
+		const path = resolveBoundPath();
+		if (path) stateManager.set(path, eventValue);
+		return oninputUser?.(eventValue);
+	};
 
 	/**
 	 * Get bound value if 'bind' is specified.
@@ -129,17 +232,19 @@
 	 */
 	const boundValue = $derived.by(() => {
 		if (!node.bind) return undefined;
-		// Remove curly braces if present
-		const path = node.bind.replace(/^\{|\}$/g, '').trim();
-		const statePath = path.replace(/^state\./, '');
+		const tpl = boundPathTemplate;
+		if (!tpl) return undefined;
+		// Resolve `{...}` placeholders against current loop context.
+		const statePath = tpl.includes('{')
+			? (() => {
+					const r = resolveString(tpl, getResolverContext());
+					return typeof r === 'string' ? r : String(r ?? '');
+			  })()
+			: tpl;
 
-		// For simple keys (no dots), access state directly for proper reactivity tracking
-		// The $state proxy will track this property access
 		if (!statePath.includes('.')) {
 			return stateManager.state[statePath];
 		}
-
-		// For nested paths, use the get method (less reactive but works for reads)
 		return stateManager.get(statePath);
 	});
 
@@ -205,12 +310,14 @@
 	 * Children without `slot` go to the default bucket (the body children snippet).
 	 * Named-slot children are forwarded to the widget via matching snippet props.
 	 */
+	const KNOWN_SLOTS = new Set(['default', 'header', 'footer', 'sidebar', 'topbar', 'actions']);
+
 	const childBuckets = $derived.by<Record<string, UINode[]>>(() => {
 		const buckets: Record<string, UINode[]> = { default: [] };
 		if (!node.children) return buckets;
 		for (const child of node.children) {
 			const key = child.slot ?? 'default';
-			if (key !== 'default' && key !== 'header' && key !== 'footer') {
+			if (!KNOWN_SLOTS.has(key)) {
 				console.warn(`[Ripple] Unknown slot name: ${key}`);
 			}
 			if (!buckets[key]) buckets[key] = [];
@@ -256,19 +363,25 @@
 		{@const defaultKids = childBuckets.default ?? []}
 		{@const headerKids = childBuckets.header ?? []}
 		{@const footerKids = childBuckets.footer ?? []}
+		{@const sidebarKids = childBuckets.sidebar ?? []}
+		{@const topbarKids = childBuckets.topbar ?? []}
+		{@const actionsKids = childBuckets.actions ?? []}
 		{@const widgetProps = {
 			id: node.id,
 			...(resolvedClass !== undefined && { class: resolvedClass }),
 			...(node.style !== undefined && { style: node.style }),
 			...resolvedProps,
-			...(boundValue !== undefined && { value: boundValue }),
-			...((node.type === 'checkbox' || node.type === 'switch') && boundValue !== undefined && { checked: boundValue }),
+			...(resolvedName !== undefined && { name: resolvedName }),
+			...(boundValue !== undefined && { [bindContract.prop]: boundValue }),
 			...(onclick !== undefined && { onclick }),
-			...(onchange !== undefined && { onchange }),
+			...((boundPathTemplate || onchangeUser) && { [bindContract.event]: onchange }),
+			...((boundPathTemplate ||oninputUser) && { oninput }),
 			...(onsubmit !== undefined && { onsubmit }),
 			...(onfocus !== undefined && { onfocus }),
 			...(onblur !== undefined && { onblur }),
-			...(defaultKids.length > 0 && { hasChildren: true })
+			...extraHandlers,
+			...(defaultKids.length > 0 && { hasChildren: true }),
+			...(node.type === 'tabs' && defaultKids.length > 0 && { panels: defaultKids, panelLoopContext: loopContext })
 		}}
 		{#snippet headerSnippet()}
 			{#each headerKids as child, i (child.id ?? i)}
@@ -280,10 +393,28 @@
 				<Self node={child} {loopContext} />
 			{/each}
 		{/snippet}
+		{#snippet sidebarSnippet()}
+			{#each sidebarKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet topbarSnippet()}
+			{#each topbarKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
+		{#snippet actionsSnippet()}
+			{#each actionsKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
 		<WidgetComponent
 			{...widgetProps}
 			header={headerKids.length > 0 ? headerSnippet : undefined}
 			footer={footerKids.length > 0 ? footerSnippet : undefined}
+			sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
+			topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
+			actions={actionsKids.length > 0 ? actionsSnippet : undefined}
 		>
 			{#snippet children()}
 				{#each defaultKids as child, i (child.id ?? i)}
@@ -292,9 +423,23 @@
 			{/snippet}
 		</WidgetComponent>
 	{:else}
-		<!-- Unknown widget type -->
-		<div class="text-red-500 p-2 border border-red-300 rounded bg-red-50">
-			Unknown widget type: {node.type}
+		<!--
+			Unknown widget type — the node's `type` is not in the widget catalog.
+			Fail loud: surface the offending type and the node id so the spec
+			author (or the catalog gate) can pinpoint it.
+		-->
+		<div
+			class="text-red-500 p-2 border border-red-300 rounded bg-red-50 text-sm"
+			role="alert"
+			data-ripple-unknown-widget={node.type}
+		>
+			<strong>Widget type "{node.type}" isn't in the catalog.</strong>
+			{#if node.id}
+				<span class="block opacity-80">node id: {node.id}</span>
+			{/if}
+			<span class="block opacity-80">
+				Use a registered widget type, or register a custom widget before mount.
+			</span>
 		</div>
 	{/if}
 {/if}

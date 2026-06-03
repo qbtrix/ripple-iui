@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import { getContext } from 'svelte';
   import type { EventDispatcher } from '$lib/core/event-dispatcher.js';
   import type { StateManager } from '$lib/core/state-manager.svelte.js';
@@ -28,10 +29,11 @@
   }
 
   let {
-    sources = [], count, label = 'sources',
+    sources: rawSources = [], count, label = 'sources',
     share = true, copy = true, class: className, onclick
   }: Props = $props();
 
+  const sources = $derived(safeArray<SourceRef>(rawSources, { widget: 'sources-bar', key: 'sources' }));
   const validSources = $derived(sources.filter(s => s?.name));
   const displayCount = $derived(count ?? validSources.length);
   const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
@@ -120,7 +122,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 1.5px solid hsl(var(--card));
+    border: 1.5px solid var(--card);
     flex-shrink: 0;
     position: relative;
   }
@@ -128,7 +130,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 1.5px solid hsl(var(--card));
+    border: 1.5px solid var(--card);
     flex-shrink: 0;
     position: relative;
     object-fit: cover;
@@ -136,7 +138,7 @@
   .rsbar-count {
     font-size: 12px;
     font-weight: 500;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
   }
   .rsbar-actions {
     display: flex;
@@ -152,12 +154,12 @@
     border-radius: 6px;
     border: none;
     background: transparent;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
   .rsbar-btn:hover {
-    background: hsl(var(--muted));
-    color: hsl(var(--foreground));
+    background: var(--muted);
+    color: var(--foreground);
   }
 </style>

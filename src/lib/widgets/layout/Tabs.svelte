@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { safeArray } from '$lib/utils/safe-props.js';
   import * as Tabs from '$lib/components/ui/tabs/index.js';
+  import NodeRenderer from '$lib/components/NodeRenderer.svelte';
+  import type { UINode } from '$lib/schema/index.js';
 
   interface Tab {
     value: string;
@@ -15,16 +18,20 @@
     defaultValue?: string;
     value?: string;
     children?: Snippet;
+    /** Per-tab content nodes injected by NodeRenderer (one per tab, by index). */
+    panels?: UINode[];
+    /** Loop context to thread through NodeRenderer for per-tab content. */
+    panelLoopContext?: Record<string, unknown>;
     onchange?: (value?: unknown) => void;
   }
 
   let {
     id, class: className, tabs: rawTabs = [], defaultValue, value: externalValue,
-    children, onchange
+    children, panels, panelLoopContext, onchange
   }: Props = $props();
 
   const tabs: Tab[] = $derived(
-    rawTabs.map((t, i) =>
+    safeArray<Tab | string>(rawTabs, { widget: 'tabs', key: 'tabs' }).map((t, i) =>
       typeof t === 'string'
         ? { value: t, label: t }
         : { value: t.value ?? t.label ?? `tab-${i}`, label: t.label ?? t.value ?? `Tab ${i + 1}` }
@@ -39,7 +46,6 @@
     }
   });
 
-  // Sync when external value changes
   $effect(() => {
     if (externalValue !== undefined) {
       activeTab = externalValue;
@@ -63,9 +69,11 @@
       <Tabs.Trigger value={tab.value}>{tab.label}</Tabs.Trigger>
     {/each}
   </Tabs.List>
-  {#each tabs as tab (tab.value)}
+  {#each tabs as tab, i (tab.value)}
     <Tabs.Content value={tab.value}>
-      {#if activeTab === tab.value}
+      {#if panels && panels[i]}
+        <NodeRenderer node={panels[i]} loopContext={panelLoopContext ?? {}} />
+      {:else if activeTab === tab.value}
         {@render children?.()}
       {/if}
     </Tabs.Content>

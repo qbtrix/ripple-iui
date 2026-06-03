@@ -55,7 +55,7 @@
     font-size: 11px;
     font-weight: 700;
     flex-shrink: 0;
-    background: hsl(var(--background));
+    background: var(--background);
     border: 1.5px solid currentColor;
     margin-top: 1px;
   }
@@ -66,13 +66,13 @@
     display: block;
     font-size: 13px;
     font-weight: 700;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     margin-bottom: 2px;
   }
   .rcall-text {
     font-size: 12px;
     line-height: 1.5;
-    color: hsl(var(--foreground) / 0.8);
+    color: color-mix(in oklab, var(--foreground) 80%, transparent);
     margin: 0;
   }
 </style>

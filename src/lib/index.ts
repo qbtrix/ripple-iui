@@ -1,3 +1,6 @@
+// Updated 2026-05-22: export validateCatalog so hosts can gate a spec
+// against the widget catalog before mount (Increment 5 catalog-as-allowlist).
+
 // Main component
 export { default as Ripple } from './Ripple.svelte';
 
@@ -20,9 +23,45 @@ export {
   resolveValue,
   evaluateCondition,
   hasExpressions,
+  withFlowContext,
   type ResolverContext
 } from './core/expression-resolver.js';
 export { normalizeSpec } from './core/normalizer.js';
+export {
+  validateCatalog,
+  type UnknownNode,
+  type ValidateCatalogOptions
+} from './core/validate-catalog.js';
+export { newNodeId, isValidNodeId, ensureNodeIds } from './core/spec-id.js';
+export {
+  findById,
+  findParent,
+  applyAddNode,
+  applyReplaceNode,
+  applySetNodeProp,
+  applyMoveNode,
+  applyRemoveNode,
+  applySetPropArrayItem,
+  applyAppendPropArrayItem,
+  applyRemovePropArrayItem,
+  applyOp,
+  type AddNodeOp,
+  type ReplaceNodeOp,
+  type SetNodePropOp,
+  type MoveNodeOp,
+  type RemoveNodeOp,
+  type SetPropArrayItemOp,
+  type AppendPropArrayItemOp,
+  type RemovePropArrayItemOp
+} from './core/spec-mutator.js';
+export {
+  getStatePath,
+  setStatePath,
+  appendStatePath,
+  removeStatePath,
+  patchState,
+  applyStateOp
+} from './core/state-mutator.js';
 
 // Widget registry
 export {
@@ -36,8 +75,20 @@ export {
 
 // Schema
 export { UISpec, UINode, DataFetcher, ThemeOverrides, parseUISpec, safeParseUISpec } from './schema/ui-spec.js';
-export { UniversalSpec, IntentType, LifecycleType, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
+export { UniversalSpec, IntentType, LifecycleType, FlowAction, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
 export { EventHandler, EventAction, EventHandlerOrArray } from './schema/event-handler.js';
+
+// Chain Flow primitive (RFC 13) — the client-side, zero-roundtrip multi-step
+// flow runtime. `ChainExecutor` walks a nested chain/chain_map tree; `FlowRunner`
+// hosts it over `<Ripple>` so a flow renders in a Pocket (or any surface).
+export {
+  ChainExecutor,
+  MAX_HISTORY_DEPTH,
+  FlowRunner,
+  buildOnboardingWizard,
+  type ChainState,
+  type TerminalResult
+} from './intent/index.js';
 export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 
 // Actions

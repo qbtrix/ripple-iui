@@ -1,6 +1,8 @@
 # Widgets Reference
 
-Ripple includes 30+ built-in widgets organized into 7 categories. All widgets accept common props: `id`, `class`, `style`, and `onclick` (where applicable).
+Ripple ships 150+ built-in widgets across nine categories. Every widget accepts the common props `id`, `class`, `style`, and (where applicable) `onclick`.
+
+> **Canonical schema lives in [`dist/manifest.json`](../dist/manifest.json).** The manifest is generated from the same TypeScript prop declarations the runtime consumes, so it's always in sync. This page covers the high-traffic widgets in detail and lists the rest by category — refer to the manifest for full prop tables and runnable examples for everything else. The dev server also serves the manifest at `http://localhost:5174/manifest.json`.
 
 ---
 
@@ -183,6 +185,12 @@ interface FeedItem {
 
 ## Input Widgets
 
+> **Binding contract.** Each input below uses a specific prop / event
+> pair for two-way `bind`. The runtime source of truth is
+> `src/lib/core/widget-bind-contract.ts`; see
+> [State Management → Per-widget bind contract](./state-management.md#per-widget-bind-contract)
+> for the full table and how to register a new one.
+
 ### `button`
 
 Interactive button.
@@ -264,9 +272,12 @@ Data table with columns, variants, and row click support.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `data` | `any[]` | `[]` | Row data array |
-| `columns` | `{ header: string; accessorKey: string }[]` | `[]` | Column definitions |
+| `rows` | `Array<Record<string, unknown>>` | `[]` | Row objects (canonical name; `data` is also accepted as an alias) |
+| `columns` | `Array<{ header?: string; accessorKey?: string; sortable?: boolean }>` | `[]` | Column definitions. `key`/`label` are accepted as aliases for `accessorKey`/`header` |
 | `variant` | `'default' \| 'compact' \| 'striped' \| 'minimal'` | `'default'` | Visual variant |
+| `sortable` | `boolean` | `false` | Enable click-to-sort headers |
+| `searchable` | `boolean` | `false` | Show a search input that filters across visible columns |
+| `pageSize` | `number` | — | Paginate; click prev/next to walk pages |
 | `statusKey` | `string` | — | Column key for colored status dot |
 | `onRowClick` | `EventHandler \| EventHandler[]` | — | Row click handler. Provides `item` and `index` in context |
 
@@ -314,6 +325,24 @@ Inside children, use `{item.field}` or `{yourAlias.field}` to access loop data.
 
 ## Composite Widgets
 
+Composite widgets are typed full-pane layouts — emit ONE node and the whole pattern (header + body + actions) renders. Reach for them before rebuilding the same shape out of `flex` + `card` + inputs.
+
+### Composite layouts (refer to manifest for full prop schema)
+
+| Widget | When to use |
+|--------|-------------|
+| `comparison-layout` | Side-by-side comparison of 2–6 items with hero cards, section-tab feature grid, Card/Table view toggle |
+| `entity-detail` | Record / profile / entity page — header, properties, tabs |
+| `form-layout` | Multi-section form with grouped fields, validation, and a submit/cancel action row |
+| `wizard-layout` | Multi-step setup or onboarding flow with stepper, per-step body, and Back/Next actions |
+| `checklist-layout` | Launch checklist / pre-flight / runbook with grouped items, completion progress, and per-item details |
+| `report-layout` | Long-form report with sections, embedded data widgets, and callouts |
+| `invoice-layout` | Invoice / quote / receipt with line items, computed totals, and download actions |
+| `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline |
+| `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
+
+For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
+
 ### `terminal`
 
 Terminal/code output display with optional interactive input.
@@ -338,8 +367,58 @@ interface TermLine {
 
 ---
 
+## Other categories
+
+The remaining widgets are documented in the [`docs/kb/`](./kb/) knowledge-base files (covering layout, display, input, data, control flow, composites, research, universal-spec) and exhaustively in `dist/manifest.json`. Highlights:
+
+- **Overlay** — `alert`, `callout`, `tooltip`, `popover`, `dropdown-menu`, `toast`, `command-palette`, `context-menu`, `notification-center`, `error-state`, `coachmark`, `confirm-dialog`
+- **Research** — `source-card`, `citation`, `sources-bar`, `discover-card`, `follow-up`, `kv-table`, `news-card`, `ticker`, `company-header`, `analyst-bar`, `range-bar`
+- **Vertical / enterprise** — `pricing-table`, `settings-list`, `comment-thread`, `audit-log`, `api-key`, `people-picker`, `permission-matrix`, `org-chart`, `invoice-lines`, `bulk-action-bar`, `saved-views`
+- **Extra layout** — `accordion`, `split`, `master-detail`, `app-shell`, `sidebar`, `breadcrumb`, `page-header`, `hero`, `section`, `collapsible`, `glass-card`
+- **Extra data** — `data-grid`, `kanban`, `gantt`, `calendar`, `timeline`, `tree`, `tree-table`, `virtual-list`, `sparkline`, `gauge`, `funnel`, `heatmap`, `sankey`, `treemap`, `map`
+- **Extra input** — `textarea`, `combobox`, `multi-select`, `radio-group`, `slider`, `rating`, `date-picker`, `time-picker`, `number-input`, `segmented`, `color-picker`, `file-upload`, `form`, `filter-bar`, `search`, `location-picker`
+
 ## Widget Aliases
+
+The widget registry accepts several common aliases — pick whichever reads better in your spec.
 
 | Alias | Maps To |
 |-------|---------|
 | `label` | `text` |
+| `comparison`, `comparison-table` | `ComparisonTable` |
+| `comparison-cards`, `compare` | `comparison-layout` |
+| `dialog` | `modal` |
+| `divider` | `separator` |
+| `banner` | `alert` |
+| `dropdown`, `menu` | `dropdown-menu` |
+| `pricing`, `plans` | `pricing-table` |
+| `audit` | `audit-log` |
+| `comments` | `comment-thread` |
+| `nav` | `sidebar` |
+| `shell` | `app-shell` |
+| `breadcrumbs` | `breadcrumb` |
+| `list-detail` | `master-detail` |
+| `filters` | `filter-bar` |
+| `autocomplete` | `combobox` |
+| `multiselect`, `tag-input` | `multi-select` |
+| `datepicker`, `date` | `date-picker` |
+| `timepicker`, `time` | `time-picker` |
+| `fileupload`, `dropzone` | `file-upload` |
+| `data-table`, `datatable` | `table` |
+| `vlist`, `list` | `virtual-list` |
+| `treeview` | `tree` |
+| `treetable`, `nested-rows` | `tree-table` |
+| `board` | `kanban` |
+| `gantt-chart`, `roadmap` | `gantt` |
+| `geo-map`, `tracking-map`, `route-map` | `map` |
+| `geo-picker`, `pick-location` | `location-picker` |
+| `notifications`, `inbox` | `notification-center` |
+| `cmdk`, `command` | `command-palette` |
+| `record-detail`, `entity-page` | `entity-detail` |
+| `quote-layout`, `receipt` | `invoice-layout` |
+| `shipment-tracker`, `order-tracking` | `order-status` |
+| `wizard` | `wizard-layout` |
+| `checklist` | `checklist-layout` |
+| `report` | `report-layout` |
+| `frame`, `nested-spec` | `ripple-frame` |
+| `tour` | `coachmark` |

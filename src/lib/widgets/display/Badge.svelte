@@ -12,8 +12,8 @@
 
   // Map Ripple-specific variants to shadcn badge variants, with custom classes for success/warning
   const variantMap: Record<string, string> = {
-    success: 'bg-green-500/10 text-green-500 border-green-500/20',
-    warning: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+    success: 'bg-ripple-success/10 text-ripple-success border-ripple-success/20',
+    warning: 'bg-ripple-warning/10 text-ripple-warning border-ripple-warning/20',
   };
 
   const shadcnVariant = $derived(

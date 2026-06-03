@@ -17,8 +17,15 @@
 		columns = 1, rows, gap, onclick
 	}: Props = $props();
 
+	const gapScale: Record<string, string> = {
+		xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px', '2xl': '32px'
+	};
 	const gapValue = $derived(
-		gap == null ? undefined : typeof gap === 'number' ? `${gap * 4}px` : gap
+		gap == null
+			? undefined
+			: typeof gap === 'number'
+				? `${gap * 4}px`
+				: (gapScale[gap] ?? gap)
 	);
 
 	const combinedStyle = $derived.by(() => {

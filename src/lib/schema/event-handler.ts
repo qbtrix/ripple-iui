@@ -7,6 +7,14 @@
  *   - Converted to discriminatedUnion on `action` so each variant has its own shape
  *   - Added flow, branch, confirm, validate, delay, invoke action types
  *   - Extended api action with response_key, on_success, on_error for async chaining
+ *   - Added run_source action — host-delegated re-run of a server-side read
+ *     binding (RFC 04 — Pocket Interactivity & Data Sync)
+ *   - Added call_binding action — host-delegated write-action twin of
+ *     run_source; invokes a named server-side write binding (RFC 05 M2a)
+ *   - Added invoke_tool action — host-delegated invocation of a named
+ *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
+ *     args; the click-driven sibling of run_source / call_binding for
+ *     home-pocket button refresh (#1206 part a)
  *   - EventHandlerOrArray still accepts either a single handler or an array for
  *     backwards compatibility with existing specs
  */
@@ -19,6 +27,13 @@ import { z } from 'zod';
  * Legacy actions:
  * - set: Update a state value
  * - api: Make an API call (host-delegated — host performs the HTTP request)
+ * - run_source: Re-run a server-side read binding (host-delegated — host
+ *   re-fetches the named source)
+ * - call_binding: Invoke a named server-side write binding (host-delegated —
+ *   host performs the write; the verb lives in the persisted spec)
+ * - invoke_tool: Invoke a named server-side tool by id with resolved args
+ *   (host-delegated — the host POSTs to `/pockets/{id}/tools/run` with the
+ *   tool name + args; click-driven sibling of run_source / call_binding)
  * - navigate: Navigate to a URL
  * - toast: Show a toast notification
  * - emit: Emit a custom event to parent
@@ -35,7 +50,13 @@ import { z } from 'zod';
  */
 export const EventAction = z.enum([
 	'set',
+	'toggle',
+	'push',
+	'remove',
 	'api',
+	'run_source',
+	'call_binding',
+	'invoke_tool',
 	'navigate',
 	'toast',
 	'emit',
@@ -60,6 +81,37 @@ export const SetHandler = z.object({
 	action: z.literal('set'),
 	target: z.string(),
 	value: z.any().optional()
+});
+
+/**
+ * `toggle` — flip a boolean target, or toggle membership of `value` in an array
+ * target. With no `value`, the target must be a boolean and is inverted.
+ */
+export const ToggleHandler = z.object({
+	action: z.literal('toggle'),
+	target: z.string(),
+	value: z.any().optional()
+});
+
+/**
+ * `push` — append a value to an array target. If the target is undefined,
+ * a new array is created. No-op on non-array targets (with a warning).
+ */
+export const PushHandler = z.object({
+	action: z.literal('push'),
+	target: z.string(),
+	value: z.any().optional()
+});
+
+/**
+ * `remove` — remove an item from an array target. With `value`, removes by
+ * equality match (first occurrence). With `index`, removes by position.
+ */
+export const RemoveHandler = z.object({
+	action: z.literal('remove'),
+	target: z.string(),
+	value: z.any().optional(),
+	index: z.number().optional()
 });
 
 /** `open` — set the target state path to true (opens modals and dialogs). */
@@ -118,6 +170,75 @@ export const ApiHandler: z.ZodType<ApiHandlerType> = z.lazy(() =>
 		body: z.record(z.string(), z.any()).optional(),
 		headers: z.record(z.string(), z.string()).optional(),
 		response_key: z.string().optional(),
+		on_success: z.array(EventHandler).optional(),
+		on_error: z.array(EventHandler).optional()
+	})
+);
+
+/**
+ * `run_source` — host-delegated re-run of a server-side read binding ("source").
+ * Ripple does not fetch; it emits the event to the host's `onEvent` callback,
+ * the host re-runs the named source and returns a RippleEventResult. The
+ * dispatcher then chains on_success / on_error exactly like `api`.
+ *
+ * For backwards compatibility, hosts returning `void` are treated as a silent
+ * success with no data — no continuation receives a payload.
+ */
+export const RunSourceHandler: z.ZodType<RunSourceHandlerType> = z.lazy(() =>
+	z.object({
+		action: z.literal('run_source'),
+		source: z.string(),
+		on_success: z.array(EventHandler).optional(),
+		on_error: z.array(EventHandler).optional()
+	})
+);
+
+/**
+ * `call_binding` — host-delegated invocation of a named server-side write
+ * binding. The write-action twin of `run_source`: ripple does not make the
+ * HTTP call, it emits a `call_binding` event to the host's `onEvent` callback,
+ * the host performs the write and returns a RippleEventResult. The dispatcher
+ * resolves `{state.x}` / `{item.id}` in `path` and `params` client-side before
+ * the event leaves the browser (exactly like `api` resolves `url` / `body`),
+ * then chains on_success / on_error exactly like `run_source` and `api`.
+ *
+ * NOTE: `method` is deliberately absent — the HTTP verb is read from the
+ * persisted spec on the server; the client never names the verb.
+ *
+ * For backwards compatibility, hosts returning `void` are treated as a silent
+ * success with no data — no continuation receives a payload.
+ */
+export const CallBindingHandler: z.ZodType<CallBindingHandlerType> = z.lazy(() =>
+	z.object({
+		action: z.literal('call_binding'),
+		binding: z.string(),
+		path: z.string().optional(),
+		params: z.record(z.string(), z.any()).optional(),
+		on_success: z.array(EventHandler).optional(),
+		on_error: z.array(EventHandler).optional()
+	})
+);
+
+/**
+ * `invoke_tool` — host-delegated invocation of a named server-side tool
+ * (WebFetch, Composio, etc.) by tool id + resolved args. The click-driven
+ * sibling of `run_source` (read-only fetch) and `call_binding` (named
+ * write binding); the home grid's `onEvent` plumbing POSTs to
+ * `/pockets/{id}/tools/run` and the dispatcher chains `on_success` /
+ * `on_error` with the result exactly like `run_source` / `call_binding`.
+ *
+ * The dispatcher resolves `{state.x}` / `{item.id}` inside each value of
+ * `args` client-side before emitting (same contract as `call_binding`
+ * resolves `path` / `params`), so the server never sees expressions.
+ *
+ * For backwards compatibility, hosts returning `void` are treated as a
+ * silent success with no data — no continuation receives a payload.
+ */
+export const InvokeToolHandler: z.ZodType<InvokeToolHandlerType> = z.lazy(() =>
+	z.object({
+		action: z.literal('invoke_tool'),
+		tool: z.string(),
+		args: z.record(z.string(), z.any()).optional(),
 		on_success: z.array(EventHandler).optional(),
 		on_error: z.array(EventHandler).optional()
 	})
@@ -189,6 +310,30 @@ type ApiHandlerType = {
 	on_error?: EventHandler[];
 };
 
+type RunSourceHandlerType = {
+	action: 'run_source';
+	source: string;
+	on_success?: EventHandler[];
+	on_error?: EventHandler[];
+};
+
+type CallBindingHandlerType = {
+	action: 'call_binding';
+	binding: string;
+	path?: string;
+	params?: Record<string, unknown>;
+	on_success?: EventHandler[];
+	on_error?: EventHandler[];
+};
+
+type InvokeToolHandlerType = {
+	action: 'invoke_tool';
+	tool: string;
+	args?: Record<string, unknown>;
+	on_success?: EventHandler[];
+	on_error?: EventHandler[];
+};
+
 type FlowHandlerType = {
 	action: 'flow';
 	steps: EventHandler[];
@@ -224,6 +369,9 @@ type ConfirmHandlerType = {
  */
 export const EventHandler = z.union([
 	SetHandler,
+	ToggleHandler,
+	PushHandler,
+	RemoveHandler,
 	OpenHandler,
 	NavigateHandler,
 	ToastHandler,
@@ -231,6 +379,9 @@ export const EventHandler = z.union([
 	PinHandler,
 	UnpinHandler,
 	ApiHandler,
+	RunSourceHandler,
+	CallBindingHandler,
+	InvokeToolHandler,
 	FlowHandler,
 	BranchHandler,
 	ConfirmHandler,
@@ -241,6 +392,9 @@ export const EventHandler = z.union([
 
 export type EventHandler =
 	| z.infer<typeof SetHandler>
+	| z.infer<typeof ToggleHandler>
+	| z.infer<typeof PushHandler>
+	| z.infer<typeof RemoveHandler>
 	| z.infer<typeof OpenHandler>
 	| z.infer<typeof NavigateHandler>
 	| z.infer<typeof ToastHandler>
@@ -248,6 +402,9 @@ export type EventHandler =
 	| z.infer<typeof PinHandler>
 	| z.infer<typeof UnpinHandler>
 	| ApiHandlerType
+	| RunSourceHandlerType
+	| CallBindingHandlerType
+	| InvokeToolHandlerType
 	| FlowHandlerType
 	| BranchHandlerType
 	| ConfirmHandlerType

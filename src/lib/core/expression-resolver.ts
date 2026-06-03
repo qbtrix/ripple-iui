@@ -6,6 +6,11 @@
  *   - Initial creation with expression parsing and evaluation
  *   - Support for simple paths, comparisons, and null checks
  *   - Template string resolution for embedded expressions
+ *   - RFC 13 M1: `state` scope can carry a Chain Flow's accumulated `context`
+ *     so a later step pre-fills from an earlier one with
+ *     `{state.<flowId>_selection.field}`. This is a SCOPE ADDITION — see
+ *     `withFlowContext` — not a new expression engine. App state wins on key
+ *     collision, so a flow can never shadow real state.
  */
 
 /**
@@ -23,6 +28,30 @@ export interface ResolverContext {
 	index?: number;
 	/** Custom loop variable names */
 	[key: string]: unknown;
+}
+
+/**
+ * Layer a Chain Flow's accumulated `context` (namespaced
+ * `<flowId>_selection` / `<flowId>_formData` keys) onto the `state` scope of a
+ * resolver context, so cross-step expressions like
+ * `{state.pick_goal_selection.id}` resolve while a flow is mid-walk.
+ *
+ * RFC 13 §5.2: "Extend its `state` scope to include the flow's accumulated
+ * `context` ... No new expression engine — this is a scope addition."
+ *
+ * Real application state takes precedence: the flow keys are spread *under*
+ * `ctx.state`, so a flow key can never shadow a genuine state key of the same
+ * name. Returns `ctx` unchanged when there is no flow context to add.
+ */
+export function withFlowContext(
+	ctx: ResolverContext,
+	flowContext: Record<string, unknown> | null | undefined
+): ResolverContext {
+	if (!flowContext || Object.keys(flowContext).length === 0) return ctx;
+	return {
+		...ctx,
+		state: { ...flowContext, ...ctx.state }
+	};
 }
 
 /**
@@ -72,19 +101,16 @@ export function isSingleExpression(value: string): boolean {
 export function evaluateExpression(expression: string, context: ResolverContext): unknown {
 	const trimmed = expression.trim();
 
-	// Check for ternary operator first (condition ? trueVal : falseVal)
-	// First normalize optional chaining to avoid confusion with ternary operator
-	// We replace ?. with a placeholder, find ternary, then restore
-	const normalized = trimmed.replace(/\?\./g, '\x00OPTCHAIN\x00');
-	const ternaryMatch = normalized.match(/^(.+?)\s*\?\s*(.+?)\s*:\s*(.+)$/);
-	if (ternaryMatch) {
-		// Restore optional chaining in the matched parts
-		const restoreOptChain = (s: string) => s.replace(/\x00OPTCHAIN\x00/g, '?.');
-		const [, conditionExpr, trueExpr, falseExpr] = ternaryMatch;
-		const condition = evaluateExpression(restoreOptChain(conditionExpr.trim()), context);
+	// Ternary: scan for the top-level `?` and matching `:`, respecting
+	// parens, brackets, braces, and string literals. The previous regex
+	// approach broke when the true / false branch contained `:` inside a
+	// nested object literal (e.g. `cond ? a : [{value: 'x'}]`).
+	const ternary = findTernarySplit(trimmed);
+	if (ternary) {
+		const condition = evaluateExpression(ternary.cond, context);
 		return condition
-			? evaluateExpression(restoreOptChain(trueExpr.trim()), context)
-			: evaluateExpression(restoreOptChain(falseExpr.trim()), context);
+			? evaluateExpression(ternary.then, context)
+			: evaluateExpression(ternary.else, context);
 	}
 
 	// Check for OR operator (||) - split and evaluate each part
@@ -137,6 +163,26 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 		return evaluateExpression(trimmed.slice(1, -1), context);
 	}
 
+	// Null-coalesce (??): split outside parens; pick first non-null/undefined
+	if (trimmed.includes('??')) {
+		const parts = splitLogicalOperator(trimmed, '??');
+		if (parts.length > 1) {
+			for (let i = 0; i < parts.length; i++) {
+				const v = evaluateExpression(parts[i].trim(), context);
+				if (v !== null && v !== undefined) return v;
+				if (i === parts.length - 1) return v;
+			}
+		}
+	}
+
+	// Whitelisted method calls — `<receiver>.<method>(<args>)`
+	const methodCall = matchMethodCall(trimmed);
+	if (methodCall) {
+		const receiver = evaluateExpression(methodCall.receiver, context);
+		const args = methodCall.args.map((a) => evaluateExpression(a, context));
+		return applyMethod(receiver, methodCall.method, args);
+	}
+
 	// Check for comparison operators (order matters - check === before ==)
 	const comparisonMatch = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
 
@@ -165,8 +211,310 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 		}
 	}
 
+	// Arithmetic: + and - (lowest precedence). String concat for + when either side is a string.
+	const additive = splitArithmetic(trimmed, ['+', '-']);
+	if (additive) {
+		let result = evaluateExpression(additive.parts[0], context);
+		for (let i = 0; i < additive.ops.length; i++) {
+			const right = evaluateExpression(additive.parts[i + 1], context);
+			if (additive.ops[i] === '+') {
+				if (typeof result === 'string' || typeof right === 'string') {
+					result = String(result ?? '') + String(right ?? '');
+				} else {
+					result = toNumber(result) + toNumber(right);
+				}
+			} else {
+				result = toNumber(result) - toNumber(right);
+			}
+		}
+		return result;
+	}
+
+	// Arithmetic: *, /, % (higher precedence)
+	const multiplicative = splitArithmetic(trimmed, ['*', '/', '%']);
+	if (multiplicative) {
+		let result = toNumber(evaluateExpression(multiplicative.parts[0], context));
+		for (let i = 0; i < multiplicative.ops.length; i++) {
+			const right = toNumber(evaluateExpression(multiplicative.parts[i + 1], context));
+			const op = multiplicative.ops[i];
+			if (op === '*') result *= right;
+			else if (op === '/') result = right === 0 ? 0 : result / right;
+			else result = right === 0 ? 0 : result % right;
+		}
+		return result;
+	}
+
 	// Fallback: try to parse as value (literal or path)
 	return parseValue(trimmed, context);
+}
+
+/** Coerce any value to a finite number (NaN/non-numeric → 0). */
+function toNumber(v: unknown): number {
+	const n = Number(v);
+	return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Split an expression on top-level binary arithmetic operators, respecting
+ * parentheses and treating leading `-`/`+` as unary (sign of a literal).
+ * Returns null if the expression has no binary operator from the set.
+ */
+function splitArithmetic(
+	expr: string,
+	operators: string[]
+): { ops: string[]; parts: string[] } | null {
+	const parts: string[] = [];
+	const ops: string[] = [];
+	let depth = 0;
+	let bracketDepth = 0;
+	let braceDepth = 0;
+	let inStr: '"' | "'" | null = null;
+	let current = '';
+	let prevNonSpace = '';
+
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+
+		// Inside a quoted string — pass everything through, only watch for the closing quote.
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+
+		if (ch === '(') {
+			depth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === ')') {
+			depth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '[') {
+			bracketDepth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === ']') {
+			bracketDepth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '{') {
+			braceDepth++;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (ch === '}') {
+			braceDepth--;
+			current += ch;
+			prevNonSpace = ch;
+			continue;
+		}
+		if (depth === 0 && bracketDepth === 0 && braceDepth === 0 && operators.includes(ch)) {
+			const isBinary = /[a-zA-Z0-9_)\]}'"]/.test(prevNonSpace);
+			if (isBinary) {
+				parts.push(current.trim());
+				ops.push(ch);
+				current = '';
+				prevNonSpace = '';
+				continue;
+			}
+		}
+		current += ch;
+		if (ch !== ' ') prevNonSpace = ch;
+	}
+
+	if (parts.length === 0) return null;
+	parts.push(current.trim());
+	return { ops, parts };
+}
+
+/**
+ * Match a method call at the end of an expression: `<receiver>.<method>(<args>)`.
+ * Respects nested parens and quoted strings inside args.
+ */
+function matchMethodCall(
+	expr: string
+): { receiver: string; method: string; args: string[] } | null {
+	if (!expr.endsWith(')')) return null;
+
+	// Find the matching `(` for the trailing `)`.
+	let depth = 0;
+	let openIdx = -1;
+	for (let i = expr.length - 1; i >= 0; i--) {
+		const ch = expr[i];
+		if (ch === ')') depth++;
+		else if (ch === '(') {
+			depth--;
+			if (depth === 0) {
+				openIdx = i;
+				break;
+			}
+		}
+	}
+	if (openIdx <= 0) return null;
+
+	// `<head>.<method>(<argsExpr>)` — head must end with `.method`.
+	const head = expr.slice(0, openIdx);
+	const dotIdx = head.lastIndexOf('.');
+	if (dotIdx <= 0) return null;
+
+	const method = head.slice(dotIdx + 1);
+	if (!/^[a-zA-Z_][\w]*$/.test(method)) return null;
+
+	const receiver = head.slice(0, dotIdx).trim();
+	if (!receiver) return null;
+
+	const argsExpr = expr.slice(openIdx + 1, expr.length - 1).trim();
+	const args = argsExpr === '' ? [] : splitArgs(argsExpr);
+	return { receiver, method, args };
+}
+
+/** Split a comma-separated argument list, respecting parens and quoted strings. */
+function splitArgs(expr: string): string[] {
+	const parts: string[] = [];
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let current = '';
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			continue;
+		}
+		if (ch === '(') depth++;
+		else if (ch === ')') depth--;
+		if (ch === ',' && depth === 0) {
+			parts.push(current.trim());
+			current = '';
+			continue;
+		}
+		current += ch;
+	}
+	if (current.trim() !== '') parts.push(current.trim());
+	return parts;
+}
+
+/** Apply a whitelisted method on a receiver value. Unknown methods return undefined. */
+function applyMethod(receiver: unknown, method: string, args: unknown[]): unknown {
+	if (typeof receiver === 'string') {
+		switch (method) {
+			case 'toLowerCase':
+				return receiver.toLowerCase();
+			case 'toUpperCase':
+				return receiver.toUpperCase();
+			case 'trim':
+				return receiver.trim();
+			case 'includes':
+				return receiver.includes(String(args[0] ?? ''));
+			case 'startsWith':
+				return receiver.startsWith(String(args[0] ?? ''));
+			case 'endsWith':
+				return receiver.endsWith(String(args[0] ?? ''));
+		}
+	}
+	if (Array.isArray(receiver)) {
+		switch (method) {
+			case 'includes':
+				return receiver.includes(args[0]);
+			case 'join':
+				return receiver.join(String(args[0] ?? ','));
+			case 'sum': {
+				const field = typeof args[0] === 'string' ? (args[0] as string) : null;
+				return receiver.reduce((a: number, v: unknown) => {
+					const n = field
+						? Number((v as Record<string, unknown> | null | undefined)?.[field])
+						: Number(v);
+					return a + (Number.isFinite(n) ? n : 0);
+				}, 0);
+			}
+			case 'count':
+				return receiver.length;
+			case 'first':
+				return receiver[0];
+			case 'last':
+				return receiver[receiver.length - 1];
+			case 'where': {
+				// .where(field, value) — equality match. Pass-through when value is
+				// nullish or 'All' so a "no filter" select can bind directly.
+				const field = args[0];
+				const value = args[1];
+				if (typeof field !== 'string') return receiver;
+				if (value === null || value === undefined || value === 'All') return receiver;
+				return receiver.filter(
+					(r) =>
+						r !== null &&
+						typeof r === 'object' &&
+						(r as Record<string, unknown>)[field] === value
+				);
+			}
+			case 'whereIn': {
+				// .whereIn(field, [values]) — pass-through on empty/non-array.
+				const field = args[0];
+				const values = args[1];
+				if (typeof field !== 'string') return receiver;
+				if (!Array.isArray(values) || values.length === 0) return receiver;
+				return receiver.filter(
+					(r) =>
+						r !== null &&
+						typeof r === 'object' &&
+						values.includes((r as Record<string, unknown>)[field])
+				);
+			}
+			case 'sortBy': {
+				// .sortBy(field, 'asc'|'desc') — non-mutating, numeric-aware.
+				const field = args[0];
+				if (typeof field !== 'string') return receiver;
+				const dir = args[1] === 'desc' ? -1 : 1;
+				return [...receiver].sort((a, b) => {
+					const av = (a as Record<string, unknown> | null)?.[field];
+					const bv = (b as Record<string, unknown> | null)?.[field];
+					if (av === bv) return 0;
+					if (av === null || av === undefined) return -1;
+					if (bv === null || bv === undefined) return 1;
+					if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+					return (
+						String(av).localeCompare(String(bv), undefined, { numeric: true }) * dir
+					);
+				});
+			}
+			case 'limit': {
+				const n = Number(args[0]);
+				if (!Number.isFinite(n) || n < 0) return receiver;
+				return receiver.slice(0, n);
+			}
+			case 'reverse':
+				return [...receiver].reverse();
+		}
+	}
+	if (typeof receiver === 'number') {
+		switch (method) {
+			case 'toFixed':
+				return receiver.toFixed(Number(args[0] ?? 0));
+		}
+	}
+	return undefined;
 }
 
 /**
@@ -203,50 +551,123 @@ function splitLogicalOperator(expr: string, operator: string): string[] {
 }
 
 /**
- * Evaluate a simple dot-notation path against context.
- * Supports optional chaining: "state.user?.name" treats ?. same as .
+ * Path segment: either a static dot-segment (`foo`) or a bracket lookup whose
+ * key is itself an expression to evaluate (`[state.k]`, `[0]`, `['Astro']`).
+ */
+type PathSegment = { kind: 'dot'; key: string } | { kind: 'bracket'; expr: string };
+
+/**
+ * Tokenize a dot/bracket path into segments.
+ * Handles `state.m[state.k].name`, `state.r[0]`, `state.m['foo']`.
+ * Quotes inside brackets are respected so `[']']` parses correctly.
+ */
+function parsePath(path: string): PathSegment[] {
+	const segments: PathSegment[] = [];
+	let buf = '';
+	let i = 0;
+	while (i < path.length) {
+		const ch = path[i];
+		if (ch === '.') {
+			if (buf) {
+				segments.push({ kind: 'dot', key: buf });
+				buf = '';
+			}
+			i++;
+			continue;
+		}
+		if (ch === '[') {
+			if (buf) {
+				segments.push({ kind: 'dot', key: buf });
+				buf = '';
+			}
+			let depth = 1;
+			let j = i + 1;
+			let inStr: '"' | "'" | null = null;
+			while (j < path.length && depth > 0) {
+				const c = path[j];
+				if (inStr) {
+					if (c === inStr && path[j - 1] !== '\\') inStr = null;
+				} else if (c === '"' || c === "'") {
+					inStr = c;
+				} else if (c === '[') {
+					depth++;
+				} else if (c === ']') {
+					depth--;
+					if (depth === 0) break;
+				}
+				j++;
+			}
+			if (depth !== 0) return segments; // malformed — bail
+			segments.push({ kind: 'bracket', expr: path.slice(i + 1, j) });
+			i = j + 1;
+			continue;
+		}
+		buf += ch;
+		i++;
+	}
+	if (buf) segments.push({ kind: 'dot', key: buf });
+	return segments;
+}
+
+/**
+ * Evaluate a simple dot/bracket-notation path against context.
+ * Supports optional chaining (`?.`) and bracket indexing with expressions.
  *
- * @param path - Dot-separated path like "state.user.name" or "state.user?.name"
- * @param context - The resolver context
+ * @example
+ *   state.user.name
+ *   state.user?.name
+ *   state.repos_by_lang[state.filter]
+ *   state.items[0].title
  */
 function evaluateSimplePath(path: string, context: ResolverContext): unknown {
-	// Normalize optional chaining - treat ?. as . (we already handle null/undefined)
 	const normalizedPath = path.replace(/\?\./g, '.');
-	const parts = normalizedPath.split('.');
-	const rootKey = parts[0];
+	const segments = parsePath(normalizedPath);
+	if (segments.length === 0) return undefined;
 
-	// Determine the root object
-	let root: unknown;
-	if (rootKey === 'state') {
-		root = context.state;
-		parts.shift(); // Remove 'state' from path
-	} else if (rootKey === 'data' && context.data) {
-		root = context.data;
-		parts.shift();
-	} else if (rootKey === 'item' && context.item !== undefined) {
-		root = context.item;
-		parts.shift();
-	} else if (rootKey === 'index' && context.index !== undefined) {
-		return context.index;
-	} else if (context[rootKey] !== undefined) {
-		// Custom loop variable (e.g., 'flight' from item_as: 'flight')
-		root = context[rootKey];
-		parts.shift();
-	} else {
-		// Assume it's a state path without 'state.' prefix
-		root = context.state;
+	// Determine root from the first dot-segment.
+	const first = segments[0];
+	let current: unknown;
+	let startIdx = 1;
+
+	if (first.kind !== 'dot') {
+		// Path can't start with a bracket — nothing meaningful to resolve.
+		return undefined;
 	}
 
-	// Navigate the path
-	let current: unknown = root;
-	for (const part of parts) {
-		if (current === null || current === undefined) {
-			return undefined;
+	const rootKey = first.key;
+	if (rootKey === 'state') {
+		current = context.state;
+	} else if (rootKey === 'data' && context.data) {
+		current = context.data;
+	} else if (rootKey === 'item' && context.item !== undefined) {
+		current = context.item;
+	} else if (rootKey === 'index' && context.index !== undefined) {
+		return segments.length === 1 ? context.index : undefined;
+	} else if (context[rootKey] !== undefined) {
+		current = context[rootKey];
+	} else {
+		// Implicit state-prefix: treat the whole path as state-relative.
+		current = context.state;
+		startIdx = 0;
+	}
+
+	for (let idx = startIdx; idx < segments.length; idx++) {
+		if (current === null || current === undefined) return undefined;
+		const seg = segments[idx];
+		let key: string | number;
+		if (seg.kind === 'dot') {
+			key = seg.key;
+		} else {
+			const resolved = evaluateExpression(seg.expr, context);
+			if (resolved === null || resolved === undefined) return undefined;
+			key = typeof resolved === 'number' ? resolved : String(resolved);
 		}
-		if (typeof current !== 'object') {
-			return undefined;
+		if (typeof current === 'string' || Array.isArray(current)) {
+			current = (current as unknown as Record<string | number, unknown>)[key];
+			continue;
 		}
-		current = (current as Record<string, unknown>)[part];
+		if (typeof current !== 'object') return undefined;
+		current = (current as Record<string | number, unknown>)[key];
 	}
 
 	return current;
@@ -254,6 +675,15 @@ function evaluateSimplePath(path: string, context: ResolverContext): unknown {
 
 /**
  * Parse a value from expression (handles literals and paths).
+ *
+ * Supported literals:
+ *   - `null`, `undefined`, `true`, `false`
+ *   - Strings: `'foo'` / `"foo"`
+ *   - Numbers: `42`, `-1.5`
+ *   - Arrays: `[1, 2, 'x']`, `[{value: 'a', label: 'A'}]`
+ *   - Objects: `{key: 'val', n: 1}` (key is identifier, string, or number)
+ *
+ * Anything else is treated as a state-relative path.
  */
 function parseValue(value: string, context: ResolverContext): unknown {
 	// Null literal
@@ -276,8 +706,199 @@ function parseValue(value: string, context: ResolverContext): unknown {
 		return num;
 	}
 
+	// Array literal: `[item, item, ...]` — each item is itself an expression.
+	const arrLit = parseArrayLiteral(value, context);
+	if (arrLit !== undefined) return arrLit;
+
+	// Object literal: `{key: value, ...}` — keys may be identifiers, quoted
+	// strings, or numbers; values are recursively evaluated as expressions.
+	const objLit = parseObjectLiteral(value, context);
+	if (objLit !== undefined) return objLit;
+
 	// Otherwise, treat as path
 	return evaluateSimplePath(value, context);
+}
+
+/**
+ * Locate the top-level `?` and matching `:` for a ternary expression,
+ * respecting parens / brackets / braces and string literals so that
+ * `:` inside a nested object literal doesn't split the ternary
+ * prematurely. Returns null when no ternary is present.
+ *
+ * Treats `?.` (optional chaining) as not-a-ternary.
+ */
+function findTernarySplit(expr: string): { cond: string; then: string; else: string } | null {
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let qIdx = -1;
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		else if (ch === '?' && depth === 0 && expr[i + 1] !== '.') {
+			qIdx = i;
+			break;
+		}
+	}
+	if (qIdx === -1) return null;
+
+	let cIdx = -1;
+	let d = 0;
+	inStr = null;
+	for (let i = qIdx + 1; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') d++;
+		else if (ch === ')' || ch === ']' || ch === '}') d--;
+		else if (ch === ':' && d === 0) {
+			cIdx = i;
+			break;
+		}
+	}
+	if (cIdx === -1) return null;
+
+	return {
+		cond: expr.slice(0, qIdx).trim(),
+		then: expr.slice(qIdx + 1, cIdx).trim(),
+		else: expr.slice(cIdx + 1).trim()
+	};
+}
+
+/**
+ * Split an expression on a single-character separator at top level —
+ * respecting `()` / `[]` / `{}` nesting and string literals. Used by
+ * array / object literal parsers.
+ */
+function splitTopLevel(expr: string, sep: string): string[] {
+	const parts: string[] = [];
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	let current = '';
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			current += ch;
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			current += ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		if (ch === sep && depth === 0) {
+			parts.push(current);
+			current = '';
+			continue;
+		}
+		current += ch;
+	}
+	if (current.trim() !== '') parts.push(current);
+	return parts;
+}
+
+/** Find the index of the first top-level `:` in a key:value pair. */
+function findKeyValueSplit(pair: string): number {
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	for (let i = 0; i < pair.length; i++) {
+		const ch = pair[i];
+		if (inStr) {
+			if (ch === inStr && pair[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		else if (ch === ':' && depth === 0) return i;
+	}
+	return -1;
+}
+
+function parseArrayLiteral(value: string, context: ResolverContext): unknown[] | undefined {
+	const t = value.trim();
+	if (t.length < 2 || t[0] !== '[' || t[t.length - 1] !== ']') return undefined;
+	if (!isBalanced(t)) return undefined;
+	const inner = t.slice(1, -1).trim();
+	if (inner === '') return [];
+	return splitTopLevel(inner, ',').map((p) => evaluateExpression(p.trim(), context));
+}
+
+function parseObjectLiteral(
+	value: string,
+	context: ResolverContext
+): Record<string, unknown> | undefined {
+	const t = value.trim();
+	if (t.length < 2 || t[0] !== '{' || t[t.length - 1] !== '}') return undefined;
+	if (!isBalanced(t)) return undefined;
+	const inner = t.slice(1, -1).trim();
+	if (inner === '') return {};
+	const result: Record<string, unknown> = {};
+	for (const pair of splitTopLevel(inner, ',')) {
+		const colonIdx = findKeyValueSplit(pair);
+		if (colonIdx === -1) continue; // malformed pair — skip
+		const rawKey = pair.slice(0, colonIdx).trim();
+		const rawVal = pair.slice(colonIdx + 1).trim();
+		let key: string | undefined;
+		const strMatch = rawKey.match(/^['"](.*)['"]$/);
+		if (strMatch) {
+			key = strMatch[1];
+		} else if (/^[a-zA-Z_$][\w$]*$/.test(rawKey)) {
+			key = rawKey;
+		} else if (!isNaN(Number(rawKey))) {
+			key = String(Number(rawKey));
+		}
+		if (key === undefined) continue;
+		result[key] = evaluateExpression(rawVal, context);
+	}
+	return result;
+}
+
+/**
+ * Quick balance check — verifies that every `(`, `[`, `{` has a matching
+ * close in order, ignoring characters inside string literals. Used by the
+ * literal parsers to bail out on malformed input.
+ */
+function isBalanced(expr: string): boolean {
+	const stack: string[] = [];
+	const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+	let inStr: '"' | "'" | null = null;
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") {
+			inStr = ch;
+			continue;
+		}
+		if (ch === '(' || ch === '[' || ch === '{') stack.push(ch);
+		else if (ch === ')' || ch === ']' || ch === '}') {
+			if (stack.pop() !== pairs[ch]) return false;
+		}
+	}
+	return stack.length === 0 && inStr === null;
 }
 
 /**
@@ -335,6 +956,39 @@ export function resolveObject(
 }
 
 /**
+ * Detect a UINode-shaped subtree. We use a narrow signature — a string `type`
+ * combined with at least one widget-tree marker (props/children/bind/show/items
+ * /condition). Such subtrees are passed through unresolved so they can be
+ * resolved later at render time, against the loop context that exists at the
+ * point of rendering (e.g. `{item.label}` inside a `master-detail` detail
+ * pane sees `item = selectedItem`, not the parent's `item`).
+ */
+function isUINodeSpec(v: Record<string, unknown>): boolean {
+	if (typeof v.type !== 'string') return false;
+	return (
+		'props' in v ||
+		'children' in v ||
+		'bind' in v ||
+		'show' in v ||
+		'items' in v ||
+		'condition' in v
+	);
+}
+
+/**
+ * Detect an EventHandler-shaped subtree. Action objects must reach the
+ * EventDispatcher with their `{state.x}` placeholders intact so they
+ * resolve against the state at dispatch time, not at render time. If
+ * we eagerly resolve them here, `validate.condition: "{state.agreed}"`
+ * becomes the literal boolean `false` long before the user has had a
+ * chance to tick the checkbox — and the dispatcher then can't even
+ * recognise it as an expression to re-evaluate.
+ */
+function isEventHandlerSpec(v: Record<string, unknown>): boolean {
+	return typeof v.action === 'string';
+}
+
+/**
  * Resolve any value (string, object, array, or primitive).
  */
 export function resolveValue(value: unknown, context: ResolverContext): unknown {
@@ -347,7 +1001,18 @@ export function resolveValue(value: unknown, context: ResolverContext): unknown 
 	}
 
 	if (value !== null && typeof value === 'object') {
-		return resolveObject(value as Record<string, unknown>, context);
+		const obj = value as Record<string, unknown>;
+		if (isUINodeSpec(obj)) {
+			// Leave UINode subtrees raw for downstream NodeRenderer to resolve.
+			return obj;
+		}
+		if (isEventHandlerSpec(obj)) {
+			// Leave action objects raw — the EventDispatcher resolves their
+			// fields (condition, value, message, url, body, ...) at fire time
+			// so expressions read the live state, not a snapshot from render.
+			return obj;
+		}
+		return resolveObject(obj, context);
 	}
 
 	return value;

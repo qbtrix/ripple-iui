@@ -1,8 +1,67 @@
-# Ripple Composite Widgets — terminal, workflow, c4 diagram
+# Ripple Composite Widgets
 
-Advanced widgets for specialized use cases: CLI output, visual workflows, and architecture diagrams.
+Composite widgets are full-pane typed layouts. Emit ONE node and the whole pattern (header + body + actions) renders — don't rebuild these out of `flex` + `card` + inputs. Two flavors:
 
-## terminal
+1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, the dashboard variants) — pre-composed business surfaces.
+2. **Specialized canvases** (`terminal`, `workflow`, `c4`) — niche widgets for CLI output, flow diagrams, and architecture diagrams.
+
+Refer to `dist/manifest.json` (or `get_widget_spec` from an agent) for the exact prop schema of each — this page covers shape and intended use.
+
+## Composite layouts
+
+### comparison-layout
+
+Side-by-side comparison of 2–6 items with hero cards, a section-tab feature grid, and a Card/Table view toggle. Per-item `actions` and `learn_more` accept event handlers, so each row can fire a chat.send / navigate / api action.
+
+Use when the user asks "compare X vs Y" or "what's the difference between …" — NOT when they need a feature matrix (that's `comparison-table`).
+
+### entity-detail
+
+Record / profile / entity page. Header (avatar + title + subtitle + status), property strip, optional tabs, optional related-records section. Use for customer detail, ticket detail, asset profile.
+
+Picks this over a flex of metric tiles, which always reads worse for a single-record surface.
+
+### form-layout
+
+Multi-section form. Groups fields into sections with optional headings, validates on submit, renders a primary + cancel action row at the bottom. Use for signup, contact, multi-field intake.
+
+The internal fields are still standard input widgets (`input`, `textarea`, `select`, etc.) so binding follows the normal Mutation Triangle (`bind` + on_change to state).
+
+### wizard-layout
+
+Multi-step setup or onboarding flow. Renders a stepper, the current step body, and Back/Next/Submit actions. Each step has its own children and validation.
+
+Always pick this over a manual stepper + form rebuild.
+
+### checklist-layout
+
+Launch checklist / pre-flight / runbook. Grouped items with completion progress, per-item details, optional owners and due dates. Great for kickoffs, audits, deploy gates.
+
+Always pick this over a flex of `checkbox` + `text` rows.
+
+### report-layout
+
+Long-form report — quarterly review, status report, write-up. Sections with headings, embedded data widgets (chart, table, metric), inline callouts, citations. Use when the deliverable is a *document* with structure, not an interactive surface.
+
+### invoice-layout
+
+Invoice / quote / receipt. Header (issuer, recipient, dates), line items table, computed totals (subtotal/tax/total), download/print actions.
+
+The widget computes totals from the line items — don't pre-sum and pass a number; pass the items.
+
+### order-status
+
+Multi-step shipment status. Stepper for placed → confirmed → preparing → in-transit → out-for-delivery → delivered. Optional embedded `map` widget (composes the data-category `map` widget under the hood) when origin/destination/tracker are supplied. Optional event timeline beneath the map.
+
+Use for delivery tracking, courier dispatch, inbound logistics.
+
+### Dashboard variants
+
+`exec-dashboard`, `ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (KPIs + chart + table for exec, status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.
+
+## Specialized canvases
+
+### terminal
 
 CLI-style output display with optional interactive command input. Use for showing logs, build output, or command results.
 
@@ -36,7 +95,7 @@ CLI-style output display with optional interactive command input. Use for showin
 }
 ```
 
-## workflow
+### workflow
 
 Visual node-based workflow diagram. Renders interactive flowcharts with SvelteFlow. Use for process flows, automation pipelines, approval chains.
 
@@ -83,7 +142,7 @@ Visual node-based workflow diagram. Renders interactive flowcharts with SvelteFl
 }
 ```
 
-## c4 — C4 Architecture Diagram
+### c4 — C4 Architecture Diagram
 
 Renders C4 model system architecture diagrams. Supports all 4 C4 levels (Context, Container, Component, Code) with auto-layout via ELK.js.
 
