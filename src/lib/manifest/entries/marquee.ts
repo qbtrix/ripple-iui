@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const marqueeEntry: WidgetManifestEntry = {
   type: 'marquee',
   category: 'display',
+  staticSafe: true,
   description: 'Seamless scrolling row/column of its children (logos, badges, quotes). Pure-CSS loop, pauses on hover. Use for logo strips and ticker rows.',
   props: {
     duration: { type: 'number', required: false, description: 'Seconds per loop. Default 30.' },

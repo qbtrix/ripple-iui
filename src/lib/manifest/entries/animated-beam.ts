@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const animatedBeamEntry: WidgetManifestEntry = {
   type: 'animated-beam',
   category: 'display',
+  staticSafe: true,
   description: 'An SVG curve with a flowing gradient pulse connecting two points (pure SVG/CSS). Use to suggest a connection or data flow in a diagram.',
   props: {
     duration: { type: 'number', required: false, description: 'Seconds per flow. Default 4.' },

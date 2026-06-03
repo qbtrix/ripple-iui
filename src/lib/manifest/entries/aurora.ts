@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const auroraEntry: WidgetManifestEntry = {
   type: 'aurora',
   category: 'layout',
+  staticSafe: true,
   description: 'Wraps children over a soft, drifting multi-gradient aurora backdrop (pure CSS). Aliased aurora-background. Use as a hero or section background.',
   props: {
     colors: { type: 'string[]', required: false, description: 'Gradient stop colours driving the aurora. Default blue/violet/teal.' },

@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const borderBeamEntry: WidgetManifestEntry = {
   type: 'border-beam',
   category: 'display',
+  staticSafe: true,
   description: 'Wraps children in a card-like box with a gradient beam orbiting its border (pure CSS). Use to draw attention to a featured card or CTA.',
   props: {
     size: { type: 'number', required: false, description: 'Beam thickness in px. Default 1.5.' },
