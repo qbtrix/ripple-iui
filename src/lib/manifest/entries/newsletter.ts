@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const newsletterEntry: WidgetManifestEntry = {
   type: 'newsletter',
-  category: 'input',
+  category: 'marketing',
   description: 'Email-capture band: heading, subtext, email field, submit button. Aliased as email-capture. Emits the entered email via on_submit.',
   props: {
     heading: { type: 'string', required: false, description: 'Headline above the field.' },

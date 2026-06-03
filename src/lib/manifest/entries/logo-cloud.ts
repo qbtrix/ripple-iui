@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const logoCloudEntry: WidgetManifestEntry = {
   type: 'logo-cloud',
-  category: 'display',
+  category: 'marketing',
   description: 'Row of client / partner logos with an optional heading. Grayscale by default, color on hover. Aliased as logos. Use for social proof.',
   props: {
     heading: { type: 'string', required: false, description: 'Optional eyebrow heading, e.g. "Trusted by".' },

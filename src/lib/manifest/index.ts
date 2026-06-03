@@ -224,7 +224,7 @@ export interface NamedPocketSpec extends PocketSpec {
 export interface WidgetManifestEntry {
   /** Canonical widget type as registered in `widgets/index.ts`. */
   type: string;
-  /** Top-level grouping — display | layout | input | data | control | composite | overlay | research | vertical. */
+  /** Top-level grouping — display | layout | input | data | control | composite | overlay | research | vertical | marketing. Free string; `marketing` groups the Paw Sites landing pack. */
   category: string;
   /** One-line summary, < 200 chars. Long docs stay in the wiki. */
   description: string;

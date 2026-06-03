@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const testimonialEntry: WidgetManifestEntry = {
   type: 'testimonial',
-  category: 'display',
+  category: 'marketing',
   description: 'A single customer testimonial card: quote, author, role, optional avatar. Use for social proof on a landing page.',
   props: {
     quote: { type: 'string', required: true, description: 'The testimonial text.' },

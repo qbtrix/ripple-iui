@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-06-03T06:41:13.921Z",
+  "generatedAt": "2026-06-03T16:43:39.211Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -3690,7 +3690,7 @@
     },
     {
       "type": "cta",
-      "category": "layout",
+      "category": "marketing",
       "description": "Call-to-action band: a headline, optional subtext, and one button. Aliased as call-to-action. Use to drive the page conversion.",
       "props": {
         "headline": {
@@ -6033,7 +6033,7 @@
     },
     {
       "type": "feature-grid",
-      "category": "layout",
+      "category": "marketing",
       "description": "Responsive grid of feature cells (title + description). Aliased as features. Use to lay out product benefits on a landing page.",
       "props": {
         "features": {
@@ -6356,7 +6356,7 @@
     },
     {
       "type": "footer",
-      "category": "layout",
+      "category": "marketing",
       "description": "Marketing footer: columns of links plus a copyright line. Use at the bottom of a landing page.",
       "props": {
         "columns": {
@@ -8193,7 +8193,7 @@
     },
     {
       "type": "logo-cloud",
-      "category": "display",
+      "category": "marketing",
       "description": "Row of client / partner logos with an optional heading. Grayscale by default, color on hover. Aliased as logos. Use for social proof.",
       "props": {
         "heading": {
@@ -9041,7 +9041,7 @@
     },
     {
       "type": "navbar",
-      "category": "layout",
+      "category": "marketing",
       "description": "Marketing top navigation: brand, links, and an optional CTA button. Sticky-capable. Use at the top of a landing page.",
       "props": {
         "brand": {
@@ -9139,7 +9139,7 @@
     },
     {
       "type": "newsletter",
-      "category": "input",
+      "category": "marketing",
       "description": "Email-capture band: heading, subtext, email field, submit button. Aliased as email-capture. Emits the entered email via on_submit.",
       "props": {
         "heading": {
@@ -13606,7 +13606,7 @@
     },
     {
       "type": "testimonial",
-      "category": "display",
+      "category": "marketing",
       "description": "A single customer testimonial card: quote, author, role, optional avatar. Use for social proof on a landing page.",
       "props": {
         "quote": {
