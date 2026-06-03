@@ -60,7 +60,7 @@
 
   const styleString = $derived.by(() => {
     const styles: string[] = [];
-    if (color && (color.startsWith('#') || color.startsWith('rgb'))) {
+    if (color?.startsWith('#') || color?.startsWith('rgb')) {
       styles.push(`color:${color}`);
     }
     if (style) {
