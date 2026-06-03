@@ -226,6 +226,14 @@ export interface WidgetManifestEntry {
   type: string;
   /** Top-level grouping — display | layout | input | data | control | composite | overlay | research | vertical | marketing. Free string; `marketing` groups the Paw Sites landing pack. */
   category: string;
+  /**
+   * True only for Tier-0 (pure-CSS) animation widgets that render and animate
+   * on a static `csr=false` site with zero client JS. Surfaces the authoritative
+   * Tier-0/Tier-1 split (`src/lib/motion/engine.ts`) into the manifest so the
+   * Paw Sites landing builder can pick animated polish without tripping the SSR
+   * gate. Absent/false = needs client JS (e.g. reveal, parallax, spotlight).
+   */
+  staticSafe?: boolean;
   /** One-line summary, < 200 chars. Long docs stay in the wiki. */
   description: string;
   /** Prop name → spec. Only LLM-relevant props; internal/passthrough props omitted. */

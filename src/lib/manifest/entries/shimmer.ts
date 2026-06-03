@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const shimmerEntry: WidgetManifestEntry = {
   type: 'shimmer',
   category: 'display',
+  staticSafe: true,
   description: 'Sweeps a moving highlight band across its children (pure CSS). Use on a CTA label, a "new" badge, or skeleton text to draw the eye.',
   props: {
     duration: { type: 'number', required: false, description: 'Seconds per sweep. Default 2.' },

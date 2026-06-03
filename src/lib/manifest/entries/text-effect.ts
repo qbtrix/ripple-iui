@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const textEffectEntry: WidgetManifestEntry = {
   type: 'text-effect',
   category: 'display',
+  staticSafe: true,
   description: 'Reveals text per word or character with a staggered animation (pure CSS). Aliased animated-text. Use for hero headlines and eyebrow text.',
   props: {
     text: { type: 'string', required: true, description: 'The text to animate.' },

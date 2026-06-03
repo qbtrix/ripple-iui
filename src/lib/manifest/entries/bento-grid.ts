@@ -5,6 +5,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const bentoGridEntry: WidgetManifestEntry = {
   type: 'bento-grid',
   category: 'layout',
+  staticSafe: true,
   description: 'A bento/masonry feature grid where cells span 1-3 columns for a varied layout. Aliased bento. Use for a feature showcase or product grid.',
   props: {
     items: { type: 'Array<{ title: string; description?: string; span?: 1 | 2 | 3 }>', required: false, description: 'Declarative cells. Omit to supply your own via children.' },

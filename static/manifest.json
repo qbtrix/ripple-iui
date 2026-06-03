@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-06-03T16:43:39.211Z",
+  "generatedAt": "2026-06-03T16:45:16.033Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -693,6 +693,7 @@
     {
       "type": "animated-beam",
       "category": "display",
+      "staticSafe": true,
       "description": "An SVG curve with a flowing gradient pulse connecting two points (pure SVG/CSS). Use to suggest a connection or data flow in a diagram.",
       "props": {
         "duration": {
@@ -1154,6 +1155,7 @@
     {
       "type": "aurora",
       "category": "layout",
+      "staticSafe": true,
       "description": "Wraps children over a soft, drifting multi-gradient aurora backdrop (pure CSS). Aliased aurora-background. Use as a hero or section background.",
       "props": {
         "colors": {
@@ -1284,6 +1286,7 @@
     {
       "type": "bento-grid",
       "category": "layout",
+      "staticSafe": true,
       "description": "A bento/masonry feature grid where cells span 1-3 columns for a varied layout. Aliased bento. Use for a feature showcase or product grid.",
       "props": {
         "items": {
@@ -1322,6 +1325,7 @@
     {
       "type": "border-beam",
       "category": "display",
+      "staticSafe": true,
       "description": "Wraps children in a card-like box with a gradient beam orbiting its border (pure CSS). Use to draw attention to a featured card or CTA.",
       "props": {
         "size": {
@@ -8451,6 +8455,7 @@
     {
       "type": "marquee",
       "category": "display",
+      "staticSafe": true,
       "description": "Seamless scrolling row/column of its children (logos, badges, quotes). Pure-CSS loop, pauses on hover. Use for logo strips and ticker rows.",
       "props": {
         "duration": {
@@ -12706,6 +12711,7 @@
     {
       "type": "shimmer",
       "category": "display",
+      "staticSafe": true,
       "description": "Sweeps a moving highlight band across its children (pure CSS). Use on a CTA label, a \"new\" badge, or skeleton text to draw the eye.",
       "props": {
         "duration": {
@@ -13681,6 +13687,7 @@
     {
       "type": "text-effect",
       "category": "display",
+      "staticSafe": true,
       "description": "Reveals text per word or character with a staggered animation (pure CSS). Aliased animated-text. Use for hero headlines and eyebrow text.",
       "props": {
         "text": {
