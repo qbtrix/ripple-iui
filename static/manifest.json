@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
-  "version": "0.3.1",
-  "generatedAt": "2026-05-31T07:32:15.209Z",
+  "version": "0.5.0",
+  "generatedAt": "2026-06-03T06:37:58.868Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -429,7 +429,148 @@
         "target": "searchInput",
         "method": "focus"
       }
+    },
+    "animate": {
+      "description": "Imperatively trigger a motion on a target node by id (host-delegated). Use sparingly — most animation belongs in the node-level `motion` field, not an action.",
+      "shape": {
+        "action": "\"animate\"",
+        "target": "string — id of the node to animate.",
+        "motion": "object — a motion directive (see the motion field schema), e.g. { tap: { scale: 0.96 } }."
+      },
+      "example": {
+        "action": "animate",
+        "target": "cta",
+        "motion": {
+          "tap": {
+            "scale": 0.96
+          }
+        }
+      }
     }
+  },
+  "motion": {
+    "field": "motion",
+    "description": "Add a `motion` field to ANY node (sibling to props/class/style, never inside props) to animate it. Vocabulary: enter/exit, hover/tap/focus, inView (reveal on scroll), scroll (parallax), stagger, and transition (use a semantic preset — never raw numbers). MotionState channels are GPU-safe only (opacity, x, y, scale, rotate, blur). transition.delay is in SECONDS (e.g. 0.12 = 120ms); cascade a row by giving each child delay = index * 0.12. Reduced-motion and SSR are handled by the runtime — do not add them.",
+    "budgetRule": "MOTION BUDGET: animate entrances and the PRIMARY call-to-action only. Leave everything else at rest. Default transition is `snappy`. Over-animating reads as cheap — restraint reads as premium.",
+    "presets": {
+      "instant": "tween 100ms — micro-feedback.",
+      "snappy": "spring, lively but controlled — the default for entrances and CTAs.",
+      "smooth": "tween 250ms decelerate — section reveals.",
+      "gentle": "tween 400ms — large hero elements.",
+      "bouncy": "spring with overshoot — playful accents, use rarely."
+    },
+    "examples": [
+      {
+        "name": "hero-entrance",
+        "description": "Fade + rise on load.",
+        "motion": {
+          "enter": {
+            "opacity": 0,
+            "y": 24
+          },
+          "transition": {
+            "preset": "snappy"
+          }
+        }
+      },
+      {
+        "name": "cta-hover",
+        "description": "Lift the primary button on hover.",
+        "motion": {
+          "hover": {
+            "y": -2,
+            "scale": 1.02
+          },
+          "transition": {
+            "preset": "snappy"
+          }
+        }
+      },
+      {
+        "name": "section-reveal",
+        "description": "Reveal a section as it scrolls into view.",
+        "motion": {
+          "inView": {
+            "opacity": 0,
+            "y": 32,
+            "once": true
+          },
+          "transition": {
+            "preset": "smooth"
+          }
+        }
+      },
+      {
+        "name": "stagger-cascade",
+        "description": "Per-card cascade: each card fades+rises on scroll, offset by its index. delay is SECONDS.",
+        "motion": {
+          "inView": {
+            "opacity": 0,
+            "y": 28,
+            "once": true
+          },
+          "transition": {
+            "preset": "smooth",
+            "delay": 0.24
+          }
+        }
+      },
+      {
+        "name": "parallax-drift",
+        "description": "Continuous parallax: contents drift on scroll bound to the view range.",
+        "motion": {
+          "scroll": {
+            "property": "y",
+            "from": 40,
+            "to": -40,
+            "range": "cover"
+          }
+        }
+      }
+    ],
+    "recipes": [
+      {
+        "name": "reveal-section",
+        "description": "A section whose heading and cards rise into view on scroll. The canonical landing-page reveal.",
+        "ui": {
+          "type": "reveal",
+          "props": {
+            "direction": "up"
+          },
+          "children": [
+            {
+              "type": "section",
+              "props": {
+                "title": "How it works",
+                "description": "Three steps."
+              },
+              "children": [
+                {
+                  "type": "feature-grid",
+                  "props": {
+                    "columns": 3,
+                    "features": [
+                      {
+                        "title": "Build",
+                        "description": "Describe it in chat."
+                      },
+                      {
+                        "title": "Publish",
+                        "description": "One click to the edge."
+                      },
+                      {
+                        "title": "Edit forever",
+                        "description": "Keep changing it by chat."
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
   },
   "widgets": [
     {
@@ -550,6 +691,41 @@
       }
     },
     {
+      "type": "animated-beam",
+      "category": "display",
+      "description": "An SVG curve with a flowing gradient pulse connecting two points (pure SVG/CSS). Use to suggest a connection or data flow in a diagram.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per flow. Default 4."
+        },
+        "curvature": {
+          "type": "number",
+          "required": false,
+          "description": "Arc height in viewBox units (negative bows up). Default -40."
+        },
+        "gradientStart": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient start colour. Default #18CCFC."
+        },
+        "gradientStop": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient stop colour. Default #AE48FF."
+        }
+      },
+      "example": {
+        "type": "animated-beam",
+        "props": {
+          "duration": 4,
+          "curvature": -50
+        },
+        "class": "h-24 text-muted-foreground"
+      }
+    },
+    {
       "type": "api-key",
       "category": "vertical",
       "description": "Secret key display with mask/reveal toggle, copy button, and optional rotate action.",
@@ -598,7 +774,7 @@
     {
       "type": "ask-user-questions",
       "category": "composite",
-      "description": "Stepped multi-choice question flow with numbered options (1-9 shortcuts), single/multi-select, optional \"Other\" free-text, and skip/back. On complete, fires completeActions with a human-readable answer summary as the event value.",
+      "description": "Stepped multi-choice flow: numbered options (1-9 shortcuts), single/multi-select, optional \"Other\" free-text, skip/back. On complete, fires completeActions with an answer summary.",
       "props": {
         "questions": {
           "type": "Array<{ title: string; options: Array<{ title: string; description?: string }>; multiSelect?: boolean; allowOther?: boolean; otherPlaceholder?: string; skippable?: boolean; nextLabel?: string; layout?: \"inline\" | \"stacked\" }>",
@@ -976,6 +1152,35 @@
       }
     },
     {
+      "type": "aurora",
+      "category": "layout",
+      "description": "Wraps children over a soft, drifting multi-gradient aurora backdrop (pure CSS). Aliased aurora-background. Use as a hero or section background.",
+      "props": {
+        "colors": {
+          "type": "string[]",
+          "required": false,
+          "description": "Gradient stop colours driving the aurora. Default blue/violet/teal."
+        },
+        "speed": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per drift cycle (lower = faster). Default 12."
+        }
+      },
+      "example": {
+        "type": "aurora",
+        "class": "min-h-[320px] flex items-center justify-center p-12",
+        "children": [
+          {
+            "type": "heading",
+            "props": {
+              "text": "Sites that move"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "avatar",
       "category": "display",
       "description": "Circular avatar with image fallback to initials.",
@@ -1074,6 +1279,83 @@
           "text": "Active",
           "variant": "success"
         }
+      }
+    },
+    {
+      "type": "bento-grid",
+      "category": "layout",
+      "description": "A bento/masonry feature grid where cells span 1-3 columns for a varied layout. Aliased bento. Use for a feature showcase or product grid.",
+      "props": {
+        "items": {
+          "type": "Array<{ title: string; description?: string; span?: 1 | 2 | 3 }>",
+          "required": false,
+          "description": "Declarative cells. Omit to supply your own via children."
+        },
+        "columns": {
+          "type": "number",
+          "required": false,
+          "description": "Column count. Default 3."
+        }
+      },
+      "example": {
+        "type": "bento-grid",
+        "props": {
+          "columns": 3,
+          "items": [
+            {
+              "title": "Edge-fast",
+              "description": "Deployed worldwide.",
+              "span": 2
+            },
+            {
+              "title": "White-label",
+              "description": "Your brand, end to end."
+            },
+            {
+              "title": "No infra",
+              "description": "We host it."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "border-beam",
+      "category": "display",
+      "description": "Wraps children in a card-like box with a gradient beam orbiting its border (pure CSS). Use to draw attention to a featured card or CTA.",
+      "props": {
+        "size": {
+          "type": "number",
+          "required": false,
+          "description": "Beam thickness in px. Default 1.5."
+        },
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per orbit. Default 8."
+        },
+        "colorFrom": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient start colour. Default #ffaa40."
+        },
+        "colorTo": {
+          "type": "string",
+          "required": false,
+          "description": "Gradient end colour. Default #9c40ff."
+        }
+      },
+      "example": {
+        "type": "border-beam",
+        "class": "rounded-xl border bg-card p-6",
+        "children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "Featured plan"
+            }
+          }
+        ]
       }
     },
     {
@@ -1650,6 +1932,105 @@
                 "action": "toast",
                 "message": "Continuing…",
                 "variant": "info"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "checkbox-group",
+      "category": "input",
+      "description": "Multi-select checkbox list. A background highlight glides between items on hover; contiguous checked items share a merged background. Bind an array of checked values.",
+      "props": {
+        "label": {
+          "type": "string",
+          "required": false,
+          "description": "Group label."
+        },
+        "bind": {
+          "type": "string",
+          "required": false,
+          "description": "Two-way state path holding the array of checked values, e.g. \"{state.toppings}\"."
+        },
+        "value": {
+          "type": "(string | number)[]",
+          "required": false,
+          "description": "Array of checked values."
+        },
+        "options": {
+          "type": "string[] | Array<{ value: string | number; label: string; disabled?: boolean }>",
+          "required": true,
+          "description": "Checkbox options."
+        },
+        "disabled": {
+          "type": "boolean",
+          "required": false,
+          "description": "Disable the whole group."
+        }
+      },
+      "events": {
+        "on_change": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired with the new array of checked values when any item toggles."
+        }
+      },
+      "example": {
+        "type": "checkbox-group",
+        "props": {
+          "label": "Toppings",
+          "options": [
+            "Cheese",
+            "Mushrooms",
+            "Olives",
+            "Onions"
+          ]
+        },
+        "bind": "{state.toppings}"
+      },
+      "pocket": {
+        "state": {
+          "toppings": [
+            "Cheese"
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "checkbox-group",
+              "props": {
+                "label": "Toppings",
+                "options": [
+                  {
+                    "value": "cheese",
+                    "label": "Extra cheese"
+                  },
+                  {
+                    "value": "mushrooms",
+                    "label": "Mushrooms"
+                  },
+                  {
+                    "value": "olives",
+                    "label": "Olives"
+                  },
+                  {
+                    "value": "onions",
+                    "label": "Onions"
+                  }
+                ]
+              },
+              "bind": "toppings"
+            },
+            {
+              "type": "text",
+              "props": {
+                "text": "Selected: {state.toppings}"
               }
             }
           ]
@@ -3308,6 +3689,48 @@
       }
     },
     {
+      "type": "cta",
+      "category": "layout",
+      "description": "Call-to-action band: a headline, optional subtext, and one button. Aliased as call-to-action. Use to drive the page conversion.",
+      "props": {
+        "headline": {
+          "type": "string",
+          "required": true,
+          "description": "The primary line."
+        },
+        "subtext": {
+          "type": "string",
+          "required": false,
+          "description": "Supporting copy."
+        },
+        "button": {
+          "type": "string",
+          "required": false,
+          "description": "Button label."
+        },
+        "href": {
+          "type": "string",
+          "required": false,
+          "description": "Button destination."
+        },
+        "align": {
+          "type": "\"left\" | \"center\"",
+          "required": false,
+          "description": "Content alignment. Default \"center\"."
+        }
+      },
+      "example": {
+        "type": "cta",
+        "props": {
+          "headline": "Ready for a brighter smile?",
+          "subtext": "Book your first visit in under a minute.",
+          "button": "Book now",
+          "href": "#book",
+          "align": "center"
+        }
+      }
+    },
+    {
       "type": "context-menu",
       "category": "overlay",
       "description": "Right-click context menu with items, icons, shortcuts, and separators.",
@@ -4331,7 +4754,7 @@
     {
       "type": "exec-dashboard",
       "category": "composite",
-      "description": "Executive dashboard with KPI strip (status bands, progress to target, sparklines), primary chart + activity rail, and data-table footer. Supports loading/error/empty states, density toggle, lastUpdated indicator, date-range chips, granularity toggle, refresh, and clickable KPIs/activity items for drill-through.",
+      "description": "Executive dashboard: KPI strip with sparklines, primary chart, activity rail, and data-table footer. Date-range + granularity chips, density toggle, loading/error/empty states, clickable KPIs.",
       "props": {
         "title": {
           "type": "string",
@@ -5609,6 +6032,43 @@
       }
     },
     {
+      "type": "feature-grid",
+      "category": "layout",
+      "description": "Responsive grid of feature cells (title + description). Aliased as features. Use to lay out product benefits on a landing page.",
+      "props": {
+        "features": {
+          "type": "Array<{ title: string; description?: string; icon?: string }>",
+          "required": true,
+          "description": "Feature cells."
+        },
+        "columns": {
+          "type": "2 | 3 | 4",
+          "required": false,
+          "description": "Columns on md+. Default 3."
+        }
+      },
+      "example": {
+        "type": "feature-grid",
+        "props": {
+          "columns": 3,
+          "features": [
+            {
+              "title": "Edge-fast",
+              "description": "Served from the closest edge node."
+            },
+            {
+              "title": "You own it",
+              "description": "Your domain, your brand, your data."
+            },
+            {
+              "title": "Edit by chat",
+              "description": "Change anything just by asking."
+            }
+          ]
+        }
+      }
+    },
+    {
       "type": "file-upload",
       "category": "input",
       "description": "Drag-and-drop file upload with file list display, accept-type filtering, and size limits.",
@@ -5895,6 +6355,57 @@
       }
     },
     {
+      "type": "footer",
+      "category": "layout",
+      "description": "Marketing footer: columns of links plus a copyright line. Use at the bottom of a landing page.",
+      "props": {
+        "columns": {
+          "type": "Array<{ title: string; links: Array<{ label: string; href: string }> }>",
+          "required": false,
+          "description": "Footer link columns."
+        },
+        "copyright": {
+          "type": "string",
+          "required": false,
+          "description": "Copyright / legal line."
+        }
+      },
+      "example": {
+        "type": "footer",
+        "props": {
+          "columns": [
+            {
+              "title": "Company",
+              "links": [
+                {
+                  "label": "About",
+                  "href": "#about"
+                },
+                {
+                  "label": "Careers",
+                  "href": "#careers"
+                }
+              ]
+            },
+            {
+              "title": "Legal",
+              "links": [
+                {
+                  "label": "Privacy",
+                  "href": "#privacy"
+                },
+                {
+                  "label": "Terms",
+                  "href": "#terms"
+                }
+              ]
+            }
+          ],
+          "copyright": "© 2026 Bright Smile Dental"
+        }
+      }
+    },
+    {
       "type": "form",
       "category": "input",
       "description": "Form wrapper with integrated validation. Wrap input children and pass validation rules.",
@@ -5918,6 +6429,16 @@
           "type": "\"submit\" | \"change\"",
           "required": false,
           "description": "When validation runs."
+        },
+        "action": {
+          "type": "string",
+          "required": false,
+          "description": "Native submit URL. When set, the form does a real browser POST/GET so it works with NO client JS — for static / prerendered hosts. When omitted, the form stays client-side (validate then on_submit)."
+        },
+        "method": {
+          "type": "\"post\" | \"get\"",
+          "required": false,
+          "description": "HTTP method for the native form. Only used with `action`. Default \"post\"."
         }
       },
       "events": {
@@ -5974,6 +6495,42 @@
         ]
       },
       "pockets": [
+        {
+          "name": "native-post-static",
+          "description": "Native browser POST — works with no client JS. For static / prerendered hosts (paw-sites). The form submits straight to `action`; inputs serialize by their `name`.",
+          "state": {},
+          "ui": {
+            "type": "form",
+            "props": {
+              "action": "/api/submit",
+              "method": "post"
+            },
+            "children": [
+              {
+                "type": "input",
+                "props": {
+                  "label": "Your name",
+                  "name": "full_name"
+                }
+              },
+              {
+                "type": "input",
+                "props": {
+                  "label": "Phone",
+                  "name": "phone"
+                }
+              },
+              {
+                "type": "button",
+                "props": {
+                  "label": "Request appointment",
+                  "type": "submit",
+                  "variant": "primary"
+                }
+              }
+            ]
+          }
+        },
         {
           "name": "validate-and-emit",
           "description": "Client-side validation, then hand off to the host via emit.",
@@ -7635,6 +8192,43 @@
       }
     },
     {
+      "type": "logo-cloud",
+      "category": "display",
+      "description": "Row of client / partner logos with an optional heading. Grayscale by default, color on hover. Aliased as logos. Use for social proof.",
+      "props": {
+        "heading": {
+          "type": "string",
+          "required": false,
+          "description": "Optional eyebrow heading, e.g. \"Trusted by\"."
+        },
+        "logos": {
+          "type": "Array<{ src: string; alt: string; href?: string }>",
+          "required": false,
+          "description": "Logo images."
+        }
+      },
+      "example": {
+        "type": "logo-cloud",
+        "props": {
+          "heading": "Trusted by clinics across the city",
+          "logos": [
+            {
+              "src": "/logos/acme.svg",
+              "alt": "Acme"
+            },
+            {
+              "src": "/logos/globex.svg",
+              "alt": "Globex"
+            },
+            {
+              "src": "/logos/initech.svg",
+              "alt": "Initech"
+            }
+          ]
+        }
+      }
+    },
+    {
       "type": "map",
       "category": "data",
       "description": "Leaflet-backed interactive map. Renders markers, polyline paths, polygon geofences, and live trackers (smoothly interpolated moving markers with optional trails). No API key needed for default tiles.",
@@ -7852,6 +8446,63 @@
         "props": {
           "content": "# Release notes\n\n- Added two-way bind for inputs\n- Fixed `oninput` event\n\n> See PR #26 for details."
         }
+      }
+    },
+    {
+      "type": "marquee",
+      "category": "display",
+      "description": "Seamless scrolling row/column of its children (logos, badges, quotes). Pure-CSS loop, pauses on hover. Use for logo strips and ticker rows.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per loop. Default 30."
+        },
+        "pauseOnHover": {
+          "type": "boolean",
+          "required": false,
+          "description": "Pause the scroll on hover. Default true."
+        },
+        "reverse": {
+          "type": "boolean",
+          "required": false,
+          "description": "Reverse the scroll direction. Default false."
+        },
+        "direction": {
+          "type": "'horizontal' | 'vertical'",
+          "required": false,
+          "description": "Scroll axis. Default horizontal."
+        }
+      },
+      "example": {
+        "type": "marquee",
+        "props": {
+          "duration": 24,
+          "pauseOnHover": true
+        },
+        "children": [
+          {
+            "type": "image",
+            "props": {
+              "src": "/logos/acme.svg",
+              "alt": "Acme"
+            }
+          },
+          {
+            "type": "image",
+            "props": {
+              "src": "/logos/globex.svg",
+              "alt": "Globex"
+            }
+          },
+          {
+            "type": "image",
+            "props": {
+              "src": "/logos/initech.svg",
+              "alt": "Initech"
+            }
+          }
+        ]
       }
     },
     {
@@ -8389,6 +9040,57 @@
       }
     },
     {
+      "type": "navbar",
+      "category": "layout",
+      "description": "Marketing top navigation: brand, links, and an optional CTA button. Sticky-capable. Use at the top of a landing page.",
+      "props": {
+        "brand": {
+          "type": "string",
+          "required": false,
+          "description": "Brand / site name."
+        },
+        "links": {
+          "type": "Array<{ label: string; href: string }>",
+          "required": false,
+          "description": "Nav links."
+        },
+        "cta": {
+          "type": "string",
+          "required": false,
+          "description": "CTA button label."
+        },
+        "ctaHref": {
+          "type": "string",
+          "required": false,
+          "description": "CTA destination."
+        },
+        "sticky": {
+          "type": "boolean",
+          "required": false,
+          "description": "Stick to the top on scroll. Default false."
+        }
+      },
+      "example": {
+        "type": "navbar",
+        "props": {
+          "brand": "Bright Smile Dental",
+          "links": [
+            {
+              "label": "Services",
+              "href": "#services"
+            },
+            {
+              "label": "About",
+              "href": "#about"
+            }
+          ],
+          "cta": "Book now",
+          "ctaHref": "#book",
+          "sticky": true
+        }
+      }
+    },
+    {
       "type": "news-card",
       "category": "research",
       "description": "News article card with headline, source, timestamp, sentiment tag, and optional thumbnail.",
@@ -8432,6 +9134,54 @@
           "time": "2 hours ago",
           "sentiment": "bearish",
           "url": "https://ft.com/article"
+        }
+      }
+    },
+    {
+      "type": "newsletter",
+      "category": "input",
+      "description": "Email-capture band: heading, subtext, email field, submit button. Aliased as email-capture. Emits the entered email via on_submit.",
+      "props": {
+        "heading": {
+          "type": "string",
+          "required": false,
+          "description": "Headline above the field."
+        },
+        "subtext": {
+          "type": "string",
+          "required": false,
+          "description": "Supporting copy."
+        },
+        "placeholder": {
+          "type": "string",
+          "required": false,
+          "description": "Input placeholder. Default \"you@example.com\"."
+        },
+        "button": {
+          "type": "string",
+          "required": false,
+          "description": "Submit button label. Default \"Subscribe\"."
+        }
+      },
+      "events": {
+        "on_submit": {
+          "type": "EventHandler",
+          "required": false,
+          "description": "Fires with the entered email on submit."
+        }
+      },
+      "example": {
+        "type": "newsletter",
+        "props": {
+          "heading": "Stay in the loop",
+          "subtext": "Tips and offers, no spam.",
+          "placeholder": "you@email.com",
+          "button": "Subscribe"
+        },
+        "on_submit": {
+          "action": "emit",
+          "target": "subscribe",
+          "value": "{state.email}"
         }
       }
     },
@@ -9538,6 +10288,33 @@
           "subtitle": "Apr 1 — Jun 30",
           "eyebrow": "Sales"
         }
+      }
+    },
+    {
+      "type": "parallax",
+      "category": "layout",
+      "description": "Container whose contents drift vertically as the page scrolls. Sugar over a scroll motion. Use sparingly for depth on hero imagery.",
+      "props": {
+        "distance": {
+          "type": "number",
+          "required": false,
+          "description": "Vertical drift in px across the scroll range. Default 60."
+        }
+      },
+      "example": {
+        "type": "parallax",
+        "props": {
+          "distance": 60
+        },
+        "children": [
+          {
+            "type": "image",
+            "props": {
+              "src": "/hero.jpg",
+              "alt": "Backdrop"
+            }
+          }
+        ]
       }
     },
     {
@@ -11127,6 +11904,38 @@
       }
     },
     {
+      "type": "reveal",
+      "category": "layout",
+      "description": "Container that animates its children into view on scroll. Sugar over an inView motion. Use to reveal sections as the visitor scrolls a landing page.",
+      "props": {
+        "direction": {
+          "type": "\"up\" | \"down\" | \"left\" | \"right\" | \"fade\"",
+          "required": false,
+          "description": "Travel direction. Default \"up\"."
+        },
+        "once": {
+          "type": "boolean",
+          "required": false,
+          "description": "Reveal only the first time it enters view. Default true."
+        }
+      },
+      "example": {
+        "type": "reveal",
+        "props": {
+          "direction": "up"
+        },
+        "children": [
+          {
+            "type": "hero",
+            "props": {
+              "title": "We build for the long tail",
+              "align": "center"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "rich-text",
       "category": "input",
       "description": "WYSIWYG rich-text editor with formatting toolbar (Tiptap).",
@@ -11895,6 +12704,35 @@
       }
     },
     {
+      "type": "shimmer",
+      "category": "display",
+      "description": "Sweeps a moving highlight band across its children (pure CSS). Use on a CTA label, a \"new\" badge, or skeleton text to draw the eye.",
+      "props": {
+        "duration": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds per sweep. Default 2."
+        },
+        "width": {
+          "type": "string",
+          "required": false,
+          "description": "Highlight band width (CSS length). Default 100px."
+        }
+      },
+      "example": {
+        "type": "shimmer",
+        "class": "text-lg font-semibold",
+        "children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "Get early access"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "sidebar",
       "category": "layout",
       "description": "Navigation sidebar with grouped items, icons, badges, and optional footer. Pair with app-shell.",
@@ -12322,6 +13160,35 @@
       }
     },
     {
+      "type": "spotlight",
+      "category": "layout",
+      "description": "Wraps children with a radial highlight that follows the cursor on hover (CSS, client-only pointer wiring). Use on a hero or feature card.",
+      "props": {
+        "size": {
+          "type": "string",
+          "required": false,
+          "description": "Highlight diameter (CSS length). Default 300px."
+        },
+        "color": {
+          "type": "string",
+          "required": false,
+          "description": "Highlight colour. Default a translucent white."
+        }
+      },
+      "example": {
+        "type": "spotlight",
+        "class": "rounded-xl border bg-card p-10",
+        "children": [
+          {
+            "type": "heading",
+            "props": {
+              "text": "Hover to light it up"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "stat",
       "category": "display",
       "description": "Labeled metric with delta, direction, and sentiment colors. Richer than `metric` — supports formatting.",
@@ -12738,6 +13605,41 @@
       }
     },
     {
+      "type": "testimonial",
+      "category": "display",
+      "description": "A single customer testimonial card: quote, author, role, optional avatar. Use for social proof on a landing page.",
+      "props": {
+        "quote": {
+          "type": "string",
+          "required": true,
+          "description": "The testimonial text."
+        },
+        "author": {
+          "type": "string",
+          "required": false,
+          "description": "Person quoted."
+        },
+        "role": {
+          "type": "string",
+          "required": false,
+          "description": "Their role / company."
+        },
+        "avatar": {
+          "type": "string",
+          "required": false,
+          "description": "Avatar image URL."
+        }
+      },
+      "example": {
+        "type": "testimonial",
+        "props": {
+          "quote": "Booking went from a phone-tag headache to one tap.",
+          "author": "Dr. Lee",
+          "role": "Owner, Bright Smile Dental"
+        }
+      }
+    },
+    {
       "type": "text",
       "category": "display",
       "description": "Inline text or paragraph. Use for prose, labels, captions, descriptions.",
@@ -12774,6 +13676,42 @@
           "text": "Total revenue this quarter.",
           "size": "sm"
         }
+      }
+    },
+    {
+      "type": "text-effect",
+      "category": "display",
+      "description": "Reveals text per word or character with a staggered animation (pure CSS). Aliased animated-text. Use for hero headlines and eyebrow text.",
+      "props": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "description": "The text to animate."
+        },
+        "effect": {
+          "type": "'gradient' | 'fade-in' | 'shimmer'",
+          "required": false,
+          "description": "Reveal effect. Default fade-in."
+        },
+        "by": {
+          "type": "'word' | 'char'",
+          "required": false,
+          "description": "Split granularity. Default word."
+        },
+        "stagger": {
+          "type": "number",
+          "required": false,
+          "description": "Seconds between each unit. Default 0.05."
+        }
+      },
+      "example": {
+        "type": "text-effect",
+        "props": {
+          "text": "Build. Brand. Ship.",
+          "effect": "gradient",
+          "by": "word"
+        },
+        "class": "text-4xl font-bold"
       }
     },
     {
