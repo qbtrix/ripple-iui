@@ -33,3 +33,6 @@ vite.config.ts.timestamp-*
 /playwright-report/
 /blob-report/
 /.playwright/
+
+# kb-go local store (stray — canonical store is ~/.knowledge-base/)
+.knowledge-base/

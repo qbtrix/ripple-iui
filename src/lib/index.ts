@@ -27,6 +27,7 @@ export {
   resolveValue,
   evaluateCondition,
   hasExpressions,
+  withFlowContext,
   type ResolverContext
 } from './core/expression-resolver.js';
 export { normalizeSpec } from './core/normalizer.js';
@@ -79,8 +80,20 @@ export {
 
 // Schema
 export { UISpec, UINode, DataFetcher, ThemeOverrides, parseUISpec, safeParseUISpec } from './schema/ui-spec.js';
-export { UniversalSpec, IntentType, LifecycleType, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
+export { UniversalSpec, IntentType, LifecycleType, FlowAction, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
 export { EventHandler, EventAction, EventHandlerOrArray } from './schema/event-handler.js';
+
+// Chain Flow primitive (RFC 13) — the client-side, zero-roundtrip multi-step
+// flow runtime. `ChainExecutor` walks a nested chain/chain_map tree; `FlowRunner`
+// hosts it over `<Ripple>` so a flow renders in a Pocket (or any surface).
+export {
+  ChainExecutor,
+  MAX_HISTORY_DEPTH,
+  FlowRunner,
+  buildOnboardingWizard,
+  type ChainState,
+  type TerminalResult
+} from './intent/index.js';
 export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 
 // Actions

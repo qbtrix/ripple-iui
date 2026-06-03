@@ -20,6 +20,10 @@
       filter withMotion writes onto it painted nothing (motion ran but never
       animated). Changed the wrapper to `class="block"` (a real layout box),
       matching the working reveal/parallax sugar widgets that DO animate.
+    - 2026-06-02: derive a form-field `name` for input widgets — explicit
+      `props.name` wins, else fall back to the resolved `bind` path — so a
+      native <form action> POST carries field values with JS disabled
+      (ripple-iui #54).
 -->
 <!--
   LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
@@ -41,6 +45,7 @@
 		resolveString,
 		evaluateCondition,
 		hasExpressions,
+		withFlowContext,
 		type ResolverContext
 	} from '../core/expression-resolver.js';
 	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
@@ -63,6 +68,12 @@
 	const eventDispatcher = getContext<EventDispatcher>('ui-events');
 	const dataStore = getContext<Record<string, unknown>>('ui-data');
 	const getWidget = getContext<(type: string) => any>('ui-widget-resolver');
+	// RFC 13: optional Chain Flow context accessor. When a host renders a flow,
+	// it provides `setContext('ui-flow-context', () => chainExecutor.context)`,
+	// layering the flow's accumulated `<flowId>_selection`/`_formData` keys onto
+	// the `state` scope so a later step can pre-fill from an earlier one. Read as
+	// a getter so it tracks the executor's reactive `$state` context.
+	const getFlowContext = getContext<(() => Record<string, unknown>) | undefined>('ui-flow-context');
 
 	/**
 	 * Build the resolver context for expression evaluation.
@@ -70,11 +81,13 @@
 	 * will track property access during derived computations.
 	 */
 	function getResolverContext(): ResolverContext {
-		return {
+		const ctx: ResolverContext = {
 			state: stateManager.state,
 			data: dataStore ?? {},
 			...loopContext
 		};
+		// Layer the flow's accumulated context onto `state` (a no-op when absent).
+		return getFlowContext ? withFlowContext(ctx, getFlowContext()) : ctx;
 	}
 
 	/**
@@ -198,6 +211,25 @@
 		const result = resolveString(tpl, getResolverContext());
 		return typeof result === 'string' ? result : String(result ?? '');
 	}
+
+	/**
+	 * Form-field name for input widgets, so a native `<form action>` POST
+	 * (Form.svelte's static-host mode) carries the field with JS disabled —
+	 * the browser only submits controls that have a `name`.
+	 *
+	 * Priority: an explicit `name` in the spec props wins; otherwise we fall
+	 * back to the resolved `bind` path. Form.svelte validates and serializes
+	 * by state-path key, so defaulting `name` to the bind path lines the
+	 * POSTed body keys up with the form's field rules with no extra config.
+	 *
+	 * Loop placeholders (`lines.{i}.qty`) are resolved against the current
+	 * loop context, matching the bound value/onchange wiring above.
+	 */
+	const resolvedName = $derived.by(() => {
+		const explicit = resolvedProps.name;
+		if (typeof explicit === 'string' && explicit.length > 0) return explicit;
+		return resolveBoundPath() ?? undefined;
+	});
 
 	const onchangeUser = createEventHandler(node.on_change);
 	const onchange = (eventValue?: unknown) => {
@@ -357,6 +389,7 @@
 			...(resolvedClass !== undefined && { class: resolvedClass }),
 			...(node.style !== undefined && { style: node.style }),
 			...resolvedProps,
+			...(resolvedName !== undefined && { name: resolvedName }),
 			...(boundValue !== undefined && { [bindContract.prop]: boundValue }),
 			...(onclick !== undefined && { onclick }),
 			...((boundPathTemplate || onchangeUser) && { [bindContract.event]: onchange }),

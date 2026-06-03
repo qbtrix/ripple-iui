@@ -65,6 +65,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'code-editor', 'codeeditor', 'editor',
   'search', 'filter-bar', 'filters',
   'location-picker', 'geo-picker', 'pick-location',
+  // interactive consumer widgets (value = full item array)
+  'todo-list', 'todo', 'todos',
   // selectable data
   'tree', 'treeview', 'tree-table', 'treetable', 'nested-rows',
   'kanban', 'board',

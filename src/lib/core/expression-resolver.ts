@@ -6,6 +6,11 @@
  *   - Initial creation with expression parsing and evaluation
  *   - Support for simple paths, comparisons, and null checks
  *   - Template string resolution for embedded expressions
+ *   - RFC 13 M1: `state` scope can carry a Chain Flow's accumulated `context`
+ *     so a later step pre-fills from an earlier one with
+ *     `{state.<flowId>_selection.field}`. This is a SCOPE ADDITION — see
+ *     `withFlowContext` — not a new expression engine. App state wins on key
+ *     collision, so a flow can never shadow real state.
  */
 
 /**
@@ -23,6 +28,30 @@ export interface ResolverContext {
 	index?: number;
 	/** Custom loop variable names */
 	[key: string]: unknown;
+}
+
+/**
+ * Layer a Chain Flow's accumulated `context` (namespaced
+ * `<flowId>_selection` / `<flowId>_formData` keys) onto the `state` scope of a
+ * resolver context, so cross-step expressions like
+ * `{state.pick_goal_selection.id}` resolve while a flow is mid-walk.
+ *
+ * RFC 13 §5.2: "Extend its `state` scope to include the flow's accumulated
+ * `context` ... No new expression engine — this is a scope addition."
+ *
+ * Real application state takes precedence: the flow keys are spread *under*
+ * `ctx.state`, so a flow key can never shadow a genuine state key of the same
+ * name. Returns `ctx` unchanged when there is no flow context to add.
+ */
+export function withFlowContext(
+	ctx: ResolverContext,
+	flowContext: Record<string, unknown> | null | undefined
+): ResolverContext {
+	if (!flowContext || Object.keys(flowContext).length === 0) return ctx;
+	return {
+		...ctx,
+		state: { ...flowContext, ...ctx.state }
+	};
 }
 
 /**

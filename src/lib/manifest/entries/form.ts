@@ -9,6 +9,8 @@ export const formEntry: WidgetManifestEntry = {
     errorsTarget: { type: 'string', required: false, description: 'State path for validation errors. Default "errors".' },
     validTarget: { type: 'string', required: false, description: 'State path for overall validity. Default "valid".' },
     validateOn: { type: '"submit" | "change"', required: false, description: 'When validation runs.' },
+    action: { type: 'string', required: false, description: 'Native submit URL. When set, the form does a real browser POST/GET so it works with NO client JS — for static / prerendered hosts. When omitted, the form stays client-side (validate then on_submit).' },
+    method: { type: '"post" | "get"', required: false, description: 'HTTP method for the native form. Only used with `action`. Default "post".' },
   },
   events: {
     on_submit: { type: 'EventAction', required: false, description: 'Fired when a valid form is submitted.' },
@@ -30,6 +32,20 @@ export const formEntry: WidgetManifestEntry = {
     ],
   },
   pockets: [
+    {
+      name: 'native-post-static',
+      description: 'Native browser POST — works with no client JS. For static / prerendered hosts (paw-sites). The form submits straight to `action`; inputs serialize by their `name`.',
+      state: {},
+      ui: {
+        type: 'form',
+        props: { action: '/api/submit', method: 'post' },
+        children: [
+          { type: 'input', props: { label: 'Your name', name: 'full_name' } },
+          { type: 'input', props: { label: 'Phone', name: 'phone' } },
+          { type: 'button', props: { label: 'Request appointment', type: 'submit', variant: 'primary' } },
+        ],
+      },
+    },
     {
       name: 'validate-and-emit',
       description: 'Client-side validation, then hand off to the host via emit.',

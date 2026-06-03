@@ -1,3 +1,6 @@
+<!-- Updated: 2026-06-02 — pass a `name` to the bits-ui checkbox so it renders a
+     hidden form input; a static <form action> POST then submits the checked
+     state with JS off (ripple-iui #54). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Checkbox } from '$lib/components/ui/checkbox/index.js';
@@ -9,12 +12,14 @@
     checked?: boolean;
     disabled?: boolean;
     label?: string;
+    /** Field name for native form submission. Defaults to the bind path via NodeRenderer. */
+    name?: string;
     onchange?: (value?: unknown) => void;
   }
 
   let {
     id, class: className, style, checked = false,
-    disabled = false, label, onchange
+    disabled = false, label, name, onchange
   }: Props = $props();
 
   // Local state that syncs with prop
@@ -38,6 +43,7 @@
   <div class={cn('flex items-center gap-2', className)} style={styleString}>
     <Checkbox
       {id}
+      {name}
       checked={localChecked}
       {disabled}
       onCheckedChange={handleChange}
@@ -49,6 +55,7 @@
 {:else}
   <Checkbox
     {id}
+    {name}
     checked={localChecked}
     {disabled}
     class={cn(className)}

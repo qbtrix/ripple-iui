@@ -60,7 +60,12 @@
 
   const styleString = $derived.by(() => {
     const styles: string[] = [];
-    if (color && (color.startsWith('#') || color.startsWith('rgb'))) {
+    // Use optional chaining per clause (not `color && (a || b)`): the Svelte
+    // compiler can drop the grouping parens around the `||`, leaving
+    // `color && a || b` which calls .startsWith on an undefined `color` and
+    // crashes SSR/prerender. `color?.startsWith(...)` short-circuits safely
+    // regardless of how the expression is flattened — matches Metric/Highlight.
+    if (color?.startsWith('#') || color?.startsWith('rgb')) {
       styles.push(`color:${color}`);
     }
     if (style) {

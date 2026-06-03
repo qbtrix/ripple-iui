@@ -1,3 +1,6 @@
+<!-- Updated: 2026-06-02 — pass a `name` to RadioGroup.Root so bits-ui renders a
+     hidden form input per item; a static <form action> POST then submits the
+     selected option with JS off (ripple-iui #54). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
@@ -16,12 +19,14 @@
     value?: string;
     options?: (string | Option)[];
     disabled?: boolean;
+    /** Field name for native form submission. Defaults to the bind path via NodeRenderer. */
+    name?: string;
     onchange?: (value?: unknown) => void;
   }
 
   let {
     id, class: className, style, label, value = '',
-    options = [], disabled = false, onchange
+    options = [], disabled = false, name, onchange
   }: Props = $props();
 
   const normalized: Option[] = $derived(
@@ -47,6 +52,7 @@
   <RadioGroup.Root
     {value}
     {disabled}
+    {name}
     onValueChange={handleChange}
   >
     {#each normalized as opt (opt.value)}

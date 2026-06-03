@@ -21,6 +21,7 @@ import { apiKeyEntry } from './entries/api-key.js';
 import { appShellEntry } from './entries/app-shell.js';
 import { askUserQuestionsEntry } from './entries/ask-user-questions.js';
 import { articleMetaEntry } from './entries/article-meta.js';
+import { audioEntry } from './entries/audio.js';
 import { auditLogEntry } from './entries/audit-log.js';
 import { auroraEntry } from './entries/aurora.js';
 import { avatarEntry } from './entries/avatar.js';
@@ -66,6 +67,7 @@ import { datePickerEntry } from './entries/date-picker.js';
 import { definitionListEntry } from './entries/definition-list.js';
 import { diffEntry } from './entries/diff.js';
 import { discoverCardEntry } from './entries/discover-card.js';
+import { drawingCanvasEntry } from './entries/drawing-canvas.js';
 import { dropdownMenuEntry } from './entries/dropdown-menu.js';
 import { eachEntry } from './entries/each.js';
 import { embedEntry } from './entries/embed.js';
@@ -76,6 +78,7 @@ import { errorStateEntry } from './entries/error-state.js';
 import { featureGridEntry } from './entries/feature-grid.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
+import { flashcardEntry } from './entries/flashcard.js';
 import { flexEntry } from './entries/flex.js';
 import { followUpEntry } from './entries/follow-up.js';
 import { footerEntry } from './entries/footer.js';
@@ -176,12 +179,15 @@ import { textareaEntry } from './entries/textarea.js';
 import { tickerEntry } from './entries/ticker.js';
 import { timelineEntry } from './entries/timeline.js';
 import { timePickerEntry } from './entries/time-picker.js';
+import { timerEntry } from './entries/timer.js';
+import { todoListEntry } from './entries/todo-list.js';
 import { toastEntry } from './entries/toast.js';
 import { tooltipEntry } from './entries/tooltip.js';
 import { treeEntry } from './entries/tree.js';
 import { treemapEntry } from './entries/treemap.js';
 import { treeTableEntry } from './entries/tree-table.js';
 import { trendEntry } from './entries/trend.js';
+import { videoEntry } from './entries/video.js';
 import { virtualListEntry } from './entries/virtual-list.js';
 import { wizardLayoutEntry } from './entries/wizard-layout.js';
 import { workflowEntry } from './entries/workflow.js';
@@ -512,6 +518,13 @@ export const manifestEntries: WidgetManifestEntry[] = [
   virtualListEntry,
   wizardLayoutEntry,
   workflowEntry,
+  // Composite consumer widgets (ocean-flow port, 2026-05-31)
+  todoListEntry,
+  drawingCanvasEntry,
+  timerEntry,
+  flashcardEntry,
+  audioEntry,
+  videoEntry,
 ];
 
 export function buildManifest(): WidgetManifest {
