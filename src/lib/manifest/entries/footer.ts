@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const footerEntry: WidgetManifestEntry = {
   type: 'footer',
-  category: 'layout',
+  category: 'marketing',
   description: 'Marketing footer: columns of links plus a copyright line. Use at the bottom of a landing page.',
   props: {
     columns: { type: 'Array<{ title: string; links: Array<{ label: string; href: string }> }>', required: false, description: 'Footer link columns.' },

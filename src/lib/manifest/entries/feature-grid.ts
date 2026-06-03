@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const featureGridEntry: WidgetManifestEntry = {
   type: 'feature-grid',
-  category: 'layout',
+  category: 'marketing',
   description: 'Responsive grid of feature cells (title + description). Aliased as features. Use to lay out product benefits on a landing page.',
   props: {
     features: { type: 'Array<{ title: string; description?: string; icon?: string }>', required: true, description: 'Feature cells.' },

@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const ctaEntry: WidgetManifestEntry = {
   type: 'cta',
-  category: 'layout',
+  category: 'marketing',
   description: 'Call-to-action band: a headline, optional subtext, and one button. Aliased as call-to-action. Use to drive the page conversion.',
   props: {
     headline: { type: 'string', required: true, description: 'The primary line.' },

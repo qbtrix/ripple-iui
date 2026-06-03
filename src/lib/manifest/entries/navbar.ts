@@ -4,7 +4,7 @@ import type { WidgetManifestEntry } from '../index.js';
 
 export const navbarEntry: WidgetManifestEntry = {
   type: 'navbar',
-  category: 'layout',
+  category: 'marketing',
   description: 'Marketing top navigation: brand, links, and an optional CTA button. Sticky-capable. Use at the top of a landing page.',
   props: {
     brand: { type: 'string', required: false, description: 'Brand / site name.' },
