@@ -26,3 +26,6 @@ vite.config.ts.timestamp-*
 # Local tooling artifacts (Claude Code + Playwright MCP)
 .claude/
 .playwright-mcp/
+
+# kb-go local store (stray — canonical store is ~/.knowledge-base/)
+.knowledge-base/
