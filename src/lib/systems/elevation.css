@@ -1,0 +1,17 @@
+/* src/lib/systems/elevation.css
+   8-step surface/elevation ladder. Each step lightens (light mode) / darkens
+   less (dark mode handled by the host's tokens) and deepens the shadow.
+   Provenance: Fluid Functionalism (github.com/mickadesign/fluid-functionalism, MIT). */
+:root {
+  --surface-1: var(--background);
+  --surface-2: color-mix(in oklch, var(--background) 94%, var(--foreground));
+  --surface-3: color-mix(in oklch, var(--background) 90%, var(--foreground));
+  --surface-4: color-mix(in oklch, var(--background) 86%, var(--foreground));
+  --surface-5: color-mix(in oklch, var(--background) 82%, var(--foreground));
+  --surface-6: color-mix(in oklch, var(--background) 78%, var(--foreground));
+  --surface-7: color-mix(in oklch, var(--background) 74%, var(--foreground));
+  --surface-8: color-mix(in oklch, var(--background) 70%, var(--foreground));
+  --elevation-shadow-1: 0 1px 2px rgba(0,0,0,0.06);
+  --elevation-shadow-4: 0 6px 16px rgba(0,0,0,0.12);
+  --elevation-shadow-8: 0 16px 48px rgba(0,0,0,0.20);
+}

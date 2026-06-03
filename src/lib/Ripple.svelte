@@ -12,6 +12,14 @@
   re-detecting the step as a flow and nesting a second FlowRunner. A terminal
   step's completion is forwarded to this component's `onComplete` prop. The
   non-flow path is untouched — byte-identical output for plain specs.
+  Updated: 2026-05-30 (PR #45 animate runtime) — bind:this on the ripple-root and
+  pass a lazy `() => rootEl` resolver into the EventDispatcher so the `animate`
+  action can locate its target node (by widget id) inside THIS instance's subtree
+  and run the built-in pulse, correctly scoped (never reaching a sibling render).
+  Updated: 2026-05-30 — apply spec.theme to the ripple-root via
+  themeToStyleString (RFC 12 white-label — Ripple previously parsed theme but
+  never applied it). The host `style` prop and the theme vars are merged on the
+  root div.
   Previous (2026-05-22): Opt-in catalog gate: when `checkCatalog` is true,
   Ripple runs `validateCatalog` on the spec before mount and warns about any
   out-of-catalog node types. Non-breaking — it never blocks rendering;
@@ -34,6 +42,7 @@
   import { createWidgetRegistry } from './core/widget-registry.js';
   import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
+  import { themeToStyleString } from './core/theme-applier.js';
   import { validateCatalog } from './core/validate-catalog.js';
   import { isFlowSpec, unwrapFlowRoot } from './core/flow-spec.js';
   import { getWidget } from './widgets/index.js';
@@ -102,6 +111,10 @@
   const resolvedSpec = $derived(streaming?.current ?? rawSpec);
   const spec = $derived(normalizeSpec(resolvedSpec));
 
+  // White-label keystone (RFC 12): emit spec.theme as CSS custom properties on
+  // the ripple-root so a host's brand applies with no per-site CSS authoring.
+  const themeStyle = $derived(themeToStyleString((spec as { theme?: unknown }).theme as never));
+
   // Chain Flow auto-detection (RFC 13, every-surface). A chain spec is hosted in
   // a `FlowRunner` so it advances client-side; a plain spec renders as before.
   // `flowHosted` is the recursion guard — FlowRunner's per-step inner <Ripple>
@@ -143,7 +156,17 @@
     return onEvent?.(event);
   };
 
-  const eventDispatcher = createEventDispatcher(stateManager, chainedOnEvent, widgetRegistry);
+  // Root element ref — lets the dispatcher's `animate` action find its target
+  // node (by widget id) inside THIS Ripple instance's subtree, so the built-in
+  // pulse is correctly scoped and never reaches into a sibling render. Read
+  // lazily (closure) because the dispatcher is constructed before mount.
+  let rootEl = $state<HTMLElement | undefined>(undefined);
+  const eventDispatcher = createEventDispatcher(
+    stateManager,
+    chainedOnEvent,
+    widgetRegistry,
+    () => rootEl
+  );
   let dataStore = $state<Record<string, unknown>>({});
 
   // Sync external state prop changes into the stateManager reactively.
@@ -268,8 +291,9 @@
   <FlowRunner spec={flowRoot} {onComplete} {onEvent} state={initialStateOverride} class={className} />
 {:else}
 <div
+  bind:this={rootEl}
   class="ripple-root {className}"
-  {style}
+  style={[style, themeStyle].filter(Boolean).join('; ')}
   data-ripple-version={spec.version}
   data-ripple-intent={spec.intent}
   data-ripple-streaming={streaming ? (streaming.done ? 'done' : 'active') : undefined}

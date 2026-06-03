@@ -1,6 +1,6 @@
 {
   "name": "@ripple-ui/svelte",
-  "version": "0.3.1",
+  "version": "0.5.0",
   "type": "module",
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,13 +32,15 @@
   ],
   "scripts": {
     "dev": "vite dev",
-    "build": "svelte-package && bun run scripts/build-manifest.ts",
+    "build": "bun run lint:anim && svelte-package && bun run scripts/build-manifest.ts",
     "build:manifest": "bun run scripts/build-manifest.ts",
+    "lint:anim": "bun run scripts/check-no-toplevel-anim-imports.ts",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest",
+    "test:e2e": "playwright test",
     "package": "svelte-package"
   },
   "peerDependencies": {
@@ -47,10 +49,10 @@
   "dependencies": {
     "@codemirror/lang-html": "^6.4.11",
     "@codemirror/lang-javascript": "^6.2.5",
-    "@google/model-viewer": "^4.2.0",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.41.1",
+    "@google/model-viewer": "^4.2.0",
     "@lucide/svelte": "1.16.0",
     "@tiptap/core": "^3.22.5",
     "@tiptap/pm": "^3.22.5",
@@ -69,6 +71,7 @@
     "layerchart": "2.0.0-next.43",
     "leaflet": "^1.9.4",
     "marked": "^18.0.2",
+    "motion": "^12.40.0",
     "muuri": "^0.9.5",
     "partial-json": "0.1.7",
     "qrcode-svg": "^1.1.0",
@@ -79,6 +82,7 @@
     "tailwind-variants": "^3.2.2"
   },
   "devDependencies": {
+    "@playwright/test": "1.60.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/kit": "^2.50.2",
     "@sveltejs/package": "^2.3.0",

@@ -7,6 +7,8 @@
  *   - Added `run_source` event type + `source` field for RFC 04 data sync
  *   - Added `call_binding` event type + `binding` / `path` / `params` fields
  *     for RFC 05 M2a write-actions core
+ *   - Added `animate` event type + `motion` field — host-delegated imperative
+ *     animation trigger (RFC 12 — animation primitive)
  *   - Added `invoke_tool` event type + `tool` / `args` fields — the
  *     click-driven sibling of `run_source` / `call_binding` for the new
  *     `POST /pockets/{id}/tools/run` wire (#1206 part a)
@@ -22,7 +24,8 @@ export type RippleEvent = {
     | 'toast'
     | 'emit'
     | 'pin'
-    | 'unpin';
+    | 'unpin'
+    | 'animate';
   url?: string;
   method?: string;
   body?: Record<string, unknown>;
@@ -40,6 +43,8 @@ export type RippleEvent = {
   /** Resolved argument map passed to an `invoke_tool` invocation. */
   args?: Record<string, unknown>;
   target?: string;
+  /** Motion directive carried by an `animate` event (see schema/motion.ts). */
+  motion?: unknown;
   message?: string;
   variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
   name?: string;

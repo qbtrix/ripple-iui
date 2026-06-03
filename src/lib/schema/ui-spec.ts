@@ -7,10 +7,13 @@
  *   - Recursive UINode definition for nested component trees
  *   - Added optional `sources` key — server-executed read bindings (RFC 04),
  *     preserved verbatim by ripple as opaque pass-through
+ *   - Added node-level `motion` field (RFC 12 animation primitive).
+ *   - Added font + logo tokens to ThemeOverrides (RFC 12 white-label theme-applier).
  */
 
 import { z } from 'zod';
 import { EventHandlerOrArray } from './event-handler.js';
+import { Motion } from './motion.js';
 
 /**
  * Data fetcher for loading external data.
@@ -66,6 +69,9 @@ const UINodeBase = z.object({
 
 	/** Inline styles */
 	style: z.record(z.string(), z.string()).optional(),
+
+	/** Declarative animation — node-level, sibling to class/style. See schema/motion.ts. */
+	motion: Motion.optional(),
 
 	/** Named snippet slot to route this child into on its parent widget
 	 *  (e.g., 'header' or 'footer' on a Card). Ignored for parents without that slot. */
@@ -150,7 +156,20 @@ export const ThemeOverrides = z.object({
 	/** Border radius (e.g., "0.5rem") */
 	radius: z.string().optional(),
 	/** Dark mode preference */
-	mode: z.enum(['light', 'dark', 'system']).optional()
+	mode: z.enum(['light', 'dark', 'system']).optional(),
+	/** Font-family tokens — emitted as CSS vars (--ripple-font-*). */
+	fonts: z.object({
+		sans: z.string().optional(),
+		serif: z.string().optional(),
+		mono: z.string().optional(),
+		heading: z.string().optional()
+	}).optional(),
+	/** Brand logo — surfaced to widgets (e.g. Navbar) and emitted as --ripple-logo*. */
+	logo: z.object({
+		src: z.string(),
+		alt: z.string().optional(),
+		darkSrc: z.string().optional()
+	}).optional()
 });
 
 export type ThemeOverrides = z.infer<typeof ThemeOverrides>;

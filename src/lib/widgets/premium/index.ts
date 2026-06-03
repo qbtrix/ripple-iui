@@ -1,0 +1,11 @@
+// src/lib/widgets/premium/index.ts
+// @file widgets/premium/index.ts — barrel for the ported premium pack (MIT).
+// @created 2026-05-30 — RFC 12.
+export { default as Marquee } from './Marquee.svelte';
+export { default as BorderBeam } from './BorderBeam.svelte';
+export { default as Shimmer } from './Shimmer.svelte';
+export { default as AnimatedBeam } from './AnimatedBeam.svelte';
+export { default as Aurora } from './Aurora.svelte';
+export { default as Spotlight } from './Spotlight.svelte';
+export { default as BentoGrid } from './BentoGrid.svelte';
+export { default as TextEffect } from './TextEffect.svelte';

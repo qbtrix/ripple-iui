@@ -5319,9 +5319,69 @@
   }
 </script>
 
+<!-- Focused sub-route demos. The gallery below is a single dog-food spec; these
+     standalone pages each render their own specs (card/stat/flow/spec) plus the
+     three new RFC-12 pages (motion + the marketing & premium widget packs). -->
+<nav class="subroute-nav" aria-label="Showcase sub-routes">
+  <span class="subroute-nav-label">Pages</span>
+  <a href="/showcase/motion">Motion</a>
+  <a href="/showcase/moving-indicator">Moving indicator</a>
+  <a href="/showcase/checkbox-group">Checkbox group</a>
+  <a href="/showcase/marketing">Marketing pack</a>
+  <a href="/showcase/premium">Premium pack</a>
+  <span class="subroute-nav-sep" aria-hidden="true">·</span>
+  <a href="/showcase/card">Card</a>
+  <a href="/showcase/stat">Stat</a>
+  <a href="/showcase/flow">Flow actions</a>
+  <a href="/showcase/spec">Spec</a>
+  <a href="/showcase/button">Button</a>
+  <a href="/showcase/exec-dashboard">Exec dashboard</a>
+</nav>
+
 <Ripple spec={showcaseSpec} state={initialOverride} {onStateChange} onEvent={handleEvent} />
 
 <style>
+  /* Sub-route link strip — sits above the dog-food gallery. */
+  .subroute-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.75rem 2rem 0;
+  }
+  .subroute-nav-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: hsl(var(--muted-foreground));
+    margin-right: 4px;
+  }
+  .subroute-nav-sep {
+    color: hsl(var(--muted-foreground) / 0.6);
+    padding: 0 2px;
+  }
+  .subroute-nav a {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: hsl(var(--muted) / 0.4);
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .subroute-nav a:hover {
+    background: hsl(var(--muted));
+  }
+  @media (max-width: 720px) {
+    .subroute-nav {
+      padding: 0.75rem 1rem 0;
+    }
+  }
+
   /* Layout-only glue. Widget visuals come from their own components. */
   :global(.showcase-shell) {
     min-height: calc(100vh - 60px);

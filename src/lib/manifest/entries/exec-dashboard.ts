@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const execDashboardEntry: WidgetManifestEntry = {
   type: 'exec-dashboard',
   category: 'composite',
-  description: 'Executive dashboard with KPI strip (status bands, progress to target, sparklines), primary chart + activity rail, and data-table footer. Supports loading/error/empty states, density toggle, lastUpdated indicator, date-range chips, granularity toggle, refresh, and clickable KPIs/activity items for drill-through.',
+  description: 'Executive dashboard: KPI strip with sparklines, primary chart, activity rail, and data-table footer. Date-range + granularity chips, density toggle, loading/error/empty states, clickable KPIs.',
   props: {
     title: { type: 'string', required: false, description: 'Page title.' },
     subtitle: { type: 'string', required: false, description: 'Page subtitle / description.' },

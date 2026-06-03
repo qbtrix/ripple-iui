@@ -3,6 +3,12 @@
 //
 // Per-widget entries live in ./entries/<kebab-type>.ts. Adding a new widget
 // requires both a new entry file AND adding the import + array entry below.
+//
+// Updated 2026-05-30 (RFC 12 motion primitive): registered reveal + parallax
+// entries and attached the top-level `motion` doc block (motion-doc.ts) to the
+// built manifest so the node-level `motion` field is documented for the LLM.
+// Updated 2026-05-30 (RFC 12 Phase 4): registered the premium pack entries
+// (marquee + the 6 remaining ports) for the MIT-ported animation widgets.
 
 import pkg from '../../../package.json' with { type: 'json' };
 
@@ -10,15 +16,19 @@ import { manifestActions } from './actions.js';
 import { accordionEntry } from './entries/accordion.js';
 import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
+import { animatedBeamEntry } from './entries/animated-beam.js';
 import { apiKeyEntry } from './entries/api-key.js';
 import { appShellEntry } from './entries/app-shell.js';
 import { askUserQuestionsEntry } from './entries/ask-user-questions.js';
 import { articleMetaEntry } from './entries/article-meta.js';
 import { audioEntry } from './entries/audio.js';
 import { auditLogEntry } from './entries/audit-log.js';
+import { auroraEntry } from './entries/aurora.js';
 import { avatarEntry } from './entries/avatar.js';
 import { avatarGroupEntry } from './entries/avatar-group.js';
 import { badgeEntry } from './entries/badge.js';
+import { bentoGridEntry } from './entries/bento-grid.js';
+import { borderBeamEntry } from './entries/border-beam.js';
 import { breadcrumbEntry } from './entries/breadcrumb.js';
 import { bulkActionBarEntry } from './entries/bulk-action-bar.js';
 import { buttonEntry } from './entries/button.js';
@@ -28,6 +38,7 @@ import { calloutEntry } from './entries/callout.js';
 import { cardEntry } from './entries/card.js';
 import { chartEntry } from './entries/chart.js';
 import { checkboxEntry } from './entries/checkbox.js';
+import { checkboxGroupEntry } from './entries/checkbox-group.js';
 import { chipEntry } from './entries/chip.js';
 import { citationEntry } from './entries/citation.js';
 import { coachmarkEntry } from './entries/coachmark.js';
@@ -46,6 +57,7 @@ import { comparisonLayoutEntry } from './entries/comparison-layout.js';
 import { comparisonTableEntry } from './entries/comparison-table.js';
 import { confirmDialogEntry } from './entries/confirm-dialog.js';
 import { containerEntry } from './entries/container.js';
+import { ctaEntry } from './entries/cta.js';
 import { contextMenuEntry } from './entries/context-menu.js';
 import { copyEntry } from './entries/copy.js';
 import { dashboardEntry } from './entries/dashboard.js';
@@ -63,11 +75,13 @@ import { emptyStateEntry } from './entries/empty-state.js';
 import { entityDetailEntry } from './entries/entity-detail.js';
 import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
+import { featureGridEntry } from './entries/feature-grid.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flashcardEntry } from './entries/flashcard.js';
 import { flexEntry } from './entries/flex.js';
 import { followUpEntry } from './entries/follow-up.js';
+import { footerEntry } from './entries/footer.js';
 import { formEntry } from './entries/form.js';
 import { formLayoutEntry } from './entries/form-layout.js';
 import { funnelEntry } from './entries/funnel.js';
@@ -92,15 +106,20 @@ import { kvTableEntry } from './entries/kv-table.js';
 import { linkPreviewEntry } from './entries/link-preview.js';
 import { loadingEntry } from './entries/loading.js';
 import { locationPickerEntry } from './entries/location-picker.js';
+import { logoCloudEntry } from './entries/logo-cloud.js';
 import { mapEntry } from './entries/map.js';
 import { markdownEntry } from './entries/markdown.js';
+import { marqueeEntry } from './entries/marquee.js';
 import { masterDetailEntry } from './entries/master-detail.js';
 import { mentionEntry } from './entries/mention.js';
 import { metricEntry } from './entries/metric.js';
 import { modalEntry } from './entries/modal.js';
 import { modelViewerEntry } from './entries/model-viewer.js';
+import { motionDoc, type MotionDoc } from './motion-doc.js';
 import { multiSelectEntry } from './entries/multi-select.js';
+import { navbarEntry } from './entries/navbar.js';
 import { newsCardEntry } from './entries/news-card.js';
+import { newsletterEntry } from './entries/newsletter.js';
 import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
 import { opsDashboardEntry } from './entries/ops-dashboard.js';
@@ -108,6 +127,7 @@ import { orderStatusEntry } from './entries/order-status.js';
 import { orgChartEntry } from './entries/org-chart.js';
 import { otpInputEntry } from './entries/otp-input.js';
 import { pageHeaderEntry } from './entries/page-header.js';
+import { parallaxEntry } from './entries/parallax.js';
 import { peoplePickerEntry } from './entries/people-picker.js';
 import { pipelineDashboardEntry } from './entries/pipeline-dashboard.js';
 import { permissionMatrixEntry } from './entries/permission-matrix.js';
@@ -123,6 +143,7 @@ import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
 import { reportLayoutEntry } from './entries/report-layout.js';
+import { revealEntry } from './entries/reveal.js';
 import { richTextEntry } from './entries/rich-text.js';
 import { rippleFrameEntry } from './entries/ripple-frame.js';
 import { sankeyEntry } from './entries/sankey.js';
@@ -134,6 +155,7 @@ import { selectEntry } from './entries/select.js';
 import { separatorEntry } from './entries/separator.js';
 import { settingsListEntry } from './entries/settings-list.js';
 import { sheetEntry } from './entries/sheet.js';
+import { shimmerEntry } from './entries/shimmer.js';
 import { sidebarEntry } from './entries/sidebar.js';
 import { skeletonEntry } from './entries/skeleton.js';
 import { sliderEntry } from './entries/slider.js';
@@ -142,14 +164,17 @@ import { sourceCardEntry } from './entries/source-card.js';
 import { sourcesBarEntry } from './entries/sources-bar.js';
 import { sparklineEntry } from './entries/sparkline.js';
 import { splitEntry } from './entries/split.js';
+import { spotlightEntry } from './entries/spotlight.js';
 import { statEntry } from './entries/stat.js';
 import { statusDotEntry } from './entries/status-dot.js';
 import { stepsEntry } from './entries/steps.js';
 import { switchEntry } from './entries/switch.js';
 import { tableEntry } from './entries/table.js';
 import { tabsEntry } from './entries/tabs.js';
+import { testimonialEntry } from './entries/testimonial.js';
 import { terminalEntry } from './entries/terminal.js';
 import { textEntry } from './entries/text.js';
+import { textEffectEntry } from './entries/text-effect.js';
 import { textareaEntry } from './entries/textarea.js';
 import { tickerEntry } from './entries/ticker.js';
 import { timelineEntry } from './entries/timeline.js';
@@ -291,6 +316,8 @@ export interface WidgetManifest {
   spec: SpecEnvelope;
   /** Grammar reference for every EventAction variant the dispatcher accepts. */
   actions: Record<string, ActionSpec>;
+  /** LLM-facing documentation for the node-level `motion` field (RFC 12). */
+  motion: MotionDoc;
   widgets: WidgetManifestEntry[];
 }
 
@@ -323,14 +350,18 @@ export const manifestEntries: WidgetManifestEntry[] = [
   accordionEntry,
   alertEntry,
   analystBarEntry,
+  animatedBeamEntry,
   apiKeyEntry,
   askUserQuestionsEntry,
   appShellEntry,
   articleMetaEntry,
   auditLogEntry,
+  auroraEntry,
   avatarEntry,
   avatarGroupEntry,
   badgeEntry,
+  bentoGridEntry,
+  borderBeamEntry,
   breadcrumbEntry,
   bulkActionBarEntry,
   buttonEntry,
@@ -340,6 +371,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   cardEntry,
   chartEntry,
   checkboxEntry,
+  checkboxGroupEntry,
   chipEntry,
   citationEntry,
   coachmarkEntry,
@@ -358,6 +390,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   comparisonTableEntry,
   confirmDialogEntry,
   containerEntry,
+  ctaEntry,
   contextMenuEntry,
   copyEntry,
   dashboardEntry,
@@ -374,10 +407,12 @@ export const manifestEntries: WidgetManifestEntry[] = [
   entityDetailEntry,
   execDashboardEntry,
   errorStateEntry,
+  featureGridEntry,
   fileUploadEntry,
   filterBarEntry,
   flexEntry,
   followUpEntry,
+  footerEntry,
   formEntry,
   formLayoutEntry,
   funnelEntry,
@@ -402,15 +437,19 @@ export const manifestEntries: WidgetManifestEntry[] = [
   linkPreviewEntry,
   loadingEntry,
   locationPickerEntry,
+  logoCloudEntry,
   mapEntry,
   markdownEntry,
+  marqueeEntry,
   masterDetailEntry,
   mentionEntry,
   metricEntry,
   modalEntry,
   modelViewerEntry,
   multiSelectEntry,
+  navbarEntry,
   newsCardEntry,
+  newsletterEntry,
   notificationCenterEntry,
   numberInputEntry,
   opsDashboardEntry,
@@ -418,6 +457,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
+  parallaxEntry,
   peoplePickerEntry,
   pipelineDashboardEntry,
   permissionMatrixEntry,
@@ -433,6 +473,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   rangeBarEntry,
   ratingEntry,
   reportLayoutEntry,
+  revealEntry,
   richTextEntry,
   rippleFrameEntry,
   sankeyEntry,
@@ -444,6 +485,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   separatorEntry,
   settingsListEntry,
   sheetEntry,
+  shimmerEntry,
   sidebarEntry,
   skeletonEntry,
   sliderEntry,
@@ -452,6 +494,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   sourcesBarEntry,
   sparklineEntry,
   splitEntry,
+  spotlightEntry,
   statEntry,
   statusDotEntry,
   stepsEntry,
@@ -459,7 +502,9 @@ export const manifestEntries: WidgetManifestEntry[] = [
   tableEntry,
   tabsEntry,
   terminalEntry,
+  testimonialEntry,
   textEntry,
+  textEffectEntry,
   textareaEntry,
   tickerEntry,
   timelineEntry,
@@ -492,6 +537,7 @@ export function buildManifest(): WidgetManifest {
     generatedAt: new Date().toISOString(),
     spec: specEnvelope,
     actions: manifestActions,
+    motion: motionDoc,
     widgets: manifestEntries,
   };
 }

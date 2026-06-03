@@ -5,6 +5,9 @@
    shadcn token set. Defaults below cascade from the host's shadcn tokens
    so doing nothing keeps the existing look. */
 
+/* Fluid Functionalism 8-step surface/elevation ladder (MIT). */
+@import './systems/elevation.css';
+
 :root {
   --ripple-surface: var(--card);
   --ripple-surface-foreground: var(--card-foreground);

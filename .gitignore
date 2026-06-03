@@ -27,5 +27,12 @@ vite.config.ts.timestamp-*
 .claude/
 .playwright-mcp/
 
+# Playwright browser smoke-test artifacts (the browsers themselves live in the
+# shared ms-playwright cache, not the repo; these are per-run outputs)
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright/
+
 # kb-go local store (stray — canonical store is ~/.knowledge-base/)
 .knowledge-base/

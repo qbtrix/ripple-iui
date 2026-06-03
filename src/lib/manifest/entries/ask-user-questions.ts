@@ -4,7 +4,7 @@ export const askUserQuestionsEntry: WidgetManifestEntry = {
   type: 'ask-user-questions',
   category: 'composite',
   description:
-    'Stepped multi-choice question flow with numbered options (1-9 shortcuts), single/multi-select, optional "Other" free-text, and skip/back. On complete, fires completeActions with a human-readable answer summary as the event value.',
+    'Stepped multi-choice flow: numbered options (1-9 shortcuts), single/multi-select, optional "Other" free-text, skip/back. On complete, fires completeActions with an answer summary.',
   props: {
     questions: {
       type: 'Array<{ title: string; options: Array<{ title: string; description?: string }>; multiSelect?: boolean; allowOther?: boolean; otherPlaceholder?: string; skippable?: boolean; nextLabel?: string; layout?: "inline" | "stacked" }>',

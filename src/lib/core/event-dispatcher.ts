@@ -14,6 +14,15 @@
  *     write binding; resolves {state.x}/{item.id} in path/params client-side
  *     before emitting, then chains on_success / on_error like run_source
  *     (RFC 05 M2a — Write actions core)
+ *   - Added animate action — host-delegated imperative animation trigger;
+ *     emits an `animate` RippleEvent carrying target + motion, like navigate
+ *     (RFC 12 — animation primitive)
+ *   - 2026-05-30 (PR #45 animate runtime): `animate` is now a REAL runtime
+ *     behavior, not emit-only. `handleAnimate` locates the target node by widget
+ *     id inside the dispatcher's DOM root (new optional `getAnimateRoot` ctor arg,
+ *     supplied by Ripple.svelte) and pulses it via `playMotion`, so clicking an
+ *     `animate` trigger moves the target on screen with NO host code. It still
+ *     emits the `animate` event afterward so observers/hosts can react or override.
  *   - Added invoke_tool action — host-delegated invocation of a named
  *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
  *     args; click-driven sibling of run_source / call_binding for the new
@@ -105,7 +114,14 @@ export class EventDispatcher {
 	constructor(
 		private stateManager: StateManager,
 		private onEvent?: OnEventCallback,
-		private widgetRegistry?: WidgetRegistry
+		private widgetRegistry?: WidgetRegistry,
+		/**
+		 * Returns the DOM subtree this dispatcher's `animate` action searches for
+		 * its target node (by widget id). Supplied by Ripple.svelte as the rendered
+		 * root. Optional — without it `animate` still emits its event for host
+		 * observers, it just can't run the built-in pulse itself.
+		 */
+		private getAnimateRoot?: () => HTMLElement | null | undefined
 	) {}
 
 	/**
@@ -191,6 +207,9 @@ export class EventDispatcher {
 			case 'pin':
 			case 'unpin':
 				this.emitExternal(handler, context, eventValue);
+				return;
+			case 'animate':
+				this.handleAnimate(handler, context, eventValue);
 				return;
 			case 'api':
 				await this.handleApi(handler, context, depth);
@@ -419,6 +438,65 @@ export class EventDispatcher {
 		}
 
 		this.onEvent(event);
+	}
+
+	/**
+	 * `animate` — host-delegated imperative animation trigger that ALSO runs a
+	 * built-in pulse when a DOM root is available. Two halves:
+	 *
+	 *   1. RUNTIME (preferred path): locate the target node by its widget id in
+	 *      the Ripple root and pulse it via `playMotion` (the same engine channels
+	 *      the declarative `withMotion` action uses). This makes `animate` work
+	 *      with NO host code — clicking the trigger moves the target on screen.
+	 *   2. OBSERVERS: always emit an `animate` RippleEvent carrying the resolved
+	 *      `target` + `motion`, exactly like `navigate`, so a host can observe /
+	 *      override. Legacy hosts that only echoed the event keep working.
+	 *
+	 * The handler's `target` is a widget id; `motion` is a node-level Motion
+	 * directive. `target` accepts `{...}` expressions (loop ids) like the other
+	 * actions. Both were previously left `undefined` whenever a spec authored the
+	 * action incorrectly — see the showcase fix in the same PR.
+	 */
+	private handleAnimate(
+		handler: Extract<EventHandler, { action: 'animate' }>,
+		context: ResolverContext,
+		_eventValue?: unknown
+	): void {
+		const target = handler.target ? this.resolveTarget(handler.target, context) : handler.target;
+
+		// 1. Runtime pulse — find the target node in the rendered root and play it.
+		const root = this.getAnimateRoot?.();
+		if (root && target && handler.motion) {
+			// Escape the id for the attribute selector so ids with special chars
+			// (or numeric loop ids) still match; fall back to getElementById.
+			let node: HTMLElement | null = null;
+			try {
+				const sel =
+					typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+						? `#${CSS.escape(target)}`
+						: `#${target}`;
+				node = root.querySelector<HTMLElement>(sel);
+			} catch {
+				node = null;
+			}
+			if (!node && typeof document !== 'undefined') {
+				node = document.getElementById(target);
+			}
+			if (node) {
+				// Lazy import keeps the dispatcher free of a static action dependency
+				// (and the action free of any SSR/top-level engine import concern).
+				void import('../actions/with-motion.js').then(({ playMotion }) => {
+					playMotion(node!, handler.motion as never);
+				});
+			}
+		}
+
+		// 2. Observers — emit the event regardless, like navigate.
+		if (this.onEvent) {
+			const event: RippleEvent = { type: 'animate', target };
+			(event as { motion?: unknown }).motion = handler.motion;
+			this.onEvent(event);
+		}
 	}
 
 	// -- api with async continuations ---------------------------------------
@@ -827,7 +905,8 @@ export class EventDispatcher {
 export function createEventDispatcher(
 	stateManager: StateManager,
 	onEvent?: OnEventCallback,
-	widgetRegistry?: WidgetRegistry
+	widgetRegistry?: WidgetRegistry,
+	getAnimateRoot?: () => HTMLElement | null | undefined
 ): EventDispatcher {
-	return new EventDispatcher(stateManager, onEvent, widgetRegistry);
+	return new EventDispatcher(stateManager, onEvent, widgetRegistry, getAnimateRoot);
 }

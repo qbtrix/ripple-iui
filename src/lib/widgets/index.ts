@@ -1,11 +1,14 @@
 // Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
 // Updated 2026-05-22: registered the `media/` escape-hatch widgets — ModelViewer (declarative 3D, type `model-viewer`/`3d`/`model`) and Embed (sandboxed iframe, type `embed`/`iframe`) for Increment 5.
+// Updated 2026-05-30: registered the `motion/` sugar widgets — Reveal (type `reveal`) and Parallax (type `parallax`), which desugar to a motion field (RFC 12 animation primitive).
+// Updated 2026-05-30: registered the `marketing/` widget pack — Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud (+ aliases) for the RFC 12 landing-page pack (Phase 3).
+// Updated 2026-05-30: registered the full `premium/` MIT-ported pack (Phase 4) — Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora (+ aurora-background), Spotlight, BentoGrid (+ bento), TextEffect (+ animated-text).
 // Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`/`pomodoro`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
 import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
-import { Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
+import { Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
 import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, Map as MapWidget } from './data/index.js';
 import { If, Each } from './control/index.js';
 import {
@@ -27,6 +30,9 @@ import {
   BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines
 } from './vertical/index.js';
 import { ModelViewer, Embed, AudioPlayer, VideoPlayer } from './media/index.js';
+import { Reveal, Parallax } from './motion/index.js';
+import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud } from './marketing/index.js';
+import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect } from './premium/index.js';
 import { TodoList, DrawingCanvas, Timer, Flashcard } from './interactive/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
@@ -100,6 +106,8 @@ const defaultRegistry: WidgetMap = {
   input: Input,
   select: Select,
   checkbox: Checkbox,
+  'checkbox-group': CheckboxGroup,
+  'checkbox-list': CheckboxGroup,
   switch: Switch,
   textarea: Textarea,
   slider: Slider,
@@ -301,6 +309,33 @@ const defaultRegistry: WidgetMap = {
   model: ModelViewer,
   embed: Embed,
   iframe: Embed,
+  // Motion — sugar widgets (RFC 12 animation primitive)
+  reveal: Reveal,
+  parallax: Parallax,
+  // Marketing — landing-page widget pack (RFC 12)
+  navbar: Navbar,
+  footer: Footer,
+  cta: Cta,
+  'call-to-action': Cta,
+  testimonial: Testimonial,
+  'feature-grid': FeatureGrid,
+  features: FeatureGrid,
+  newsletter: Newsletter,
+  'email-capture': Newsletter,
+  'logo-cloud': LogoCloud,
+  logos: LogoCloud,
+  // Premium — MIT-ported animation pack (RFC 12)
+  marquee: Marquee,
+  'border-beam': BorderBeam,
+  shimmer: Shimmer,
+  'animated-beam': AnimatedBeam,
+  aurora: Aurora,
+  'aurora-background': Aurora,
+  spotlight: Spotlight,
+  'bento-grid': BentoGrid,
+  bento: BentoGrid,
+  'text-effect': TextEffect,
+  'animated-text': TextEffect,
   // Media — native players (composite consumer widgets, 2026-05-31)
   audio: AudioPlayer,
   'audio-player': AudioPlayer,
@@ -354,7 +389,7 @@ export {
   Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible, DropdownMenu,
   ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
   Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock,
-  Button, Input, Select, Checkbox, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
+  Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
   NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker,
   Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, MapWidget,
   ProgressRing, Mention, LinkPreview, Qr, Diff, Terminal, If, Each,
@@ -370,7 +405,10 @@ export {
   AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions,
   ModelViewer, Embed, AudioPlayer, VideoPlayer,
-  TodoList, DrawingCanvas, Timer, Flashcard
+  Reveal, Parallax,
+  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud,
+  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
+  TodoList, DrawingCanvas, Timer, Flashcard,
+  AskUserQuestions
 };

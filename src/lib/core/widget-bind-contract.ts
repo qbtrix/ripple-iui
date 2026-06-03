@@ -52,6 +52,7 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   // inputs
   'input', 'textarea', 'select', 'combobox', 'autocomplete',
   'multi-select', 'multiselect', 'tag-input',
+  'checkbox-group', 'checkbox-list',
   'radio-group', 'radio', 'segmented', 'toggle-group',
   'slider', 'rating', 'stars',
   'number-input', 'numberinput', 'number',

@@ -11,6 +11,8 @@
  *     binding (RFC 04 — Pocket Interactivity & Data Sync)
  *   - Added call_binding action — host-delegated write-action twin of
  *     run_source; invokes a named server-side write binding (RFC 05 M2a)
+ *   - Added animate action — host-delegated imperative animation trigger on a
+ *     target node by id, carrying a node-level Motion directive (RFC 12)
  *   - Added invoke_tool action — host-delegated invocation of a named
  *     server-side tool (WebFetch / Composio / etc.) by tool id + resolved
  *     args; the click-driven sibling of run_source / call_binding for
@@ -20,6 +22,7 @@
  */
 
 import { z } from 'zod';
+import { Motion } from './motion.js';
 
 /**
  * Supported event handler actions.
@@ -68,7 +71,8 @@ export const EventAction = z.enum([
 	'confirm',
 	'validate',
 	'delay',
-	'invoke'
+	'invoke',
+	'animate'
 ]);
 
 export type EventAction = z.infer<typeof EventAction>;
@@ -298,6 +302,13 @@ export const InvokeHandler = z.object({
 	args: z.array(z.any()).optional()
 });
 
+/** `animate` — host-delegated imperative animation trigger on a target node. */
+export const AnimateHandler = z.object({
+	action: z.literal('animate'),
+	target: z.string(),
+	motion: Motion
+});
+
 // Forward-declared concrete types for recursive schemas (flow/branch/confirm/api).
 type ApiHandlerType = {
 	action: 'api';
@@ -387,7 +398,8 @@ export const EventHandler = z.union([
 	ConfirmHandler,
 	ValidateHandler,
 	DelayHandler,
-	InvokeHandler
+	InvokeHandler,
+	AnimateHandler
 ]);
 
 export type EventHandler =
@@ -410,7 +422,8 @@ export type EventHandler =
 	| ConfirmHandlerType
 	| z.infer<typeof ValidateHandler>
 	| z.infer<typeof DelayHandler>
-	| z.infer<typeof InvokeHandler>;
+	| z.infer<typeof InvokeHandler>
+	| z.infer<typeof AnimateHandler>;
 
 /**
  * Multiple event handlers can be chained.
