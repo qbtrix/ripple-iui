@@ -29,7 +29,16 @@
   ].filter(Boolean).join(';'));
   // A horizontal quadratic curve across the viewBox, bowed by `curvature`.
   const path = $derived(`M 4 50 Q 100 ${50 + curvature} 196 50`);
-  const gradientId = $derived(`ripple-beam-grad-${id ?? Math.random().toString(36).slice(2, 8)}`);
+  // SSR-safe stable id: a deterministic hash of the gradient's distinguishing
+  // props, NOT Math.random() (which differs between the prerender pass and
+  // client hydration, breaking the url(#id) reference so the beam goes invisible
+  // on a prerendered Paw Site). Identical beams can safely share a gradient id.
+  function beamHash(s: string): string {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+  }
+  const gradientId = $derived(`ripple-beam-grad-${id ?? beamHash(`${gradientStart}|${gradientStop}|${curvature}|${duration}`)}`);
 </script>
 
 <svg {id} data-animated-beam viewBox="0 0 200 100" fill="none" preserveAspectRatio="none" class={cn('ripple-animated-beam w-full', className)} style={styleString} aria-hidden="true">
