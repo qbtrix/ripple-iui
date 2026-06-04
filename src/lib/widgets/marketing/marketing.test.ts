@@ -5,7 +5,11 @@
 //   its core content, and (where checked) to gain a [data-ripple-motion] wrapper
 //   when a node-level motion field is present.
 // @created 2026-05-30 — RFC 12 marketing widget pack (Phase 3).
-import { render } from '@testing-library/svelte';
+// @updated 2026-06-04 — Added coverage for the marketing-pack polish pass:
+//   FeatureGrid lucide-icon rendering (+ graceful unknown-slug fallback),
+//   Testimonial initials-circle + star-rating, and the LogoCloud text-mode
+//   fallback when a logo has no usable image src.
+import { render, waitFor } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
 import { getWidgetTypes } from '$lib/widgets/index.js';
@@ -59,6 +63,20 @@ describe('Testimonial', () => {
     expect(getByText('Dr. Lee')).toBeInTheDocument();
     expect(getByText('Owner, BrightSmile')).toBeInTheDocument();
   });
+  it('shows an initials circle when no avatar is provided', () => {
+    const { getByText } = r({ type: 'testimonial', props: { quote: 'Great.', author: 'Dana Reyes' } });
+    expect(getByText('DR')).toBeInTheDocument();
+  });
+  it('renders an avatar image instead of initials when an avatar is given', () => {
+    const { container } = r({ type: 'testimonial', props: { quote: 'Great.', author: 'Dana Reyes', avatar: '/dana.jpg' } });
+    expect(container.querySelector('img[alt="Dana Reyes"]')).not.toBeNull();
+  });
+  it('renders a star rating when `rating` is provided', () => {
+    const { container } = r({ type: 'testimonial', props: { quote: 'Five stars.', author: 'Sam', rating: 5 } });
+    expect(container.querySelector('[aria-label="5 out of 5 stars"]')).not.toBeNull();
+    // 5 star svgs in the rating row.
+    expect(container.querySelectorAll('[aria-label="5 out of 5 stars"] svg').length).toBe(5);
+  });
 });
 
 describe('FeatureGrid', () => {
@@ -70,6 +88,25 @@ describe('FeatureGrid', () => {
     expect(getByText('Fast')).toBeInTheDocument();
     expect(getByText('Edge-served.')).toBeInTheDocument();
     expect(getByText('Owned')).toBeInTheDocument();
+  });
+  it('renders a lucide icon (svg) when a feature has an `icon` slug', async () => {
+    const { container } = r({ type: 'feature-grid', props: { features: [
+      { title: 'Secure', description: 'End-to-end.', icon: 'shield-check' },
+    ] } });
+    await waitFor(() => { expect(container.querySelector('svg')).not.toBeNull(); }, { timeout: 2000, interval: 25 });
+  });
+  it('renders fine (no svg, no throw) when the icon slug is unknown', async () => {
+    const { getByText, container } = r({ type: 'feature-grid', props: { features: [
+      { title: 'Mystery', icon: '__not_a_real_icon__' },
+    ] } });
+    // Title still renders; an unknown slug resolves to no icon rather than crashing.
+    expect(getByText('Mystery')).toBeInTheDocument();
+    await new Promise((res) => setTimeout(res, 150));
+    expect(container.querySelector('svg')).toBeNull();
+  });
+  it('omits the icon medallion entirely when no `icon` is provided', () => {
+    const { container } = r({ type: 'feature-grid', props: { features: [{ title: 'Plain' }] } });
+    expect(container.querySelector('svg')).toBeNull();
   });
 });
 
@@ -97,6 +134,33 @@ describe('LogoCloud', () => {
     expect(getByText('Trusted by')).toBeInTheDocument();
     expect(container.querySelectorAll('img').length).toBe(2);
     expect(container.querySelector('img[alt="Acme"]')).not.toBeNull();
+  });
+  it('renders the brand NAME as text (no img) when a logo has no src', () => {
+    const { getByText, container } = r({ type: 'logo-cloud', props: { logos: [{ alt: 'Acme' }, { alt: 'Globex' }] } });
+    expect(container.querySelectorAll('img').length).toBe(0);
+    expect(getByText('Acme')).toBeInTheDocument();
+    expect(getByText('Globex')).toBeInTheDocument();
+  });
+  it('treats empty / "placeholder" src as missing and falls back to text', () => {
+    const { getByText, container } = r({ type: 'logo-cloud', props: { logos: [
+      { src: '', alt: 'Empty' }, { src: '   ', alt: 'Whitespace' }, { src: 'placeholder', alt: 'Placeholder' },
+    ] } });
+    expect(container.querySelectorAll('img').length).toBe(0);
+    expect(getByText('Empty')).toBeInTheDocument();
+    expect(getByText('Whitespace')).toBeInTheDocument();
+    expect(getByText('Placeholder')).toBeInTheDocument();
+  });
+  it('prefers an explicit `name` over `alt` for the text label', () => {
+    const { getByText } = r({ type: 'logo-cloud', props: { logos: [{ alt: 'acme-logo', name: 'Acme Corp' }] } });
+    expect(getByText('Acme Corp')).toBeInTheDocument();
+  });
+  it('mixes image logos and text-mode logos in one cloud', () => {
+    const { getByText, container } = r({ type: 'logo-cloud', props: { logos: [
+      { src: '/real.svg', alt: 'Real' }, { alt: 'NoLogo' },
+    ] } });
+    expect(container.querySelectorAll('img').length).toBe(1);
+    expect(container.querySelector('img[alt="Real"]')).not.toBeNull();
+    expect(getByText('NoLogo')).toBeInTheDocument();
   });
 });
 
