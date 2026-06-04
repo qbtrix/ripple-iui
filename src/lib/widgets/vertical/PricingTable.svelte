@@ -1,4 +1,9 @@
-<!-- src/lib/widgets/vertical/PricingTable.svelte -->
+<!--
+  src/lib/widgets/vertical/PricingTable.svelte
+  @updated 2026-06-04 — Marketing polish: tier cards lift on hover, the
+    popular tier reads stronger (kept ring + shadow), feature check/x icons
+    unchanged. Prop API unchanged. SSR-safe (static lucide imports).
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
@@ -56,8 +61,8 @@
   {#each tiers as tier (tier.id)}
     <div
       class={cn(
-        'relative flex flex-col rounded-xl border bg-card p-6 transition-shadow',
-        tier.popular ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border'
+        'relative flex flex-col rounded-xl border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg',
+        tier.popular ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border hover:border-primary/30'
       )}
     >
       {#if tier.popular}
