@@ -5,6 +5,12 @@
   management, daily ops. Distinct from `steps` (which is a visual indicator)
   because each item carries owner / due / blocked / attachments and supports
   per-item event actions.
+  @changes 2026-06-06 — make the checklist reactive. Added the default
+  `value` + `onchange` bind surface (mirrors TodoList) so a spec can
+  `bind: "state.checklist"` and have toggles persist through StateManager.
+  Toggling now optimistically emits a NEW items array with the flipped item's
+  state, gates blocked items (cannot be marked done), and still fires
+  `toggleActions` as an enterprise side-effect hook (API / audit / emit).
 -->
 <script lang="ts">
   import { getContext } from 'svelte';
@@ -50,7 +56,10 @@
     style?: Record<string, string>;
     title?: string;
     description?: string;
+    /** Items when not bound (static spec). */
     items?: ChecklistItem[];
+    /** Bound value from NodeRenderer (`bind` resolves here). Wins over `items`. */
+    value?: ChecklistItem[];
     groupBy?: 'none' | 'state' | 'owner';
     showProgress?: boolean;
     /** When provided, overrides the auto-computed value. */
@@ -58,6 +67,8 @@
     emptyText?: string;
     onitemclick?: (id: string) => void;
     ontoggle?: (id: string, nextDone: boolean) => void;
+    /** Fires with the full new array whenever an item's state changes. */
+    onchange?: (items: ChecklistItem[]) => void;
   }
 
   let {
@@ -67,15 +78,20 @@
     title,
     description,
     items: rawItems = [],
+    value,
     groupBy = 'none',
     showProgress = true,
     progress,
     emptyText = 'No items yet.',
     onitemclick,
-    ontoggle
+    ontoggle,
+    onchange
   }: Props = $props();
 
-  const items = $derived(safeArray<ChecklistItem>(rawItems, { widget: 'checklist-layout', key: 'items' }));
+  // Bound value wins; fall back to the static `items` prop.
+  const items = $derived(
+    safeArray<ChecklistItem>(value ?? rawItems, { widget: 'checklist-layout', key: 'items' })
+  );
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
@@ -151,9 +167,23 @@
   }
   function handleToggle(it: ChecklistItem, e: MouseEvent) {
     e.stopPropagation();
-    const next = it.state === 'done' ? false : true;
-    const fired = fire(it.toggleActions, it);
-    if (!fired) ontoggle?.(it.id, next);
+    const goingDone = it.state !== 'done';
+    const isBlocked = it.state === 'blocked' || (it.blockedBy?.length ?? 0) > 0;
+
+    // Enterprise side-effect hook: fire toggleActions regardless (API call,
+    // audit log, emit) so a spec can react to the intent even when gated.
+    fire(it.toggleActions, it);
+    ontoggle?.(it.id, goingDone);
+
+    // Gate: a blocked item cannot be optimistically marked done. Un-doning a
+    // completed item is always allowed.
+    if (goingDone && isBlocked) return;
+
+    // Optimistic local update: emit a NEW array with this item's state flipped.
+    // When the checklist is value-bound, NodeRenderer writes it back through
+    // StateManager and the widget re-renders reactively.
+    const nextState: State = goingDone ? 'done' : 'pending';
+    onchange?.(items.map((row) => (row.id === it.id ? { ...row, state: nextState } : row)));
   }
   function initials(name: string): string {
     return name.split(/\s+/).filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join('');

@@ -6,9 +6,14 @@
     ResizeObserver-driven height morph, platform-specific shortcut hints) intentionally
     omitted — easy to layer in later.
 
-    Fires `completeActions` with a human-readable summary of the answers as the event
-    value, which `emit: chat.send` consumes verbatim. Also fires `changeActions` on
-    every answer mutation and `skipActions` when the user skips a question.
+    After the last question is answered the widget shows a read-only recap of every
+    question and its selected answer. `completeActions` (with the human-readable
+    summary as the event value, which `emit: chat.send` consumes verbatim) and
+    `oncomplete` fire when the user confirms from that recap — not silently on the
+    final pick. Also fires `changeActions` on every answer mutation and `skipActions`
+    when the user skips a question.
+
+    @changes 2026-06-06 — added the end-of-flow read-only recap + Confirm gate.
 
   Spec example:
     {
@@ -113,6 +118,8 @@
 
   let otherInputRef = $state<HTMLTextAreaElement | null>(null);
   let containerRef = $state<HTMLDivElement | null>(null);
+  // Terminal read-only recap shown after the last question is answered.
+  let reviewing = $state(false);
 
   function optionTitle(o: Option, i: number): string {
     return o.title || o.id || `Option ${i + 1}`;
@@ -143,6 +150,16 @@
       .join('\n');
   }
 
+  // Just the answer portion (no question title) for the recap rows.
+  function answerValue(a: Answer | undefined): string {
+    if (!a) return '(no answer)';
+    if (a.skipped) return '(skipped)';
+    const parts: string[] = [];
+    if (a.selectedTitles.length) parts.push(a.selectedTitles.join(', '));
+    if (a.otherText) parts.push(`Other: ${a.otherText}`);
+    return parts.join(' / ') || '(no answer)';
+  }
+
   function writeAnswer(patch: (prev: Answer | undefined) => Answer) {
     const next = { ...answers, [qId]: patch(answers[qId]) };
     answers = next;
@@ -153,11 +170,20 @@
 
   function commitNext(snapshot: Record<string, Answer>) {
     if (safeIndex >= total - 1) {
-      oncomplete?.(snapshot);
-      fire(completeActions, formatAllAnswers(snapshot));
+      // Show the read-only recap; completion fires on Confirm, not here.
+      reviewing = true;
       return;
     }
     currentIndex = safeIndex + 1;
+  }
+
+  function confirmAnswers() {
+    oncomplete?.(answers);
+    fire(completeActions, formatAllAnswers(answers));
+  }
+
+  function editFromRecap() {
+    reviewing = false;
   }
 
   function pickSingle(title: string) {
@@ -262,7 +288,26 @@
   tabindex="-1"
   onkeydown={onKeydown}
 >
-  {#if !question}
+  {#if reviewing}
+    <div class="auq-header">
+      <span class="auq-counter">Review</span>
+      <h3 class="auq-title">Review your answers</h3>
+    </div>
+    <div class="auq-review">
+      {#each questions as q, i (q.id ?? i)}
+        {@const a = answers[q.id ?? `q-${i}`]}
+        <div class={cn('auq-review-item', a?.skipped && 'auq-review-item-skipped')}>
+          <span class="auq-review-q">{q.title}</span>
+          <span class="auq-review-a">{answerValue(a)}</span>
+        </div>
+      {/each}
+    </div>
+    <div class="auq-footer">
+      <button type="button" class="auq-btn auq-btn-ghost" onclick={editFromRecap}>← Back</button>
+      <div class="auq-footer-spacer"></div>
+      <button type="button" class="auq-btn auq-btn-primary" onclick={confirmAnswers}>Confirm</button>
+    </div>
+  {:else if !question}
     <div class="auq-empty">No questions provided.</div>
   {:else}
     <div class="auq-header">
@@ -365,6 +410,25 @@
   }
 
   .auq-empty { color: var(--muted-foreground, rgba(255,255,255,0.5)); font-size: 13px; }
+
+  .auq-review { display: flex; flex-direction: column; gap: 2px; }
+  .auq-review-item {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--border, rgba(255,255,255,0.06));
+    background: rgba(255,255,255,0.02);
+  }
+  .auq-review-item-skipped { opacity: 0.6; }
+  .auq-review-q {
+    font-size: 11.5px; letter-spacing: 0.02em;
+    color: var(--muted-foreground, rgba(255,255,255,0.5));
+    font-variation-settings: 'wght' 550;
+  }
+  .auq-review-a {
+    font-size: 13.5px; line-height: 1.4;
+    color: var(--foreground, rgba(255,255,255,0.9));
+    font-variation-settings: 'wght' 500;
+  }
 
   .auq-header { display: flex; flex-direction: column; gap: 4px; }
   .auq-counter {
