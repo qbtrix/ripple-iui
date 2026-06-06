@@ -67,6 +67,7 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'location-picker', 'geo-picker', 'pick-location',
   // interactive consumer widgets (value = full item array)
   'todo-list', 'todo', 'todos',
+  'checklist-layout', 'checklist',
   // selectable data
   'tree', 'treeview', 'tree-table', 'treetable', 'nested-rows',
   'kanban', 'board',

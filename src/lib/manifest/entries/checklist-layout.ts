@@ -11,7 +11,8 @@ export const checklistLayoutEntry: WidgetManifestEntry = {
     items: {
       type: 'Array<{ id: string; label: string; description?: string; state?: "pending" | "in-progress" | "done" | "blocked" | "skipped"; owner?: { id?: string; name: string; avatar?: string }; due?: string; overdue?: boolean; blockedBy?: string[]; attachments?: { name: string; url?: string }[]; actions?: EventAction | EventAction[]; toggleActions?: EventAction | EventAction[] }>',
       required: true,
-      description: 'Checklist items. Click row → `actions`; click checkbox → `toggleActions`.',
+      description:
+        'Checklist items. Click row → `actions`; click checkbox → `toggleActions`. Two-way bind the array with `bind: "state.checklist"` (default `value`/`onchange` surface) so toggles persist reactively through state — toggling flips the item state optimistically and `toggleActions` still fires as a side-effect hook (API / audit). Blocked items (state `blocked` or non-empty `blockedBy`) cannot be marked done.',
     },
     groupBy: { type: '"none" | "state" | "owner"', required: false, description: 'Group items into sections. Default "none".' },
     showProgress: { type: 'boolean', required: false, description: 'Show the auto-computed progress bar in the header. Default true.' },
