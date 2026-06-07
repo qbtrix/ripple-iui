@@ -87,10 +87,15 @@
 	let seededFor = spec;
 	$effect(() => {
 		if (spec !== untrack(() => seededFor)) {
-			executor.reset(spec);
+			executor.reset(spec); // also clears the submitted flag
 			seededFor = spec;
 		}
 	});
+	// True once a terminal `flow.submit` fired — drives the in-card success view
+	// so finishing gives visible feedback even when the terminal action is an
+	// `emit`/no-op the host doesn't surface. Kept on the executor (a .svelte.ts
+	// class) so it's reactive without a top-level component `$state` rune.
+	const completed = $derived(executor.submitted);
 
 	// Expose the accumulated flow context to NodeRenderer's resolver as a getter
 	// so `{state.<flowId>_selection.field}` resolves and stays reactive.
@@ -114,6 +119,10 @@
 	// labelled with its selection / form value for the dots tooltips.
 	const currentStep = $derived(executor.historyLength);
 	const totalSteps = $derived(executor.estimatedTotalSteps);
+	// Can step back whenever there's a prior step in history and we're not done.
+	const canGoBack = $derived(!completed && executor.historyLength > 1);
+	// Heading for the success view: prefer the terminal step's title.
+	const completionTitle = $derived(currentSpec.title || 'All done');
 	const completedSteps = $derived.by(() => {
 		const hist = executor.history;
 		if (hist.length <= 1) return [];
@@ -181,8 +190,15 @@
 	}
 
 	function fireTerminal(): void {
+		// Show the success view first so the user always gets feedback, then hand
+		// the terminal action off to the host (navigate/emit/chat) exactly as before.
+		executor.markSubmitted();
 		const terminal = executor.terminalAction();
 		if (terminal) onComplete?.(terminal);
+	}
+
+	function goBack(): void {
+		executor.back();
 	}
 
 	const handleEvent: OnEventCallback = (event) => {
@@ -231,6 +247,16 @@
 		<ChainProgress steps={completedSteps} current={currentStep} total={totalSteps} />
 	{/if}
 
+	{#if completed}
+		<!-- Terminal success view: visible feedback after a flow.submit, shown
+		     regardless of the host action kind (emit/navigate/chat/no-op). The
+		     host action already fired in fireTerminal(). -->
+		<div class="flow-runner__card flow-runner__done" role="status" aria-live="polite">
+			<div class="flow-runner__check" aria-hidden="true">✓</div>
+			<h2 class="flow-runner__title">{completionTitle}</h2>
+			<p class="flow-runner__desc">You're all set.</p>
+		</div>
+	{:else}
 	{#key stepKey}
 		<!--
 		  The step is wrapped in a themed card with a short fly transition so a step
@@ -254,8 +280,14 @@
 				</div>
 			{/if}
 			<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
+			{#if canGoBack}
+				<div class="flow-runner__nav">
+					<button type="button" class="flow-runner__back" onclick={goBack}>← Back</button>
+				</div>
+			{/if}
 		</div>
 	{/key}
+	{/if}
 </div>
 
 <style>
@@ -294,5 +326,49 @@
 		margin: 0;
 		font-size: 0.85rem;
 		color: var(--ripple-muted-foreground);
+	}
+
+	/* Back nav — sits under the step body inside the card. */
+	.flow-runner__nav {
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	.flow-runner__back {
+		appearance: none;
+		background: transparent;
+		border: none;
+		padding: 0.25rem 0.25rem;
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: var(--ripple-muted-foreground);
+		cursor: pointer;
+		border-radius: var(--ripple-radius, 0.5rem);
+		transition: color 150ms ease-out;
+	}
+
+	.flow-runner__back:hover {
+		color: var(--ripple-surface-foreground);
+	}
+
+	/* Terminal success view. */
+	.flow-runner__done {
+		align-items: center;
+		text-align: center;
+		gap: 0.5rem;
+		padding: 1.75rem 1.5rem;
+	}
+
+	.flow-runner__check {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 3rem;
+		height: 3rem;
+		border-radius: 9999px;
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--ripple-accent-foreground, #fff);
+		background: var(--ripple-accent, #4f46e5);
 	}
 </style>
