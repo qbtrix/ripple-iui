@@ -1,5 +1,12 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
+  Updated: 2026-06-07 — intent→layout slice: the non-flow render path now routes
+  through IntentRenderer, which dispatches on `spec.intent` to a DESIGNED layout
+  (form→FormLayout, confirm→SummaryLayout, dashboard→DashboardRenderer) and falls
+  back to NodeRenderer for `custom` and any unmapped intent. Behaviour is
+  identical for `custom`/dashboard and any spec not explicitly mapped (still
+  NodeRenderer / DashboardRenderer). The flow context (from a hosting FlowRunner)
+  is threaded into IntentRenderer so a confirm STEP can summarize earlier answers.
   Updated: 2026-05-31 — Chain Flow auto-detection on EVERY surface (RFC 13,
   completes PR #49). The base renderer now detects a chain spec via `isFlowSpec`
   and hosts it in a `FlowRunner` (so a multi-step flow advances client-side in a
@@ -33,7 +40,7 @@
   parse arrives, then switches to the live spec.
 -->
 <script lang="ts">
-  import { setContext } from 'svelte';
+  import { setContext, getContext } from 'svelte';
   import type { UISpec } from './schema/ui-spec.js';
   import type { UniversalSpec } from './schema/universal-spec.js';
   import type { StreamSpecStore } from './streaming/types.js';
@@ -48,6 +55,7 @@
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
   import DashboardRenderer from './intent/DashboardRenderer.svelte';
+  import IntentRenderer from './intent/IntentRenderer.svelte';
   import FlowRunner from './intent/FlowRunner.svelte';
   import Skeleton from './widgets/display/Skeleton.svelte';
   import ConfirmDialog from './widgets/overlay/ConfirmDialog.svelte';
@@ -242,15 +250,29 @@
     return stateManager.subscribe(onStateChange);
   });
 
-  let renderMode = $derived.by((): 'dashboard' | 'node' | 'empty' | 'skeleton' | 'stream-error' => {
-    if (streaming && streaming.done && streaming.error && streaming.current == null) {
-      return 'stream-error';
+  // Flow context, if this Ripple is rendered inside a hosting FlowRunner. The
+  // host provides `setContext('ui-flow-context', () => executor.context)`; we
+  // read it as a getter so a confirm STEP's IntentRenderer can summarize the
+  // earlier answers. Absent (undefined) for a standalone, non-flow render.
+  const getFlowContext = getContext<(() => Record<string, unknown>) | undefined>('ui-flow-context');
+
+  // Intents routed to a DESIGNED layout via IntentRenderer. Everything else
+  // (custom + any unmapped intent) keeps the byte-identical NodeRenderer path.
+  const DESIGNED_INTENTS = new Set(['form', 'confirm', 'quick_confirm']);
+
+  let renderMode = $derived.by(
+    (): 'dashboard' | 'intent' | 'node' | 'empty' | 'skeleton' | 'stream-error' => {
+      if (streaming && streaming.done && streaming.error && streaming.current == null) {
+        return 'stream-error';
+      }
+      if (streaming && streaming.current == null && !streaming.done) return 'skeleton';
+      if (spec.intent === 'dashboard') return 'dashboard';
+      // Designed layouts dispatch through IntentRenderer (form / confirm).
+      if (DESIGNED_INTENTS.has(spec.intent as string)) return 'intent';
+      if (spec.ui) return 'node';
+      return 'empty';
     }
-    if (streaming && streaming.current == null && !streaming.done) return 'skeleton';
-    if (spec.intent === 'dashboard') return 'dashboard';
-    if (spec.ui) return 'node';
-    return 'empty';
-  });
+  );
 
   const streamingError = $derived(streaming?.error ?? null);
 
@@ -304,6 +326,18 @@
     <!-- streamingError banner below carries the message; nothing else to render -->
   {:else if renderMode === 'dashboard'}
     <DashboardRenderer {spec} {onSpecChanged} />
+  {:else if renderMode === 'intent'}
+    <!--
+      Designed intent layout (form / confirm) via IntentRenderer. The flow
+      context (if any) lets a confirm step summarize earlier answers. A form/
+      confirm step that carries only a raw `ui` tree renders that tree inside the
+      layout chrome (raw-ui mode) — the step's flow-verb buttons still work.
+    -->
+    <IntentRenderer
+      {spec}
+      context={getFlowContext ? getFlowContext() : undefined}
+      {onSpecChanged}
+    />
   {:else if renderMode === 'node' && spec.ui}
     <NodeRenderer node={spec.ui} />
   {:else}

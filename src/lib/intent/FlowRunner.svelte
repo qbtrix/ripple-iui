@@ -1,6 +1,15 @@
 <!--
   FlowRunner.svelte — Chain Flow host (RFC 13 M1).
   Created 2026-05-31.
+  Updated 2026-06-07 — intent→layout slice: each step now renders inside a polished
+  card with a ChainProgress chrome and a ~180ms step transition, instead of a bare
+  widget tree. The executor logic, the flow.next/back/forward/submit interception,
+  the terminal onComplete hand-off, and the flowHosted recursion guard are ALL
+  unchanged — only the per-step CHROME is new. The step's tree still renders via
+  the inner `<Ripple flowHosted>` (which routes through IntentRenderer now), so the
+  step's flow-verb buttons keep driving the executor. ChainProgress reads
+  completed/current/total derived purely from the executor's history + estimated
+  total (no new engine state).
   Updated 2026-05-31 — RECURSION GUARD: the per-step inner `<Ripple>` now mounts
   with `flowHosted={true}`. Now that the base `<Ripple>` auto-detects chain specs
   (PR #49 every-surface fix), a non-terminal step still carries its onward
@@ -36,7 +45,9 @@
 -->
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
+	import { fly } from 'svelte/transition';
 	import Ripple from '../Ripple.svelte';
+	import ChainProgress from './ChainProgress.svelte';
 	import { ChainExecutor, type TerminalResult } from './chain-executor.svelte.js';
 	import type { UniversalSpec } from '../schema/universal-spec.js';
 	import type { OnEventCallback } from '../core/event-dispatcher.js';
@@ -84,6 +95,36 @@
 	// two steps that share a flowId (e.g. reached via back/forward).
 	const stepKey = $derived(
 		`${executor.historyLength}:${currentSpec.flowId ?? currentSpec.id ?? currentSpec.intent}`
+	);
+
+	// --- ChainProgress chrome (purely derived from the executor's history) -----
+	// `current` is 1-indexed history depth; `total` is the executor's estimate
+	// (undefined when a chain_map makes the path dynamic — ChainProgress then
+	// shows just the live count). `completedSteps` is every prior history entry,
+	// labelled with its selection / form value for the dots tooltips.
+	const currentStep = $derived(executor.historyLength);
+	const totalSteps = $derived(executor.estimatedTotalSteps);
+	const completedSteps = $derived.by(() => {
+		const hist = executor.history;
+		if (hist.length <= 1) return [];
+		return hist.slice(0, -1).map((entry, i) => {
+			const sel = entry.state.selected as Record<string, unknown> | null;
+			let value = '';
+			if (sel && typeof sel === 'object') {
+				value = String(sel.label ?? sel.title ?? sel.name ?? sel.id ?? '');
+			} else if (sel != null) {
+				value = String(sel);
+			} else {
+				const fd = entry.state.formData ?? {};
+				const firstKey = Object.keys(fd)[0];
+				if (firstKey) value = String(fd[firstKey] ?? '');
+			}
+			return { title: entry.spec.title ?? `Step ${i + 1}`, value };
+		});
+	});
+	// Only show progress chrome once the flow is genuinely multi-step.
+	const showProgress = $derived(
+		currentStep > 1 || (typeof totalSteps === 'number' && totalSteps > 1)
 	);
 
 	const FLOW_VERBS = new Set(['flow.next', 'flow.back', 'flow.forward', 'flow.submit']);
@@ -142,14 +183,76 @@
 	};
 </script>
 
-<div class="flow-runner {className}" data-flow-step={currentSpec.flowId ?? currentSpec.id ?? currentSpec.intent}>
+<div
+	class="flow-runner {className}"
+	data-flow-step={currentSpec.flowId ?? currentSpec.id ?? currentSpec.intent}
+>
+	{#if showProgress}
+		<ChainProgress steps={completedSteps} current={currentStep} total={totalSteps} />
+	{/if}
+
 	{#key stepKey}
 		<!--
+		  The step is wrapped in a themed card with a short fly transition so a step
+		  change feels like a smooth advance, not a hard swap. `{#key stepKey}`
+		  remounts the card per step (a fresh StateManager + handlers — see stepKey
+		  note above), which also re-triggers the transition.
+
 		  flowHosted={true} is the recursion guard: a non-terminal step still
 		  carries its onward chain/chain_map, so the base <Ripple>'s flow
 		  auto-detection would otherwise mount a nested FlowRunner here. The flag
-		  makes this inner Ripple render just the step's node tree.
+		  makes this inner Ripple render just the step's node tree (now routed
+		  through IntentRenderer → designed layout).
 		-->
-		<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
+		<div class="flow-runner__card" in:fly={{ x: 16, duration: 180 }}>
+			{#if currentSpec.title}
+				<div class="flow-runner__header">
+					<h2 class="flow-runner__title">{currentSpec.title}</h2>
+					{#if currentSpec.description}
+						<p class="flow-runner__desc">{currentSpec.description}</p>
+					{/if}
+				</div>
+			{/if}
+			<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
+		</div>
 	{/key}
 </div>
+
+<style>
+	.flow-runner {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.flow-runner__card {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1.5rem;
+		border-radius: var(--ripple-radius);
+		border: 1px solid var(--ripple-border);
+		background: var(--ripple-surface);
+		color: var(--ripple-surface-foreground);
+		box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+	}
+
+	.flow-runner__header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.flow-runner__title {
+		margin: 0;
+		font-size: 1.15rem;
+		font-weight: 600;
+		line-height: 1.3;
+	}
+
+	.flow-runner__desc {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--ripple-muted-foreground);
+	}
+</style>
