@@ -10,6 +10,16 @@
   step's flow-verb buttons keep driving the executor. ChainProgress reads
   completed/current/total derived purely from the executor's history + estimated
   total (no new engine state).
+  Updated 2026-06-07 (Wave 3 fixes):
+    (a) DOUBLE HEADING: showHeader now detects whether the step's ui tree leads with
+        a heading node; when it does the flow-runner__header is suppressed so only
+        one heading renders per step.
+    (b) CHAINPROGRESS ALWAYS VISIBLE: showProgress now includes a check for whether
+        the root spec is multi-step (has chain/chain_map), so the dots render even
+        at step 1 when total is unknown.
+    (c) BARE PILL BUTTONS: select steps now route through IntentRenderer → SelectLayout
+        → OptionList (via DESIGNED_INTENTS expansion in Ripple.svelte). FlowRunner
+        itself is untouched for this — the routing change is in Ripple + SelectLayout.
   Updated 2026-05-31 — RECURSION GUARD: the per-step inner `<Ripple>` now mounts
   with `flowHosted={true}`. Now that the base `<Ripple>` auto-detects chain specs
   (PR #49 every-surface fix), a non-terminal step still carries its onward
@@ -122,9 +132,39 @@
 			return { title: entry.spec.title ?? `Step ${i + 1}`, value };
 		});
 	});
-	// Only show progress chrome once the flow is genuinely multi-step.
+	// Fix (b): show ChainProgress always when the flow is multi-step, even at step 1
+	// when totalSteps is unknown (chain_map branches). We also check the root spec
+	// itself (spec, not currentSpec) — the root always has chain/chain_map; once
+	// we're past step 1 the current step is terminal-or-next so we can't rely solely
+	// on the current step. ChainProgress renders "Step 1" + dots correctly when
+	// total is undefined (see ChainProgress.svelte line ~36: totalCount fallback).
+	const isMultiStepFlow = $derived(
+		!!(spec as Record<string, unknown>).chain ||
+		!!(spec as Record<string, unknown>).chain_map
+	);
 	const showProgress = $derived(
-		currentStep > 1 || (typeof totalSteps === 'number' && totalSteps > 1)
+		isMultiStepFlow ||
+		currentStep > 1 ||
+		(typeof totalSteps === 'number' && totalSteps > 1)
+	);
+
+	// Fix (a): detect when the current step's ui tree leads with a heading node.
+	// When it does, the step already has its own visible heading and we must suppress
+	// the flow-runner__header so only one heading renders per step.
+	function uiLeadsWithHeading(s: UniversalSpec): boolean {
+		const ui = (s as Record<string, unknown>).ui as Record<string, unknown> | undefined;
+		if (!ui) return false;
+		if (ui.type === 'heading') return true;
+		const children = ui.children;
+		if (Array.isArray(children) && children.length > 0) {
+			const first = children[0] as Record<string, unknown> | undefined;
+			return first?.type === 'heading';
+		}
+		return false;
+	}
+	// Suppress the FlowRunner title block when the step's own ui leads with a heading.
+	const showHeader = $derived(
+		!!currentSpec.title && !uiLeadsWithHeading(currentSpec)
 	);
 
 	const FLOW_VERBS = new Set(['flow.next', 'flow.back', 'flow.forward', 'flow.submit']);
@@ -205,7 +245,7 @@
 		  through IntentRenderer → designed layout).
 		-->
 		<div class="flow-runner__card" in:fly={{ x: 16, duration: 180 }}>
-			{#if currentSpec.title}
+			{#if showHeader}
 				<div class="flow-runner__header">
 					<h2 class="flow-runner__title">{currentSpec.title}</h2>
 					{#if currentSpec.description}

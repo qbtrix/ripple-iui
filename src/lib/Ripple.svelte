@@ -258,7 +258,13 @@
 
   // Intents routed to a DESIGNED layout via IntentRenderer. Everything else
   // (custom + any unmapped intent) keeps the byte-identical NodeRenderer path.
-  const DESIGNED_INTENTS = new Set(['form', 'confirm', 'quick_confirm']);
+  // Wave 3 (layouts): expanded from form/confirm to all structured intents.
+  // custom / action / workspace remain as NodeRenderer escape hatches inside
+  // IntentRenderer itself — they never block a render.
+  const DESIGNED_INTENTS = new Set([
+    'form', 'confirm', 'quick_confirm',
+    'browse', 'select', 'detail', 'info', 'search',
+  ]);
 
   let renderMode = $derived.by(
     (): 'dashboard' | 'intent' | 'node' | 'empty' | 'skeleton' | 'stream-error' => {
@@ -267,7 +273,7 @@
       }
       if (streaming && streaming.current == null && !streaming.done) return 'skeleton';
       if (spec.intent === 'dashboard') return 'dashboard';
-      // Designed layouts dispatch through IntentRenderer (form / confirm).
+      // Designed layouts dispatch through IntentRenderer.
       if (DESIGNED_INTENTS.has(spec.intent as string)) return 'intent';
       if (spec.ui) return 'node';
       return 'empty';

@@ -15,10 +15,19 @@ import type { TerminalResult } from '../chain-executor.svelte.js';
 import type { UniversalSpec } from '../../schema/universal-spec.js';
 
 function clickButton(container: HTMLElement, label: string) {
-	const btn = within(container)
-		.getAllByRole('button')
-		.find((b) => b.textContent?.trim() === label);
-	if (!btn) throw new Error(`button "${label}" not found; have: ${within(container).getAllByRole('button').map((b) => b.textContent?.trim()).join(', ')}`);
+	// Options now render through OptionList as role="radio"/"checkbox" cards, not
+	// plain buttons — so match any clickable control (button or selection option)
+	// whose trimmed text equals the label.
+	const clickables = [
+		...within(container).queryAllByRole('button'),
+		...within(container).queryAllByRole('radio'),
+		...within(container).queryAllByRole('checkbox'),
+	];
+	const btn = clickables.find((b) => b.textContent?.trim() === label);
+	if (!btn)
+		throw new Error(
+			`control "${label}" not found; have: ${clickables.map((b) => b.textContent?.trim()).join(', ')}`,
+		);
 	return fireEvent.click(btn);
 }
 

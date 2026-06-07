@@ -1,12 +1,16 @@
 <!--
   SummaryLayout.svelte — designed confirm/summary layout for intent='confirm'.
   Created 2026-06-07.
-  Adapted from ocean-flow's SummaryLayout, rendered with RIPPLE elements + tokens.
+  Updated 2026-06-07 (Wave 3: layouts) — now COMPOSES the ResultsSummary organism
+  (key/value review rows + an optional emphasised total) instead of hand-rolling the
+  row markup. The adapter's rows ({title, subtitle, price}) are mapped to
+  ResultsSummary's {label, value} shape; a row carrying a price becomes the total.
+  Adapted from ocean-flow's SummaryLayout, rendered with ripple organisms.
 
   DUAL MODE (locked decision C):
     - 'data'   structured rows (from `data.items`, `form_fields`, or — for a
                confirm step — the flow's accumulated context) render as a clean
-               key/value review card.
+               key/value review card via ResultsSummary.
     - 'raw-ui' the step's own `ui` tree (which carries the confirm/Finish button
                that fires flow.submit) renders via NodeRenderer. When the adapter
                also surfaced accumulated context, the review rows render ABOVE the
@@ -16,6 +20,7 @@
 -->
 <script lang="ts">
 	import NodeRenderer from '../../components/NodeRenderer.svelte';
+	import ResultsSummary from '$lib/organisms/ResultsSummary.svelte';
 	import type { LayoutInput } from '../layout-adapter.js';
 
 	interface Props {
@@ -32,18 +37,14 @@
 		return mapped ? item[mapped] : undefined;
 	}
 
-	function rowLabel(item: Record<string, unknown>): unknown {
-		return field(item, 'title') ?? item.title ?? item.label;
+	function rowLabel(item: Record<string, unknown>): string {
+		return String(field(item, 'title') ?? item.title ?? item.label ?? '');
 	}
 
-	function rowValue(item: Record<string, unknown>): unknown {
-		return (
-			field(item, 'subtitle') ??
-			field(item, 'description') ??
-			item.value ??
-			item.subtitle ??
-			''
-		);
+	function rowValue(item: Record<string, unknown>): string {
+		const v =
+			field(item, 'subtitle') ?? field(item, 'description') ?? item.value ?? item.subtitle ?? '';
+		return String(v);
 	}
 
 	function formatPrice(value: unknown): string {
@@ -53,92 +54,30 @@
 		return `$${str}`;
 	}
 
-	const totalItem = $derived(rows.find((r) => field(r, 'price')));
-	const showRows = $derived(rows.length > 0);
+	// A row carrying a price becomes the emphasised total; the rest are plain rows.
+	const totalItem = $derived(rows.find((r) => field(r, 'price') != null));
+	const summaryItems = $derived(
+		rows
+			.filter((r) => r !== totalItem)
+			.map((r) => ({ label: rowLabel(r), value: rowValue(r) }))
+	);
+	const total = $derived(
+		totalItem
+			? { label: rowLabel(totalItem) || 'Total', value: formatPrice(field(totalItem, 'price')) }
+			: undefined
+	);
+	const showSummary = $derived(rows.length > 0);
 </script>
 
-<div class="summary-layout">
-	{#if showRows}
-		<div class="summary-layout__rows">
-			{#each rows as item, i (i)}
-				<div class="summary-layout__row">
-					<span class="summary-layout__label">{rowLabel(item)}</span>
-					<span class="summary-layout__value">{rowValue(item)}</span>
-				</div>
-			{/each}
-		</div>
-
-		{#if totalItem}
-			<div class="summary-layout__total">
-				<span>Total</span>
-				<span class="summary-layout__total-value">{formatPrice(field(totalItem, 'price'))}</span>
-			</div>
-		{/if}
+<div class="flex flex-col gap-4">
+	{#if showSummary}
+		<ResultsSummary items={summaryItems} {total} />
 	{/if}
 
 	{#if input.mode === 'raw-ui' && input.spec.ui}
 		<!-- The step's own tree (carries the Finish/confirm button → flow.submit). -->
-		<div class="summary-layout__actions">
+		<div class="mt-1">
 			<NodeRenderer node={input.spec.ui} />
 		</div>
 	{/if}
 </div>
-
-<style>
-	.summary-layout {
-		display: flex;
-		flex-direction: column;
-		gap: 0.85rem;
-	}
-
-	.summary-layout__rows {
-		border: 1px solid var(--ripple-border);
-		border-radius: var(--ripple-radius);
-		overflow: hidden;
-		background: var(--ripple-surface);
-	}
-
-	.summary-layout__row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.7rem 0.95rem;
-	}
-
-	.summary-layout__row + .summary-layout__row {
-		border-top: 1px solid color-mix(in oklch, var(--ripple-border) 70%, transparent);
-	}
-
-	.summary-layout__label {
-		font-size: 0.85rem;
-		color: var(--ripple-muted-foreground);
-	}
-
-	.summary-layout__value {
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: var(--ripple-surface-foreground);
-		text-align: right;
-	}
-
-	.summary-layout__total {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.7rem 0.95rem;
-		border-radius: var(--ripple-radius);
-		background: var(--ripple-muted);
-		font-weight: 500;
-	}
-
-	.summary-layout__total-value {
-		font-size: 1.05rem;
-		font-weight: 700;
-		color: var(--ripple-accent);
-	}
-
-	.summary-layout__actions {
-		margin-top: 0.25rem;
-	}
-</style>
