@@ -9,6 +9,12 @@
  *     selection id), `flowId` (stable step id that namespaces accumulated data),
  *     and `onComplete` (`FlowAction` run at a terminal step). `chain` was already
  *     present; `chain_map` was previously read off the spec via `as any`.
+ *   - 2026-06-07: extend DisplayHints.layout ADDITIVELY with the composite +
+ *     ported intent-layout hints (comparison, checklist, invoice, report,
+ *     timeline, table, article). IntentType is unchanged — these are display
+ *     hints, not intents, so the layout engine can route an `info`/`browse`/
+ *     `custom` spec to a designed composite layout WITHOUT inventing IntentType
+ *     enum values. Existing hints are untouched, so prior specs are unaffected.
  */
 
 import { z } from 'zod';
@@ -96,7 +102,26 @@ export const FieldMapping = z.record(z.string(), z.string()); // key: semantic_n
  * Display hints for the auto-layout engine.
  */
 export const DisplayHints = z.object({
-  layout: z.enum(['auto', 'grid', 'list', 'masonry', 'carousel', 'hero', 'split']).default('auto'),
+  layout: z
+    .enum([
+      'auto',
+      'grid',
+      'list',
+      'masonry',
+      'carousel',
+      'hero',
+      'split',
+      // Composite / ported designed-layout hints (2026-06-07). Route an
+      // otherwise-generic intent to a designed layout via display.layout.
+      'comparison',
+      'checklist',
+      'invoice',
+      'report',
+      'timeline',
+      'table',
+      'article'
+    ])
+    .default('auto'),
   columns: z.number().optional(),
   density: z.enum(['compact', 'comfortable', 'spacious']).default('comfortable'),
   item_template: UINode.optional() // Custom template for items in a list/grid

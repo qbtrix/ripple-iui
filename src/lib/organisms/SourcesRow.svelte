@@ -10,7 +10,7 @@
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
-  import SourceCard from '$lib/molecules/SourceCard.svelte';
+  import SourceCard from '$lib/widgets/research/SourceCard.svelte';
 
   interface Source {
     id: string;

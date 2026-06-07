@@ -8,19 +8,26 @@
     detail    → DetailLayout
     info      → InfoHeroLayout
     search    → SearchLayout
-    form      → FormLayout    (now composes FormSection — Wave 3 upgrade)
-    confirm   → SummaryLayout (now composes ResultsSummary — Wave 3 upgrade)
+    form      → FormLayout    (composes FormSection — data mode; raw-ui fallback)
+    confirm   → SummaryLayout (composes ResultsSummary; reads review_rows / context)
     dashboard → DashboardRenderer (existing, unchanged)
     workspace → NodeRenderer escape hatch (no WorkspaceRenderer in ripple yet)
     action    → NodeRenderer escape hatch
     custom    → NodeRenderer escape hatch  ← LOAD-BEARING, never remove
     unmapped  → NodeRenderer escape hatch
 
-  Takes a UniversalSpec, uses the layout engine + the adapter to pick and feed a
-  designed layout. The ESCAPE HATCH is load-bearing: `custom` and ANY unmapped
-  intent fall straight through to `<NodeRenderer node={spec.ui}>`, so a render is
-  NEVER blocked and existing specs behave exactly as before (byte-identical for
-  custom).
+  Updated 2026-06-07 (composite + ported layouts) — added display-hint routing:
+    display.layout='comparison' → ComparisonIntentLayout (ComparisonLayout composite)
+    display.layout='checklist'  → ChecklistIntentLayout  (ChecklistLayout composite)
+    display.layout='invoice'    → InvoiceIntentLayout    (InvoiceLayout composite)
+    display.layout='report'     → ReportIntentLayout     (ReportLayout composite)
+    display.layout='timeline'   → TimelineLayout         (ported, composes Timeline widget)
+    display.layout='table'      → TableLayout            (ported, composes Table widget)
+    display.layout='article'    → ArticleLayout          (ported, ripple-native)
+
+  These are routed BEFORE the raw-ui check so a spec that carries only a display
+  hint (and optional data) still reaches the designed layout. The raw-ui→NodeRenderer
+  escape hatch for intent-driven routing (browse/detail/info/search) is kept intact.
 
   The adapter (layout-adapter.ts) is the schema bridge: it turns the spec (+ the
   optional flow `context`) into the LayoutInput every layout reads. PURE — no fetch,
@@ -40,6 +47,15 @@
 	import DetailLayout from './layouts/DetailLayout.svelte';
 	import InfoHeroLayout from './layouts/InfoHeroLayout.svelte';
 	import SearchLayout from './layouts/SearchLayout.svelte';
+	// Composite intent-layout wrappers (display-hint routed).
+	import ComparisonIntentLayout from './layouts/ComparisonIntentLayout.svelte';
+	import ChecklistIntentLayout from './layouts/ChecklistIntentLayout.svelte';
+	import InvoiceIntentLayout from './layouts/InvoiceIntentLayout.svelte';
+	import ReportIntentLayout from './layouts/ReportIntentLayout.svelte';
+	// Ported agnostic layouts (display-hint routed).
+	import TimelineLayout from './layouts/TimelineLayout.svelte';
+	import TableLayout from './layouts/TableLayout.svelte';
+	import ArticleLayout from './layouts/ArticleLayout.svelte';
 
 	interface Props {
 		/** The step / spec to render. */
@@ -82,22 +98,38 @@
 	 * Which designed layout handles this spec.
 	 *
 	 * Resolution order:
-	 *  1. dashboard           → DashboardRenderer
-	 *  2. form / form-*       → FormLayout
-	 *  3. confirm / summary-card → SummaryLayout
-	 *  4. select              → SelectLayout
-	 *  5. browse + list family → ListLayout
-	 *  6. browse + card family → CardGridLayout
-	 *  7. detail              → DetailLayout
-	 *  8. info                → InfoHeroLayout
-	 *  9. search              → SearchLayout
-	 * 10. everything else     → NodeRenderer (escape hatch — load-bearing)
+	 *  1. dashboard                   → DashboardRenderer
+	 *  2. form / form-*               → FormLayout
+	 *  3. confirm / summary-card      → SummaryLayout
+	 *  4. select                      → SelectLayout
+	 *  -- Display-hint composite/ported layouts (checked before raw-ui gate) --
+	 *  5. comparison hint             → ComparisonIntentLayout
+	 *  6. checklist hint              → ChecklistIntentLayout
+	 *  7. invoice hint                → InvoiceIntentLayout
+	 *  8. report hint                 → ReportIntentLayout
+	 *  9. timeline hint               → TimelineLayout
+	 * 10. table hint                  → TableLayout
+	 * 11. article hint                → ArticleLayout
+	 *  -- Data layouts (skip when raw-ui — no structured data) ---------------
+	 * 12. browse + list family        → ListLayout
+	 * 13. browse + card family        → CardGridLayout
+	 * 14. detail                      → DetailLayout
+	 * 15. info                        → InfoHeroLayout
+	 * 16. search                      → SearchLayout
+	 * 17. everything else             → NodeRenderer (escape hatch — load-bearing)
 	 */
 	type Designed =
 		| 'dashboard'
 		| 'form'
 		| 'summary'
 		| 'select'
+		| 'comparison'
+		| 'checklist'
+		| 'invoice'
+		| 'report'
+		| 'timeline'
+		| 'table'
+		| 'article'
 		| 'card-grid'
 		| 'list'
 		| 'detail'
@@ -117,6 +149,19 @@
 		// select / form / confirm handle raw-ui in their own chrome (a flow step's
 		// option buttons → OptionList, etc.), so they route regardless of mode.
 		if (spec.intent === 'select') return 'select';
+
+		// Composite + ported layouts: routed by layout-engine result (which mirrors
+		// the display.layout hint). These are checked BEFORE the raw-ui gate so a
+		// spec that has a hint but no full structured data still routes correctly —
+		// the wrappers each handle an empty state internally.
+		if (layout === 'comparison') return 'comparison';
+		if (layout === 'checklist') return 'checklist';
+		if (layout === 'invoice') return 'invoice';
+		if (layout === 'report') return 'report';
+		if (layout === 'timeline') return 'timeline';
+		if (layout === 'table') return 'table';
+		if (layout === 'article') return 'article';
+
 		// The PURE data layouts (browse/detail/info/search) read structured data
 		// and ignore `spec.ui`. When a spec is in raw-ui mode (a hand-authored
 		// widget tree, no structured data — e.g. our start_flow steps or legacy
@@ -149,6 +194,20 @@
 	<SummaryLayout {input} />
 {:else if designed === 'select'}
 	<SelectLayout {input} {selectedIds} onSelect={(id) => handleSelect(id)} />
+{:else if designed === 'comparison'}
+	<ComparisonIntentLayout {input} onSelect={(id) => handleSelect(id)} />
+{:else if designed === 'checklist'}
+	<ChecklistIntentLayout {input} />
+{:else if designed === 'invoice'}
+	<InvoiceIntentLayout {input} />
+{:else if designed === 'report'}
+	<ReportIntentLayout {input} />
+{:else if designed === 'timeline'}
+	<TimelineLayout {input} />
+{:else if designed === 'table'}
+	<TableLayout {input} />
+{:else if designed === 'article'}
+	<ArticleLayout {input} />
 {:else if designed === 'card-grid'}
 	<CardGridLayout {input} {selectedIds} onSelect={(id) => handleSelect(id)} />
 {:else if designed === 'list'}
