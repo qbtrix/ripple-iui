@@ -25,6 +25,10 @@
   const extraClass = $derived(variantMap[variant] ?? '');
 </script>
 
-<Badge variant={shadcnVariant} class={cn(extraClass, className)}>
-  {text}
-</Badge>
+<!-- Empty guard: an empty badge (no text) would render as a bare bordered pill —
+     a stray-circle artifact in cards. Render nothing when there's no content. -->
+{#if text?.trim()}
+  <Badge variant={shadcnVariant} class={cn(extraClass, className)}>
+    {text}
+  </Badge>
+{/if}

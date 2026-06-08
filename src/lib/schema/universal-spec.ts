@@ -9,6 +9,18 @@
  *     selection id), `flowId` (stable step id that namespaces accumulated data),
  *     and `onComplete` (`FlowAction` run at a terminal step). `chain` was already
  *     present; `chain_map` was previously read off the spec via `as any`.
+ *   - 2026-06-07: extend DisplayHints.layout ADDITIVELY with the composite +
+ *     ported intent-layout hints (comparison, checklist, invoice, report,
+ *     timeline, table, article). IntentType is unchanged — these are display
+ *     hints, not intents, so the layout engine can route an `info`/`browse`/
+ *     `custom` spec to a designed composite layout WITHOUT inventing IntentType
+ *     enum values. Existing hints are untouched, so prior specs are unaffected.
+ *   - 2026-06-08: reconcile IntentType with the intents the renderer actually
+ *     routes on. ADDED `quick_confirm` (layout-engine summary-card + IntentRenderer
+ *     SummaryLayout + Ripple DESIGNED_INTENTS), `widget` (layout-engine `widget`
+ *     layout, tested), and `itinerary` (layout-engine `itinerary` layout, tested).
+ *     Without these the enum rejected/coerced schema-valid specs, making those
+ *     routing paths unreachable. No existing values removed.
  */
 
 import { z } from 'zod';
@@ -47,17 +59,20 @@ export type FlowAction = z.infer<typeof FlowAction>;
 // =============================================================================
 
 export const IntentType = z.enum([
-  'browse',   // Grid/List of items
-  'select',   // Pick one or more items
-  'detail',   // View single item details
-  'form',     // Input data
-  'confirm',  // Review and submit
-  'info',     // Read-only information
-  'search',   // Search interface
-  'action',   // Trigger an action
-  'custom',   // Raw UI control (Escape hatch)
-  'workspace',// Tool-based workspace
-  'dashboard' // Persistent dashboard
+  'browse',       // Grid/List of items
+  'select',       // Pick one or more items
+  'detail',       // View single item details
+  'form',         // Input data
+  'confirm',      // Review and submit
+  'quick_confirm',// Lightweight review/submit step (routes to summary-card)
+  'info',         // Read-only information
+  'search',       // Search interface
+  'action',       // Trigger an action
+  'custom',       // Raw UI control (Escape hatch)
+  'workspace',    // Tool-based workspace
+  'dashboard',    // Persistent dashboard
+  'widget',       // Single-widget display (routes to widget layout)
+  'itinerary'     // Multi-day travel plan with timeline (routes to itinerary layout)
 ]);
 
 export type IntentType = z.infer<typeof IntentType>;
@@ -96,7 +111,26 @@ export const FieldMapping = z.record(z.string(), z.string()); // key: semantic_n
  * Display hints for the auto-layout engine.
  */
 export const DisplayHints = z.object({
-  layout: z.enum(['auto', 'grid', 'list', 'masonry', 'carousel', 'hero', 'split']).default('auto'),
+  layout: z
+    .enum([
+      'auto',
+      'grid',
+      'list',
+      'masonry',
+      'carousel',
+      'hero',
+      'split',
+      // Composite / ported designed-layout hints (2026-06-07). Route an
+      // otherwise-generic intent to a designed layout via display.layout.
+      'comparison',
+      'checklist',
+      'invoice',
+      'report',
+      'timeline',
+      'table',
+      'article'
+    ])
+    .default('auto'),
   columns: z.number().optional(),
   density: z.enum(['compact', 'comfortable', 'spacious']).default('comfortable'),
   item_template: UINode.optional() // Custom template for items in a list/grid

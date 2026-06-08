@@ -1,4 +1,11 @@
-<!-- src/lib/widgets/composite/AvatarGroup.svelte -->
+<!--
+  AvatarGroup.svelte — stacked avatar row composite.
+  Updated 2026-06-08 (design polish): fallbacks derive proper initials (first +
+  last) and no longer emit a bare "?" — an empty name yields '' so the muted
+  placeholder reads as intentional rather than broken. The stacked ring path
+  (avatar-group's ring-background on each avatar) is unchanged.
+-->
+
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
@@ -36,11 +43,11 @@
 
   function initials(u: User): string {
     if (u.fallback) return u.fallback;
-    if (u.alt) {
-      const parts = u.alt.split(/\s+/).filter(Boolean);
-      return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
-    }
-    return '?';
+    const parts = (u.alt ?? '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '';
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
+    return (first + last).toUpperCase();
   }
 </script>
 

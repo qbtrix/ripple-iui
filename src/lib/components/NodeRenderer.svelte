@@ -24,6 +24,12 @@
       `props.name` wins, else fall back to the resolved `bind` path — so a
       native <form action> POST carries field values with JS disabled
       (ripple-iui #54).
+    - 2026-06-07: route organism-ref nodes (`{ organism, props }`) to
+      OrganismRenderer — the 3rd dispatch tier. A node is an organism-ref ONLY
+      when it carries a valid `organism` type string and NO widget `type` key,
+      so normal `{type, props, children}` widget nodes are byte-identical to
+      before. Guarded by isOrganismType so a stray `organism` prop on a widget
+      can never mis-fire.
 -->
 <!--
   LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
@@ -53,6 +59,11 @@
 
 	// Self-import for recursion (Svelte 5 pattern)
 	import Self from './NodeRenderer.svelte';
+
+	// 3rd dispatch tier: organism references. A spec node can reference a ripple
+	// organism by name (`{ organism, props }`) instead of inlining a widget tree.
+	import OrganismRenderer from '../organisms/OrganismRenderer.svelte';
+	import { isOrganismType } from '../organisms/schema.js';
 
 	interface Props {
 		/** The UI node to render */
@@ -132,6 +143,25 @@
 			return final;
 		}
 		return rest;
+	});
+
+	/**
+	 * Is this node an organism reference (`{ organism, props }`) rather than a
+	 * widget node (`{ type, props, children }`)? Two conditions, both required,
+	 * so the guard never mis-fires on a widget that happens to carry a stray
+	 * `organism` prop:
+	 *   1. `node.organism` is a registered OrganismType (isOrganismType), AND
+	 *   2. the node has NO widget `type` — every widget node always has `type`,
+	 *      so a typed node always routes through the widget path, untouched.
+	 */
+	const organismRef = $derived.by(() => {
+		const raw = node as unknown as { organism?: unknown; type?: unknown };
+		if (raw.type != null) return null; // a widget node — never an organism ref
+		if (!isOrganismType(raw.organism)) return null;
+		return {
+			organism: raw.organism,
+			props: (resolvedProps ?? {}) as Record<string, unknown>
+		};
 	});
 
 	/**
@@ -376,6 +406,14 @@
 				{/each}
 			{/if}
 		{/each}
+	{:else if organismRef}
+		<!--
+			Organism reference — the node is `{ organism, props }`, not a widget
+			tree. Route to OrganismRenderer (3rd dispatch tier). The resolved props
+			(expressions evaluated) are forwarded; widget nodes never reach here
+			because they always carry a `type`.
+		-->
+		<OrganismRenderer organism={organismRef.organism} props={organismRef.props} />
 	{:else if WidgetComponent}
 		<!-- Regular widget rendering -->
 		{@const defaultKids = childBuckets.default ?? []}

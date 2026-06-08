@@ -5,6 +5,16 @@
  *
  * This is the "smart" part of the system that makes layout decisions
  * so the AI doesn't have to specify exact layouts.
+ *
+ * @changes
+ *   - 2026-06-07: map the composite + ported display.layout hints
+ *     (comparison/checklist/invoice/report/timeline/table/article) to dedicated
+ *     LayoutType values, so IntentRenderer can route a generic spec to a
+ *     designed composite layout via the hint without a new IntentType. The
+ *     auto-determine switch is unchanged — only explicit hints reach these.
+ *   - 2026-06-08: analyzeData now falls back to `spec.data.stats` when `items`
+ *     is absent (`items ?? stats ?? []`), matching layout-adapter's normalization
+ *     so a stats-only info/dashboard spec analyzes its fields correctly.
  */
 
 import type { UniversalSpec } from '../schema/universal-spec.js';
@@ -54,6 +64,11 @@ export type LayoutType =
 	| 'info-grid' // Multiple info cards
 	| 'action-buttons' // Simple action buttons
 	| 'table' // Table layout
+	| 'comparison' // Side-by-side comparison (composite ComparisonLayout)
+	| 'checklist' // Gated checklist (composite ChecklistLayout)
+	| 'invoice' // Invoice / quote / receipt document (composite InvoiceLayout)
+	| 'report' // Printable structured report (composite ReportLayout)
+	| 'timeline' // Chronological timeline (ported TimelineLayout)
 	| 'workspace' // Workspace intent (tool-like interfaces)
 	| 'dashboard' // Dashboard intent with widgets
 	| 'widget' // Widget intent (single widget display)
@@ -89,7 +104,9 @@ export function analyzeData(
 		return { itemCount: 0, availableFields: new Set<string>() };
 	}
 
-	const items = spec.data.items ?? [];
+	// Fall back to `stats` when `items` is absent, matching layout-adapter's
+	// `s.data?.items ?? s.data?.stats ?? []` so all three agree on the source.
+	const items = spec.data.items ?? spec.data.stats ?? [];
 	const itemCount = items.length;
 
 	// Collect all unique keys from items
@@ -181,10 +198,7 @@ export function determineLayout(spec: IntentSpec): LayoutType {
 /**
  * Map display hint to actual layout type.
  */
-function mapHintToLayout(
-	hint: 'auto' | 'cards' | 'list' | 'grid' | 'carousel' | 'table' | 'hero' | 'timeline' | 'itinerary',
-	spec: IntentSpec
-): LayoutType {
+function mapHintToLayout(hint: string, spec: IntentSpec): LayoutType {
 	const { availableFields } = analyzeData(spec);
 	const hasImages = hasField(spec.fields, 'image', availableFields);
 
@@ -195,15 +209,31 @@ function mapHintToLayout(
 			return 'list';
 		case 'grid':
 			return hasImages ? 'image-grid' : 'card-grid';
+		case 'masonry':
+			return 'image-grid';
 		case 'carousel':
 			return 'scrollable-list';
+		case 'split':
+			return 'detail-split';
 		case 'table':
 			return 'table';
 		case 'hero':
 			return 'info-hero';
-		case 'timeline':
 		case 'itinerary':
 			return 'itinerary';
+		// Composite + ported designed-layout hints (2026-06-07).
+		case 'comparison':
+			return 'comparison';
+		case 'checklist':
+			return 'checklist';
+		case 'invoice':
+			return 'invoice';
+		case 'report':
+			return 'report';
+		case 'timeline':
+			return 'timeline';
+		case 'article':
+			return 'article';
 		default:
 			return 'list';
 	}

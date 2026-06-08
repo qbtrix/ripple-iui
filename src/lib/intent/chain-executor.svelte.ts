@@ -68,6 +68,10 @@ export class ChainExecutor {
 	private _history = $state<HistoryEntry[]>([]);
 	private _forwardStack = $state<HistoryEntry[]>([]);
 	private _context = $state<Record<string, unknown>>({});
+	// True once a terminal step's submit fired — drives FlowRunner's success
+	// view. Lives here (a .svelte.ts class) rather than as a top-level component
+	// `$state` so it stays reactive without the entry-component rune limitation.
+	private _submitted = $state(false);
 
 	/**
 	 * Non-reactive ledger of the RAW (un-proxied) spec object at each history
@@ -363,6 +367,17 @@ export class ChainExecutor {
 		this._forwardStack = [];
 		this._rawForward = [];
 		this._context = {};
+		this._submitted = false;
+	}
+
+	/** True once a terminal `flow.submit` has fired (see {@link markSubmitted}). */
+	get submitted(): boolean {
+		return this._submitted;
+	}
+
+	/** Flag the flow as completed after a terminal submit — drives the success view. */
+	markSubmitted() {
+		this._submitted = true;
 	}
 
 	/**
