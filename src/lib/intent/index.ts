@@ -1,6 +1,19 @@
 export * from './layout-engine.js';
 export * from './pattern-detector.js';
 export {
+	resolveDefaults,
+	getSmartDefault,
+	getAllDefaults,
+	createDefaultsContext,
+	createTimeContext,
+	type DefaultsContext,
+	type DefaultsField,
+	type DefaultsFieldType,
+	type UserContext as DefaultsUserContext,
+	type TimeContext as DefaultsTimeContext,
+	type DomainContext as DefaultsDomainContext
+} from './defaults-resolver.js';
+export {
 	ChainExecutor,
 	MAX_HISTORY_DEPTH,
 	type ChainState,

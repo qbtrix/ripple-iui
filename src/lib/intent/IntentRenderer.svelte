@@ -29,6 +29,18 @@
   hint (and optional data) still reaches the designed layout. The raw-ui→NodeRenderer
   escape hatch for intent-driven routing (browse/detail/info/search) is kept intact.
 
+  Updated 2026-06-08 (genesis V3 Layer 5: pattern auto-detection) — BEFORE the
+  generic layout dispatch, the pattern detectors run against the spec + its data:
+    isQuizPattern    (intent='select' + items have a `correct` field) → QuizQuestion
+    isResultsPattern (intent='info'   + items have label+value)       → ResultsSummary
+    isChartPattern   → routed to a Chart widget ONLY when a clean path exists (a
+                        chart-widget tree on spec.ui); else SKIP (don't force it).
+  This realizes "AI describes intent+data, system auto-detects the organism"
+  without an explicit organism ref. GUARDED + ADDITIVE: a spec that matches no
+  pattern routes to the normal designed layout exactly as before; a raw-ui spec
+  (no structured items) never matches, so flow steps are unaffected and the
+  raw-ui→NodeRenderer escape hatch stays intact.
+
   The adapter (layout-adapter.ts) is the schema bridge: it turns the spec (+ the
   optional flow `context`) into the LayoutInput every layout reads. PURE — no fetch,
   no service; the layout reads data already on the spec / context.
@@ -37,7 +49,15 @@
 	import type { UniversalSpec } from '../schema/universal-spec.js';
 	import { toLayoutInput } from './layout-adapter.js';
 	import { determineLayout } from './layout-engine.js';
+	import {
+		isQuizPattern,
+		isResultsPattern,
+		toQuizOptions,
+		toResultsItems
+	} from './pattern-detector.js';
 	import NodeRenderer from '../components/NodeRenderer.svelte';
+	import QuizQuestion from '$lib/organisms/QuizQuestion.svelte';
+	import ResultsSummary from '$lib/organisms/ResultsSummary.svelte';
 	import DashboardRenderer from './DashboardRenderer.svelte';
 	import FormLayout from './layouts/FormLayout.svelte';
 	import SummaryLayout from './layouts/SummaryLayout.svelte';
@@ -93,6 +113,34 @@
 
 	// Search query (layout-local; the SearchLayout is purely presentational).
 	let searchQuery = $state('');
+
+	// --- Pattern auto-detection (genesis V3 Layer 5) -------------------------
+	// Extract the structured items the detectors inspect. PURE: read only the
+	// data already on the spec (inline `data.items`). A raw-ui flow step has no
+	// inline items array → patternItems is empty → no pattern ever matches, so
+	// the existing raw-ui path is untouched.
+	const patternItems = $derived.by<Record<string, unknown>[]>(() => {
+		const data = spec.data as { items?: unknown } | undefined;
+		const items = data && typeof data === 'object' ? data.items : undefined;
+		return Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
+	});
+
+	// Which organism (if any) the data shape auto-detects to. Checked BEFORE the
+	// generic layout dispatch; 'none' falls through to the normal designed layout.
+	type Pattern = 'quiz' | 'results' | 'none';
+	const pattern = $derived.by<Pattern>(() => {
+		if (patternItems.length === 0) return 'none';
+		if (isQuizPattern(spec, patternItems)) return 'quiz';
+		if (isResultsPattern(spec, patternItems)) return 'results';
+		// isChartPattern is intentionally NOT auto-routed: ripple has no clean
+		// intent→Chart path yet, so forcing it would regress. Skipped on purpose.
+		return 'none';
+	});
+
+	const quizOptions = $derived(
+		pattern === 'quiz' ? toQuizOptions(patternItems, spec.fields) : []
+	);
+	const resultsItems = $derived(pattern === 'results' ? toResultsItems(patternItems) : []);
 
 	/**
 	 * Which designed layout handles this spec.
@@ -186,7 +234,22 @@
 	});
 </script>
 
-{#if designed === 'dashboard'}
+{#if pattern === 'quiz'}
+	<!-- Auto-detected quiz organism (intent='select' + items carry `correct`).
+	     Routed BEFORE the generic dispatch; the verdict is surfaced via
+	     onFieldChange('_answer', { optionId, isCorrect }) so the host can react
+	     without a new prop. A spec without a `correct` field never reaches here. -->
+	<QuizQuestion
+		question={spec.title ?? ''}
+		options={quizOptions}
+		onAnswer={(optionId, isCorrect) =>
+			onFieldChange?.('_answer', { optionId, isCorrect })}
+	/>
+{:else if pattern === 'results'}
+	<!-- Auto-detected results/summary organism (intent='info' + items carry
+	     label+value). The designed review card instead of the generic info hero. -->
+	<ResultsSummary title={spec.title} items={resultsItems} />
+{:else if designed === 'dashboard'}
 	<DashboardRenderer {spec} {onSpecChanged} />
 {:else if designed === 'form'}
 	<FormLayout {input} {onFieldChange} />

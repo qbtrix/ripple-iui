@@ -6,6 +6,12 @@
   FormSection organism (grouped, labelled, validated ripple input widgets) instead
   of hand-rolling raw <input>/<select> markup. One canonical field-rendering path
   shared with the rest of the atomic-design stack.
+  Updated 2026-06-08 (genesis V3 Layer 2: smart auto-fill) — the data-mode seed
+  now applies the PURE defaults-resolver. A DefaultsContext, INJECTED by the host
+  via the 'ui-defaults-context' Svelte context (a value or a getter, like
+  'ui-flow-context'), pre-fills EMPTY fields by the genesis priority chain. A
+  field's explicit `default` still wins; with no context injected it is a graceful
+  no-op (fields start empty). User edits are never overridden (seed runs once).
   Adapted from ocean-flow's FormLayout but rendered with RIPPLE's organisms/widgets.
 
   DUAL MODE (locked decision C):
@@ -22,9 +28,15 @@
   service. Field edits are surfaced via `onFieldChange` (the host owns state).
 -->
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import NodeRenderer from '../../components/NodeRenderer.svelte';
 	import FormSection from '$lib/organisms/FormSection.svelte';
 	import type { LayoutInput } from '../layout-adapter.js';
+	import {
+		resolveDefaults,
+		type DefaultsContext,
+		type DefaultsField
+	} from '../defaults-resolver.js';
 
 	type FieldType =
 		| 'text'
@@ -61,6 +73,17 @@
 
 	const rawFields = $derived((input.formFields as FormFieldLike[]) ?? []);
 
+	// Host-injected DefaultsContext (genesis V3 Layer 2). Mirrors the
+	// 'ui-flow-context' convention: the value may be the context itself OR a
+	// getter returning it. Absent → undefined → resolver is a graceful no-op.
+	// PURE: this layout never builds a profile; the host supplies the context.
+	const injectedDefaults = getContext<
+		DefaultsContext | (() => DefaultsContext | undefined) | undefined
+	>('ui-defaults-context');
+	function readDefaultsContext(): DefaultsContext | undefined {
+		return typeof injectedDefaults === 'function' ? injectedDefaults() : injectedDefaults;
+	}
+
 	// Normalize each field descriptor into FormSection's `FormField` shape (label
 	// required; option values coerced to strings; helperText → description).
 	const fields = $derived(
@@ -81,7 +104,13 @@
 	let seeded = $state(false);
 	$effect(() => {
 		if (seeded || rawFields.length === 0) return;
-		const next: Record<string, unknown> = {};
+		// Smart auto-fill: resolve empties from the injected DefaultsContext FIRST,
+		// then let each field's explicit `default` win on top. Empties-only — the
+		// resolver skips fields that carry their own default. No context → {}.
+		const next: Record<string, unknown> = resolveDefaults(
+			rawFields as DefaultsField[],
+			readDefaultsContext()
+		);
 		for (const f of rawFields) {
 			if (f.default !== undefined) next[f.id] = f.default;
 		}
