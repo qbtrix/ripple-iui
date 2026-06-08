@@ -10,6 +10,12 @@
   step's flow-verb buttons keep driving the executor. ChainProgress reads
   completed/current/total derived purely from the executor's history + estimated
   total (no new engine state).
+  Updated 2026-06-08 (design polish): the card chrome now follows a single
+  4/8/12/16/24px spacing scale. Card padding 24px, body gap 16px, header gap 4px,
+  title/desc tracking tightened, a hairline divider above the back-nav, and the
+  back control restyled as a quiet ghost button (8px radius, 12px inset). The
+  success view keeps the centered layout on the same scale. Behavior unchanged —
+  CSS only.
   Updated 2026-06-07 (Wave 3 fixes):
     (a) DOUBLE HEADING: showHeader now detects whether the step's ui tree leads with
         a heading node; when it does the flow-runner__header is suppressed so only
@@ -282,7 +288,9 @@
 			<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
 			{#if canGoBack}
 				<div class="flow-runner__nav">
-					<button type="button" class="flow-runner__back" onclick={goBack}>← Back</button>
+					<button type="button" class="flow-runner__back" onclick={goBack}>
+						<span aria-hidden="true">←</span> Back
+					</button>
 				</div>
 			{/if}
 		</div>
@@ -291,72 +299,92 @@
 </div>
 
 <style>
+	/* Spacing scale: 4 / 8 / 12 / 16 / 24 px. */
 	.flow-runner {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.75rem; /* 12px between progress chrome and the card */
 	}
 
 	.flow-runner__card {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
-		padding: 1.5rem;
+		gap: 1rem; /* 16px between header / body / actions */
+		padding: 1.5rem; /* 24px */
 		border-radius: var(--ripple-radius);
 		border: 1px solid var(--ripple-border);
 		background: var(--ripple-surface);
 		color: var(--ripple-surface-foreground);
-		box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+		box-shadow:
+			0 1px 2px rgb(0 0 0 / 0.04),
+			0 4px 12px rgb(0 0 0 / 0.05);
 	}
 
 	.flow-runner__header {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 0.25rem; /* 4px */
 	}
 
 	.flow-runner__title {
 		margin: 0;
-		font-size: 1.15rem;
+		font-size: 1.125rem; /* 18px */
 		font-weight: 600;
 		line-height: 1.3;
+		letter-spacing: -0.011em;
 	}
 
 	.flow-runner__desc {
 		margin: 0;
-		font-size: 0.85rem;
+		font-size: 0.875rem; /* 14px */
+		line-height: 1.45;
 		color: var(--ripple-muted-foreground);
 	}
 
-	/* Back nav — sits under the step body inside the card. */
+	/* Back nav — sits under the step body, set off by a hairline divider. */
 	.flow-runner__nav {
 		display: flex;
 		justify-content: flex-start;
+		margin-top: 0.25rem; /* 4px beyond the 16px body gap */
+		padding-top: 1rem; /* 16px */
+		border-top: 1px solid var(--ripple-border);
 	}
 
 	.flow-runner__back {
 		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem; /* 6px */
 		background: transparent;
 		border: none;
-		padding: 0.25rem 0.25rem;
-		font-size: 0.85rem;
+		padding: 0.375rem 0.75rem; /* 6px / 12px */
+		margin-left: -0.75rem; /* keep the label optically aligned to the card edge */
+		font-size: 0.875rem; /* 14px */
 		font-weight: 500;
 		color: var(--ripple-muted-foreground);
 		cursor: pointer;
-		border-radius: var(--ripple-radius, 0.5rem);
-		transition: color 150ms ease-out;
+		border-radius: 0.5rem; /* 8px */
+		transition:
+			color 150ms ease-out,
+			background-color 150ms ease-out;
 	}
 
 	.flow-runner__back:hover {
 		color: var(--ripple-surface-foreground);
+		background: var(--ripple-muted);
+	}
+
+	.flow-runner__back:focus-visible {
+		outline: 2px solid var(--ripple-ring);
+		outline-offset: 2px;
 	}
 
 	/* Terminal success view. */
 	.flow-runner__done {
 		align-items: center;
 		text-align: center;
-		gap: 0.5rem;
-		padding: 1.75rem 1.5rem;
+		gap: 0.75rem; /* 12px */
+		padding: 2rem 1.5rem; /* 32px / 24px */
 	}
 
 	.flow-runner__check {
@@ -368,7 +396,8 @@
 		border-radius: 9999px;
 		font-size: 1.5rem;
 		font-weight: 700;
-		color: var(--ripple-accent-foreground, #fff);
-		background: var(--ripple-accent, #4f46e5);
+		color: var(--ripple-success-foreground, #fff);
+		background: var(--ripple-success, oklch(0.72 0.17 155));
+		box-shadow: 0 2px 8px color-mix(in oklch, var(--ripple-success, oklch(0.72 0.17 155)) 35%, transparent);
 	}
 </style>
