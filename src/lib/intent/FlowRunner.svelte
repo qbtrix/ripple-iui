@@ -16,6 +16,14 @@
   back control restyled as a quiet ghost button (8px radius, 12px inset). The
   success view keeps the centered layout on the same scale. Behavior unchanged —
   CSS only.
+  Updated 2026-06-08 (step-content rhythm): the card gap only reaches the card's
+  OWN direct children (header / Ripple / nav); the rendered step's blocks live a
+  level deeper inside `.ripple-root`, and a bare Container renders them flush —
+  the source of the "content too cramped" complaint. We now impose a 16px
+  baseline gap on adjacent siblings of the step's `.ripple-root` AND of any bare
+  `[data-ripple-container]` inside it. Zero-specificity (`:where()`) so a spec's
+  own spacing wins, and containers that already drive layout via flex/grid/gap-*
+  are excluded to avoid double-spacing. FLOW-CARD scoped only. CSS only.
   Updated 2026-06-07 (Wave 3 fixes):
     (a) DOUBLE HEADING: showHeader now detects whether the step's ui tree leads with
         a heading node; when it does the flow-runner__header is suppressed so only
@@ -318,6 +326,38 @@
 		box-shadow:
 			0 1px 2px rgb(0 0 0 / 0.04),
 			0 4px 12px rgb(0 0 0 / 0.05);
+	}
+
+	/* Baseline vertical rhythm for the rendered STEP content. The flow-card gap
+	   only reaches the card's own direct children (header / Ripple / nav); the
+	   step's blocks live one level deeper inside `.ripple-root` and a bare
+	   Container (`[data-ripple-container]`) renders its children flush. We give
+	   adjacent siblings — both the ripple-root's own children and a bare
+	   container's children — a 16px baseline gap. Scoped to the FLOW CARD only,
+	   so no other surface is touched.
+
+	   Safety: `:where()` keeps specificity at 0, so a spec that sets its own
+	   spacing still wins on source order. We also EXCLUDE any container that
+	   declares flex / grid / gap-* (where the spec is already driving layout
+	   via `gap`, so a margin would double up). A lone child (`+`) gets nothing. */
+	.flow-runner__card :global(.ripple-root) {
+		display: flex;
+		flex-direction: column;
+	}
+	.flow-runner__card :global(:where(.ripple-root) > * + *) {
+		margin-top: 1rem; /* 16px */
+	}
+	.flow-runner__card
+		:global(
+			:where(
+					.ripple-root
+						[data-ripple-container]:not([class*='flex']):not([class*='grid']):not(
+							[class*='gap-']
+						)
+				)
+				> * + *
+		) {
+		margin-top: 1rem; /* 16px */
 	}
 
 	.flow-runner__header {
