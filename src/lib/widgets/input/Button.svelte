@@ -252,54 +252,27 @@
     transform: none;
   }
 
-  /* ── Solid keys: gradient face + inset top highlight + outer drop shadow ──── */
+  /* ── Solid keys: flat fill + a barely-there gradient face (NO shadows) ──────
+     Captain wants flat buttons — all box-shadows removed. A faint top→base
+     gradient keeps a hint of dimension without any drop/inset shadow. The
+     tactile feel comes purely from the spring press (scale). */
   .ripple-solid {
-    /* Faint vertical gradient over the token bg: lighter top → base. Uses a white
-       overlay (the allowed hardcoded color) so it works on any token hue. */
     background-image: linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0) 55%
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0) 60%
     );
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      0 1px 2px rgba(0, 0, 0, 0.16),
-      0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  .ripple-solid:hover:not(:disabled) {
-    /* Hover lift: shadow grows a touch (fill brightens via the tv hover token). */
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      0 2px 4px rgba(0, 0, 0, 0.18),
-      0 4px 12px rgba(0, 0, 0, 0.14);
   }
   .ripple-solid:active:not(:disabled) {
-    /* Pressed: depth collapses to read "pushed in" — shallow shadow, dimmer face. */
+    /* Pressed: face dims slightly (no shadow) — paired with the scale press. */
     background-image: linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.04),
-      rgba(0, 0, 0, 0) 55%
+      rgba(0, 0, 0, 0.05),
+      rgba(0, 0, 0, 0) 60%
     );
-    box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.18),
-      0 1px 1px rgba(0, 0, 0, 0.12);
   }
 
-  /* ── Raised keys (secondary / outline): a lighter version of the same edge ── */
-  .ripple-raised {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 1px 2px rgba(0, 0, 0, 0.08);
-  }
-  .ripple-raised:hover:not(:disabled) {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.16),
-      0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  .ripple-raised:active:not(:disabled) {
-    box-shadow:
-      inset 0 1px 2px rgba(0, 0, 0, 0.12);
-  }
+  /* ── Raised keys (secondary / outline): flat, no shadow (border/fill carry) ── */
 
   /* ── Ghost: quiet control that lights up in the accent when active ──────────
      No fill in either state. When pressed/selected (data-active) OR held down
