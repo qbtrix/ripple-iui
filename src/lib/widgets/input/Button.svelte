@@ -1,22 +1,46 @@
 <!--
   Button.svelte — Ripple button widget.
-  Updated 2026-06-08 (design polish): modernized every variant while keeping the
-  theme tokens + the tv variants/sizes API intact. Solid variants (default/
-  primary/destructive) now carry a soft elevation shadow + a 1px inset top
-  highlight (via ring) for premium depth instead of reading flat. All variants
-  gain a crisp active/pressed state (slight downward nudge + flattened shadow)
-  and a clearer focus-visible ring. secondary/outline/ghost are visually
-  distinct: secondary is a filled neutral chip, outline a bordered surface with
-  a hover lift, ghost a quiet hover-fill. Proportions tightened (taller/roomier
-  sizes, consistent radius via --radius token, medium weight, -0.01em tracking).
-  Hover/active brightness uses Tailwind opacity layering on the existing tokens
-  so light/dark + host theming still drive the actual colors — no hardcoded hex.
+  Updated 2026-06-08 (Fluid Functionalism redesign): buttons now read as physical,
+  tactile objects — layered depth + a springy press driven by ripple's OWN motion
+  primitive. Same API: tv variants (default/primary/secondary/outline/ghost/link/
+  destructive) + sizes (sm/md/lg/icon) are unchanged.
+
+  DEPTH (solid fills — default/primary/destructive): a 1px inset top-edge highlight
+  (inset 0 1px 0 rgba(255,255,255,.18) — the only allowed hardcoded color, a
+  white overlay, not a theme color), a soft outer drop shadow, and a faint vertical
+  gradient (slightly lighter top → token base) layered over the token bg so the
+  surface catches light like a real key. Crisp, not heavy. outline/secondary carry
+  a lighter version of the same edge + shadow.
+
+  SPRING PRESS (the signature): on :active the button compresses to scale(0.965)
+  and settles with a SPRING bounce-back, not a linear ease. Both the compress and
+  the release reuse ripple's motion vocabulary — see the SPRING TIMING block in
+  the script: physics come from resolvePreset('snappy')/('bouncy') -> springToCssTiming
+  (the same overshoot cubic-bezier the whole motion pack uses), paired with the
+  FF_SPRING_TOKENS authored durations (80ms compress / 160ms release) so the press
+  is consistent with every other ripple spring AND fast enough to feel tactile.
+  Reduced motion: a scoped @media (prefers-reduced-motion: reduce) block drops the
+  transform + collapses the transition, honoring the same policy as the motion
+  runtime (reduce-motion.ts). No $state rune is used for the press — :active + CSS
+  carries it, so there's no vitest "$state is not a function" surface.
+
+  HOVER: a small lift — fill brightens slightly + the drop shadow grows a touch.
+
+  GHOST (special): transparent by default with a subtle hover bg so it's clearly a
+  control, not naked text. In its ACTIVE / pressed / aria-pressed (selected) state
+  it "lights up" — label + leading/trailing icons render in the accent (primary)
+  color, still with NO fill. Driven by the data-active attribute below.
+
+  Colors stay token-driven (bg-primary / bg-destructive / --primary etc.); the host
+  theme maps --primary to macOS system blue, so primary reads as Apple blue with no
+  hardcoded blue here.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { tv } from 'tailwind-variants';
   import { Loader2 } from '@lucide/svelte';
   import { cn } from '$lib/utils.js';
+  import { FF_SPRING_TOKENS, resolvePreset, springToCssTiming } from '$lib/motion/presets.js';
 
   interface Props {
     id?: string;
@@ -32,6 +56,9 @@
     type?: 'button' | 'submit' | 'reset';
     disabled?: boolean;
     loading?: boolean;
+    /** Toggle/selected state. Drives ghost's "lights up in the accent" active look
+     *  and is reflected to aria-pressed. Leave undefined for a plain button. */
+    pressed?: boolean;
     form?: string;
     name?: string;
     value?: string;
@@ -53,6 +80,7 @@
     type = 'button',
     disabled = false,
     loading = false,
+    pressed,
     form,
     name,
     value,
@@ -60,35 +88,61 @@
     onclick,
   }: Props = $props();
 
+  // ── SPRING TIMING — reuse ripple's motion primitive for the press ────────────
+  // The press is a tap gesture: tap: { scale: 0.965 } with a spring. Rather than
+  // hand-roll a cubic-bezier, we pull the PHYSICS from the same primitives every
+  // other ripple animation uses, so the press feels consistent app-wide:
+  //   • EASING comes from springToCssTiming(resolvePreset(<preset>)) — the exact
+  //     spring→CSS overshoot cubic-bezier the motion runtime emits for a spring
+  //     preset (the "kiss past then settle" curve).
+  //   • DURATION comes from FF_SPRING_TOKENS — the FF-restrained authored timings.
+  //     springToCssTiming's 220ms floor is right for an ENTRANCE but too slow for a
+  //     tactile press, so we keep its EASING and swap in the FF token's short
+  //     duration (the sub-100ms snap that reads "Apple-level"), the same split
+  //     CheckboxGroup uses via ffTokenToCssTiming.
+  //
+  // COMPRESS (pointer down): snappy spring easing + FF `fast` (80ms) — instant, firm.
+  // RELEASE  (pointer up):   bouncy spring easing + FF `moderate` (160ms) — springs
+  //   back past rest then settles, the signature bounce-back.
+  // Module-constant strings (no $state) so there is no runes/vitest surface.
+  const COMPRESS_EASING = springToCssTiming(resolvePreset('snappy')).easing; // overshoot, restrained
+  const RELEASE_EASING = springToCssTiming(resolvePreset('bouncy')).easing; // overshoot, playful
+  const COMPRESS_MS = Math.round(FF_SPRING_TOKENS.fast.duration * 1000); // 80
+  const RELEASE_MS = Math.round(FF_SPRING_TOKENS.moderate.duration * 1000); // 160
+
   const button = tv({
     base: [
-      'inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer',
+      'ripple-btn relative isolate inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer',
       'rounded-[var(--radius,0.625rem)] font-medium tracking-[-0.01em] leading-none',
-      // Animate color + shadow + transform together so depth + press feel intentional.
-      'transition-[background-color,box-shadow,transform,border-color,color] duration-150 ease-out',
-      // Clear, theme-driven focus ring (offset so it reads on any surface).
+      // Color/shadow ride a tween; the TRANSFORM (press) rides the spring vars
+      // defined per-state in the scoped style block below. Split so the press keeps
+      // its spring feel while color/shadow stay calm.
+      'transition-[background-color,box-shadow,border-color,color] duration-150 ease-out',
+      // Theme-driven focus ring, offset so it reads on any surface.
       'outline-none focus-visible:ring-2 focus-visible:ring-ring/55 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-      // Disabled: quiet + non-interactive, no lingering shadow/transform.
+      // Disabled: quiet, flat, non-interactive — no lingering depth.
       'disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none',
     ],
     variants: {
       variant: {
-        // Solid: soft elevation + a 1px inset top highlight (inset ring) for premium depth.
+        // Solid keys: layered depth via the scoped .ripple-solid rule (gradient
+        // overlay + inset top highlight + outer shadow). Token bg drives the hue.
         default:
-          'bg-primary text-primary-foreground shadow-sm ring-1 ring-inset ring-white/10 hover:bg-primary/92 hover:shadow active:bg-primary/95 active:shadow-xs active:translate-y-px',
+          'ripple-solid bg-primary text-primary-foreground hover:bg-primary/95',
         primary:
-          'bg-primary text-primary-foreground shadow-sm ring-1 ring-inset ring-white/10 hover:bg-primary/92 hover:shadow active:bg-primary/95 active:shadow-xs active:translate-y-px',
+          'ripple-solid bg-primary text-primary-foreground hover:bg-primary/95',
         destructive:
-          'bg-destructive text-destructive-foreground shadow-sm ring-1 ring-inset ring-white/12 hover:bg-destructive/92 hover:shadow active:bg-destructive/95 active:shadow-xs active:translate-y-px',
-        // Secondary: filled neutral chip — a real button, not flat gray.
+          'ripple-solid bg-destructive text-destructive-foreground hover:bg-destructive/95',
+        // Secondary: a real filled neutral key with a softer edge + shadow.
         secondary:
-          'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/75 active:bg-secondary/85 active:translate-y-px',
+          'ripple-raised bg-secondary text-secondary-foreground hover:bg-secondary/80',
         // Outline: bordered surface that lifts on hover.
         outline:
-          'border border-border bg-background text-foreground shadow-xs hover:bg-muted hover:border-border/80 hover:shadow-sm active:bg-muted active:shadow-xs active:translate-y-px',
-        // Ghost: quiet until hovered — clearly a control, not naked text.
+          'ripple-raised border border-border bg-background text-foreground hover:bg-muted hover:border-border/80',
+        // Ghost: transparent control with a quiet hover bg; lights up in the
+        // accent when active (.ripple-ghost + data-active handle the accent text).
         ghost:
-          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px',
+          'ripple-ghost bg-transparent text-foreground hover:bg-muted',
         link: 'bg-transparent text-primary underline-offset-4 hover:underline px-0 h-auto',
       },
       size: {
@@ -103,9 +157,20 @@
 
   const isDisabled = $derived(disabled || loading);
   const state = $derived(loading ? 'loading' : disabled ? 'disabled' : 'idle');
+  // Ghost "lit" look: explicitly pressed/selected. link never lights up.
+  const isActive = $derived(pressed === true && variant !== 'link');
+
+  // Press spring CSS custom properties — injected so the scoped style can read the
+  // primitive-derived timing without templating CSS strings into a stylesheet.
+  const pressVars = $derived(
+    [
+      `--ripple-press-compress:${COMPRESS_MS}ms ${COMPRESS_EASING}`,
+      `--ripple-press-release:${RELEASE_MS}ms ${RELEASE_EASING}`,
+    ].join(';'),
+  );
 
   const styleString = $derived(
-    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined,
+    (style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') + ';' : '') + pressVars,
   );
 
   const iconSize = $derived(size === 'sm' ? 14 : size === 'lg' ? 18 : 16);
@@ -127,8 +192,10 @@
   data-variant={variant}
   data-size={size}
   data-state={state}
+  data-active={isActive ? 'true' : undefined}
   disabled={isDisabled}
   aria-busy={loading ? 'true' : undefined}
+  aria-pressed={pressed === undefined ? undefined : pressed ? 'true' : 'false'}
   aria-label={ariaLabel}
   onclick={handleClick}
 >
@@ -143,10 +210,118 @@
   {#if hasChildren && children}
     {@render children()}
   {:else if label}
-    <span>{label}</span>
+    <span data-slot="button-label">{label}</span>
   {/if}
 
   {#if !loading && trailing}
     <span data-slot="button-trailing" class="inline-flex shrink-0">{@render trailing()}</span>
   {/if}
 </button>
+
+<style>
+  /* ── Fluid Functionalism depth + spring press ──────────────────────────────
+     Scoped so it can't leak. Colors stay token-driven; the ONLY hardcoded color
+     is the white inset top-edge highlight (a light overlay, not a theme hue). */
+
+  .ripple-btn {
+    /* Will-change the transform only while interactive; keeps the press composited. */
+    transform: translateZ(0);
+    /* RELEASE is the resting transition: when :active is removed the button
+       springs back along the bouncy overshoot curve. Falls back to a sane spring
+       if the custom prop is somehow absent. */
+    transition:
+      transform var(--ripple-press-release, 160ms cubic-bezier(0.34, 1.66, 0.4, 1)),
+      background-color 150ms ease-out,
+      box-shadow 150ms ease-out,
+      border-color 150ms ease-out,
+      color 150ms ease-out;
+  }
+
+  /* The signature press: compress + settle on a snappy spring. On pointer down
+     the COMPRESS transition takes over (faster, firmer); releasing falls back to
+     the resting RELEASE transition above (the bounce-back). */
+  .ripple-btn:active:not(:disabled) {
+    transform: scale(0.965) translateZ(0);
+    transition:
+      transform var(--ripple-press-compress, 80ms cubic-bezier(0.34, 1.39, 0.4, 1)),
+      background-color 150ms ease-out,
+      box-shadow 150ms ease-out;
+  }
+  /* link is text, not a physical key — it shouldn't compress. */
+  .ripple-btn[data-variant='link']:active {
+    transform: none;
+  }
+
+  /* ── Solid keys: gradient face + inset top highlight + outer drop shadow ──── */
+  .ripple-solid {
+    /* Faint vertical gradient over the token bg: lighter top → base. Uses a white
+       overlay (the allowed hardcoded color) so it works on any token hue. */
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0) 55%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 1px 2px rgba(0, 0, 0, 0.16),
+      0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  .ripple-solid:hover:not(:disabled) {
+    /* Hover lift: shadow grows a touch (fill brightens via the tv hover token). */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 2px 4px rgba(0, 0, 0, 0.18),
+      0 4px 12px rgba(0, 0, 0, 0.14);
+  }
+  .ripple-solid:active:not(:disabled) {
+    /* Pressed: depth collapses to read "pushed in" — shallow shadow, dimmer face. */
+    background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.04),
+      rgba(0, 0, 0, 0) 55%
+    );
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.18),
+      0 1px 1px rgba(0, 0, 0, 0.12);
+  }
+
+  /* ── Raised keys (secondary / outline): a lighter version of the same edge ── */
+  .ripple-raised {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+  .ripple-raised:hover:not(:disabled) {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  .ripple-raised:active:not(:disabled) {
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  /* ── Ghost: quiet control that lights up in the accent when active ──────────
+     No fill in either state. When pressed/selected (data-active) OR held down
+     (:active), the label + icons take the primary accent color. */
+  .ripple-ghost[data-active='true'],
+  .ripple-ghost:active:not(:disabled) {
+    color: hsl(var(--primary));
+    background-color: transparent;
+  }
+  /* Icons inherit currentColor, so the leading/trailing slots light up too. */
+
+  /* ── Reduced motion: honor the same policy as the motion runtime ────────────
+     Drop the press transform + collapse the transition to a near-instant fade of
+     color/shadow only. Mirrors reduce-motion.ts (movement dropped). */
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-btn,
+    .ripple-btn:active:not(:disabled) {
+      transform: none;
+      transition:
+        background-color 100ms ease,
+        box-shadow 100ms ease,
+        color 100ms ease;
+    }
+  }
+</style>
