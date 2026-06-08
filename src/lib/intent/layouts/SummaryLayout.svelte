@@ -70,14 +70,15 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	{#if showSummary}
+	{#if input.spec.ui}
+		<!-- The step's own tree carries BOTH the review text AND the Finish/confirm
+		     button (→ flow.submit, the terminal hand-off to the agent). Render it so
+		     the flow can actually complete. We do NOT also render ResultsSummary here
+		     — that would duplicate the review rows. The designed ResultsSummary path
+		     below is for a pure-data confirm spec with no ui. Wiring ResultsSummary +
+		     a flow.submit button for the data path is a tracked follow-up. -->
+		<NodeRenderer node={input.spec.ui} />
+	{:else if showSummary}
 		<ResultsSummary items={summaryItems} {total} />
-	{/if}
-
-	{#if input.mode === 'raw-ui' && input.spec.ui}
-		<!-- The step's own tree (carries the Finish/confirm button → flow.submit). -->
-		<div class="mt-1">
-			<NodeRenderer node={input.spec.ui} />
-		</div>
 	{/if}
 </div>

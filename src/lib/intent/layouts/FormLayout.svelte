@@ -95,10 +95,17 @@
 	}
 </script>
 
-{#if input.mode === 'raw-ui' && input.spec.ui}
-	<!-- Escape hatch: render the step's own widget tree so its controls keep
-	     driving the flow. The card chrome around us makes it look designed. -->
+{#if input.spec.ui}
+	<!-- When the step carries its own widget tree, render IT — its input binds +
+	     Continue/submit button drive the flow (flow.next/flow.submit) and write
+	     the state the confirm step's {state.x} pre-fill reads. The card chrome
+	     makes it look designed. (A flow step always has a ui, so this is the live
+	     path.) Rendering FormSection from `form_fields` INSTEAD would drop the
+	     advance button + the state writes — that designed-form path is only safe
+	     for a pure-data form spec with no ui, handled below. Wiring FormSection to
+	     emit flow.next + write flow state is a tracked follow-up. -->
 	<NodeRenderer node={input.spec.ui} />
 {:else}
+	<!-- Pure-data form spec (no raw ui): render the designed FormSection. -->
 	<FormSection {fields} {values} onChange={update} />
 {/if}
