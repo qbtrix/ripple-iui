@@ -248,4 +248,29 @@ describe('analyzeData', () => {
     expect(result.itemCount).toBe(3);
     expect(result.availableFields).toEqual(new Set(['valid']));
   });
+
+  // FIX #3: fall back to data.stats when items is absent, matching the adapter.
+  it('falls back to data.stats when items is absent', () => {
+    const result = analyzeData(
+      spec({
+        intent: 'info',
+        data: { stats: [{ label: 'Users', value: 42 }, { label: 'Churn', value: 3 }] },
+      })
+    );
+    expect(result.itemCount).toBe(2);
+    expect(result.availableFields).toEqual(new Set(['label', 'value']));
+  });
+
+  it('prefers items over stats when both present', () => {
+    const result = analyzeData(
+      spec({
+        data: {
+          items: [{ title: 'A' }],
+          stats: [{ label: 'X', value: 1 }],
+        },
+      })
+    );
+    expect(result.itemCount).toBe(1);
+    expect(result.availableFields).toEqual(new Set(['title']));
+  });
 });

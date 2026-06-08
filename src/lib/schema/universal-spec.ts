@@ -15,6 +15,12 @@
  *     hints, not intents, so the layout engine can route an `info`/`browse`/
  *     `custom` spec to a designed composite layout WITHOUT inventing IntentType
  *     enum values. Existing hints are untouched, so prior specs are unaffected.
+ *   - 2026-06-08: reconcile IntentType with the intents the renderer actually
+ *     routes on. ADDED `quick_confirm` (layout-engine summary-card + IntentRenderer
+ *     SummaryLayout + Ripple DESIGNED_INTENTS), `widget` (layout-engine `widget`
+ *     layout, tested), and `itinerary` (layout-engine `itinerary` layout, tested).
+ *     Without these the enum rejected/coerced schema-valid specs, making those
+ *     routing paths unreachable. No existing values removed.
  */
 
 import { z } from 'zod';
@@ -53,17 +59,20 @@ export type FlowAction = z.infer<typeof FlowAction>;
 // =============================================================================
 
 export const IntentType = z.enum([
-  'browse',   // Grid/List of items
-  'select',   // Pick one or more items
-  'detail',   // View single item details
-  'form',     // Input data
-  'confirm',  // Review and submit
-  'info',     // Read-only information
-  'search',   // Search interface
-  'action',   // Trigger an action
-  'custom',   // Raw UI control (Escape hatch)
-  'workspace',// Tool-based workspace
-  'dashboard' // Persistent dashboard
+  'browse',       // Grid/List of items
+  'select',       // Pick one or more items
+  'detail',       // View single item details
+  'form',         // Input data
+  'confirm',      // Review and submit
+  'quick_confirm',// Lightweight review/submit step (routes to summary-card)
+  'info',         // Read-only information
+  'search',       // Search interface
+  'action',       // Trigger an action
+  'custom',       // Raw UI control (Escape hatch)
+  'workspace',    // Tool-based workspace
+  'dashboard',    // Persistent dashboard
+  'widget',       // Single-widget display (routes to widget layout)
+  'itinerary'     // Multi-day travel plan with timeline (routes to itinerary layout)
 ]);
 
 export type IntentType = z.infer<typeof IntentType>;

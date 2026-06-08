@@ -12,6 +12,9 @@
  *     LayoutType values, so IntentRenderer can route a generic spec to a
  *     designed composite layout via the hint without a new IntentType. The
  *     auto-determine switch is unchanged — only explicit hints reach these.
+ *   - 2026-06-08: analyzeData now falls back to `spec.data.stats` when `items`
+ *     is absent (`items ?? stats ?? []`), matching layout-adapter's normalization
+ *     so a stats-only info/dashboard spec analyzes its fields correctly.
  */
 
 import type { UniversalSpec } from '../schema/universal-spec.js';
@@ -101,7 +104,9 @@ export function analyzeData(
 		return { itemCount: 0, availableFields: new Set<string>() };
 	}
 
-	const items = spec.data.items ?? [];
+	// Fall back to `stats` when `items` is absent, matching layout-adapter's
+	// `s.data?.items ?? s.data?.stats ?? []` so all three agree on the source.
+	const items = spec.data.items ?? spec.data.stats ?? [];
 	const itemCount = items.length;
 
 	// Collect all unique keys from items

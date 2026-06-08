@@ -2,6 +2,12 @@
  * @file pattern-detector.ts
  * @description Detects UI patterns (quiz, results) and transforms data.
  * Extracted from IntentRenderer for modularity.
+ * @changes
+ *   - 2026-06-08: isQuizPattern / isResultsPattern now require EVERY item to fit
+ *     (was `.some(...)`). A single matching item no longer flips a mixed array to
+ *     quiz/results — that false-positive could also drop the non-matching items.
+ *     `length === 0 → false` guard and intent checks unchanged; isChartPattern's
+ *     first-item heuristic is intentionally left as-is.
  */
 
 // ============================================================================
@@ -39,7 +45,7 @@ export function isQuizPattern(
   if (spec.intent !== 'select') return false;
   if (items.length === 0) return false;
 
-  return items.some((item) => 'correct' in item);
+  return items.every((item) => 'correct' in item);
 }
 
 /**
@@ -54,7 +60,7 @@ export function isResultsPattern(
   if (spec.intent !== 'info') return false;
   if (items.length === 0) return false;
 
-  return items.some((item) => 'label' in item && 'value' in item);
+  return items.every((item) => 'label' in item && 'value' in item);
 }
 
 // ============================================================================

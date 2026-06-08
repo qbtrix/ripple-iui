@@ -44,6 +44,10 @@
   The adapter (layout-adapter.ts) is the schema bridge: it turns the spec (+ the
   optional flow `context`) into the LayoutInput every layout reads. PURE — no fetch,
   no service; the layout reads data already on the spec / context.
+
+  Updated 2026-06-08 — patternItems now falls back to `spec.data.stats` when
+  `items` is absent (`items ?? stats`), matching layout-adapter's normalization so
+  a stats-only info spec can still pattern-detect (e.g. ResultsSummary).
 -->
 <script lang="ts">
 	import type { UniversalSpec } from '../schema/universal-spec.js';
@@ -120,8 +124,10 @@
 	// inline items array → patternItems is empty → no pattern ever matches, so
 	// the existing raw-ui path is untouched.
 	const patternItems = $derived.by<Record<string, unknown>[]>(() => {
-		const data = spec.data as { items?: unknown } | undefined;
-		const items = data && typeof data === 'object' ? data.items : undefined;
+		const data = spec.data as { items?: unknown; stats?: unknown } | undefined;
+		// Fall back to `stats` when `items` is absent, matching layout-adapter's
+		// `s.data?.items ?? s.data?.stats ?? []` so all three agree on the source.
+		const items = data && typeof data === 'object' ? (data.items ?? data.stats) : undefined;
 		return Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
 	});
 
