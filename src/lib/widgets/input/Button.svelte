@@ -112,7 +112,10 @@
 
   const button = tv({
     base: [
-      'ripple-btn relative isolate inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer',
+      // box-border makes height immutable: any per-spec padding/border lives
+      // INSIDE the fixed size height, so every variant of a given size is the
+      // SAME height (canonical) regardless of border/padding/consumer preflight.
+      'ripple-btn box-border relative isolate inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer',
       'rounded-[var(--radius,0.625rem)] font-medium tracking-[-0.01em] leading-none',
       // Color/shadow ride a tween; the TRANSFORM (press) rides the spring vars
       // defined per-state in the scoped style block below. Split so the press keeps
