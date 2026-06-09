@@ -1,4 +1,7 @@
-<!-- src/lib/widgets/input/Search.svelte -->
+<!-- src/lib/widgets/input/Search.svelte
+     Updated: 2026-06-09 — a11y: the role="combobox" input now wires
+     aria-controls to the results listbox (which gets a stable id) so it
+     satisfies a11y_role_has_required_aria_props (aria-expanded was already set). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import SearchIcon from '@lucide/svelte/icons/search';
@@ -58,6 +61,10 @@
   let focused = $state(false);
   let highlight = $state(0);
   let inputEl = $state<HTMLInputElement | null>(null);
+
+  // Stable id for the results listbox so the combobox input can reference it
+  // via aria-controls (required by the ARIA combobox role).
+  const listboxId = $derived(`${id ?? 'ripple-search'}-listbox`);
 
   const showDropdown = $derived(focused && (alwaysShow || value.trim().length > 0));
 
@@ -131,6 +138,7 @@
       type="text"
       role="combobox"
       aria-expanded={showDropdown}
+      aria-controls={listboxId}
       aria-autocomplete="list"
       {placeholder}
       {value}
@@ -159,6 +167,7 @@
 
   {#if showDropdown}
     <div
+      id={listboxId}
       class="absolute left-0 right-0 top-full mt-1 z-50 max-h-[360px] overflow-y-auto rounded-md border border-border bg-popover text-popover-foreground shadow-md p-1"
       role="listbox"
     >

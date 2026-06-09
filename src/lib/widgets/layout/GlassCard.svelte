@@ -1,7 +1,10 @@
 <!-- GlassCard.svelte — Glass morphism container widget for Ripple.
      Created: Phase 4 of paw-os-ui migration.
      Extracted liquid glass CSS from paw-enterprise OS layout into a reusable widget.
-     Props: opacity, blur, tint, borderGlow for full glass customization. -->
+     Props: opacity, blur, tint, borderGlow for full glass customization.
+     Updated 2026-06-09 (a11y): optional onclick uses a conditional-spread so the
+     card is a plain element with no handler and a keyboard-operable role="button"
+     (Enter/Space) when one is passed. Replaces the dead svelte-ignore. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -47,10 +50,16 @@
     if (style) Object.assign(base, style);
     return Object.entries(base).map(([k, v]) => `${k}:${v}`).join(';');
   });
+
+  function handleKey(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick?.(e); }
+  }
+  const interactive = $derived(
+    onclick ? { role: 'button', tabindex: 0, onclick, onkeydown: handleKey } : {}
+  );
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div {id} class={cn('ripple-glass-card', className)} style={glassStyle} {onclick}>
+<div {id} class={cn('ripple-glass-card', className)} style={glassStyle} {...interactive}>
   {#if title || description}
     <div class="glass-card-header">
       {#if title}

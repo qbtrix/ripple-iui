@@ -1,4 +1,7 @@
-<!-- src/lib/widgets/data/Kanban.svelte -->
+<!-- src/lib/widgets/data/Kanban.svelte
+     Modified: 2026-06-09 — a11y: drop-zone column <div> given role="list" (with
+     aria-label) and draggable card <div> given role="listitem" so the drag/drop
+     handlers satisfy a11y_no_static_element_interactions. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -127,6 +130,8 @@
   {#each columns as col (col.id)}
     {@const colCards = cardsByColumn.get(col.id) ?? []}
     <div
+      role="list"
+      aria-label={col.title}
       class={cn(
         'flex flex-col w-72 shrink-0 rounded-lg border bg-card/30 p-2 gap-2 transition-colors',
         hoverColumn === col.id ? 'border-primary bg-primary/5' : 'border-border'
@@ -150,6 +155,7 @@
       <div class="flex flex-col gap-2 min-h-[24px]">
         {#each colCards as card (card.id)}
           <div
+            role="listitem"
             draggable="true"
             ondragstart={(e) => onDragStart(e, card.id)}
             ondragend={onDragEnd}

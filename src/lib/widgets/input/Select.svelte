@@ -1,6 +1,9 @@
 <!-- Updated: 2026-06-02 — pass a `name` to Select.Root so bits-ui renders a
      hidden form input; a static <form action> POST then submits the selected
-     value with JS off (ripple-iui #54). -->
+     value with JS off (ripple-iui #54).
+     Updated: 2026-06-09 — svelte-ignore state_referenced_locally on the
+     internalValue seed: it's intentionally mutated by handleChange/bind:value +
+     synced by an $effect (controlled input with internal state), stays $state. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
@@ -29,6 +32,7 @@
   // `bind:value` on the bits-ui primitive) can round-trip user picks. Without
   // this, picking an option leaves bits-ui's internal state ahead of our
   // upstream prop and onValueChange fires correctly but the trigger drifts.
+  // svelte-ignore state_referenced_locally
   let internalValue = $state(value);
   $effect(() => {
     if (value !== internalValue) internalValue = value;

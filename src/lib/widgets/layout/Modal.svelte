@@ -3,7 +3,12 @@
      the `invoke` flow action can call `open` / `close` remotely.
      Opens/closes via state-bound `value` prop (maps to dialog `open`).
      Props: title, description, size ("sm"|"md"|"lg"). Supports children.
-     Dismissal (overlay click / Esc) emits onchange(false) to sync state. -->
+     Dismissal (overlay click / Esc) emits onchange(false) to sync state.
+     Updated: 2026-06-09 (reactivity) — isOpen seeds once from the `value` prop and
+     is then mutated by an $effect, the registry open/close callbacks, and
+     handleOpenChange, so it must stay $state. The state_referenced_locally warning
+     on the seed is an intentional one-time read, suppressed with a directive
+     directly above the $state line. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
@@ -34,6 +39,7 @@
   }: Props = $props();
 
   // Local open state that syncs with incoming `value` prop
+  // svelte-ignore state_referenced_locally
   let isOpen = $state(value ?? false);
 
   $effect(() => {

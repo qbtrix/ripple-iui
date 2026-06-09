@@ -7,6 +7,8 @@
     - EventHandler-driven actions (primary + "Learn more") with onselect/onlearnmore fallbacks
     - Auto-feature inference when `features` is not supplied
     - Direct lucide icon imports for fixed glyphs; ripple's Icon for user-supplied icon names
+  Modified: 2026-06-09 — state_referenced_locally: added svelte-ignore above
+  `viewMode` $state — intentional uncontrolled default seed from `defaultView` prop. Recipe 7.
 -->
 <script lang="ts">
   import { getContext } from 'svelte';
@@ -88,6 +90,7 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  // svelte-ignore state_referenced_locally
   let viewMode = $state<'card' | 'table'>(defaultView);
   let showDiffOnly = $state(false);
   let activeSection = $state<string | null>(null);

@@ -1,3 +1,9 @@
+<!--
+  Grid.svelte — Ripple CSS grid layout widget.
+  Updated 2026-06-09 (a11y): optional onclick uses a conditional-spread so the div
+  is a plain element with no handler and a keyboard-operable role="button"
+  (Enter/Space) when one is passed. Replaces the dead svelte-ignore.
+-->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
@@ -40,10 +46,16 @@
 		if (style) s.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));
 		return s.join(';');
 	});
+
+	function handleKey(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick?.(e); }
+	}
+	const interactive = $derived(
+		onclick ? { role: 'button', tabindex: 0, onclick, onkeydown: handleKey } : {}
+	);
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div {id} class="rgrid {className ?? ''}" style={combinedStyle} {onclick}>
+<div {id} class="rgrid {className ?? ''}" style={combinedStyle} {...interactive}>
 	{@render children?.()}
 </div>
 

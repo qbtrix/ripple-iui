@@ -1,6 +1,10 @@
 <!--
   FlowRunner.svelte — Chain Flow host (RFC 13 M1).
   Created 2026-05-31.
+  Updated 2026-06-09 — silenced two state_referenced_locally warnings on `spec`
+  (the executor seed and the seededFor sentinel). Both are intentional one-time
+  seeds backed by the explicit re-seed $effect; seededFor is reassigned so it
+  can't be $derived. svelte-ignore per recipe, no behavior change.
   Updated 2026-06-07 — intent→layout slice: each step now renders inside a polished
   card with a ChainProgress chrome and a ~180ms step transition, instead of a bare
   widget tree. The executor logic, the flow.next/back/forward/submit interception,
@@ -97,7 +101,12 @@
 	let { spec, onComplete, onEvent, state, class: className = '' }: Props = $props();
 
 	// One executor per root spec. Re-seed if the root spec identity changes.
+	// Both reads below are intentional one-time seeds: the $effect right after
+	// re-seeds the executor (and seededFor, which it reassigns — so it can't be
+	// $derived) whenever the spec identity changes. Not a stale-snapshot bug.
+	// svelte-ignore state_referenced_locally
 	const executor = new ChainExecutor(spec);
+	// svelte-ignore state_referenced_locally
 	let seededFor = spec;
 	$effect(() => {
 		if (spec !== untrack(() => seededFor)) {

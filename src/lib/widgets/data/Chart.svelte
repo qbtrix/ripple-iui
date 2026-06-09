@@ -2,6 +2,8 @@
   Chart.svelte — 10 chart types: bar, line, area, pie, donut,
   candlestick, sparkline, heatmap, gauge, radar.
   ResizeObserver init, theme-aware colors, themeOverrides deep merge.
+  Modified: 2026-06-09 — chartEl declared with $state() (was plain `let`) so
+  bind:this updates are reactive (fixes non_reactive_update).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -87,7 +89,7 @@
 		return colors[i] || defaultColors[i % defaultColors.length];
 	}
 
-	let chartEl: HTMLDivElement;
+	let chartEl: HTMLDivElement | undefined = $state();
 	let chart: any = null;
 	let echartsMod: any = null;
 

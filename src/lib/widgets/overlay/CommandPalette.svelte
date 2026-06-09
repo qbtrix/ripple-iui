@@ -1,4 +1,7 @@
-<!-- src/lib/widgets/overlay/CommandPalette.svelte -->
+<!-- src/lib/widgets/overlay/CommandPalette.svelte
+     Updated: 2026-06-09 — svelte-ignore state_referenced_locally on the isOpen
+     seed: it's intentionally mutated by the registry open/close handlers +
+     synced by an $effect (controlled overlay with internal state), stays $state. -->
 <script lang="ts">
   import { getContext } from "svelte";
   import { cn } from "$lib/utils.js";
@@ -56,6 +59,7 @@
       : undefined,
   );
 
+  // svelte-ignore state_referenced_locally
   let isOpen = $state(value);
   let query = $state("");
   let highlight = $state(0);

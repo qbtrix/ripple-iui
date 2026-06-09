@@ -11,6 +11,9 @@
   Toggling now optimistically emits a NEW items array with the flipped item's
   state, gates blocked items (cannot be marked done), and still fires
   `toggleActions` as an enterprise side-effect hook (API / audit / emit).
+  @changes 2026-06-09 — a11y: the clickable row `<li>` now carries role="button",
+  tabindex="0" and an onkeydown (Enter/Space) handler so it is keyboard
+  accessible (fixes a11y_no_noninteractive_element_interactions). Recipe 3.
 -->
 <script lang="ts">
   import { getContext } from 'svelte';
@@ -165,6 +168,12 @@
     const fired = fire(it.actions, it);
     if (!fired) onitemclick?.(it.id);
   }
+  function handleRowKey(it: ChecklistItem, e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleRowClick(it);
+    }
+  }
   function handleToggle(it: ChecklistItem, e: MouseEvent) {
     e.stopPropagation();
     const goingDone = it.state !== 'done';
@@ -231,70 +240,74 @@
             {@const s = it.state ?? 'pending'}
             {@const meta = STATE_META[s]}
             {@const blocked = it.blockedBy && it.blockedBy.length > 0}
-            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-            <li
-              class={cn('rcheck-item', `rcheck-item-${s}`, blocked && 'rcheck-item-blocked')}
-              onclick={() => handleRowClick(it)}
-            >
-              <button
-                type="button"
-                class={cn('rcheck-toggle', s === 'done' && 'rcheck-toggle-done')}
-                onclick={(e) => handleToggle(it, e)}
-                aria-label={s === 'done' ? 'Mark as not done' : 'Mark as done'}
+            <li class={cn('rcheck-item', `rcheck-item-${s}`, blocked && 'rcheck-item-blocked')}>
+              <div
+                class="rcheck-row-btn"
+                role="button"
+                tabindex="0"
+                onclick={() => handleRowClick(it)}
+                onkeydown={(e) => handleRowKey(it, e)}
               >
-                {#if s === 'done'}
-                  <Icon name="check" size={14} color="white" />
-                {:else if s === 'in-progress'}
-                  <span class="rcheck-toggle-spin"></span>
-                {:else if s === 'blocked'}
-                  <Icon name="ban" size={14} color="oklch(0.55 0.22 25)" />
-                {:else if s === 'skipped'}
-                  <Icon name="minus" size={14} />
-                {/if}
-              </button>
-              <div class="rcheck-body">
-                <div class="rcheck-row">
-                  <div class="rcheck-label">{it.label}</div>
-                  <div class="rcheck-meta">
-                    {#if it.due}
-                      <span class={cn('rcheck-due', it.overdue && 'rcheck-due-overdue')}>
-                        <Icon name="calendar" size={11} />
-                        {it.due}
-                      </span>
-                    {/if}
-                    {#if it.attachments && it.attachments.length > 0}
-                      <span class="rcheck-attach">
-                        <Icon name="paperclip" size={11} />
-                        {it.attachments.length}
-                      </span>
-                    {/if}
-                    {#if it.owner}
-                      <span class="rcheck-owner" title={it.owner.name}>
-                        {#if it.owner.avatar}
-                          <img src={it.owner.avatar} alt={it.owner.name} />
-                        {:else}
-                          <span class="rcheck-owner-initials">{initials(it.owner.name)}</span>
-                        {/if}
-                      </span>
-                    {/if}
+                <button
+                  type="button"
+                  class={cn('rcheck-toggle', s === 'done' && 'rcheck-toggle-done')}
+                  onclick={(e) => handleToggle(it, e)}
+                  aria-label={s === 'done' ? 'Mark as not done' : 'Mark as done'}
+                >
+                  {#if s === 'done'}
+                    <Icon name="check" size={14} color="white" />
+                  {:else if s === 'in-progress'}
+                    <span class="rcheck-toggle-spin"></span>
+                  {:else if s === 'blocked'}
+                    <Icon name="ban" size={14} color="oklch(0.55 0.22 25)" />
+                  {:else if s === 'skipped'}
+                    <Icon name="minus" size={14} />
+                  {/if}
+                </button>
+                <div class="rcheck-body">
+                  <div class="rcheck-row">
+                    <div class="rcheck-label">{it.label}</div>
+                    <div class="rcheck-meta">
+                      {#if it.due}
+                        <span class={cn('rcheck-due', it.overdue && 'rcheck-due-overdue')}>
+                          <Icon name="calendar" size={11} />
+                          {it.due}
+                        </span>
+                      {/if}
+                      {#if it.attachments && it.attachments.length > 0}
+                        <span class="rcheck-attach">
+                          <Icon name="paperclip" size={11} />
+                          {it.attachments.length}
+                        </span>
+                      {/if}
+                      {#if it.owner}
+                        <span class="rcheck-owner" title={it.owner.name}>
+                          {#if it.owner.avatar}
+                            <img src={it.owner.avatar} alt={it.owner.name} />
+                          {:else}
+                            <span class="rcheck-owner-initials">{initials(it.owner.name)}</span>
+                          {/if}
+                        </span>
+                      {/if}
+                    </div>
                   </div>
+                  {#if it.description}
+                    <p class="rcheck-desc">{it.description}</p>
+                  {/if}
+                  {#if blocked}
+                    <div class="rcheck-blocked-by">
+                      <Icon name="link-2" size={11} />
+                      Blocked by: {it.blockedBy!.join(', ')}
+                    </div>
+                  {/if}
                 </div>
-                {#if it.description}
-                  <p class="rcheck-desc">{it.description}</p>
-                {/if}
-                {#if blocked}
-                  <div class="rcheck-blocked-by">
-                    <Icon name="link-2" size={11} />
-                    Blocked by: {it.blockedBy!.join(', ')}
-                  </div>
-                {/if}
+                <span
+                  class="rcheck-state-pill"
+                  style={`color:${meta.color}; background:${meta.bg};`}
+                >
+                  {meta.label}
+                </span>
               </div>
-              <span
-                class="rcheck-state-pill"
-                style={`color:${meta.color}; background:${meta.bg};`}
-              >
-                {meta.label}
-              </span>
             </li>
           {/each}
         </ul>
@@ -414,18 +427,26 @@
     gap: 6px;
   }
   .rcheck-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 14px;
     border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--card);
-    cursor: pointer;
     transition: background 0.12s, border-color 0.12s;
   }
   .rcheck-item:hover {
     background: color-mix(in oklab, var(--muted) 35%, transparent);
+  }
+  .rcheck-row-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    width: 100%;
+    cursor: pointer;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: inherit;
+    outline-offset: -2px;
   }
   .rcheck-item-done {
     opacity: 0.85;

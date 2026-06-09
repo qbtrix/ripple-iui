@@ -1,3 +1,9 @@
+<!--
+  DiscoverCard.svelte — discovery/feed card with image, title, source.
+  Modified: 2026-06-09 — a11y fix: bundle role/tabindex/onkeydown into a derived
+  `interactive` spread so the card is a coherent keyboard-accessible button only
+  when clickable (fixes a11y_no_noninteractive_tabindex). Recipe 2.
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
 
@@ -20,15 +26,20 @@
     image, title, description, source,
     url, class: className, onclick
   }: Props = $props();
+
+  const handler = $derived(onclick ?? (url ? () => window.open(url, '_blank') : undefined));
+  function handleKey(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handler?.(e);
+    }
+  }
+  const interactive = $derived(
+    handler ? { role: 'button', tabindex: 0, onclick: handler, onkeydown: handleKey } : {}
+  );
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div
-  class={cn('rdisc', className)}
-  onclick={onclick ?? (url ? () => window.open(url, '_blank') : undefined)}
-  role={onclick || url ? 'button' : undefined}
-  tabindex={onclick || url ? 0 : undefined}
->
+<div class={cn('rdisc', className)} {...interactive}>
   {#if image}
     <div class="rdisc-img-wrap">
       <img src={image} alt={title} class="rdisc-img" />

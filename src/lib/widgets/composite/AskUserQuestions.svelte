@@ -14,6 +14,10 @@
     when the user skips a question.
 
     @changes 2026-06-06 — added the end-of-flow read-only recap + Confirm gate.
+    @changes 2026-06-09 — a11y fix: moved onkeydown to <svelte:window> so the
+      container div (tabindex="-1" focus-trap) carries no keyboard listener,
+      fixing a11y_no_noninteractive_element_interactions. Reverted role to
+      "region" (plain landmark, no interactions). Recipe 3.
 
   Spec example:
     {
@@ -278,6 +282,7 @@
   });
 </script>
 
+<svelte:window onkeydown={onKeydown} />
 <div
   bind:this={containerRef}
   {id}
@@ -286,7 +291,6 @@
   role="region"
   aria-label="Question flow"
   tabindex="-1"
-  onkeydown={onKeydown}
 >
   {#if reviewing}
     <div class="auq-header">

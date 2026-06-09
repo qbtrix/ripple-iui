@@ -27,6 +27,7 @@
   const OFFSETS: Record<NonNullable<Props['direction']>, { x?: number; y?: number }> = {
     up: { y: 24 }, down: { y: -24 }, left: { x: 24 }, right: { x: -24 }, fade: {},
   };
+  // svelte-ignore state_referenced_locally
   const motion: Motion = {
     inView: { opacity: 0, ...OFFSETS[direction], once, amount: 0.2 } as Motion['inView'],
     transition: { preset: 'smooth' },
