@@ -19,13 +19,15 @@ import { buildOnboardingWizard } from './intent/fixtures/onboarding-wizard.js';
 import type { TerminalResult } from './intent/chain-executor.svelte.js';
 
 function clickButton(container: HTMLElement, label: string) {
-	const btn = within(container)
-		.getAllByRole('button')
-		.find((b) => b.textContent?.trim() === label);
+	// Options render as `<button role="radio">` inside a radiogroup (the
+	// single-select a11y pattern), so their accessible role is "radio", not
+	// "button". Search both roles to find a labelled control to click.
+	const q = within(container);
+	const candidates = [...q.queryAllByRole('button'), ...q.queryAllByRole('radio')];
+	const btn = candidates.find((b) => b.textContent?.trim() === label);
 	if (!btn) {
 		throw new Error(
-			`button "${label}" not found; have: ${within(container)
-				.getAllByRole('button')
+			`control "${label}" not found; have: ${candidates
 				.map((b) => b.textContent?.trim())
 				.join(', ')}`
 		);

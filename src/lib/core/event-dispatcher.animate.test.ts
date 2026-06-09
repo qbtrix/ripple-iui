@@ -48,20 +48,22 @@ describe('animate event-action', () => {
     const sm = createStateManager({});
     const d = createEventDispatcher(sm, onEvent, undefined, () => root);
 
-    expect(target.style.transform).toBe('');
+    // jsdom now ships Element.animate, so the runtime pulse goes through WAAPI
+    // (no inline-style write). Spy on the target's animate: it being called with
+    // the peak keyframe proves the node was located by id AND animated.
+    const animateSpy = vi.spyOn(target, 'animate').mockReturnValue({} as Animation);
     await d.dispatch(
       { action: 'animate', target: 'hero-cta', motion: { enter: { scale: 1.3, y: -12 } } } as never,
       { state: sm.state, data: {} },
     );
     // The runtime pulse imports playMotion lazily (dynamic import). Poll a few
-    // ticks for the import promise + the fallback's synchronous style write.
-    await vi.waitFor(() => expect(target.style.transform).not.toBe(''), { timeout: 1000 });
+    // ticks for the import promise to resolve and the animate call to land.
+    await vi.waitFor(() => expect(animateSpy).toHaveBeenCalled(), { timeout: 1000 });
 
-    // jsdom has no WAAPI, so playMotion takes the inline-style fallback and
-    // toggles the peak frame onto the node — the transform must now carry the
-    // pulse (scale + translateY), proving the node was found and animated.
-    expect(target.style.transform).toMatch(/scale\(1\.3\)/);
-    expect(target.style.transform).toMatch(/translateY\(-12px\)/);
+    const frames = animateSpy.mock.calls[0][0] as Keyframe[];
+    const peak = String(frames.find((f) => f.offset === 0.5)?.transform ?? '');
+    expect(peak).toMatch(/scale\(1\.3\)/);
+    expect(peak).toMatch(/translateY\(-12px\)/);
     // …and the event still fires for observers.
     expect(onEvent).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'animate', target: 'hero-cta' }),
