@@ -1,6 +1,9 @@
 <!-- Updated: 2026-06-02 — pass a `name` to the bits-ui switch so it renders a
      hidden form input; a static <form action> POST then submits the toggled
-     state with JS off (ripple-iui #54). -->
+     state with JS off (ripple-iui #54).
+     Updated: 2026-06-09 — svelte-ignore state_referenced_locally on the
+     localChecked seed: it's intentionally mutated by handleChange + synced by
+     an $effect (controlled input with internal state), so it stays $state. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Switch } from '$lib/components/ui/switch/index.js';
@@ -23,6 +26,7 @@
   }: Props = $props();
 
   // Local state that syncs with prop
+  // svelte-ignore state_referenced_locally
   let localChecked = $state(checked);
 
   $effect(() => {

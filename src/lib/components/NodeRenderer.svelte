@@ -24,6 +24,15 @@
       `props.name` wins, else fall back to the resolved `bind` path — so a
       native <form action> POST carries field values with JS disabled
       (ripple-iui #54).
+    - 2026-06-09: cleared 10 state_referenced_locally warnings on the `node` prop.
+      Two distinct cases: (1) `nodeHasExpressions` is now $derived so it tracks the
+      current `node` (it feeds the shouldShow/resolvedProps deriveds, which already
+      re-run on node change) — a correctness improvement, not a behavior change for
+      keyed nodes. (2) The event-handler consts (onclick/onsubmit/onfocus/onblur/
+      oninputUser/onchangeUser) keep their deliberate "computed once" design — the
+      handler spec is seeded once at construction (fresh resolver context is fetched
+      per-invocation), so they get svelte-ignore, not derivation. No frozen-snapshot
+      bug found; all event handlers already re-read live state at call time.
     - 2026-06-07: route organism-ref nodes (`{ organism, props }`) to
       OrganismRenderer — the 3rd dispatch tier. A node is an organism-ref ONLY
       when it carries a valid `organism` type string and NO widget `type` key,
@@ -105,11 +114,17 @@
 	 * Evaluate the 'show' condition if present.
 	 * Force state tracking via JSON.stringify for reactivity.
 	 */
-	// Check once if this node uses any expressions (avoid JSON.stringify for static nodes)
-	const nodeHasExpressions = node.show ? true
+	// Whether this node uses any expressions (avoid JSON.stringify for static nodes).
+	// $derived so it tracks the `node` prop — it's consumed inside the shouldShow /
+	// resolvedProps deriveds, which already re-run when `node` changes, so deriving
+	// it keeps the expression-gate correct for the current node rather than freezing
+	// the first node's classification.
+	const nodeHasExpressions = $derived(
+		node.show ? true
 		: node.bind ? true
 		: node.props ? Object.values(node.props).some(v => typeof v === 'string' && hasExpressions(v))
-		: false;
+		: false
+	);
 
 	const shouldShow = $derived.by(() => {
 		if (!node.show) return true;
@@ -194,11 +209,20 @@
 		};
 	}
 
-	// Event handlers are computed once but context is fresh on each call
+	// Event handlers are computed once but context is fresh on each call. The
+	// handler spec is read once at construction by design (a new function identity
+	// per node change would churn the widget's event props); fresh resolver context
+	// is fetched at invocation time inside createEventHandler. Intentional one-time
+	// seed, not a stale-snapshot bug.
+	// svelte-ignore state_referenced_locally
 	const onclick = createEventHandler(node.on_click);
+	// svelte-ignore state_referenced_locally
 	const onsubmit = createEventHandler(node.on_submit);
+	// svelte-ignore state_referenced_locally
 	const onfocus = createEventHandler(node.on_focus);
+	// svelte-ignore state_referenced_locally
 	const onblur = createEventHandler(node.on_blur);
+	// svelte-ignore state_referenced_locally
 	const oninputUser = createEventHandler(node.on_input);
 
 	/**
@@ -261,6 +285,7 @@
 		return resolveBoundPath() ?? undefined;
 	});
 
+	// svelte-ignore state_referenced_locally
 	const onchangeUser = createEventHandler(node.on_change);
 	const onchange = (eventValue?: unknown) => {
 		const path = resolveBoundPath();

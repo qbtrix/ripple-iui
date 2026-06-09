@@ -1,7 +1,10 @@
 <!-- Created: 2026-04-16 — Textarea widget wrapping shadcn Textarea primitive.
      Props: placeholder, rows, disabled, value (bind). Events: onchange, onfocus, onblur.
      Updated: 2026-06-02 — render a `name` on the native textarea so a static
-     <form action> POST submits the field with JS off (ripple-iui #54). -->
+     <form action> POST submits the field with JS off (ripple-iui #54).
+     Updated: 2026-06-09 — svelte-ignore state_referenced_locally on the
+     localValue seed: it's intentionally mutated by handleInput + synced by an
+     $effect (controlled input with internal state), so it stays $state. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
@@ -29,6 +32,7 @@
   }: Props = $props();
 
   // Local state that syncs with incoming prop (matches Switch pattern)
+  // svelte-ignore state_referenced_locally
   let localValue = $state(value);
 
   $effect(() => {

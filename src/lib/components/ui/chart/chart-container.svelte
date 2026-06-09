@@ -1,3 +1,6 @@
+<!-- chart-container.svelte — shadcn chart wrapper.
+     Modified: 2026-06-09 — chartId now $derived(...) so it tracks the reactive `id`
+     prop (fixes state_referenced_locally). -->
 <script lang="ts">
 	import { cn, type WithElementRef } from "$lib/utils.js";
 	import type { HTMLAttributes } from "svelte/elements";
@@ -17,7 +20,7 @@
 		config: ChartConfig;
 	} = $props();
 
-	const chartId = `chart-${id || uid.replace(/:/g, "")}`;
+	const chartId = $derived(`chart-${id || uid.replace(/:/g, "")}`);
 
 	setChartContext({
 		get config() {

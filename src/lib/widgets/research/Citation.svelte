@@ -1,3 +1,9 @@
+<!--
+  Citation.svelte — inline source citation chip.
+  Modified: 2026-06-09 — a11y fix: bundle role/tabindex/onkeydown into a derived
+  `interactive` spread so the element is a coherent keyboard-accessible button only
+  when clickable (fixes a11y_no_noninteractive_tabindex). Recipe 2.
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { faviconUrl } from './favicon.js';
@@ -24,15 +30,20 @@
 
   const iconSrc = $derived(favicon ?? faviconUrl(source));
   let iconError = $state(false);
+
+  const handler = $derived(onclick ?? (url ? () => window.open(url, '_blank') : undefined));
+  function handleKey(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handler?.(e);
+    }
+  }
+  const interactive = $derived(
+    handler ? { role: 'button', tabindex: 0, onclick: handler, onkeydown: handleKey } : {}
+  );
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<span
-  class={cn('rcite', className)}
-  onclick={onclick ?? (url ? () => window.open(url, '_blank') : undefined)}
-  role={onclick || url ? 'button' : undefined}
-  tabindex={onclick || url ? 0 : undefined}
->
+<span class={cn('rcite', className)} {...interactive}>
   {#if !iconError}
     <img src={iconSrc} alt="" class="rcite-favicon" onerror={() => iconError = true} />
   {:else}

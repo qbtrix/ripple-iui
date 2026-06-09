@@ -1,4 +1,12 @@
-<!-- src/lib/widgets/layout/Split.svelte -->
+<!-- src/lib/widgets/layout/Split.svelte
+     Updated 2026-06-09 (a11y + reactivity): the resize gutter is a focusable,
+     draggable handle, so it now uses role="slider" (an interactive role) with
+     aria-label, aria-orientation and aria-valuenow/min/max, plus full keyboard
+     (arrow) + pointer drag handling. This structurally clears both L136 a11y
+     warnings (noninteractive tabindex / noninteractive element interactions) —
+     svelte-ignore does not suppress a11y_* under $props(). The defaultSize -> size
+     seed is a one-time initial value, so its state_referenced_locally warning is
+     suppressed with a directive directly above the $state line. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -47,6 +55,7 @@
   );
 
   let containerEl = $state<HTMLDivElement | null>(null);
+  // svelte-ignore state_referenced_locally
   let size = $state(clamp(defaultSize));
   let dragging = $state(false);
 
@@ -134,7 +143,8 @@
   </div>
 
   <div
-    role="separator"
+    role="slider"
+    aria-label="Resize panes"
     aria-orientation={direction === 'horizontal' ? 'vertical' : 'horizontal'}
     aria-valuenow={Math.round(size)}
     aria-valuemin={minSize}

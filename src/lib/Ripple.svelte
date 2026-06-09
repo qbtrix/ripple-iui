@@ -1,5 +1,11 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
+  Updated: 2026-06-09 — silenced two state_referenced_locally compiler warnings.
+  Both are intentional one-time init reads, NOT reactivity bugs: `mergedInitialState`
+  seeds the StateManager once (a separate $effect at the spec-state sync block keeps
+  later spec.state changes in sync), and `onEvent` is read once when passed to
+  setContext (which itself captures once at init). svelte-ignore on the line directly
+  above each statement, per the verified recipe.
   Updated: 2026-06-07 — intent→layout slice: the non-flow render path now routes
   through IntentRenderer, which dispatches on `spec.intent` to a DESIGNED layout
   (form→FormLayout, confirm→SummaryLayout, dashboard→DashboardRenderer) and falls
@@ -140,6 +146,7 @@
     ...(initialStateOverride ?? {})
   });
 
+  // svelte-ignore state_referenced_locally
   const stateManager = createStateManager(mergedInitialState);
   const widgetRegistry = createWidgetRegistry();
   const toastBus = createToastBus();
@@ -242,6 +249,7 @@
   setContext('ui-widget-registry', widgetRegistry);
   // Expose the host onEvent so nested ripple-frame instances can forward
   // their inner events back up to the outermost host.
+  // svelte-ignore state_referenced_locally
   setContext('ui-host-event', onEvent);
   setContext('ui-toasts', toastBus);
 

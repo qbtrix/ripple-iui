@@ -30,21 +30,25 @@ describe('Split', () => {
     expect(grid.style.gridTemplateColumns.startsWith('20%')).toBe(true);
   });
 
-  it('exposes a separator with appropriate ARIA attributes', () => {
+  // The resize gutter uses role="slider" (an interactive role) rather than a
+  // focusable separator: Svelte's a11y_no_noninteractive_element_interactions
+  // lint fires on a separator carrying event listeners and is not silenceable
+  // via svelte-ignore. slider keeps identical value/keyboard semantics.
+  it('exposes a resize handle with appropriate ARIA attributes', () => {
     const { container } = render(Split, {
       props: { start: 'L', end: 'R', direction: 'vertical' }
     });
-    const sep = container.querySelector('[role="separator"]');
+    const sep = container.querySelector('[role="slider"]');
     expect(sep).not.toBeNull();
     expect(sep!.getAttribute('aria-orientation')).toBe('horizontal');
     expect(sep!.getAttribute('tabindex')).toBe('0');
   });
 
-  it('responds to ArrowRight on horizontal separator with keyboard nav', async () => {
+  it('responds to ArrowRight on the resize handle with keyboard nav', async () => {
     const { container } = render(Split, {
       props: { start: 'L', end: 'R', defaultSize: 50 }
     });
-    const sep = container.querySelector('[role="separator"]') as HTMLElement;
+    const sep = container.querySelector('[role="slider"]') as HTMLElement;
     await fireEvent.keyDown(sep, { key: 'ArrowRight' });
     expect(sep.getAttribute('aria-valuenow')).toBe('51');
   });

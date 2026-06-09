@@ -1,6 +1,8 @@
 <!--
   SearchLayout.svelte — designed search layout for intent='search' (Wave 3: layouts).
   Created 2026-06-07.
+  Updated 2026-06-09 — removed redundant role="searchbox" from <input type="search">
+  (<input type="search"> already carries the searchbox role implicitly; recipe 4).
   Adapted from ocean-flow's SearchLayout. A search field above a results region that
   COMPOSES CardGridLayout (or, dense, ListLayout) for the matches — so search reuses
   the same ItemCard rendering path as browse/select. The input is presentational:
@@ -48,7 +50,6 @@
     </svg>
     <input
       type="search"
-      role="searchbox"
       class="flex-1 bg-transparent text-sm text-ripple-input-foreground outline-none placeholder:text-muted-foreground"
       {placeholder}
       value={query}

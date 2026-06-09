@@ -1,5 +1,9 @@
 <!--
   Container.svelte — Ripple generic vertical/stack container widget.
+  Updated 2026-06-09 (a11y): the optional onclick now uses a conditional-spread
+  so the div is a plain element when no handler is passed and a keyboard-operable
+  role="button" (Enter/Space) when one is. Replaces the dead svelte-ignore that
+  did not suppress the a11y warning under $props().
   Updated 2026-06-08 (design polish): emits a `data-ripple-container` marker so
   surfaces that want to impose a baseline rhythm on a bare container's stacked
   children (e.g. the flow card — see FlowRunner) can target it without guessing
@@ -26,9 +30,15 @@
 		if (!style) return undefined;
 		return Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';');
 	});
+
+	function handleKey(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick?.(e); }
+	}
+	const interactive = $derived(
+		onclick ? { role: 'button', tabindex: 0, onclick, onkeydown: handleKey } : {}
+	);
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div {id} class={className} style={styleString} onclick={onclick} data-ripple-container>
+<div {id} class={className} style={styleString} data-ripple-container {...interactive}>
 	{@render children?.()}
 </div>

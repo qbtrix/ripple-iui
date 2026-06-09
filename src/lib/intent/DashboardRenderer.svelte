@@ -302,6 +302,15 @@
     }
   }
 
+  // Keyboard dismiss for the open widget menu (a11y: the outside-click handler
+  // lives on svelte:window, so the keyboard equivalent does too — Escape closes
+  // the popup without trapping focus on a non-interactive backdrop).
+  function closeMenuOnEscape(e: KeyboardEvent) {
+    if (openMenuId && e.key === 'Escape') {
+      openMenuId = null;
+    }
+  }
+
   // --- Muuri ---
   let gridEl: HTMLDivElement;
   let muuriGrid: any = null;
@@ -414,8 +423,10 @@
   });
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div class="ripple-dashboard" class:ripple-dashboard--mounted={mounted} onclick={closeMenu}>
+<!-- Outside-click / Escape dismiss for the widget menu lives on the window so the
+     dashboard container stays a non-interactive layout box (no fake button role). -->
+<svelte:window onclick={closeMenu} onkeydown={closeMenuOnEscape} />
+<div class="ripple-dashboard" class:ripple-dashboard--mounted={mounted}>
   <div bind:this={gridEl} class="muuri-grid">
     {#each manager.spec.widgets as widget (widget.id)}
       {@const node = widgetToNode(widget)}

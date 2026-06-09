@@ -1,4 +1,7 @@
-<!-- src/lib/widgets/data/Calendar.svelte -->
+<!-- src/lib/widgets/data/Calendar.svelte
+     Modified: 2026-06-09 — a11y/reactivity fixes: svelte-ignore state_referenced_locally
+     on viewDate (one-time seed from `value` prop, reassigned in shift()); event-chip <span>
+     given role="button" + tabindex + onkeydown so click-to-select is keyboard accessible. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -67,6 +70,7 @@
     return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   }
 
+  // svelte-ignore state_referenced_locally
   let viewDate = $state<Date>(parseISO(value) ?? new Date());
 
   function shift(days: number) {
@@ -152,6 +156,10 @@
   function pickDay(d: Date) {
     onchange?.(toISO(d));
   }
+
+  function selectEvent(ev: Event) {
+    onselect?.(ev);
+  }
 </script>
 
 <div
@@ -209,9 +217,18 @@
         <div class="flex-1 mt-1 flex flex-col gap-0.5 overflow-hidden">
           {#each cell.events.slice(0, 3) as ev (ev.id)}
             <span
+              role="button"
+              tabindex="0"
               class="truncate text-[10px] rounded px-1 py-0.5 cursor-pointer"
               style={`background:${ev.color ?? '#3b82f6'}20; color:${ev.color ?? '#3b82f6'};`}
-              onclick={(e) => { e.stopPropagation(); onselect?.(ev); }}
+              onclick={(e) => { e.stopPropagation(); selectEvent(ev); }}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  selectEvent(ev);
+                }
+              }}
             >
               {ev.title}
             </span>

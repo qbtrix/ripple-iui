@@ -1,3 +1,10 @@
+<!--
+  Tabs.svelte — Ripple tabbed layout widget.
+  Updated 2026-06-09 (reactivity): activeTab seeds once from externalValue/defaultValue
+  and is then mutated locally (handleValueChange) and synced by two $effects, so it
+  must stay $state. The state_referenced_locally warnings on the seed are intentional
+  one-time reads, suppressed with a directive directly above the $state line.
+-->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -38,6 +45,7 @@
     )
   );
 
+  // svelte-ignore state_referenced_locally
   let activeTab = $state(externalValue ?? defaultValue ?? '');
 
   $effect(() => {

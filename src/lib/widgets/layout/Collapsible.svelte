@@ -1,4 +1,8 @@
-<!-- src/lib/widgets/layout/Collapsible.svelte -->
+<!-- src/lib/widgets/layout/Collapsible.svelte
+     Updated 2026-06-09 (reactivity): internalOpen seeds once from defaultOpen and is
+     then mutated by toggle(), so it must stay $state. The state_referenced_locally
+     warning on the seed is an intentional one-time read, suppressed with a directive
+     directly above the $state line. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -35,6 +39,7 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  // svelte-ignore state_referenced_locally
   let internalOpen = $state(defaultOpen);
   const open = $derived(value !== undefined ? !!value : internalOpen);
 

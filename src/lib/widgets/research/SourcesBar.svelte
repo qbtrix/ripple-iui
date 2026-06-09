@@ -1,3 +1,9 @@
+<!--
+  SourcesBar.svelte — compact bar of source favicons with share/copy actions.
+  Modified: 2026-06-09 — a11y fix: make the optional-onclick container a coherent
+  keyboard-accessible button via a derived `interactive` spread (role/tabindex/
+  onkeydown), plain div otherwise (fixes a11y_no_static_element_interactions). Recipe 1.
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -52,6 +58,16 @@
     );
   }
 
+  function handleKey(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onclick?.(e);
+    }
+  }
+  const interactive = $derived(
+    onclick ? { role: 'button', tabindex: 0, onclick, onkeydown: handleKey } : {}
+  );
+
   function handleShare() {
     const text = sources.map(s => s.name + (s.url ? ` — ${s.url}` : '')).join('\n');
     if (navigator.share) {
@@ -66,8 +82,7 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div class={cn('rsbar', className)} onclick={onclick}>
+<div class={cn('rsbar', className)} {...interactive}>
   <div class="rsbar-left">
     <div class="rsbar-dots">
       {#each validSources.slice(0, 4) as src, i}

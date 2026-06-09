@@ -1,4 +1,10 @@
-<!-- src/lib/widgets/vertical/AuditLog.svelte -->
+<!--
+  src/lib/widgets/vertical/AuditLog.svelte
+  Modified: 2026-06-09 — a11y fix: moved onclick/onkeydown off <li> and onto the
+  inner content <div> via a `rowInteractive` derived spread (role="button"/tabindex/
+  aria-label only when onSelectId is provided), fixing
+  a11y_no_noninteractive_element_interactions. Recipe 3.
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import type { Component } from 'svelte';
@@ -190,6 +196,23 @@
   function handleRowClick(eid: string | number) {
     onSelectId?.(eid);
   }
+  function handleRowKey(eid: string | number, e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleRowClick(eid);
+    }
+  }
+  // Row is only interactive when onSelectId is provided. Build the interactive
+  // attrs as a derived so the spread pattern suppresses the static a11y check.
+  const rowInteractive = $derived(
+    onSelectId
+      ? {
+          role: 'button' as const,
+          tabindex: 0,
+          'aria-label': 'Select entry',
+        }
+      : {}
+  );
 </script>
 
 <div {id} class={cn('flex flex-col gap-3', className)} style={styleString}>
@@ -279,20 +302,22 @@
             {@const isOpen = expanded.has(entry.id)}
             {@const isLast = i === g.entries.length - 1}
             {@const isSelected = selectedId !== undefined && selectedId === entry.id}
-            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions a11y_no_static_element_interactions -->
             <li
               class={cn(
                 'relative pl-6 py-2.5 -mx-2 px-2 rounded-md transition-colors',
-                onSelectId && 'cursor-pointer hover:bg-muted/40',
                 isSelected && 'bg-primary/5 ring-1 ring-primary/30'
               )}
-              onclick={() => onSelectId && handleRowClick(entry.id)}
             >
               <span class={cn('absolute left-3.5 top-3.5 h-2 w-2 rounded-full', severityClasses(entry.severity))}></span>
               {#if !isLast}
                 <span class="absolute left-[18px] top-5 bottom-0 w-px bg-border" aria-hidden="true"></span>
               {/if}
-              <div class="flex items-center justify-between gap-3">
+              <div
+                class={cn('flex items-center justify-between gap-3', onSelectId && 'cursor-pointer hover:bg-muted/40 rounded-sm')}
+                {...rowInteractive}
+                onclick={onSelectId ? () => handleRowClick(entry.id) : undefined}
+                onkeydown={onSelectId ? (e) => handleRowKey(entry.id, e) : undefined}
+              >
                 <div class="flex-1 min-w-0">
                   <div class="text-sm">
                     {#if ActorIcon}<ActorIcon size={12} class="inline opacity-60 mr-1 align-[-2px]" />{/if}

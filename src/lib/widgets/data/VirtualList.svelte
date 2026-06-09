@@ -1,4 +1,6 @@
-<!-- src/lib/widgets/data/VirtualList.svelte -->
+<!-- src/lib/widgets/data/VirtualList.svelte
+     Modified: 2026-06-09 — a11y: added aria-selected="false" to the role="option"
+     row so it has the required ARIA prop (a11y_role_has_required_aria_props). -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -96,7 +98,7 @@
     <div style="height: {totalHeight}px; position: relative;">
       <div style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({offsetY}px);">
         {#each visible as v (v.index)}
-          <div style="height: {itemHeight}px;" role="option" aria-posinset={v.index + 1} aria-setsize={total}>
+          <div style="height: {itemHeight}px;" role="option" aria-selected="false" aria-posinset={v.index + 1} aria-setsize={total}>
             {#if isSpec(item)}
               <NodeRenderer node={item} loopContext={{ item: v.item, index: v.index }} />
             {:else if children}
