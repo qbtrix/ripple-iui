@@ -1,10 +1,13 @@
 // @file manifest/entries/navbar.ts — manifest entry for the `navbar` widget.
 // @created 2026-05-30 — RFC 12 marketing widget pack.
+// @change 2026-06-09 — moved to category 'marketing'; flagged staticSafe (links
+//   + CSS only, no client JS).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const navbarEntry: WidgetManifestEntry = {
   type: 'navbar',
-  category: 'layout',
+  category: 'marketing',
+  staticSafe: true,
   description: 'Marketing top navigation: brand, links, and an optional CTA button. Sticky-capable. Use at the top of a landing page.',
   props: {
     brand: { type: 'string', required: false, description: 'Brand / site name.' },

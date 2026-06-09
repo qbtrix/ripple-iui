@@ -1,10 +1,13 @@
 // @file manifest/entries/logo-cloud.ts — manifest entry for the `logo-cloud` widget.
 // @created 2026-05-30 — RFC 12 marketing widget pack.
+// @change 2026-06-09 — moved to category 'marketing'; flagged staticSafe (logo
+//   images + CSS hover, no client JS).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const logoCloudEntry: WidgetManifestEntry = {
   type: 'logo-cloud',
-  category: 'display',
+  category: 'marketing',
+  staticSafe: true,
   description: 'Row of client / partner logos with an optional heading. Grayscale by default, color on hover. Aliased as logos. Use for social proof.',
   props: {
     heading: { type: 'string', required: false, description: 'Optional eyebrow heading, e.g. "Trusted by".' },

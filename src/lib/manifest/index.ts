@@ -9,6 +9,10 @@
 // built manifest so the node-level `motion` field is documented for the LLM.
 // Updated 2026-05-30 (RFC 12 Phase 4): registered the premium pack entries
 // (marquee + the 6 remaining ports) for the MIT-ported animation widgets.
+// Updated 2026-06-09 (marketing-pack enrich): added a `marketing` category and
+// a `staticSafe` (Tier-0) flag to WidgetManifestEntry; moved the marketing pack
+// (navbar/footer/cta/testimonial/feature-grid/logo-cloud/newsletter) under it;
+// registered the new faq + marketing-hero entries.
 
 import pkg from '../../../package.json' with { type: 'json' };
 
@@ -75,6 +79,7 @@ import { emptyStateEntry } from './entries/empty-state.js';
 import { entityDetailEntry } from './entries/entity-detail.js';
 import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
+import { faqEntry } from './entries/faq.js';
 import { featureGridEntry } from './entries/feature-grid.js';
 import { fileUploadEntry } from './entries/file-upload.js';
 import { filterBarEntry } from './entries/filter-bar.js';
@@ -109,6 +114,7 @@ import { locationPickerEntry } from './entries/location-picker.js';
 import { logoCloudEntry } from './entries/logo-cloud.js';
 import { mapEntry } from './entries/map.js';
 import { markdownEntry } from './entries/markdown.js';
+import { marketingHeroEntry } from './entries/marketing-hero.js';
 import { marqueeEntry } from './entries/marquee.js';
 import { masterDetailEntry } from './entries/master-detail.js';
 import { mentionEntry } from './entries/mention.js';
@@ -224,8 +230,19 @@ export interface NamedPocketSpec extends PocketSpec {
 export interface WidgetManifestEntry {
   /** Canonical widget type as registered in `widgets/index.ts`. */
   type: string;
-  /** Top-level grouping — display | layout | input | data | control | composite | overlay | research | vertical. */
+  /** Top-level grouping — display | layout | input | data | control | composite | overlay | research | vertical | marketing | media | interactive. */
   category: string;
+  /**
+   * Tier-0 static-safety flag. `true` means the widget renders correctly when
+   * PRERENDERED with JavaScript OFF (csr=false): its resting/final state is
+   * fully baked into markup, it does not depend on onMount or any client-only
+   * primitive, and any animation degrades to a static frame. The Paw Sites
+   * landing renderer (ripple mode) prerenders pages, so only `staticSafe`
+   * widgets are safe to place there. Widgets that need client JS to function
+   * (e.g. an email-capture form, a cursor-tracking effect) are `false`.
+   * Absent = unspecified (treat as not-yet-audited, NOT a guarantee of safety).
+   */
+  staticSafe?: boolean;
   /** One-line summary, < 200 chars. Long docs stay in the wiki. */
   description: string;
   /** Prop name → spec. Only LLM-relevant props; internal/passthrough props omitted. */
@@ -407,6 +424,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   entityDetailEntry,
   execDashboardEntry,
   errorStateEntry,
+  faqEntry,
   featureGridEntry,
   fileUploadEntry,
   filterBarEntry,
@@ -440,6 +458,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   logoCloudEntry,
   mapEntry,
   markdownEntry,
+  marketingHeroEntry,
   marqueeEntry,
   masterDetailEntry,
   mentionEntry,

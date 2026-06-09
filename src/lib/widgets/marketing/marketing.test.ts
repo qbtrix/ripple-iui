@@ -5,6 +5,10 @@
 //   its core content, and (where checked) to gain a [data-ripple-motion] wrapper
 //   when a node-level motion field is present.
 // @created 2026-05-30 — RFC 12 marketing widget pack (Phase 3).
+// @change 2026-06-09 — marketing-pack enrich: FeatureGrid now renders the
+//   per-feature lucide icon (ITEM 2); added Faq (native <details>, ITEM 3) and
+//   MarketingHero (bespoke hero, ITEM 4) render + registration tests; extended
+//   the catalog-coverage list to include faq + marketing-hero.
 import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
@@ -71,6 +75,71 @@ describe('FeatureGrid', () => {
     expect(getByText('Edge-served.')).toBeInTheDocument();
     expect(getByText('Owned')).toBeInTheDocument();
   });
+  it('renders the per-feature lucide icon as an inline SVG (ITEM 2)', () => {
+    const { container } = r({ type: 'feature-grid', props: { columns: 2, features: [
+      { icon: 'zap', title: 'Fast', description: 'Edge-served.' },
+      { icon: 'shield-check', title: 'Owned', description: 'Your domain.' },
+    ] } });
+    // Two feature cards each resolve a lucide slug to an inline <svg>.
+    expect(container.querySelectorAll('svg').length).toBeGreaterThanOrEqual(2);
+  });
+  it('renders no icon chip when the slug is missing or unknown (graceful, static-safe)', () => {
+    const { container } = r({ type: 'feature-grid', props: { columns: 2, features: [
+      { title: 'No icon here' },
+      { icon: 'definitely-not-a-real-lucide-icon', title: 'Bad slug' },
+    ] } });
+    // Neither feature yields an SVG glyph; the cards still render their titles.
+    expect(container.querySelector('svg')).toBeNull();
+    expect(container.textContent).toContain('No icon here');
+    expect(container.textContent).toContain('Bad slug');
+  });
+});
+
+describe('Faq', () => {
+  it('is registered (faq + faqs alias)', () => {
+    const t = getWidgetTypes();
+    expect(t).toContain('faq');
+    expect(t).toContain('faqs');
+  });
+  it('renders each question/answer pair inside a native <details>/<summary> (no JS needed)', () => {
+    const { getByText, container } = r({ type: 'faq', props: { title: 'Common questions', items: [
+      { question: 'How long does it take?', answer: 'About 45 minutes.' },
+      { question: 'Do you bill insurance?', answer: 'Yes, all major plans.' },
+    ] } });
+    expect(getByText('Common questions')).toBeInTheDocument();
+    expect(getByText('How long does it take?')).toBeInTheDocument();
+    expect(getByText('About 45 minutes.')).toBeInTheDocument();
+    expect(getByText('Do you bill insurance?')).toBeInTheDocument();
+    // Static-safety contract: native disclosure elements, one per item.
+    expect(container.querySelectorAll('details').length).toBe(2);
+    expect(container.querySelectorAll('summary').length).toBe(2);
+  });
+});
+
+describe('MarketingHero', () => {
+  it('is registered', () => { expect(getWidgetTypes()).toContain('marketing-hero'); });
+  it('renders eyebrow, title, subtitle, and both CTAs as links', () => {
+    const { getByText, container } = r({ type: 'marketing-hero', props: {
+      eyebrow: 'Bright Smile',
+      title: 'A dentist you look forward to',
+      subtitle: 'Gentle care, same-week visits.',
+      cta: 'Book now', ctaHref: '#book',
+      secondaryCta: 'See services', secondaryCtaHref: '#services',
+    } });
+    expect(getByText('Bright Smile')).toBeInTheDocument();
+    expect(getByText('A dentist you look forward to')).toBeInTheDocument();
+    expect(getByText('Gentle care, same-week visits.')).toBeInTheDocument();
+    expect(container.querySelector('a[href="#book"]')).not.toBeNull();
+    expect(container.querySelector('a[href="#services"]')).not.toBeNull();
+  });
+  it("omits the visual panel when visual='plain'", () => {
+    const { container } = r({ type: 'marketing-hero', props: { title: 'Plain hero', visual: 'plain' } });
+    expect(container.querySelector('.ripple-mhero-panel')).toBeNull();
+  });
+  it("renders the bespoke visual panel by default (visual='grid')", () => {
+    const { container } = r({ type: 'marketing-hero', props: { title: 'Default hero' } });
+    expect(container.querySelector('.ripple-mhero-panel')).not.toBeNull();
+  });
 });
 
 describe('Newsletter', () => {
@@ -102,7 +171,7 @@ describe('LogoCloud', () => {
 
 describe('marketing catalog coverage', () => {
   it('every marketing type is known to validateCatalog (no unknown-widget errors)', () => {
-    for (const type of ['navbar', 'footer', 'cta', 'testimonial', 'feature-grid', 'newsletter', 'logo-cloud']) {
+    for (const type of ['navbar', 'footer', 'cta', 'testimonial', 'feature-grid', 'newsletter', 'logo-cloud', 'faq', 'marketing-hero']) {
       expect(validateCatalog({ type, props: {} } as UINode)).toEqual([]);
     }
   });

@@ -1,10 +1,13 @@
 // @file manifest/entries/cta.ts — manifest entry for the `cta` widget.
 // @created 2026-05-30 — RFC 12 marketing widget pack.
+// @change 2026-06-09 — moved to category 'marketing'; flagged staticSafe (a
+//   headline + a link, no client JS).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const ctaEntry: WidgetManifestEntry = {
   type: 'cta',
-  category: 'layout',
+  category: 'marketing',
+  staticSafe: true,
   description: 'Call-to-action band: a headline, optional subtext, and one button. Aliased as call-to-action. Use to drive the page conversion.',
   props: {
     headline: { type: 'string', required: true, description: 'The primary line.' },
