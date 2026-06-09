@@ -1,10 +1,13 @@
 // @file manifest/entries/testimonial.ts — manifest entry for the `testimonial` widget.
 // @created 2026-05-30 — RFC 12 marketing widget pack.
+// @change 2026-06-09 — moved to category 'marketing'; flagged staticSafe (quote
+//   + optional avatar image, no client JS).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const testimonialEntry: WidgetManifestEntry = {
   type: 'testimonial',
-  category: 'display',
+  category: 'marketing',
+  staticSafe: true,
   description: 'A single customer testimonial card: quote, author, role, optional avatar. Use for social proof on a landing page.',
   props: {
     quote: { type: 'string', required: true, description: 'The testimonial text.' },

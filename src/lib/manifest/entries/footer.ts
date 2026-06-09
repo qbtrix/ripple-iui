@@ -1,10 +1,13 @@
 // @file manifest/entries/footer.ts — manifest entry for the `footer` widget.
 // @created 2026-05-30 — RFC 12 marketing widget pack.
+// @change 2026-06-09 — moved to category 'marketing'; flagged staticSafe (links
+//   + text only, no client JS).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const footerEntry: WidgetManifestEntry = {
   type: 'footer',
-  category: 'layout',
+  category: 'marketing',
+  staticSafe: true,
   description: 'Marketing footer: columns of links plus a copyright line. Use at the bottom of a landing page.',
   props: {
     columns: { type: 'Array<{ title: string; links: Array<{ label: string; href: string }> }>', required: false, description: 'Footer link columns.' },

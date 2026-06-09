@@ -1,10 +1,14 @@
 // @file manifest/entries/newsletter.ts — manifest entry for the `newsletter` widget.
 // @created 2026-05-30 — RFC 12 marketing widget pack.
+// @change 2026-06-09 — moved to category 'marketing'; flagged staticSafe:false.
+//   The email-capture form needs client JS (preventDefault + on_submit handler)
+//   to function, so it is NOT safe on a prerendered JS-off landing page.
 import type { WidgetManifestEntry } from '../index.js';
 
 export const newsletterEntry: WidgetManifestEntry = {
   type: 'newsletter',
-  category: 'input',
+  category: 'marketing',
+  staticSafe: false,
   description: 'Email-capture band: heading, subtext, email field, submit button. Aliased as email-capture. Emits the entered email via on_submit.',
   props: {
     heading: { type: 'string', required: false, description: 'Headline above the field.' },

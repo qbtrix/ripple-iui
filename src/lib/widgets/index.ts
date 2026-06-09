@@ -4,6 +4,7 @@
 // Updated 2026-05-30: registered the `marketing/` widget pack — Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud (+ aliases) for the RFC 12 landing-page pack (Phase 3).
 // Updated 2026-05-30: registered the full `premium/` MIT-ported pack (Phase 4) — Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora (+ aurora-background), Spotlight, BentoGrid (+ bento), TextEffect (+ animated-text).
 // Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`/`pomodoro`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
+// Updated 2026-06-09: marketing-pack enrich — registered Faq (native <details>, type `faq`/`faqs`) and MarketingHero (bespoke static-safe hero, type `marketing-hero`).
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
@@ -31,7 +32,7 @@ import {
 } from './vertical/index.js';
 import { ModelViewer, Embed, AudioPlayer, VideoPlayer } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
-import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud } from './marketing/index.js';
+import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero } from './marketing/index.js';
 import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect } from './premium/index.js';
 import { TodoList, DrawingCanvas, Timer, Flashcard } from './interactive/index.js';
 
@@ -324,6 +325,9 @@ const defaultRegistry: WidgetMap = {
   'email-capture': Newsletter,
   'logo-cloud': LogoCloud,
   logos: LogoCloud,
+  faq: Faq,
+  faqs: Faq,
+  'marketing-hero': MarketingHero,
   // Premium — MIT-ported animation pack (RFC 12)
   marquee: Marquee,
   'border-beam': BorderBeam,
@@ -407,7 +411,7 @@ export {
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed, AudioPlayer, VideoPlayer,
   Reveal, Parallax,
-  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud,
+  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
   AskUserQuestions
