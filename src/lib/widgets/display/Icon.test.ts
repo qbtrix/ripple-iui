@@ -4,8 +4,11 @@ import { render } from '@testing-library/svelte';
 import Icon from './Icon.svelte';
 
 describe('Icon', () => {
-  it('renders a placeholder span before the icon resolves', () => {
-    const { container } = render(Icon, { props: { name: 'check', size: 24 } });
+  it('renders a sized placeholder span for an unresolved icon', () => {
+    // Known icons now resolve synchronously (static @lucide/svelte import), so
+    // the placeholder only appears for an unresolved name. Its box is sized to
+    // the requested dimensions to reserve layout space.
+    const { container } = render(Icon, { props: { name: '__unresolved__', size: 24 } });
     const span = container.querySelector('span');
     expect(span).not.toBeNull();
     expect(span!.style.width).toBe('24px');

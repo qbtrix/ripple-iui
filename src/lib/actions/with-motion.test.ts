@@ -206,19 +206,39 @@ describe('withMotion action', () => {
   });
 
   // ── playMotion: the one-shot imperative player (the `animate` runtime) ─────
+  /** The peak (offset 0.5) keyframe playMotion hands to WAAPI. */
+  function peakTransform(spy: ReturnType<typeof vi.spyOn>): string {
+    const frames = spy.mock.calls[0][0] as Keyframe[];
+    return String(frames.find((f) => f.offset === 0.5)?.transform ?? '');
+  }
+
   it('playMotion pulses the node toward the first present interaction frame', () => {
     const el = makeEl();
-    // No WAAPI in jsdom → fallback toggles the peak frame onto the inline style.
+    // jsdom now ships Element.animate, so the WAAPI path runs (it does not write
+    // inline style). Spy on it and assert the peak keyframe carries the gesture.
+    const spy = vi.spyOn(el, 'animate').mockReturnValue({} as Animation);
     const played = playMotion(el, { enter: { scale: 1.35, y: -14 }, transition: { preset: 'bouncy' } } as Motion);
     expect(played).toBe(true);
-    expect(el.style.transform).toMatch(/scale\(1\.35\)/);
-    expect(el.style.transform).toMatch(/translateY\(-14px\)/);
+    expect(spy).toHaveBeenCalledOnce();
+    expect(peakTransform(spy)).toMatch(/scale\(1\.35\)/);
+    expect(peakTransform(spy)).toMatch(/translateY\(-14px\)/);
   });
 
   it('playMotion picks hover when there is no enter frame', () => {
     const el = makeEl();
+    const spy = vi.spyOn(el, 'animate').mockReturnValue({} as Animation);
     playMotion(el, { hover: { scale: 1.1 } } as Motion);
-    expect(el.style.transform).toMatch(/scale\(1\.1\)/);
+    expect(peakTransform(spy)).toMatch(/scale\(1\.1\)/);
+  });
+
+  it('playMotion falls back to an inline-style pulse where WAAPI is absent', () => {
+    const el = makeEl();
+    // Force the no-WAAPI branch (older engines / non-browser unit envs).
+    Object.defineProperty(el, 'animate', { value: undefined, configurable: true });
+    const played = playMotion(el, { enter: { scale: 1.35, y: -14 } } as Motion);
+    expect(played).toBe(true);
+    expect(el.style.transform).toMatch(/scale\(1\.35\)/);
+    expect(el.style.transform).toMatch(/translateY\(-14px\)/);
   });
 
   it('playMotion returns false when the motion carries no animatable frame', () => {
