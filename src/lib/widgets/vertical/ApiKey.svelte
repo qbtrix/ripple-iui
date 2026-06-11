@@ -1,6 +1,7 @@
 <!-- src/lib/widgets/vertical/ApiKey.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import EyeIcon from '@lucide/svelte/icons/eye';
   import EyeOffIcon from '@lucide/svelte/icons/eye-off';
   import CopyIcon from '@lucide/svelte/icons/copy';
@@ -47,17 +48,21 @@
   let visible = $state(false);
   let copied = $state(false);
 
+  // `value` is string-typed but a binding can deliver a number — coerce once so
+  // .length/.slice (string-only) never crash the canvas.
+  const secret = $derived(asText(value));
+
   const masked = $derived.by(() => {
-    if (!value) return '';
-    if (visible) return value;
-    if (value.length <= revealLast) return '•'.repeat(value.length);
-    return '•'.repeat(Math.min(value.length - revealLast, 24)) + value.slice(-revealLast);
+    if (!secret) return '';
+    if (visible) return secret;
+    if (secret.length <= revealLast) return '•'.repeat(secret.length);
+    return '•'.repeat(Math.min(secret.length - revealLast, 24)) + secret.slice(-revealLast);
   });
 
   async function copy() {
-    if (!value) return;
+    if (!secret) return;
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(secret);
     } catch {
       // ignore — environment may not allow clipboard
     }

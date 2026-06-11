@@ -1,6 +1,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
     label: string;
@@ -17,9 +18,12 @@
     variant = 'default', class: className
   }: Props = $props();
 
+  // `trend` is null-guarded with `?.`, but a numeric binding has no .startsWith
+  // either — coerce so the sign check never crashes the canvas.
+  const trendText = $derived(asText(trend));
   const trendVariant = $derived(
-    trend?.startsWith('+') ? 'default' as const
-    : trend?.startsWith('-') ? 'destructive' as const
+    trendText.startsWith('+') ? 'default' as const
+    : trendText.startsWith('-') ? 'destructive' as const
     : 'secondary' as const
   );
 </script>

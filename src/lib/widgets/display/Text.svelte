@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import { linkifySegments } from './linkify.js';
   import type { EventDispatcher } from '../../core/event-dispatcher.js';
   import type { StateManager } from '../../core/state-manager.svelte.js';
@@ -60,13 +61,13 @@
 
   const styleString = $derived.by(() => {
     const styles: string[] = [];
-    // Use optional chaining per clause (not `color && (a || b)`): the Svelte
-    // compiler can drop the grouping parens around the `||`, leaving
-    // `color && a || b` which calls .startsWith on an undefined `color` and
-    // crashes SSR/prerender. `color?.startsWith(...)` short-circuits safely
-    // regardless of how the expression is flattened — matches Metric/Highlight.
-    if (color?.startsWith('#') || color?.startsWith('rgb')) {
-      styles.push(`color:${color}`);
+    // `color` is string-typed, but a binding can deliver a number — coerce
+    // before .startsWith (which exists only on strings) so a non-string color
+    // never crashes SSR/prerender. asText('') for null/undefined short-circuits
+    // both checks to false, matching the prior optional-chaining behavior.
+    const colorText = asText(color);
+    if (colorText.startsWith('#') || colorText.startsWith('rgb')) {
+      styles.push(`color:${colorText}`);
     }
     if (style) {
       styles.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));

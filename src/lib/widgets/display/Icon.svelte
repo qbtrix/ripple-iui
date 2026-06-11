@@ -3,6 +3,7 @@
   import type { Component } from 'svelte';
   import * as iconMap from '@lucide/svelte';
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
     id?: string;
@@ -21,8 +22,10 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  function pascalCase(slug: string): string {
-    return slug
+  // `name` is string-typed but a binding can deliver a non-string — coerce
+  // before .split so the icon lookup never crashes the canvas.
+  function pascalCase(slug: unknown): string {
+    return asText(slug)
       .split(/[-_]/g)
       .filter(Boolean)
       .map((p) => p[0]?.toUpperCase() + p.slice(1).toLowerCase())

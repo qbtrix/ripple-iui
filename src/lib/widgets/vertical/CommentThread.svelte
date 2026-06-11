@@ -14,6 +14,7 @@
 
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import Self from './CommentThread.svelte';
   import MessageSquareIcon from '@lucide/svelte/icons/message-square';
 
@@ -43,8 +44,9 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  function initials(name: string): string {
-    return name
+  // Comment authors come from data and can be non-strings — coerce before .split.
+  function initials(name: unknown): string {
+    return asText(name)
       .split(/\s+/)
       .map((w) => w[0])
       .filter(Boolean)

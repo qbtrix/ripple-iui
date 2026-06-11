@@ -2,6 +2,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
   import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
@@ -75,7 +76,9 @@
   $effect(() => {
     if (sortKey !== null) return;
     if (defaultSort) {
-      const [k, dir] = defaultSort.split(':');
+      // `defaultSort` is string-typed but a binding can deliver a number —
+      // coerce before .split so the sort init never crashes the canvas.
+      const [k, dir] = asText(defaultSort).split(':');
       sortKey = k;
       sortDir = (dir as 'asc' | 'desc') === 'desc' ? 'desc' : 'asc';
     }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import { faviconUrl } from './favicon.js';
 
   interface Props {
@@ -42,7 +43,9 @@
   );
   let logoError = $state(false);
 
-  const isPositive = $derived(change ? !change.startsWith('-') : true);
+  // `change` can arrive as a number from a binding ("+12.50" or 12.5) — coerce
+  // before .startsWith so a non-string never crashes the canvas.
+  const isPositive = $derived(change != null ? !asText(change).startsWith('-') : true);
 </script>
 
 <div class={cn('rch', className)}>
@@ -51,7 +54,7 @@
       {#if logoSrc && !logoError}
         <img src={logoSrc} alt={name} class="rch-logo" onerror={() => logoError = true} />
       {:else}
-        <div class="rch-logo-fallback">{name.charAt(0)}</div>
+        <div class="rch-logo-fallback">{asText(name).charAt(0)}</div>
       {/if}
       <div class="rch-name-block">
         <div class="rch-name-row">

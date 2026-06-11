@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import TrendingUpIcon from '@lucide/svelte/icons/trending-up';
   import TrendingDownIcon from '@lucide/svelte/icons/trending-down';
 
@@ -28,8 +29,11 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  // `delta` is a string-typed prop but a binding can deliver a number — coerce
+  // before .trim so the tone auto-derivation never crashes the canvas.
+  const deltaText = $derived(asText(delta).trim());
   const resolvedTone = $derived(
-    tone ?? (delta?.trim().startsWith('-') ? 'negative' : delta?.trim().startsWith('+') ? 'positive' : 'neutral')
+    tone ?? (deltaText.startsWith('-') ? 'negative' : deltaText.startsWith('+') ? 'positive' : 'neutral')
   );
 
   const toneClass = $derived(

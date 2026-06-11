@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   type Mode = 'lines' | 'words' | 'chars';
 
@@ -43,10 +44,14 @@
 
   async function compute() {
     const mod = await import('diff');
+    // `before`/`after` are string-typed but a binding can deliver a number —
+    // coerce before handing them to the diff lib (string-only contract).
+    const a = asText(before);
+    const b = asText(after);
     let result: Part[];
-    if (mode === 'words') result = (mod as any).diffWords(before, after);
-    else if (mode === 'chars') result = (mod as any).diffChars(before, after);
-    else result = (mod as any).diffLines(before, after);
+    if (mode === 'words') result = (mod as any).diffWords(a, b);
+    else if (mode === 'chars') result = (mod as any).diffChars(a, b);
+    else result = (mod as any).diffLines(a, b);
     parts = result;
   }
 

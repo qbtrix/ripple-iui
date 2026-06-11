@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface TickerItem {
     symbol: string;
@@ -16,8 +17,9 @@
 
   let { items = [], class: className }: Props = $props();
 
-  function isUp(change: string): boolean {
-    return !change.trim().startsWith('-');
+  // `change` comes from item data and can be a number — coerce before .trim.
+  function isUp(change: unknown): boolean {
+    return !asText(change).trim().startsWith('-');
   }
 </script>
 

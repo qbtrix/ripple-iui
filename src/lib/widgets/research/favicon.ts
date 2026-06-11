@@ -1,3 +1,5 @@
+import { asText } from '../text-coerce';
+
 /** Known source name → domain mappings */
 const DOMAIN_MAP: Record<string, string> = {
   reddit: 'reddit.com',
@@ -40,9 +42,12 @@ const DOMAIN_MAP: Record<string, string> = {
  * Derive a favicon URL from a source name.
  * Uses Google's favicon service for reliable, cached icons.
  */
-export function faviconUrl(source: string | undefined | null): string {
+export function faviconUrl(rawSource: unknown): string {
+  // A binding can hand a non-string source — coerce before any string method
+  // (.includes / .toLowerCase / .replace all exist only on strings).
+  const source = asText(rawSource);
   if (!source) return `https://www.google.com/s2/favicons?sz=32&domain=example.com`;
   const domain = DOMAIN_MAP[source]
-    ?? (source?.includes('.') ? source : `${source?.toLowerCase()?.replace(/\s+/g, '')}.com`);
+    ?? (source.includes('.') ? source : `${source.toLowerCase().replace(/\s+/g, '')}.com`);
   return `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
 }
