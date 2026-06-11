@@ -21,8 +21,15 @@ const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
  * Break `input` into ordered segments. Plain runs carry `text` only; URL runs
  * also carry `url`. A string with no URLs yields a single plain segment, so
  * callers can render the result uniformly.
+ *
+ * Bindings routinely deliver non-strings (numbers from `{state.x.score}`,
+ * booleans, null) — coerce instead of crashing: `matchAll` exists only on
+ * strings, and a Text widget must render whatever value it is handed.
  */
 export function linkifySegments(input: string): TextSegment[] {
+  if (typeof input !== 'string') {
+    return [{ text: input == null ? '' : String(input) }];
+  }
   if (!input) return [{ text: input }];
 
   const segments: TextSegment[] = [];

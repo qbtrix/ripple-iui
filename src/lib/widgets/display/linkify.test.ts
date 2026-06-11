@@ -51,3 +51,18 @@ describe('linkifySegments', () => {
     ]);
   });
 });
+
+describe('linkifySegments non-string inputs', () => {
+  it('coerces numbers instead of crashing', () => {
+    expect(linkifySegments(87 as unknown as string)).toEqual([{ text: '87' }]);
+  });
+
+  it('renders null/undefined as empty text', () => {
+    expect(linkifySegments(null as unknown as string)).toEqual([{ text: '' }]);
+    expect(linkifySegments(undefined as unknown as string)).toEqual([{ text: '' }]);
+  });
+
+  it('coerces booleans', () => {
+    expect(linkifySegments(false as unknown as string)).toEqual([{ text: 'false' }]);
+  });
+});
