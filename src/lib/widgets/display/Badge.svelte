@@ -23,12 +23,17 @@
   );
 
   const extraClass = $derived(variantMap[variant] ?? '');
+
+  // Bindings deliver numbers/booleans as readily as strings ({state.x.score}).
+  // Coerce before the emptiness check — .trim() exists only on strings, and a
+  // non-string prop must render, not crash the canvas.
+  const label = $derived(text == null ? '' : String(text));
 </script>
 
 <!-- Empty guard: an empty badge (no text) would render as a bare bordered pill —
      a stray-circle artifact in cards. Render nothing when there's no content. -->
-{#if text?.trim()}
+{#if label.trim()}
   <Badge variant={shadcnVariant} class={cn(extraClass, className)}>
-    {text}
+    {label}
   </Badge>
 {/if}
