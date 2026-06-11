@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-06-03T06:41:13.921Z",
+  "generatedAt": "2026-06-11T08:55:33.079Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -3284,7 +3284,7 @@
         "items": {
           "type": "Array<{ id: string; label: string; description?: string; state?: \"pending\" | \"in-progress\" | \"done\" | \"blocked\" | \"skipped\"; owner?: { id?: string; name: string; avatar?: string }; due?: string; overdue?: boolean; blockedBy?: string[]; attachments?: { name: string; url?: string }[]; actions?: EventAction | EventAction[]; toggleActions?: EventAction | EventAction[] }>",
           "required": true,
-          "description": "Checklist items. Click row → `actions`; click checkbox → `toggleActions`."
+          "description": "Checklist items. Click row → `actions`; click checkbox → `toggleActions`. Two-way bind the array with `bind: \"state.checklist\"` (default `value`/`onchange` surface) so toggles persist reactively through state — toggling flips the item state optimistically and `toggleActions` still fires as a side-effect hook (API / audit). Blocked items (state `blocked` or non-empty `blockedBy`) cannot be marked done."
         },
         "groupBy": {
           "type": "\"none\" | \"state\" | \"owner\"",
