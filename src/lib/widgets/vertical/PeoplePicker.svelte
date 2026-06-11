@@ -2,6 +2,7 @@
 <script lang="ts">
   import { Popover as P } from 'bits-ui';
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
   import SearchIcon from '@lucide/svelte/icons/search';
   import CheckIcon from '@lucide/svelte/icons/check';
@@ -64,11 +65,13 @@
     !query
       ? people
       : people.filter((p) => {
+          // Person fields come from data and can be non-strings — coerce before
+          // .toLowerCase so the search filter never crashes the canvas.
           const q = query.toLowerCase();
           return (
-            p.name.toLowerCase().includes(q) ||
-            (p.email?.toLowerCase().includes(q) ?? false) ||
-            (p.role?.toLowerCase().includes(q) ?? false)
+            asText(p.name).toLowerCase().includes(q) ||
+            asText(p.email).toLowerCase().includes(q) ||
+            asText(p.role).toLowerCase().includes(q)
           );
         })
   );
@@ -77,8 +80,8 @@
     return people.find((p) => p.id === idv);
   }
 
-  function initials(name: string): string {
-    return name
+  function initials(name: unknown): string {
+    return asText(name)
       .split(/\s+/)
       .map((w) => w[0])
       .filter(Boolean)

@@ -9,6 +9,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   type Size = 'sm' | 'md' | 'lg';
 
@@ -42,8 +43,9 @@
   const overflow = $derived(Math.max(0, (users ?? []).length - max));
 
   function initials(u: User): string {
-    if (u.fallback) return u.fallback;
-    const parts = (u.alt ?? '').trim().split(/\s+/).filter(Boolean);
+    if (u.fallback) return asText(u.fallback);
+    // `alt` comes from item data and can be a number — coerce before .trim/.split.
+    const parts = asText(u.alt).trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '';
     const first = parts[0]?.[0] ?? '';
     const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';

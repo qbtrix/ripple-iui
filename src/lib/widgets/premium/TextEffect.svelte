@@ -9,6 +9,7 @@
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   interface Props {
     id?: string; class?: string; style?: Record<string, string>;
     /** The text to animate (required). */
@@ -27,7 +28,10 @@
   // Split into units. Word mode keeps spaces as separators (re-inserted between
   // spans so textContent reconstructs the original string); char mode keeps
   // every character including spaces.
-  const units = $derived(by === 'char' ? Array.from(text) : text.split(' '));
+  // `text` is required/string-typed but a binding can deliver a number — coerce
+  // before .split so the per-word/char reveal never crashes the canvas.
+  const safeText = $derived(asText(text));
+  const units = $derived(by === 'char' ? Array.from(safeText) : safeText.split(' '));
 </script>
 
 <span {id} data-text-effect class={cn('ripple-text-effect inline-block', `ripple-te-${effect}`, className)} style={styleString} aria-label={text}>

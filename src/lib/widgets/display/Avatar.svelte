@@ -16,6 +16,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
     id?: string;
@@ -37,8 +38,10 @@
 
   // Derive tasteful initials from the name when no explicit fallback is given.
   const initials = $derived.by(() => {
-    if (fallback) return fallback;
-    const parts = (alt ?? '').trim().split(/\s+/).filter(Boolean);
+    if (fallback) return asText(fallback);
+    // `alt` is string-typed but a binding can deliver a number — coerce before
+    // .trim/.split so initials derivation never crashes the canvas.
+    const parts = asText(alt).trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '';
     const first = parts[0]?.[0] ?? '';
     const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';

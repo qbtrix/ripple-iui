@@ -1,6 +1,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
     text?: string;
@@ -27,7 +28,7 @@
   // Bindings deliver numbers/booleans as readily as strings ({state.x.score}).
   // Coerce before the emptiness check — .trim() exists only on strings, and a
   // non-string prop must render, not crash the canvas.
-  const label = $derived(text == null ? '' : String(text));
+  const label = $derived(asText(text));
 </script>
 
 <!-- Empty guard: an empty badge (no text) would render as a bare bordered pill —

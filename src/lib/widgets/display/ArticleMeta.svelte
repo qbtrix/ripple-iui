@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import CalendarIcon from '@lucide/svelte/icons/calendar';
   import ClockIcon from '@lucide/svelte/icons/clock';
 
@@ -23,9 +24,12 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  function authorInitials(name?: string): string {
-    if (!name) return '';
-    return name
+  // `author` is string-typed but a binding can deliver a number — coerce before
+  // .split so initials derivation never crashes the canvas.
+  function authorInitials(name?: unknown): string {
+    const text = asText(name);
+    if (!text) return '';
+    return text
       .split(' ')
       .map((p) => p[0]?.toUpperCase() ?? '')
       .slice(0, 2)

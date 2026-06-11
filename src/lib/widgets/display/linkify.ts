@@ -1,6 +1,11 @@
 // linkify.ts — split a plain-text string into text + URL segments so the
 // Text widget can render bare URLs as clickable links. Kept pure (no Svelte,
 // no DOM) so the segmentation is unit-testable on its own.
+//
+// Non-string inputs are coerced through the shared asText() idiom (a binding
+// can hand the Text widget a number/boolean/null) so .matchAll never throws.
+
+import { asText } from '../text-coerce';
 
 export interface TextSegment {
   /** The visible text for this segment. */
@@ -23,13 +28,11 @@ const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
  * callers can render the result uniformly.
  *
  * Bindings routinely deliver non-strings (numbers from `{state.x.score}`,
- * booleans, null) — coerce instead of crashing: `matchAll` exists only on
- * strings, and a Text widget must render whatever value it is handed.
+ * booleans, null) — coerce through asText() instead of crashing: `matchAll`
+ * exists only on strings, and a Text widget must render whatever it is handed.
  */
-export function linkifySegments(input: string): TextSegment[] {
-  if (typeof input !== 'string') {
-    return [{ text: input == null ? '' : String(input) }];
-  }
+export function linkifySegments(rawInput: unknown): TextSegment[] {
+  const input = asText(rawInput);
   if (!input) return [{ text: input }];
 
   const segments: TextSegment[] = [];

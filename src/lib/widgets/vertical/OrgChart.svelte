@@ -13,6 +13,7 @@
 
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
   import Self from './OrgChart.svelte';
 
   interface Props {
@@ -42,8 +43,9 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  function initials(name: string): string {
-    return name
+  // Node names come from data and can be non-strings — coerce before .split.
+  function initials(name: unknown): string {
+    return asText(name)
       .split(/\s+/)
       .map((w) => w[0])
       .filter(Boolean)

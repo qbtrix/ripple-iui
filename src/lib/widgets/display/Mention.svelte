@@ -2,6 +2,7 @@
 <script lang="ts">
   import * as HC from '$lib/components/ui/hover-card/index.js';
   import { cn } from '$lib/utils.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
     id?: string;
@@ -39,8 +40,10 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  function initials(s: string): string {
-    return s
+  // `name`/`displayName` are string-typed but a binding can deliver a number —
+  // coerce before .split so initials derivation never crashes the canvas.
+  function initials(s: unknown): string {
+    return asText(s)
       .split(/\s+/)
       .map((w) => w[0])
       .filter(Boolean)

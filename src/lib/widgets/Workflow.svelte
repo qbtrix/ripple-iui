@@ -13,6 +13,7 @@
   import { WorkflowNode } from './workflow/index.js';
   import { autoLayout } from './workflow/layout.js';
   import type { WorkflowNodeData, WorkflowEdgeData } from './workflow/types.js';
+  import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
     nodes?: WorkflowNodeData[];
@@ -84,7 +85,9 @@
       // If the source is a condition node, connect from the appropriate handle
       const sourceNode = inputNodes.find((n) => n.id === e.from);
       if (sourceNode?.type === 'condition' && e.label) {
-        const handleId = e.label.toLowerCase();
+        // Edge labels come from spec data and can be non-strings — coerce
+        // before .toLowerCase so the handle match never crashes the canvas.
+        const handleId = asText(e.label).toLowerCase();
         if (handleId === 'yes' || handleId === 'no') {
           edge.sourceHandle = handleId;
         }
