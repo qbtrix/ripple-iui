@@ -32,6 +32,15 @@ jobs:
       - name: Build library + manifest
         run: bun run build
 
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          bun publish --access public
+          rm -f "$HOME/.npmrc"
+
       - name: Stage release assets
         run: |
           set -euo pipefail
