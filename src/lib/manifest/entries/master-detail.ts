@@ -1,9 +1,12 @@
+// Updated 2026-06-13 (docs): description now states the native independent-scroll +
+// sticky-detail behaviour and the master-item customization cliff (list items support
+// only valueKey/labelKey/descriptionKey/badgeKey; bespoke list cards need a hand-rolled grid).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const masterDetailEntry: WidgetManifestEntry = {
   type: 'master-detail',
   category: 'layout',
-  description: 'List on left, detail view on right. Selected item flows into detail spec via loop context.',
+  description: 'List on left, detail view on right. Selected item flows into detail spec via loop context. Provides independent scroll + a sticky detail pane natively, and its `detail` prop accepts a full custom spec. BUT master list items are limited to valueKey/labelKey/descriptionKey/badgeKey (no custom item template) — for bespoke list cards, hand-roll a grid with the fixed-height + overflow recipe instead.',
   props: {
     items: { type: 'Array<Record<string, unknown>>', required: true, description: 'Items shown in master list.' },
     value: { type: 'string | number | null', required: false, description: 'Currently selected item value.' },
