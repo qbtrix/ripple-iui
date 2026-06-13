@@ -82,6 +82,7 @@ import { errorStateEntry } from './entries/error-state.js';
 import { faqEntry } from './entries/faq.js';
 import { featureGridEntry } from './entries/feature-grid.js';
 import { fileUploadEntry } from './entries/file-upload.js';
+import { fillGridEntry } from './entries/fill-grid.js';
 import { filterBarEntry } from './entries/filter-bar.js';
 import { flashcardEntry } from './entries/flashcard.js';
 import { flexEntry } from './entries/flex.js';
@@ -93,6 +94,7 @@ import { funnelEntry } from './entries/funnel.js';
 import { ganttEntry } from './entries/gantt.js';
 import { gaugeEntry } from './entries/gauge.js';
 import { glassCardEntry } from './entries/glass-card.js';
+import { glyphGridEntry } from './entries/glyph-grid.js';
 import { gridEntry } from './entries/grid.js';
 import { headingEntry } from './entries/heading.js';
 import { heatmapEntry } from './entries/heatmap.js';
@@ -108,6 +110,7 @@ import { invoiceLinesEntry } from './entries/invoice-lines.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
+import { ledClockEntry } from './entries/led-clock.js';
 import { linkPreviewEntry } from './entries/link-preview.js';
 import { loadingEntry } from './entries/loading.js';
 import { locationPickerEntry } from './entries/location-picker.js';
@@ -157,6 +160,7 @@ import { savedViewsEntry } from './entries/saved-views.js';
 import { searchEntry } from './entries/search.js';
 import { sectionEntry } from './entries/section.js';
 import { segmentedEntry } from './entries/segmented.js';
+import { seismographEntry } from './entries/seismograph.js';
 import { selectEntry } from './entries/select.js';
 import { separatorEntry } from './entries/separator.js';
 import { settingsListEntry } from './entries/settings-list.js';
@@ -174,6 +178,7 @@ import { spotlightEntry } from './entries/spotlight.js';
 import { statEntry } from './entries/stat.js';
 import { statusDotEntry } from './entries/status-dot.js';
 import { stepsEntry } from './entries/steps.js';
+import { streakBarsEntry } from './entries/streak-bars.js';
 import { switchEntry } from './entries/switch.js';
 import { tableEntry } from './entries/table.js';
 import { tabsEntry } from './entries/tabs.js';
@@ -544,6 +549,12 @@ export const manifestEntries: WidgetManifestEntry[] = [
   flashcardEntry,
   audioEntry,
   videoEntry,
+  // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
+  ledClockEntry,
+  seismographEntry,
+  glyphGridEntry,
+  fillGridEntry,
+  streakBarsEntry,
 ];
 
 export function buildManifest(): WidgetManifest {

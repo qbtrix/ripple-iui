@@ -8,9 +8,9 @@
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff } from './display/index.js';
+import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff, LedClock, GlyphGrid, FillGrid, StreakBars } from './display/index.js';
 import { Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
-import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, Map as MapWidget } from './data/index.js';
+import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, Map as MapWidget, Seismograph } from './data/index.js';
 import { If, Each } from './control/index.js';
 import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
@@ -358,6 +358,22 @@ const defaultRegistry: WidgetMap = {
   pomodoro: Timer,
   flashcard: Flashcard,
   'flip-card': Flashcard,
+  // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
+  'led-clock': LedClock,
+  ledclock: LedClock,
+  'dot-matrix': LedClock,
+  seismograph: Seismograph,
+  trace: Seismograph,
+  oscilloscope: Seismograph,
+  'glyph-grid': GlyphGrid,
+  glyphgrid: GlyphGrid,
+  glyph: GlyphGrid,
+  'fill-grid': FillGrid,
+  fillgrid: FillGrid,
+  'heap-meter': FillGrid,
+  'streak-bars': StreakBars,
+  streakbars: StreakBars,
+  streak: StreakBars,
   // Aliases
   label: Text,
 };
@@ -414,5 +430,7 @@ export {
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions
+  AskUserQuestions,
+  // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
+  LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph
 };

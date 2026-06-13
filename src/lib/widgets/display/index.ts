@@ -31,3 +31,8 @@ export { default as Mention } from './Mention.svelte';
 export { default as LinkPreview } from './LinkPreview.svelte';
 export { default as Qr } from './Qr.svelte';
 export { default as Diff } from './Diff.svelte';
+// Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
+export { default as LedClock } from './LedClock.svelte';
+export { default as GlyphGrid } from './GlyphGrid.svelte';
+export { default as FillGrid } from './FillGrid.svelte';
+export { default as StreakBars } from './StreakBars.svelte';

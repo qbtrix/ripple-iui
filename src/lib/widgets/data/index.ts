@@ -14,3 +14,5 @@ export { default as GanttChart } from './GanttChart.svelte';
 export { default as TreeTable } from './TreeTable.svelte';
 export { default as Calendar } from './Calendar.svelte';
 export { default as Map } from './Map.svelte';
+// Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
+export { default as Seismograph } from './Seismograph.svelte';
