@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-06-09T08:31:38.442Z",
+  "generatedAt": "2026-06-13T07:35:44.399Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -15120,6 +15120,283 @@
           "src": "https://example.com/clip.mp4",
           "poster": "https://example.com/poster.jpg",
           "title": "Demo Clip"
+        }
+      }
+    },
+    {
+      "type": "led-clock",
+      "category": "display",
+      "staticSafe": true,
+      "description": "Dot-matrix LED readout. Renders digits/letters as a 5×7 lit-dot grid (unlit cells show as faint ghost dots). Live HH:MM clock when `time` is set; optional dim sub-readout (ms ticker).",
+      "props": {
+        "value": {
+          "type": "string | number",
+          "required": false,
+          "description": "Static text/number to render. Ignored when `time` is true."
+        },
+        "time": {
+          "type": "boolean",
+          "required": false,
+          "description": "Render a live clock that ticks every second."
+        },
+        "seconds": {
+          "type": "boolean",
+          "required": false,
+          "description": "Include seconds in the live clock (HH:MM:SS)."
+        },
+        "sub": {
+          "type": "string | number",
+          "required": false,
+          "description": "Small dim sub-readout to the right of the matrix."
+        },
+        "subTick": {
+          "type": "boolean",
+          "required": false,
+          "description": "Auto-tick the sub-readout 00..99 (the ms counter)."
+        },
+        "label": {
+          "type": "string",
+          "required": false,
+          "description": "Caption below the matrix."
+        },
+        "accent": {
+          "type": "string",
+          "required": false,
+          "description": "Lit-dot color. Default the foreground token. Pass a CSS var or hex."
+        },
+        "dot": {
+          "type": "number",
+          "required": false,
+          "description": "Dot diameter in px — drives overall size. Default 6."
+        }
+      },
+      "example": {
+        "type": "led-clock",
+        "props": {
+          "time": true,
+          "subTick": true,
+          "sub": "00",
+          "label": "LOCAL TIME · NEW YORK",
+          "accent": "#EDEAE3",
+          "dot": 7
+        }
+      }
+    },
+    {
+      "type": "seismograph",
+      "category": "data",
+      "staticSafe": false,
+      "description": "Scrolling live signal trace on a canvas via an internal rAF ring-buffer. `line` = oscilloscope trace with a bright leading-edge tip; `bars` = histogram. Includes a ● LIVE/REC indicator + readout. Paused on tab-hide; static frame under reduced-motion.",
+      "props": {
+        "variant": {
+          "type": "\"line\" | \"bars\"",
+          "required": false,
+          "description": "line = oscilloscope trace, bars = histogram. Default line."
+        },
+        "live": {
+          "type": "boolean",
+          "required": false,
+          "description": "Animate live. When false, paints a single static frame. Default true."
+        },
+        "color": {
+          "type": "string",
+          "required": false,
+          "description": "Trace color. Default the primary token. Pass a CSS var or hex."
+        },
+        "label": {
+          "type": "string",
+          "required": false,
+          "description": "Caption (e.g. \"GATE EVENTS · CH 01\")."
+        },
+        "readout": {
+          "type": "string",
+          "required": false,
+          "description": "Right-side readout (e.g. \"12 evt/min\")."
+        },
+        "indicator": {
+          "type": "boolean",
+          "required": false,
+          "description": "Show the ● LIVE/REC pill. Defaults to the value of `live`."
+        },
+        "indicatorLabel": {
+          "type": "string",
+          "required": false,
+          "description": "Indicator text. Default \"LIVE\"."
+        },
+        "height": {
+          "type": "number",
+          "required": false,
+          "description": "Canvas height in px. Default 96."
+        },
+        "samples": {
+          "type": "number",
+          "required": false,
+          "description": "Ring-buffer length. Default 160."
+        },
+        "seed": {
+          "type": "number[]",
+          "required": false,
+          "description": "Optional seed values (oldest → newest) to pre-fill the buffer."
+        }
+      },
+      "example": {
+        "type": "seismograph",
+        "props": {
+          "variant": "line",
+          "live": true,
+          "color": "#2E6BFF",
+          "label": "GATE EVENTS · CH 01",
+          "readout": "12 evt/min",
+          "indicatorLabel": "LIVE"
+        }
+      }
+    },
+    {
+      "type": "glyph-grid",
+      "category": "display",
+      "staticSafe": true,
+      "description": "N×N matrix of cells lit per a bitmap pattern — a 2D brightness array or a named built-in glyph. Lit cells take the accent color; a subtle CSS pulse breathes them (frozen under reduced-motion). Pure CSS, SSR-safe.",
+      "props": {
+        "pattern": {
+          "type": "number[][]",
+          "required": false,
+          "description": "2D brightness grid (0 = unlit, 1..3 = lit intensity)."
+        },
+        "glyph": {
+          "type": "\"n1\" | \"nerve\" | \"paw\" | \"wave\" | \"check\" | \"block\"",
+          "required": false,
+          "description": "Named built-in glyph if no `pattern` given. Default \"n1\"."
+        },
+        "cols": {
+          "type": "number",
+          "required": false,
+          "description": "Override grid columns (else derived from pattern width)."
+        },
+        "rows": {
+          "type": "number",
+          "required": false,
+          "description": "Override grid rows."
+        },
+        "color": {
+          "type": "string",
+          "required": false,
+          "description": "Lit-cell color. Default the foreground token."
+        },
+        "cell": {
+          "type": "number",
+          "required": false,
+          "description": "Cell size in px. Default 14."
+        },
+        "pulse": {
+          "type": "boolean",
+          "required": false,
+          "description": "Animate a subtle lit-cell pulse. Default true."
+        }
+      },
+      "example": {
+        "type": "glyph-grid",
+        "props": {
+          "glyph": "n1",
+          "color": "#2E6BFF",
+          "cell": 14
+        }
+      }
+    },
+    {
+      "type": "fill-grid",
+      "category": "display",
+      "staticSafe": true,
+      "description": "Discrete heap/segment meter — a row (or matrix) of M cells, the first N filled per value/max, the rest faint ghost cells. Pure CSS, SSR-safe.",
+      "props": {
+        "value": {
+          "type": "number",
+          "required": false,
+          "description": "Current value. Filled cells = round(value/max * total)."
+        },
+        "max": {
+          "type": "number",
+          "required": false,
+          "description": "Max value. Default 100."
+        },
+        "total": {
+          "type": "number",
+          "required": false,
+          "description": "Total number of cells. Default 24."
+        },
+        "cols": {
+          "type": "number",
+          "required": false,
+          "description": "Columns for a matrix layout. Omit for a single row."
+        },
+        "color": {
+          "type": "string",
+          "required": false,
+          "description": "Filled-cell color. Default the primary token."
+        },
+        "cellHeight": {
+          "type": "number",
+          "required": false,
+          "description": "Cell height in px. Default 12."
+        },
+        "gap": {
+          "type": "number",
+          "required": false,
+          "description": "Gap between cells in px. Default 3."
+        }
+      },
+      "example": {
+        "type": "fill-grid",
+        "props": {
+          "value": 100,
+          "max": 100,
+          "total": 24,
+          "color": "#2FB970"
+        }
+      }
+    },
+    {
+      "type": "streak-bars",
+      "category": "display",
+      "staticSafe": true,
+      "description": "A row of discrete segments colored per a values[] array (or a simple filled-count streak). Drives the amber \"clean run\" indicator. Pure CSS, SSR-safe.",
+      "props": {
+        "values": {
+          "type": "Array<number | { intensity?: number; color?: string; on?: boolean }>",
+          "required": false,
+          "description": "Explicit per-segment values/objects."
+        },
+        "count": {
+          "type": "number",
+          "required": false,
+          "description": "When `values` omitted, number of segments. Default 14."
+        },
+        "filled": {
+          "type": "number",
+          "required": false,
+          "description": "When using `count`, how many leading segments are lit. Default = count."
+        },
+        "color": {
+          "type": "string",
+          "required": false,
+          "description": "Base segment color. Default the accent (amber) token."
+        },
+        "height": {
+          "type": "number",
+          "required": false,
+          "description": "Segment height in px. Default 14."
+        },
+        "gap": {
+          "type": "number",
+          "required": false,
+          "description": "Gap in px. Default 3."
+        }
+      },
+      "example": {
+        "type": "streak-bars",
+        "props": {
+          "count": 12,
+          "filled": 12,
+          "color": "#E8852B"
         }
       }
     }
