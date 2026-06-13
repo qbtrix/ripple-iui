@@ -82,6 +82,31 @@ A slot inside a `dashboard`. Required for Swapy drag support.
 | `itemId` | `string` | — | Unique item identifier (required) |
 | `span` | `number \| 'auto'` | `1` | Column span |
 
+### Layout gotchas
+
+Two traps that bite when building master-detail (list + detail) layouts. Both hit a real deployment.
+
+**1. Independent column scroll needs a fixed height, not `max-height`.** A CSS grid's implicit row stays `max-content`, so `max-height` clips the box but the columns never scroll on their own — the whole page scrolls as one. To make a grid's columns scroll independently, set a *fixed* `height` + `overflow: hidden` on the grid, and `overflow-y: auto` + `min-height: 0` on each column child. `grid`, `flex`, and `card` all accept a `style: Record<string, string>` passthrough (merged into the computed style in `Grid.svelte` line 46, `Flex.svelte` line 65, `Card.svelte` line 64) even though `style` isn't listed in their manifest prop tables.
+
+```jsonc
+{
+  "type": "grid",
+  "props": {
+    "columns": "320px 1fr",
+    "gap": "0px",
+    "style": { "height": "calc(100vh - 64px)", "overflow": "hidden" }
+  },
+  "children": [
+    { "type": "flex", "props": { "direction": "column",
+      "style": { "overflow-y": "auto", "min-height": "0" } }, "children": [ /* list */ ] },
+    { "type": "flex", "props": { "direction": "column",
+      "style": { "overflow-y": "auto", "min-height": "0" } }, "children": [ /* detail */ ] }
+  ]
+}
+```
+
+**2. The `master-detail` widget gives you scroll + sticky for free — until you need custom list cards.** Its list pane and detail pane are each `overflow-auto`, so you get independent scroll and a sticky detail with no extra CSS, and its `detail` prop takes a full custom spec for a rich detail panel. But its *master list items* are not custom-templatable — only `valueKey` / `labelKey` / `descriptionKey` / `badgeKey`. The moment you want a bespoke list card (a score ring, custom badges), you can't express it through `master-detail`, so use `master-detail` when the list items are simple. If you need custom list cards, hand-roll a grid and apply the fixed-height + overflow recipe above — a hand-rolled master-detail with no bounded height scrolls as one page (the exact bug from trap 1).
+
 ---
 
 ## Display Widgets
