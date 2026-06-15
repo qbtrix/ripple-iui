@@ -1,6 +1,16 @@
 <!--
   FlowRunner.svelte — Chain Flow host (RFC 13 M1).
   Created 2026-05-31.
+  Updated 2026-06-15 (Chain Flow v2 §3.3, D2 — write-terminal success gating):
+  fireTerminal no longer always shows the success view before handing off to the
+  host. For WRITE-kind terminals (invoke_tool / call_binding / create_pocket) it
+  now AWAITS onComplete and only calls markSubmitted() once the host write
+  resolves — on rejection it stays un-submitted so the still-rendered terminal
+  step + submit button are the retry, and the host's error toast is the feedback.
+  No more false "✓ all set" before the write lands. chat / navigate / emit are
+  unchanged (no failure mode → instant feedback, fire-and-forget). The onComplete
+  prop type widened to `=> void | Promise<void>`. Additive + backward-compatible:
+  every pre-v2 flow has a non-write terminal and keeps the exact prior behavior.
   Updated 2026-06-09 — silenced two state_referenced_locally warnings on `spec`
   (the executor seed and the seededFor sentinel). Both are intentional one-time
   seeds backed by the explicit re-seed $effect; seededFor is reassigned so it
@@ -89,8 +99,12 @@
 		 * and the full accumulated, namespaced payload. The host runs the action
 		 * (navigate / emit / chat); FlowRunner intentionally does not navigate or
 		 * call back to an agent itself — that wiring is the host's concern (M2).
+		 *
+		 * May return a promise: for WRITE-kind terminals (invoke_tool /
+		 * call_binding / create_pocket) FlowRunner awaits it and only shows the
+		 * success view once the host write resolves (Chain Flow v2 §3.3, D2).
 		 */
-		onComplete?: (result: TerminalResult) => void;
+		onComplete?: (result: TerminalResult) => void | Promise<void>;
 		/** Forwarded non-flow events from the rendered step's `<Ripple>`. */
 		onEvent?: OnEventCallback;
 		/** Optional initial state passed through to each step's `<Ripple>`. */
@@ -212,12 +226,35 @@
 		return null;
 	}
 
+	// Terminal kinds that perform a SERVER-SIDE WRITE. For these the success view
+	// must wait for the host write to resolve (Chain Flow v2 §3.3, D2) — showing
+	// "✓ all set" before the write lands would be a false success. chat / navigate
+	// / emit have no failure mode, so they keep the instant feedback.
+	const WRITE_TERMINAL_KINDS = new Set(['invoke_tool', 'call_binding', 'create_pocket']);
+
 	function fireTerminal(): void {
-		// Show the success view first so the user always gets feedback, then hand
-		// the terminal action off to the host (navigate/emit/chat) exactly as before.
-		executor.markSubmitted();
 		const terminal = executor.terminalAction();
-		if (terminal) onComplete?.(terminal);
+		// No declared action (plain emit/no-op flow): nothing to await — mark done.
+		if (!terminal) {
+			executor.markSubmitted();
+			return;
+		}
+		const kind = (terminal.action as { kind?: string } | undefined)?.kind;
+		if (kind && WRITE_TERMINAL_KINDS.has(kind)) {
+			// D2: gate the success view on the host write resolving. On failure stay
+			// un-submitted — the terminal step (with its submit button) is still
+			// rendered, and the host already surfaced the error via toast, so the
+			// user can retry. No false "success" before the write lands.
+			Promise.resolve(onComplete?.(terminal))
+				.then(() => executor.markSubmitted())
+				.catch(() => {
+					/* host already toasted the error; leave the step un-submitted for retry */
+				});
+		} else {
+			// chat / navigate / emit: instant feedback, fire-and-forget — unchanged.
+			executor.markSubmitted();
+			onComplete?.(terminal);
+		}
 	}
 
 	function goBack(): void {
