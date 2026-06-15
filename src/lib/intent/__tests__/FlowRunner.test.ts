@@ -1,5 +1,13 @@
 // FlowRunner.test.ts — RFC 13 M1 end-to-end proof.
 // Created 2026-05-31.
+// Updated 2026-06-15 — the onboarding-wizard terminal moved from an `emit`
+//   event to a `chat` loop in the production builder (pocketpaw
+//   `build_flow('onboarding_wizard')`), so the focus + collaborate branch tests
+//   now assert the `{kind:'chat', message:<prompt>}` terminal action instead of
+//   the old `{kind:'emit', event:'onboarding.complete'}`. The `emit` terminal
+//   kind is still a valid FlowAction, so a dedicated test below drives a small
+//   inline two-step flow whose terminal IS an emit and asserts onComplete fires
+//   with it — emit coverage moves, it does not disappear.
 //
 // Renders the NON-COMMERCE onboarding-wizard fixture in a FlowRunner (which
 // hosts the flow over the standard <Ripple> renderer — the "renders in a Pocket"
@@ -13,6 +21,12 @@ import FlowRunner from '../FlowRunner.svelte';
 import { buildOnboardingWizard } from '../fixtures/onboarding-wizard.js';
 import type { TerminalResult } from '../chain-executor.svelte.js';
 import type { UniversalSpec } from '../../schema/universal-spec.js';
+
+// The exact chat-terminal prompt the onboarding wizard hands back to the agent,
+// mirroring pocketpaw `build_onboarding_wizard`. Kept as a constant so the
+// fixture and both branch assertions stay in lockstep.
+const ONBOARDING_CHAT_MESSAGE =
+	"I've finished onboarding — here are my choices, please set up my workspace.";
 
 function clickButton(container: HTMLElement, label: string) {
 	// Options now render through OptionList as role="radio"/"checkbox" cards, not
@@ -70,7 +84,9 @@ describe('FlowRunner — onboarding wizard (focus branch)', () => {
 
 		expect(onComplete).toHaveBeenCalledTimes(1);
 		const result = onComplete.mock.calls[0][0];
-		expect(result.action).toEqual({ kind: 'emit', event: 'onboarding.complete' });
+		// Terminal hands back to the AGENT via the chat loop (mirrors the real
+		// build_flow('onboarding_wizard') terminal), not a dead-end emit event.
+		expect(result.action).toEqual({ kind: 'chat', message: ONBOARDING_CHAT_MESSAGE });
 		expect(result.payload['pick_goal_selection']).toEqual({
 			id: 'focus',
 			label: 'Focus on my own work'
@@ -100,11 +116,94 @@ describe('FlowRunner — onboarding wizard (collaborate branch)', () => {
 
 		await clickButton(container, 'Finish');
 		const result = onComplete.mock.calls[0][0];
+		// Same chat-loop terminal on the collaborate branch — the chain_map split
+		// changes step 2, not the terminal hand-off.
+		expect(result.action).toEqual({ kind: 'chat', message: ONBOARDING_CHAT_MESSAGE });
 		expect(result.payload['pick_goal_selection']).toEqual({
 			id: 'collaborate',
 			label: 'Collaborate with a team'
 		});
 		expect(result.payload['enter_details_formData']).toEqual({ workspace: 'Acme Team' });
+	});
+});
+
+describe('FlowRunner — emit terminal (the other valid FlowAction kind)', () => {
+	// `chat` is what the onboarding wizard ships, but `emit` is still a first-class
+	// terminal kind in the FlowAction union (schema/universal-spec.ts). This drives
+	// a small-but-real two-step chain whose terminal declares `onComplete:{kind:
+	// 'emit',...}` and asserts onComplete fires with that emit action — so the emit
+	// path stays covered now that the wizard fixture no longer exercises it.
+	function buildEmitTerminalFlow(): UniversalSpec {
+		// Step 2 (terminal): no chain/chain_map left, declares an emit onComplete.
+		const terminal: UniversalSpec = {
+			version: '2.0',
+			id: 'emit-term',
+			flowId: 'review',
+			intent: 'confirm',
+			title: 'Done',
+			onComplete: { kind: 'emit', event: 'inline.flow.complete' },
+			ui: {
+				type: 'container',
+				children: [
+					{ type: 'heading', props: { text: 'Confirm and finish' } },
+					{
+						type: 'button',
+						props: { label: 'Submit' },
+						on_click: { action: 'emit', target: 'flow.submit', value: {} }
+					}
+				]
+			}
+		};
+		// Step 1 (root): one button advances into the terminal via flow.next,
+		// carrying a selection so the accumulated payload is non-empty and real.
+		return {
+			version: '2.0',
+			id: 'emit-start',
+			flowId: 'start',
+			intent: 'select',
+			title: 'Start',
+			chain: terminal,
+			ui: {
+				type: 'container',
+				children: [
+					{ type: 'heading', props: { text: 'Begin the flow' } },
+					{
+						type: 'button',
+						props: { label: 'Begin' },
+						on_click: {
+							action: 'emit',
+							target: 'flow.next',
+							value: { selection: { id: 'go', label: 'Go' } }
+						}
+					}
+				]
+			}
+		};
+	}
+
+	it('advances through the chain and fires onComplete with the emit action + payload', async () => {
+		const onComplete = vi.fn<(r: TerminalResult) => void>();
+		const { container } = render(FlowRunner, {
+			props: { spec: buildEmitTerminalFlow(), onComplete }
+		});
+
+		// Step 1 renders; terminal heading is not shown yet.
+		expect(container.textContent).toContain('Begin the flow');
+		expect(container.textContent).not.toContain('Confirm and finish');
+
+		// Advance into the terminal step.
+		await clickButton(container, 'Begin');
+		expect(container.textContent).toContain('Confirm and finish');
+
+		// Submit the terminal step -> onComplete fires with the EMIT action.
+		expect(onComplete).not.toHaveBeenCalled();
+		await clickButton(container, 'Submit');
+
+		expect(onComplete).toHaveBeenCalledTimes(1);
+		const result = onComplete.mock.calls[0][0];
+		expect(result.action).toEqual({ kind: 'emit', event: 'inline.flow.complete' });
+		// Step 1's selection landed in the namespaced accumulated payload.
+		expect(result.payload['start_selection']).toEqual({ id: 'go', label: 'Go' });
 	});
 });
 
