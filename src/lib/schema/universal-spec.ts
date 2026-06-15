@@ -21,6 +21,12 @@
  *     layout, tested), and `itinerary` (layout-engine `itinerary` layout, tested).
  *     Without these the enum rejected/coerced schema-valid specs, making those
  *     routing paths unreachable. No existing values removed.
+ *   - 2026-06-15 (Chain Flow v2 §3.3/§5.1): `FlowAction` now carries three
+ *     terminal mini-app actions in ADDITION to the original chat/navigate/emit —
+ *     `invoke_tool`, `call_binding`, and `create_pocket` — plus an optional
+ *     `then` post-action (`z.lazy` self-reference) so a write terminal can chain
+ *     a follow-up (e.g. navigate to the new pocket). Purely additive: the three
+ *     existing kinds are untouched, so every current flow validates unchanged.
  */
 
 import { z } from 'zod';
@@ -35,8 +41,17 @@ import { UINode, ThemeOverrides, DataFetcher } from './ui-spec.js';
  * (no `chain` / `chain_map` left). Distinct from the action-VM's `flow` verb
  * (`event-dispatcher.ts`), which sequences actions *within* one step; this is
  * the terminal hand-off of a step *sequence*. See ChainExecutor for the split.
+ *
+ * Chain Flow v2 (§3.3) adds three "real mini-app" terminal kinds on top of the
+ * original chat/navigate/emit: `invoke_tool` (run a tool with the answers),
+ * `call_binding` (server-side write), and `create_pocket` (materialize a
+ * permanent pocket from the answers). Each may carry an optional `then`
+ * post-action — a single follow-up FlowAction run after the write succeeds
+ * (typically `navigate` to the freshly created pocket). `then` is a forward
+ * `z.lazy` self-reference, resolved at parse time, so the union stays
+ * self-describing without a separate type declaration.
  */
-export const FlowAction = z.discriminatedUnion('kind', [
+export const FlowAction: z.ZodType<FlowActionType> = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('emit'),
     event: z.string(),
@@ -49,10 +64,55 @@ export const FlowAction = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('chat'),
     message: z.string()
+  }),
+  // --- Chain Flow v2 terminal mini-app actions (§3.3) — additive ---------
+  z.object({
+    kind: z.literal('invoke_tool'),
+    tool: z.string(),
+    args: z.record(z.string(), z.any()).optional(),
+    then: z.lazy(() => FlowAction).optional()
+  }),
+  z.object({
+    kind: z.literal('call_binding'),
+    binding: z.string(),
+    path: z.string(),
+    params: z.record(z.string(), z.any()).optional(),
+    then: z.lazy(() => FlowAction).optional()
+  }),
+  z.object({
+    kind: z.literal('create_pocket'),
+    name: z.string(),
+    template: z.string().optional(),
+    spec: z.record(z.string(), z.any()).optional(),
+    seed_from_flow: z.boolean().optional(),
+    then: z.lazy(() => FlowAction).optional()
   })
 ]);
 
-export type FlowAction = z.infer<typeof FlowAction>;
+// Declared before the schema to break the `then` self-reference cycle, mirroring
+// the UniversalSpecType pattern below.
+type FlowActionType =
+  | { kind: 'emit'; event: string; payload?: any }
+  | { kind: 'navigate'; url: string }
+  | { kind: 'chat'; message: string }
+  | { kind: 'invoke_tool'; tool: string; args?: Record<string, any>; then?: FlowActionType }
+  | {
+      kind: 'call_binding';
+      binding: string;
+      path: string;
+      params?: Record<string, any>;
+      then?: FlowActionType;
+    }
+  | {
+      kind: 'create_pocket';
+      name: string;
+      template?: string;
+      spec?: Record<string, any>;
+      seed_from_flow?: boolean;
+      then?: FlowActionType;
+    };
+
+export type FlowAction = FlowActionType;
 
 // =============================================================================
 // Enums & Constants
