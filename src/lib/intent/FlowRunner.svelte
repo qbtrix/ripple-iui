@@ -1,6 +1,16 @@
 <!--
   FlowRunner.svelte — Chain Flow host (RFC 13 M1).
   Created 2026-05-31.
+  Updated 2026-06-17 (fix/flow-required-validation) — required-field gate. The
+  executor now refuses to advance past a step whose required form fields are
+  empty (returns null AND sets hasValidationErrors). Two changes here: (1)
+  flow.submit no longer treats EVERY null advance as "terminal reached" — it
+  only fires the terminal (markSubmitted + onComplete) when the advance was a
+  genuine end-of-chain, NOT when it was blocked by validation; a blocked submit
+  stays on the step exactly like a blocked next. (2) when the executor reports
+  validation errors we render an inline, accessible error summary inside the
+  step card listing each missing field, so the user sees what's missing instead
+  of a Continue click that silently does nothing.
   Updated 2026-06-15 (Chain Flow v2 §3.3, D2 — write-terminal success gating):
   fireTerminal no longer always shows the success view before handing off to the
   host. For WRITE-kind terminals (invoke_tool / call_binding / create_pocket) it
@@ -133,6 +143,13 @@
 	// `emit`/no-op the host doesn't surface. Kept on the executor (a .svelte.ts
 	// class) so it's reactive without a top-level component `$state` rune.
 	const completed = $derived(executor.submitted);
+
+	// Per-field validation errors for the current step (reactive). Populated when
+	// the executor blocks an advance because a required field is empty; cleared on
+	// the next successful advance. Rendered as the inline error summary below.
+	const validationErrors = $derived(executor.validationErrors);
+	const validationMessages = $derived(Object.values(validationErrors));
+	const hasValidationErrors = $derived(validationMessages.length > 0);
 
 	// Expose the accumulated flow context to NodeRenderer's resolver as a getter
 	// so `{state.<flowId>_selection.field}` resolves and stays reactive.
@@ -280,6 +297,9 @@
 		switch (verb) {
 			case 'flow.next':
 				// flow.next only moves forward; terminal completion is flow.submit.
+				// A null return here is either end-of-chain (no-op for next) or a
+				// validation block — either way we stay put; the executor's
+				// validationErrors drive the inline summary.
 				executor.advance(args.selection, args.formData ?? {}, args.idField);
 				return;
 			case 'flow.back':
@@ -289,10 +309,15 @@
 				executor.forward();
 				return;
 			case 'flow.submit': {
-				// Advance once (records this step's data), then fire onComplete if
-				// the step we were on was terminal (advance returned null).
+				// Advance once (records this step's data), then fire onComplete only
+				// if the step we were on was genuinely TERMINAL. advance() returns
+				// null both at a terminal step AND when it blocks on a missing
+				// required field — so we must NOT fire the terminal on a blocked
+				// submit (that would mark the flow complete with an empty required
+				// field). Distinguish via the executor: a block sets
+				// hasValidationErrors; a real terminal does not.
 				const next = executor.advance(args.selection, args.formData ?? {}, args.idField);
-				if (next === null) fireTerminal();
+				if (next === null && !executor.hasValidationErrors) fireTerminal();
 				return;
 			}
 		}
@@ -340,6 +365,20 @@
 				</div>
 			{/if}
 			<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
+			{#if hasValidationErrors}
+				<!-- Inline validation summary: the executor blocked the advance because
+				     one or more required fields are empty. Surfaced here (not silently
+				     swallowed) so the user sees exactly what's missing. role="alert"
+				     + aria-live announces it to assistive tech the moment it appears. -->
+				<div class="flow-runner__errors" role="alert" aria-live="assertive">
+					<p class="flow-runner__errors-title">Please complete the required fields</p>
+					<ul class="flow-runner__errors-list">
+						{#each Object.entries(validationErrors) as [fieldId, message] (fieldId)}
+							<li>{message}</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 			{#if canGoBack}
 				<div class="flow-runner__nav">
 					<button type="button" class="flow-runner__back" onclick={goBack}>
@@ -463,6 +502,42 @@
 	.flow-runner__back:focus-visible {
 		outline: 2px solid var(--ripple-ring);
 		outline-offset: 2px;
+	}
+
+	/* Inline required-field validation summary. Uses the destructive semantic
+	   token so it reads as an error in any theme; spacing on the same 4/8/12px
+	   scale as the rest of the card. */
+	.flow-runner__errors {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem; /* 4px */
+		padding: 0.75rem; /* 12px */
+		border-radius: 0.5rem; /* 8px */
+		border: 1px solid var(--ripple-destructive, oklch(0.58 0.22 27));
+		background: color-mix(
+			in oklch,
+			var(--ripple-destructive, oklch(0.58 0.22 27)) 8%,
+			transparent
+		);
+		color: var(--ripple-destructive, oklch(0.58 0.22 27));
+	}
+
+	.flow-runner__errors-title {
+		margin: 0;
+		font-size: 0.875rem; /* 14px */
+		font-weight: 600;
+		line-height: 1.4;
+	}
+
+	.flow-runner__errors-list {
+		margin: 0;
+		padding-left: 1.125rem; /* 18px — room for the bullet */
+		font-size: 0.875rem; /* 14px */
+		line-height: 1.45;
+	}
+
+	.flow-runner__errors-list > li + li {
+		margin-top: 0.125rem; /* 2px */
 	}
 
 	/* Terminal success view. */

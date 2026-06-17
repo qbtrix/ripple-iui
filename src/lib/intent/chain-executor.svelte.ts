@@ -19,6 +19,17 @@
  *     that points back into the tree can't grow history without limit.
  *   - Added `terminalAction()` so a terminal step's `onComplete` FlowAction and
  *     the full accumulated payload can be fired by the host.
+ *   - 2026-06-17 (fix/flow-required-validation): `advance()` now gates on the
+ *     CURRENT step's required form fields BEFORE mutating any state. A step's
+ *     `form_fields` carry a `required` flag (set by the pocketpaw builder's
+ *     `_form_field`, the only place required lives — the raw `ui` tree does not
+ *     carry it). When a required field's value in `formData` is missing or
+ *     whitespace-only, advance refuses: it returns `null`, leaves history +
+ *     context untouched, and records a per-field message under `validationErrors`
+ *     (with `hasValidationErrors` true) so the host can surface what's missing.
+ *     A valid advance clears the errors first, then proceeds exactly as before.
+ *     Steps with no `form_fields` are never validated (legacy raw-ui flow steps
+ *     keep advancing unchanged — required validation is opt-in via the field set).
  */
 import type { UniversalSpec, FlowAction } from '../schema/universal-spec.js';
 
@@ -58,6 +69,25 @@ export interface TerminalResult {
 }
 
 /**
+ * Minimal shape of a single entry in a step's `form_fields` array — the
+ * structured field set the pocketpaw builder emits on form steps. Only the
+ * fields the validation gate reads are typed here; `form_fields` is not a typed
+ * member of `UniversalSpec` (it rides as builder-emitted data), so we read it
+ * off the spec through this view.
+ */
+interface FormFieldSpec {
+	id: string;
+	label?: string;
+	required?: boolean;
+}
+
+/**
+ * Per-field validation messages keyed by field id. Empty object = no errors.
+ * Populated by {@link ChainExecutor.advance} when a required field is missing.
+ */
+export type ValidationErrors = Record<string, string>;
+
+/**
  * Manages client-side intent chaining and navigation history.
  * Allows instant transitions between steps without AI roundtrips.
  *
@@ -88,6 +118,11 @@ export class ChainExecutor {
 
 	/** Raw-spec mirror of `_forwardStack`, kept in lockstep for back/forward. */
 	private _rawForward: UniversalSpec[] = [];
+
+	// Per-field validation errors for the CURRENT step, set by `advance` when a
+	// required form field is empty/whitespace. Reactive so FlowRunner can surface
+	// the messages inline; cleared on every successful advance.
+	private _validationErrors = $state<ValidationErrors>({});
 
 	// Quiz score tracking (universal for any quiz-type flow)
 	private _quizScore = $state<{ correct: number; wrong: number; answers: boolean[] }>({
@@ -225,6 +260,20 @@ export class ChainExecutor {
 	}
 
 	/**
+	 * Per-field validation messages for the current step (reactive). Keyed by
+	 * field id; empty when the last advance succeeded or no validation has run.
+	 * Set by {@link advance} when a required form field is missing/whitespace.
+	 */
+	get validationErrors(): ValidationErrors {
+		return this._validationErrors;
+	}
+
+	/** True when the last {@link advance} was blocked by a required-field error. */
+	get hasValidationErrors(): boolean {
+		return Object.keys(this._validationErrors).length > 0;
+	}
+
+	/**
 	 * Get quiz score (reactive)
 	 */
 	get quizScore(): { correct: number; wrong: number; answers: boolean[] } {
@@ -268,6 +317,24 @@ export class ChainExecutor {
 		// without the proxy.
 		const current = this.currentRawSpec;
 		if (!current) return null;
+
+		// Required-field gate (RFC 13 fix/flow-required-validation). Validate the
+		// CURRENT step's required form fields against the entered `formData` BEFORE
+		// touching any state. If a required field is empty/whitespace we refuse to
+		// advance: no state save, no context write, history unchanged, and the
+		// per-field messages stay on `validationErrors` for the host to render. The
+		// caller sees `null` (same shape as a terminal step), so a blocked advance
+		// never fires the terminal action or pushes a step.
+		const errors = this.collectRequiredFieldErrors(current, formData);
+		if (Object.keys(errors).length > 0) {
+			this._validationErrors = errors;
+			return null;
+		}
+		// Valid input — clear any errors from a prior blocked attempt before we
+		// mutate state, so the host's inline error display goes away on success.
+		if (Object.keys(this._validationErrors).length > 0) {
+			this._validationErrors = {};
+		}
 
 		// Save current state before advancing
 		this.updateCurrentState(selection, formData);
@@ -485,5 +552,43 @@ export class ChainExecutor {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Validate a step's REQUIRED form fields against the entered values. Returns a
+	 * per-field error map (keyed by field id); empty = nothing missing.
+	 *
+	 * Reads `form_fields` off the spec (it is builder-emitted data, not a typed
+	 * `UniversalSpec` member, so it rides through a cast). Validation is opt-in:
+	 * a step with no `form_fields` array yields no errors, so legacy raw-ui flow
+	 * steps keep advancing untouched. Only fields with `required === true` are
+	 * checked; a value counts as missing when it is null/undefined, an
+	 * empty/whitespace-only string, or an empty array (a multi-select with no
+	 * choice). Anything else (a number like 0, a boolean) is accepted as present.
+	 */
+	private collectRequiredFieldErrors(
+		spec: UniversalSpec,
+		formData: Record<string, unknown>
+	): ValidationErrors {
+		const fields = (spec as { form_fields?: unknown }).form_fields;
+		if (!Array.isArray(fields) || fields.length === 0) return {};
+
+		const errors: ValidationErrors = {};
+		for (const raw of fields as FormFieldSpec[]) {
+			if (!raw || raw.required !== true || !raw.id) continue;
+			if (this.isMissing(formData[raw.id])) {
+				const label = raw.label ?? raw.id;
+				errors[raw.id] = `${label} is required`;
+			}
+		}
+		return errors;
+	}
+
+	/** A required value is "missing" when null/undefined, blank/whitespace, or an empty array. */
+	private isMissing(value: unknown): boolean {
+		if (value == null) return true;
+		if (typeof value === 'string') return value.trim().length === 0;
+		if (Array.isArray(value)) return value.length === 0;
+		return false;
 	}
 }
