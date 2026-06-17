@@ -1,5 +1,12 @@
 // chain-executor.test.ts — Unit tests for the Chain Flow step-sequencer (RFC 13 M1).
 // Created 2026-05-31.
+// Updated 2026-06-17 (fix/flow-required-validation) — added a
+//   "required-field validation at advance time" describe block. It reproduces
+//   the reported chain-flow v2 bug (Continue with empty required fields advanced
+//   anyway) at the executor level: advance() with a required form field left
+//   empty/whitespace must NOT push the next step, must surface a per-field error
+//   on `validationErrors`, and must leave history unchanged; advance() with every
+//   required field filled clears the errors and advances as before.
 //
 // Ports the still-applicable cases from the genesis prototype's
 // chain-executor.test.ts (retyped from IntentSpec to ripple's UniversalSpec),
@@ -230,6 +237,126 @@ describe('ChainExecutor — back / forward navigation (RFC 13)', () => {
 		const executor = new ChainExecutor(tree);
 		expect(executor.back()).toBeNull();
 		expect(executor.forward()).toBeNull();
+	});
+});
+
+describe('ChainExecutor — required-field validation at advance time (bug repro)', () => {
+	// A two-step form→confirm flow whose step 1 declares three REQUIRED fields
+	// (mirrors the captain's refund-request flow: Order ID / Refund amount /
+	// Reason required, Notes optional). `form_fields` is the structured field set
+	// the pocketpaw builder emits onto every form step (each carries `required`).
+	function refundFlow(): UniversalSpec {
+		const confirm = step({ intent: 'confirm', flowId: 'confirm', title: 'Confirm' });
+		return step({
+			intent: 'form',
+			flowId: 'refund',
+			title: 'Request a refund',
+			chain: confirm,
+			// The structured field spec the builder threads through (required flag
+			// already present end-to-end: descriptor.fields[].required → form_fields).
+			form_fields: [
+				{ id: 'order_id', label: 'Order ID', type: 'text', required: true },
+				{ id: 'refund_amount', label: 'Refund amount', type: 'number', required: true },
+				{ id: 'reason', label: 'Reason', type: 'textarea', required: true },
+				{ id: 'notes', label: 'Notes', type: 'textarea', required: false }
+			]
+		} as Partial<UniversalSpec> & { intent: UniversalSpec['intent'] });
+	}
+
+	it('does NOT advance when every required field is empty (the reported bug)', () => {
+		const executor = new ChainExecutor(refundFlow());
+		// Continue with everything blank — the production Continue button resolves
+		// `{state.x}` placeholders to '' for empty inputs, so advance() receives
+		// empty strings for each required field.
+		const next = executor.advance(null, { order_id: '', refund_amount: '', reason: '', notes: '' });
+
+		// MUST block: no next step, still on step 1.
+		expect(next).toBeNull();
+		expect(executor.currentSpec?.flowId).toBe('refund');
+		expect(executor.historyLength).toBe(1);
+		// Per-field errors surfaced for the UI.
+		expect(executor.hasValidationErrors).toBe(true);
+		expect(executor.validationErrors.order_id).toBeTruthy();
+		expect(executor.validationErrors.refund_amount).toBeTruthy();
+		expect(executor.validationErrors.reason).toBeTruthy();
+		// The optional field is never flagged.
+		expect(executor.validationErrors.notes).toBeUndefined();
+	});
+
+	it('treats whitespace-only required values as empty (blocks the advance)', () => {
+		const executor = new ChainExecutor(refundFlow());
+		const next = executor.advance(null, {
+			order_id: '   ',
+			refund_amount: '\t',
+			reason: '\n ',
+			notes: ''
+		});
+		expect(next).toBeNull();
+		expect(executor.historyLength).toBe(1);
+		expect(executor.hasValidationErrors).toBe(true);
+	});
+
+	it('flags ONLY the missing required field when others are filled', () => {
+		const executor = new ChainExecutor(refundFlow());
+		const next = executor.advance(null, {
+			order_id: 'A-1001',
+			refund_amount: '49.99',
+			reason: '', // the one missing required field
+			notes: 'ship it'
+		});
+		expect(next).toBeNull();
+		expect(executor.historyLength).toBe(1);
+		expect(executor.validationErrors.order_id).toBeUndefined();
+		expect(executor.validationErrors.refund_amount).toBeUndefined();
+		expect(executor.validationErrors.reason).toBeTruthy();
+	});
+
+	it('advances and clears errors once every required field is filled', () => {
+		const executor = new ChainExecutor(refundFlow());
+
+		// First attempt blocks and records errors.
+		expect(executor.advance(null, { order_id: '', refund_amount: '', reason: '' })).toBeNull();
+		expect(executor.hasValidationErrors).toBe(true);
+
+		// Fill everything required → advance succeeds and errors clear.
+		const next = executor.advance(null, {
+			order_id: 'A-1001',
+			refund_amount: '49.99',
+			reason: 'Item arrived damaged',
+			notes: '' // optional, fine to leave blank
+		});
+		expect(next).not.toBeNull();
+		expect(next?.flowId).toBe('confirm');
+		expect(executor.currentSpec?.flowId).toBe('confirm');
+		expect(executor.historyLength).toBe(2);
+		expect(executor.hasValidationErrors).toBe(false);
+		expect(executor.validationErrors).toEqual({});
+	});
+
+	it('records the entered formData in context only on a successful advance', () => {
+		const executor = new ChainExecutor(refundFlow());
+		executor.advance(null, { order_id: '', refund_amount: '', reason: '' }); // blocked
+		expect(executor.getAccumulatedContext()).toEqual({});
+
+		executor.advance(null, { order_id: 'A-1', refund_amount: '5', reason: 'damaged' });
+		expect(executor.getAccumulatedContext()['refund_formData']).toEqual({
+			order_id: 'A-1',
+			refund_amount: '5',
+			reason: 'damaged'
+		});
+	});
+
+	it('does not validate a step with no form_fields (back-compat raw-ui steps)', () => {
+		// A step carrying only a raw ui tree (no structured form_fields) must keep
+		// advancing exactly as before — required validation is opt-in via the
+		// field spec, so legacy hand-built flow steps are untouched.
+		const executor = new ChainExecutor(
+			step({ intent: 'form', flowId: 'legacy', chain: step({ intent: 'confirm' }) })
+		);
+		const next = executor.advance(null, {});
+		expect(next).not.toBeNull();
+		expect(executor.historyLength).toBe(2);
+		expect(executor.hasValidationErrors).toBe(false);
 	});
 });
 

@@ -1,5 +1,9 @@
 // Ripple.flow.test.ts — Chain Flow auto-detection guard (RFC 13 every-surface fix).
 // Created 2026-05-31.
+// Updated 2026-06-15 — the onboarding-wizard terminal moved from `emit` to a
+//   `chat` loop in the production builder, so the full-walk test now asserts the
+//   `{kind:'chat', message:<prompt>}` terminal action (matching the shared
+//   fixture). This file otherwise guards auto-detection, not the terminal kind.
 //
 // THE test that would have caught "Pockets don't run flows." The existing M1
 // suite (intent/__tests__/FlowRunner.test.ts) drove `FlowRunner` DIRECTLY, so it
@@ -79,7 +83,12 @@ describe('Ripple auto-detects a Chain Flow (bare top-level root)', () => {
 		await clickButton(container, 'Finish');
 		expect(onComplete).toHaveBeenCalledTimes(1);
 		const result = onComplete.mock.calls[0][0];
-		expect(result.action).toEqual({ kind: 'emit', event: 'onboarding.complete' });
+		// Terminal hands back to the agent via the chat loop, mirroring the real
+		// build_flow('onboarding_wizard') terminal (see fixtures/onboarding-wizard).
+		expect(result.action).toEqual({
+			kind: 'chat',
+			message: "I've finished onboarding — here are my choices, please set up my workspace."
+		});
 		expect(result.payload['pick_goal_selection']).toEqual({
 			id: 'focus',
 			label: 'Focus on my own work'
