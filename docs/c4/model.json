@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "scope": "ripple",
+  "generated_at": "2026-06-21T12:30:00Z",
+  "source_path": "/Users/prakash-1/Documents/paw-workspace/ripple",
+  "authored": true,
+  "model": {
+    "people": [],
+    "systems": [
+      {
+        "id": "ripple",
+        "name": "Ripple",
+        "description": "Svelte 5 generative-UI runtime (@ripple-ui/svelte). Renders declarative JSON specs (UISpec / UniversalSpec) into fully interactive UIs with reactive state, expression resolution, event dispatch, and ~240 widget types including marketing, premium, and motion packs.",
+        "tags": ["internal"],
+        "containers": [
+          {
+            "id": "ripple-runtime",
+            "name": "Ripple Runtime",
+            "description": "The publishable npm library (dist/). All components, the core engine, schema definitions, the widget registry, intent layouts, and the motion system. The SvelteKit routes (src/routes/) are a dev playground only.",
+            "technology": "Svelte 5, TypeScript, Tailwind 4",
+            "tags": ["internal"],
+            "kb_article": "",
+            "components": [
+              {
+                "id": "core",
+                "name": "Core Engine",
+                "description": "Reactive state machine and rendering primitives. StateManager ($state rune, dot-path get/set), EventDispatcher (set/api/navigate/toast/emit/open/pin/unpin actions), ExpressionResolver ({state.path}, {item.field}, ternary, arithmetic), spec normalizer (UISpec→UniversalSpec), and NodeRenderer.svelte (recursive widget tree renderer with show-condition eval, loop context, prop binding). src/lib/core/ + src/lib/components/NodeRenderer.svelte + src/lib/Ripple.svelte.",
+                "technology": "Svelte 5, TypeScript",
+                "kb_article": ""
+              },
+              {
+                "id": "schema",
+                "name": "Schema",
+                "description": "Type contracts for the two spec systems: UISpec (explicit widget tree with UINode), UniversalSpec (intent-based high-level spec), FlowAction (chain-step action types), and WidgetTypes (widget type enum). src/lib/schema/.",
+                "technology": "TypeScript",
+                "kb_article": ""
+              },
+              {
+                "id": "widgets",
+                "name": "Widget Registry",
+                "description": "WidgetRegistry class plus ~240 widget types across layout, display, input, data, control, composite, overlay, research, vertical, workflow, interactive, and media categories. Build-time manifest for static-safe widget enumeration. src/lib/widgets/ + src/lib/manifest/.",
+                "technology": "Svelte 5, TypeScript",
+                "kb_article": ""
+              },
+              {
+                "id": "marketing-premium",
+                "name": "Marketing + Premium Widgets",
+                "description": "50+ MIT-ported landing and marketing widgets (Hero, Cta, FeatureGrid, Footer, Faq, MarketingHero, Navbar, Testimonial, LogoCloud, Newsletter) and premium animated widgets (Marquee, BorderBeam, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect, Shimmer). src/lib/widgets/marketing/ + src/lib/widgets/premium/.",
+                "technology": "Svelte 5, TypeScript",
+                "kb_article": ""
+              },
+              {
+                "id": "intent",
+                "name": "Intent System",
+                "description": "High-level intent rendering: IntentRenderer.svelte dispatches to LayoutEngine (auto-selects layout from intent type and data shape), PatternDetector (identifies quiz/results patterns), and 14 named intent layouts (FormLayout, SummaryLayout, DetailLayout, SelectLayout, TableLayout, etc.). Falls back to NodeRenderer for 'custom' intent. src/lib/intent/.",
+                "technology": "Svelte 5, TypeScript",
+                "kb_article": ""
+              },
+              {
+                "id": "dashboard",
+                "name": "Dashboard Renderer",
+                "description": "Muuri-backed draggable grid renderer for dashboard intents. DashboardRenderer.svelte manages slot registration, drag-and-drop reorder, and resize events. dashboard-manager.svelte.ts holds the reactive grid state. src/lib/intent/DashboardRenderer.svelte + src/lib/intent/dashboard-manager.svelte.ts.",
+                "technology": "Svelte 5, Muuri",
+                "kb_article": ""
+              },
+              {
+                "id": "chain-flow",
+                "name": "Chain Flow",
+                "description": "Client-side multi-step flow engine (RFC 13). ChainExecutor (chain-executor.svelte.ts) walks nested chain/chain_map UniversalSpec trees with zero round-trips, accumulating per-step data, enforcing required-field gates, and maintaining back/forward history. FlowRunner.svelte is the host component. src/lib/intent/chain-executor.svelte.ts + src/lib/intent/FlowRunner.svelte.",
+                "technology": "Svelte 5, TypeScript",
+                "kb_article": ""
+              },
+              {
+                "id": "motion",
+                "name": "Motion System",
+                "description": "Declarative node-level animation (RFC 12). Motion engine (src/lib/motion/engine.ts) resolves animation presets and applies them. with-motion.ts Svelte action (src/lib/actions/with-motion.ts) attaches motion to rendered nodes. Reveal and Parallax sugar widgets desugar to motion fields. Supports reduced-motion via prefers-reduced-motion.",
+                "technology": "Svelte 5, TypeScript",
+                "kb_article": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "paw-enterprise",
+        "name": "paw-enterprise",
+        "description": "External: SvelteKit frontend that consumes ripple as @ripple-ui/svelte (file: dep). Renders pocket UIs and admin surfaces via the Ripple runtime.",
+        "tags": ["external"],
+        "containers": []
+      },
+      {
+        "id": "pocketpaw",
+        "name": "PocketPaw",
+        "description": "External: agentic OS backend. Pockets produce rippleSpec JSON; the cloud site engine compiles the ripple track for static/dynamic Paw Sites.",
+        "tags": ["external"],
+        "containers": []
+      }
+    ],
+    "relationships": [
+      {"source": "core", "target": "schema", "description": "normalizes and validates specs", "technology": "", "style": "sync"},
+      {"source": "core", "target": "widgets", "description": "resolves widget type and renders", "technology": "", "style": "sync"},
+      {"source": "intent", "target": "core", "description": "falls back to NodeRenderer for custom intent", "technology": "", "style": "sync"},
+      {"source": "intent", "target": "widgets", "description": "composes layout widgets into intent views", "technology": "", "style": "sync"},
+      {"source": "dashboard", "target": "widgets", "description": "renders dashboard slot widgets in Muuri grid", "technology": "", "style": "sync"},
+      {"source": "chain-flow", "target": "core", "description": "hosts a per-step Ripple instance inside the flow", "technology": "", "style": "sync"},
+      {"source": "widgets", "target": "marketing-premium", "description": "registers and resolves marketing/premium widget types", "technology": "", "style": "sync"},
+      {"source": "motion", "target": "core", "description": "attaches animation to rendered nodes via Svelte action", "technology": "", "style": "sync"},
+      {"source": "paw-enterprise", "target": "core", "description": "consumes @ripple-ui/svelte to render pocket UIs", "technology": "npm package (file dep)", "style": "sync"},
+      {"source": "pocketpaw", "target": "core", "description": "pockets render via ripple; sites engine compiles ripple track", "technology": "", "style": "sync"}
+    ]
+  }
+}
