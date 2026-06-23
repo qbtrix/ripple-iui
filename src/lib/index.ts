@@ -100,6 +100,16 @@ export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 export { reorderable, type ReorderableOptions } from './actions/reorderable.js';
 export { withMotion } from './actions/index.js';
 
+// Motion primitives (Fluid Functionalism) — reusable by host apps for
+// shared-layout sliding indicators (animated tabs/segmented nav) and FF timing.
+export {
+  movingIndicator,
+  type MovingIndicatorOptions,
+  type IndicatorRect,
+  type ActiveSource,
+} from './motion/moving-indicator.js';
+export { FF_SPRING_TOKENS } from './motion/presets.js';
+
 // Fluid Functionalism systems layer (MIT)
 export {
   wghtStyle, animateWght,
