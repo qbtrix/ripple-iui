@@ -13,6 +13,9 @@
 // a `staticSafe` (Tier-0) flag to WidgetManifestEntry; moved the marketing pack
 // (navbar/footer/cta/testimonial/feature-grid/logo-cloud/newsletter) under it;
 // registered the new faq + marketing-hero entries.
+// Updated 2026-06-24 (AI-native tier): added the `ai` category and registered
+// stream-text + tool-call + reasoning-trace — read-only widgets a generative-UI
+// engine uses to show an agent's work (streaming text, tool calls, reasoning).
 
 import pkg from '../../../package.json' with { type: 'json' };
 
@@ -151,6 +154,7 @@ import { quoteEntry } from './entries/quote.js';
 import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
+import { reasoningTraceEntry } from './entries/reasoning-trace.js';
 import { reportLayoutEntry } from './entries/report-layout.js';
 import { revealEntry } from './entries/reveal.js';
 import { richTextEntry } from './entries/rich-text.js';
@@ -179,6 +183,7 @@ import { statEntry } from './entries/stat.js';
 import { statusDotEntry } from './entries/status-dot.js';
 import { stepsEntry } from './entries/steps.js';
 import { streakBarsEntry } from './entries/streak-bars.js';
+import { streamTextEntry } from './entries/stream-text.js';
 import { switchEntry } from './entries/switch.js';
 import { tableEntry } from './entries/table.js';
 import { tabsEntry } from './entries/tabs.js';
@@ -193,6 +198,7 @@ import { timePickerEntry } from './entries/time-picker.js';
 import { timerEntry } from './entries/timer.js';
 import { todoListEntry } from './entries/todo-list.js';
 import { toastEntry } from './entries/toast.js';
+import { toolCallEntry } from './entries/tool-call.js';
 import { tooltipEntry } from './entries/tooltip.js';
 import { treeEntry } from './entries/tree.js';
 import { treemapEntry } from './entries/treemap.js';
@@ -555,6 +561,10 @@ export const manifestEntries: WidgetManifestEntry[] = [
   glyphGridEntry,
   fillGridEntry,
   streakBarsEntry,
+  // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
+  streamTextEntry,
+  toolCallEntry,
+  reasoningTraceEntry,
 ];
 
 export function buildManifest(): WidgetManifest {
