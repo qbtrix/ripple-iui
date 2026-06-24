@@ -5,6 +5,11 @@
   collapsed/expanded), reasoning-trace (collapsed summary vs expanded steps).
   Each panel is one declarative <Ripple {spec} onEvent={...} />, matching the
   card/stat/premium sub-route pattern. Display-only — no write-back.
+  Updated: 2026-06-24 — added the approval-gate organism (human-in-the-loop
+  approve/deny/diff-review): pending across each risk level, a gate composing a
+  diff + tool-call body, and pre-resolved approved/denied states. The last gate
+  is BOUND (decision persists via state) so the panel demos the full
+  click → state → onStateChange round-trip.
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -12,6 +17,10 @@
 
   function handleEvent(event: RippleEvent) {
     console.log('RippleEvent:', event);
+  }
+
+  function handleStateChange(path: string, value: unknown) {
+    console.log('onStateChange:', path, value);
   }
 
   // 1 ── stream-text — streaming (caret + aria-busy) vs done
@@ -119,6 +128,118 @@
       ],
     },
   };
+
+  // 4 ── approval-gate — pending across each risk level
+  const riskSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'approval-gate',
+          props: {
+            title: 'Tag 12 leads as "warm"',
+            summary: 'A reversible CRM update on 12 records.',
+            risk: 'low',
+            actionId: 'act_low',
+          },
+        },
+        {
+          type: 'approval-gate',
+          props: {
+            title: 'Send the renewal email to 48 customers',
+            summary: 'Outbound to 48 recipients — cannot be unsent.',
+            risk: 'medium',
+            actionId: 'act_med',
+          },
+        },
+        {
+          type: 'approval-gate',
+          props: {
+            title: 'Delete 3 inactive workspaces',
+            summary: 'Destructive — removes all data in those workspaces.',
+            risk: 'high',
+            actionId: 'act_high',
+          },
+        },
+      ],
+    },
+  };
+
+  // 5 ── approval-gate — a rich gate composing a diff + a proposed tool call
+  const richGateSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'approval-gate',
+      props: {
+        title: 'Upgrade 3 accounts to the Pro tier',
+        summary: 'Reviews the config change and the write the agent will run.',
+        risk: 'high',
+        actionId: 'act_upgrade',
+        body: 'The agent matched **3 accounts** over the seat threshold and proposes a tier change. Review the diff and the write before approving.',
+        diff: {
+          before: 'acme:\n  tier: free\n  seats: 12\nbeta:\n  tier: free\n  seats: 9',
+          after: 'acme:\n  tier: pro\n  seats: 12\nbeta:\n  tier: pro\n  seats: 9',
+          title: 'accounts.yaml',
+        },
+        toolCalls: [
+          {
+            name: 'update_accounts',
+            status: 'pending',
+            args: { ids: ['acme', 'beta', 'gamma'], tier: 'pro' },
+          },
+        ],
+      },
+    },
+  };
+
+  // 6 ── approval-gate — pre-resolved states (approved / denied), controls dimmed
+  const resolvedSpec = {
+    version: '1.0' as const,
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'approval-gate',
+          props: {
+            title: 'Refund order #4821',
+            summary: '$240 refund to the customer.',
+            risk: 'medium',
+            decision: 'approved',
+            decidedBy: 'Ada',
+          },
+        },
+        {
+          type: 'approval-gate',
+          props: {
+            title: 'Wipe the staging database',
+            summary: 'Irreversible.',
+            risk: 'high',
+            decision: 'denied',
+            decidedBy: 'Ada',
+          },
+        },
+      ],
+    },
+  };
+
+  // 7 ── approval-gate — BOUND: the decision persists to state on click.
+  const boundGateSpec = {
+    version: '1.0' as const,
+    state: { gateDecision: 'pending' },
+    ui: {
+      type: 'approval-gate',
+      bind: '{state.gateDecision}',
+      props: {
+        title: 'Publish the new pricing page',
+        summary: 'Click Approve/Deny — the decision is written to state.gateDecision.',
+        risk: 'medium',
+        actionId: 'act_publish',
+      },
+    },
+  };
 </script>
 
 <div class="mx-auto max-w-2xl space-y-10 p-8">
@@ -142,5 +263,25 @@
   <section class="space-y-3">
     <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">reasoning-trace</h2>
     <Ripple spec={reasoningSpec} onEvent={handleEvent} />
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — risk levels</h2>
+    <Ripple spec={riskSpec} onEvent={handleEvent} />
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — diff + tool-call body</h2>
+    <Ripple spec={richGateSpec} onEvent={handleEvent} />
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — resolved (approved / denied)</h2>
+    <Ripple spec={resolvedSpec} onEvent={handleEvent} />
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — bound (decision persists)</h2>
+    <Ripple spec={boundGateSpec} onEvent={handleEvent} onStateChange={handleStateChange} />
   </section>
 </div>
