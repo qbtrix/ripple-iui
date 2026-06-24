@@ -21,6 +21,8 @@
 // Updated 2026-06-24 (AI-native tier): added the `ai` category and registered
 // stream-text + tool-call + reasoning-trace — read-only widgets a generative-UI
 // engine uses to show an agent's work (streaming text, tool calls, reasoning).
+// Updated 2026-06-24: registered approval-gate — the human-in-the-loop
+// approve/deny/diff-review organism (the Instinct "human mans the gate" layer).
 
 import { RIPPLE_VERSION } from '../version.js';
 
@@ -28,6 +30,7 @@ import { manifestActions } from './actions.js';
 import { accordionEntry } from './entries/accordion.js';
 import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
+import { approvalGateEntry } from './entries/approval-gate.js';
 import { animatedBeamEntry } from './entries/animated-beam.js';
 import { apiKeyEntry } from './entries/api-key.js';
 import { appShellEntry } from './entries/app-shell.js';
@@ -570,6 +573,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   streamTextEntry,
   toolCallEntry,
   reasoningTraceEntry,
+  approvalGateEntry,
 ];
 
 export function buildManifest(): WidgetManifest {

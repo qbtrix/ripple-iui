@@ -1,5 +1,6 @@
 // Modified: 2026-04-07 — Added c4, workflow to WidgetType enum and diagram category
 // Modified: 2026-06-24 — Added the AI-native display tier (stream-text, tool-call, reasoning-trace) to the WidgetType enum and a new `ai` category.
+// Modified: 2026-06-24 — Added approval-gate (human-in-the-loop approve/deny/diff-review organism) to the WidgetType enum and the `ai` category.
 import { z } from 'zod';
 
 export const WidgetType = z.enum([
@@ -19,7 +20,7 @@ export const WidgetType = z.enum([
   'source-card', 'citation', 'sources-bar', 'discover-card', 'follow-up',
   'company-header', 'ticker', 'kv-table', 'timeline', 'callout', 'news-card',
   // AI-native display tier
-  'stream-text', 'tool-call', 'reasoning-trace'
+  'stream-text', 'tool-call', 'reasoning-trace', 'approval-gate'
 ]);
 
 export type WidgetType = z.infer<typeof WidgetType>;
@@ -35,5 +36,5 @@ export const WIDGET_CATEGORIES = {
   research: ['source-card', 'citation', 'sources-bar', 'discover-card', 'follow-up',
     'company-header', 'ticker', 'kv-table', 'timeline', 'callout', 'news-card',
     'analyst-bar', 'range-bar'],
-  ai: ['stream-text', 'tool-call', 'reasoning-trace']
+  ai: ['stream-text', 'tool-call', 'reasoning-trace', 'approval-gate']
 } as const;

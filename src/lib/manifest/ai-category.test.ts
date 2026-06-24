@@ -8,8 +8,8 @@
 import { describe, expect, it } from 'vitest';
 import { manifestEntries } from './index.js';
 
-/** The AI-native display widgets a generative-UI engine renders for agent work. */
-const AI_TYPES = ['stream-text', 'tool-call', 'reasoning-trace'] as const;
+/** The AI-native widgets a generative-UI engine renders for agent work. */
+const AI_TYPES = ['stream-text', 'tool-call', 'reasoning-trace', 'approval-gate'] as const;
 
 describe('ai manifest category', () => {
   const byType = new Map(manifestEntries.map((e) => [e.type, e]));

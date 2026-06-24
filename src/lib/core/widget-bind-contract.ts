@@ -38,6 +38,12 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'order-status': { prop: 'currentStep', event: 'onstepchange' },
   'shipment-tracker': { prop: 'currentStep', event: 'onstepchange' },
   'order-tracking': { prop: 'currentStep', event: 'onstepchange' },
+  // approval-gate binds its decision ('pending'|'approved'|'denied'), not `value`,
+  // and emits the new decision via `ondecision` — so a refresh remembers the call.
+  'approval-gate': { prop: 'decision', event: 'ondecision' },
+  approval: { prop: 'decision', event: 'ondecision' },
+  'approve-card': { prop: 'decision', event: 'ondecision' },
+  'human-gate': { prop: 'decision', event: 'ondecision' },
 };
 
 /**
