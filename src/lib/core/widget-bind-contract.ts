@@ -71,6 +71,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   // selectable data
   'tree', 'treeview', 'tree-table', 'treetable', 'nested-rows',
   'kanban', 'board',
+  // editable data tables (bind = full rows array; in-place cell edit)
+  'table', 'data-table', 'datatable',
   'data-grid', 'datagrid', 'grid_table',
   'calendar',
   'saved-views', 'views',
