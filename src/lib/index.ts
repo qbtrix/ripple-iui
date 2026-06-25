@@ -100,6 +100,12 @@ export { WidgetType, WIDGET_CATEGORIES } from './schema/widget-types.js';
 export { reorderable, type ReorderableOptions } from './actions/reorderable.js';
 export { withMotion } from './actions/index.js';
 
+// Motion — the shared-layout moving-indicator action + Fluid Functionalism spring
+// tokens (consumed by hosts e.g. paw-enterprise TopBar). Added to the public barrel
+// 2026-06-25: the motion module shipped in src but was never exported here.
+export { movingIndicator, type MovingIndicatorOptions } from './motion/moving-indicator.js';
+export { FF_SPRING_TOKENS } from './motion/presets.js';
+
 // Fluid Functionalism systems layer (MIT)
 export {
   wghtStyle, animateWght,
