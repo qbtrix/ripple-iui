@@ -1,5 +1,12 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
+  Updated: 2026-06-27 (SP-0 editor spike) — added an opt-in `ensureIds` prop.
+  When true, a WeakSet-guarded $effect runs `ensureNodeIds` once per distinct
+  `ui` root, filling stable `n_xxxxxxxx` ids on any node that lacks one so the
+  visual-editor overlay can address rendered nodes. Default OFF — plain renders
+  are byte-identical and the caller's spec is never mutated. Finding: neither
+  Ripple nor `normalizeSpec` assigned node ids before this; ids existed only if
+  the backend/author supplied them.
   Updated: 2026-06-09 — silenced two state_referenced_locally compiler warnings.
   Both are intentional one-time init reads, NOT reactivity bugs: `mergedInitialState`
   seeds the StateManager once (a separate $effect at the spec-state sync block keeps
@@ -58,6 +65,8 @@
   import { themeToStyleString } from './core/theme-applier.js';
   import { validateCatalog } from './core/validate-catalog.js';
   import { isFlowSpec, unwrapFlowRoot } from './core/flow-spec.js';
+  import { ensureNodeIds } from './core/spec-id.js';
+  import type { UINode } from './schema/ui-spec.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
   import DashboardRenderer from './intent/DashboardRenderer.svelte';
@@ -102,6 +111,18 @@
     checkCatalog?: boolean;
     /** Extra widget types to treat as known when `checkCatalog` is on. */
     extraWidgetTypes?: string[];
+    /**
+     * SP-0 editor spike. When true, Ripple assigns a stable `n_xxxxxxxx` id to
+     * every node in the spec's `ui` tree that lacks one (via `ensureNodeIds`),
+     * IN PLACE, once per distinct `ui` root. The visual editor turns this on so
+     * the overlay can address each rendered node by id and so edits persist.
+     *
+     * Default OFF — a plain render is byte-identical to before and never mutates
+     * the caller's spec. `ensureNodeIds` only FILLS gaps (existing ids are kept;
+     * only sibling-duplicate ids are reassigned), so an already-id'd spec is
+     * untouched even when this is on.
+     */
+    ensureIds?: boolean;
     class?: string;
     style?: string;
   }
@@ -118,6 +139,7 @@
     flowHosted = false,
     checkCatalog = false,
     extraWidgetTypes,
+    ensureIds = false,
     class: className = '',
     style
   }: Props = $props();
@@ -310,6 +332,21 @@
       `[Ripple] ${unknown.length} node(s) use a widget type not in the catalog:`,
       unknown
     );
+  });
+
+  // SP-0 editor spike: opt-in stable-id assignment. Runs ONCE per distinct `ui`
+  // root (WeakSet-guarded) so it can't loop, and only when `ensureIds` is on.
+  // The effect reads `spec.ui` (the slot) but never reads any node's `id`, so
+  // writing ids back into the tree doesn't retrigger it. Default-off keeps every
+  // existing Ripple consumer's behavior byte-identical.
+  const ensuredRoots = new WeakSet<object>();
+  $effect(() => {
+    if (!ensureIds) return;
+    const tree = (spec as { ui?: UINode }).ui;
+    if (!tree || typeof tree !== 'object') return;
+    if (ensuredRoots.has(tree)) return;
+    ensuredRoots.add(tree);
+    ensureNodeIds(tree);
   });
 </script>
 

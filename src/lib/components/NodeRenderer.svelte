@@ -39,6 +39,14 @@
       so normal `{type, props, children}` widget nodes are byte-identical to
       before. Guarded by isOrganismType so a stray `organism` prop on a widget
       can never mis-fire.
+    - 2026-06-27 (SP-0 editor spike): stamp `data-ripple-node` (= node.id) and
+      `data-ripple-type` (= node.type) into widgetProps, and add
+      `data-ripple-node` to the motion-wrapper div, so the visual-editor overlay
+      can map a DOM element back to its spec node. Stamp sits LAST in widgetProps
+      so author props can't clobber node identity. CAVEAT: these reach the DOM
+      only for widgets whose root forwards unknown attributes (≈none do today) —
+      empirically the working selector is the DOM `id` already bound by ~82% of
+      widgets; see docs/design/sp0-spike-report.md.
 -->
 <!--
   LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
@@ -462,7 +470,16 @@
 			...(onblur !== undefined && { onblur }),
 			...extraHandlers,
 			...(defaultKids.length > 0 && { hasChildren: true }),
-			...(node.type === 'tabs' && defaultKids.length > 0 && { panels: defaultKids, panelLoopContext: loopContext })
+			...(node.type === 'tabs' && defaultKids.length > 0 && { panels: defaultKids, panelLoopContext: loopContext }),
+			// SP-0 editor spike: per-node DOM stamp for the visual-editor overlay.
+			// Placed LAST so an author-supplied prop can never clobber the node's
+			// identity (resolvedProps spreads earlier). NOTE: these only reach the
+			// DOM for widgets whose root element actually forwards them — see the
+			// spike report; most widgets surface `id` but drop unknown attrs, so
+			// the overlay's primary selector is the DOM `id`, with these as the
+			// dedicated-attribute path for widgets that opt in.
+			'data-ripple-node': node.id,
+			'data-ripple-type': node.type
 		}}
 		{#snippet headerSnippet()}
 			{#each headerKids as child, i (child.id ?? i)}
@@ -498,7 +515,7 @@
 				reveal/parallax sugar widgets. See the LAYOUT CAVEAT at the top of
 				this file for the inline-widget trade-off.
 			-->
-			<div data-ripple-motion class="block" use:withMotion={node.motion}>
+			<div data-ripple-motion data-ripple-node={node.id} class="block" use:withMotion={node.motion}>
 				<WidgetComponent
 					{...widgetProps}
 					header={headerKids.length > 0 ? headerSnippet : undefined}
