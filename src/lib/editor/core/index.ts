@@ -8,6 +8,8 @@
  *   `@ripple-ui/svelte/editor` package entry.
  * @created 2026-06-27 (SP-1a — branch spike/editor-domid-overlay)
  * @changes 2026-06-27 (SP-1b): export findNodeElement, editable.ts, editor-ops.ts.
+ * @changes 2026-06-27 (SP-1c-a): export ports.ts (host-boundary interfaces) +
+ *   MemoryPersistenceAdapter (in-memory reference stub).
  */
 export { pointInRect, rectToStyle, rectArea, relativeRect, type Rect } from './geometry.js';
 export {
@@ -46,3 +48,13 @@ export {
   type EditorOps,
   type EditorOpsOptions
 } from './editor-ops.js';
+export {
+  type PersistenceAdapter,
+  type DataSourceAdapter,
+  type ExportStorageAdapter,
+  type AuthoringAgentAdapter,
+  type ScopeId,
+  type DraftRef,
+  type Revision
+} from './ports.js';
+export { MemoryPersistenceAdapter } from './memory-persistence-adapter.js';
