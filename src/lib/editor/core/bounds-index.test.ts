@@ -16,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BoundsIndex,
   buildBoundsIndex,
+  findNodeElement,
   nodeIdOf,
   resolveElementToNodeId,
   RIPPLE_NODE_ATTR
@@ -173,5 +174,36 @@ describe('buildBoundsIndex (id discovery; positions deferred to browser)', () =>
     container.appendChild(makeEl({ id: 'author-thing' }));
     const idx = buildBoundsIndex(container);
     expect(idx.size).toBe(0);
+  });
+});
+
+describe('findNodeElement (SP-1b: the element the inline editor edits)', () => {
+  it('finds the element carrying a node id (by DOM id)', () => {
+    const container = makeEl();
+    const heading = makeEl({ id: 'n_head0001' }, 'h2');
+    container.appendChild(heading);
+    expect(findNodeElement(container, 'n_head0001')).toBe(heading);
+  });
+
+  it('finds the element carrying a node id via the data-ripple-node stamp', () => {
+    const container = makeEl();
+    const wrap = makeEl({ [RIPPLE_NODE_ATTR]: 'n_motion01' });
+    container.appendChild(wrap);
+    expect(findNodeElement(container, 'n_motion01')).toBe(wrap);
+  });
+
+  it('returns the FIRST match (outermost) when an id repeats', () => {
+    const container = makeEl();
+    const outer = makeEl({ [RIPPLE_NODE_ATTR]: 'n_dup00001' });
+    const inner = makeEl({ id: 'n_dup00001' });
+    outer.appendChild(inner);
+    container.appendChild(outer);
+    expect(findNodeElement(container, 'n_dup00001')).toBe(outer);
+  });
+
+  it('returns null when no element carries the id (e.g. a non-id-forwarding widget)', () => {
+    const container = makeEl();
+    container.appendChild(makeEl({ id: 'n_other001' }));
+    expect(findNodeElement(container, 'n_missing0')).toBeNull();
   });
 });

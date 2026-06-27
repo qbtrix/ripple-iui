@@ -146,3 +146,21 @@ export function buildBoundsIndex(container: HTMLElement, opts?: ResolveOptions):
   }
   return new BoundsIndex(map);
 }
+
+/**
+ * THIN DOM BOUNDARY. Find the FIRST element in `container` (document order =
+ * outermost) carrying node `id` — by the dedicated `data-ripple-node` stamp or a
+ * recognized DOM `id`. Used by the inline editor (SP-1b) to target the element
+ * to make contenteditable, and by SP-1c for drag handles. Returns null when no
+ * such element exists (e.g. a non-id-forwarding widget that only select-parents).
+ */
+export function findNodeElement(
+  container: HTMLElement,
+  id: string,
+  opts?: ResolveOptions
+): HTMLElement | null {
+  for (const el of container.querySelectorAll(NODE_ID_SELECTOR)) {
+    if (nodeIdOf(el, opts) === id) return el as HTMLElement;
+  }
+  return null;
+}
