@@ -28,6 +28,11 @@
       "svelte": "./dist/streaming/index.js",
       "default": "./dist/streaming/index.js"
     },
+    "./editor": {
+      "types": "./dist/editor/index.d.ts",
+      "svelte": "./dist/editor/index.js",
+      "default": "./dist/editor/index.js"
+    },
     "./theme.css": "./dist/theme.css"
   },
   "files": [
