@@ -1,3 +1,4 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -8,6 +9,8 @@
   }
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Array of key-value rows */
     rows: KvRow[];
     /** Number of columns (1 or 2) */
@@ -17,7 +20,7 @@
     class?: string;
   }
 
-  let { rows: rawRows = [], columns = 1, striped = true, class: className }: Props = $props();
+  let { id, rows: rawRows = [], columns = 1, striped = true, class: className }: Props = $props();
 
   const rows = $derived(safeArray<KvRow>(rawRows, { widget: 'kv-table', key: 'rows' }));
 
@@ -29,7 +32,7 @@
   });
 </script>
 
-<div class={cn('rkv', columns === 2 ? 'rkv-2col' : '', className)}>
+<div {id} data-ripple-node={id} class={cn('rkv', columns === 2 ? 'rkv-2col' : '', className)}>
   {#each groups as group}
     <div class="rkv-col">
       {#each group as row, i}

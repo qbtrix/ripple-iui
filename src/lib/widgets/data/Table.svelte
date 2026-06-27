@@ -1,3 +1,5 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on the root div
+     so the visual editor can select this widget directly (SP-0 id-forwarding codemod). -->
 <script lang="ts">
     import { getContext } from "svelte";
     import { cn } from "$lib/utils.js";
@@ -19,6 +21,7 @@
     }
 
     interface Props {
+        id?: string;
         data?: any[];
         rows?: any[];
         columns?: Array<TableColumn | string>;
@@ -37,6 +40,7 @@
     }
 
     let {
+        id,
         data,
         rows,
         columns: rawColumns = [],
@@ -181,7 +185,7 @@
     );
 </script>
 
-<div class={cn("flex flex-col gap-2", className)}>
+<div {id} data-ripple-node={id} class={cn("flex flex-col gap-2", className)}>
     {#if searchable}
         <div class="flex items-center gap-2">
             <input

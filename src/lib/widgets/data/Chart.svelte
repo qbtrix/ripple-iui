@@ -4,6 +4,8 @@
   ResizeObserver init, theme-aware colors, themeOverrides deep merge.
   Modified: 2026-06-09 — chartEl declared with $state() (was plain `let`) so
   bind:this updates are reactive (fixes non_reactive_update).
+  Modified: 2026-06-27 — forward node id (bind id + data-ripple-node on the root div)
+  for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -23,6 +25,7 @@
 	}
 
 	interface Props {
+		id?: string;
 		data: DataPoint[];
 		type?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'candlestick' | 'sparkline' | 'heatmap' | 'gauge' | 'radar';
 		title?: string;
@@ -37,6 +40,7 @@
 	}
 
 	let {
+		id,
 		data: rawData,
 		type = 'bar',
 		title,
@@ -489,7 +493,7 @@
 	});
 </script>
 
-<div class={cn('w-full', className)} style="color: var(--foreground)">
+<div {id} data-ripple-node={id} class={cn('w-full', className)} style="color: var(--foreground)">
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
 	{:else}

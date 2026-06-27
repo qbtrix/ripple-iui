@@ -3,6 +3,8 @@
   Modified: 2026-06-09 — a11y fix: make the optional-onclick container a coherent
   keyboard-accessible button via a derived `interactive` spread (role/tabindex/
   onkeydown), plain div otherwise (fixes a11y_no_static_element_interactions). Recipe 1.
+  Modified: 2026-06-27 — forward node id (bind id + data-ripple-node on the root)
+  for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -20,6 +22,8 @@
   }
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Array of source references */
     sources: SourceRef[];
     /** Override display count (defaults to sources.length) */
@@ -35,7 +39,7 @@
   }
 
   let {
-    sources: rawSources = [], count, label = 'sources',
+    id, sources: rawSources = [], count, label = 'sources',
     share = true, copy = true, class: className, onclick
   }: Props = $props();
 
@@ -82,7 +86,7 @@
   }
 </script>
 
-<div class={cn('rsbar', className)} {...interactive}>
+<div {id} data-ripple-node={id} class={cn('rsbar', className)} {...interactive}>
   <div class="rsbar-left">
     <div class="rsbar-dots">
       {#each validSources.slice(0, 4) as src, i}
