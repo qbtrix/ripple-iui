@@ -1,25 +1,44 @@
 <!--
   @file routes/editor-lab/+page.svelte
-  @description SP-1a captain visual-check surface for the Ripple visual editor.
+  @description Captain visual-check surface for the Ripple visual editor.
     Renders a representative spec via <Ripple ensureIds {spec}> inside a relative
-    "stage", overlaid with <RippleEditorOverlay>. Click any widget to draw a
-    selection box; hover shows a dashed box. Demonstrates SELECT-PARENT: clicking
-    a non-id-forwarding widget (badge / metric / table) selects the nearest
-    id-bearing ancestor. A side panel reads back the selected node id + type, and
-    a "Re-measure" button bumps renderVersion to exercise the measure guard.
-    SCOPE: selection + overlay only (SP-1a) — no inline edit / drag / persist.
+    "stage", overlaid with <RippleEditorOverlay> (SP-1a select/hover) and driven
+    by <RippleInlineEditor> (SP-1b inline text edit). The spec is held in $state
+    so spec-mutator ops are reactive.
+
+    SP-1a (kept): click any widget to draw a selection box; hover shows a dashed
+    box; non-id-forwarding widgets (badge / metric / table) SELECT-PARENT to the
+    nearest id-bearing ancestor.
+
+    SP-1b (new): DOUBLE-CLICK a single-text widget (heading / text / button) to
+    edit it in place — type, then Enter or click away to commit; Escape cancels.
+    The inspector renders an editable field per editable text prop of the selected
+    node (e.g. card title, badge text, alert title/description) — editing it
+    updates the canvas live. BOTH paths emit exactly one `node_prop_set` through
+    the shared EditorOps seam, so they share one code path and SP-1c persistence
+    can intercept it at `onApplied`.
   @created 2026-06-27 (SP-1a — branch spike/editor-domid-overlay)
+  @changes 2026-06-27 (SP-1b): spec -> $state; EditorOps seam; RippleInlineEditor
+    mounted; inspector upgraded from read-only to editable text fields.
 -->
 <script lang="ts">
   import { Ripple, findById } from '$lib/index.js';
   import type { UINode } from '$lib/schema/ui-spec.js';
-  import { RippleEditorOverlay, createEditorSelection } from '$lib/editor/index.js';
+  import {
+    RippleEditorOverlay,
+    RippleInlineEditor,
+    createEditorSelection,
+    createEditorOps,
+    editableTextProps,
+    isInlineTextWidget
+  } from '$lib/editor/index.js';
 
   // Representative spec. Every node carries an explicit n_xxxxxxxx id, so
   // `ensureIds` is a no-op here (it only fills gaps) and knownIds is exact.
   // Non-forwarders (badge / metric / table) are nested so SELECT-PARENT lands on
-  // a visible ancestor.
-  const spec = {
+  // a visible ancestor. Defined as a plain literal first so knownIds is derived
+  // from it without referencing $state during init.
+  const INITIAL = {
     version: '1.0' as const,
     ui: {
       type: 'container',
@@ -31,7 +50,7 @@
         {
           type: 'text',
           id: 'n_text0001',
-          props: { text: 'Click a widget to select it. Hover to preview.', size: 'sm' }
+          props: { text: 'Double-click a heading, this text, or a button to edit it inline.', size: 'sm' }
         },
         {
           type: 'flex',
@@ -96,7 +115,7 @@
   };
 
   // Walk the spec collecting node ids — the precise allow-list passed to the
-  // overlay so author content can never be mistaken for a node.
+  // overlay/inline editor so author content can never be mistaken for a node.
   function collectIds(node: UINode, out = new Set<string>()): Set<string> {
     if (node && typeof node === 'object') {
       if (node.id) out.add(node.id);
@@ -107,16 +126,45 @@
     }
     return out;
   }
-  const knownIds = collectIds(spec.ui as UINode);
+  // Editing only changes prop VALUES (never ids), so the id allow-list computed
+  // from the initial literal stays correct for the life of the page.
+  const knownIds = collectIds(INITIAL.ui as UINode);
+
+  // The editor OWNS the spec as $state (a deep proxy) so spec-mutator's in-place
+  // ops are reactive (SP-0 §3). Cloned so the INITIAL literal is never mutated.
+  let spec = $state(structuredClone(INITIAL));
 
   let stageEl = $state<HTMLElement | null>(null);
   let renderVersion = $state(0);
+  let lastEdit = $state<string | null>(null);
   const selection = createEditorSelection();
 
-  // Read-back of the currently selected node (type + props) for the panel.
+  // The single op seam shared by inline edit AND the inspector. onApplied bumps
+  // renderVersion so the overlay re-measures after text reflows; SP-1c will also
+  // saveDraft(spec) here.
+  const ops = createEditorOps({
+    getRoot: () => spec.ui as UINode,
+    onApplied: () => {
+      renderVersion += 1;
+    }
+  });
+
+  // Read-back of the currently selected node for the inspector.
   const selectedNode = $derived(
     selection.selectedId ? findById(spec.ui as UINode, selection.selectedId) : null
   );
+  // The editable text props (primary first) for the selected node's type.
+  const editProps = $derived(selectedNode ? editableTextProps(selectedNode.type) : []);
+  const inlineHint = $derived(
+    selectedNode ? isInlineTextWidget(selectedNode.type) : false
+  );
+
+  function onInspectorInput(prop: string, ev: Event) {
+    const id = selection.selectedId;
+    if (!id) return;
+    const value = (ev.currentTarget as HTMLInputElement).value;
+    if (ops.setNodeProp(id, prop, value)) lastEdit = `${id}.${prop} = "${value}"`;
+  }
 
   // Widgets whose root does not forward `id` (SP-0 fallback set) — for the
   // legend, so the captain knows which clicks are expected to select-parent.
@@ -125,10 +173,11 @@
 
 <div class="page">
   <header class="page-head">
-    <p class="eyebrow">SP-1a</p>
-    <h1>Ripple Editor — selection overlay</h1>
+    <p class="eyebrow">SP-1b</p>
+    <h1>Ripple Editor — inline + inspector edit</h1>
     <p class="lede">
-      DOM-id selection on top of <code>&lt;Ripple ensureIds&gt;</code>. Click selects, hover previews.
+      Click selects, hover previews (SP-1a). <strong>Double-click</strong> a heading / text / button
+      to edit it in place, or edit a prop in the inspector — both update the canvas live.
     </p>
   </header>
 
@@ -137,6 +186,7 @@
     <section class="stage-wrap">
       <div class="toolbar">
         <span class="muted">Live preview</span>
+        {#if lastEdit}<span class="last-edit" title="last applied op">{lastEdit}</span>{/if}
         <button class="btn" onclick={() => (renderVersion += 1)}>Re-measure</button>
         <button class="btn" onclick={() => selection.clear()}>Clear</button>
       </div>
@@ -145,10 +195,18 @@
           <Ripple ensureIds {spec} />
         </div>
         <RippleEditorOverlay container={stageEl} {selection} {knownIds} {renderVersion} />
+        <RippleInlineEditor
+          container={stageEl}
+          {selection}
+          {ops}
+          {knownIds}
+          getNode={(id) => findById(spec.ui as UINode, id)}
+          oncommit={(id, prop, value) => (lastEdit = `${id}.${prop} = "${value}"`)}
+        />
       </div>
     </section>
 
-    <!-- Inspector: read-only selection read-back. -->
+    <!-- Inspector: editable text props of the selected node. -->
     <aside class="inspector">
       <h2>Selection</h2>
       {#if selectedNode}
@@ -157,11 +215,33 @@
           <dd><code>{selection.selectedId}</code></dd>
           <dt>type</dt>
           <dd><code>{selectedNode.type}</code></dd>
-          {#if selectedNode.props}
-            <dt>props</dt>
-            <dd><pre>{JSON.stringify(selectedNode.props, null, 2)}</pre></dd>
-          {/if}
         </dl>
+
+        <h2>Edit text</h2>
+        {#if editProps.length > 0}
+          {#if inlineHint}
+            <p class="hint">Double-click it on the canvas to edit inline, or use the fields below.</p>
+          {/if}
+          <div class="fields">
+            {#each editProps as prop (prop)}
+              <label class="field">
+                <span class="field-label">{prop}{prop === editProps[0] ? ' (primary)' : ''}</span>
+                <input
+                  type="text"
+                  value={String(selectedNode.props?.[prop] ?? '')}
+                  oninput={(e) => onInspectorInput(prop, e)}
+                />
+              </label>
+            {/each}
+          </div>
+        {:else}
+          <p class="muted">This widget has no editable text prop. Select a heading, text, button, card, badge…</p>
+        {/if}
+
+        {#if selectedNode.props}
+          <h2>Props (live)</h2>
+          <dd><pre>{JSON.stringify(selectedNode.props, null, 2)}</pre></dd>
+        {/if}
       {:else}
         <p class="muted">Nothing selected. Click a widget in the preview.</p>
       {/if}
@@ -172,7 +252,7 @@
       <h2>Select-parent</h2>
       <p class="muted">
         These widgets don't forward <code>id</code>, so clicking them selects their nearest id-bearing
-        ancestor:
+        ancestor (edit them via the inspector):
       </p>
       <ul class="chips">
         {#each selectParentWidgets as w (w)}
@@ -197,7 +277,7 @@
     margin: 0;
     font: 700 11px/1 ui-monospace, monospace;
     letter-spacing: 0.12em;
-    color: #3b82f6;
+    color: #6366f1;
   }
   .page-head h1 {
     margin: 6px 0 4px;
@@ -211,7 +291,7 @@
   }
   .lab {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 340px;
     gap: 20px;
     align-items: start;
   }
@@ -228,6 +308,18 @@
   }
   .toolbar .muted {
     margin-right: auto;
+  }
+  .last-edit {
+    font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #4338ca;
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    padding: 3px 7px;
+    border-radius: 5px;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .btn {
     font: 600 12px/1 ui-sans-serif, system-ui;
@@ -274,6 +366,11 @@
     color: #64748b;
     font-size: 0.85rem;
   }
+  .hint {
+    color: #4338ca;
+    font-size: 0.8rem;
+    margin: 0 0 8px;
+  }
   dl {
     margin: 0;
     display: grid;
@@ -288,6 +385,33 @@
   dd {
     margin: 0;
     font-size: 0.85rem;
+  }
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .field-label {
+    font: 600 11px/1 ui-monospace, monospace;
+    color: #64748b;
+  }
+  .field input {
+    font: 400 0.85rem/1.4 ui-sans-serif, system-ui;
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #0f172a;
+  }
+  .field input:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 0;
+    border-color: #6366f1;
   }
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
