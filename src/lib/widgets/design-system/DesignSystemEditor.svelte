@@ -35,9 +35,12 @@
   let { brand, onChange, mode = 'light', class: className = '' }: Props = $props();
 
   function clone(b: BrandPack): BrandPack {
-    return typeof structuredClone === 'function'
-      ? structuredClone(b)
-      : (JSON.parse(JSON.stringify(b)) as BrandPack);
+    // JSON round-trip, NOT structuredClone: the brand is plain JSON (token values
+    // are strings/numbers), so this is lossless AND proxy-safe. structuredClone
+    // throws DataCloneError on the Svelte `$state` proxy the host passes as
+    // `brand`, which silently swallowed every edit (the live "color not applying"
+    // bug). JSON.stringify reads through the proxy's traps and yields a plain object.
+    return JSON.parse(JSON.stringify(b)) as BrandPack;
   }
 
   function setColor(role: string, slot: 'light' | 'dark', value: string) {
