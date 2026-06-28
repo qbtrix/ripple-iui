@@ -66,10 +66,12 @@
   import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { normalizeSpec } from './core/normalizer.js';
   import { themeToStyleString } from './core/theme-applier.js';
+  import { brandToStyleString } from './core/brand-applier.js';
   import { validateCatalog } from './core/validate-catalog.js';
   import { isFlowSpec, unwrapFlowRoot } from './core/flow-spec.js';
   import { ensureNodeIds } from './core/spec-id.js';
   import type { UINode } from './schema/ui-spec.js';
+  import type { BrandPack } from './schema/brand.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
   import DashboardRenderer from './intent/DashboardRenderer.svelte';
@@ -126,6 +128,16 @@
      * untouched even when this is on.
      */
     ensureIds?: boolean;
+    /**
+     * SP-3 design system. A portable BrandPack whose tokens are emitted as CSS
+     * custom properties on the ripple-root, re-skinning the whole spec at once.
+     * Absent or token-less brand emits nothing (today's look — no regression).
+     * Precedence on the root: spec.theme overrides brand; brand overrides the
+     * host `style`; an explicit per-widget prop still wins over all of them.
+     */
+    brand?: BrandPack;
+    /** Which brand color slot to apply (inline CSS vars can't react to `.dark`). */
+    brandMode?: 'light' | 'dark';
     class?: string;
     style?: string;
   }
@@ -143,6 +155,8 @@
     checkCatalog = false,
     extraWidgetTypes,
     ensureIds = false,
+    brand,
+    brandMode = 'light',
     class: className = '',
     style
   }: Props = $props();
@@ -153,6 +167,11 @@
   // White-label keystone (RFC 12): emit spec.theme as CSS custom properties on
   // the ripple-root so a host's brand applies with no per-site CSS authoring.
   const themeStyle = $derived(themeToStyleString((spec as { theme?: unknown }).theme as never));
+
+  // SP-3 design system: emit the BrandPack's tokens as CSS vars on the ripple-root.
+  // Placed BEFORE themeStyle in the style string (later wins) so spec.theme
+  // overrides brand, and after the host `style` so brand overrides ad-hoc host CSS.
+  const brandStyle = $derived(brandToStyleString(brand, { mode: brandMode }));
 
   // Chain Flow auto-detection (RFC 13, every-surface). A chain spec is hosted in
   // a `FlowRunner` so it advances client-side; a plain spec renders as before.
@@ -370,7 +389,7 @@
 <div
   bind:this={rootEl}
   class="ripple-root {className}"
-  style={[style, themeStyle].filter(Boolean).join('; ')}
+  style={[style, brandStyle, themeStyle].filter(Boolean).join('; ')}
   data-ripple-version={spec.version}
   data-ripple-intent={spec.intent}
   data-ripple-streaming={streaming ? (streaming.done ? 'done' : 'active') : undefined}
