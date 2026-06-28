@@ -17,9 +17,18 @@
     updates the canvas live. BOTH paths emit exactly one `node_prop_set` through
     the shared EditorOps seam, so they share one code path and SP-1c persistence
     can intercept it at `onApplied`.
+
+    SP-1c-b (new): the persistence PORT is now wired to the lab. A single
+    in-memory MemoryPersistenceAdapter backs a clickable round-trip — "Save
+    snapshot" drafts then publishes the current spec as a revision, the inspector
+    lists the revisions, and each "Restore" reverts the canvas to that revision.
+    The adapter is UINode-shaped (it stores spec.ui, the editor's root), so the
+    real Branch-backed adapter drops in behind the same interface unchanged.
   @created 2026-06-27 (SP-1a — branch spike/editor-domid-overlay)
   @changes 2026-06-27 (SP-1b): spec -> $state; EditorOps seam; RippleInlineEditor
     mounted; inspector upgraded from read-only to editable text fields.
+  @changes 2026-06-28 (SP-1c-b): wired MemoryPersistenceAdapter — Save snapshot,
+    revisions list, and Restore — surfacing the persistence port in the lab.
 -->
 <script lang="ts">
   import { Ripple, findById } from '$lib/index.js';
@@ -30,7 +39,9 @@
     createEditorSelection,
     createEditorOps,
     editableTextProps,
-    isInlineTextWidget
+    isInlineTextWidget,
+    MemoryPersistenceAdapter,
+    type Revision
   } from '$lib/editor/index.js';
 
   // Representative spec. Every node carries an explicit n_xxxxxxxx id, so
@@ -139,6 +150,17 @@
   let lastEdit = $state<string | null>(null);
   const selection = createEditorSelection();
 
+  // SP-1c-b: wire the persistence PORT into the lab. One in-memory adapter keeps
+  // the whole Save -> publish -> revisions -> Restore round-trip clickable with
+  // no backend; the real Branch-backed adapter implements the same interface
+  // host-side. The port is UINode-shaped, so we seed / save / restore spec.ui
+  // (the editor's root), never the { version, ui } envelope.
+  const persistence = new MemoryPersistenceAdapter();
+  const scopeId = 'lab';
+  persistence.seed(scopeId, INITIAL.ui as UINode);
+  let revisions = $state<Revision[]>([]);
+  let persistStatus = $state<string | null>(null);
+
   // The single op seam shared by inline edit AND the inspector. onApplied bumps
   // renderVersion so the overlay re-measures after text reflows; SP-1c will also
   // saveDraft(spec) here.
@@ -166,6 +188,27 @@
     if (ops.setNodeProp(id, prop, value)) lastEdit = `${id}.${prop} = "${value}"`;
   }
 
+  // SP-1c-b: Save snapshot = draft the live spec, publish it as a revision, then
+  // refresh the list. $state.snapshot peels a plain object off the $state proxy
+  // so the adapter's structuredClone never sees a proxy.
+  async function saveSnapshot() {
+    const draft = await persistence.saveDraft(scopeId, $state.snapshot(spec.ui) as UINode);
+    const rev = await persistence.publish(scopeId, draft);
+    revisions = await persistence.listRevisions(scopeId);
+    persistStatus = `Saved ${rev.revisionId}`;
+  }
+
+  // SP-1c-b: Restore reverts the canvas to a chosen revision. Assigning the
+  // returned (plain) UINode back into spec.ui re-proxies it under $state, so
+  // <Ripple> repaints; bump renderVersion so the overlay re-measures the new DOM
+  // and any live selection box stays aligned. (Cast into spec.ui's narrower slot
+  // — restore returns the general UINode the adapter stored.)
+  async function restoreRevision(revisionId: string) {
+    spec.ui = (await persistence.restore(scopeId, revisionId)) as typeof spec.ui;
+    renderVersion += 1;
+    persistStatus = `Restored ${revisionId}`;
+  }
+
   // Widgets whose root does not forward `id` (SP-0 fallback set) — for the
   // legend, so the captain knows which clicks are expected to select-parent.
   const selectParentWidgets = ['badge', 'metric', 'table'];
@@ -173,11 +216,12 @@
 
 <div class="page">
   <header class="page-head">
-    <p class="eyebrow">SP-1b</p>
-    <h1>Ripple Editor — inline + inspector edit</h1>
+    <p class="eyebrow">SP-1c-b</p>
+    <h1>Ripple Editor — edit, snapshot, restore</h1>
     <p class="lede">
       Click selects, hover previews (SP-1a). <strong>Double-click</strong> a heading / text / button
       to edit it in place, or edit a prop in the inspector — both update the canvas live.
+      <strong>Save snapshot</strong> publishes a revision; <strong>Restore</strong> reverts the canvas to it.
     </p>
   </header>
 
@@ -187,6 +231,7 @@
       <div class="toolbar">
         <span class="muted">Live preview</span>
         {#if lastEdit}<span class="last-edit" title="last applied op">{lastEdit}</span>{/if}
+        <button class="btn btn-primary" onclick={saveSnapshot}>Save snapshot</button>
         <button class="btn" onclick={() => (renderVersion += 1)}>Re-measure</button>
         <button class="btn" onclick={() => selection.clear()}>Clear</button>
       </div>
@@ -206,8 +251,25 @@
       </div>
     </section>
 
-    <!-- Inspector: editable text props of the selected node. -->
+    <!-- Inspector: persistence history + editable text props of the selection. -->
     <aside class="inspector">
+      <!-- SP-1c-b: persistence round-trip. "Save snapshot" (in the toolbar)
+           publishes a revision; each entry below restores the canvas to it. -->
+      <h2>Versions</h2>
+      {#if persistStatus}<p class="persist-status">{persistStatus}</p>{/if}
+      {#if revisions.length > 0}
+        <ol class="revisions">
+          {#each revisions as rev (rev.revisionId)}
+            <li class="revision">
+              <code>{rev.revisionId}</code>
+              <button class="btn btn-sm" onclick={() => restoreRevision(rev.revisionId)}>Restore</button>
+            </li>
+          {/each}
+        </ol>
+      {:else}
+        <p class="muted">No snapshots yet. Edit a widget, then press "Save snapshot" above the canvas.</p>
+      {/if}
+
       <h2>Selection</h2>
       {#if selectedNode}
         <dl>
@@ -332,6 +394,18 @@
   .btn:hover {
     background: #f8fafc;
   }
+  .btn-primary {
+    border-color: #6366f1;
+    background: #6366f1;
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #4f46e5;
+  }
+  .btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
   /* The stage is the positioned ancestor; the overlay covers it. stage-inner
      holds the live render at the stage origin so box coords line up. */
   .stage {
@@ -370,6 +444,33 @@
     color: #4338ca;
     font-size: 0.8rem;
     margin: 0 0 8px;
+  }
+  .persist-status {
+    font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #047857;
+    background: #ecfdf5;
+    border: 1px solid #d1fae5;
+    padding: 4px 8px;
+    border-radius: 5px;
+    margin: 0 0 8px;
+  }
+  .revisions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .revision {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 6px;
+    border: 1px solid #eef2f7;
+    border-radius: 6px;
+    background: #f8fafc;
   }
   dl {
     margin: 0;
