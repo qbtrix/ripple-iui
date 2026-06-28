@@ -1,9 +1,25 @@
-<!-- 2026-06-27: forward node id — bind id + data-ripple-node on the root div
-     so the visual editor can select this widget directly (SP-0 id-forwarding codemod). -->
+<!-- src/lib/widgets/data/Table.svelte
+     Modified: 2026-06-24 — in-place cell editing (feat/widget-direct-manipulation).
+     Table now supports user-initiated DIRECT MANIPULATION that persists, reusing
+     the Kanban manipulation→persist pattern exactly: on commit it builds the FULL
+     mutated rows array and fires `onchange(next)`; NodeRenderer turns that into
+     `stateManager.set(<bind path>, next)`, which surfaces to the host via
+     `onStateChange`. Editing is bound-path driven and opt-in: a cell is editable
+     only when the table prop `editable` is true (and, in a spec, the node carries a
+     `bind` so NodeRenderer supplies `onchange`). A column may set `editable:false`
+     to stay read-only. Unbound / non-editable tables render byte-identical
+     read-only output, preserving backward compat. A11y per the atoms roadmap:
+     editable cells get role="button" + tabindex=0 + Enter/Space to open; the editor
+     commits on Enter/blur and cancels on Escape; data-editable / data-editing attrs
+     for styling and tests.
+     Modified: 2026-06-27 — forward node id: bind id + data-ripple-node on the root
+     div so the visual editor can select this widget directly (SP-0 id-forwarding). -->
+
 <script lang="ts">
     import { getContext } from "svelte";
     import { cn } from "$lib/utils.js";
     import { safeArray } from "$lib/utils/safe-props.js";
+    import { asText } from "$lib/widgets/text-coerce";
     import type { EventHandlerOrArray } from "../../schema/event-handler.js";
     import type { EventDispatcher } from "../../core/event-dispatcher.js";
     import type { StateManager } from "../../core/state-manager.svelte.js";
@@ -18,12 +34,21 @@
         accessorKey?: string;
         key?: string;
         sortable?: boolean;
+        /** Per-column opt-out: set false to keep this column read-only even when the table is editable. */
+        editable?: boolean;
     }
 
     interface Props {
         id?: string;
         data?: any[];
         rows?: any[];
+        /**
+         * Bound rows array. This is the bind-contract surface (`prop: "value"`):
+         * `bind: "{state.rows}"` flows the live array in here, and on a cell commit
+         * the mutated copy flows back out via `onchange`. Equivalent to `data`/`rows`
+         * for read-only use; required for the editable two-way binding to round-trip.
+         */
+        value?: any[];
         columns?: Array<TableColumn | string>;
         /** Visual variant. */
         variant?: "default" | "compact" | "striped" | "minimal";
@@ -35,6 +60,19 @@
         searchable?: boolean;
         /** If set, paginate rows; click prev/next to walk pages. */
         pageSize?: number;
+        /**
+         * Enable in-place cell editing. When true (and the table is `bind`-bound so
+         * `onchange` is supplied), clicking a cell opens an inline editor; committing
+         * emits the full mutated rows array via `onchange`. Per-column `editable:false`
+         * keeps a column read-only. Unset → read-only (backward compatible).
+         */
+        editable?: boolean;
+        /**
+         * Bound-value callback. Fires with the FULL mutated rows array on cell commit.
+         * NodeRenderer wires this to `stateManager.set(<bind path>, next)` when the
+         * node carries a `bind` — the same persistence path Kanban uses.
+         */
+        onchange?: (rows: any[]) => void;
         onRowClick?: EventHandlerOrArray;
         class?: string;
     }
@@ -43,23 +81,40 @@
         id,
         data,
         rows,
+        value,
         columns: rawColumns = [],
         variant = "default",
         statusKey,
         sortable: tableSortable = false,
         searchable = false,
         pageSize,
+        editable = false,
+        onchange,
         onRowClick,
         class: className,
     }: Props = $props();
 
-    // Coerce both shapes — `data` and `rows` — to arrays. LLM-generated
-    // specs may pass an unevaluated expression string for `rows`.
-    const tableData = $derived(
-        safeArray(data, { widget: "table", key: "data" }).length > 0
-            ? safeArray(data, { widget: "table", key: "data" })
-            : safeArray(rows, { widget: "table", key: "rows" }),
-    );
+    // Coerce all three shapes — `data`, `rows`, and the bound `value` — to arrays.
+    // LLM-generated specs may pass an unevaluated expression string. Precedence
+    // keeps existing specs byte-identical: explicit `data` wins, then `rows`, then
+    // the bound `value` (the bind-contract surface that carries the live array for
+    // the editable two-way binding).
+    const tableData = $derived.by<Record<string, any>[]>(() => {
+        const fromData = safeArray<Record<string, any>>(data, {
+            widget: "table",
+            key: "data",
+        });
+        if (fromData.length > 0) return fromData;
+        const fromRows = safeArray<Record<string, any>>(rows, {
+            widget: "table",
+            key: "rows",
+        });
+        if (fromRows.length > 0) return fromRows;
+        return safeArray<Record<string, any>>(value, {
+            widget: "table",
+            key: "value",
+        });
+    });
 
     const columns = $derived.by(() => {
         const colsArr = safeArray<TableColumn | string>(rawColumns, {
@@ -73,12 +128,15 @@
                         accessorKey: c,
                         header: c,
                         sortable: tableSortable,
+                        editable: true,
                     };
                 return {
                     accessorKey:
                         c.accessorKey ?? c.key ?? c.header ?? c.label ?? "",
                     header: c.header ?? c.label ?? c.accessorKey ?? c.key ?? "",
                     sortable: c.sortable ?? tableSortable,
+                    // Per-column opt-out: default editable, explicit false stays read-only.
+                    editable: c.editable !== false,
                 };
             });
         }
@@ -88,6 +146,7 @@
                 accessorKey: k,
                 header: k,
                 sortable: tableSortable,
+                editable: true,
             }));
         }
         return [];
@@ -174,6 +233,94 @@
         });
     }
 
+    // ── In-place cell editing ────────────────────────────────────────────────
+    // Mirrors the Kanban manipulation→persist contract: on commit we build the
+    // FULL mutated rows array and fire `onchange(next)`. NodeRenderer turns that
+    // into `stateManager.set(<bind path>, next)`, which the host persists via
+    // `onStateChange`. The widget never touches StateManager directly.
+    //
+    // The edit target is tracked by *source-array index* + column key, NOT object
+    // identity: `editingRowIndex` lives in `$state`, so comparing a stored row
+    // object against a live `{#each}` row with `===` would trip Svelte's
+    // state_proxy_equality_mismatch (the proxy and the raw value differ). The
+    // index into `tableData` is stable and proxy-free, so commit writes to the
+    // right *source* record regardless of the sorted/filtered/paged view.
+    let editingRowIndex = $state<number | null>(null);
+    let editingKey = $state<string | null>(null);
+    let editingValue = $state("");
+
+    function cellIsEditable(col: { editable?: boolean }): boolean {
+        return editable && col.editable !== false;
+    }
+
+    function startEdit(rowIndex: number, key: string, current: unknown) {
+        editingRowIndex = rowIndex;
+        editingKey = key;
+        editingValue = current === null || current === undefined ? "" : asText(current);
+    }
+
+    function isEditing(rowIndex: number, key: string): boolean {
+        return editingRowIndex === rowIndex && editingKey === key;
+    }
+
+    function cancelEdit() {
+        editingRowIndex = null;
+        editingKey = null;
+        editingValue = "";
+    }
+
+    function commitEdit() {
+        if (editingRowIndex === null || editingKey === null) return;
+        const targetIndex = editingRowIndex;
+        const key = editingKey;
+        const value = editingValue;
+        // Map over the live source array by index → a new array with a new row
+        // object at the edited position (no in-place mutation of the caller's data).
+        const next = tableData.map((r, i) =>
+            i === targetIndex ? { ...(r as Record<string, unknown>), [key]: value } : r,
+        );
+        cancelEdit();
+        onchange?.(next);
+    }
+
+    function onEditorKeydown(e: KeyboardEvent) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            commitEdit();
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            cancelEdit();
+        }
+    }
+
+    function onCellKeydown(
+        e: KeyboardEvent,
+        rowIndex: number,
+        key: string,
+        current: unknown,
+    ) {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            startEdit(rowIndex, key, current);
+        }
+    }
+
+    /**
+     * Source-array index of a visible row. `visible` is a sorted/filtered/paged
+     * derivation that preserves the original row object references, so a plain
+     * `indexOf` against `tableData` recovers the stable index the edit target
+     * tracks. Falls back to -1 (no-op) if the reference can't be found.
+     */
+    function sourceIndexOf(row: Record<string, any>): number {
+        return tableData.indexOf(row);
+    }
+
+    // Autofocus + select-all when an editor mounts, so typing replaces the value.
+    function focusEditor(node: HTMLInputElement) {
+        node.focus();
+        node.select();
+    }
+
     const variantClasses = $derived(
         {
             default: "",
@@ -242,7 +389,18 @@
                                 : ""}
                             onclick={() => handleRowClick(row, i)}
                         >
+                            {@const srcIndex = sourceIndexOf(row)}
                             {#each columns as col, ci}
+                                {@const editKey = col.accessorKey ?? ""}
+                                {@const canEdit =
+                                    cellIsEditable(col) &&
+                                    editKey !== "" &&
+                                    srcIndex !== -1}
+                                {@const cellValue =
+                                    col.accessorKey &&
+                                    row[col.accessorKey] !== undefined
+                                        ? row[col.accessorKey]
+                                        : (Object.values(row)[ci] ?? "")}
                                 <Table.Cell>
                                     {#if ci === 0 && statusKey && row[statusKey]}
                                         <span
@@ -250,10 +408,46 @@
                                             style="background:{row[statusKey]}"
                                         ></span>
                                     {/if}
-                                    {#if col.accessorKey && row[col.accessorKey] !== undefined}
-                                        {row[col.accessorKey]}
+                                    {#if canEdit && isEditing(srcIndex, editKey)}
+                                        <input
+                                            type="text"
+                                            value={editingValue}
+                                            oninput={(e) =>
+                                                (editingValue = (
+                                                    e.currentTarget as HTMLInputElement
+                                                ).value)}
+                                            onkeydown={onEditorKeydown}
+                                            onblur={commitEdit}
+                                            use:focusEditor
+                                            aria-label={`Edit ${col.header} value`}
+                                            data-editing="true"
+                                            class="w-full min-w-0 rounded border border-ring bg-background px-1.5 py-0.5 text-sm outline-none ring-2 ring-ring/40"
+                                        />
+                                    {:else if canEdit}
+                                        <span
+                                            role="button"
+                                            tabindex="0"
+                                            data-editable="true"
+                                            aria-label={`Edit ${col.header}`}
+                                            onclick={() =>
+                                                startEdit(
+                                                    srcIndex,
+                                                    editKey,
+                                                    cellValue,
+                                                )}
+                                            onkeydown={(e) =>
+                                                onCellKeydown(
+                                                    e,
+                                                    srcIndex,
+                                                    editKey,
+                                                    cellValue,
+                                                )}
+                                            class="-mx-1 inline-block min-w-[1ch] cursor-text rounded px-1 hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring"
+                                        >
+                                            {cellValue}
+                                        </span>
                                     {:else}
-                                        {Object.values(row)[ci] ?? ""}
+                                        {cellValue}
                                     {/if}
                                 </Table.Cell>
                             {/each}
