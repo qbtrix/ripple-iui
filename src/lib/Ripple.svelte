@@ -1,5 +1,8 @@
 <!--
   Ripple.svelte — Main entry point for Ripple UI rendering.
+  Updated: 2026-06-28 (SP-4 slides) — added `slides` to DESIGNED_INTENTS so a
+  `{intent:'slides'}` spec routes through IntentRenderer to the new SlidesLayout
+  (presentation deck). Additive: every other intent's routing is byte-identical.
   Updated: 2026-06-27 (SP-0 editor spike) — added an opt-in `ensureIds` prop.
   When true, a WeakSet-guarded $effect runs `ensureNodeIds` once per distinct
   `ui` root, filling stable `n_xxxxxxxx` ids on any node that lacks one so the
@@ -294,6 +297,7 @@
   const DESIGNED_INTENTS = new Set([
     'form', 'confirm', 'quick_confirm',
     'browse', 'select', 'detail', 'info', 'search',
+    'slides', // SP-4: presentation deck → IntentRenderer → SlidesLayout
   ]);
 
   let renderMode = $derived.by(

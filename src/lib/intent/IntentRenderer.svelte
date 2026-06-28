@@ -80,6 +80,9 @@
 	import TimelineLayout from './layouts/TimelineLayout.svelte';
 	import TableLayout from './layouts/TableLayout.svelte';
 	import ArticleLayout from './layouts/ArticleLayout.svelte';
+	// Presentation deck (SP-4) — routed by `intent`, reads the spec's node tree
+	// directly (not the layout-adapter `items`), so it's dispatched up-front.
+	import SlidesLayout from './layouts/SlidesLayout.svelte';
 
 	interface Props {
 		/** The step / spec to render. */
@@ -174,6 +177,7 @@
 	 */
 	type Designed =
 		| 'dashboard'
+		| 'slides'
 		| 'form'
 		| 'summary'
 		| 'select'
@@ -193,6 +197,10 @@
 
 	const designed = $derived.by<Designed>(() => {
 		if (spec.intent === 'dashboard' || layout === 'dashboard') return 'dashboard';
+		// Presentation deck: routed purely by intent, BEFORE any data/hint check.
+		// SlidesLayout reads the spec's own node tree (sections / ui.children / ui),
+		// not the adapter `items`, so it must not fall through to the data layouts.
+		if (spec.intent === 'slides') return 'slides';
 		if (spec.intent === 'form' || layout.startsWith('form')) return 'form';
 		if (
 			spec.intent === 'confirm' ||
@@ -257,6 +265,10 @@
 	<ResultsSummary title={spec.title} items={resultsItems} />
 {:else if designed === 'dashboard'}
 	<DashboardRenderer {spec} {onSpecChanged} />
+{:else if designed === 'slides'}
+	<!-- Presentation deck (SP-4): reads the spec's node tree directly, so it takes
+	     `spec` (not the adapter `input`) and partitions it into slides. -->
+	<SlidesLayout {spec} />
 {:else if designed === 'form'}
 	<FormLayout {input} {onFieldChange} />
 {:else if designed === 'summary'}

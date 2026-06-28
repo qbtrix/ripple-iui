@@ -27,6 +27,11 @@
  *     `then` post-action (`z.lazy` self-reference) so a write terminal can chain
  *     a follow-up (e.g. navigate to the new pocket). Purely additive: the three
  *     existing kinds are untouched, so every current flow validates unchanged.
+ *   - 2026-06-28 (SP-4 slides layout): ADDED `slides` to IntentType — a
+ *     presentation-deck intent routed to SlidesLayout. Required for the same
+ *     reason as quick_confirm/widget/itinerary above: normalizeSpec parses with
+ *     this enum, so without it a `{intent:'slides'}` spec fails parse and is
+ *     coerced to an empty `custom`. Purely additive; no existing value removed.
  */
 
 import { z } from 'zod';
@@ -132,7 +137,8 @@ export const IntentType = z.enum([
   'workspace',    // Tool-based workspace
   'dashboard',    // Persistent dashboard
   'widget',       // Single-widget display (routes to widget layout)
-  'itinerary'     // Multi-day travel plan with timeline (routes to itinerary layout)
+  'itinerary',    // Multi-day travel plan with timeline (routes to itinerary layout)
+  'slides'        // Presentation deck — one slide per section (routes to SlidesLayout)
 ]);
 
 export type IntentType = z.infer<typeof IntentType>;
