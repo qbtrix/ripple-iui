@@ -3,12 +3,16 @@
   Modified: 2026-06-09 — a11y fix: bundle role/tabindex/onkeydown into a derived
   `interactive` spread so the element is a coherent keyboard-accessible button only
   when clickable (fixes a11y_no_noninteractive_tabindex). Recipe 2.
+  Modified: 2026-06-27 — forward node id (bind id + data-ripple-node on the root)
+  for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { faviconUrl } from './favicon.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Source/publisher name */
     source: string;
     /** Dot/accent color — fallback if favicon fails */
@@ -24,7 +28,7 @@
   }
 
   let {
-    source, color = 'var(--primary)', favicon, number,
+    id, source, color = 'var(--primary)', favicon, number,
     url, class: className, onclick
   }: Props = $props();
 
@@ -43,7 +47,7 @@
   );
 </script>
 
-<span class={cn('rcite', className)} {...interactive}>
+<span {id} data-ripple-node={id} class={cn('rcite', className)} {...interactive}>
   {#if !iconError}
     <img src={iconSrc} alt="" class="rcite-favicon" onerror={() => iconError = true} />
   {:else}

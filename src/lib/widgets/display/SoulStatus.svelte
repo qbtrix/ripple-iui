@@ -1,8 +1,11 @@
 <!-- SoulStatus.svelte — Compact/expanded display widget for an agent's soul state -->
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on each variant's root div
+     so the visual editor can select this widget directly (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
 
   interface Props {
+    id?: string;
     name?: string;
     role?: string;
     initials?: string;
@@ -17,6 +20,7 @@
   }
 
   let {
+    id,
     name = 'Agent',
     role = '',
     initials = '',
@@ -44,7 +48,7 @@
 </script>
 
 {#if compact}
-  <div class={cn('flex items-center gap-2.5', className)}>
+  <div {id} data-ripple-node={id} class={cn('flex items-center gap-2.5', className)}>
     <!-- Avatar with status dot -->
     <div class="relative shrink-0">
       <div
@@ -78,7 +82,7 @@
     </div>
   </div>
 {:else}
-  <div class={cn('flex flex-col gap-3 rounded-lg border border-border/50 bg-transparent p-3', className)}>
+  <div {id} data-ripple-node={id} class={cn('flex flex-col gap-3 rounded-lg border border-border/50 bg-transparent p-3', className)}>
     <!-- Header: avatar + name/role -->
     <div class="flex items-center gap-2.5">
       <div class="relative shrink-0">

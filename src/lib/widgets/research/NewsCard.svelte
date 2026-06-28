@@ -3,12 +3,16 @@
   Modified: 2026-06-09 — a11y fix: bundle role/tabindex/onkeydown into a derived
   `interactive` spread so the row is a coherent keyboard-accessible button only
   when clickable (fixes a11y_no_noninteractive_tabindex). Recipe 2.
+  Modified: 2026-06-27 — forward node id (bind id + data-ripple-node on the root)
+  for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { faviconUrl } from './favicon.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Article headline */
     headline: string;
     /** Source/publisher name */
@@ -26,7 +30,7 @@
   }
 
   let {
-    headline, source, time, sentiment, image,
+    id, headline, source, time, sentiment, image,
     url, class: className, onclick
   }: Props = $props();
 
@@ -51,7 +55,7 @@
   );
 </script>
 
-<div class={cn('rnews', className)} {...interactive}>
+<div {id} data-ripple-node={id} class={cn('rnews', className)} {...interactive}>
   <div class="rnews-body">
     <div class="rnews-source-row">
       {#if !iconError}

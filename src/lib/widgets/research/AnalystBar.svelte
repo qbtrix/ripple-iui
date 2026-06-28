@@ -1,7 +1,10 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Number of Buy/Overweight ratings */
     buy?: number;
     /** Number of Hold ratings */
@@ -16,7 +19,7 @@
   }
 
   let {
-    buy = 0, hold = 0, sell = 0,
+    id, buy = 0, hold = 0, sell = 0,
     consensus, target, class: className
   }: Props = $props();
 
@@ -26,7 +29,7 @@
   const sellPct = $derived(total ? (sell / total * 100) : 0);
 </script>
 
-<div class={cn('rab', className)}>
+<div {id} data-ripple-node={id} class={cn('rab', className)}>
   {#if consensus || target}
     <div class="rab-header">
       {#if consensus}

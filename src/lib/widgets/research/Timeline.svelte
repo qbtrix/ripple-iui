@@ -1,3 +1,4 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -16,6 +17,8 @@
   }
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     events: TimelineEvent[];
     /** Max events to show before truncating */
     maxItems?: number;
@@ -25,6 +28,7 @@
   }
 
   let {
+    id,
     events: rawEvents = [],
     maxItems,
     density = 'comfortable',
@@ -48,7 +52,7 @@
   }
 </script>
 
-<div class={cn('rtl', density === 'compact' && 'rtl--compact', className)}>
+<div {id} data-ripple-node={id} class={cn('rtl', density === 'compact' && 'rtl--compact', className)}>
   {#each visible as ev, i}
     <div class="rtl-item">
       <div class="rtl-rail">

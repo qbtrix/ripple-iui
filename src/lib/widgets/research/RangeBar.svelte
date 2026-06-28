@@ -1,7 +1,10 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Label for the range */
     label?: string;
     /** Minimum value (left) */
@@ -22,7 +25,7 @@
   }
 
   let {
-    label, min, max, current,
+    id, label, min, max, current,
     minLabel, maxLabel, currentLabel,
     color = 'var(--primary)',
     class: className
@@ -33,7 +36,7 @@
   );
 </script>
 
-<div class={cn('rrb', className)}>
+<div {id} data-ripple-node={id} class={cn('rrb', className)}>
   {#if label}
     <div class="rrb-header">
       <span class="rrb-label">{label}</span>

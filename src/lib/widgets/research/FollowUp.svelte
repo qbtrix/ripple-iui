@@ -1,3 +1,4 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { getContext } from 'svelte';
@@ -5,6 +6,8 @@
   import type { StateManager } from '$lib/core/state-manager.svelte.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Input placeholder text */
     placeholder?: string;
     /** Submit button label (sr-only) */
@@ -16,6 +19,7 @@
   }
 
   let {
+    id,
     placeholder = 'Ask follow-up',
     submitLabel = 'Send',
     event = 'follow-up',
@@ -48,7 +52,7 @@
   }
 </script>
 
-<div class={cn('rfollow', className)}>
+<div {id} data-ripple-node={id} class={cn('rfollow', className)}>
   <input
     type="text"
     class="rfollow-input"

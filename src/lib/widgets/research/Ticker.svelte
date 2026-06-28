@@ -1,3 +1,4 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -10,12 +11,14 @@
   }
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Single ticker or array for a ticker strip */
     items: TickerItem[];
     class?: string;
   }
 
-  let { items = [], class: className }: Props = $props();
+  let { id, items = [], class: className }: Props = $props();
 
   // `change` comes from item data and can be a number — coerce before .trim.
   function isUp(change: unknown): boolean {
@@ -23,7 +26,7 @@
   }
 </script>
 
-<div class={cn('rtick', className)}>
+<div {id} data-ripple-node={id} class={cn('rtick', className)}>
   {#each items as item, i}
     {#if i > 0}<span class="rtick-sep"></span>{/if}
     <div class="rtick-item">

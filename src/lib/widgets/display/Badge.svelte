@@ -1,15 +1,18 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root (passed through the
+     shadcn Badge restProps) so the visual editor can select this widget directly (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { asText } from '$lib/widgets/text-coerce';
 
   interface Props {
+    id?: string;
     text?: string;
     variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
     class?: string;
   }
 
-  let { text = '', variant = 'default', class: className }: Props = $props();
+  let { id, text = '', variant = 'default', class: className }: Props = $props();
 
   // Map Ripple-specific variants to shadcn badge variants, with custom classes for success/warning
   const variantMap: Record<string, string> = {
@@ -34,7 +37,7 @@
 <!-- Empty guard: an empty badge (no text) would render as a bare bordered pill —
      a stray-circle artifact in cards. Render nothing when there's no content. -->
 {#if label.trim()}
-  <Badge variant={shadcnVariant} class={cn(extraClass, className)}>
+  <Badge {id} data-ripple-node={id} variant={shadcnVariant} class={cn(extraClass, className)}>
     {label}
   </Badge>
 {/if}

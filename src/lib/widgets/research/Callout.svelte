@@ -1,7 +1,10 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Callout title (optional) */
     title?: string;
     /** Body text */
@@ -11,7 +14,7 @@
     class?: string;
   }
 
-  let { title, text, variant = 'info', class: className }: Props = $props();
+  let { id, title, text, variant = 'info', class: className }: Props = $props();
 
   const config: Record<string, { border: string; bg: string; icon: string }> = {
     info:    { border: '#3b82f6', bg: 'rgba(59,130,246,0.06)', icon: 'i' },
@@ -24,6 +27,8 @@
 </script>
 
 <div
+  {id}
+  data-ripple-node={id}
   class={cn('rcall', className)}
   style="border-left-color:{c.border}; background:{c.bg}"
 >

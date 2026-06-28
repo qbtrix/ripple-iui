@@ -1,3 +1,4 @@
+<!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -5,6 +6,8 @@
   import { faviconUrl } from './favicon.js';
 
   interface Props {
+    /** Spec node id, forwarded by NodeRenderer for editor selection. */
+    id?: string;
     /** Company name */
     name: string;
     /** Stock ticker symbol */
@@ -31,7 +34,7 @@
   }
 
   let {
-    name, ticker, exchange, description, logo, domain,
+    id, name, ticker, exchange, description, logo, domain,
     tags: rawTags = [], price, change, changePercent, marketCap,
     class: className
   }: Props = $props();
@@ -48,7 +51,7 @@
   const isPositive = $derived(change != null ? !asText(change).startsWith('-') : true);
 </script>
 
-<div class={cn('rch', className)}>
+<div {id} data-ripple-node={id} class={cn('rch', className)}>
   <div class="rch-top">
     <div class="rch-identity">
       {#if logoSrc && !logoError}
