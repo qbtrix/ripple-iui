@@ -1,0 +1,450 @@
+<!--
+  @file routes/editor-lab/+page.svelte
+  @description Captain visual-check surface for the Ripple visual editor.
+    Renders a representative spec via <Ripple ensureIds {spec}> inside a relative
+    "stage", overlaid with <RippleEditorOverlay> (SP-1a select/hover) and driven
+    by <RippleInlineEditor> (SP-1b inline text edit). The spec is held in $state
+    so spec-mutator ops are reactive.
+
+    SP-1a (kept): click any widget to draw a selection box; hover shows a dashed
+    box; non-id-forwarding widgets (badge / metric / table) SELECT-PARENT to the
+    nearest id-bearing ancestor.
+
+    SP-1b (new): DOUBLE-CLICK a single-text widget (heading / text / button) to
+    edit it in place — type, then Enter or click away to commit; Escape cancels.
+    The inspector renders an editable field per editable text prop of the selected
+    node (e.g. card title, badge text, alert title/description) — editing it
+    updates the canvas live. BOTH paths emit exactly one `node_prop_set` through
+    the shared EditorOps seam, so they share one code path and SP-1c persistence
+    can intercept it at `onApplied`.
+  @created 2026-06-27 (SP-1a — branch spike/editor-domid-overlay)
+  @changes 2026-06-27 (SP-1b): spec -> $state; EditorOps seam; RippleInlineEditor
+    mounted; inspector upgraded from read-only to editable text fields.
+-->
+<script lang="ts">
+  import { Ripple, findById } from '$lib/index.js';
+  import type { UINode } from '$lib/schema/ui-spec.js';
+  import {
+    RippleEditorOverlay,
+    RippleInlineEditor,
+    createEditorSelection,
+    createEditorOps,
+    editableTextProps,
+    isInlineTextWidget
+  } from '$lib/editor/index.js';
+
+  // Representative spec. Every node carries an explicit n_xxxxxxxx id, so
+  // `ensureIds` is a no-op here (it only fills gaps) and knownIds is exact.
+  // Non-forwarders (badge / metric / table) are nested so SELECT-PARENT lands on
+  // a visible ancestor. Defined as a plain literal first so knownIds is derived
+  // from it without referencing $state during init.
+  const INITIAL = {
+    version: '1.0' as const,
+    ui: {
+      type: 'container',
+      id: 'n_root0001',
+      props: { padding: 'lg' },
+      children: [
+        { type: 'navbar', id: 'n_navbar01', props: { brand: 'Ripple Studio' } },
+        { type: 'heading', id: 'n_head0001', props: { text: 'Editor Lab', level: 2 } },
+        {
+          type: 'text',
+          id: 'n_text0001',
+          props: { text: 'Double-click a heading, this text, or a button to edit it inline.', size: 'sm' }
+        },
+        {
+          type: 'flex',
+          id: 'n_row00001',
+          props: { gap: '8px', align: 'center', wrap: 'wrap' },
+          children: [
+            { type: 'button', id: 'n_btnsave1', props: { label: 'Save', variant: 'default' } },
+            { type: 'button', id: 'n_btnedit1', props: { label: 'Edit', variant: 'outline' } },
+            { type: 'input', id: 'n_input001', props: { placeholder: 'Search…' } }
+          ]
+        },
+        {
+          type: 'grid',
+          id: 'n_grid0001',
+          props: { columns: 3, gap: '12px' },
+          children: [
+            {
+              type: 'card',
+              id: 'n_cardrev1',
+              props: { title: 'Revenue' },
+              children: [{ type: 'stat', id: 'n_stat0001', props: { label: 'MRR', value: '$12.4k' } }]
+            },
+            {
+              type: 'card',
+              id: 'n_cardusr1',
+              props: { title: 'Users' },
+              // metric does NOT forward id — clicking it select-parents to this card.
+              children: [{ type: 'metric', id: 'n_metric01', props: { label: 'Active', value: 1280 } }]
+            },
+            {
+              type: 'card',
+              id: 'n_cardnew1',
+              props: { title: 'Status' },
+              // badge does NOT forward id — clicking it select-parents to this card.
+              children: [{ type: 'badge', id: 'n_badge001', props: { text: 'Live', variant: 'success' } }]
+            }
+          ]
+        },
+        // table does NOT forward id — clicking it select-parents to the root container.
+        {
+          type: 'table',
+          id: 'n_table001',
+          props: {
+            variant: 'compact',
+            columns: [
+              { key: 'name', label: 'Name' },
+              { key: 'role', label: 'Role' }
+            ],
+            rows: [
+              { name: 'Ada', role: 'Engineer' },
+              { name: 'Linus', role: 'Maintainer' }
+            ]
+          }
+        },
+        {
+          type: 'form',
+          id: 'n_form0001',
+          children: [{ type: 'input', id: 'n_finput01', props: { label: 'Email', placeholder: 'you@co' } }]
+        }
+      ]
+    }
+  };
+
+  // Walk the spec collecting node ids — the precise allow-list passed to the
+  // overlay/inline editor so author content can never be mistaken for a node.
+  function collectIds(node: UINode, out = new Set<string>()): Set<string> {
+    if (node && typeof node === 'object') {
+      if (node.id) out.add(node.id);
+      for (const key of ['children', 'else_children'] as const) {
+        const kids = (node as Record<string, unknown>)[key];
+        if (Array.isArray(kids)) for (const k of kids) collectIds(k as UINode, out);
+      }
+    }
+    return out;
+  }
+  // Editing only changes prop VALUES (never ids), so the id allow-list computed
+  // from the initial literal stays correct for the life of the page.
+  const knownIds = collectIds(INITIAL.ui as UINode);
+
+  // The editor OWNS the spec as $state (a deep proxy) so spec-mutator's in-place
+  // ops are reactive (SP-0 §3). Cloned so the INITIAL literal is never mutated.
+  let spec = $state(structuredClone(INITIAL));
+
+  let stageEl = $state<HTMLElement | null>(null);
+  let renderVersion = $state(0);
+  let lastEdit = $state<string | null>(null);
+  const selection = createEditorSelection();
+
+  // The single op seam shared by inline edit AND the inspector. onApplied bumps
+  // renderVersion so the overlay re-measures after text reflows; SP-1c will also
+  // saveDraft(spec) here.
+  const ops = createEditorOps({
+    getRoot: () => spec.ui as UINode,
+    onApplied: () => {
+      renderVersion += 1;
+    }
+  });
+
+  // Read-back of the currently selected node for the inspector.
+  const selectedNode = $derived(
+    selection.selectedId ? findById(spec.ui as UINode, selection.selectedId) : null
+  );
+  // The editable text props (primary first) for the selected node's type.
+  const editProps = $derived(selectedNode ? editableTextProps(selectedNode.type) : []);
+  const inlineHint = $derived(
+    selectedNode ? isInlineTextWidget(selectedNode.type) : false
+  );
+
+  function onInspectorInput(prop: string, ev: Event) {
+    const id = selection.selectedId;
+    if (!id) return;
+    const value = (ev.currentTarget as HTMLInputElement).value;
+    if (ops.setNodeProp(id, prop, value)) lastEdit = `${id}.${prop} = "${value}"`;
+  }
+
+  // Widgets whose root does not forward `id` (SP-0 fallback set) — for the
+  // legend, so the captain knows which clicks are expected to select-parent.
+  const selectParentWidgets = ['badge', 'metric', 'table'];
+</script>
+
+<div class="page">
+  <header class="page-head">
+    <p class="eyebrow">SP-1b</p>
+    <h1>Ripple Editor — inline + inspector edit</h1>
+    <p class="lede">
+      Click selects, hover previews (SP-1a). <strong>Double-click</strong> a heading / text / button
+      to edit it in place, or edit a prop in the inspector — both update the canvas live.
+    </p>
+  </header>
+
+  <div class="lab">
+    <!-- The stage: relative so the overlay's absolute boxes align to it. -->
+    <section class="stage-wrap">
+      <div class="toolbar">
+        <span class="muted">Live preview</span>
+        {#if lastEdit}<span class="last-edit" title="last applied op">{lastEdit}</span>{/if}
+        <button class="btn" onclick={() => (renderVersion += 1)}>Re-measure</button>
+        <button class="btn" onclick={() => selection.clear()}>Clear</button>
+      </div>
+      <div class="stage">
+        <div class="stage-inner" bind:this={stageEl}>
+          <Ripple ensureIds {spec} />
+        </div>
+        <RippleEditorOverlay container={stageEl} {selection} {knownIds} {renderVersion} />
+        <RippleInlineEditor
+          container={stageEl}
+          {selection}
+          {ops}
+          {knownIds}
+          getNode={(id) => findById(spec.ui as UINode, id)}
+          oncommit={(id, prop, value) => (lastEdit = `${id}.${prop} = "${value}"`)}
+        />
+      </div>
+    </section>
+
+    <!-- Inspector: editable text props of the selected node. -->
+    <aside class="inspector">
+      <h2>Selection</h2>
+      {#if selectedNode}
+        <dl>
+          <dt>node id</dt>
+          <dd><code>{selection.selectedId}</code></dd>
+          <dt>type</dt>
+          <dd><code>{selectedNode.type}</code></dd>
+        </dl>
+
+        <h2>Edit text</h2>
+        {#if editProps.length > 0}
+          {#if inlineHint}
+            <p class="hint">Double-click it on the canvas to edit inline, or use the fields below.</p>
+          {/if}
+          <div class="fields">
+            {#each editProps as prop (prop)}
+              <label class="field">
+                <span class="field-label">{prop}{prop === editProps[0] ? ' (primary)' : ''}</span>
+                <input
+                  type="text"
+                  value={String(selectedNode.props?.[prop] ?? '')}
+                  oninput={(e) => onInspectorInput(prop, e)}
+                />
+              </label>
+            {/each}
+          </div>
+        {:else}
+          <p class="muted">This widget has no editable text prop. Select a heading, text, button, card, badge…</p>
+        {/if}
+
+        {#if selectedNode.props}
+          <h2>Props (live)</h2>
+          <dd><pre>{JSON.stringify(selectedNode.props, null, 2)}</pre></dd>
+        {/if}
+      {:else}
+        <p class="muted">Nothing selected. Click a widget in the preview.</p>
+      {/if}
+
+      <h2>Hover</h2>
+      <p class="muted">{selection.hoverId ?? '—'}</p>
+
+      <h2>Select-parent</h2>
+      <p class="muted">
+        These widgets don't forward <code>id</code>, so clicking them selects their nearest id-bearing
+        ancestor (edit them via the inspector):
+      </p>
+      <ul class="chips">
+        {#each selectParentWidgets as w (w)}
+          <li>{w}</li>
+        {/each}
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<style>
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 64px;
+    color: #0f172a;
+  }
+  .page-head {
+    margin-bottom: 20px;
+  }
+  .eyebrow {
+    margin: 0;
+    font: 700 11px/1 ui-monospace, monospace;
+    letter-spacing: 0.12em;
+    color: #6366f1;
+  }
+  .page-head h1 {
+    margin: 6px 0 4px;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .lede {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+  .lab {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .lab {
+      grid-template-columns: 1fr;
+    }
+  }
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .toolbar .muted {
+    margin-right: auto;
+  }
+  .last-edit {
+    font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #4338ca;
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    padding: 3px 7px;
+    border-radius: 5px;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .btn {
+    font: 600 12px/1 ui-sans-serif, system-ui;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: #f8fafc;
+  }
+  /* The stage is the positioned ancestor; the overlay covers it. stage-inner
+     holds the live render at the stage origin so box coords line up. */
+  .stage {
+    position: relative;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .stage-inner {
+    padding: 16px;
+  }
+  .inspector {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    padding: 16px;
+    position: sticky;
+    top: 16px;
+  }
+  .inspector h2 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin: 16px 0 6px;
+  }
+  .inspector h2:first-child {
+    margin-top: 0;
+  }
+  .muted {
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+  .hint {
+    color: #4338ca;
+    font-size: 0.8rem;
+    margin: 0 0 8px;
+  }
+  dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 4px 10px;
+    align-items: baseline;
+  }
+  dt {
+    color: #94a3b8;
+    font-size: 0.75rem;
+  }
+  dd {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .field-label {
+    font: 600 11px/1 ui-monospace, monospace;
+    color: #64748b;
+  }
+  .field input {
+    font: 400 0.85rem/1.4 ui-sans-serif, system-ui;
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #0f172a;
+  }
+  .field input:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 0;
+    border-color: #6366f1;
+  }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  pre {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72rem;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 6px;
+    padding: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .chips {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chips li {
+    font: 600 11px/1 ui-monospace, monospace;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 3px 7px;
+    border-radius: 5px;
+  }
+</style>
