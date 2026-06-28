@@ -142,11 +142,13 @@ describe('SP-0: per-node DOM addressability coverage', () => {
     // addressable via data-ripple-node (on the wrapper div).
     expect(container.querySelector('[data-ripple-node="n_motion01"]')).not.toBeNull();
 
-    // FINDING 4: known non-forwarders surface in the id-miss set (locks the
-    // empirical fallback list against silent regressions).
-    const idMissTypes = new Set(idMiss.map((n) => n.type));
-    expect(idMissTypes.has('badge')).toBe(true);
-    expect(idMissTypes.has('metric')).toBe(true);
-    expect(idMissTypes.has('table')).toBe(true);
+    // FINDING 4 (updated after the #79 widget-id-forwarding codemod): the former
+    // non-forwarders (badge / metric / table) now bind their id on root, so they
+    // are directly addressable rather than select-parent fallbacks. This locks in
+    // the codemod's effect — a regression that drops id from these roots fails here.
+    const idHitTypes = new Set(idHits.map((n) => n.type));
+    expect(idHitTypes.has('badge')).toBe(true);
+    expect(idHitTypes.has('metric')).toBe(true);
+    expect(idHitTypes.has('table')).toBe(true);
   });
 });

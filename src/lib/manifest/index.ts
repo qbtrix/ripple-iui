@@ -13,8 +13,13 @@
 // a `staticSafe` (Tier-0) flag to WidgetManifestEntry; moved the marketing pack
 // (navbar/footer/cta/testimonial/feature-grid/logo-cloud/newsletter) under it;
 // registered the new faq + marketing-hero entries.
+// Updated 2026-06-28 (SP-1c-b): the version now comes from src/lib/version.ts (a
+// plain constant) instead of importing package.json. This module is a CLIENT
+// dependency (the visual editor consumes the manifest), and importing the
+// project-root package.json into the client path 500s `vite dev` via
+// server.fs.allow. version.test.ts guards the constant against release drift.
 
-import pkg from '../../../package.json' with { type: 'json' };
+import { RIPPLE_VERSION } from '../version.js';
 
 import { manifestActions } from './actions.js';
 import { accordionEntry } from './entries/accordion.js';
@@ -563,7 +568,7 @@ export function buildManifest(): WidgetManifest {
   }
   return {
     schema: 'ripple.manifest/v1',
-    version: pkg.version,
+    version: RIPPLE_VERSION,
     generatedAt: new Date().toISOString(),
     spec: specEnvelope,
     actions: manifestActions,
