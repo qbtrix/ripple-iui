@@ -209,9 +209,12 @@
     persistStatus = `Restored ${revisionId}`;
   }
 
-  // Widgets whose root does not forward `id` (SP-0 fallback set) — for the
-  // legend, so the captain knows which clicks are expected to select-parent.
-  const selectParentWidgets = ['badge', 'metric', 'table'];
+  // After the #79 id-forwarding codemod, badge / metric / table forward their id
+  // and select DIRECTLY, so nothing in this sample triggers select-parent anymore.
+  // Select-parent stays the fallback for widgets that don't render their own
+  // id-bearing root (e.g. control-flow wrappers); list them here if the sample
+  // ever includes one.
+  const selectParentWidgets: string[] = [];
 </script>
 
 <div class="page">
@@ -313,14 +316,18 @@
 
       <h2>Select-parent</h2>
       <p class="muted">
-        These widgets don't forward <code>id</code>, so clicking them selects their nearest id-bearing
-        ancestor (edit them via the inspector):
+        Select-parent is the fallback for a widget that doesn't render its own
+        <code>id</code>-bearing root. After the id-forwarding codemod, the sampled
+        widgets (including badge, metric, and table) all forward their
+        <code>id</code> and select directly, so none of them trigger it here.
       </p>
-      <ul class="chips">
-        {#each selectParentWidgets as w (w)}
-          <li>{w}</li>
-        {/each}
-      </ul>
+      {#if selectParentWidgets.length}
+        <ul class="chips">
+          {#each selectParentWidgets as w (w)}
+            <li>{w}</li>
+          {/each}
+        </ul>
+      {/if}
     </aside>
   </div>
 </div>

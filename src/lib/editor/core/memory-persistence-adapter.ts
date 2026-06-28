@@ -17,11 +17,14 @@ import { applyOp } from '../../core/spec-mutator.js';
 import type { PersistenceAdapter, ScopeId, DraftRef, Revision } from './ports.js';
 import type { EditorOp } from './editor-ops.js';
 
-/** Robust structural clone — specs are plain JSON, so JSON is a safe fallback. */
+/**
+ * JSON round-trip clone (NOT structuredClone): structuredClone throws
+ * DataCloneError on a Svelte `$state` proxy. Callers currently pass
+ * `$state.snapshot()`-ed (plain) specs, but JSON keeps this proxy-safe whatever a
+ * caller hands in. Specs are plain JSON, so the round-trip is lossless.
+ */
 function clone<T>(value: T): T {
-	return typeof structuredClone === 'function'
-		? structuredClone(value)
-		: (JSON.parse(JSON.stringify(value)) as T);
+	return JSON.parse(JSON.stringify(value)) as T;
 }
 
 interface ScopeStore {
