@@ -44,6 +44,20 @@ No new dependencies beyond what's already in `package.json` (`bits-ui`, `tailwin
 | — | Typography + oklch tokens | TBD | ⏳ | Insert between 3 and 4 if color drift is bothering us |
 | 8+ | Table | TBD | ⏳ | Own multi-task plan — big scope |
 
+## AI-native display tier (2026-06-24)
+
+Added a new `ai` manifest category — the read-only widgets a generative-UI engine
+renders to show an *agent's* work, which the catalog lacked. All display-only
+(render from props/bound state; no write-back).
+
+| Widget | Type | Tier | What it shows |
+|---|---|---|---|
+| **StreamText** | `stream-text` (+ `streaming-text`) | atom | Progressive/streaming text — live-stream a growing state path or typewriter a static string. aria-live + blinking caret, reduced-motion safe. Reuses Markdown when `markdown`. |
+| **ToolCall** | `tool-call` (+ `tool-invocation`) | organism | Agent tool-invocation card — name + icon, status badge (pending/running/success/error), collapsible args (JSON) + result. Collapsed on success, auto-expanded on error. |
+| **ReasoningTrace** | `reasoning-trace` (+ `reasoning`, `thinking-trace`) | organism | Agent reasoning steps — collapsed "Reasoned for N steps", expands to an ordered list; active step shimmers; reduced-motion safe. |
+
+Files: `src/lib/widgets/ai/`, manifest entries in `src/lib/manifest/entries/{stream-text,tool-call,reasoning-trace}.ts`, category pin in `src/lib/manifest/ai-category.test.ts`, behavior tests in `src/lib/widgets/ai/ai.test.ts`, showcase at `/showcase/ai`.
+
 ## Not in scope (explicit skips)
 
 - **Container / Flex / Grid** — layout primitives, no shadcn baggage. Fine as-is.

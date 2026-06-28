@@ -5,6 +5,8 @@
 // Updated 2026-05-30: registered the full `premium/` MIT-ported pack (Phase 4) — Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora (+ aurora-background), Spotlight, BentoGrid (+ bento), TextEffect (+ animated-text).
 // Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`/`pomodoro`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
 // Updated 2026-06-09: marketing-pack enrich — registered Faq (native <details>, type `faq`/`faqs`) and MarketingHero (bespoke static-safe hero, type `marketing-hero`).
+// Updated 2026-06-24: registered the `ai/` AI-native display tier — StreamText (progressive/streaming text, type `stream-text`/aliases), ToolCall (tool-invocation card, type `tool-call`/aliases), ReasoningTrace (collapsible thinking steps, type `reasoning-trace`/aliases). Read-only widgets a generative-UI engine uses to show an agent's work.
+// Updated 2026-06-24: registered ApprovalGate (type `approval-gate`/`approval`/`approve-card`/`human-gate`) — the human-in-the-loop approve/deny/diff-review organism (the Instinct "human mans the gate" layer); composes Diff + ToolCall in its body and persists its decision via the bind contract.
 import type { Component } from 'svelte';
 
 import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
@@ -36,6 +38,7 @@ import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, F
 import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect } from './premium/index.js';
 import { TodoList, DrawingCanvas, Timer, Flashcard } from './interactive/index.js';
 import { DesignSystemEditor } from './design-system/index.js';
+import { StreamText, ToolCall, ReasoningTrace, ApprovalGate } from './ai/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
@@ -376,6 +379,20 @@ const defaultRegistry: WidgetMap = {
   'streak-bars': StreakBars,
   streakbars: StreakBars,
   streak: StreakBars,
+  // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
+  'stream-text': StreamText,
+  streamtext: StreamText,
+  'streaming-text': StreamText,
+  'tool-call': ToolCall,
+  toolcall: ToolCall,
+  'tool-invocation': ToolCall,
+  'reasoning-trace': ReasoningTrace,
+  reasoning: ReasoningTrace,
+  'thinking-trace': ReasoningTrace,
+  'approval-gate': ApprovalGate,
+  approval: ApprovalGate,
+  'approve-card': ApprovalGate,
+  'human-gate': ApprovalGate,
   // Aliases
   label: Text,
 };
@@ -434,5 +451,7 @@ export {
   TodoList, DrawingCanvas, Timer, Flashcard,
   AskUserQuestions,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
-  LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph
+  LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
+  // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
+  StreamText, ToolCall, ReasoningTrace, ApprovalGate
 };
