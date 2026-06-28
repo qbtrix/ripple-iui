@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-06-13T07:35:44.399Z",
+  "generatedAt": "2026-06-28T10:23:08.388Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -7089,7 +7089,7 @@
     {
       "type": "grid",
       "category": "layout",
-      "description": "CSS grid container. Lays children in evenly-sized columns. Best for KPI rows and card grids.",
+      "description": "CSS grid container. Lays children in evenly-sized columns. Best for KPI rows and card grids. For independent column scroll (master-detail layouts), set a fixed `height` + `overflow:hidden` via the `style` passthrough and give each column `overflow-y:auto; min-height:0`. `max-height` does NOT work — the grid row stays max-content.",
       "props": {
         "columns": {
           "type": "number | string",
@@ -8619,7 +8619,7 @@
     {
       "type": "master-detail",
       "category": "layout",
-      "description": "List on left, detail view on right. Selected item flows into detail spec via loop context.",
+      "description": "List on left, detail view on right. Selected item flows into detail spec via loop context. Provides independent scroll + a sticky detail pane natively, and its `detail` prop accepts a full custom spec. BUT master list items are limited to valueKey/labelKey/descriptionKey/badgeKey (no custom item template) — for bespoke list cards, hand-roll a grid with the fixed-height + overflow recipe instead.",
       "props": {
         "items": {
           "type": "Array<Record<string, unknown>>",
@@ -15397,6 +15397,229 @@
           "count": 12,
           "filled": 12,
           "color": "#E8852B"
+        }
+      }
+    },
+    {
+      "type": "stream-text",
+      "category": "ai",
+      "description": "Progressive/streaming text. Bind text to a growing state path for live agent streaming, or pass speed for a typewriter reveal. Blinking caret + aria-busy while streaming.",
+      "props": {
+        "text": {
+          "type": "string",
+          "required": false,
+          "description": "Text to render. Bind to a growing state path for live streaming."
+        },
+        "streaming": {
+          "type": "boolean",
+          "required": false,
+          "description": "Show the blinking caret + aria-busy. True while the agent is producing."
+        },
+        "markdown": {
+          "type": "boolean",
+          "required": false,
+          "description": "Render the revealed text as markdown (reuses the Markdown widget). Default false."
+        },
+        "speed": {
+          "type": "number",
+          "required": false,
+          "description": "Typewriter speed in chars/sec. When set, the string types itself in. Omit for verbatim render."
+        },
+        "done": {
+          "type": "boolean",
+          "required": false,
+          "description": "Streaming finished — clears busy/caret even if streaming was left true."
+        },
+        "size": {
+          "type": "string",
+          "required": false,
+          "description": "Font size: 'sm' | 'md' | 'lg'. Default 'md'."
+        }
+      },
+      "example": {
+        "type": "stream-text",
+        "props": {
+          "text": "The agent is thinking through the request",
+          "streaming": true
+        }
+      }
+    },
+    {
+      "type": "tool-call",
+      "category": "ai",
+      "description": "An agent tool-invocation card: tool name + icon, status badge (pending|running|success|error), collapsible args (JSON) and result. Collapsed on success, auto-expanded on error.",
+      "props": {
+        "name": {
+          "type": "string",
+          "required": false,
+          "description": "Tool name, e.g. \"search_web\"."
+        },
+        "status": {
+          "type": "string",
+          "required": false,
+          "description": "Invocation status: 'pending' | 'running' | 'success' | 'error'."
+        },
+        "args": {
+          "type": "object",
+          "required": false,
+          "description": "Invocation arguments — rendered as formatted JSON."
+        },
+        "result": {
+          "type": "any",
+          "required": false,
+          "description": "Tool output. String → code/markdown; object → JSON."
+        },
+        "resultMarkdown": {
+          "type": "boolean",
+          "required": false,
+          "description": "Render a string result as markdown instead of a code block."
+        },
+        "durationMs": {
+          "type": "number",
+          "required": false,
+          "description": "Call duration in ms — shown as a compact label."
+        },
+        "time": {
+          "type": "string",
+          "required": false,
+          "description": "Relative time label, e.g. \"2s ago\". Display-only."
+        },
+        "error": {
+          "type": "string",
+          "required": false,
+          "description": "Error message — shown when status is \"error\"."
+        },
+        "open": {
+          "type": "boolean",
+          "required": false,
+          "description": "Force the body open/closed. Omit to use the status-derived default."
+        }
+      },
+      "example": {
+        "type": "tool-call",
+        "props": {
+          "name": "search_web",
+          "status": "success",
+          "args": {
+            "query": "ripple widget catalog"
+          },
+          "result": "Found 3 results.",
+          "durationMs": 420
+        }
+      }
+    },
+    {
+      "type": "reasoning-trace",
+      "category": "ai",
+      "description": "Agent reasoning trace. Collapsed shows \"Reasoned for N steps\"; expanded shows an ordered list of {title, detail?, status} steps. Active step shimmers. Collapsed by default.",
+      "props": {
+        "steps": {
+          "type": "array",
+          "required": false,
+          "description": "Ordered steps: array of { title, detail?, status: \"thinking\"|\"done\" }."
+        },
+        "streaming": {
+          "type": "boolean",
+          "required": false,
+          "description": "Agent is still reasoning — summary reads \"Reasoning…\"."
+        },
+        "collapsed": {
+          "type": "boolean",
+          "required": false,
+          "description": "Initial collapsed state. Default true."
+        }
+      },
+      "example": {
+        "type": "reasoning-trace",
+        "props": {
+          "steps": [
+            {
+              "title": "Parse the request",
+              "status": "done"
+            },
+            {
+              "title": "Search the widget catalog",
+              "detail": "Looking for a streaming-text primitive.",
+              "status": "thinking"
+            }
+          ],
+          "streaming": true
+        }
+      }
+    },
+    {
+      "type": "approval-gate",
+      "category": "ai",
+      "description": "Human-in-the-loop approval card: shows a proposed agent action with a risk badge, an optional diff and tool-call list, and Approve/Deny/Edit controls that resolve and persist the decision.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "The proposed action, e.g. \"Update 3 customer records\"."
+        },
+        "summary": {
+          "type": "string",
+          "required": false,
+          "description": "Optional one-line summary under the title."
+        },
+        "risk": {
+          "type": "string",
+          "required": false,
+          "description": "Risk level: 'low' | 'medium' | 'high'. Drives the badge + tone."
+        },
+        "decision": {
+          "type": "string",
+          "required": false,
+          "description": "Decision state: 'pending' | 'approved' | 'denied'. Bind to persist it."
+        },
+        "actionId": {
+          "type": "string",
+          "required": false,
+          "description": "Identifier for the proposed action, passed back to the host callbacks."
+        },
+        "diff": {
+          "type": "object",
+          "required": false,
+          "description": "Before/after payload ({ before, after, mode, layout, title }) rendered with the Diff widget."
+        },
+        "changes": {
+          "type": "object",
+          "required": false,
+          "description": "Alias for `diff`."
+        },
+        "toolCalls": {
+          "type": "array",
+          "required": false,
+          "description": "Proposed tool calls — each rendered with the ToolCall widget."
+        },
+        "body": {
+          "type": "string",
+          "required": false,
+          "description": "Markdown body shown alongside the structured parts."
+        },
+        "decidedBy": {
+          "type": "string",
+          "required": false,
+          "description": "Who decided — shown in the resolved stamp (\"Approved by Ada\")."
+        },
+        "disabled": {
+          "type": "boolean",
+          "required": false,
+          "description": "Disable the controls (e.g. while the host persists the decision)."
+        }
+      },
+      "example": {
+        "type": "approval-gate",
+        "props": {
+          "title": "Update 3 customer records",
+          "summary": "Agent proposes changing the tier for 3 accounts.",
+          "risk": "high",
+          "actionId": "act_482",
+          "diff": {
+            "before": "tier: free\nseats: 5",
+            "after": "tier: pro\nseats: 5",
+            "title": "accounts.yaml"
+          }
         }
       }
     }

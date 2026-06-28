@@ -37,6 +37,7 @@ import { Reveal, Parallax } from './motion/index.js';
 import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero } from './marketing/index.js';
 import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect } from './premium/index.js';
 import { TodoList, DrawingCanvas, Timer, Flashcard } from './interactive/index.js';
+import { DesignSystemEditor } from './design-system/index.js';
 import { StreamText, ToolCall, ReasoningTrace, ApprovalGate } from './ai/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
@@ -50,6 +51,7 @@ const defaultRegistry: WidgetMap = {
   tabs: Tabs,
   dashboard: Dashboard,
   'dashboard-slot': DashboardSlot,
+  'design-system': DesignSystemEditor,
   'glass-card': GlassCard,
   modal: Modal,
   dialog: Modal,
