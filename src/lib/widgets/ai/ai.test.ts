@@ -310,6 +310,33 @@ describe('ApprovalGate (widget level)', () => {
   });
 });
 
+describe('AI-native widgets — node-id forwarding (visual-editor selection)', () => {
+  // The visual editor discovers selectable nodes by querying `[data-ripple-node]`
+  // (see src/lib/editor/core/bounds-index.ts — `nodeIdOf` reads the stamp and it
+  // always wins). NodeRenderer pushes `id: node.id` into every widget's props, but
+  // the node only becomes addressable when the widget binds `data-ripple-node={id}`
+  // on its ROOT. Render each AI widget as the spec root through Ripple (the real
+  // discovery path) and assert the stamp surfaces on the root carrying that id.
+  const CASES: Array<{ type: string; id: string; props: Record<string, unknown> }> = [
+    { type: 'stream-text', id: 'n-stream-text', props: { text: 'hi' } },
+    { type: 'tool-call', id: 'n-tool-call', props: { name: 'search_web', status: 'success' } },
+    { type: 'reasoning-trace', id: 'n-reasoning-trace', props: { steps: [{ title: 'step' }] } },
+    { type: 'approval-gate', id: 'n-approval-gate', props: { title: 'Proposed', risk: 'low' } },
+  ];
+
+  test.each(CASES)(
+    'widget "$type" forwards data-ripple-node={id} on its root',
+    ({ type, id, props }) => {
+      const { container } = render(Ripple, {
+        props: { spec: { state: {}, ui: { type, id, props } } },
+      });
+      const stamped = container.querySelector(`[data-ripple-node="${id}"]`);
+      expect(stamped, `${type} should bind data-ripple-node={id} on its root`).not.toBeNull();
+      expect(stamped?.getAttribute('data-ripple-node')).toBe(id);
+    },
+  );
+});
+
 describe('ApprovalGate decision → state persistence (integration through Ripple)', () => {
   test('a bound gate writes the decision to state and fires onStateChange', async () => {
     const onStateChange = vi.fn();

@@ -22,6 +22,7 @@
   @a11y Real <button>s with explicit labels; risk + resolved state are conveyed by
     text (not color); the resolved stamp is announced via aria-live; the controls are
     keyboard-operable. The resolve transition honors prefers-reduced-motion.
+  Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -216,6 +217,7 @@
 
 <div
   {id}
+  data-ripple-node={id}
   data-variant="default"
   data-risk={risk}
   data-decision={localDecision}

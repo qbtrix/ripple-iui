@@ -14,6 +14,7 @@
   @a11y aria-live="polite" announces streamed text; aria-busy reflects the
     in-flight state. The caret is decorative (aria-hidden) and frozen under
     reduced motion.
+  Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -111,6 +112,7 @@
 
 <div
   {id}
+  data-ripple-node={id}
   data-variant="default"
   data-size={size}
   data-state={busy ? 'streaming' : 'done'}

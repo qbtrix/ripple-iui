@@ -10,6 +10,7 @@
   @a11y A real <button> disclosure with aria-expanded + aria-controls; steps
     render as an ordered list (<ol>). Status is conveyed by text + icon, not
     color alone. The shimmer freezes under prefers-reduced-motion.
+  Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -70,6 +71,7 @@
 
 <div
   {id}
+  data-ripple-node={id}
   data-variant="default"
   data-state={streaming ? 'streaming' : 'done'}
   class={cn('ripple-reasoning-trace rounded-md border border-border bg-muted/30 overflow-hidden text-sm', className)}
