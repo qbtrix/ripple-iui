@@ -61,13 +61,35 @@
     <DesignSystemEditor {brand} {mode} onChange={(next) => (brand = next)} class="flex-1" />
   </aside>
 
-  <!-- Canvas: a neutral surround with the brand "artboard" centered in it (a
+  <!-- Canvas: a textured surround with the brand "artboard" centered in it (a
        design-tool framing). The Ripple root paints bg-background/text-foreground,
        so the artboard adopts the brand's OWN surface — the light-brand preview
-       reads on a white artboard even while the app chrome is dark. -->
-  <main class="flex-1 overflow-auto bg-muted/20 p-6 sm:p-10" class:dark={mode === 'dark'}>
-    <div class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-border shadow-lg">
-      <Ripple spec={sample} {brand} brandMode={mode} class="block bg-background text-foreground" />
+       reads on a white artboard even while the app chrome is dark. min-h-full +
+       centering floats the artboard mid-pane instead of stranding dead space. -->
+  <main class="ds-canvas flex-1 overflow-auto" class:dark={mode === 'dark'}>
+    <div class="flex min-h-full items-center justify-center p-6 sm:p-12">
+      <div class="w-full max-w-2xl">
+        <p class="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          Live preview · {mode} mode
+        </p>
+        <div class="ds-artboard overflow-hidden rounded-2xl border border-border">
+          <Ripple spec={sample} {brand} brandMode={mode} class="block bg-background text-foreground" />
+        </div>
+      </div>
     </div>
   </main>
 </div>
+
+<style>
+  /* Quiet dotted canvas so the empty surround reads as an intentional artboard
+     backdrop, not a flat void. Foreground-tinted dots adapt to light/dark. */
+  .ds-canvas {
+    background:
+      radial-gradient(color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px) 0 0 / 22px 22px,
+      var(--muted);
+  }
+  /* Soft float so the artboard lifts off the canvas in both themes. */
+  .ds-artboard {
+    box-shadow: 0 24px 50px -24px color-mix(in srgb, var(--foreground) 30%, transparent);
+  }
+</style>
