@@ -163,11 +163,13 @@
     font-size: 0.85rem;
     color: var(--muted-foreground);
   }
+  /* Recessed canvas — a muted surround so the deck's own slide surface (var(--card))
+     reads as an elevated artboard on top of it, in both themes. */
   .stage {
-    padding: 24px;
+    padding: 32px;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--card);
+    border-radius: 16px;
+    background: var(--muted);
   }
   /* The lab's own "Brand theme" toggle paints a fixed dark brand onto the deck to
      prove tokens apply — intentionally a specific palette, not the app theme. */
