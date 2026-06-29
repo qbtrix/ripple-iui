@@ -8,6 +8,9 @@
     Left/Right arrow keys to page the deck. A small theme toggle proves the deck
     respects brand tokens (it renders inside the ripple-root).
   @created 2026-06-28 (SP-4 — slides intent layout)
+  @changed 2026-06-29: theming. Page chrome now uses theme tokens (var(--token))
+    so it follows light/dark; fixes the dark-on-dark heading. The in-deck "Brand
+    theme" toggle keeps its fixed demo palette on purpose.
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -130,7 +133,7 @@
     max-width: 1024px;
     margin: 0 auto;
     padding: 24px 24px 64px;
-    color: #0f172a;
+    color: var(--foreground);
   }
   .page-head {
     margin-bottom: 20px;
@@ -139,16 +142,17 @@
     margin: 0;
     font: 700 11px/1 ui-monospace, monospace;
     letter-spacing: 0.12em;
-    color: #0ea5e9;
+    color: var(--primary);
   }
   .page-head h1 {
     margin: 6px 0 4px;
     font-size: 1.5rem;
     font-weight: 700;
+    letter-spacing: -0.02em;
   }
   .lede {
     margin: 0;
-    color: #64748b;
+    color: var(--muted-foreground);
     font-size: 0.9rem;
   }
   .toggle {
@@ -157,14 +161,16 @@
     gap: 6px;
     margin-top: 10px;
     font-size: 0.85rem;
-    color: #475569;
+    color: var(--muted-foreground);
   }
   .stage {
     padding: 24px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 12px;
-    background: #f8fafc;
+    background: var(--card);
   }
+  /* The lab's own "Brand theme" toggle paints a fixed dark brand onto the deck to
+     prove tokens apply — intentionally a specific palette, not the app theme. */
   .stage--dark {
     background: #020617;
     border-color: #1e293b;
@@ -172,7 +178,8 @@
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.8rem;
-    background: #f1f5f9;
+    background: var(--muted);
+    color: var(--foreground);
     padding: 1px 5px;
     border-radius: 4px;
   }

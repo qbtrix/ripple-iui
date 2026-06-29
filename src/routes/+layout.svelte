@@ -1,3 +1,11 @@
+<!--
+  @file routes/+layout.svelte
+  @description App shell + topbar nav (Pockets / Labs / Showcase / Playground)
+    with the light/dark toggle. Theme colors read shadcn tokens as var(--token);
+    the tokens already resolve to full hsl(), so they must not be re-wrapped.
+  @changed 2026-06-29: added the Labs nav link; fixed double-wrapped hsl(var())
+    tokens that left the topbar transparent and borderless in dark mode.
+-->
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
 	import '$lib/styles.css';
@@ -26,6 +34,7 @@
 		</a>
 		<div class="topbar-links">
 			<a href="/" class="nav-link">Pockets</a>
+			<a href="/labs" class="nav-link">Labs</a>
 			<a href="/showcase" class="nav-link">Showcase</a>
 			<a href="/playground" class="nav-link">Playground</a>
 			<button class="theme-btn" onclick={() => dark = !dark} title="Toggle theme">
@@ -56,8 +65,8 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 10px 24px;
-		border-bottom: 1px solid hsl(var(--border));
-		background: hsl(var(--card));
+		border-bottom: 1px solid var(--border);
+		background: var(--card);
 		position: sticky;
 		top: 0;
 		z-index: 50;
@@ -67,7 +76,7 @@
 		align-items: center;
 		gap: 8px;
 		text-decoration: none;
-		color: hsl(var(--foreground));
+		color: var(--foreground);
 	}
 	.logo-mark {
 		display: flex;
@@ -76,8 +85,8 @@
 		width: 26px;
 		height: 26px;
 		border-radius: 7px;
-		background: hsl(var(--primary));
-		color: hsl(var(--primary-foreground));
+		background: var(--primary);
+		color: var(--primary-foreground);
 		font-weight: 700;
 		font-size: 14px;
 	}
@@ -96,13 +105,13 @@
 		border-radius: 6px;
 		font-size: 13px;
 		font-weight: 500;
-		color: hsl(var(--muted-foreground));
+		color: var(--muted-foreground);
 		text-decoration: none;
 		transition: color 0.15s, background 0.15s;
 	}
 	.nav-link:hover {
-		color: hsl(var(--foreground));
-		background: hsl(var(--muted) / 0.5);
+		color: var(--foreground);
+		background: color-mix(in srgb, var(--muted) 50%, transparent);
 	}
 	.theme-btn {
 		display: flex;
@@ -110,16 +119,16 @@
 		justify-content: center;
 		width: 32px;
 		height: 32px;
-		border: 1px solid hsl(var(--border));
+		border: 1px solid var(--border);
 		border-radius: 7px;
 		background: transparent;
-		color: hsl(var(--muted-foreground));
+		color: var(--muted-foreground);
 		cursor: pointer;
 		margin-left: 8px;
 		transition: color 0.15s, border-color 0.15s;
 	}
 	.theme-btn:hover {
-		color: hsl(var(--foreground));
-		border-color: hsl(var(--foreground) / 0.3);
+		color: var(--foreground);
+		border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
 	}
 </style>

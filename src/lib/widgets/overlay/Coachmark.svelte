@@ -122,19 +122,19 @@
   for the popover + overlay rather than fight Vite SSR resolution.
 -->
 <style>
-  :global(.driver-popover) { position: absolute; background: var(--popover, #fff); color: var(--popover-foreground, #171717); border-radius: 8px; min-width: 280px; max-width: 320px; padding: 16px; box-shadow: 0 10px 24px -3px rgba(0,0,0,0.18); border: 1px solid hsl(var(--border, 240 5% 88%)); z-index: 100000; font-family: inherit; }
+  :global(.driver-popover) { position: absolute; background: var(--popover, #fff); color: var(--popover-foreground, #171717); border-radius: 8px; min-width: 280px; max-width: 320px; padding: 16px; box-shadow: 0 10px 24px -3px rgba(0,0,0,0.18); border: 1px solid var(--border, hsl(240 5% 88%)); z-index: 100000; font-family: inherit; }
   :global(.driver-popover-title) { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
-  :global(.driver-popover-description) { font-size: 13px; line-height: 1.4; margin: 0; color: hsl(var(--muted-foreground, 240 5% 45%)); }
+  :global(.driver-popover-description) { font-size: 13px; line-height: 1.4; margin: 0; color: var(--muted-foreground, hsl(240 5% 45%)); }
   :global(.driver-popover-footer) { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 8px; }
-  :global(.driver-popover-progress-text) { font-size: 11px; color: hsl(var(--muted-foreground, 240 5% 45%)); }
+  :global(.driver-popover-progress-text) { font-size: 11px; color: var(--muted-foreground, hsl(240 5% 45%)); }
   :global(.driver-popover-navigation-btns) { display: flex; gap: 6px; }
   :global(.driver-popover-prev-btn), :global(.driver-popover-next-btn), :global(.driver-popover-close-btn) {
-    appearance: none; cursor: pointer; border: 1px solid hsl(var(--border, 240 5% 88%)); background: transparent;
+    appearance: none; cursor: pointer; border: 1px solid var(--border, hsl(240 5% 88%)); background: transparent;
     color: inherit; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 6px;
     transition: background 0.15s ease;
   }
-  :global(.driver-popover-prev-btn:hover), :global(.driver-popover-next-btn:hover) { background: hsl(var(--muted, 240 5% 96%)); }
-  :global(.driver-popover-next-btn) { background: hsl(var(--primary, 240 5% 10%)); color: hsl(var(--primary-foreground, 0 0% 98%)); border-color: transparent; }
+  :global(.driver-popover-prev-btn:hover), :global(.driver-popover-next-btn:hover) { background: var(--muted, hsl(240 5% 96%)); }
+  :global(.driver-popover-next-btn) { background: var(--primary, hsl(240 5% 10%)); color: var(--primary-foreground, hsl(0 0% 98%)); border-color: transparent; }
   :global(.driver-popover-close-btn) { position: absolute; top: 8px; right: 8px; padding: 2px 6px; line-height: 1; border: none; }
   :global(.driver-popover-arrow) { content: ''; position: absolute; width: 0; height: 0; border: 7px solid transparent; }
   :global(.driver-popover-arrow-side-left) { right: -14px; border-left-color: var(--popover, #fff); }
