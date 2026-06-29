@@ -12,7 +12,7 @@
     version: '1.0' as const,
     ui: {
       type: 'container',
-      style: { padding: '16px', background: 'hsl(var(--muted) / 0.3)', 'border-radius': '8px' },
+      style: { padding: '16px', background: 'color-mix(in srgb, var(--muted) 30%, transparent)', 'border-radius': '8px' },
       children: [
         { type: 'text', props: { text: 'I am inside a container', size: 'sm' } }
       ]
@@ -250,7 +250,7 @@
     ui: {
       type: 'flex',
       props: { gap: '0' },
-      style: { height: '320px', border: '1px solid hsl(var(--border))', 'border-radius': '8px', overflow: 'hidden' },
+      style: { height: '320px', border: '1px solid var(--border)', 'border-radius': '8px', overflow: 'hidden' },
       children: [
         {
           type: 'sidebar',
@@ -381,7 +381,7 @@
       children: [
         {
           type: 'split',
-          style: { height: '220px', border: '1px solid hsl(var(--border))', 'border-radius': '8px' },
+          style: { height: '220px', border: '1px solid var(--border)', 'border-radius': '8px' },
           props: { direction: 'horizontal', defaultSize: 35, minSize: 15, maxSize: 70 },
           start: {
             type: 'flex',
@@ -3200,7 +3200,7 @@
             item: {
               type: 'flex',
               props: { direction: 'column', gap: '2px' },
-              style: { padding: '8px 12px', 'border-bottom': '1px solid hsl(var(--border) / 0.5)' },
+              style: { padding: '8px 12px', 'border-bottom': '1px solid color-mix(in srgb, var(--border) 50%, transparent)' },
               children: [
                 { type: 'text', props: { text: '{item.title}', size: 'sm', weight: 'medium' } },
                 { type: 'text', props: { text: '{item.body}', size: 'xs', muted: true } }
@@ -5356,11 +5356,11 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin-right: 4px;
   }
   .subroute-nav-sep {
-    color: hsl(var(--muted-foreground) / 0.6);
+    color: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
     padding: 0 2px;
   }
   .subroute-nav a {
@@ -5368,13 +5368,13 @@
     border-radius: 6px;
     font-size: 0.8rem;
     font-weight: 500;
-    background: hsl(var(--muted) / 0.4);
-    color: hsl(var(--foreground));
+    background: color-mix(in srgb, var(--muted) 40%, transparent);
+    color: var(--foreground);
     text-decoration: none;
     transition: background 0.15s;
   }
   .subroute-nav a:hover {
-    background: hsl(var(--muted));
+    background: var(--muted);
   }
   @media (max-width: 720px) {
     .subroute-nav {

@@ -100,7 +100,7 @@
         tabindex={isSelected ? 0 : -1}
         data-segment={i}
         class="relative z-10 rounded-[7px] px-3.5 py-1 text-[13px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
-        style="color:{isSelected ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))'};"
+        style="color:{isSelected ? 'var(--foreground)' : 'var(--muted-foreground)'};"
         onclick={() => select(seg)}
         onkeydown={(e) => onKeydown(e, i)}
       >{seg}</button>

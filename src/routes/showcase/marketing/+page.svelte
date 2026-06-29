@@ -205,7 +205,7 @@
     max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
   .showcase-header {
     margin-bottom: 1.5rem;
@@ -217,12 +217,12 @@
   }
   .showcase-header p {
     font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin: 0 0 0.5rem;
     max-width: 70ch;
   }
   .showcase-header code {
-    background: hsl(var(--muted) / 0.5);
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 0.8rem;
@@ -231,9 +231,9 @@
     font-size: 0.8rem;
   }
   .landing-frame {
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
-    background: hsl(var(--background));
+    background: var(--background);
   }
 </style>
