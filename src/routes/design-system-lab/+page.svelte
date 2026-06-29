@@ -5,6 +5,10 @@
   The mode toggle switches the editor's slot AND the preview's brandMode + .dark
   class. Dev/playground route only (ripple's SvelteKit routes are not packaged).
   @created 2026-06-28 — SP-3.
+  @changed 2026-06-29: preview now paints the brand surface (bg-background /
+    text-foreground on the Ripple root) inside a centered, framed artboard, so
+    the light-brand preview reads on its own white surface even when the app
+    chrome is dark; added canvas padding so the pane is not cramped.
 -->
 <script lang="ts">
   import Ripple from '$lib/Ripple.svelte';
@@ -57,7 +61,13 @@
     <DesignSystemEditor {brand} {mode} onChange={(next) => (brand = next)} class="flex-1" />
   </aside>
 
-  <main class="flex-1 overflow-auto" class:dark={mode === 'dark'}>
-    <Ripple spec={sample} {brand} brandMode={mode} class="min-h-full" />
+  <!-- Canvas: a neutral surround with the brand "artboard" centered in it (a
+       design-tool framing). The Ripple root paints bg-background/text-foreground,
+       so the artboard adopts the brand's OWN surface — the light-brand preview
+       reads on a white artboard even while the app chrome is dark. -->
+  <main class="flex-1 overflow-auto bg-muted/20 p-6 sm:p-10" class:dark={mode === 'dark'}>
+    <div class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-border shadow-lg">
+      <Ripple spec={sample} {brand} brandMode={mode} class="block bg-background text-foreground" />
+    </div>
   </main>
 </div>
