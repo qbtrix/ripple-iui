@@ -10,8 +10,11 @@
  *   `EditorOps.onApplied` seams.
  * @created 2026-06-27 (SP-1a — branch spike/editor-domid-overlay)
  * @changes 2026-06-27 (SP-1b): export RippleInlineEditor (inline text edit).
+ * @changes 2026-06-29 (editor chrome): export RippleInspector (manifest-driven
+ *   properties panel) + the inspector-fields L1 helpers (via core barrel).
  */
 export * from './core/index.js';
 export { default as RippleEditorOverlay } from './RippleEditorOverlay.svelte';
 export { default as RippleInlineEditor } from './RippleInlineEditor.svelte';
+export { default as RippleInspector } from './RippleInspector.svelte';
 export { EditorSelection, createEditorSelection } from './editor-selection.svelte.js';

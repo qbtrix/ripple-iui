@@ -58,3 +58,12 @@ export {
   type Revision
 } from './ports.js';
 export { MemoryPersistenceAdapter } from './memory-persistence-adapter.js';
+export {
+  inferFields,
+  inferFieldKind,
+  parseEnumOptions,
+  coerceFieldValue,
+  inspectorCatalogEntry,
+  type InspectorField,
+  type FieldKind
+} from './inspector-fields.js';
