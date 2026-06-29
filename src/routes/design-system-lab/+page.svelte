@@ -5,10 +5,11 @@
   The mode toggle switches the editor's slot AND the preview's brandMode + .dark
   class. Dev/playground route only (ripple's SvelteKit routes are not packaged).
   @created 2026-06-28 — SP-3.
-  @changed 2026-06-29: preview now paints the brand surface (bg-background /
-    text-foreground on the Ripple root) inside a centered, framed artboard, so
-    the light-brand preview reads on its own white surface even when the app
-    chrome is dark; added canvas padding so the pane is not cramped.
+  @changed 2026-06-29: preview paints the brand surface (bg-background /
+    text-foreground on the Ripple root) inside a centered, floating artboard. The
+    workspace canvas tone follows the EDITING mode (light/dark) via per-mode
+    --canvas-* vars, so the surround and the artboard stay cohesive regardless of
+    the app chrome (no white artboard stranded on a dark void).
 -->
 <script lang="ts">
   import Ripple from '$lib/Ripple.svelte';
@@ -61,18 +62,28 @@
     <DesignSystemEditor {brand} {mode} onChange={(next) => (brand = next)} class="flex-1" />
   </aside>
 
-  <!-- Canvas: a textured surround with the brand "artboard" centered in it (a
-       design-tool framing). The Ripple root paints bg-background/text-foreground,
-       so the artboard adopts the brand's OWN surface — the light-brand preview
-       reads on a white artboard even while the app chrome is dark. min-h-full +
-       centering floats the artboard mid-pane instead of stranding dead space. -->
-  <main class="ds-canvas flex-1 overflow-auto" class:dark={mode === 'dark'}>
+  <!-- Canvas: a workspace surround whose tone follows the EDITING mode (not the
+       app chrome), so the preview is cohesive — light mode shows a light canvas +
+       light artboard, dark shows dark + dark. The artboard (Ripple root) paints
+       the brand's own surface; the --canvas-* vars below set the surround per-mode
+       so it works even when the app chrome is the opposite theme. -->
+  <main
+    class="ds-canvas flex-1 overflow-auto"
+    class:dark={mode === 'dark'}
+    style:--canvas-bg={mode === 'dark' ? 'hsl(0 0% 7%)' : 'hsl(0 0% 96.5%)'}
+    style:--canvas-dot={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.045)'}
+    style:--canvas-fg={mode === 'dark' ? 'hsl(0 0% 60%)' : 'hsl(0 0% 42%)'}
+    style:--canvas-border={mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)'}
+  >
     <div class="flex min-h-full items-center justify-center p-6 sm:p-12">
       <div class="w-full max-w-2xl">
-        <p class="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        <p
+          class="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em]"
+          style="color: var(--canvas-fg)"
+        >
           Live preview · {mode} mode
         </p>
-        <div class="ds-artboard overflow-hidden rounded-2xl border border-border">
+        <div class="ds-artboard overflow-hidden rounded-2xl">
           <Ripple spec={sample} {brand} brandMode={mode} class="block bg-background text-foreground" />
         </div>
       </div>
@@ -81,15 +92,16 @@
 </div>
 
 <style>
-  /* Quiet dotted canvas so the empty surround reads as an intentional artboard
-     backdrop, not a flat void. Foreground-tinted dots adapt to light/dark. */
+  /* Workspace canvas — tone follows the editing mode via per-mode --canvas-* vars
+     set on the element, so the preview stays cohesive regardless of app chrome. */
   .ds-canvas {
     background:
-      radial-gradient(color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px) 0 0 / 22px 22px,
-      var(--muted);
+      radial-gradient(var(--canvas-dot) 1px, transparent 1px) 0 0 / 22px 22px,
+      var(--canvas-bg);
   }
-  /* Soft float so the artboard lifts off the canvas in both themes. */
+  /* Float the artboard off the canvas: a mode-tuned hairline + a soft drop. */
   .ds-artboard {
-    box-shadow: 0 24px 50px -24px color-mix(in srgb, var(--foreground) 30%, transparent);
+    border: 1px solid var(--canvas-border);
+    box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.45);
   }
 </style>
