@@ -5,6 +5,11 @@
   The mode toggle switches the editor's slot AND the preview's brandMode + .dark
   class. Dev/playground route only (ripple's SvelteKit routes are not packaged).
   @created 2026-06-28 — SP-3.
+  @changed 2026-06-29: preview paints the brand surface (bg-background /
+    text-foreground on the Ripple root) inside a centered, floating artboard. The
+    workspace canvas tone follows the EDITING mode (light/dark) via per-mode
+    --canvas-* vars, so the surround and the artboard stay cohesive regardless of
+    the app chrome (no white artboard stranded on a dark void).
 -->
 <script lang="ts">
   import Ripple from '$lib/Ripple.svelte';
@@ -34,7 +39,7 @@
         },
         {
           type: 'card',
-          props: { title: 'Revenue' },
+          props: { title: 'Revenue', density: 'comfortable' },
           children: [{ type: 'stat', props: { label: 'MRR', value: '$12,400', delta: '+8%' } }]
         },
         { type: 'input', props: { placeholder: 'Search…' } }
@@ -57,7 +62,46 @@
     <DesignSystemEditor {brand} {mode} onChange={(next) => (brand = next)} class="flex-1" />
   </aside>
 
-  <main class="flex-1 overflow-auto" class:dark={mode === 'dark'}>
-    <Ripple spec={sample} {brand} brandMode={mode} class="min-h-full" />
+  <!-- Canvas: a workspace surround whose tone follows the EDITING mode (not the
+       app chrome), so the preview is cohesive — light mode shows a light canvas +
+       light artboard, dark shows dark + dark. The artboard (Ripple root) paints
+       the brand's own surface; the --canvas-* vars below set the surround per-mode
+       so it works even when the app chrome is the opposite theme. -->
+  <main
+    class="ds-canvas flex-1 overflow-auto"
+    class:dark={mode === 'dark'}
+    style:--canvas-bg={mode === 'dark' ? 'hsl(0 0% 7%)' : 'hsl(0 0% 96.5%)'}
+    style:--canvas-dot={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.045)'}
+    style:--canvas-fg={mode === 'dark' ? 'hsl(0 0% 60%)' : 'hsl(0 0% 42%)'}
+    style:--canvas-border={mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)'}
+  >
+    <div class="flex min-h-full items-center justify-center p-6 sm:p-12">
+      <div class="w-full max-w-2xl">
+        <p
+          class="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em]"
+          style="color: var(--canvas-fg)"
+        >
+          Live preview · {mode} mode
+        </p>
+        <div class="ds-artboard overflow-hidden rounded-2xl">
+          <Ripple spec={sample} {brand} brandMode={mode} class="block bg-background text-foreground" />
+        </div>
+      </div>
+    </div>
   </main>
 </div>
+
+<style>
+  /* Workspace canvas — tone follows the editing mode via per-mode --canvas-* vars
+     set on the element, so the preview stays cohesive regardless of app chrome. */
+  .ds-canvas {
+    background:
+      radial-gradient(var(--canvas-dot) 1px, transparent 1px) 0 0 / 22px 22px,
+      var(--canvas-bg);
+  }
+  /* Float the artboard off the canvas: a mode-tuned hairline + a soft drop. */
+  .ds-artboard {
+    border: 1px solid var(--canvas-border);
+    box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.45);
+  }
+</style>

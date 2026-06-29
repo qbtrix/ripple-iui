@@ -1551,7 +1551,7 @@
                             {
                               type: 'flex',
                               props: { direction: 'column' },
-                              style: { 'border-top': '1px solid hsl(var(--border))', 'padding-top': '12px', 'margin-top': '12px' },
+                              style: { 'border-top': '1px solid var(--border)', 'padding-top': '12px', 'margin-top': '12px' },
                               children: [
                                 { type: 'ripple-frame', props: { spec: '{pocket.spec}' } }
                               ]

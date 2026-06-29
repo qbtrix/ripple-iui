@@ -1,5 +1,7 @@
 <!--
   @file routes/editor-lab/+page.svelte
+  @changed 2026-06-29: theming. Hardcoded hex swapped for theme tokens
+    (var(--token) + color-mix) so the lab follows light/dark like the app.
   @description Captain visual-check surface for the Ripple visual editor.
     Renders a representative spec via <Ripple ensureIds {spec}> inside a relative
     "stage", overlaid with <RippleEditorOverlay> (SP-1a select/hover) and driven
@@ -337,7 +339,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 24px 24px 64px;
-    color: #0f172a;
+    color: var(--foreground);
   }
   .page-head {
     margin-bottom: 20px;
@@ -346,16 +348,17 @@
     margin: 0;
     font: 700 11px/1 ui-monospace, monospace;
     letter-spacing: 0.12em;
-    color: #6366f1;
+    color: var(--primary);
   }
   .page-head h1 {
     margin: 6px 0 4px;
     font-size: 1.5rem;
     font-weight: 700;
+    letter-spacing: -0.02em;
   }
   .lede {
     margin: 0;
-    color: #64748b;
+    color: var(--muted-foreground);
     font-size: 0.9rem;
   }
   .lab {
@@ -380,9 +383,9 @@
   }
   .last-edit {
     font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-    color: #4338ca;
-    background: #eef2ff;
-    border: 1px solid #e0e7ff;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
     padding: 3px 7px;
     border-radius: 5px;
     max-width: 280px;
@@ -394,20 +397,21 @@
     font: 600 12px/1 ui-sans-serif, system-ui;
     padding: 6px 10px;
     border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
     cursor: pointer;
   }
   .btn:hover {
-    background: #f8fafc;
+    background: var(--muted);
   }
   .btn-primary {
-    border-color: #6366f1;
-    background: #6366f1;
-    color: #fff;
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
   .btn-primary:hover {
-    background: #4f46e5;
+    background: color-mix(in srgb, var(--primary) 90%, transparent);
   }
   .btn-sm {
     padding: 3px 8px;
@@ -417,18 +421,18 @@
      holds the live render at the stage origin so box coords line up. */
   .stage {
     position: relative;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--card);
     overflow: hidden;
   }
   .stage-inner {
     padding: 16px;
   }
   .inspector {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--card);
     padding: 16px;
     position: sticky;
     top: 16px;
@@ -437,26 +441,26 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #94a3b8;
+    color: var(--muted-foreground);
     margin: 16px 0 6px;
   }
   .inspector h2:first-child {
     margin-top: 0;
   }
   .muted {
-    color: #64748b;
+    color: var(--muted-foreground);
     font-size: 0.85rem;
   }
   .hint {
-    color: #4338ca;
+    color: var(--primary);
     font-size: 0.8rem;
     margin: 0 0 8px;
   }
   .persist-status {
     font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-    color: #047857;
-    background: #ecfdf5;
-    border: 1px solid #d1fae5;
+    color: hsl(160 84% 39%);
+    background: color-mix(in srgb, hsl(160 84% 39%) 12%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(160 84% 39%) 24%, transparent);
     padding: 4px 8px;
     border-radius: 5px;
     margin: 0 0 8px;
@@ -475,9 +479,9 @@
     justify-content: space-between;
     gap: 8px;
     padding: 4px 6px;
-    border: 1px solid #eef2f7;
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: #f8fafc;
+    background: var(--muted);
   }
   dl {
     margin: 0;
@@ -487,7 +491,7 @@
     align-items: baseline;
   }
   dt {
-    color: #94a3b8;
+    color: var(--muted-foreground);
     font-size: 0.75rem;
   }
   dd {
@@ -506,25 +510,26 @@
   }
   .field-label {
     font: 600 11px/1 ui-monospace, monospace;
-    color: #64748b;
+    color: var(--muted-foreground);
   }
   .field input {
     font: 400 0.85rem/1.4 ui-sans-serif, system-ui;
     padding: 6px 8px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--input);
     border-radius: 6px;
-    background: #fff;
-    color: #0f172a;
+    background: var(--background);
+    color: var(--foreground);
   }
   .field input:focus {
-    outline: 2px solid #6366f1;
+    outline: 2px solid var(--ring);
     outline-offset: 0;
-    border-color: #6366f1;
+    border-color: var(--ring);
   }
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.8rem;
-    background: #f1f5f9;
+    background: var(--muted);
+    color: var(--foreground);
     padding: 1px 5px;
     border-radius: 4px;
   }
@@ -532,8 +537,9 @@
     margin: 0;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.72rem;
-    background: #f8fafc;
-    border: 1px solid #eef2f7;
+    background: var(--muted);
+    color: var(--foreground);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 8px;
     overflow-x: auto;
@@ -550,8 +556,8 @@
   }
   .chips li {
     font: 600 11px/1 ui-monospace, monospace;
-    background: #fef3c7;
-    color: #92400e;
+    background: color-mix(in srgb, hsl(38 92% 50%) 16%, transparent);
+    color: hsl(38 92% 42%);
     padding: 3px 7px;
     border-radius: 5px;
   }

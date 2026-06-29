@@ -282,7 +282,7 @@
      (:active), the label + icons take the primary accent color. */
   .ripple-ghost[data-active='true'],
   .ripple-ghost:active:not(:disabled) {
-    color: hsl(var(--primary));
+    color: var(--primary);
     background-color: transparent;
   }
   /* Icons inherit currentColor, so the leading/trailing slots light up too. */

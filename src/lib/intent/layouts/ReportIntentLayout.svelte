@@ -93,12 +93,12 @@
     font-size: 0.875rem;
     color: var(--ripple-muted-foreground, inherit);
     padding: 0.375rem 0;
-    border-bottom: 1px solid var(--ripple-border, #e5e7eb);
+    border-bottom: 1px solid var(--ripple-border, var(--border));
   }
   .report-body__value {
     font-size: 0.875rem;
     color: var(--ripple-foreground, inherit);
     padding: 0.375rem 0;
-    border-bottom: 1px solid var(--ripple-border, #e5e7eb);
+    border-bottom: 1px solid var(--ripple-border, var(--border));
   }
 </style>

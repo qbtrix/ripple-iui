@@ -223,7 +223,7 @@
     max-width: 960px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
   .showcase-header {
     margin-bottom: 2.5rem;
@@ -235,11 +235,11 @@
   }
   .showcase-header p {
     font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin: 0 0 1rem;
   }
   .showcase-header code {
-    background: hsl(var(--muted) / 0.5);
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 0.8rem;
@@ -254,13 +254,13 @@
     border-radius: 6px;
     font-size: 0.8rem;
     font-weight: 500;
-    background: hsl(var(--muted) / 0.4);
-    color: hsl(var(--foreground));
+    background: color-mix(in srgb, var(--muted) 40%, transparent);
+    color: var(--foreground);
     text-decoration: none;
     transition: background 0.15s;
   }
   .showcase-nav a:hover {
-    background: hsl(var(--muted));
+    background: var(--muted);
   }
   .showcase-section {
     margin-bottom: 2.5rem;
@@ -270,11 +270,11 @@
     font-weight: 600;
     margin: 0 0 0.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 1px solid var(--border);
   }
   .section-caption {
     font-size: 0.8125rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     margin: 0 0 1rem;
   }
   .side-by-side {
@@ -301,18 +301,18 @@
   .matrix-col-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     text-align: center;
     padding-bottom: 0.25rem;
   }
   .matrix-row-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-family: monospace;
   }
   .showcase-item {
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
   }
@@ -321,12 +321,12 @@
     font-weight: 600;
     padding: 8px 14px;
     margin: 0;
-    background: hsl(var(--muted) / 0.25);
-    border-bottom: 1px solid hsl(var(--border));
-    color: hsl(var(--muted-foreground));
+    background: color-mix(in srgb, var(--muted) 25%, transparent);
+    border-bottom: 1px solid var(--border);
+    color: var(--muted-foreground);
   }
   .showcase-item-demo {
     padding: 1.25rem;
-    background: hsl(var(--background));
+    background: var(--background);
   }
 </style>

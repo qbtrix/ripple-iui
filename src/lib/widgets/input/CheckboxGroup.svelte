@@ -308,7 +308,7 @@
          the FF `fast` token via the same primitive. Mounts only while focused. -->
     {#if focusedIndex !== null}
       <div
-        class="absolute rounded-[22px] pointer-events-none z-20 border border-[hsl(var(--ring))]"
+        class="absolute rounded-[22px] pointer-events-none z-20 border border-[var(--ring)]"
         data-checkbox-group-focus
         use:movingIndicator={{
           container: () => container,
@@ -362,7 +362,7 @@
           <span class="col-start-1 row-start-1 invisible" aria-hidden="true" style="font-variation-settings:'wght' 550;">{opt.label}</span>
           <span
             class="col-start-1 row-start-1"
-            style="font-variation-settings:'wght' {isChecked ? 550 : 400}; color:{isChecked || isActive ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))'}; transition:color 80ms {HOVER.easing}, font-variation-settings 80ms {HOVER.easing};"
+            style="font-variation-settings:'wght' {isChecked ? 550 : 400}; color:{isChecked || isActive ? 'var(--foreground)' : 'var(--muted-foreground)'}; transition:color 80ms {HOVER.easing}, font-variation-settings 80ms {HOVER.easing};"
           >{opt.label}</span>
         </span>
       </div>
