@@ -39,7 +39,7 @@
         },
         {
           type: 'card',
-          props: { title: 'Revenue' },
+          props: { title: 'Revenue', density: 'comfortable' },
           children: [{ type: 'stat', props: { label: 'MRR', value: '$12,400', delta: '+8%' } }]
         },
         { type: 'input', props: { placeholder: 'Search…' } }

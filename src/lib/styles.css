@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* Ripple's --ripple-* token base + the ripple-* Tailwind utilities (bg-ripple-surface,
+   rounded-ripple, …) that Card and ~16 other components depend on. Without this the
+   utilities resolve to nothing (cards lose their surface fill + radius). */
+@import "./theme.css";
 
 /* Map shadcn-svelte/bits-ui state attributes to Tailwind v4 shorthand
    variants. bits-ui exposes `data-state="checked|unchecked|active|open|closed"`
