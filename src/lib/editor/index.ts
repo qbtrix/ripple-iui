@@ -24,6 +24,10 @@
  * @changes 2026-06-30 (EP-3): the pluggable InlineEditor slot (interface + registry +
  *   the ContentEditable / TipTap ripple impls) is exported through the core barrel
  *   (`export * from './core/index.js'`); RippleInlineEditor now delegates mounting to it.
+ * @changes 2026-06-30 (EP-4): the SOURCE-FIDELITY InlineEditor (no-dep, byte-stable,
+ *   in-place; registered under the 'overlay' kind for the future svelte source lane) is
+ *   exported through the core barrel; the controller is UNCHANGED (it resolves 'overlay'
+ *   from the registry).
  */
 export * from './core/index.js';
 export { default as RippleEditorOverlay } from './RippleEditorOverlay.svelte';
