@@ -10,6 +10,8 @@
  * @changes 2026-06-27 (SP-1b): export findNodeElement, editable.ts, editor-ops.ts.
  * @changes 2026-06-27 (SP-1c-a): export ports.ts (host-boundary interfaces) +
  *   MemoryPersistenceAdapter (in-memory reference stub).
+ * @changes 2026-06-30 (EP-1): export the LaneAdapter port (lane-adapter.ts) + the
+ *   ripple implementation (RippleLaneAdapter).
  */
 export { pointInRect, rectToStyle, rectArea, relativeRect, type Rect } from './geometry.js';
 export {
@@ -78,3 +80,10 @@ export {
   type SiblingResolver,
   type DropTarget
 } from './drag-reorder.js';
+export {
+  type LaneAdapter,
+  type TargetRef,
+  type EditableNode,
+  type EditOp
+} from './lane-adapter.js';
+export { RippleLaneAdapter, type RippleLaneAdapterOptions } from './ripple-lane-adapter.js';

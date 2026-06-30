@@ -31,6 +31,9 @@
     mounted; inspector upgraded from read-only to editable text fields.
   @changes 2026-06-28 (SP-1c-b): wired MemoryPersistenceAdapter — Save snapshot,
     revisions list, and Restore — surfacing the persistence port in the lab.
+  @changes 2026-06-30 (EP-1): the inspector is now driven through the LaneAdapter
+    PORT (RippleLaneAdapter: adapter + target) instead of node+ops. Overlay/inline/
+    drag still use ops/getNode — a later slice migrates them. Zero behavior change.
 -->
 <script lang="ts">
   import { Ripple, findById } from '$lib/index.js';
@@ -42,8 +45,10 @@
     RippleDragLayer,
     createEditorSelection,
     createEditorOps,
+    RippleLaneAdapter,
     MemoryPersistenceAdapter,
-    type Revision
+    type Revision,
+    type TargetRef
   } from '$lib/editor/index.js';
 
   // Representative spec. Every node carries an explicit n_xxxxxxxx id, so
@@ -170,9 +175,8 @@
   let revisions = $state<Revision[]>([]);
   let persistStatus = $state<string | null>(null);
 
-  // The single op seam shared by inline edit AND the inspector. onApplied bumps
-  // renderVersion so the overlay re-measures after text reflows; SP-1c will also
-  // saveDraft(spec) here.
+  // The op seam shared by inline edit + drag. onApplied bumps renderVersion so the
+  // overlay re-measures after text reflows; SP-1c will also saveDraft(spec) here.
   const ops = createEditorOps({
     getRoot: () => spec.ui as UINode,
     onApplied: () => {
@@ -180,12 +184,31 @@
     }
   });
 
-  // Read-back of the currently selected node for the inspector.
+  // EP-1: the inspector now drives the ripple substrate through the LaneAdapter
+  // PORT instead of node+ops. The adapter wraps the same getRoot/spec-mutator path
+  // (its own internal EditorOps), so an inspector edit still bumps renderVersion
+  // via onApplied — identical to the pre-port seam. getBoundary supplies the stage
+  // as the ancestor-walk boundary for resolveElement (forward-wiring; the inspector
+  // selects off `selection`, not resolveElement). Overlay/inline/drag stay on
+  // ops/getNode below — a later slice migrates them onto the same port.
+  const adapter = new RippleLaneAdapter({
+    getRoot: () => spec.ui as UINode,
+    onApplied: () => {
+      renderVersion += 1;
+    },
+    knownIds,
+    getBoundary: () => stageEl
+  });
+
+  // Read-back of the currently selected node (for the live-props readout below).
   const selectedNode = $derived(
     selection.selectedId ? findById(spec.ui as UINode, selection.selectedId) : null
   );
-  // Inline edit + the inspector both flow through `ops`; the inspector derives its
-  // own fields from `selectedNode`, so no per-prop wiring lives in the lab anymore.
+  // The inspector's target: the selection, tagged with the ripple lane. The panel
+  // derives its own fields from the adapter, so no per-prop wiring lives here.
+  const selectedTarget = $derived<TargetRef | null>(
+    selection.selectedId ? { uid: selection.selectedId, lane: 'ripple' } : null
+  );
 
   // SP-1c-b: Save snapshot = draft the live spec, publish it as a revision, then
   // refresh the list. $state.snapshot peels a plain object off the $state proxy
@@ -286,8 +309,8 @@
 
       <h2>Properties</h2>
       <RippleInspector
-        node={selectedNode}
-        {ops}
+        {adapter}
+        target={selectedTarget}
         onedit={(id, prop, value) => (lastEdit = `${id}.${prop} = ${JSON.stringify(value)}`)}
       />
 
