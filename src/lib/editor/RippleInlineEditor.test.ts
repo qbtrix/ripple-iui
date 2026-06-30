@@ -1,20 +1,27 @@
 // editor/RippleInlineEditor.test.ts
-// @description Component test for the inline text editor (jsdom) AFTER its EP-2
-//   migration onto the LaneAdapter port. It drives a real container DOM through the
-//   dblclick -> edit -> commit / cancel lifecycle and asserts the SAME behavior as
-//   the pre-port editor while touching ONLY the port: a single-text widget enters
-//   contenteditable on double-click and selects the node; Enter commits exactly one
-//   node_prop_set (the adapter maps setText -> the node's primary text prop); Escape
-//   cancels with no op and restores the original text; an unchanged edit emits
-//   nothing; and a non-inline widget never enters edit. A spy-adapter case proves
-//   the port CONTRACT (the editor sends a {kind:'setText'} EditOp). The
-//   contenteditable INTERACTION FEEL (caret, IME, select-all) is out of jsdom's
-//   reach — covered by the "needs browser confirmation" list, not here.
+// @description Component test for the inline editor (jsdom) AFTER EP-3 — the editor
+//   MOUNTING is now behind the pluggable `InlineEditor` slot, but ripple behavior is
+//   unchanged, so the original EP-2 assertions still hold. It drives a real container
+//   DOM through the dblclick -> edit -> commit / cancel lifecycle while touching ONLY
+//   the port: a single-text widget enters contenteditable on double-click and selects
+//   the node; Enter commits exactly one node_prop_set (the adapter maps setText -> the
+//   node's primary text prop); Escape cancels with no op and restores the original
+//   text; an unchanged edit emits nothing; and a non-inline widget never enters edit.
+//   A spy-adapter case proves the port CONTRACT (the editor sends a {kind:'setText'}
+//   EditOp). A fake-InlineEditor case proves the SLOT CONTRACT (EP-3): the controller
+//   mounts the lane's editor, routes its onCommit -> applyEdit(setText) and onCancel ->
+//   no-op, and destroys it on re-entry / unmount — asserted via the double, free of
+//   TipTap's jsdom quirks. The contenteditable INTERACTION FEEL (caret, IME,
+//   select-all) is out of jsdom's reach — covered by the "needs browser
+//   confirmation" list, not here.
 // @created 2026-06-27 (SP-1b — branch spike/editor-domid-overlay)
 // @changes 2026-06-30 (EP-2): migrated off getNode/ops props onto an `adapter`
 //   prop. Tests now drive a real RippleLaneAdapter over a synthetic root (writes
 //   round-trip the root + fire onApplied) plus one spy-adapter case asserting the
 //   setText EditOp the editor sends through the port.
+// @changes 2026-06-30 (EP-3): added a fake-InlineEditor double registered under the
+//   'squire' kind (EP-4's mechanism), proving the controller delegates mount /
+//   onCommit / onCancel / destroy to the slot without editing the controller.
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -23,7 +30,14 @@ import { findById } from '../core/spec-mutator.js';
 import InlineEditor from './RippleInlineEditor.svelte';
 import { createEditorSelection } from './editor-selection.svelte.js';
 import { RippleLaneAdapter } from './core/ripple-lane-adapter.js';
-import type { EditableNode, LaneAdapter, TargetRef } from './core/index.js';
+import { registerInlineEditor } from './core/index.js';
+import type {
+  EditableNode,
+  InlineEditor as InlineEditorSlot,
+  InlineEditorMountOpts,
+  LaneAdapter,
+  TargetRef
+} from './core/index.js';
 
 const ref = (uid: string): TargetRef => ({ uid, lane: 'ripple' });
 
@@ -246,5 +260,117 @@ describe('RippleInlineEditor — sends a setText EditOp through the port', () =>
     await fireEvent.keyDown(heading, { key: 'Enter' });
 
     expect(applyEdit).toHaveBeenCalledWith(ref('n_head0001'), { kind: 'setText', html: 'New Title' });
+  });
+});
+
+// A no-op InlineEditor double — captures the mount opts it receives and counts
+// destroys, so the EP-3 SLOT CONTRACT can be asserted without TipTap's async jsdom
+// path. Each mount returns its own handle but shares the destroy counter.
+function makeFakeInlineEditor() {
+  const mounts: InlineEditorMountOpts[] = [];
+  let destroys = 0;
+  const editor: InlineEditorSlot = {
+    mount(_el, opts) {
+      mounts.push(opts);
+      return {
+        destroy() {
+          destroys += 1;
+        }
+      };
+    }
+  };
+  return { editor, mounts, getDestroys: () => destroys };
+}
+
+// A spy adapter over two richtext nodes. `inlineEditor: 'squire'` routes the rich
+// path to whatever is registered under 'squire' — the fake double here, the real
+// Squire/overlay impl in EP-4 — WITHOUT the controller knowing either.
+function richSpyAdapter() {
+  const applyEdit = vi.fn(() => true);
+  const seed = (uid: string) => (uid === 'n_prose001' ? '<p>A</p>' : '<p>B</p>');
+  const node = (uid: string): EditableNode => ({
+    uid,
+    type: 'richtext',
+    props: { html: seed(uid) },
+    text: seed(uid),
+    childUids: []
+  });
+  const adapter: LaneAdapter = {
+    id: 'ripple',
+    inlineEditor: 'squire',
+    resolveElement: (el) => {
+      if (el.closest('#n_prose001')) return ref('n_prose001');
+      if (el.closest('#n_prose002')) return ref('n_prose002');
+      return null;
+    },
+    readNode: (r) => node(r.uid),
+    readProp: (r, name) => (name === 'html' ? seed(r.uid) : undefined),
+    listChildren: () => [],
+    getFields: () => [],
+    applyEdit
+  };
+  return { adapter, applyEdit };
+}
+
+describe('RippleInlineEditor — delegates to the pluggable InlineEditor slot (EP-3)', () => {
+  it('mounts the lane editor and routes onCommit -> applyEdit(setText), onCancel -> no-op', async () => {
+    const { editor: fake, mounts } = makeFakeInlineEditor();
+    registerInlineEditor('squire', fake); // EP-4 does exactly this with a real impl
+    const stage = makeStage('<div id="n_prose001"><p>A</p></div>');
+    const prose = stage.querySelector('#n_prose001') as HTMLElement;
+    const { adapter, applyEdit } = richSpyAdapter();
+
+    render(InlineEditor, { props: { adapter, container: stage } });
+    await tick();
+
+    await fireEvent.dblClick(prose);
+    // The slot was mounted once, seeded with the html read through the port.
+    expect(mounts).toHaveLength(1);
+    expect(mounts[0].content).toBe('<p>A</p>');
+
+    // onCommit routes straight to applyEdit({kind:'setText'}) with the edited value.
+    mounts[0].onCommit('<p>Edited</p>');
+    expect(applyEdit).toHaveBeenCalledWith(ref('n_prose001'), {
+      kind: 'setText',
+      html: '<p>Edited</p>'
+    });
+
+    // onCancel applies no op.
+    applyEdit.mockClear();
+    mounts[0].onCancel();
+    expect(applyEdit).not.toHaveBeenCalled();
+  });
+
+  it('destroys the active slot on re-entry (double-click a different node)', async () => {
+    const { editor: fake, getDestroys } = makeFakeInlineEditor();
+    registerInlineEditor('squire', fake);
+    const stage = makeStage('<div id="n_prose001"><p>A</p></div><div id="n_prose002"><p>B</p></div>');
+    const a = stage.querySelector('#n_prose001') as HTMLElement;
+    const b = stage.querySelector('#n_prose002') as HTMLElement;
+    const { adapter } = richSpyAdapter();
+
+    render(InlineEditor, { props: { adapter, container: stage } });
+    await tick();
+
+    await fireEvent.dblClick(a);
+    expect(getDestroys()).toBe(0);
+    await fireEvent.dblClick(b); // re-entry on a different node tears the first down
+    expect(getDestroys()).toBe(1);
+  });
+
+  it('destroys the active slot on unmount', async () => {
+    const { editor: fake, getDestroys } = makeFakeInlineEditor();
+    registerInlineEditor('squire', fake);
+    const stage = makeStage('<div id="n_prose001"><p>A</p></div>');
+    const prose = stage.querySelector('#n_prose001') as HTMLElement;
+    const { adapter } = richSpyAdapter();
+
+    const { unmount } = render(InlineEditor, { props: { adapter, container: stage } });
+    await tick();
+
+    await fireEvent.dblClick(prose);
+    expect(getDestroys()).toBe(0);
+    unmount();
+    expect(getDestroys()).toBe(1);
   });
 });
