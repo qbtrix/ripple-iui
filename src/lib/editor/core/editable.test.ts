@@ -17,6 +17,9 @@ import {
   INLINE_TEXT_WIDGETS,
   isInlineTextWidget,
   normalizeInlineText,
+  RICH_TEXT_PROP,
+  RICH_TEXT_WIDGETS,
+  isRichTextWidget,
   type CatalogEntryLike
 } from './editable.js';
 
@@ -140,6 +143,34 @@ describe('inline-edit eligibility gate', () => {
   it('every widget in INLINE_TEXT_WIDGETS actually has a primary text prop (no drift from catalog)', () => {
     for (const t of INLINE_TEXT_WIDGETS) {
       expect(primaryTextProp(t), `${t} must declare a primary text prop`).not.toBeNull();
+    }
+  });
+});
+
+describe('rich-text edit eligibility gate (TipTap path)', () => {
+  it('richtext is a rich-text widget', () => {
+    expect(isRichTextWidget('richtext')).toBe(true);
+    expect(RICH_TEXT_WIDGETS.has('richtext')).toBe(true);
+  });
+
+  it('the rich content prop is `html`', () => {
+    expect(RICH_TEXT_PROP).toBe('html');
+  });
+
+  it('plain-text / composite widgets are NOT rich-text widgets', () => {
+    for (const t of ['heading', 'text', 'badge', 'button', 'card', 'markdown']) {
+      expect(isRichTextWidget(t)).toBe(false);
+    }
+  });
+
+  it('the rich path and the contenteditable text path are disjoint', () => {
+    // A widget must not be claimed by both inline edit paths — they round-trip
+    // content differently (textContent vs getHTML), so overlap would corrupt.
+    for (const t of RICH_TEXT_WIDGETS) {
+      expect(isInlineTextWidget(t)).toBe(false);
+    }
+    for (const t of INLINE_TEXT_WIDGETS) {
+      expect(isRichTextWidget(t)).toBe(false);
     }
   });
 });

@@ -38,6 +38,9 @@ export {
   INLINE_TEXT_WIDGETS,
   isInlineTextWidget,
   normalizeInlineText,
+  RICH_TEXT_PROP,
+  RICH_TEXT_WIDGETS,
+  isRichTextWidget,
   type CatalogPropSpec,
   type CatalogEntryLike
 } from './editable.js';

@@ -64,6 +64,13 @@
           id: 'n_text0001',
           props: { text: 'Double-click a heading, this text, or a button to edit it inline.', size: 'sm' }
         },
+        // richtext is a DISPLAY widget; double-click mounts a TipTap editor in
+        // place to author its `html` prop (rich-HTML inline edit, PIECE 1).
+        {
+          type: 'richtext',
+          id: 'n_prose001',
+          props: { html: '<p>Double-click to edit <strong>rich</strong> text. Try a <em>list</em> or <code>code</code>.</p>' }
+        },
         {
           type: 'flex',
           id: 'n_row00001',
