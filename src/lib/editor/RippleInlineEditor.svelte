@@ -169,6 +169,7 @@
       html = s.original;
     }
     safeDestroy(s.editor);
+    s.el.removeAttribute('data-ripple-editing'); // clear the editing outline (text path does this in teardownTextDom)
     const changed = html !== s.original;
     if (changed) {
       const applied = ops.setNodeProp(s.id, RICH_TEXT_PROP, html);
@@ -191,6 +192,7 @@
     // rich
     s.disposed = true;
     safeDestroy(s.editor);
+    s.el.removeAttribute('data-ripple-editing'); // clear the editing outline (text path does this in teardownTextDom)
     restoreRichHtml(s.el, s.original);
     oncancel?.(s.id);
   }
