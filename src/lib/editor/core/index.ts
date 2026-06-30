@@ -38,6 +38,9 @@ export {
   INLINE_TEXT_WIDGETS,
   isInlineTextWidget,
   normalizeInlineText,
+  RICH_TEXT_PROP,
+  RICH_TEXT_WIDGETS,
+  isRichTextWidget,
   type CatalogPropSpec,
   type CatalogEntryLike
 } from './editable.js';
@@ -58,3 +61,20 @@ export {
   type Revision
 } from './ports.js';
 export { MemoryPersistenceAdapter } from './memory-persistence-adapter.js';
+export {
+  inferFields,
+  inferFieldKind,
+  parseEnumOptions,
+  coerceFieldValue,
+  inspectorCatalogEntry,
+  type InspectorField,
+  type FieldKind
+} from './inspector-fields.js';
+export {
+  resolveSiblingDrop,
+  siblingResolverFromRoot,
+  nodeMovedOp,
+  type ParentAndSiblings,
+  type SiblingResolver,
+  type DropTarget
+} from './drag-reorder.js';

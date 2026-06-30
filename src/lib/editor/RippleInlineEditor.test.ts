@@ -160,3 +160,40 @@ describe('RippleInlineEditor — non-inline widgets', () => {
     expect(ops.setNodeProp).not.toHaveBeenCalled();
   });
 });
+
+describe('RippleInlineEditor — rich-text path teardown (regression: stuck editing outline)', () => {
+  const RICH_NODE: UINode = { type: 'richtext', id: 'n_prose001', props: { html: '<p>Hi</p>' } };
+
+  // The rich path sets data-ripple-editing synchronously in beginRichEdit (before
+  // the async TipTap import), so this reproduces the stuck-outline bug WITHOUT a
+  // mounted editor: enter rich edit, then commit by double-clicking a different
+  // node (the editor commits the prior session first). commit() guards a null
+  // editor, so the rich commit branch runs deterministically. Before the fix the
+  // branch never removed the attribute, leaving the indigo outline stuck.
+  it('committing a rich edit clears data-ripple-editing', async () => {
+    const container = makeStage('<div id="n_prose001"><p>Hi</p></div><h2 id="n_head0001">T</h2>');
+    const prose = container.querySelector('#n_prose001') as HTMLElement;
+    const heading = container.querySelector('#n_head0001') as HTMLElement;
+    const ops = makeOps();
+
+    render(InlineEditor, {
+      props: {
+        container,
+        ops,
+        knownIds: new Set(['n_prose001', 'n_head0001']),
+        getNode: (id: string) => (id === 'n_prose001' ? RICH_NODE : HEADING_NODE)
+      }
+    });
+    await tick();
+
+    await fireEvent.dblClick(prose);
+    expect(prose.getAttribute('data-ripple-editing')).toBe('n_prose001'); // entered rich edit
+
+    // Commit the rich session by double-clicking a different node.
+    await fireEvent.dblClick(heading);
+    await tick();
+
+    // The outline affordance must be gone after commit (was the bug).
+    expect(prose.hasAttribute('data-ripple-editing')).toBe(false);
+  });
+});

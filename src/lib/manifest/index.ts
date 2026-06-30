@@ -166,6 +166,7 @@ import { reasoningTraceEntry } from './entries/reasoning-trace.js';
 import { reportLayoutEntry } from './entries/report-layout.js';
 import { revealEntry } from './entries/reveal.js';
 import { richTextEntry } from './entries/rich-text.js';
+import { richtextEntry } from './entries/richtext.js';
 import { rippleFrameEntry } from './entries/ripple-frame.js';
 import { sankeyEntry } from './entries/sankey.js';
 import { savedViewsEntry } from './entries/saved-views.js';
@@ -513,6 +514,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   reportLayoutEntry,
   revealEntry,
   richTextEntry,
+  richtextEntry,
   rippleFrameEntry,
   sankeyEntry,
   savedViewsEntry,

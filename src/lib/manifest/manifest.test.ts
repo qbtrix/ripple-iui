@@ -65,6 +65,16 @@ describe('widget manifest', () => {
     expect(eachEntry?.example).toHaveProperty('items');
   });
 
+  it('registers the richtext DISPLAY widget (distinct from the rich-text input)', () => {
+    const display = manifestEntries.find((e) => e.type === 'richtext');
+    const input = manifestEntries.find((e) => e.type === 'rich-text');
+    expect(display, 'richtext display entry must exist').toBeTruthy();
+    expect(display?.category).toBe('display');
+    expect(display?.props).toHaveProperty('html');
+    // The WYSIWYG input widget stays separate (type `rich-text`, category input).
+    expect(input?.category).toBe('input');
+  });
+
   it('buildManifest produces a v1 document', () => {
     const m = buildManifest();
     expect(m.schema).toBe('ripple.manifest/v1');

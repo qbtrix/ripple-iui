@@ -17,9 +17,12 @@
  *
  * Payload shape conventions (action → required fields):
  *   - "node_added"                     → { parent_id, after_id?, subtree }
+ *                                        (anchorless add APPENDS to the end)
  *   - "node_replaced"                  → { node_id, subtree }
  *   - "node_prop_set"                  → { node_id, prop, value }
  *   - "node_moved"                     → { node_id, new_parent_id, after_id? }
+ *                                        (after_id = sibling to insert AFTER;
+ *                                         empty/omitted inserts FIRST)
  *   - "node_removed"                   → { node_id }
  *   - "node_prop_array_item_set"       → { node_id, prop, item_index, item }
  *   - "node_prop_array_item_appended"  → { node_id, prop, item_index, item }
@@ -195,6 +198,7 @@ function setDotted(container: Record<string, unknown>, path: string, value: unkn
 export interface MoveNodeOp {
   node_id: string;
   new_parent_id: string;
+  /** Sibling to insert AFTER. Empty/omitted inserts FIRST (≠ node_added, which appends). */
   after_id?: string | null;
 }
 
@@ -214,7 +218,11 @@ export function applyMoveNode(root: UINode, op: MoveNodeOp): void {
   try {
     if (!Array.isArray(newParent.children)) newParent.children = [];
     if (!op.after_id) {
-      newParent.children.push(subtree);
+      // Empty/omitted after_id inserts FIRST for a MOVE (the node_moved contract),
+      // which is what reorder-to-top emits. This deliberately differs from
+      // applyAddNode, where an anchorless ADD appends (a new node's natural home
+      // is the end). node_moved has no other consumers, so the two stay decoupled.
+      newParent.children.unshift(subtree);
       return;
     }
     const idx = newParent.children.findIndex((c) => c?.id === op.after_id);

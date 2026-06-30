@@ -38,10 +38,10 @@
   import {
     RippleEditorOverlay,
     RippleInlineEditor,
+    RippleInspector,
+    RippleDragLayer,
     createEditorSelection,
     createEditorOps,
-    editableTextProps,
-    isInlineTextWidget,
     MemoryPersistenceAdapter,
     type Revision
   } from '$lib/editor/index.js';
@@ -64,6 +64,13 @@
           type: 'text',
           id: 'n_text0001',
           props: { text: 'Double-click a heading, this text, or a button to edit it inline.', size: 'sm' }
+        },
+        // richtext is a DISPLAY widget; double-click mounts a TipTap editor in
+        // place to author its `html` prop (rich-HTML inline edit, PIECE 1).
+        {
+          type: 'richtext',
+          id: 'n_prose001',
+          props: { html: '<p>Double-click to edit <strong>rich</strong> text. Try a <em>list</em> or <code>code</code>.</p>' }
         },
         {
           type: 'flex',
@@ -177,18 +184,8 @@
   const selectedNode = $derived(
     selection.selectedId ? findById(spec.ui as UINode, selection.selectedId) : null
   );
-  // The editable text props (primary first) for the selected node's type.
-  const editProps = $derived(selectedNode ? editableTextProps(selectedNode.type) : []);
-  const inlineHint = $derived(
-    selectedNode ? isInlineTextWidget(selectedNode.type) : false
-  );
-
-  function onInspectorInput(prop: string, ev: Event) {
-    const id = selection.selectedId;
-    if (!id) return;
-    const value = (ev.currentTarget as HTMLInputElement).value;
-    if (ops.setNodeProp(id, prop, value)) lastEdit = `${id}.${prop} = "${value}"`;
-  }
+  // Inline edit + the inspector both flow through `ops`; the inspector derives its
+  // own fields from `selectedNode`, so no per-prop wiring lives in the lab anymore.
 
   // SP-1c-b: Save snapshot = draft the live spec, publish it as a revision, then
   // refresh the list. $state.snapshot peels a plain object off the $state proxy
@@ -225,7 +222,9 @@
     <h1>Ripple Editor — edit, snapshot, restore</h1>
     <p class="lede">
       Click selects, hover previews (SP-1a). <strong>Double-click</strong> a heading / text / button
-      to edit it in place, or edit a prop in the inspector — both update the canvas live.
+      to edit it in place (or the rich-text block for formatted HTML), or edit a prop in the
+      inspector — both update the canvas live. With a node selected, <strong>drag the grip</strong>
+      (top-right) to reorder it among its siblings.
       <strong>Save snapshot</strong> publishes a revision; <strong>Restore</strong> reverts the canvas to it.
     </p>
   </header>
@@ -253,6 +252,16 @@
           getNode={(id) => findById(spec.ui as UINode, id)}
           oncommit={(id, prop, value) => (lastEdit = `${id}.${prop} = "${value}"`)}
         />
+        <!-- PIECE 2: a grip on the selected node drags it to reorder among siblings. -->
+        <RippleDragLayer
+          container={stageEl}
+          {selection}
+          {ops}
+          {knownIds}
+          {renderVersion}
+          getRoot={() => spec.ui as UINode}
+          onreorder={(t) => (lastEdit = `moved ${t.node_id} after "${t.after_id || '(first)'}"`)}
+        />
       </div>
     </section>
 
@@ -275,42 +284,16 @@
         <p class="muted">No snapshots yet. Edit a widget, then press "Save snapshot" above the canvas.</p>
       {/if}
 
-      <h2>Selection</h2>
-      {#if selectedNode}
-        <dl>
-          <dt>node id</dt>
-          <dd><code>{selection.selectedId}</code></dd>
-          <dt>type</dt>
-          <dd><code>{selectedNode.type}</code></dd>
-        </dl>
+      <h2>Properties</h2>
+      <RippleInspector
+        node={selectedNode}
+        {ops}
+        onedit={(id, prop, value) => (lastEdit = `${id}.${prop} = ${JSON.stringify(value)}`)}
+      />
 
-        <h2>Edit text</h2>
-        {#if editProps.length > 0}
-          {#if inlineHint}
-            <p class="hint">Double-click it on the canvas to edit inline, or use the fields below.</p>
-          {/if}
-          <div class="fields">
-            {#each editProps as prop (prop)}
-              <label class="field">
-                <span class="field-label">{prop}{prop === editProps[0] ? ' (primary)' : ''}</span>
-                <input
-                  type="text"
-                  value={String(selectedNode.props?.[prop] ?? '')}
-                  oninput={(e) => onInspectorInput(prop, e)}
-                />
-              </label>
-            {/each}
-          </div>
-        {:else}
-          <p class="muted">This widget has no editable text prop. Select a heading, text, button, card, badge…</p>
-        {/if}
-
-        {#if selectedNode.props}
-          <h2>Props (live)</h2>
-          <dd><pre>{JSON.stringify(selectedNode.props, null, 2)}</pre></dd>
-        {/if}
-      {:else}
-        <p class="muted">Nothing selected. Click a widget in the preview.</p>
+      {#if selectedNode?.props}
+        <h2>Props (live)</h2>
+        <pre>{JSON.stringify(selectedNode.props, null, 2)}</pre>
       {/if}
 
       <h2>Hover</h2>
@@ -451,11 +434,6 @@
     color: var(--muted-foreground);
     font-size: 0.85rem;
   }
-  .hint {
-    color: var(--primary);
-    font-size: 0.8rem;
-    margin: 0 0 8px;
-  }
   .persist-status {
     font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
     color: hsl(160 84% 39%);
@@ -482,48 +460,6 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     background: var(--muted);
-  }
-  dl {
-    margin: 0;
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    gap: 4px 10px;
-    align-items: baseline;
-  }
-  dt {
-    color: var(--muted-foreground);
-    font-size: 0.75rem;
-  }
-  dd {
-    margin: 0;
-    font-size: 0.85rem;
-  }
-  .fields {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .field-label {
-    font: 600 11px/1 ui-monospace, monospace;
-    color: var(--muted-foreground);
-  }
-  .field input {
-    font: 400 0.85rem/1.4 ui-sans-serif, system-ui;
-    padding: 6px 8px;
-    border: 1px solid var(--input);
-    border-radius: 6px;
-    background: var(--background);
-    color: var(--foreground);
-  }
-  .field input:focus {
-    outline: 2px solid var(--ring);
-    outline-offset: 0;
-    border-color: var(--ring);
   }
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

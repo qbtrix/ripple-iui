@@ -173,3 +173,33 @@ export function isInlineTextWidget(type: string): boolean {
 export function normalizeInlineText(raw: string | null | undefined): string {
   return (raw ?? '').replace(/\u00a0/g, ' ').trim();
 }
+
+// --------------------------------------------------------------------------
+// Rich-HTML edit eligibility \u2014 the TipTap path (editor chrome PIECE 1).
+// --------------------------------------------------------------------------
+
+/**
+ * The single prop a rich-text widget stores its authored HTML in. The inline
+ * editor seeds TipTap from `node.props.html` and commits `editor.getHTML()` back
+ * to the same prop. Kept as a named constant so the editor never hard-codes the
+ * magic string.
+ */
+export const RICH_TEXT_PROP = 'html' as const;
+
+/**
+ * Widgets edited via the TipTap RICH-HTML path rather than the plain
+ * contenteditable text path: their primary content is structural HTML (stored in
+ * `RICH_TEXT_PROP`), so double-click mounts a TipTap StarterKit editor in place
+ * and commits `getHTML()`. Deliberately separate from `INLINE_TEXT_WIDGETS`
+ * (which round-trips textContent) \u2014 a rich widget would lose its markup through
+ * the textContent path.
+ */
+export const RICH_TEXT_WIDGETS: ReadonlySet<string> = new Set(['richtext']);
+
+/**
+ * True when `type` should be edited through the TipTap rich-HTML path. Belt-and-
+ * suspenders mirror of `isInlineTextWidget`: membership in the rich allow-list.
+ */
+export function isRichTextWidget(type: string): boolean {
+  return RICH_TEXT_WIDGETS.has(type);
+}
