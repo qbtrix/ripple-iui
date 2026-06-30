@@ -6,11 +6,16 @@
 //   resolveElement maps a DOM element -> TargetRef; and applyEdit maps every EditOp
 //   to spec-mutator — setProp (with manifest coercion), setText, moveChild,
 //   removeChild round-trip the root, return true, and fire onApplied; a bad ref is
-//   swallowed to `false` (the port never throws).
+//   swallowed to `false` (the port never throws) and now also dev-warns; and
+//   readProp/getNodeProp mirror the write routing for top-level-colliding (`bind`)
+//   and dotted props (the EP-1 review fix — a write lands on `node.bind`, so the
+//   read must too, else `onedit` reports undefined).
 // @created 2026-06-30 (EP-1 — LaneAdapter port + Ripple adapter)
+// @changes 2026-06-30 (EP-1 review): add readProp/getNodeProp write-routing-parity
+//   cases; assert the failure path now console.warns.
 import { describe, it, expect, vi } from 'vitest';
 import type { UINode } from '../../schema/ui-spec.js';
-import { findById } from '../../core/spec-mutator.js';
+import { findById, getNodeProp } from '../../core/spec-mutator.js';
 import { inferFields } from './inspector-fields.js';
 import { RippleLaneAdapter } from './ripple-lane-adapter.js';
 
@@ -211,14 +216,18 @@ describe('RippleLaneAdapter.applyEdit — removeChild & insertChild', () => {
 });
 
 describe('RippleLaneAdapter.applyEdit — failure path', () => {
-  it('returns false (never throws) and skips onApplied on an illegal op', () => {
+  it('returns false (never throws), skips onApplied, and dev-warns on an illegal op', () => {
     const root = tree();
     const onApplied = vi.fn();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const a = new RippleLaneAdapter({ getRoot: () => root, onApplied });
 
-    // moving a non-existent child makes applyMoveNode throw; the adapter swallows.
+    // moving a non-existent child makes applyMoveNode throw; the adapter swallows it
+    // to `false` but now surfaces it via console.warn (FIX 3 — observability).
     expect(a.applyEdit(ref('n_root0001'), { kind: 'moveChild', childUid: 'n_nope', toIndex: 0 })).toBe(false);
     expect(onApplied).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
   });
 
   it('is a no-op (false) when the root accessor returns null', () => {
@@ -227,5 +236,47 @@ describe('RippleLaneAdapter.applyEdit — failure path', () => {
     expect(a.readNode(ref('n_head0001'))).toBeNull();
     expect(a.listChildren(ref('n_head0001'))).toEqual([]);
     expect(a.getFields(ref('n_head0001'))).toEqual([]);
+    expect(a.readProp(ref('n_head0001'), 'text')).toBeUndefined();
+  });
+});
+
+// A top-level-colliding prop is one whose name lives in spec-mutator's
+// TOP_LEVEL_PROP_KEYS (bind/class/style/show/…). `bind` is a string-typed manifest
+// field on ~23 widgets, so the inspector edits it — but a WRITE lands on
+// `node.bind`, NOT `node.props.bind`. The read path must mirror that routing or
+// `onedit` reads back undefined (the EP-1 review bug this guards — FIX 1/2).
+describe('RippleLaneAdapter.readProp — write-routing parity', () => {
+  const inputTree = (): UINode => ({
+    type: 'container',
+    id: 'n_root0001',
+    props: { gap: 'md', style: { color: 'red' } },
+    children: [{ type: 'input', id: 'n_input01', props: { label: 'Query', placeholder: 'search…' } }]
+  });
+
+  it('setProp on a top-level-colliding prop (bind) writes node.bind — not node.props.bind — and readProp reads it back', () => {
+    const root = inputTree();
+    const a = new RippleLaneAdapter({ getRoot: () => root });
+
+    expect(a.applyEdit(ref('n_input01'), { kind: 'setProp', name: 'bind', value: 'state.q' })).toBe(true);
+
+    const node = findById(root, 'n_input01')!;
+    expect(node.bind).toBe('state.q'); // routed TOP-LEVEL by spec-mutator
+    expect(node.props?.bind).toBeUndefined(); // NOT written into props
+    expect(a.readProp(ref('n_input01'), 'bind')).toBe('state.q'); // read mirrors the write
+    // the pre-fix readback path (readNode().props[name]) misses it — exactly the bug FIX 1 closes:
+    expect(a.readNode(ref('n_input01'))?.props.bind).toBeUndefined();
+  });
+
+  it('getNodeProp mirrors all three write routes — top-level / props / dotted', () => {
+    const root = inputTree();
+    const input = findById(root, 'n_input01')!;
+    input.props!.bind = 'props-decoy'; // a props-level decoy the top-level route must ignore
+    input.bind = 'state.q'; // the real top-level value a write produces
+
+    expect(getNodeProp(root, 'n_input01', 'bind')).toBe('state.q'); // top-level key → node[prop]
+    expect(getNodeProp(root, 'n_input01', 'label')).toBe('Query'); // ordinary key → node.props[prop]
+    expect(getNodeProp(root, 'n_root0001', 'style.color')).toBe('red'); // dotted → nested in node.props
+    expect(getNodeProp(root, 'n_missing0', 'bind')).toBeUndefined(); // missing node → undefined
+    expect(getNodeProp(root, 'n_input01', 'nope')).toBeUndefined(); // missing prop → undefined
   });
 });

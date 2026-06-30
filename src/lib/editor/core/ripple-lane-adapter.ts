@@ -28,9 +28,13 @@
  *   which stays correct because `knownIds` is the precise allow-list (host chrome
  *   can't carry a known node id).
  * @created 2026-06-30 (EP-1 — LaneAdapter port + Ripple adapter)
+ * @changes 2026-06-30 (EP-1 review): add `readProp` (mirrors the write routing via
+ *   `getNodeProp` so a read returns what a write stored); the internal EditorOps
+ *   `onError` now `console.warn`s instead of swallowing silently, so genuinely bad
+ *   ops aren't invisible.
  */
 import type { UINode } from '../../schema/ui-spec.js';
-import { findById } from '../../core/spec-mutator.js';
+import { findById, getNodeProp } from '../../core/spec-mutator.js';
 import { resolveElementToNodeId } from './bounds-index.js';
 import { inferFields, coerceFieldValue, type InspectorField } from './inspector-fields.js';
 import { primaryTextProp, isRichTextWidget, RICH_TEXT_PROP } from './editable.js';
@@ -62,18 +66,31 @@ export class RippleLaneAdapter implements LaneAdapter {
   #getRoot: () => UINode | null | undefined;
   #knownIds: Set<string> | null;
   #getBoundary?: () => Element | null;
+  /**
+   * This adapter's OWN write seam — every mutating op (setProp/setText/insert/
+   * move/remove) routes through it. NOTE: the lab also constructs a SECOND
+   * `EditorOps` (its `ops`, driving inline-edit / drag) over the SAME `$state`
+   * root. Two seams is benign today (each just calls `applyOp`), but the future
+   * undo/redo slice MUST unify them — `editor-ops.ts` intends ONE choke point so
+   * the inverse it returns is captured in a single place.
+   */
   #ops: EditorOps;
 
   constructor(opts: RippleLaneAdapterOptions) {
     this.#getRoot = opts.getRoot;
     this.#knownIds = opts.knownIds ?? null;
     this.#getBoundary = opts.getBoundary;
-    // One internal seam for every write. onError swallows so applyEdit returns a
-    // boolean instead of throwing (the port contract); onApplied still fires.
+    // One internal seam for every write (see the #ops field note). `onError`
+    // keeps the port contract — applyEdit still returns `false` (never throws) and
+    // onApplied still fires on success — but no longer swallows SILENTLY: a bad op
+    // (bad node id / illegal move) is surfaced via console.warn so it isn't
+    // invisible. (import.meta.env isn't typed in this lib's tsconfig, so we can't
+    // dev-guard on it without a type error; a clear-prefixed warn is the fallback.)
     this.#ops = createEditorOps({
       getRoot: opts.getRoot,
       onApplied: opts.onApplied,
-      onError: () => {}
+      onError: (err, op) =>
+        console.warn('[RippleLaneAdapter] op swallowed (applyEdit→false):', op, err)
     });
   }
 
@@ -98,6 +115,17 @@ export class RippleLaneAdapter implements LaneAdapter {
     const text = readPrimaryText(node, props);
     if (text !== undefined) node_.text = text;
     return node_;
+  }
+
+  /**
+   * Read one field's CURRENT value, mirroring the write routing via `getNodeProp`:
+   * a top-level-colliding key (`bind`, `class`, `style`, …) reads off the node, a
+   * dotted path reads nested in `props`, everything else reads `props[name]`. This
+   * is the correct `onedit` readback — `readNode().props[name]` misses any prop the
+   * write routed OUTSIDE `props`. Returns `undefined` when the node/field is absent.
+   */
+  readProp(ref: TargetRef, name: string): unknown {
+    return getNodeProp(this.#getRoot(), ref.uid, name);
   }
 
   /** The target's children as refs, in document order. */
@@ -125,6 +153,11 @@ export class RippleLaneAdapter implements LaneAdapter {
       }
       case 'insertChild':
         return this.#ops.apply(insertChildOp(ref.uid, op, this.#getRoot()));
+      // moveChild/removeChild ASSUME `op.childUid` is an actual child of `ref`:
+      // moveChild computes `after_id` from `ref`'s children (so a non-child yields
+      // a meaningless position), and removeChild treats `ref` as the parent. True
+      // for the inspector slice (it never calls either); the future drag/overlay
+      // consumer MUST pass real children (a bad id throws → swallowed to `false`).
       case 'moveChild':
         return this.#ops.apply(moveChildOp(ref.uid, op, this.#getRoot()));
       case 'removeChild':
@@ -180,6 +213,9 @@ function insertChildOp(parentId: string, op: { childType: string; index: number 
  * siblings; `after_id` is the sibling that should precede the moved child in the
  * post-move list (computed over the siblings WITHOUT the moving child, since
  * `applyMoveNode` removes it before re-inserting). Empty `after_id` inserts first.
+ * Assumes `childUid` is currently a child of `parentId` (the caller's `ref`) — the
+ * sibling math is over `parentId`'s children, so a non-child yields a nonsensical
+ * position. The inspector slice never calls this; the drag consumer must honor it.
  */
 function moveChildOp(parentId: string, op: { childUid: string; toIndex: number }, root: UINode | null | undefined): EditorOp {
   const kids = findById(root, parentId)?.children ?? [];

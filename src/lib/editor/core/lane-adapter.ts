@@ -22,6 +22,9 @@
  *   these returns to `T | Promise<T>` when the first async lane lands. Deferring
  *   that until a real async lane exists avoids speculative Promise plumbing now.
  * @created 2026-06-30 (EP-1 — LaneAdapter port + Ripple adapter)
+ * @changes 2026-06-30 (EP-1 review): add `readProp` — a symmetric single-field
+ *   read that mirrors the write routing (top-level / props / dotted), so the
+ *   chrome can read back a prop the adapter may store OUTSIDE `props`.
  */
 import type { InspectorField } from './inspector-fields.js';
 
@@ -73,6 +76,14 @@ export interface LaneAdapter {
   resolveElement(el: Element): TargetRef | null;
   /** Normalized view of the target node, or null when it no longer exists. */
   readNode(ref: TargetRef): EditableNode | null;
+  /**
+   * Read ONE field's CURRENT value, mirroring `applyEdit`'s write routing so the
+   * value returned is exactly what the matching `setProp` stored. Use this — not
+   * `readNode().props[name]` — to read back a prop the adapter may route OUTSIDE
+   * `props` (top-level-colliding keys like `bind` / `class` / `style`, or a dotted
+   * path into `props`). Returns `undefined` when the node or field is absent.
+   */
+  readProp(ref: TargetRef, name: string): unknown;
   /** The target's children as refs, in document order. */
   listChildren(ref: TargetRef): TargetRef[];
   /** Manifest fields (with current values) for the target — drives the inspector. */

@@ -8,6 +8,8 @@
 //   round-trips the edit into the root and `onedit` reports the COERCED stored
 //   value; and a null target renders the empty state.
 // @created 2026-06-30 (EP-1 — LaneAdapter port + Ripple adapter)
+// @changes 2026-06-30 (EP-1 review): spyAdapter implements the new `readProp`
+//   port member (the panel reads `onedit`'s value back through it).
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
@@ -29,6 +31,9 @@ function spyAdapter(
     id: 'ripple',
     resolveElement: () => null,
     readNode: () => node,
+    // The panel only invokes readProp inside the `onedit` readback (not passed in
+    // these spy tests), so a typed stub keeps the spy satisfying the port.
+    readProp: () => undefined,
     listChildren: () => [],
     getFields: () => fields,
     applyEdit: vi.fn(() => true)

@@ -19,6 +19,9 @@
   @created 2026-06-29 (editor chrome — properties panel)
   @changes 2026-06-30 (EP-1): migrate off node+ops onto the LaneAdapter port
     (adapter + target); coercion + write now live behind the port.
+  @changes 2026-06-30 (EP-1 review): read `onedit`'s value via `adapter.readProp`
+    (was `readNode().props[prop]`), so it reports the real stored value for
+    top-level-colliding (`bind`) + dotted props instead of undefined.
 -->
 <script lang="ts">
   import type { LaneAdapter, TargetRef } from './core/lane-adapter.js';
@@ -43,12 +46,13 @@
   const fields = $derived(target ? adapter.getFields(target) : []);
 
   // Pass the RAW control value to the port; the adapter coerces it. Report the
-  // coerced, stored value back via `onedit` (read back through the port) so the
-  // panel still owns no coercion while keeping `onedit`'s value identical.
+  // coerced, stored value back via `onedit` using `readProp` (mirrors the write
+  // routing) — `readNode().props[prop]` misses top-level-colliding props like
+  // `bind`, so the readback would otherwise be undefined for ~23 widgets.
   function commit(prop: string, raw: unknown) {
     if (!target) return;
     if (adapter.applyEdit(target, { kind: 'setProp', name: prop, value: raw })) {
-      onedit?.(target.uid, prop, adapter.readNode(target)?.props[prop]);
+      onedit?.(target.uid, prop, adapter.readProp(target, prop));
     }
   }
 </script>
