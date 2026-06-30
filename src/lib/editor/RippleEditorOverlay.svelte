@@ -20,20 +20,35 @@
     drag/drop (SP-1c), no persistence. Pixel-correct box positioning needs
     BROWSER confirmation — jsdom returns zero rects.
   @created 2026-06-27 (SP-1a — branch spike/editor-domid-overlay)
+  @changes 2026-06-30 (EP-2): selection/hover RESOLUTION now routes through the
+    LaneAdapter port (`adapter.resolveElement(el)`), not the direct L1
+    `resolveElementToNodeId`. DOM GEOMETRY stays lane-agnostic and local: the
+    overlay still measures rects with `buildBoundsIndex`/`BoundsIndex` and draws
+    boxes by uid, and still takes `knownIds` PURELY as the geometry id allow-list
+    (the adapter carries its own knownIds + boundary for resolution). Behavior is
+    byte-identical to the pre-port overlay.
 -->
 <script lang="ts">
-  import { buildBoundsIndex, resolveElementToNodeId, BoundsIndex } from './core/bounds-index.js';
+  import { buildBoundsIndex, BoundsIndex } from './core/bounds-index.js';
   import { rectToStyle } from './core/geometry.js';
   import { EditorSelection } from './editor-selection.svelte.js';
+  import type { LaneAdapter } from './core/lane-adapter.js';
 
   interface Props {
+    /** The lane adapter clicks/hovers RESOLVE through — the only port seam the overlay touches. */
+    adapter: LaneAdapter;
     /** Element wrapping the mounted <Ripple> whose nodes are measured/selected. */
     container?: HTMLElement | null;
     /** Shared selection store; one is created if omitted. */
     selection?: EditorSelection;
     /** Bump to force a re-measure after a spec edit / re-render. */
     renderVersion?: number;
-    /** Node ids known from the spec — the precise id allow-list for resolution. */
+    /**
+     * Node ids known from the spec — the precise id allow-list for GEOMETRY
+     * (buildBoundsIndex). Resolution does NOT use this: the adapter carries its
+     * own knownIds + boundary. Kept because the bounds index still measures rects
+     * by node id (a lane-agnostic DOM concern, not a port one).
+     */
     knownIds?: Set<string> | null;
     /** When false, listeners detach and the boxes hide (preview mode). */
     enabled?: boolean;
@@ -44,6 +59,7 @@
   }
 
   let {
+    adapter,
     container = null,
     selection = new EditorSelection(),
     renderVersion = 0,
@@ -52,6 +68,13 @@
     onselect,
     onhover
   }: Props = $props();
+
+  // Resolve a DOM event target to a node uid THROUGH THE PORT. The adapter carries
+  // its own knownIds + boundary (the stage), so this is identical to the pre-port
+  // resolveElementToNodeId(target, { knownIds, boundary: container }).
+  function resolveId(target: EventTarget | null): string | null {
+    return target instanceof Element ? (adapter.resolveElement(target)?.uid ?? null) : null;
+  }
 
   let index = $state<BoundsIndex | null>(null);
   // Local re-measure trigger, bumped by the ResizeObserver. Combined with the
@@ -79,12 +102,12 @@
     if (!el || !enabled) return;
 
     const onClick = (e: MouseEvent) => {
-      const id = resolveElementToNodeId(e.target as Element | null, { knownIds, boundary: el });
+      const id = resolveId(e.target);
       selection.select(id);
       onselect?.(id);
     };
     const onMove = (e: MouseEvent) => {
-      const id = resolveElementToNodeId(e.target as Element | null, { knownIds, boundary: el });
+      const id = resolveId(e.target);
       if (id !== selection.hoverId) {
         selection.hover(id);
         onhover?.(id);
