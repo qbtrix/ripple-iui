@@ -17,6 +17,10 @@
  * @changes 2026-06-30 (EP-1): the LaneAdapter port + RippleLaneAdapter are exported
  *   through the core barrel (`export * from './core/index.js'`); the inspector is
  *   migrated onto the port.
+ * @changes 2026-06-30 (EP-2): the remaining chrome (RippleEditorOverlay,
+ *   RippleInlineEditor, RippleDragLayer) is migrated onto the LaneAdapter port —
+ *   each now takes an `adapter` prop and no longer reaches into resolveElementToNodeId
+ *   / EditorOps / spec-mutator directly. Public exports are unchanged.
  */
 export * from './core/index.js';
 export { default as RippleEditorOverlay } from './RippleEditorOverlay.svelte';

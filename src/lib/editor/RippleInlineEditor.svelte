@@ -3,8 +3,9 @@
   @description L2 (Svelte) INLINE EDIT controller for the Ripple visual editor.
     A headless controller (renders no chrome, only a `:global` editing-outline
     style): it delegates ONE `dblclick` listener on the render `container`,
-    resolves the target to a node id (the same L1 `resolveElementToNodeId`
-    SELECT-PARENT walk the overlay uses), and opens an in-place editor on it.
+    resolves the target to a node ref THROUGH THE LaneAdapter port
+    (`adapter.resolveElement`, the same SELECT-PARENT walk the overlay uses), and
+    opens an in-place editor on it.
 
     TWO edit paths, picked by the L1 editable policy:
       • PLAIN TEXT (`isInlineTextWidget`) — heading / text / badge / button:
@@ -20,9 +21,11 @@
         innerHTML on a changed value; we set it explicitly for the unchanged case
         and to close the async gap).
 
-    Both paths emit through the shared `EditorOps` seam, so the canvas repaints
-    reactively (SP-0 §3) and SP-1c persistence intercepts the same op stream via
-    `EditorOps.onApplied`.
+    Both paths commit THROUGH THE LaneAdapter PORT (`adapter.applyEdit(ref,
+    { kind: 'setText', html })`), so the canvas repaints reactively (SP-0 §3) and
+    persistence intercepts the same op stream via the adapter's `onApplied` — the
+    adapter maps `setText` to the same `node_prop_set` on the node's primary text
+    (or `html`) prop the pre-port path emitted, so the write is byte-identical.
 
     SCOPE: inline text + rich HTML of single-content widgets. Multi-text /
     composite widgets are edited via the inspector's per-prop fields. Interaction
@@ -33,10 +36,18 @@
   @changes 2026-06-30 (editor chrome PIECE 1): added the TipTap RICH-HTML path for
     `richtext` widgets alongside the existing contenteditable text path; session
     bookkeeping is now a discriminated union (text | rich).
+  @changes 2026-06-30 (EP-2): migrated onto the LaneAdapter PORT. RESOLUTION goes
+    through `adapter.resolveElement`, the edit-path decision + rich seed READ
+    through `adapter.readNode` / `adapter.readProp`, and commits WRITE through
+    `adapter.applyEdit({ kind: 'setText' })` — dropping the `getNode`/`ops`/
+    `knownIds` props. The TipTap + contenteditable MOUNTING is unchanged (EP-3
+    abstracts the editor slot). `findNodeElement` stays as lane-agnostic DOM
+    location (its `isValidNodeId` recognizer matches every ripple node id, so the
+    knownIds allow-list isn't needed to FIND the already-resolved node element).
+    Zero behavior change.
 -->
 <script lang="ts">
-  import type { UINode } from '../schema/ui-spec.js';
-  import { resolveElementToNodeId, findNodeElement } from './core/bounds-index.js';
+  import { findNodeElement } from './core/bounds-index.js';
   import {
     isInlineTextWidget,
     isRichTextWidget,
@@ -44,20 +55,16 @@
     normalizeInlineText,
     RICH_TEXT_PROP
   } from './core/editable.js';
-  import type { EditorOps } from './core/editor-ops.js';
+  import type { LaneAdapter, TargetRef } from './core/lane-adapter.js';
   import { EditorSelection } from './editor-selection.svelte.js';
 
   interface Props {
+    /** The lane adapter the editor RESOLVES / READS / WRITES through (its only port seam). */
+    adapter: LaneAdapter;
     /** Element wrapping the mounted <Ripple> whose nodes are edited. */
     container?: HTMLElement | null;
     /** Shared selection store — double-click also selects the targeted node. */
     selection?: EditorSelection;
-    /** Resolve a node id to its spec node (type + props for the rich seed). */
-    getNode: (id: string) => UINode | null | undefined;
-    /** The one-op seam (shared with the inspector) — commit emits node_prop_set. */
-    ops: EditorOps;
-    /** Node ids known from the spec — the precise id allow-list for resolution. */
-    knownIds?: Set<string> | null;
     /** When false, double-click does nothing (preview mode). */
     enabled?: boolean;
     /** Fired when an element enters edit mode. */
@@ -69,16 +76,17 @@
   }
 
   let {
+    adapter,
     container = null,
     selection = new EditorSelection(),
-    getNode,
-    ops,
-    knownIds = null,
     enabled = true,
     onbeginedit,
     oncommit,
     oncancel
   }: Props = $props();
+
+  // Build the lane-scoped ref for a resolved node id (the adapter stamps the lane).
+  const refOf = (uid: string): TargetRef => ({ uid, lane: adapter.id });
 
   // The current edit, plus what we need to commit/restore. Held OUTSIDE $state on
   // purpose: this is imperative DOM-edit bookkeeping, not render state — the
@@ -154,7 +162,9 @@
       teardownTextDom(s);
       // Only emit when the text actually changed — keeps the op/undo stream clean.
       if (value !== normalizeInlineText(s.original)) {
-        const applied = ops.setNodeProp(s.id, s.prop, value);
+        // Write THROUGH THE PORT: setText targets the node's primary text prop —
+        // the adapter maps it to the same node_prop_set on `s.prop` as before.
+        const applied = adapter.applyEdit(refOf(s.id), { kind: 'setText', html: value });
         if (applied) oncommit?.(s.id, s.prop, value);
       }
       // The reactive re-render rewrites the element's text from the new prop.
@@ -172,7 +182,9 @@
     s.el.removeAttribute('data-ripple-editing'); // clear the editing outline (text path does this in teardownTextDom)
     const changed = html !== s.original;
     if (changed) {
-      const applied = ops.setNodeProp(s.id, RICH_TEXT_PROP, html);
+      // Rich commit through the PORT — the adapter routes setText to RICH_TEXT_PROP
+      // for a rich widget (same node_prop_set the pre-port path emitted).
+      const applied = adapter.applyEdit(refOf(s.id), { kind: 'setText', html });
       if (applied) oncommit?.(s.id, RICH_TEXT_PROP, html);
     }
     restoreRichHtml(s.el, changed ? html : s.original);
@@ -219,10 +231,7 @@
     onbeginedit?.(id);
   }
 
-  async function beginRichEdit(el: HTMLElement, id: string, node: UINode): Promise<void> {
-    const raw = node.props?.[RICH_TEXT_PROP];
-    const original = typeof raw === 'string' ? raw : '';
-
+  async function beginRichEdit(el: HTMLElement, id: string, original: string): Promise<void> {
     // Set the session synchronously so a re-entrant dblclick is ignored while the
     // editor module loads. `editor` is filled in once TipTap resolves.
     const s: RichSession = { kind: 'rich', el, id, original, editor: null, disposed: false };
@@ -300,7 +309,6 @@
 
   $effect(() => {
     const root = container;
-    void knownIds;
     if (!root || !enabled) return;
 
     const onDblClick = (e: MouseEvent) => {
@@ -308,20 +316,30 @@
       // Ignore double-clicks inside the element we're already editing.
       if (session && target && session.el.contains(target)) return;
 
-      const id = resolveElementToNodeId(target, { knownIds, boundary: root });
-      if (!id) return;
+      // Resolve THROUGH THE PORT — the adapter carries its own knownIds + boundary,
+      // so this is identical to the pre-port resolveElementToNodeId on the stage.
+      const ref = target instanceof Element ? adapter.resolveElement(target) : null;
+      if (!ref) return;
+      const id = ref.uid;
       // A fresh double-click on a different node commits the previous edit first.
       if (session && session.id !== id) commit();
 
       selection.select(id);
-      const node = getNode(id);
+      // Read the node THROUGH THE PORT to pick the edit path by its type.
+      const node = adapter.readNode(ref);
       if (!node) return;
-      const el = findNodeElement(root, id, { knownIds });
+      // Find the DOM element to mount on — lane-agnostic DOM location (like the
+      // overlay's buildBoundsIndex). The recognized id format matches every ripple
+      // node id, so the already-resolved id needs no knownIds allow-list to locate.
+      const el = findNodeElement(root, id);
       if (!el) return; // non-id-forwarding widget — inspector handles it
 
       if (isRichTextWidget(node.type)) {
         e.preventDefault();
-        void beginRichEdit(el, id, node);
+        // Seed the rich editor from the html prop, read back THROUGH THE PORT
+        // (mirrors the rich-widget setText write target).
+        const html = adapter.readProp(ref, RICH_TEXT_PROP);
+        void beginRichEdit(el, id, typeof html === 'string' ? html : '');
         return;
       }
 

@@ -34,6 +34,11 @@
   @changes 2026-06-30 (EP-1): the inspector is now driven through the LaneAdapter
     PORT (RippleLaneAdapter: adapter + target) instead of node+ops. Overlay/inline/
     drag still use ops/getNode — a later slice migrates them. Zero behavior change.
+  @changes 2026-06-30 (EP-2): the WHOLE chrome now talks to the port — overlay,
+    inline editor, and drag layer all take the SAME single `adapter` (alongside the
+    inspector). The lab's separate `ops` EditorOps is gone (the adapter's internal
+    seam is the one write path), resolving EP-1's "two EditorOps over one root"
+    note. Zero behavior change.
 -->
 <script lang="ts">
   import { Ripple, findById } from '$lib/index.js';
@@ -44,7 +49,6 @@
     RippleInspector,
     RippleDragLayer,
     createEditorSelection,
-    createEditorOps,
     RippleLaneAdapter,
     MemoryPersistenceAdapter,
     type Revision,
@@ -175,22 +179,14 @@
   let revisions = $state<Revision[]>([]);
   let persistStatus = $state<string | null>(null);
 
-  // The op seam shared by inline edit + drag. onApplied bumps renderVersion so the
-  // overlay re-measures after text reflows; SP-1c will also saveDraft(spec) here.
-  const ops = createEditorOps({
-    getRoot: () => spec.ui as UINode,
-    onApplied: () => {
-      renderVersion += 1;
-    }
-  });
-
-  // EP-1: the inspector now drives the ripple substrate through the LaneAdapter
-  // PORT instead of node+ops. The adapter wraps the same getRoot/spec-mutator path
-  // (its own internal EditorOps), so an inspector edit still bumps renderVersion
-  // via onApplied — identical to the pre-port seam. getBoundary supplies the stage
-  // as the ancestor-walk boundary for resolveElement (forward-wiring; the inspector
-  // selects off `selection`, not resolveElement). Overlay/inline/drag stay on
-  // ops/getNode below — a later slice migrates them onto the same port.
+  // EP-2: ONE adapter drives ALL the chrome — inspector, overlay (resolveElement
+  // for select/hover), inline editor (resolveElement + readNode/readProp +
+  // applyEdit), and drag layer (applyEdit moveChild). It wraps the getRoot/
+  // spec-mutator path behind its own internal EditorOps, so every edit (inspector
+  // prop, inline text, drag reorder) bumps renderVersion via onApplied — the SINGLE
+  // write seam (this resolves EP-1's "two EditorOps over one root" note; the lab no
+  // longer builds a second `ops`). getBoundary supplies the stage as the ancestor-
+  // walk boundary for resolveElement, and knownIds is the resolution allow-list.
   const adapter = new RippleLaneAdapter({
     getRoot: () => spec.ui as UINode,
     onApplied: () => {
@@ -266,20 +262,18 @@
         <div class="stage-inner" bind:this={stageEl}>
           <Ripple ensureIds {spec} />
         </div>
-        <RippleEditorOverlay container={stageEl} {selection} {knownIds} {renderVersion} />
+        <RippleEditorOverlay container={stageEl} {adapter} {selection} {knownIds} {renderVersion} />
         <RippleInlineEditor
           container={stageEl}
+          {adapter}
           {selection}
-          {ops}
-          {knownIds}
-          getNode={(id) => findById(spec.ui as UINode, id)}
           oncommit={(id, prop, value) => (lastEdit = `${id}.${prop} = "${value}"`)}
         />
         <!-- PIECE 2: a grip on the selected node drags it to reorder among siblings. -->
         <RippleDragLayer
           container={stageEl}
+          {adapter}
           {selection}
-          {ops}
           {knownIds}
           {renderVersion}
           getRoot={() => spec.ui as UINode}

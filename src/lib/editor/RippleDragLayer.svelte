@@ -5,7 +5,7 @@
     currently-SELECTED node (only when it has reorderable siblings). Pointer-down
     on the grip starts a pointer drag; pointer-move resolves the drop gap among
     the node's siblings via the L1 `resolveSiblingDrop` and draws a drop-indicator
-    line; pointer-up emits one `node_moved` op through the shared `EditorOps` seam.
+    line; pointer-up emits one `moveChild` edit through the LaneAdapter port.
 
     Why a grip handle and not the whole selected box: the layer is
     `pointer-events: none` except for the grip, so normal selection clicks (and
@@ -16,29 +16,39 @@
     a FOLLOW-UP. Box geometry needs a real browser (jsdom returns zero rects); the
     drop MATH is unit-tested in `core/drag-reorder.test.ts`, the FEEL is not.
   @created 2026-06-30 (editor chrome PIECE 2 — drag-to-reorder siblings)
+  @changes 2026-06-30 (EP-2): the reorder now WRITES through the LaneAdapter port
+    (`adapter.applyEdit(parentRef, { kind: 'moveChild', childUid, toIndex })`)
+    instead of the direct `ops.apply(nodeMovedOp(...))`; `adapter.listChildren`
+    converts the drop math's `after_id` to the adapter's `toIndex`. The drop MATH
+    + indicator are unchanged — `getRoot` stays for the read-only sibling/parent
+    walk the port doesn't expose, and `knownIds` stays purely for buildBoundsIndex
+    geometry. Behavior is byte-identical to the pre-port layer.
 -->
 <script lang="ts">
   import { buildBoundsIndex, BoundsIndex } from './core/bounds-index.js';
   import {
     resolveSiblingDrop,
     siblingResolverFromRoot,
-    nodeMovedOp,
     type DropTarget
   } from './core/drag-reorder.js';
   import type { EditorSelection } from './editor-selection.svelte.js';
-  import type { EditorOps } from './core/editor-ops.js';
+  import type { LaneAdapter, TargetRef } from './core/lane-adapter.js';
   import type { UINode } from '../schema/ui-spec.js';
 
   interface Props {
+    /** The lane adapter the reorder WRITES through (its only port seam). */
+    adapter: LaneAdapter;
     /** Element wrapping the mounted <Ripple> whose nodes are measured/reordered. */
     container?: HTMLElement | null;
     /** Shared selection store — the selected node is the draggable one. */
     selection: EditorSelection;
-    /** The op seam — pointer-up emits node_moved through it. */
-    ops: EditorOps;
-    /** Live root accessor — sibling resolution walks it via findParent. */
+    /**
+     * Live root accessor — sibling/parent resolution walks it (findParent), which
+     * the port deliberately doesn't expose (it walks children, not parents). The
+     * WRITE goes through the adapter; this stays for the read-only drop MATH.
+     */
     getRoot: () => UINode | null | undefined;
-    /** Node ids known from the spec — the precise id allow-list for measurement. */
+    /** Node ids known from the spec — the id allow-list for GEOMETRY (buildBoundsIndex). */
     knownIds?: Set<string> | null;
     /** Bump to force a re-measure after a spec edit / re-render. */
     renderVersion?: number;
@@ -49,9 +59,9 @@
   }
 
   let {
+    adapter,
     container = null,
     selection,
-    ops,
     getRoot,
     knownIds = null,
     renderVersion = 0,
@@ -60,6 +70,8 @@
   }: Props = $props();
 
   const resolveSiblings = siblingResolverFromRoot(() => getRoot());
+  // Lane-scoped ref for a node id (the adapter stamps the lane).
+  const refOf = (uid: string): TargetRef => ({ uid, lane: adapter.id });
 
   let index = $state<BoundsIndex | null>(null);
   let measureTick = $state(0);
@@ -165,7 +177,20 @@
     indicator = null;
     draggedId = '';
     if (target && dragged) {
-      const ok = ops.apply(nodeMovedOp(dragged, target));
+      // Emit the reorder THROUGH THE PORT. The drop math yields `after_id` (the
+      // sibling to land behind); the adapter's moveChild takes a FINAL `toIndex`
+      // over the siblings WITHOUT the dragged node, so convert via the parent's
+      // children (adapter.listChildren): toIndex = position of after_id in that
+      // rest list + 1 ('' = front = 0). The adapter then recomputes the exact same
+      // after_id, so the emitted node_moved is byte-identical to the pre-port
+      // `ops.apply(nodeMovedOp(dragged, target))`.
+      const parentRef = refOf(target.new_parent_id);
+      const rest = adapter
+        .listChildren(parentRef)
+        .map((r) => r.uid)
+        .filter((uid) => uid !== dragged);
+      const toIndex = target.after_id === '' ? 0 : rest.indexOf(target.after_id) + 1;
+      const ok = adapter.applyEdit(parentRef, { kind: 'moveChild', childUid: dragged, toIndex });
       if (ok) onreorder?.({ node_id: dragged, ...target });
     }
   }
