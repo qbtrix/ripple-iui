@@ -21,6 +21,9 @@
  *   RippleInlineEditor, RippleDragLayer) is migrated onto the LaneAdapter port —
  *   each now takes an `adapter` prop and no longer reaches into resolveElementToNodeId
  *   / EditorOps / spec-mutator directly. Public exports are unchanged.
+ * @changes 2026-06-30 (EP-3): the pluggable InlineEditor slot (interface + registry +
+ *   the ContentEditable / TipTap ripple impls) is exported through the core barrel
+ *   (`export * from './core/index.js'`); RippleInlineEditor now delegates mounting to it.
  */
 export * from './core/index.js';
 export { default as RippleEditorOverlay } from './RippleEditorOverlay.svelte';

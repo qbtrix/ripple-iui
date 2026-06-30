@@ -12,6 +12,8 @@
  *   MemoryPersistenceAdapter (in-memory reference stub).
  * @changes 2026-06-30 (EP-1): export the LaneAdapter port (lane-adapter.ts) + the
  *   ripple implementation (RippleLaneAdapter).
+ * @changes 2026-06-30 (EP-3): export the pluggable InlineEditor slot (inline-editor.ts:
+ *   the interface, registry, and the two ripple impls — ContentEditable + TipTap).
  */
 export { pointInRect, rectToStyle, rectArea, relativeRect, type Rect } from './geometry.js';
 export {
@@ -87,3 +89,12 @@ export {
   type EditOp
 } from './lane-adapter.js';
 export { RippleLaneAdapter, type RippleLaneAdapterOptions } from './ripple-lane-adapter.js';
+export {
+  registerInlineEditor,
+  resolveInlineEditor,
+  type InlineEditor,
+  type InlineEditorHandle,
+  type InlineEditorMountOpts
+} from './inline-editor.js';
+export { ContentEditableInlineEditor } from './inline-editor-contenteditable.js';
+export { TipTapInlineEditor } from './inline-editor-tiptap.js';
