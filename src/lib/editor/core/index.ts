@@ -70,3 +70,11 @@ export {
   type InspectorField,
   type FieldKind
 } from './inspector-fields.js';
+export {
+  resolveSiblingDrop,
+  siblingResolverFromRoot,
+  nodeMovedOp,
+  type ParentAndSiblings,
+  type SiblingResolver,
+  type DropTarget
+} from './drag-reorder.js';

@@ -39,6 +39,7 @@
     RippleEditorOverlay,
     RippleInlineEditor,
     RippleInspector,
+    RippleDragLayer,
     createEditorSelection,
     createEditorOps,
     MemoryPersistenceAdapter,
@@ -221,7 +222,9 @@
     <h1>Ripple Editor — edit, snapshot, restore</h1>
     <p class="lede">
       Click selects, hover previews (SP-1a). <strong>Double-click</strong> a heading / text / button
-      to edit it in place, or edit a prop in the inspector — both update the canvas live.
+      to edit it in place (or the rich-text block for formatted HTML), or edit a prop in the
+      inspector — both update the canvas live. With a node selected, <strong>drag the grip</strong>
+      (top-right) to reorder it among its siblings.
       <strong>Save snapshot</strong> publishes a revision; <strong>Restore</strong> reverts the canvas to it.
     </p>
   </header>
@@ -248,6 +251,16 @@
           {knownIds}
           getNode={(id) => findById(spec.ui as UINode, id)}
           oncommit={(id, prop, value) => (lastEdit = `${id}.${prop} = "${value}"`)}
+        />
+        <!-- PIECE 2: a grip on the selected node drags it to reorder among siblings. -->
+        <RippleDragLayer
+          container={stageEl}
+          {selection}
+          {ops}
+          {knownIds}
+          {renderVersion}
+          getRoot={() => spec.ui as UINode}
+          onreorder={(t) => (lastEdit = `moved ${t.node_id} after "${t.after_id || '(first)'}"`)}
         />
       </div>
     </section>

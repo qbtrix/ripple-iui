@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   applyAppendPropArrayItem,
+  applyMoveNode,
   applyOp,
   applyRemovePropArrayItem,
   applySetPropArrayItem,
@@ -209,5 +210,82 @@ describe('applyOp — prop-array item dispatch', () => {
     });
     expect(ok).toBe(true);
     expect((tree.children![0].props as { data: unknown[] }).data).toEqual([2, 3]);
+  });
+});
+
+// applyMoveNode ------------------------------------------------------------
+// node_moved's first consumer is the editor's drag-to-reorder; these lock its
+// after_id contract (empty = insert FIRST, which differs from node_added).
+
+describe('applyMoveNode', () => {
+  function row(): UINode {
+    return {
+      id: 'n_root',
+      type: 'container',
+      children: [
+        { id: 'n_a', type: 'text' },
+        { id: 'n_b', type: 'text' },
+        { id: 'n_c', type: 'text' },
+      ],
+    } as UINode;
+  }
+  const ids = (t: UINode) => t.children!.map((c) => c.id);
+
+  test('empty after_id inserts FIRST (reorder-to-top contract)', () => {
+    const tree = row();
+    applyMoveNode(tree, { node_id: 'n_c', new_parent_id: 'n_root', after_id: '' });
+    expect(ids(tree)).toEqual(['n_c', 'n_a', 'n_b']);
+  });
+
+  test('omitted after_id also inserts first', () => {
+    const tree = row();
+    applyMoveNode(tree, { node_id: 'n_c', new_parent_id: 'n_root' });
+    expect(ids(tree)).toEqual(['n_c', 'n_a', 'n_b']);
+  });
+
+  test('after_id inserts directly after the named sibling', () => {
+    const tree = row();
+    applyMoveNode(tree, { node_id: 'n_a', new_parent_id: 'n_root', after_id: 'n_b' });
+    expect(ids(tree)).toEqual(['n_b', 'n_a', 'n_c']);
+  });
+
+  test('moving after the last sibling lands at the end', () => {
+    const tree = row();
+    applyMoveNode(tree, { node_id: 'n_a', new_parent_id: 'n_root', after_id: 'n_c' });
+    expect(ids(tree)).toEqual(['n_b', 'n_c', 'n_a']);
+  });
+
+  test('routes through applyOp by action name', () => {
+    const tree = row();
+    const ok = applyOp(tree, {
+      action: 'node_moved',
+      node_id: 'n_b',
+      new_parent_id: 'n_root',
+      after_id: '',
+    });
+    expect(ok).toBe(true);
+    expect(ids(tree)).toEqual(['n_b', 'n_a', 'n_c']);
+  });
+
+  test('throws on an unknown after_id and leaves the tree intact', () => {
+    const tree = row();
+    expect(() =>
+      applyMoveNode(tree, { node_id: 'n_a', new_parent_id: 'n_root', after_id: 'n_ghost' }),
+    ).toThrow();
+    expect(ids(tree)).toEqual(['n_a', 'n_b', 'n_c']);
+  });
+
+  test('refuses to move a node into its own descendant', () => {
+    const tree = {
+      id: 'n_root',
+      type: 'container',
+      children: [
+        { id: 'n_box', type: 'container', children: [{ id: 'n_inner', type: 'text' }] },
+        { id: 'n_sib', type: 'text' },
+      ],
+    } as UINode;
+    expect(() =>
+      applyMoveNode(tree, { node_id: 'n_box', new_parent_id: 'n_inner', after_id: '' }),
+    ).toThrow();
   });
 });
