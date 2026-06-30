@@ -10,6 +10,13 @@
  * reactivity — wrap them in your own store (e.g. Svelte 5 `$state`)
  * for reactive rendering.
  *
+ * `getNodeProp` is the symmetric READ counterpart to `applySetNodeProp`: it
+ * mirrors the same three-way prop routing (dotted → nested in `props`; a key in
+ * `TOP_LEVEL_PROP_KEYS` → `node[prop]`; else `node.props[prop]`), so reading a
+ * prop returns exactly what writing it would have stored — the inspector uses it
+ * to report a field's value after an edit (top-level-colliding props like `bind`
+ * live OFF `props`, so `node.props[prop]` alone misses them).
+ *
  * The dispatch helper `applyOp` reads `payload.action` and routes to
  * the matching operation. It returns `true` when the action was
  * recognised and applied, `false` when it wasn't — callers handle
@@ -193,6 +200,44 @@ function setDotted(container: Record<string, unknown>, path: string, value: unkn
   const old = cursor[last];
   cursor[last] = value;
   return old;
+}
+
+/**
+ * Read a node's prop, MIRRORING `applySetNodeProp`'s write routing so a read
+ * returns exactly what a write would have stored. Same three routes, same order
+ * as the writer: a dotted `prop` reads nested from `node.props`; a `prop` in
+ * `TOP_LEVEL_PROP_KEYS` reads `node[prop]`; everything else reads
+ * `node.props[prop]`. Returns `undefined` when the node or the path is missing.
+ * Pure, never throws — the read counterpart the inspector uses to report a
+ * field's CURRENT value after an edit (top-level-colliding props like `bind` /
+ * `class` / `style` live OFF `props`, so `node.props[prop]` alone misses them).
+ */
+export function getNodeProp(
+  root: UINode | null | undefined,
+  node_id: string,
+  prop: string,
+): unknown {
+  if (!prop) return undefined;
+  const node = findById(root, node_id);
+  if (!node) return undefined;
+
+  if (prop.includes('.')) {
+    return getDotted(node.props as Record<string, unknown> | undefined, prop);
+  }
+  if (TOP_LEVEL_PROP_KEYS.has(prop)) {
+    return (node as Record<string, unknown>)[prop];
+  }
+  return (node.props as Record<string, unknown> | undefined)?.[prop];
+}
+
+function getDotted(container: Record<string, unknown> | undefined, path: string): unknown {
+  if (!container) return undefined;
+  return path.split('.').reduce<unknown>((cursor, part) => {
+    if (cursor && typeof cursor === 'object') {
+      return (cursor as Record<string, unknown>)[part];
+    }
+    return undefined;
+  }, container);
 }
 
 export interface MoveNodeOp {

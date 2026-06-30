@@ -14,6 +14,9 @@
  *   properties panel) + the inspector-fields L1 helpers (via core barrel).
  * @changes 2026-06-30 (editor chrome PIECE 2): export RippleDragLayer (drag-to-
  *   reorder) + the drag-reorder L1 helpers (via core barrel).
+ * @changes 2026-06-30 (EP-1): the LaneAdapter port + RippleLaneAdapter are exported
+ *   through the core barrel (`export * from './core/index.js'`); the inspector is
+ *   migrated onto the port.
  */
 export * from './core/index.js';
 export { default as RippleEditorOverlay } from './RippleEditorOverlay.svelte';

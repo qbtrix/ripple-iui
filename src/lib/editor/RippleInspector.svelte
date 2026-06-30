@@ -1,45 +1,59 @@
 <!--
   @file editor/RippleInspector.svelte
   @description L2 (Svelte) PROPERTIES PANEL for the Ripple visual editor — the
-    reusable inspector that replaces the lab's inline, text-only field list. Given
-    the selected node, it derives a typed, editable field per prop from the widget
-    manifest (`inferFields`, L1) and renders the right control: text / textarea /
-    number / boolean / select. Every edit routes through the SAME `EditorOps` seam
-    (`ops.setNodeProp`) the inline editor uses, so the canvas repaints reactively
-    and persistence intercepts at `onApplied` — one op path for all edits.
+    reusable inspector. As of EP-1 it is migrated onto the lane-agnostic
+    `LaneAdapter` PORT: given an `adapter` + a `target` (TargetRef), it derives the
+    editable fields via `adapter.getFields(target)` and renders the right control
+    per kind (text / textarea / number / boolean / select). Every edit routes
+    through `adapter.applyEdit(target, { kind: 'setProp', name, value })` with the
+    RAW control value — the adapter owns coercion + the spec-mutator write, so this
+    panel imports NOTHING from inferFields / coerceFieldValue / editor-ops anymore;
+    it touches only the port. The same chrome can thus later drive other substrates
+    (svelte source, html/css) by swapping the adapter.
 
-    Manifest-driven, so a new widget/prop is editable the moment it lands; complex
-    props (arrays/objects) are classified readonly by the L1 and omitted. Fully
-    theme-aware: reads shadcn tokens as `var(--token)` (NOT `hsl(var(--token))` —
-    the tokens already resolve to full hsl()).
+    Behavior is identical to the pre-port panel: same controls, same empty/theming,
+    and `onedit` still reports the COERCED stored value (read back through the port
+    after the apply) so its readout is byte-for-byte what it was. Fully theme-aware:
+    reads shadcn tokens as `var(--token)` (NOT `hsl(var(--token))` — the tokens
+    already resolve to full hsl()).
   @created 2026-06-29 (editor chrome — properties panel)
+  @changes 2026-06-30 (EP-1): migrate off node+ops onto the LaneAdapter port
+    (adapter + target); coercion + write now live behind the port.
+  @changes 2026-06-30 (EP-1 review): read `onedit`'s value via `adapter.readProp`
+    (was `readNode().props[prop]`), so it reports the real stored value for
+    top-level-colliding (`bind`) + dotted props instead of undefined.
 -->
 <script lang="ts">
-  import type { UINode } from '../schema/ui-spec.js';
-  import type { EditorOps } from './core/editor-ops.js';
-  import { inferFields, coerceFieldValue } from './core/inspector-fields.js';
+  import type { LaneAdapter, TargetRef } from './core/lane-adapter.js';
 
   interface Props {
-    /** The selected node to edit, or null for the empty state. */
-    node?: UINode | null;
-    /** The shared one-op seam (same instance the inline editor + canvas use). */
-    ops: EditorOps;
+    /** The lane adapter the panel edits through (the only seam it touches). */
+    adapter: LaneAdapter;
+    /** The selected target to edit, or null for the empty state. */
+    target?: TargetRef | null;
     /** Extra classes for the panel root. */
     class?: string;
-    /** Fired after an edit applies (id, prop, coerced value). */
-    onedit?: (id: string, prop: string, value: unknown) => void;
+    /** Fired after an edit applies (uid, prop, coerced value). */
+    onedit?: (uid: string, prop: string, value: unknown) => void;
   }
 
-  let { node = null, ops, class: className = '', onedit }: Props = $props();
+  let { adapter, target = null, class: className = '', onedit }: Props = $props();
 
-  // Fields re-derive from the (reactive) node, so controls stay in sync after an
-  // op mutates the spec — the panel is a pure view over inferFields().
-  const fields = $derived(inferFields(node));
+  // Read the target node + its fields through the port. Both re-derive when the
+  // adapter's live root mutates (getFields/readNode read it), so controls stay in
+  // sync after an op — the panel is a pure view over the adapter.
+  const node = $derived(target ? adapter.readNode(target) : null);
+  const fields = $derived(target ? adapter.getFields(target) : []);
 
-  function commit(prop: string, kind: Parameters<typeof coerceFieldValue>[0], raw: unknown, numeric = false) {
-    if (!node?.id) return;
-    const value = coerceFieldValue(kind, raw, numeric);
-    if (ops.setNodeProp(node.id, prop, value)) onedit?.(node.id, prop, value);
+  // Pass the RAW control value to the port; the adapter coerces it. Report the
+  // coerced, stored value back via `onedit` using `readProp` (mirrors the write
+  // routing) — `readNode().props[prop]` misses top-level-colliding props like
+  // `bind`, so the readback would otherwise be undefined for ~23 widgets.
+  function commit(prop: string, raw: unknown) {
+    if (!target) return;
+    if (adapter.applyEdit(target, { kind: 'setProp', name: prop, value: raw })) {
+      onedit?.(target.uid, prop, adapter.readProp(target, prop));
+    }
   }
 </script>
 
@@ -49,7 +63,7 @@
   {:else}
     <header class="ri-head">
       <span class="ri-type">{node.type}</span>
-      <span class="ri-id" title={node.id}>{node.id}</span>
+      <span class="ri-id" title={node.uid}>{node.uid}</span>
     </header>
 
     {#if fields.length === 0}
@@ -65,13 +79,13 @@
                 class="ri-checkbox"
                 type="checkbox"
                 checked={Boolean(f.value)}
-                onchange={(e) => commit(f.prop, f.kind, (e.currentTarget as HTMLInputElement).checked)}
+                onchange={(e) => commit(f.prop, (e.currentTarget as HTMLInputElement).checked)}
               />
             {:else if f.kind === 'select'}
               <select
                 class="ri-input"
                 value={String(f.value ?? '')}
-                onchange={(e) => commit(f.prop, f.kind, (e.currentTarget as HTMLSelectElement).value, f.numeric)}
+                onchange={(e) => commit(f.prop, (e.currentTarget as HTMLSelectElement).value)}
               >
                 {#each f.options ?? [] as opt (opt)}
                   <option value={opt}>{opt}</option>
@@ -82,21 +96,21 @@
                 class="ri-input"
                 type="number"
                 value={f.value as number}
-                oninput={(e) => commit(f.prop, f.kind, (e.currentTarget as HTMLInputElement).value)}
+                oninput={(e) => commit(f.prop, (e.currentTarget as HTMLInputElement).value)}
               />
             {:else if f.kind === 'textarea'}
               <textarea
                 class="ri-input ri-textarea"
                 rows="3"
                 value={String(f.value ?? '')}
-                oninput={(e) => commit(f.prop, f.kind, (e.currentTarget as HTMLTextAreaElement).value)}
+                oninput={(e) => commit(f.prop, (e.currentTarget as HTMLTextAreaElement).value)}
               ></textarea>
             {:else}
               <input
                 class="ri-input"
                 type="text"
                 value={String(f.value ?? '')}
-                oninput={(e) => commit(f.prop, f.kind, (e.currentTarget as HTMLInputElement).value)}
+                oninput={(e) => commit(f.prop, (e.currentTarget as HTMLInputElement).value)}
               />
             {/if}
           </label>
