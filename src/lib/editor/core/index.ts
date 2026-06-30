@@ -14,6 +14,11 @@
  *   ripple implementation (RippleLaneAdapter).
  * @changes 2026-06-30 (EP-3): export the pluggable InlineEditor slot (inline-editor.ts:
  *   the interface, registry, and the two ripple impls — ContentEditable + TipTap).
+ * @changes 2026-06-30 (EP-4): export the SOURCE-FIDELITY InlineEditor impl
+ *   (inline-editor-source.ts) — the no-dep, byte-stable, in-place editor registered
+ *   under the 'overlay' kind for the future svelte source lane. The re-export
+ *   evaluates the module, so its self-registration side effect runs for any barrel
+ *   consumer (`resolveInlineEditor('overlay')`).
  */
 export { pointInRect, rectToStyle, rectArea, relativeRect, type Rect } from './geometry.js';
 export {
@@ -98,3 +103,4 @@ export {
 } from './inline-editor.js';
 export { ContentEditableInlineEditor } from './inline-editor-contenteditable.js';
 export { TipTapInlineEditor } from './inline-editor-tiptap.js';
+export { SourceFidelityInlineEditor } from './inline-editor-source.js';
