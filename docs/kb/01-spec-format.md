@@ -1,3 +1,13 @@
+<!--
+  docs/kb/01-spec-format.md — UISpec v1.0 JSON format reference (KB entry).
+  Changes:
+    - 2026-07-01: synced to the Zod source of truth. Added the source-of-truth
+      banner; documented `sources` (RFC 04), node-level `motion` (RFC 12), the
+      `slot` field, and the `fonts` + `logo` groups on `theme`.
+-->
+
+> **Source of truth:** the Zod schemas in `src/lib/schema/ui-spec.ts` and `src/lib/schema/universal-spec.ts` are canonical. This doc is a human-readable companion and may lag the code — when they disagree, the schema wins. Last verified against code: 2026-07-01.
+
 # Ripple UISpec v1.0 — JSON Format Reference
 
 ## Overview
@@ -27,7 +37,11 @@ Ripple renders interactive UIs from JSON specs. The top-level structure is UISpe
 ```
 
 **Required fields:** `version` (always "1.0"), `ui` (root UINode).
-**Optional fields:** `state` (initial state object), `theme`, `meta`, `data` (data fetchers).
+**Optional fields:** `state` (initial state object), `theme`, `meta`, `data` (client-side data fetchers), `sources` (server-executed read bindings — see below).
+
+### `sources` — server-executed read bindings (RFC 04)
+
+`sources` holds read bindings that the **server** owns and runs; Ripple never executes them. It preserves the key verbatim as an opaque pass-through so a client round-trip can't drop it. Each entry's shape is defined by the consuming host, so the schema types it as `Record<string, any>`. Use `sources` for server-resolved reads (e.g. dynamic Paw Sites) and `data` for client-side fetches.
 
 ## UINode Structure
 
@@ -43,6 +57,8 @@ Every widget in the tree is a UINode:
   "show": "{state.isVisible}",
   "class": "extra-css-classes",
   "style": { "margin-top": "8px" },
+  "motion": { "enter": { "opacity": 0, "y": 12 }, "transition": { "preset": "smooth" } },
+  "slot": "header",
   "on_click": { "action": "set", "target": "count", "value": "{state.count + 1}" },
   "on_change": { "action": "set", "target": "query", "value": "{event}" },
   "on_submit": { "action": "api", "url": "/api/submit", "method": "POST" },
@@ -60,7 +76,9 @@ Every widget in the tree is a UINode:
 - `children` — Nested UINode array for composition
 - `bind` — Two-way state binding using `{state.path}` syntax
 - `show` — Conditional visibility expression (hides the node when false)
-- `on_click`, `on_change`, `on_submit`, `on_focus`, `on_blur` — Event handlers (single or array for chaining)
+- `motion` — Node-level declarative animation (RFC 12), a sibling of `class`/`style`, **not** inside `props`. Closed, GPU-safe channel set; full schema in `src/lib/schema/motion.ts`. Note: `transition.delay` is in seconds, `duration` in ms.
+- `slot` — Named snippet slot to route this child into on its parent widget (e.g. `'header'`/`'footer'` on a `Card`). Ignored when the parent has no such slot.
+- `on_click`, `on_change`, `on_input`, `on_submit`, `on_focus`, `on_blur` — Event handlers (single or array for chaining)
 
 **Loop fields (for `each` pattern):**
 - `items` — Data path to iterate: `"{state.list}"`
@@ -87,6 +105,24 @@ Two-way bind input widgets:
 ```json
 { "type": "input", "props": { "label": "Name" }, "bind": "{state.name}" }
 ```
+
+## Theme
+
+The optional `theme` block overrides appearance. Alongside `colors` (the shadcn semantic-token family), `radius`, and `mode` (`'light' | 'dark' | 'system'`), it carries two white-label groups (RFC 12):
+
+```json
+{
+  "theme": {
+    "mode": "dark",
+    "radius": "0.5rem",
+    "colors": { "primary": "#3b82f6" },
+    "fonts": { "sans": "Inter", "heading": "Fraunces", "mono": "JetBrains Mono" },
+    "logo": { "src": "/logo.svg", "alt": "Acme", "darkSrc": "/logo-dark.svg" }
+  }
+}
+```
+
+`fonts` emits `--ripple-font-*` CSS variables; `logo` is surfaced to widgets such as `Navbar` and emitted as `--ripple-logo*`. Inside `logo`, only `src` is required.
 
 ## Expressions
 
