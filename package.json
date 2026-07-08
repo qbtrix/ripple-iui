@@ -2,6 +2,26 @@
   "name": "@ripple-ui/svelte",
   "version": "0.5.0",
   "license": "MIT",
+  "description": "Svelte 5 component library that renders interactive UI from declarative JSON specs, built for AI-generated interfaces.",
+  "keywords": [
+    "svelte",
+    "svelte5",
+    "ui",
+    "json-schema",
+    "renderer",
+    "ai",
+    "generative-ui",
+    "components",
+    "design-system"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qbtrix/ripple-iui.git"
+  },
+  "homepage": "https://github.com/qbtrix/ripple-iui#readme",
+  "bugs": {
+    "url": "https://github.com/qbtrix/ripple-iui/issues"
+  },
   "type": "module",
   "publishConfig": {
     "access": "public"
