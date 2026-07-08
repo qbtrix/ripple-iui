@@ -18,7 +18,6 @@ import Ripple from '$lib/Ripple.svelte';
 // stub lets it mount (the observer callback never fires in jsdom, so echarts is
 // never dynamically imported here).
 if (typeof globalThis.ResizeObserver === 'undefined') {
-  // @ts-expect-error - minimal stub for the test environment
   globalThis.ResizeObserver = class {
     observe() {}
     unobserve() {}

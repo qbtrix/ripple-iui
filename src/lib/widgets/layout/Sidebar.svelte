@@ -1,3 +1,4 @@
+<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -59,7 +60,7 @@
       .split('-')
       .map((p, i) => (i === 0 ? p[0]!.toUpperCase() + p.slice(1) : p[0]!.toUpperCase() + p.slice(1)))
       .join('');
-    return ((icons as unknown) as Record<string, unknown>)[camel] ?? null;
+    return ((icons as unknown) as Record<string, import('svelte').Component<any, any, any>>)[camel] ?? null;
   }
 
   function isActive(item: NavItem): boolean {

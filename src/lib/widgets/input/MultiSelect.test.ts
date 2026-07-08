@@ -42,7 +42,6 @@ describe('MultiSelect', () => {
 
   it('handles non-array `value` defensively', () => {
     const { container } = render(MultiSelect, {
-      // @ts-expect-error — testing defensive runtime behavior
       props: { options, value: undefined, placeholder: 'Empty' }
     });
     expect(container.textContent).toContain('Empty');
