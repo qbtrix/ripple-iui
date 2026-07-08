@@ -1,0 +1,36 @@
+# .github/workflows/ci.yml
+# Created 2026-07-08 (RCR-1): PR gate for @ripple-ui/svelte. Runs the full
+# vitest suite and svelte-check on every pull request and on pushes to main.
+# Before this workflow the repo had no CI test gate, so a failing unit test and
+# 33 svelte-check errors sat on main undetected. Keep it minimal: install, test,
+# type-check. The separate release-manifest.yml handles tag publishes.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Unit tests
+        run: bunx vitest run
+
+      - name: Type check
+        run: bun run check
