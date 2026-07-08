@@ -41,6 +41,12 @@
   import { Loader2 } from '@lucide/svelte';
   import { cn } from '$lib/utils.js';
   import { FF_SPRING_TOKENS, resolvePreset, springToCssTiming } from '$lib/motion/presets.js';
+  import type { ResolvedPhysics } from '$lib/motion/presets.js';
+
+  // 'snappy' and 'bouncy' always resolve to spring physics; narrow the union so
+  // springToCssTiming (which expects a spring shape) type-checks — same narrowing
+  // with-motion.ts does at runtime via a `type === 'spring'` guard.
+  type SpringPhysics = Extract<ResolvedPhysics, { type: 'spring' }>;
 
   interface Props {
     id?: string;
@@ -105,8 +111,8 @@
   // RELEASE  (pointer up):   bouncy spring easing + FF `moderate` (160ms) — springs
   //   back past rest then settles, the signature bounce-back.
   // Module-constant strings (no $state) so there is no runes/vitest surface.
-  const COMPRESS_EASING = springToCssTiming(resolvePreset('snappy')).easing; // overshoot, restrained
-  const RELEASE_EASING = springToCssTiming(resolvePreset('bouncy')).easing; // overshoot, playful
+  const COMPRESS_EASING = springToCssTiming(resolvePreset('snappy') as SpringPhysics).easing; // overshoot, restrained
+  const RELEASE_EASING = springToCssTiming(resolvePreset('bouncy') as SpringPhysics).easing; // overshoot, playful
   const COMPRESS_MS = Math.round(FF_SPRING_TOKENS.fast.duration * 1000); // 80
   const RELEASE_MS = Math.round(FF_SPRING_TOKENS.moderate.duration * 1000); // 160
 

@@ -42,10 +42,13 @@
     icon="columns"
   />
 {:else}
+  <!-- Adapter boundary: `items` is raw spec data (Record<string, unknown>[]).
+       The ComparisonLayout composite defensively handles item shape, so assert
+       the structural CompareItem shape here rather than reshaping the data. -->
   <ComparisonLayout
     title={input.title}
     description={input.description}
-    {items}
+    items={items as ({ id: string } & Record<string, unknown>)[]}
     {features}
     onselect={onSelect}
   />

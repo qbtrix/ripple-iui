@@ -1,6 +1,8 @@
 <script lang="ts">
   // Updated: 2026-04-21 — opts into the WidgetRegistry when `id` is set so
   // the `invoke` flow action can call `focus` remotely.
+  // Updated: 2026-07-08 — oninput/onchange now emit `string | number` to match the
+  // `value` prop and readValue() (a type='number' input yields a number).
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { tv } from 'tailwind-variants';
@@ -25,8 +27,8 @@
     helper?: string;
     prefix?: Snippet;
     suffix?: Snippet;
-    oninput?: (value: string) => void;
-    onchange?: (value: string) => void;
+    oninput?: (value: string | number) => void;
+    onchange?: (value: string | number) => void;
     onfocus?: (e: FocusEvent) => void;
     onblur?: (e: FocusEvent) => void;
   }

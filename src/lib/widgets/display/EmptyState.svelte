@@ -1,3 +1,9 @@
+<!--
+  EmptyState.svelte — dashed-border empty placeholder with an icon, title, description.
+  Updated 2026-07-08: widened the `icon` union (+columns/check-square/file-text/clock/table)
+  and their $derived mapping so the intent layouts render the real icon instead of hitting a
+  type error and falling back to the inbox glyph.
+-->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -5,6 +11,11 @@
   import SearchXIcon from '@lucide/svelte/icons/search-x';
   import FileXIcon from '@lucide/svelte/icons/file-x';
   import AlertOctagonIcon from '@lucide/svelte/icons/octagon-alert';
+  import ColumnsIcon from '@lucide/svelte/icons/columns';
+  import CheckSquareIcon from '@lucide/svelte/icons/check-square';
+  import FileTextIcon from '@lucide/svelte/icons/file-text';
+  import ClockIcon from '@lucide/svelte/icons/clock';
+  import TableIcon from '@lucide/svelte/icons/table';
 
   interface Props {
     id?: string;
@@ -12,8 +23,8 @@
     style?: Record<string, string>;
     title: string;
     description?: string;
-    /** Lucide icon name shorthand: inbox / search / file / error. */
-    icon?: 'inbox' | 'search' | 'file' | 'error';
+    /** Lucide icon shorthand: inbox / search / file / error, plus layout icons columns / check-square / file-text / clock / table. */
+    icon?: 'inbox' | 'search' | 'file' | 'error' | 'columns' | 'check-square' | 'file-text' | 'clock' | 'table';
     /** Default-slot for CTAs (e.g., a button). */
     children?: Snippet;
     hasChildren?: boolean;
@@ -28,6 +39,11 @@
     icon === 'search' ? SearchXIcon
       : icon === 'file' ? FileXIcon
       : icon === 'error' ? AlertOctagonIcon
+      : icon === 'columns' ? ColumnsIcon
+      : icon === 'check-square' ? CheckSquareIcon
+      : icon === 'file-text' ? FileTextIcon
+      : icon === 'clock' ? ClockIcon
+      : icon === 'table' ? TableIcon
       : InboxIcon
   );
 

@@ -1,3 +1,4 @@
+<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
 <!-- src/lib/widgets/overlay/ContextMenu.svelte -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -49,7 +50,7 @@
       .split('-')
       .map((p) => (p[0]?.toUpperCase() ?? '') + p.slice(1))
       .join('');
-    return ((icons as unknown) as Record<string, unknown>)[camel] ?? null;
+    return ((icons as unknown) as Record<string, import('svelte').Component<any, any, any>>)[camel] ?? null;
   }
 
   function handleSelect(item: Item) {

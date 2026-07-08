@@ -63,6 +63,7 @@
 	import QuizQuestion from '$lib/organisms/QuizQuestion.svelte';
 	import ResultsSummary from '$lib/organisms/ResultsSummary.svelte';
 	import DashboardRenderer from './DashboardRenderer.svelte';
+	import type { DashboardSpec } from './dashboard-manager.svelte.js';
 	import FormLayout from './layouts/FormLayout.svelte';
 	import SummaryLayout from './layouts/SummaryLayout.svelte';
 	import CardGridLayout from './layouts/CardGridLayout.svelte';
@@ -92,8 +93,10 @@
 		 * to build a confirm step's review rows. Absent for a standalone spec.
 		 */
 		context?: Record<string, unknown>;
-		/** Forwarded to DashboardRenderer when intent='dashboard'. */
-		onSpecChanged?: (spec: unknown) => void;
+		/** Forwarded to DashboardRenderer when intent='dashboard'. Carries a
+		 * DashboardSpec — matches Ripple's and DashboardRenderer's signatures so
+		 * the callback type is consistent across the whole render chain. */
+		onSpecChanged?: (spec: DashboardSpec) => void;
 		/** Fired when a designed form field changes (data mode). */
 		onFieldChange?: (id: string, value: unknown) => void;
 	}

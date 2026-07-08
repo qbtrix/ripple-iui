@@ -60,7 +60,7 @@
 
   // Content sections are items[1..n]. If items[1] has a `sections` array, use
   // that directly (genesis format); otherwise treat each item as a section.
-  const sections = $derived<ArticleSection[]>(() => {
+  const sections = $derived.by((): ArticleSection[] => {
     if (items.length <= 1) return [];
     const second = items[1];
     if (Array.isArray((second as any).sections)) {

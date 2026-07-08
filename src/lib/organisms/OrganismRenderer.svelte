@@ -37,7 +37,13 @@
     'sources-row': SourcesRow,
   } as const;
 
-  const Component = $derived(ORGANISMS[organism]);
+  // Cast the union of concrete organism components to a generic component type:
+  // spreading `{...props} {...handlers}` cannot satisfy every member's Props at once
+  // (e.g. OptionList requires `options`), and the runtime contract is "pass through
+  // whatever this organism needs". Updated 2026-07-08 for svelte-check.
+  const Component = $derived(
+    ORGANISMS[organism] as unknown as import('svelte').Component<Record<string, unknown>>,
+  );
 
   // Per-organism callback wiring. Each organism gets only the event it owns,
   // all funnelled through onComplete so the host has a single completion hook.
