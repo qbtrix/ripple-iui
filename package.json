@@ -57,7 +57,8 @@
   },
   "files": [
     "dist",
-    "!dist/**/*.test.*"
+    "!dist/**/*.test.*",
+    "!dist/**/__fixtures__/**"
   ],
   "scripts": {
     "dev": "vite dev",

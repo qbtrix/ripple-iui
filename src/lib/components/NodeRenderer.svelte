@@ -80,6 +80,8 @@
 	// 3rd dispatch tier: organism references. A spec node can reference a ripple
 	// organism by name (`{ organism, props }`) instead of inlining a widget tree.
 	import OrganismRenderer from '../organisms/OrganismRenderer.svelte';
+	// Per-node error-boundary fallback (RCR-4).
+	import ErrorState from '../widgets/overlay/ErrorState.svelte';
 	import { isOrganismType } from '../organisms/schema.js';
 
 	interface Props {
@@ -506,7 +508,11 @@
 				<Self node={child} {loopContext} />
 			{/each}
 		{/snippet}
-		{#if node.motion}
+		<svelte:boundary>
+			<!-- RCR-4: per-node error boundary. A widget that throws during
+			     render shows an inline ErrorState for THIS node while its siblings
+			     keep rendering, so one bad widget can't take down the message. -->
+			{#if node.motion}
 			<!--
 				The motion wrapper MUST be a real layout box (block), not
 				`display: contents`. `display: contents` generates no box, so the
@@ -547,6 +553,16 @@
 				{/snippet}
 			</WidgetComponent>
 		{/if}
+			{#snippet failed(error)}
+				<div role="alert" data-ripple-node-error={node.id}>
+					<ErrorState
+						icon="error"
+						title="This widget hit an error"
+						description={error instanceof Error ? error.message : String(error)}
+					/>
+				</div>
+			{/snippet}
+		</svelte:boundary>
 	{:else}
 		<!--
 			Unknown widget type — the node's `type` is not in the widget catalog.
