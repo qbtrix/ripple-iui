@@ -2,12 +2,19 @@
  * @file onboarding-wizard.ts
  * @description NON-COMMERCE proof fixture for the Chain Flow primitive (RFC 13 M1).
  * @created 2026-05-31
+ * @updated 2026-06-15 — terminal `onComplete` switched from `emit` to `chat` to
+ *   mirror the production builder. The fixture now matches pocketpaw
+ *   `build_flow('onboarding_wizard')` (`pocketpaw/ripple/_flows.py`
+ *   `build_onboarding_wizard`), whose terminal hands the collected answers back
+ *   to the AGENT via `{kind:'chat', message:<prompt>}` — the flow loops to the
+ *   agent instead of dead-ending on an `emit` event no one consumed. The emit
+ *   terminal kind is still exercised separately in FlowRunner.test.ts.
  *
  * A three-step onboarding wizard — "pick a goal -> enter details -> confirm" —
  * expressed as ONE nested `chain` / `chain_map` `UniversalSpec`. It proves the
- * primitive without any commerce, chat, or network: the whole decision tree is
+ * primitive without any commerce or network: the whole decision tree is
  * materialized up front, so the `ChainExecutor` walks it entirely client-side
- * with zero round-trips between steps.
+ * with zero round-trips between steps. Only the terminal hands back to the agent.
  *
  * What it exercises:
  *   - `chain_map`: step 1 branches on the picked goal id (focus vs collaborate).
@@ -16,8 +23,9 @@
  *     the workspace name the user entered earlier via
  *     `{state.pick_goal_selection.label}` /
  *     `{state.enter_details_formData.workspace}`.
- *   - `onComplete`: the terminal step declares an `emit` FlowAction carrying the
- *     full accumulated payload back to the host.
+ *   - `onComplete`: the terminal step declares a `chat` FlowAction (the chat
+ *     loop) that hands the full accumulated payload back to the agent — the
+ *     same terminal the real `build_flow('onboarding_wizard')` emits.
  *
  * UINode shape notes (so the fixture renders for real):
  *   - `on_click` is a TOP-LEVEL UINode key (sibling of `type`/`props`/`bind`),
@@ -44,10 +52,13 @@ export function buildOnboardingWizard(): UniversalSpec {
 		flowId: 'confirm',
 		intent: 'confirm',
 		title: 'You are all set',
-		// Terminal action: hand the whole accumulated payload back to the host.
+		// Terminal action: hand the collected answers back to the AGENT via the
+		// chat loop. Mirrors pocketpaw `build_onboarding_wizard` exactly — the
+		// runtime appends the accumulated payload to this message before sending,
+		// so we only supply the human-readable prompt here.
 		onComplete: {
-			kind: 'emit',
-			event: 'onboarding.complete'
+			kind: 'chat',
+			message: "I've finished onboarding — here are my choices, please set up my workspace."
 		},
 		ui: {
 			type: 'container',
