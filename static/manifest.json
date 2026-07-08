@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-06-28T10:23:08.388Z",
+  "generatedAt": "2026-07-08T13:44:00.153Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -7089,7 +7089,7 @@
     {
       "type": "grid",
       "category": "layout",
-      "description": "CSS grid container. Lays children in evenly-sized columns. Best for KPI rows and card grids. For independent column scroll (master-detail layouts), set a fixed `height` + `overflow:hidden` via the `style` passthrough and give each column `overflow-y:auto; min-height:0`. `max-height` does NOT work — the grid row stays max-content.",
+      "description": "CSS grid; even columns. Best for KPI rows and card grids. For independent column scroll, set fixed `height` + `overflow:hidden` via `style`; columns `overflow-y:auto`. `max-height` does NOT work.",
       "props": {
         "columns": {
           "type": "number | string",
@@ -8619,7 +8619,7 @@
     {
       "type": "master-detail",
       "category": "layout",
-      "description": "List on left, detail view on right. Selected item flows into detail spec via loop context. Provides independent scroll + a sticky detail pane natively, and its `detail` prop accepts a full custom spec. BUT master list items are limited to valueKey/labelKey/descriptionKey/badgeKey (no custom item template) — for bespoke list cards, hand-roll a grid with the fixed-height + overflow recipe instead.",
+      "description": "List left, detail right; selected item flows into the detail spec. Master items support only valueKey/labelKey/descriptionKey/badgeKey — for bespoke list cards, hand-roll a grid.",
       "props": {
         "items": {
           "type": "Array<Record<string, unknown>>",
@@ -12136,6 +12136,25 @@
       }
     },
     {
+      "type": "richtext",
+      "category": "display",
+      "staticSafe": true,
+      "description": "Render trusted rich HTML (e.g. TipTap StarterKit output) with prose styling. Authored inline by the visual editor.",
+      "props": {
+        "html": {
+          "type": "string",
+          "required": false,
+          "description": "Trusted rich HTML string (e.g. TipTap output)."
+        }
+      },
+      "example": {
+        "type": "richtext",
+        "props": {
+          "html": "<p>Rich <strong>HTML</strong> content with a <em>list</em>:</p><ul><li>one</li><li>two</li></ul>"
+        }
+      }
+    },
+    {
       "type": "ripple-frame",
       "category": "composite",
       "description": "Renders a Ripple spec inside another spec with isolated state. Use for nested demos or independent tiles.",
@@ -15186,7 +15205,7 @@
       "type": "seismograph",
       "category": "data",
       "staticSafe": false,
-      "description": "Scrolling live signal trace on a canvas via an internal rAF ring-buffer. `line` = oscilloscope trace with a bright leading-edge tip; `bars` = histogram. Includes a ● LIVE/REC indicator + readout. Paused on tab-hide; static frame under reduced-motion.",
+      "description": "Scrolling live signal trace on a canvas via a rAF ring-buffer. `line` = oscilloscope trace, `bars` = histogram. Has a ● LIVE/REC indicator + readout. Paused on tab-hide; static under reduced-motion.",
       "props": {
         "variant": {
           "type": "\"line\" | \"bars\"",
@@ -15255,7 +15274,7 @@
       "type": "glyph-grid",
       "category": "display",
       "staticSafe": true,
-      "description": "N×N matrix of cells lit per a bitmap pattern — a 2D brightness array or a named built-in glyph. Lit cells take the accent color; a subtle CSS pulse breathes them (frozen under reduced-motion). Pure CSS, SSR-safe.",
+      "description": "N×N matrix of cells lit per a bitmap pattern — a 2D brightness array or a named glyph. Lit cells take the accent color with a subtle pulse (frozen under reduced-motion). Pure CSS, SSR-safe.",
       "props": {
         "pattern": {
           "type": "number[][]",
