@@ -1,4 +1,5 @@
 // Manifest entry for the seismograph widget (console telemetry pack, 2026-06-13).
+// Updated 2026-07-08 (docs): description trimmed under 200 chars (manifest.test limit).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const seismographEntry: WidgetManifestEntry = {
@@ -6,7 +7,7 @@ export const seismographEntry: WidgetManifestEntry = {
   category: 'data',
   staticSafe: false,
   description:
-    'Scrolling live signal trace on a canvas via an internal rAF ring-buffer. `line` = oscilloscope trace with a bright leading-edge tip; `bars` = histogram. Includes a ● LIVE/REC indicator + readout. Paused on tab-hide; static frame under reduced-motion.',
+    'Scrolling live signal trace on a canvas via a rAF ring-buffer. `line` = oscilloscope trace, `bars` = histogram. Has a ● LIVE/REC indicator + readout. Paused on tab-hide; static under reduced-motion.',
   props: {
     variant: { type: '"line" | "bars"', required: false, description: 'line = oscilloscope trace, bars = histogram. Default line.' },
     live: { type: 'boolean', required: false, description: 'Animate live. When false, paints a single static frame. Default true.' },
