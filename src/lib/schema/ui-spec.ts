@@ -9,6 +9,16 @@
  *     preserved verbatim by ripple as opaque pass-through
  *   - Added node-level `motion` field (RFC 12 animation primitive).
  *   - Added font + logo tokens to ThemeOverrides (RFC 12 white-label theme-applier).
+ *   - Spec versioning: `version` was `z.literal('1.0')`, so ANY future spec
+ *     (`1.1`, …) failed to parse outright. It now accepts any `<major>.<minor>`
+ *     inside the renderer's major line (additive minors render fine) and
+ *     rejects a different major with a clear message. See CURRENT_SPEC_VERSION.
+ *   - Removed the `DataFetcher` schema and `UISpec.data`. Nothing ever ran them:
+ *     `Ripple.svelte` seeds the `ui-data` context with an empty store and never
+ *     populates it from `spec.data`, so a declared fetcher silently resolved to
+ *     nothing. `sources` (RFC 04, server-executed) is the live remote-data path.
+ *     The resolver's `data` expression scope is untouched — that is a real
+ *     capability a host populates directly.
  */
 
 import { z } from 'zod';
@@ -16,33 +26,27 @@ import { EventHandlerOrArray } from './event-handler.js';
 import { Motion } from './motion.js';
 
 /**
- * Data fetcher for loading external data.
- * Can be configured to refetch on state changes or at intervals.
+ * The spec version this renderer speaks. Bump the MINOR for additive changes
+ * (older renderers keep rendering them); bump the MAJOR only for a breaking
+ * shape change.
  */
-export const DataFetcher = z.object({
-	/** API endpoint URL */
-	url: z.string(),
+export const CURRENT_SPEC_VERSION = '1.0';
 
-	/** HTTP method */
-	method: z.enum(['GET', 'POST']).default('GET'),
+const CURRENT_SPEC_MAJOR = Number(CURRENT_SPEC_VERSION.split('.')[0]);
+const SPEC_VERSION_RE = /^(\d+)\.(\d+)$/;
 
-	/** State paths that trigger refetch when changed */
-	depends_on: z.array(z.string()).optional(),
-
-	/** Auto-refresh interval in seconds */
-	refresh_interval: z.number().optional(),
-
-	/** Request headers */
-	headers: z.record(z.string(), z.string()).optional(),
-
-	/** Request body (for POST) */
-	body: z.record(z.string(), z.any()).optional(),
-
-	/** Transform function name to apply to response */
-	transform: z.string().optional()
-});
-
-export type DataFetcher = z.infer<typeof DataFetcher>;
+/**
+ * Can this build render a spec declaring `version`?
+ *
+ * Same major → yes. A newer MINOR is additive by contract, so we render it and
+ * ignore the fields we don't know (zod strips unknown keys). A different MAJOR
+ * is a breaking shape change → refuse rather than mis-render it.
+ */
+export function isCompatibleSpecVersion(version: string): boolean {
+	const match = SPEC_VERSION_RE.exec(version);
+	if (!match) return false;
+	return Number(match[1]) === CURRENT_SPEC_MAJOR;
+}
 
 /**
  * Base UI Node schema (before adding recursive children).
@@ -179,14 +183,20 @@ export type ThemeOverrides = z.infer<typeof ThemeOverrides>;
  * This is the root schema that LLMs generate.
  */
 export const UISpec = z.object({
-	/** Schema version for compatibility */
-	version: z.literal('1.0').default('1.0'),
+	/**
+	 * Schema version. Any `<major>.<minor>` inside this renderer's major line is
+	 * accepted — a newer minor is additive, so it renders and unknown keys are
+	 * stripped. A different major is refused (see {@link isCompatibleSpecVersion}).
+	 */
+	version: z
+		.string()
+		.refine(isCompatibleSpecVersion, {
+			message: `Unsupported spec version — this renderer speaks ${CURRENT_SPEC_MAJOR}.x`
+		})
+		.default(CURRENT_SPEC_VERSION),
 
 	/** Initial state values */
 	state: z.record(z.string(), z.any()).optional(),
-
-	/** Data fetchers keyed by name */
-	data: z.record(z.string(), DataFetcher).optional(),
 
 	/**
 	 * Server-executed read bindings ("sources"), keyed by name (RFC 04).
