@@ -79,7 +79,15 @@ export {
 } from './widgets/index.js';
 
 // Schema
-export { UISpec, UINode, DataFetcher, ThemeOverrides, parseUISpec, safeParseUISpec } from './schema/ui-spec.js';
+export {
+	UISpec,
+	UINode,
+	ThemeOverrides,
+	parseUISpec,
+	safeParseUISpec,
+	CURRENT_SPEC_VERSION,
+	isCompatibleSpecVersion
+} from './schema/ui-spec.js';
 export { UniversalSpec, IntentType, LifecycleType, FlowAction, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';
 export { EventHandler, EventAction, EventHandlerOrArray } from './schema/event-handler.js';
 

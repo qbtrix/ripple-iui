@@ -228,6 +228,30 @@
   );
   let dataStore = $state<Record<string, unknown>>({});
 
+  // `spec.data` remote fetchers were removed from the schema: nothing ever ran
+  // them, so a declared fetcher silently resolved to nothing and the widget
+  // rendered empty. Warn once instead of leaving the author to debug it.
+  // `sources` (RFC 04, server-executed) is the live remote-data path.
+  let warnedLegacyDataFetcher = false;
+  function looksLikeRemoteFetcher(data: unknown): boolean {
+    if (!data || typeof data !== 'object') return false;
+    const obj = data as Record<string, unknown>;
+    if ('url' in obj) return true;
+    return Object.values(obj).some(
+      (v) => !!v && typeof v === 'object' && 'url' in (v as Record<string, unknown>)
+    );
+  }
+  $effect(() => {
+    if (warnedLegacyDataFetcher) return;
+    if (looksLikeRemoteFetcher((rawSpec as { data?: unknown } | undefined)?.data)) {
+      warnedLegacyDataFetcher = true;
+      console.warn(
+        '[ripple] `spec.data` remote fetchers are never executed and have been removed ' +
+          'from the schema. Use `sources` (server-executed) instead.'
+      );
+    }
+  });
+
   // Sync external state prop changes into the stateManager reactively.
   // This allows data_sources and other async state updates to flow in
   // after the initial render.

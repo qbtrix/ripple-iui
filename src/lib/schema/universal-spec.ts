@@ -35,7 +35,7 @@
  */
 
 import { z } from 'zod';
-import { UINode, ThemeOverrides, DataFetcher } from './ui-spec.js';
+import { UINode, ThemeOverrides } from './ui-spec.js';
 
 // =============================================================================
 // Chain Flow — terminal action (RFC 13 §5.1)
@@ -224,10 +224,10 @@ export const UniversalSpec: z.ZodType<UniversalSpecType> = z.object({
   theme: ThemeOverrides.optional(),
 
   // Data
-  data: z.union([
-    z.record(z.string(), z.any()), // Inline data
-    DataFetcher // Remote data
-  ]).optional(),
+  // Inline data only. The old `DataFetcher` (remote) union member was never
+  // executed by the renderer and is gone — use `sources` (RFC 04) for remote
+  // data, which the server owns and runs.
+  data: z.record(z.string(), z.any()).optional(),
 
   // Server-executed read bindings ("sources"), keyed by name (RFC 04).
   // The server owns and runs sources; ripple never executes them — it only
@@ -279,7 +279,7 @@ type UniversalSpecType = {
   title?: string;
   description?: string;
   theme?: z.infer<typeof ThemeOverrides>;
-  data?: Record<string, any> | z.infer<typeof DataFetcher>;
+  data?: Record<string, any>;
   sources?: Record<string, any>;
   fields?: Record<string, string>;
   display?: z.infer<typeof DisplayHints>;
