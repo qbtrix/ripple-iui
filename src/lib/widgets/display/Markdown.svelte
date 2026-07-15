@@ -1,6 +1,7 @@
 <script lang="ts">
   import { marked } from 'marked';
   import { cn } from '$lib/utils.js';
+  import { sanitizeHtml } from '$lib/utils/sanitize-html.js';
 
   interface Props {
     id?: string;
@@ -21,7 +22,10 @@
   const html = $derived.by(() => {
     if (!source) return '';
     try {
-      return marked.parse(source, { gfm, breaks: true, async: false }) as string;
+      // Sanitize before {@html}: markdown source is spec-controlled and may be
+      // untrusted (LLM-authored), and marked passes raw HTML through by default,
+      // so `<img src=x onerror=…>` in the source would otherwise run as XSS.
+      return sanitizeHtml(marked.parse(source, { gfm, breaks: true, async: false }) as string);
     } catch (e) {
       console.warn('[ripple/markdown] parse failed:', e);
       return '';
