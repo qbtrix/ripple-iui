@@ -462,12 +462,14 @@
 		-->
 		<svelte:boundary>
 			<OrganismRenderer organism={organismRef.organism} props={organismRef.props} />
-			{#snippet failed(error)}
+			{#snippet failed(error, reset)}
 				<div role="alert" data-ripple-node-error={node.id}>
 					<ErrorState
 						icon="error"
 						title="This widget hit an error"
+						description="The rest of the message is unaffected."
 						detail={error instanceof Error ? error.message : String(error)}
+						onaction={reset}
 					/>
 				</div>
 			{/snippet}
@@ -576,8 +578,15 @@
 				{/snippet}
 			</WidgetComponent>
 		{/if}
-			{#snippet failed(error)}
-				<!-- Raw exception messages can leak internals (paths, expression
+			{#snippet failed(error, reset)}
+				<!-- Wire the boundary's reset() to ErrorState's "Try again" action.
+				     Without it the button rendered but did nothing, so a node that
+				     transiently threw (e.g. a mid-stream partial spec, or a widget
+				     fixed in-place by the editor) stayed wedged on ErrorState with no
+				     way back. reset() re-attempts the render. (The chat streaming
+				     preview also self-heals on close — the final interactive render is
+				     a separate mount — so this covers the editor / stable cases.)
+				     Raw exception messages can leak internals (paths, expression
 				     fragments) into a consumer-facing card, so the description
 				     stays generic and the message goes to `detail` (small
 				     monospace, built for exactly this). -->
@@ -587,6 +596,7 @@
 						title="This widget hit an error"
 						description="The rest of the message is unaffected."
 						detail={error instanceof Error ? error.message : String(error)}
+						onaction={reset}
 					/>
 				</div>
 			{/snippet}
