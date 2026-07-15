@@ -37,9 +37,12 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
+          # Remove the token file on ANY exit (incl. a publish failure). Without
+          # the trap, `set -e` aborts the step before `rm` runs and leaves the
+          # NPM_TOKEN in $HOME/.npmrc on the runner.
+          trap 'rm -f "$HOME/.npmrc"' EXIT
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
           bun publish --access public
-          rm -f "$HOME/.npmrc"
 
       - name: Stage release assets
         run: |
