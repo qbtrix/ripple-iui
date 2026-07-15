@@ -7,10 +7,11 @@
     TipTap editor ON this element to author the `html` prop, and this component
     paints the committed result.
 
-    HTML posture: matches Markdown.svelte exactly — rendered via `{@html}` with NO
-    sanitizer. The codebase's accepted posture for TRUSTED spec content; StarterKit
-    output is structural HTML (p / strong / em / lists / headings / blockquote /
-    code), so no new sanitizer dependency is introduced.
+    HTML posture: matches Markdown.svelte — the `html` is DOMPurify-sanitized
+    (HTML profile) before `{@html}`, because spec content can be LLM-authored and
+    untrusted. StarterKit's structural output (p / strong / em / lists / headings /
+    blockquote / code) survives the profile unchanged; scripts / on* handlers /
+    javascript: URIs are stripped. See utils/sanitize-html.ts.
 
     The `{@html html}` is the SOLE child of the id-bearing div on purpose: Svelte 5
     compiles a lone `{@html}` to the `is_controlled` path (`element.innerHTML = value`),
@@ -21,16 +22,24 @@
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
+  import { sanitizeHtml } from '$lib/utils/sanitize-html.js';
 
   interface Props {
     id?: string;
     class?: string;
     style?: Record<string, string>;
-    /** Trusted rich HTML to render (e.g. TipTap StarterKit output). */
+    /** Rich HTML to render (e.g. TipTap StarterKit output). Spec-controlled and
+     *  possibly LLM-authored, so it is sanitized before {@html}. */
     html?: string;
   }
 
   let { id, class: className, style, html = '' }: Props = $props();
+
+  // Sanitize before {@html}. Structural TipTap/StarterKit markup survives the
+  // HTML profile; scripts / on* handlers / javascript: URIs are stripped. Still a
+  // lone {@html} expression, so Svelte's is_controlled (element.innerHTML) path —
+  // which the inline editor relies on — is preserved.
+  const safeHtml = $derived(sanitizeHtml(html));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
@@ -60,5 +69,5 @@
   )}
   style={styleString}
 >
-  {@html html}
+  {@html safeHtml}
 </div>
