@@ -19,6 +19,11 @@
  *     nothing. `sources` (RFC 04, server-executed) is the live remote-data path.
  *     The resolver's `data` expression scope is untouched — that is a real
  *     capability a host populates directly.
+ *   - Review pass: the version regex tolerates a semver patch digit ("1.0.0"
+ *     parses — LLMs emit it constantly and hard-failing the whole spec over it
+ *     defeats the forgiving intent), and the compat helper is scoped by name to
+ *     Gen-1 (isCompatibleUISpecVersion) so hosts don't point it at Gen-2
+ *     UniversalSpec versions it knows nothing about.
  */
 
 import { z } from 'zod';
@@ -33,20 +38,33 @@ import { Motion } from './motion.js';
 export const CURRENT_SPEC_VERSION = '1.0';
 
 const CURRENT_SPEC_MAJOR = Number(CURRENT_SPEC_VERSION.split('.')[0]);
-const SPEC_VERSION_RE = /^(\d+)\.(\d+)$/;
+// Accepts an optional semver-style patch digit ("1.0.0"): it carries no
+// meaning in the spec contract, but LLMs emit it out of habit and refusing
+// the whole spec over it would defeat the forgiving intent.
+const SPEC_VERSION_RE = /^(\d+)\.(\d+)(?:\.\d+)?$/;
 
 /**
- * Can this build render a spec declaring `version`?
+ * Can this build render a **Gen-1 `UISpec`** declaring `version`?
  *
  * Same major → yes. A newer MINOR is additive by contract, so we render it and
  * ignore the fields we don't know (zod strips unknown keys). A different MAJOR
  * is a breaking shape change → refuse rather than mis-render it.
+ *
+ * Gen-1 ONLY: `UniversalSpec` (Gen-2, `version: '2.0'`) is versioned
+ * separately — do not use this as a generic pre-mount check for both spec
+ * generations, it will refuse Gen-2 specs this renderer renders fine.
  */
-export function isCompatibleSpecVersion(version: string): boolean {
+export function isCompatibleUISpecVersion(version: string): boolean {
 	const match = SPEC_VERSION_RE.exec(version);
 	if (!match) return false;
 	return Number(match[1]) === CURRENT_SPEC_MAJOR;
 }
+
+/**
+ * @deprecated Renamed to {@link isCompatibleUISpecVersion} — the old name read
+ * as covering every spec generation, but it only ever spoke Gen-1 `UISpec`.
+ */
+export const isCompatibleSpecVersion = isCompatibleUISpecVersion;
 
 /**
  * Base UI Node schema (before adding recursive children).

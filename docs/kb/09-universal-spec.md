@@ -64,7 +64,7 @@ The full `IntentType` enum, in code order:
 - `title`: display title
 - `description`: subtitle or context
 - `lifecycle`: a **config object** `{ type, id?, icon?, label? }` where `type` is `"ephemeral"` (inline, temporary, default) | `"tool"` (modal/panel) | `"persistent"` (pinned). It is **not** a bare string — `"lifecycle": "persistent"` is the deprecated Gen-1 form.
-- `data`: inline data (`Record<string, any>`) or a remote `DataFetcher`
+- `data`: inline data (`Record<string, any>`), rendered directly — remote data goes through `sources`
 - `sources`: server-executed read bindings (RFC 04), preserved verbatim
 - `fields`: field mapping (semantic role → data path), e.g. `{ "title": "name" }`
 - `display`: layout preferences (the current field name — the old doc called this `display_hints`)

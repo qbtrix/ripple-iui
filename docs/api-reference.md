@@ -121,7 +121,7 @@ import {
 ### UISpec
 
 ```typescript
-import { UISpec, UINode, DataFetcher, ThemeOverrides, parseUISpec, safeParseUISpec } from '@ripple-ui/svelte';
+import { UISpec, UINode, ThemeOverrides, parseUISpec, safeParseUISpec, CURRENT_SPEC_VERSION, isCompatibleUISpecVersion } from '@ripple-ui/svelte';
 ```
 
 ### UniversalSpec

@@ -86,6 +86,8 @@ export {
 	parseUISpec,
 	safeParseUISpec,
 	CURRENT_SPEC_VERSION,
+	isCompatibleUISpecVersion,
+	// Deprecated alias of isCompatibleUISpecVersion (Gen-1 only — see schema).
 	isCompatibleSpecVersion
 } from './schema/ui-spec.js';
 export { UniversalSpec, IntentType, LifecycleType, FlowAction, parseUniversalSpec, safeParseUniversalSpec } from './schema/universal-spec.js';

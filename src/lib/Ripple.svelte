@@ -243,6 +243,11 @@
   }
   $effect(() => {
     if (warnedLegacyDataFetcher) return;
+    // Gen-2 UniversalSpec never had fetchers and its inline `data` is live,
+    // consumed content — a `{ url, title }` payload there is data, not a
+    // legacy fetcher. `intent` is required on Gen-2 and absent on Gen-1, so
+    // it's a clean discriminator.
+    if (rawSpec && typeof rawSpec === 'object' && 'intent' in rawSpec) return;
     if (looksLikeRemoteFetcher((rawSpec as { data?: unknown } | undefined)?.data)) {
       warnedLegacyDataFetcher = true;
       console.warn(
