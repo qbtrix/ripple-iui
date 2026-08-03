@@ -47,6 +47,14 @@
       only for widgets whose root forwards unknown attributes (≈none do today) —
       empirically the working selector is the DOM `id` already bound by ~82% of
       widgets; see docs/design/sp0-spike-report.md.
+    - 2026-07-08 (RCR-4): wrap the widget AND organism-ref branches in
+      <svelte:boundary> with an ErrorState fallback keyed to the node id, so a
+      widget that throws during render is isolated to its own node instead of
+      blanking the whole message. The raw error message renders in `detail`
+      (small monospace), not `description` — exception text can leak internals
+      into a consumer-facing card. NOTE: svelte:boundary catches render and
+      $effect errors only; event-handler and post-await async throws are not
+      boundary-caught (pre-existing Svelte semantics, no regression).
 -->
 <!--
   LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
@@ -447,8 +455,23 @@
 			tree. Route to OrganismRenderer (3rd dispatch tier). The resolved props
 			(expressions evaluated) are forwarded; widget nodes never reach here
 			because they always carry a `type`.
+
+			RCR-4: same per-node boundary as the widget branch below — organisms
+			are exactly the rich generated cards this boundary exists for, and a
+			top-level throwing organism would otherwise blank the whole message.
 		-->
-		<OrganismRenderer organism={organismRef.organism} props={organismRef.props} />
+		<svelte:boundary>
+			<OrganismRenderer organism={organismRef.organism} props={organismRef.props} />
+			{#snippet failed(error)}
+				<div role="alert" data-ripple-node-error={node.id}>
+					<ErrorState
+						icon="error"
+						title="This widget hit an error"
+						detail={error instanceof Error ? error.message : String(error)}
+					/>
+				</div>
+			{/snippet}
+		</svelte:boundary>
 	{:else if WidgetComponent}
 		<!-- Regular widget rendering -->
 		{@const defaultKids = childBuckets.default ?? []}
@@ -554,11 +577,16 @@
 			</WidgetComponent>
 		{/if}
 			{#snippet failed(error)}
+				<!-- Raw exception messages can leak internals (paths, expression
+				     fragments) into a consumer-facing card, so the description
+				     stays generic and the message goes to `detail` (small
+				     monospace, built for exactly this). -->
 				<div role="alert" data-ripple-node-error={node.id}>
 					<ErrorState
 						icon="error"
 						title="This widget hit an error"
-						description={error instanceof Error ? error.message : String(error)}
+						description="The rest of the message is unaffected."
+						detail={error instanceof Error ? error.message : String(error)}
 					/>
 				</div>
 			{/snippet}
