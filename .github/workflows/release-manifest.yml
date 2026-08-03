@@ -1,3 +1,12 @@
+# .github/workflows/release-manifest.yml
+# Publishes @ripple-ui/svelte to npm and attaches the manifest bundle to a
+# GitHub release, on a v* tag push or a manual dispatch.
+# Updated 2026-08-03: the "Resolve tag" step no longer pastes `${{ inputs.tag }}`
+# into its shell script. Expressions are substituted before bash sees the
+# script, so a dispatch input containing shell syntax would have run as code in
+# the step. Both expressions now arrive as environment variables, which bash
+# treats as data. Dispatching already requires write access, so this was never
+# a privilege boundary — it just shouldn't be the shape of the code.
 name: Release manifest
 
 on:
@@ -61,9 +70,13 @@ jobs:
 
       - name: Resolve tag
         id: tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "name=${INPUT_TAG}" >> "$GITHUB_OUTPUT"
           else
             echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           fi
