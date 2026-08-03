@@ -1,9 +1,25 @@
-<!-- src/lib/widgets/display/Qr.svelte -->
+<!-- src/lib/widgets/display/Qr.svelte
+     Security (review): `color`/`background` are spec-controlled and flow
+     straight into qrcode-svg, which string-concatenates them into a
+     style="fill:…" attribute with NO escaping — so a value like
+     `red" /><img src=x onerror=…>` breaks out of the attribute and injects an
+     HTML element into the {@html} sink. Two defenses: validate the colors to a
+     safe CSS-literal allowlist before they reach the generator (safeColor,
+     applied at BOTH the onMount and $effect call sites), and sanitizeSvg the
+     output (the HTML profile would strip <svg>, so this uses the SVG profile). -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { sanitizeSvg } from '$lib/utils/sanitize-html.js';
 
   type ECL = 'L' | 'M' | 'Q' | 'H';
+
+  // Only CSS color literals that can't terminate an attribute or a style
+  // declaration: hex, rgb/rgba/hsl/hsla functional forms, and bare keywords
+  // (named colors + transparent). Anything else falls back to the default.
+  const COLOR_RE = /^(#[0-9a-f]{3,8}|[a-z]+|(rgb|rgba|hsl|hsla)\([0-9a-z%.,\s/]+\))$/i;
+  const safeColor = (raw: string | undefined, fallback: string): string =>
+    raw && COLOR_RE.test(raw.trim()) ? raw.trim() : fallback;
 
   interface Props {
     id?: string;
@@ -54,14 +70,14 @@
           content: value,
           width: size,
           height: size,
-          color,
-          background,
+          color: safeColor(color, '#000000'),
+          background: safeColor(background, '#ffffff'),
           ecl,
           padding,
           join: true,
           container: 'svg-viewbox'
         });
-        svg = qr.svg();
+        svg = sanitizeSvg(qr.svg());
       } catch (e) {
         console.warn('[qr] encode failed:', e);
         svg = '';
@@ -86,14 +102,14 @@
           content: value,
           width: size,
           height: size,
-          color,
-          background,
+          color: safeColor(color, '#000000'),
+          background: safeColor(background, '#ffffff'),
           ecl,
           padding,
           join: true,
           container: 'svg-viewbox'
         });
-        svg = qr.svg();
+        svg = sanitizeSvg(qr.svg());
       } catch {
         // ignore — initial render will surface failure via onMount
       }
@@ -112,7 +128,9 @@
     style={`width:${size}px; height:${size}px;`}
     class="rounded bg-white p-1"
   >
-    <!-- qrcode-svg returns trusted, deterministic SVG markup. {@html} is safe here. -->
+    <!-- svg is generated from validated colors (safeColor) and passed through
+         sanitizeSvg — both guards, since a sanitizer can't fix a generator fed
+         attacker text. See the security note at the top of this file. -->
     {@html svg}
   </div>
   {#if caption}
