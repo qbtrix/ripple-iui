@@ -53,4 +53,42 @@ describe('NodeRenderer per-node error boundary', () => {
     expect(getByText('sibling before')).toBeTruthy();
     expect(getByText('sibling after')).toBeTruthy();
   });
+
+  it('a throwing grandchild is caught at its own node, not at the ancestor', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    registerWidget('poison', ThrowingWidget);
+
+    const { container, getByText } = render(Ripple, {
+      props: {
+        spec: {
+          ui: {
+            type: 'container',
+            children: [
+              { type: 'text', props: { text: 'outside the card' } },
+              {
+                type: 'card',
+                id: 'ancestor-card',
+                children: [
+                  { type: 'text', props: { text: 'inside the card' } },
+                  { type: 'poison', id: 'bad-grandchild' },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    // The fallback is keyed to the grandchild, so the boundary that caught the
+    // throw is the grandchild's own — a refactor that hoists the boundary up
+    // the tree flips this to the ancestor's id and fails here.
+    expect(container.querySelector('[data-ripple-node-error="bad-grandchild"]')).not.toBeNull();
+    expect(container.querySelector('[data-ripple-node-error="ancestor-card"]')).toBeNull();
+
+    // The ancestor card and its other child survive.
+    expect(getByText('inside the card')).toBeTruthy();
+    expect(getByText('outside the card')).toBeTruthy();
+  });
 });
