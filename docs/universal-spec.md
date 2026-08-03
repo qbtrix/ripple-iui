@@ -1,6 +1,8 @@
 <!--
   docs/universal-spec.md — UniversalSpec v2.0 human-readable reference.
   Changes:
+    - 2026-07-14: `data` documented as inline-only — the `DataFetcher` union
+      member was removed from the schema (it never executed).
     - 2026-07-01: synced to the Zod source of truth. Added the source-of-truth
       banner; brought IntentType to the full 15-value enum and DisplayHints.layout
       to the full 14-value set; stated the designed-layouts-are-default render
@@ -38,7 +40,7 @@ interface UniversalSpec {
   theme?: ThemeOverrides;                      // Color/appearance overrides
 
   // Data
-  data?: Record<string, any> | DataFetcher;    // Inline data or remote fetcher
+  data?: Record<string, any>;                  // Inline data (rendered directly; see `sources` for remote)
   sources?: Record<string, any>;               // Server-executed read bindings (RFC 04), preserved verbatim
   fields?: Record<string, string>;             // Field mapping (semantic → data path)
 

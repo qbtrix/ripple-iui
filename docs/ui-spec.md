@@ -5,6 +5,9 @@
       banner; documented the `sources` top-level key (RFC 04), node-level
       `motion` (RFC 12), the `slot` field on UINode, and the `fonts` + `logo`
       token groups on ThemeOverrides. Added an "Editing (SpecOp)" note.
+    - 2026-07-14: forgiving versioning (same-major renders, different major
+      refused) with a Versioning section; removed the dead `data`/DataFetcher
+      docs — the field never executed and is gone from the schema.
 -->
 
 > **Source of truth:** the Zod schemas in `src/lib/schema/ui-spec.ts` and `src/lib/schema/universal-spec.ts` are canonical. This doc is a human-readable companion and may lag the code — when they disagree, the schema wins. Last verified against code: 2026-07-01.
@@ -17,9 +20,8 @@ The UISpec is the low-level specification format for Ripple. It gives you full c
 
 ```typescript
 interface UISpec {
-  version: '1.0';                              // Schema version
+  version?: string;                            // Schema version (default '1.0') — see Versioning below
   state?: Record<string, any>;                 // Initial state values
-  data?: Record<string, DataFetcher>;          // Named data fetchers (client-side)
   sources?: Record<string, any>;               // Server-executed read bindings (RFC 04) — see below
   ui: UINode;                                  // The root widget tree (required)
   theme?: ThemeOverrides;                      // Color/appearance overrides
@@ -27,9 +29,23 @@ interface UISpec {
 }
 ```
 
+### Versioning
+
+Any version in the renderer's major line parses: a newer **minor** (`1.1`,
+`1.99`) is additive by contract, so it renders and unknown fields are ignored;
+a different **major** (`2.0`) is refused with a clear parse error rather than
+mis-rendered. A semver-style patch digit (`1.0.0`) is tolerated. Hosts can
+check ahead of a mount with `isCompatibleUISpecVersion(version)` (Gen-1
+`UISpec` only — `UniversalSpec` is versioned separately).
+
+> **Removed:** the `data` field (client-side `DataFetcher` blocks). It was
+> never executed — a declared fetcher silently resolved to nothing. Use
+> `sources` (server-executed, RFC 04) for remote data; parsing strips a legacy
+> `data` block and the renderer logs a one-time console warning.
+
 ### `sources` — server-executed read bindings (RFC 04)
 
-`sources` carries read bindings that the **server** owns and executes; Ripple never runs them. It preserves the key verbatim as an opaque pass-through, so a client round-trip (parse → render → re-serialize) cannot silently drop it. The shape of each entry is defined by the server that consumes it, which is why the schema types it as `Record<string, any>` rather than a fixed contract. If you are authoring specs for a host that resolves `sources` server-side (e.g. dynamic Paw Sites), put your read bindings here; if you only need client-side fetches, use `data` instead.
+`sources` carries read bindings that the **server** owns and executes; Ripple never runs them. It preserves the key verbatim as an opaque pass-through, so a client round-trip (parse → render → re-serialize) cannot silently drop it. The shape of each entry is defined by the server that consumes it, which is why the schema types it as `Record<string, any>` rather than a fixed contract. If you are authoring specs for a host that resolves `sources` server-side (e.g. dynamic Paw Sites), put your read bindings here; there is no client-side fetch path in the spec (the removed `data` fetchers never executed).
 
 ```json
 ```
@@ -99,22 +115,6 @@ Note: `transition.delay` is in **seconds** (Framer/motion.dev convention), while
     { "type": "text", "props": { "text": "Body content" } },
     { "type": "button", "slot": "footer", "props": { "label": "Save" } }
   ]
-}
-```
-
-## DataFetcher
-
-Configure remote data loading:
-
-```typescript
-interface DataFetcher {
-  url: string;                                 // API endpoint
-  method?: 'GET' | 'POST';                     // HTTP method (default: 'GET')
-  depends_on?: string[];                       // State paths that trigger refetch
-  refresh_interval?: number;                   // Auto-refresh in seconds
-  headers?: Record<string, string>;            // Request headers
-  body?: Record<string, any>;                  // Request body (for POST)
-  transform?: string;                          // Transform function name
 }
 ```
 
