@@ -1612,7 +1612,7 @@
         items: [
           { value: 'q1', title: 'How is this different from a templating engine?', content: 'Specs include reactive state, expressions, and event flows — not just static substitution. Bind is two-way; on_change runs flows.' },
           { value: 'q2', title: 'Can the LLM see what the user typed?', content: 'Yes. Use the onStateChange callback on <Ripple> to receive every state write, or the emit / api actions for explicit notification.' },
-          { value: 'q3', title: 'Is the markdown widget safe for untrusted input?', content: 'It renders raw HTML in markdown source via {@html}. Sanitize untrusted markdown on the host before passing it to Ripple.' }
+          { value: 'q3', title: 'Is the markdown widget safe for untrusted input?', content: 'Yes. Ripple sanitizes the markdown and rich-text widgets with DOMPurify before they reach {@html}, so spec-controlled HTML (scripts, on* handlers, javascript: URLs, inline styles) is stripped on the client. Hosts no longer need to pre-sanitize.' }
         ]
       }
     }
