@@ -6,15 +6,18 @@
 //   down the whole message. Uses a throwing fixture widget registered under a
 //   custom type.
 // @created 2026-07-08 — RCR-4 (ripple consumer-readiness arc).
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
 import { registerWidget, unregisterWidget } from '$lib/widgets/index.js';
 import ThrowingWidget from './__fixtures__/ThrowingWidget.svelte';
+import ThrowOnceWidget, { state as throwOnceState } from './__fixtures__/ThrowOnceWidget.svelte';
 
 describe('NodeRenderer per-node error boundary', () => {
   afterEach(() => {
     unregisterWidget('poison');
+    unregisterWidget('flaky');
+    throwOnceState.armed = true;
     vi.restoreAllMocks();
   });
 
@@ -90,5 +93,30 @@ describe('NodeRenderer per-node error boundary', () => {
     // The ancestor card and its other child survive.
     expect(getByText('inside the card')).toBeTruthy();
     expect(getByText('outside the card')).toBeTruthy();
+  });
+
+  it('"Try again" resets the boundary and re-renders the fixed widget', async () => {
+    // Regression test for the dead-button bug: the fallback rendered a
+    // "Try again" button with no onaction, so a transiently-failing node
+    // stayed wedged on ErrorState forever. A refactor that drops
+    // `onaction={reset}` (or renames ErrorState's prop) turns the button
+    // back into a no-op — this test is what catches it.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    registerWidget('flaky', ThrowOnceWidget);
+
+    const { container, getByText } = render(Ripple, {
+      props: { spec: { ui: { type: 'flaky', id: 'transient-node' } } }
+    });
+
+    // First render throws → boundary shows the fallback.
+    expect(container.querySelector('[data-ripple-node-error="transient-node"]')).not.toBeNull();
+
+    // The fixture has disarmed itself; clicking retry re-renders the subtree.
+    await fireEvent.click(getByText('Try again'));
+
+    expect(container.querySelector('[data-ripple-node-error="transient-node"]')).toBeNull();
+    expect(getByText('recovered')).toBeTruthy();
   });
 });

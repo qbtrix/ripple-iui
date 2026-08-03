@@ -39,8 +39,10 @@ jobs:
           set -euo pipefail
           # Remove the token file on ANY exit (incl. a publish failure). Without
           # the trap, `set -e` aborts the step before `rm` runs and leaves the
-          # NPM_TOKEN in $HOME/.npmrc on the runner.
-          trap 'rm -f "$HOME/.npmrc"' EXIT
+          # NPM_TOKEN in $HOME/.npmrc on the runner. INT/TERM are trapped too:
+          # bash skips the EXIT trap on an untrapped fatal signal, and a
+          # cancelled workflow run signals the step mid-publish.
+          trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
           bun publish --access public
 
