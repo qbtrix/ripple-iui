@@ -34,6 +34,16 @@
     `richtext` widgets alongside the existing contenteditable text path.
   @changes 2026-06-30 (EP-2): migrated onto the LaneAdapter PORT — resolution,
     edit-path decision + seed read, and commits all go through the adapter.
+  @changes 2026-08-04 (security): the RICH seed is SANITIZED before it reaches an
+    editor impl. `adapter.readProp(RICH_TEXT_PROP)` returns the RAW spec value, which
+    is LLM-authored and prompt-injectable; the impls write their seed back to
+    `el.innerHTML` on teardown, so the raw value was an XSS sink in the host origin
+    (the display side was already sanitized by RichTextDisplay, so only this lane
+    leaked). Sanitizing HERE is the chokepoint: every impl — the TipTap built-in and
+    any lane-registered editor — is seeded with clean HTML without having to be
+    trusted. It also fixes a fidelity mismatch: the editor now opens on exactly the
+    markup the user sees rendered. The PLAIN path is unaffected (it seeds from
+    `textContent`, never HTML).
   @changes 2026-06-30 (EP-3): extracted the editor MOUNTING into the pluggable
     `InlineEditor` slot. The controller no longer imports `@tiptap/core` or mounts
     contenteditable directly — it selects an impl (plain -> `ContentEditableInline
@@ -54,6 +64,7 @@
   import { resolveInlineEditor } from './core/inline-editor.js';
   import type { InlineEditor, InlineEditorHandle } from './core/inline-editor.js';
   import { EditorSelection } from './editor-selection.svelte.js';
+  import { sanitizeHtml } from '../utils/sanitize-html.js';
 
   interface Props {
     /** The lane adapter the editor RESOLVES / READS / WRITES through (its only port seam). */
@@ -161,9 +172,11 @@
         const impl = richInlineEditorFor(adapter.inlineEditor ?? 'tiptap');
         if (!impl) return; // no rich editor registered for this lane (e.g. squire pre-EP-4)
         e.preventDefault();
-        // Seed the rich editor from the html prop, read back THROUGH THE PORT.
+        // Seed the rich editor from the html prop, read back THROUGH THE PORT, then
+        // SANITIZE: the raw prop is untrusted spec content and the impls write their
+        // seed back to innerHTML on teardown (see the @changes note above).
         const html = adapter.readProp(ref, RICH_TEXT_PROP);
-        openEditor(impl, el, id, RICH_TEXT_PROP, typeof html === 'string' ? html : '');
+        openEditor(impl, el, id, RICH_TEXT_PROP, typeof html === 'string' ? sanitizeHtml(html) : '');
         return;
       }
 
