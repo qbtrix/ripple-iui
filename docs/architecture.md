@@ -90,6 +90,14 @@ Widgets are regular Svelte 5 components registered in a central map (`src/lib/wi
 - Registering custom widgets at runtime
 - Unregistering or resetting the registry
 
+`widgets/index.ts` is a **generated file**. It is emitted by
+`scripts/gen-widget-registry.ts` from `src/lib/widgets/registry.data.ts`, which declares
+every widget once: component name, source module, canonical type string, aliases, and
+whether it belongs to the package's public export surface. Adding a widget means adding a
+barrel export plus one manifest entry, then `bun run gen:widgets` — not editing three
+places in a 460-line wall by hand. A freshness check (`bun run lint:widgets`, also run as
+a vitest test in CI) fails if the committed file no longer matches the manifest.
+
 All built-in widgets wrap shadcn-svelte primitives (`src/lib/components/ui/`) with Ripple-specific integration (expression resolution, state binding, event forwarding).
 
 ## Intent System (`src/lib/intent/`)

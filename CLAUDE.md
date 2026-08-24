@@ -42,6 +42,12 @@ The **normalizer** (`src/lib/core/normalizer.ts`) converts UISpec → UniversalS
 
 Registry in `src/lib/widgets/index.ts` — supports `registerWidget`/`unregisterWidget` for custom widgets.
 
+That file is **generated**. The source of truth is `src/lib/widgets/registry.data.ts`
+(component, source module, canonical type string, aliases, whether it is publicly
+exported). To add or alias a widget: export it from its category barrel, add one entry
+there, then `bun run gen:widgets`. `bun run lint:widgets` and the vitest gate fail if the
+generated file drifts.
+
 Widgets wrap **shadcn-svelte** components (`src/lib/components/ui/`) with Ripple-specific state binding and event handling.
 
 Building a master-detail (list + detail) layout? Read the "Layout gotchas" section in `docs/widgets.md` first — independent column scroll needs a fixed `height` + `overflow:hidden` (NOT `max-height`), and the `master-detail` widget can't take custom list cards.
