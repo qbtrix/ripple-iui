@@ -50,8 +50,8 @@ Three rules worth internalising before using it:
 
 ## Conformance
 
-`conformance/` runs the 13 language-neutral fixtures as vitest cases. The trace
-must match `expect_trace` exactly; there are no skips.
+`conformance/` runs the 16 language-neutral fixtures as vitest cases (upstream
+`88a2730`). The trace must match `expect_trace` exactly; there are no skips.
 
 ```bash
 bunx vitest run --project client src/lib/kernel
@@ -61,6 +61,11 @@ bunx vitest run --project client src/lib/kernel
 
 - Fixtures are **vendored** (copied) from `paw-compose/conformance/`; see
   `conformance/README.md`. A freshness check is a follow-up.
+- `ctx.effect()` collects its disposer wrapper *after* `setup` returns; the
+  hardened Cordis fork registers it *before*, so an unload begun from inside a
+  setup body awaits that setup's own cleanup. No MUST covers this and no
+  fixture exercises it — tracked upstream as a spec gap, deliberately not
+  patched here so the fix can be proven by a fixture rather than asserted.
 - No `./kernel` entry in `package.json#exports` yet — deliberately left out to
   avoid colliding with concurrent work on that file. Import via `$lib/kernel`
   inside the repo.
