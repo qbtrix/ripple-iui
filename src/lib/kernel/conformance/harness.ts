@@ -6,6 +6,9 @@
 //   the trace, and compare it to `expect_trace` exactly. Unknown ops and
 //   unknown fields fail loudly — a fixture the harness does not understand is a
 //   failure, never a skip.
+// Updated: 2026-08-24 — Spec 730e593: `disposer_throws`, the
+//   `<plugin>:effect:<id>:dispose:error` token, and both halves of the
+//   observability check (onError aggregate + a rejecting awaited dispose).
 // Updated: 2026-08-24 — Fixture amendment 88a2730 (13 -> 16 fixtures): added
 //   `effects_after_delay` (created after `apply_delay_ms`, which is what makes
 //   dispose-during-load able to fail at all), the `observe` / `absent` /
@@ -31,6 +34,7 @@ export interface PluginDecl {
   inject?: { required?: string[]; optional?: string[] };
   effects?: string[];
   effects_after_delay?: string[];
+  disposer_throws?: string;
   listeners?: ListenerDecl[];
   children?: string[];
   apply_throws?: boolean;
@@ -80,6 +84,7 @@ const PLUGIN_FIELDS = new Set([
   'inject',
   'effects',
   'effects_after_delay',
+  'disposer_throws',
   'listeners',
   'children',
   'apply_throws',
@@ -184,6 +189,23 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
   const runtime = root.runtime;
   runtime.onTrace = (token) => trace.push(token);
 
+  // §3: a disposer error is reported, not swallowed. The kernel hands it back
+  // as it happens — mid-chain, with unwinding still in progress — and the tag
+  // the plugin body attached says which effect it came from.
+  runtime.onDisposerError = (err) => {
+    const tagged = err as { pawPlugin?: string; pawEffect?: string };
+    if (!tagged?.pawPlugin || !tagged?.pawEffect) {
+      failures.push(`unattributable disposer error: ${String(err)}`);
+      return;
+    }
+    trace.push(`${tagged.pawPlugin}:effect:${tagged.pawEffect}:dispose:error`);
+  };
+  // Aggregates are expected in the fixture that provokes them; keep them off
+  // the console but assert they were actually produced.
+  const reported: unknown[] = [];
+  runtime.onError = (err) => reported.push(err);
+  let disposeRejected = false;
+
   const scopes = new Map<string, Context>([['root', root]]);
   const fibers = new Map<string, ReturnType<Context['plugin']>>();
   const detached: Promise<unknown>[] = [];
@@ -220,6 +242,15 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
                   if (!(err instanceof EffectRejectedError)) throw err;
                   trace.push(`${name}:effect:${late}:rejected`);
                 }
+              }
+              if (decl.disposer_throws === id) {
+                // Deliberately unguarded: the KERNEL must contain this, keep
+                // unwinding, and report it. The harness only tags the error so
+                // the report can be attributed back to this effect.
+                throw Object.assign(new Error(`${name}: disposer ${id} failed`), {
+                  pawPlugin: name,
+                  pawEffect: id,
+                });
               }
             };
           });
@@ -324,13 +355,21 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
       case 'dispose': {
         const fiber = fibers.get(step.plugin!);
         if (!fiber) throw new Error(`conformance: no mounted plugin "${step.plugin}"`);
-        await fiber.dispose();
+        try {
+          await fiber.dispose();
+          disposeRejected = false;
+        } catch {
+          // A teardown failure is surfaced to whoever awaits dispose(). The
+          // fixture still expects the fiber to have reached its target state,
+          // so the run continues.
+          disposeRejected = true;
+        }
         break;
       }
       case 'dispose_nowait': {
         const fiber = fibers.get(step.plugin!);
         if (!fiber) throw new Error(`conformance: no mounted plugin "${step.plugin}"`);
-        detached.push(fiber.dispose());
+        detached.push(fiber.dispose().catch(() => {}));
         break;
       }
       case 'provide': {
@@ -380,5 +419,18 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
   }
 
   await settle();
+
+  // §3 requires a disposer error be observable, not merely contained. The
+  // trace token alone would pass a runtime that reports and then swallows, so
+  // check both channels: the aggregate reached onError, and the awaited
+  // dispose() rejected.
+  const throwsDeclared = Object.values(fixture.plugins ?? {}).some((p) => p.disposer_throws);
+  if (throwsDeclared) {
+    if (!reported.length) failures.push('a disposer threw but no error was reported to onError');
+    if (!disposeRejected) failures.push('a disposer threw but the awaited dispose() resolved');
+  } else if (reported.length) {
+    failures.push(`unexpected teardown error(s) reported: ${reported.map(String).join('; ')}`);
+  }
+
   return { trace, failures };
 }

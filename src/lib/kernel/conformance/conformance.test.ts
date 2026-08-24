@@ -10,7 +10,8 @@ import { runFixture, type Fixture } from './harness.js';
 
 // Updated: 2026-08-24 — fixture amendment 88a2730 raised the count to 16:
 // three new dispatch-mode fixtures, plus two amended so they can actually fail.
-const EXPECTED_FIXTURE_COUNT = 16;
+// Updated: 2026-08-24 — spec 730e593 adds disposer-throws-still-unwinds (17).
+const EXPECTED_FIXTURE_COUNT = 17;
 
 // Vite's glob import works under jsdom, where fs paths derived from
 // import.meta.url do not.

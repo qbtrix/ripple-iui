@@ -22,6 +22,8 @@ describe('kernel — runtime-specific obligations (SEMANTICS §7a, TypeScript)',
 
     try {
       const root = Context.root();
+      const reported: unknown[] = [];
+      root.runtime.onError = (err) => reported.push(err);
       const fiber = root.plugin({
         name: 'p',
         apply(ctx) {
@@ -33,16 +35,74 @@ describe('kernel — runtime-specific obligations (SEMANTICS §7a, TypeScript)',
       await fiber.ready();
 
       // Fire-and-forget: nothing awaits this promise, which is exactly the
-      // shape that crashes a Node host when the chain has no catch.
+      // shape that crashes a Node host when the chain has no catch. §3 also
+      // requires the error be reported, so the two must not be in tension.
       void fiber.dispose();
       await new Promise((resolve) => setTimeout(resolve, 30));
 
       expect(unhandled).toEqual([]);
-      // The failure is retained on the fiber rather than silently dropped.
+      // Reported through the runtime channel, since there is no caller here.
+      expect(reported.map(String).join()).toContain('disposer rejected');
+      // Retained on the fiber rather than silently dropped.
       expect(String(fiber.error)).toContain('disposer rejected');
+      // Containment is not abandonment: the fiber still reached its target.
+      expect(fiber.state).toBe('DISPOSED');
     } finally {
       globalThis.removeEventListener?.('unhandledrejection', onUnhandled as EventListener);
     }
+  });
+
+  it('an awaited dispose() rejects when a disposer threw', async () => {
+    const root = Context.root();
+    root.runtime.onError = () => {};
+    const fiber = root.plugin({
+      name: 'p',
+      apply(ctx) {
+        ctx.effect(() => () => {
+          throw new Error('teardown failed');
+        });
+      },
+    });
+    await fiber.ready();
+
+    await expect(fiber.dispose()).rejects.toThrow('teardown failed');
+    expect(fiber.state).toBe('DISPOSED');
+  });
+
+  it('reports every throwing disposer, not just the first (AggregateError)', async () => {
+    // §3 requires all errors to be reported when several disposers throw. How
+    // several errors are carried is language-specific; TypeScript's answer is
+    // AggregateError, which is why this check lives here and not in a fixture.
+    const root = Context.root();
+    const reported: unknown[] = [];
+    root.runtime.onError = (err) => reported.push(err);
+    const ran: string[] = [];
+
+    const fiber = root.plugin({
+      name: 'p',
+      apply(ctx) {
+        ctx.effect(() => () => {
+          ran.push('e1');
+          throw new Error('e1 failed');
+        });
+        ctx.effect(() => () => {
+          ran.push('e2');
+        });
+        ctx.effect(() => () => {
+          ran.push('e3');
+          throw new Error('e3 failed');
+        });
+      },
+    });
+    await fiber.ready();
+
+    await expect(fiber.dispose()).rejects.toBeInstanceOf(AggregateError);
+
+    // Every disposer ran, LIFO, despite two of them throwing.
+    expect(ran).toEqual(['e3', 'e2', 'e1']);
+    expect(fiber.state).toBe('DISPOSED');
+    const aggregate = reported[0] as AggregateError;
+    expect(aggregate.errors.map((e: Error) => e.message)).toEqual(['e3 failed', 'e1 failed']);
   });
 
   it('parallel dispatch fans out rather than awaiting listeners in turn', async () => {
