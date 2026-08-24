@@ -8,7 +8,9 @@
 import { describe, expect, it } from 'vitest';
 import { runFixture, type Fixture } from './harness.js';
 
-const EXPECTED_FIXTURE_COUNT = 13;
+// Updated: 2026-08-24 — fixture amendment 88a2730 raised the count to 16:
+// three new dispatch-mode fixtures, plus two amended so they can actually fail.
+const EXPECTED_FIXTURE_COUNT = 16;
 
 // Vite's glob import works under jsdom, where fs paths derived from
 // import.meta.url do not.

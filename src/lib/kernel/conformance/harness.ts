@@ -6,6 +6,11 @@
 //   the trace, and compare it to `expect_trace` exactly. Unknown ops and
 //   unknown fields fail loudly — a fixture the harness does not understand is a
 //   failure, never a skip.
+// Updated: 2026-08-24 — Fixture amendment 88a2730 (13 -> 16 fixtures): added
+//   `effects_after_delay` (created after `apply_delay_ms`, which is what makes
+//   dispose-during-load able to fail at all), the `observe` / `absent` /
+//   `value` listener actions and listener `delay_ms` for the three new
+//   dispatch-mode fixtures, and the `regression_note` fixture field.
 
 import { Context, EffectRejectedError, type Plugin } from '../index.js';
 
@@ -15,15 +20,17 @@ export interface ListenerDecl {
   event: string;
   mode: 'emit' | 'waterfall' | 'parallel' | 'serial';
   id: string;
-  action: 'delegate' | 'shortcircuit' | 'wrap';
+  action: 'delegate' | 'shortcircuit' | 'wrap' | 'observe' | 'absent' | 'value';
   wrap?: string;
   value?: unknown;
+  delay_ms?: number;
 }
 
 export interface PluginDecl {
   provides?: string[];
   inject?: { required?: string[]; optional?: string[] };
   effects?: string[];
+  effects_after_delay?: string[];
   listeners?: ListenerDecl[];
   children?: string[];
   apply_throws?: boolean;
@@ -55,6 +62,7 @@ export interface Fixture {
   steps: StepDecl[];
   expect_trace?: string[];
   expect_trace_unordered?: string[];
+  regression_note?: string;
 }
 
 const FIXTURE_FIELDS = new Set([
@@ -65,11 +73,13 @@ const FIXTURE_FIELDS = new Set([
   'steps',
   'expect_trace',
   'expect_trace_unordered',
+  'regression_note',
 ]);
 const PLUGIN_FIELDS = new Set([
   'provides',
   'inject',
   'effects',
+  'effects_after_delay',
   'listeners',
   'children',
   'apply_throws',
@@ -79,7 +89,23 @@ const PLUGIN_FIELDS = new Set([
   'record_resolved',
 ]);
 const INJECT_FIELDS = new Set(['required', 'optional']);
-const LISTENER_FIELDS = new Set(['event', 'mode', 'id', 'action', 'wrap', 'value']);
+const LISTENER_FIELDS = new Set([
+  'event',
+  'mode',
+  'id',
+  'action',
+  'wrap',
+  'value',
+  'delay_ms',
+]);
+const LISTENER_ACTIONS = new Set([
+  'delegate',
+  'shortcircuit',
+  'wrap',
+  'observe',
+  'absent',
+  'value',
+]);
 const STEP_FIELDS = new Set([
   'op',
   'plugin',
@@ -123,6 +149,11 @@ export function validateFixture(fixture: Fixture): void {
     if (decl.inject) checkFields(`plugin ${name}.inject`, decl.inject, INJECT_FIELDS);
     for (const listener of decl.listeners ?? []) {
       checkFields(`plugin ${name} listener ${listener.id}`, listener, LISTENER_FIELDS);
+      if (!LISTENER_ACTIONS.has(listener.action)) {
+        throw new Error(
+          `conformance: unknown listener action "${listener.action}" in plugin ${name}`,
+        );
+      }
     }
   }
   for (const [i, step] of (fixture.steps ?? []).entries()) {
@@ -170,7 +201,7 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
           trace.push(`${name}:resolved:${service}:${String(ctx.get(service))}`);
         }
 
-        (decl.effects ?? []).forEach((id, index) => {
+        const declareEffect = (id: string, isFirst: boolean) => {
           ctx.effect(() => {
             trace.push(`${name}:effect:${id}:setup`);
             return async () => {
@@ -179,7 +210,7 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
               // Dragon: a registration attempted from inside cleanup must be
               // refused, or it escapes the unload snapshot and leaks. Attached
               // to the first-registered effect, which disposes last.
-              if (index === 0 && decl.effect_during_dispose) {
+              if (isFirst && decl.effect_during_dispose) {
                 const late = decl.effect_during_dispose;
                 try {
                   ctx.effect(() => {
@@ -192,22 +223,46 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
               }
             };
           });
-        });
+        };
+
+        (decl.effects ?? []).forEach((id, index) => declareEffect(id, index === 0));
 
         for (const listener of decl.listeners ?? []) {
-          ctx.on(listener.event, listener.mode, ((value: unknown, next?: () => unknown) => {
-            trace.push(`${name}:listener:${listener.id}:enter`);
-            let result: unknown;
-            if (listener.action === 'shortcircuit') {
-              result = listener.value;
-            } else {
-              const delegated = next ? next() : value;
-              result =
-                listener.action === 'wrap' ? `${listener.wrap}(${String(delegated)})` : delegated;
+          // What the listener returns, per its declared action.
+          const compute = (value: unknown, next?: () => unknown): unknown => {
+            switch (listener.action) {
+              case 'shortcircuit':
+                // Deliberately does NOT call next(): the chain stops here.
+                return listener.value;
+              case 'value':
+                return listener.value;
+              case 'observe':
+              case 'absent':
+                return undefined;
+              case 'wrap':
+                return `${listener.wrap}(${String(next ? next() : value)})`;
+              case 'delegate':
+              default:
+                return next ? next() : value;
             }
-            trace.push(`${name}:listener:${listener.id}:exit`);
-            return result;
-          }) as never);
+          };
+
+          const body = listener.delay_ms
+            ? async (value: unknown) => {
+                trace.push(`${name}:listener:${listener.id}:enter`);
+                await sleep(listener.delay_ms!);
+                const result = compute(value);
+                trace.push(`${name}:listener:${listener.id}:exit`);
+                return result;
+              }
+            : (value: unknown, next?: () => unknown) => {
+                trace.push(`${name}:listener:${listener.id}:enter`);
+                const result = compute(value, next);
+                trace.push(`${name}:listener:${listener.id}:exit`);
+                return result;
+              };
+
+          ctx.on(listener.event, listener.mode, body as never);
         }
 
         for (const childName of decl.children ?? []) {
@@ -217,6 +272,13 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
         }
 
         if (decl.apply_delay_ms) await sleep(decl.apply_delay_ms);
+
+        // Created after the yield: a runtime that tears down concurrently with
+        // the rest of apply either misses these or refuses them as UNLOADING.
+        const firstEffect = (decl.effects ?? []).length === 0;
+        (decl.effects_after_delay ?? []).forEach((id, index) =>
+          declareEffect(id, firstEffect && index === 0),
+        );
 
         if (decl.apply_throws) {
           trace.push(`${name}:apply:throw`);
