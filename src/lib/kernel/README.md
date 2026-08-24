@@ -51,16 +51,40 @@ Three rules worth internalising before using it:
 ## Conformance
 
 `conformance/` runs the 16 language-neutral fixtures as vitest cases (upstream
-`88a2730`). The trace must match `expect_trace` exactly; there are no skips.
+`9ec61f2`). The trace must match `expect_trace` exactly; there are no skips.
 
 ```bash
 bunx vitest run --project client src/lib/kernel
 ```
 
+## Runtime-specific obligations (SEMANTICS §7a)
+
+Passing the shared fixtures is not sufficient. §7a requires each runtime to
+cover the hazards its own language has, in its own suite, and to say so here.
+For TypeScript that is `runtime-obligations.test.ts`:
+
+- **Cancellation — not applicable.** Python's obligation (a disposer must
+  survive `CancelledError`) has no analogue: JavaScript promises do not cancel.
+- **Unhandled rejection — covered.** A detached `dispose()` whose disposer
+  rejects would take a Node host down under the default policy, so every step
+  of a fiber's task chain attaches a handler and retains the error on
+  `fiber.error`. Verified by mutation: dropping that `catch` produces a real
+  unhandled rejection and fails the test.
+- **Concurrent scheduler — covered.** `parallel` genuinely fans out. The shared
+  `parallel-awaits-all` proves it via a 4x delay margin; the native test repeats
+  it margin-free. Verified by mutation: awaiting listeners in turn fails both.
+
 ## Known limitations
 
 - Fixtures are **vendored** (copied) from `paw-compose/conformance/`; see
   `conformance/README.md`. A freshness check is a follow-up.
+- **A throwing disposer aborts the rest of the LIFO chain.** Found while
+  writing the §7a tests, not by any fixture. If a disposer throws, the
+  disposers registered before it never run (a leak) and the fiber stays in
+  `UNLOADING` forever — yet `dispose()` still resolves, so a caller awaiting it
+  is told cleanup finished when it did not. `SEMANTICS.md` does not define what
+  a throwing disposer should do, so this is left unpatched pending a shared
+  fixture; it is language-neutral and belongs in `conformance/`, not §7a.
 - `ctx.effect()` collects its disposer wrapper *after* `setup` returns; the
   hardened Cordis fork registers it *before*, so an unload begun from inside a
   setup body awaits that setup's own cleanup. No MUST covers this and no
