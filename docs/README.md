@@ -16,5 +16,6 @@ Welcome to the **@ripple-ui/svelte** documentation. Ripple is a Svelte 5 compone
 10. [Theming](./theming.md) — Color tokens, dark mode, and theme overrides
 11. [Custom Widgets](./custom-widgets.md) — Extending Ripple with your own widgets
 12. [API Reference](./api-reference.md) — All exports, types, and functions
+13. [Headless Runtime](./headless.md) — The spec engine with no renderer: resolve specs to plain trees, in Node, a Worker, a test, or another framework
 
 > **Manifest as source of truth.** Every widget's prop schema and runnable example is shipped in `dist/manifest.json` (also served at `/manifest.json` in dev). When the docs and the manifest disagree, the manifest is canonical — it's generated from the same TypeScript declarations the runtime consumes.
