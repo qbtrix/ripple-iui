@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `@ripple-ui/svelte` — a Svelte 5 component library that renders UI from JSON specs. Designed for AI-generated interfaces: an LLM produces a declarative JSON spec, and Ripple renders it as a fully interactive UI with state management, event handling, and expression resolution.
 
+The repo ships **two runtimes over one engine**:
+
+- **Ripple UI** (`src/lib/`, entry `.`) — the Svelte renderer. Unchanged.
+- **Ripple headless** (`src/lib/headless/`, entry `./headless`) — the same
+  engine with no renderer. Resolves a spec into a plain `ResolvedNode` tree
+  (expressions evaluated, `if`/`each` collapsed) and dispatches events
+  against state. No Svelte import, no DOM. Runs in Node, a Worker, a test,
+  or under another framework. See `docs/headless.md`.
+
 ## Commands
 
 ```bash
@@ -28,13 +37,16 @@ The **normalizer** (`src/lib/core/normalizer.ts`) converts UISpec → UniversalS
 
 ### Core Engine (`src/lib/core/`)
 
-- **StateManager** (`state-manager.svelte.ts`) — Svelte 5 `$state` rune-based. Path-based get/set with dot notation (`"user.profile.name"`). Auto-creates intermediate objects.
+- **StateStore** (`state-store.ts`) — the state INTERFACE both runtimes implement. `EventDispatcher` and the headless resolver depend on this, never on a concrete class; that indirection is what keeps the engine renderer-agnostic.
+- **StateManager** (`state-manager.svelte.ts`) — Svelte 5 `$state` rune-based `StateStore`. Path-based get/set with dot notation (`"user.profile.name"`). Auto-creates intermediate objects. Its rune-free twin is `headless/state.ts`; `headless/state-parity.test.ts` holds the two to identical semantics.
 - **ExpressionResolver** (`expression-resolver.ts`) — Resolves `{state.foo}`, `{item.price}`, ternaries, comparisons, and template strings within props.
 - **EventDispatcher** (`event-dispatcher.ts`) — Handles actions: `set`, `api`, `navigate`, `toast`, `emit`, `open`, `pin`, `unpin`. Resolves expressions in URLs/body/headers.
 
 ### Rendering Pipeline
 
 `Ripple.svelte` → initializes state/events/context → `NodeRenderer.svelte` recursively renders the widget tree. NodeRenderer evaluates `show` conditions, resolves props via expressions, binds events, manages loop context (`item_as`, `index_as`), and renders children.
+
+`headless/resolve-tree.ts` is the same walk WITHOUT the rendering half — same rules, plain output. When you change one, change the other, or the runtimes diverge. Two behaviours are deliberately pinned by tests as shared with NodeRenderer: `each` items resolve from the data bag or state but never from loop context, and the data bag is consulted on a truthiness check.
 
 ### Widget System (`src/lib/widgets/`)
 
@@ -62,3 +74,4 @@ Widgets receive context via Svelte's `setContext`: `ui-state` (StateManager), `u
 - **Expression syntax**: `{state.path}` for state bindings, `{item.field}` for loop context, supports operators and ternary.
 - **Tailwind CSS** with shadcn-svelte semantic tokens (primary, secondary, muted, destructive, etc.).
 - Library output goes to `dist/` — this is a publishable npm package, not a standalone app. The SvelteKit routes (`src/routes/`) are for dev/playground only.
+- **Nothing under `src/lib/headless/` may import Svelte**, a `.svelte` component, a `.svelte.ts` rune module, or touch `document`/`window` at module top level — including transitively, through anything it imports. `headless/purity.test.ts` crawls the real import graph and fails the build otherwise. If you need a new dependency there and it pulls in Svelte, extract the framework-free part instead.
