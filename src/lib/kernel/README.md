@@ -46,12 +46,15 @@ Three rules worth internalising before using it:
   appear. Withdrawing one returns it to `PENDING`, not `DISPOSED` — it
   re-activates if the service comes back.
 - **`dispose()` resolves only when cleanup has actually finished** — async
-  disposers awaited, children disposed before the parent's own effects.
+  disposers awaited, children disposed before the parent's own effects. A
+  disposer that throws does not stop the ones behind it: unwinding completes,
+  the fiber reaches its target state, and `dispose()` rejects with what failed
+  (an `AggregateError` when several did).
 
 ## Conformance
 
-`conformance/` runs the 16 language-neutral fixtures as vitest cases (upstream
-`9ec61f2`). The trace must match `expect_trace` exactly; there are no skips.
+`conformance/` runs the 17 language-neutral fixtures as vitest cases (upstream
+`730e593`). The trace must match `expect_trace` exactly; there are no skips.
 
 ```bash
 bunx vitest run --project client src/lib/kernel
@@ -69,7 +72,13 @@ For TypeScript that is `runtime-obligations.test.ts`:
   rejects would take a Node host down under the default policy, so every step
   of a fiber's task chain attaches a handler and retains the error on
   `fiber.error`. Verified by mutation: dropping that `catch` produces a real
-  unhandled rejection and fails the test.
+  unhandled rejection and fails the test. This has to coexist with §3's
+  "observable, never swallowed": `dispose()` returns a promise that rejects
+  *and* is pre-handled, so awaiting it surfaces the failure while ignoring it
+  cannot crash the host, and the aggregate goes to `runtime.onError` regardless.
+- **Aggregating several teardown errors — covered.** §3 requires all of them,
+  not just the first. TypeScript's carrier is `AggregateError`; that choice is
+  language-specific, which is why it is asserted here rather than in a fixture.
 - **Concurrent scheduler — covered.** `parallel` genuinely fans out. The shared
   `parallel-awaits-all` proves it via a 4x delay margin; the native test repeats
   it margin-free. Verified by mutation: awaiting listeners in turn fails both.
@@ -78,13 +87,13 @@ For TypeScript that is `runtime-obligations.test.ts`:
 
 - Fixtures are **vendored** (copied) from `paw-compose/conformance/`; see
   `conformance/README.md`. A freshness check is a follow-up.
-- **A throwing disposer aborts the rest of the LIFO chain.** Found while
-  writing the §7a tests, not by any fixture. If a disposer throws, the
-  disposers registered before it never run (a leak) and the fiber stays in
-  `UNLOADING` forever — yet `dispose()` still resolves, so a caller awaiting it
-  is told cleanup finished when it did not. `SEMANTICS.md` does not define what
-  a throwing disposer should do, so this is left unpatched pending a shared
-  fixture; it is language-neutral and belongs in `conformance/`, not §7a.
+- ~~A throwing disposer aborts the rest of the LIFO chain.~~ **Fixed.** Found
+  here while writing the §7a tests, reproduced independently on the Python
+  runtime, then specified as §3's fourth dragon and covered by
+  `disposer-throws-still-unwinds`. Kept in this list as history: the two
+  runtimes had *diverged* on it — Python raised out of `dispose()`, this one
+  resolved silently — because the spec was silent, which is the drift the
+  shared suite exists to catch.
 - `ctx.effect()` collects its disposer wrapper *after* `setup` returns; the
   hardened Cordis fork registers it *before*, so an unload begun from inside a
   setup body awaits that setup's own cleanup. No MUST covers this and no
