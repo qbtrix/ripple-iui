@@ -39,7 +39,7 @@
         "@google/model-viewer": "^4.2.0",
         "@internationalized/date": "^3.12.0",
         "@lucide/svelte": "1.16.0",
-        "@ripple-ui/core": "workspace:*",
+        "@ripple-ui/core": "file:../core",
         "@tiptap/core": "^3.22.5",
         "@tiptap/pm": "^3.22.5",
         "@tiptap/starter-kit": "^3.22.5",
@@ -889,6 +889,8 @@
     "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "zrender": ["zrender@6.0.0", "", { "dependencies": { "tslib": "2.3.0" } }, "sha512-41dFXEEXuJpNecuUQq6JlbybmnHaqqpGlbH1yxnA5V9MMP4SbohSVZsJIwz+zdjQXSSlR1Vc34EgH1zxyTDvhg=="],
+
+    "@ripple-ui/svelte/@ripple-ui/core": ["@ripple-ui/core@file:packages/core", { "dependencies": { "esm-env": "^1.2.2", "zod": "^4.0.0" }, "devDependencies": { "svelte": "^5.51.0", "typescript": "^5.9.3", "vitest": "^4.1.0" }, "peerDependencies": { "svelte": "^5.0.0" }, "optionalPeers": ["svelte"] }],
 
     "@swc/helpers/tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 

@@ -89,10 +89,24 @@ cd packages/core && bun run test      # one package
 ## Versioning and release
 
 Both packages sit at the same version and move together. `@ripple-ui/svelte`
-depends on `@ripple-ui/core` via `workspace:*`, which the publish step
-rewrites to the concrete version.
+depends on `@ripple-ui/core` via **`file:../core`**, not `workspace:*`.
 
-Publishing order matters: core first, then svelte.
+That distinction cost a day, so it is worth stating plainly. `workspace:` is
+a protocol whose meaning comes from the workspace ROOT. It resolves here and
+resolves against nothing for a consumer linking
+`file:../ripple/packages/svelte`, which has no such root:
+
+    error: Workspace dependency "@ripple-ui/core" not found
+
+Every in-repo signal was green when that shipped — the whole suite, the type
+check, both builds — because the repo only ever tests itself from inside the
+workspace. `file:../core` satisfies both: bun links it here, and a consumer
+gets core nested under the svelte package. `manifest-consumable.test.ts`
+guards the general rule, that nothing in the published manifest may depend on
+being inside the monorepo.
+
+A real npm release rewrites the range to a version. Publishing order matters:
+core first, then svelte.
 
 > npm publishing is currently broken for this repo — the last three tag runs
 > failed and neither package is on npm yet. Consumers use `file:` links.
