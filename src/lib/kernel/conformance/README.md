@@ -1,9 +1,12 @@
 # Conformance fixtures — VENDORED COPY
 
-Created 2026-08-24. Re-copied 2026-08-24 at upstream commit `730e593`
-(13 → 16 → 17 fixtures: three dispatch modes added, `parallel-awaits-all`
-re-cut as an ordered trace, then `disposer-throws-still-unwinds` added when
-both runtimes turned out to leak on a throwing disposer).
+Created 2026-08-24. Re-copied 2026-08-25 at upstream commit `006d1df`
+(13 → 16 → 17 → 19 fixtures: three dispatch modes added, `parallel-awaits-all`
+re-cut as an ordered trace, `disposer-throws-still-unwinds` added when both
+runtimes turned out to leak on a throwing disposer, then `dispose-failed-fiber`
+and `duplicate-provider-rejected` added from a side-by-side reading of the two
+runtimes — neither was reachable by mutation, because no fixture disposed a
+FAILED fiber or mounted two providers of one key).
 
 **Commit before you test, and commit before you mutation-test.** This has now
 bitten twice. `git checkout -- <path>` is the natural way to undo a deliberate
@@ -25,7 +28,7 @@ had to be refreshed by hand.
 
 ## What runs here
 
-- `fixtures/*.json` — the 17 fixtures, verbatim.
+- `fixtures/*.json` — the 19 fixtures, verbatim.
 - `harness.ts` — turns a declarative fixture into real plugins, runs the steps,
   records the trace.
 - `conformance.test.ts` — one vitest case per fixture.
@@ -34,7 +37,7 @@ The harness follows the contract in the upstream `conformance/README.md`:
 
 - The trace is compared to `expect_trace` **exactly** — same tokens, same order.
 - `expect_trace_unordered` (multiset compare) is still supported but is used by
-  **no** fixture as of `730e593`. Treat that as the standing warning: an
+  **no** fixture as of `006d1df`. Treat that as the standing warning: an
   unordered compare hides mechanism. `parallel-awaits-all` was unordered and a
   strictly sequential `parallel` passed it; once ordered, the same mutation
   fails. Do not reach for it without a reason no delay margin can fix.
@@ -63,6 +66,15 @@ README:
   late in `apply` is still legal (§3: creation while `PENDING`/`LOADING` is
   legal) while one created from inside cleanup is rejected. Upstream adopted
   this reading; `effects_after_delay` now depends on it.
+- `expect_raises` may appear on ANY step and asserts the operation raised or
+  rejected. It is the only assertion that sees what the *caller* was told
+  rather than what the runtime observed internally — a trace token proves an
+  error was contained, not that it was propagated. The harness treats an
+  unexpected raise as a hard failure of the run.
+- A plugin's declared `provides` publishes its own **name** as the value, so
+  `record_resolved` renders as `<consumer>:resolved:<svc>:<provider>`.
+- `apply:throw` is emitted for ANY error out of `apply`, not only a declared
+  `apply_throws` — a publish the kernel refuses fails apply without that flag.
 - `disposer_throws` names an effect whose disposer raises after emitting its
   `:dispose` token. The harness leaves it unguarded on purpose — the kernel has
   to contain it — and tags the error so `runtime.onDisposerError` can attribute

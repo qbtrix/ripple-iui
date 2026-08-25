@@ -39,6 +39,12 @@ root.plugin({
 
 Three rules worth internalising before using it:
 
+- **One authority per key per scope.** Publishing a key already live in the
+  same scope is rejected — `provide` throws, and inside `apply` that rolls the
+  offending plugin back to `FAILED` while the incumbent and its dependents
+  carry on untouched. Sequential publication is fine. To run a second
+  implementation of a key, `isolate(key)` it; that is what the primitive is
+  for, and providers in different scopes never collide.
 - **Every registration is reversible.** `provide`, `on`, and child mounts are all
   effects. Anything you register outside `ctx.effect()` leaks.
 - **Load order comes from injection, never from mount order.** A plugin whose
@@ -49,12 +55,14 @@ Three rules worth internalising before using it:
   disposers awaited, children disposed before the parent's own effects. A
   disposer that throws does not stop the ones behind it: unwinding completes,
   the fiber reaches its target state, and `dispose()` rejects with what failed
-  (an `AggregateError` when several did).
+  (an `AggregateError` when several did). `dispose()` is **total**: a FAILED
+  fiber has nothing to unwind, but the caller asked for disposal and disposal
+  completed, so the handle still retires to `DISPOSED`.
 
 ## Conformance
 
-`conformance/` runs the 17 language-neutral fixtures as vitest cases (upstream
-`730e593`). The trace must match `expect_trace` exactly; there are no skips.
+`conformance/` runs the 19 language-neutral fixtures as vitest cases (upstream
+`006d1df`). The trace must match `expect_trace` exactly; there are no skips.
 
 ```bash
 bunx vitest run --project client src/lib/kernel
@@ -99,6 +107,11 @@ For TypeScript that is `runtime-obligations.test.ts`:
   setup body awaits that setup's own cleanup. No MUST covers this and no
   fixture exercises it — tracked upstream as a spec gap, deliberately not
   patched here so the fix can be proven by a fixture rather than asserted.
+- **Mounting into a disposed or tearing-down parent is not rejected.** Such a
+  child would never be torn down, because the parent has already unwound its
+  children list. Found by review, deferred deliberately — no fixture covers it
+  and the fix wants a spec rule first, the same way the disposer-error dragon
+  did.
 - No `./kernel` entry in `package.json#exports` yet — deliberately left out to
   avoid colliding with concurrent work on that file. Import via `$lib/kernel`
   inside the repo.
