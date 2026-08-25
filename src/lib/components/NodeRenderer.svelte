@@ -55,6 +55,12 @@
       into a consumer-facing card. NOTE: svelte:boundary catches render and
       $effect errors only; event-handler and post-await async throws are not
       boundary-caught (pre-existing Svelte semantics, no regression).
+    - 2026-08-25 (raw props): props listed in core/raw-props.ts are split out
+      before resolveValue and overlaid back verbatim, so author source code
+      (today: an `embed`/`iframe` srcdoc) reaches its widget byte-for-byte
+      instead of having every `{ ... }` block substituted away. Resolution
+      itself is untouched — every prop not in that registry, including a raw
+      prop's siblings on the same node, resolves exactly as before.
 -->
 <!--
   LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
@@ -80,6 +86,7 @@
 		type ResolverContext
 	} from '../core/expression-resolver.js';
 	import { getBindContract, warnUnregisteredBindContract } from '../core/widget-bind-contract.js';
+	import { getRawPropNames } from '../core/raw-props.js';
 	import { withMotion } from '../actions/index.js';
 
 	// Self-import for recursion (Svelte 5 pattern)
@@ -137,10 +144,18 @@
 	// resolvedProps deriveds, which already re-run when `node` changes, so deriving
 	// it keeps the expression-gate correct for the current node rather than freezing
 	// the first node's classification.
+	// Props of this node that skip expression resolution entirely (see
+	// core/raw-props.ts). `undefined` for almost every node, so the raw-prop
+	// handling below costs one identity check on the hot path.
+	const rawPropNames = $derived(getRawPropNames(node.type));
+
 	const nodeHasExpressions = $derived(
 		node.show ? true
 		: node.bind ? true
-		: node.props ? Object.values(node.props).some(v => typeof v === 'string' && hasExpressions(v))
+		: node.props ? Object.entries(node.props).some(
+				([k, v]) =>
+					!rawPropNames?.has(k) && typeof v === 'string' && hasExpressions(v)
+			)
 		: false
 	);
 
@@ -160,9 +175,26 @@
 		const ctx = getResolverContext();
 		const props = node.props ?? {};
 
+		// Split off raw props BEFORE resolving. A raw prop carries author
+		// source (e.g. an `embed` srcdoc's JavaScript), whose `{ ... }` blocks
+		// the expression resolver would substitute away — deleting every
+		// function body and leaving a SyntaxError. Every other prop, including
+		// the raw prop's siblings on this same node, resolves exactly as before.
+		let resolvable = props as Record<string, unknown>;
+		let rawEntries: [string, unknown][] | undefined;
+		if (rawPropNames) {
+			rawEntries = [];
+			const rest: Record<string, unknown> = {};
+			for (const [k, v] of Object.entries(props)) {
+				if (rawPropNames.has(k)) rawEntries.push([k, v]);
+				else rest[k] = v;
+			}
+			resolvable = rest;
+		}
+
 		let resolved: Record<string, unknown>;
 		try {
-			resolved = resolveValue(props, ctx) as Record<string, unknown>;
+			resolved = resolveValue(resolvable, ctx) as Record<string, unknown>;
 		} catch (e) {
 			console.warn('Failed to resolve props:', props, e);
 			resolved = {};
@@ -170,6 +202,12 @@
 
 		// Remove 'children' and 'class' to avoid conflicts with explicit props/snippets
 		const { children: _c, class: _cl, ...rest } = resolved;
+
+		// Overlay the raw values verbatim, after the children/class strip so
+		// nothing downstream can drop them.
+		if (rawEntries) {
+			for (const [k, v] of rawEntries) rest[k] = v;
+		}
 
 		if ((node.type === 'checkbox' || node.type === 'switch') && 'checked' in rest) {
 			const { checked: _, ...final } = rest;
