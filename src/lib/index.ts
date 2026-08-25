@@ -38,6 +38,36 @@ export {
   type ValidateCatalogOptions
 } from './core/validate-catalog.js';
 export { newNodeId, isValidNodeId, ensureNodeIds } from './core/spec-id.js';
+
+// Widget capability bridge (invoke_tool/v1) — the wire a sandboxed
+// `mode=srcdoc` embed speaks to its host. Hosts import these to validate
+// frame traffic; the host contract lives in docs/widget-bridge.md.
+export {
+  INVOKE_TOOL_CALL_V1,
+  INVOKE_TOOL_RESULT_V1,
+  INSTINCT_PENDING_STATUS,
+  INSTINCT_PENDING_CODE,
+  WIDGET_BRIDGE_CONTEXT_KEY,
+  isInvokeToolCallV1,
+  isInvokeToolResultV1,
+  classifyInvokeToolResult,
+  type InvokeToolCallV1,
+  type InvokeToolResultV1,
+  type InvokeToolOutcomeKind,
+  type WidgetBridgeHandle,
+  type WidgetBridgeHost
+} from './core/widget-bridge-protocol.js';
+export {
+  buildWidgetBridgeShimScript,
+  widgetBridgeShim,
+  WIDGET_BRIDGE_DEFAULT_TIMEOUT_MS,
+  type PawBridgeApi,
+  type PawToolOutcome,
+  type PawToolOk,
+  type PawToolPending,
+  type PawToolError,
+  type WidgetBridgeShimConfig
+} from './core/widget-bridge-shim.js';
 export {
   findById,
   findParent,
