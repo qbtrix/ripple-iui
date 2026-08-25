@@ -9,7 +9,7 @@ A **monorepo** holding Ripple's spec engine and its renderers. An LLM produces a
 | Package | Path | What |
 |---|---|---|
 | `@ripple-ui/core` | `packages/core/` | The engine: schema, expressions, state, event dispatcher, motion compiler, headless runtime. **Zero framework dependency.** Built with plain `tsc`. |
-| `@ripple-ui/svelte` | `packages/svelte/` | The Svelte 5 renderer: 189 widgets, editor, intents, streaming. Depends on core via `workspace:*`. |
+| `@ripple-ui/svelte` | `packages/svelte/` | The Svelte 5 renderer: 189 widgets, editor, intents, streaming. Depends on core via `file:../core`. |
 
 **Which package does a change belong in?** If it needs the Svelte compiler
 (a `.svelte` file, a `$state` rune, a `use:` action) or a DOM, it is
@@ -19,6 +19,14 @@ belong there.
 
 Root scripts fan out with bun workspaces: `bun run build|check|test` run
 every package. Per-package: `cd packages/core && bun run test`.
+
+**Never use `workspace:*` in `packages/svelte`'s dependencies.** It resolves
+here and resolves against nothing for a consumer linking
+`file:../ripple/packages/svelte`, which has no workspace root — `bun install`
+there dies with "Workspace dependency not found". This shipped once and broke
+paw-sites and paw-enterprise while every in-repo signal stayed green, because
+the repo only tests itself from inside the workspace. `file:../core` works
+both ways. `manifest-consumable.test.ts` guards it.
 
 ## Commands
 
