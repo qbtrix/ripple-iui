@@ -1,30 +1,34 @@
-<!-- docs/headless.md — the renderer-free runtime. Created 2026-08-25 alongside src/lib/headless/. -->
+<!-- docs/headless.md — the renderer-free runtime. Created 2026-08-25; repointed at @ripple-ui/core when the monorepo split landed. -->
 
 # Headless Ripple
 
-`@ripple-ui/svelte/headless` is Ripple's spec engine with no renderer
-attached. Same specs, same expressions, same event actions — but instead
-of DOM it hands you a **resolved tree**: plain objects with every
-expression evaluated, every `show` decided, and every `each` expanded.
+`@ripple-ui/core` is Ripple's spec engine with no renderer attached. Same
+specs, same expressions, same event actions — but instead of DOM it hands
+you a **resolved tree**: plain objects with every expression evaluated,
+every `show` decided, and every `each` expanded.
 
-Nothing reachable from this entry point imports Svelte or touches
-`document`, so it runs in bare Node, a Worker, a test file, or a
-non-Svelte framework.
+Nothing in the package imports Svelte or touches `document`, so it runs in
+bare Node, a Worker, a test file, or a non-Svelte framework.
 
 ```bash
-npm install @ripple-ui/svelte      # same package
+npm install @ripple-ui/core
 ```
 
 ```ts
-import { createHeadlessRuntime } from '@ripple-ui/svelte/headless';
+import { createHeadlessRuntime } from '@ripple-ui/core';
+// or, for just the runtime surface:
+import { createHeadlessRuntime } from '@ripple-ui/core/headless';
 ```
+
+If you already depend on `@ripple-ui/svelte`, core comes with it — import
+from `@ripple-ui/core` directly, no extra install.
 
 ## Why it exists
 
-The engine was already framework-free. `StateManager`, `EventDispatcher`,
-and the expression resolver are plain TypeScript classes; only the tree
-**walk** lived inside a Svelte component. Headless lifts that walk out, so
-one engine serves several consumers:
+The engine was already framework-free. `EventDispatcher` and the expression
+resolver are plain TypeScript; only the tree **walk** lived inside a Svelte
+component. Headless lifts that walk out, so one engine serves several
+consumers:
 
 | You want to | Before | Now |
 |---|---|---|
@@ -40,7 +44,7 @@ engine rather than the only way in.
 ## Quick start
 
 ```ts
-import { createHeadlessRuntime } from '@ripple-ui/svelte/headless';
+import { createHeadlessRuntime } from '@ripple-ui/core';
 
 const spec = {
   type: 'container',
@@ -160,7 +164,7 @@ of behavioural differences between the two runtimes.
 If you want no runtime at all, `resolveTree` is a pure function:
 
 ```ts
-import { resolveTree } from '@ripple-ui/svelte/headless';
+import { resolveTree } from '@ripple-ui/core';
 
 const { nodes } = resolveTree(spec, { state: { name: 'Ada' } });
 ```
@@ -174,7 +178,7 @@ The most immediate payoff. Instead of mounting a component and querying
 rendered HTML:
 
 ```ts
-import { createHeadlessRuntime } from '@ripple-ui/svelte/headless';
+import { createHeadlessRuntime } from '@ripple-ui/core';
 
 it('shows the empty state until rows arrive', async () => {
   const rt = createHeadlessRuntime({ spec: inboxSpec, state: { rows: [] } });
@@ -221,22 +225,28 @@ fine-grained Svelte reactivity:
 
 ```ts
 import { StateManager } from '@ripple-ui/svelte';
-import { RippleHeadless } from '@ripple-ui/svelte/headless';
+import { RippleHeadless } from '@ripple-ui/core/headless';
 
 const store = new StateManager({ count: 0 });
 const rt = new RippleHeadless({ spec, store });
 ```
+
+The rune-based `StateManager` ships from `@ripple-ui/svelte`, not core —
+`$state` needs the Svelte compiler. Both implement `StateStore`, which is
+the whole point of that interface.
 
 ## Guarantees, and how they're kept
 
 - **Parity of state** — `state-parity.test.ts` runs one operation script
   against both `HeadlessStateManager` and the rune-based `StateManager`
   and asserts identical snapshots and identical notification traces at
-  every step. Neither can drift silently.
+  every step. Neither can drift silently. It lives in `@ripple-ui/svelte`,
+  the only place both classes are reachable at once.
 - **Purity** — `purity.test.ts` crawls the transitive import graph from
-  `headless/index.ts` and fails on any Svelte import, any `.svelte.ts`
-  module, or any top-level `document` / `window` access. "Headless" is a
-  build gate, not a promise in a README.
+  core's entry point and fails on any Svelte import, any `.svelte.ts`
+  module, or any top-level `document` / `window` access. Core's vitest also
+  runs in the `node` environment, so a DOM dependency fails there too.
+  "Framework-agnostic" is a build gate, not a promise in a README.
 - **Resolution invariants** — `resolve-tree.test.ts` sweeps whole trees
   for leftover templates and control-flow nodes.
 

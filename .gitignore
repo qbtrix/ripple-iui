@@ -6,8 +6,10 @@ dist
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
 /build
+# `/.svelte-kit` was root-anchored when the repo was a single package; the
+# generated dir now lives inside the Svelte package.
+.svelte-kit
 
 # OS
 .DS_Store
