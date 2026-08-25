@@ -4,6 +4,13 @@
 //   Services live in cells shared down the context chain; `isolate(key)` gives
 //   a child its own cell for that key while every other key still resolves
 //   through the parent.
+// Updated: 2026-08-25 — SEMANTICS §1 (spec 006d1df): one authority per key per
+//   scope. Publishing a key already live in the same scope is now rejected
+//   outright rather than silently reconciled. The previous guard refused to
+//   clobber a newer provider but never restored the older one, so a key could
+//   go absent while an earlier provider was still live; the opposite policy
+//   (restore on unload) resurrects dead providers. Rejecting removes the choice
+//   and makes isolate() the way to run a second implementation.
 
 import { EventBus, type DispatchMode, type Listener } from './events.js';
 import { Fiber } from './fiber.js';
@@ -31,6 +38,21 @@ export class EffectRejectedError extends Error {
   constructor(owner: string) {
     super(`kernel: effect rejected — "${owner}" is UNLOADING`);
     this.name = 'EffectRejectedError';
+  }
+}
+
+/**
+ * Thrown when a key that is already live in a scope is published again.
+ * One authority per key per scope (SEMANTICS §1) — `isolate(key)` is how a
+ * second implementation runs alongside the first.
+ */
+export class DuplicateProviderError extends Error {
+  constructor(
+    readonly key: string,
+    readonly scope: string,
+  ) {
+    super(`kernel: "${key}" is already provided in scope "${scope}"`);
+    this.name = 'DuplicateProviderError';
   }
 }
 
@@ -106,16 +128,31 @@ export class Context {
   /**
    * Publish a service. Inside a plugin this is an effect, so the service is
    * withdrawn again when that plugin unloads (SEMANTICS §1, §3).
+   *
+   * **One authority per key per scope.** Publishing a key already live in this
+   * scope is rejected: this throws, and inside `apply` that rolls the offending
+   * plugin back to FAILED while the incumbent and its dependents carry on
+   * untouched. Sequential publication is fine — once a provider unloads and the
+   * key goes absent, another may claim it. To run a second implementation
+   * alongside the first, use {@link isolate}; that is what it is for.
+   *
+   * @throws {DuplicateProviderError} if the key is already live in this scope.
    */
   provide(key: string, value: unknown = true): void {
     const cell = this.cellFor(key);
+    if (cell.value !== undefined) {
+      this.runtime.trace(`${this.label}:provide:${key}:rejected`);
+      throw new DuplicateProviderError(key, this.label);
+    }
     if (this.fiber) {
       this.effect(() => {
         cell.value = value;
         this.runtime.trace(`${this.label}:provide:${key}`);
         this.runtime.notifyAll();
         return () => {
-          if (cell.value !== value) return;
+          // Sole authority for this key, so there is nothing to restore and
+          // nobody else's value to clobber — the two failure modes the rule
+          // exists to remove.
           cell.value = undefined;
           this.runtime.trace(`${this.label}:withdraw:${key}`);
           this.runtime.notifyAll();

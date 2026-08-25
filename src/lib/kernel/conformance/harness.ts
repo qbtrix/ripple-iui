@@ -6,6 +6,12 @@
 //   the trace, and compare it to `expect_trace` exactly. Unknown ops and
 //   unknown fields fail loudly — a fixture the harness does not understand is a
 //   failure, never a skip.
+// Updated: 2026-08-25 — Spec 006d1df: `expect_raises` on any step (the only
+//   assertion that sees what the CALLER was told, not what the runtime
+//   observed internally), the `<owner>:provide:<svc>:rejected` token, and
+//   `apply:throw` emitted for ANY error out of apply rather than only a
+//   declared one — a rejected duplicate publish fails apply without
+//   `apply_throws` being set.
 // Updated: 2026-08-24 — Spec 730e593: `disposer_throws`, the
 //   `<plugin>:effect:<id>:dispose:error` token, and both halves of the
 //   observability check (onError aggregate + a rejecting awaited dispose).
@@ -56,6 +62,7 @@ export interface StepDecl {
   nowait?: boolean;
   expect_state?: Record<string, string>;
   expect_result?: unknown;
+  expect_raises?: boolean;
 }
 
 export interface Fixture {
@@ -123,6 +130,7 @@ const STEP_FIELDS = new Set([
   'nowait',
   'expect_state',
   'expect_result',
+  'expect_raises',
 ]);
 const OPS = new Set([
   'mount',
@@ -204,7 +212,6 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
   // the console but assert they were actually produced.
   const reported: unknown[] = [];
   runtime.onError = (err) => reported.push(err);
-  let disposeRejected = false;
 
   const scopes = new Map<string, Context>([['root', root]]);
   const fibers = new Map<string, ReturnType<Context['plugin']>>();
@@ -213,11 +220,26 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
   const buildPlugin = (name: string): Plugin => {
     const decl = fixture.plugins[name];
     if (!decl) throw new Error(`conformance: fixture ${fixture.id} has no plugin "${name}"`);
+    const applyBody = buildApplyBody(name, decl);
     return {
       name,
       inject: decl.inject,
       apply: async (ctx: Context) => {
-        for (const service of decl.provides ?? []) ctx.provide(service, `${name}impl`);
+        try {
+          await applyBody(ctx);
+        } catch (err) {
+          // The token means "apply raised", whatever the cause — a declared
+          // throw, or a publish the kernel refused.
+          trace.push(`${name}:apply:throw`);
+          throw err;
+        }
+      },
+    };
+  };
+
+  const buildApplyBody = (name: string, decl: PluginDecl) => {
+    return async (ctx: Context) => {
+        for (const service of decl.provides ?? []) ctx.provide(service, name);
 
         for (const service of decl.record_resolved ?? []) {
           trace.push(`${name}:resolved:${service}:${String(ctx.get(service))}`);
@@ -312,10 +334,8 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
         );
 
         if (decl.apply_throws) {
-          trace.push(`${name}:apply:throw`);
           throw new Error(`${name}: apply failed`);
         }
-      },
     };
   };
 
@@ -337,6 +357,31 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
   };
 
   for (const [i, step] of fixture.steps.entries()) {
+    // `expect_raises` is the only assertion that sees what the CALLER was
+    // told, as opposed to what the runtime observed internally. A trace token
+    // proves an error was contained; this proves it was propagated.
+    let raised = false;
+    try {
+      await runStep(i, step);
+    } catch (err) {
+      raised = true;
+      if (!step.expect_raises) throw err;
+    }
+    if (step.expect_raises && !raised) {
+      failures.push(`step ${i}: expected op "${step.op}" to raise, but it did not`);
+    }
+
+    if (step.expect_state) {
+      for (const [name, expected] of Object.entries(step.expect_state)) {
+        const actual = fibers.get(name)?.state;
+        if (actual !== expected) {
+          failures.push(`step ${i}: expected ${name} to be ${expected}, got ${actual ?? 'absent'}`);
+        }
+      }
+    }
+  }
+
+  async function runStep(i: number, step: StepDecl): Promise<void> {
     switch (step.op) {
       case undefined:
         break;
@@ -355,15 +400,7 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
       case 'dispose': {
         const fiber = fibers.get(step.plugin!);
         if (!fiber) throw new Error(`conformance: no mounted plugin "${step.plugin}"`);
-        try {
-          await fiber.dispose();
-          disposeRejected = false;
-        } catch {
-          // A teardown failure is surfaced to whoever awaits dispose(). The
-          // fixture still expects the fiber to have reached its target state,
-          // so the run continues.
-          disposeRejected = true;
-        }
+        await fiber.dispose();
         break;
       }
       case 'dispose_nowait': {
@@ -407,15 +444,6 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
       default:
         throw new Error(`conformance: unknown op "${step.op}"`);
     }
-
-    if (step.expect_state) {
-      for (const [name, expected] of Object.entries(step.expect_state)) {
-        const actual = fibers.get(name)?.state;
-        if (actual !== expected) {
-          failures.push(`step ${i}: expected ${name} to be ${expected}, got ${actual ?? 'absent'}`);
-        }
-      }
-    }
   }
 
   await settle();
@@ -427,7 +455,6 @@ export async function runFixture(fixture: Fixture): Promise<RunResult> {
   const throwsDeclared = Object.values(fixture.plugins ?? {}).some((p) => p.disposer_throws);
   if (throwsDeclared) {
     if (!reported.length) failures.push('a disposer threw but no error was reported to onError');
-    if (!disposeRejected) failures.push('a disposer threw but the awaited dispose() resolved');
   } else if (reported.length) {
     failures.push(`unexpected teardown error(s) reported: ${reported.map(String).join('; ')}`);
   }
