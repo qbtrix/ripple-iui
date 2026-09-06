@@ -1,15 +1,18 @@
 /**
  * @file state-manager.svelte.ts
  * @description Reactive state management for the UI renderer using Svelte 5 runes.
+ * @changes
+ *   - 2026-08-25: the `StateSubscriber` type moved to `./state-store.ts` (and is
+ *     re-exported here, so existing imports are unchanged); `StateManager` now
+ *     declares `implements StateStore`, which pins it to the same contract the
+ *     rune-free `HeadlessStateManager` satisfies. Behaviour is untouched.
  */
 
-export type StateSubscriber = (
-  path: string,
-  value: unknown,
-  state: Record<string, unknown>
-) => void;
+import type { StateStore, StateSubscriber } from './state-store.js';
 
-export class StateManager {
+export type { StateSubscriber };
+
+export class StateManager implements StateStore {
   private _state = $state<Record<string, unknown>>({});
   private subscribers = new Set<StateSubscriber>();
 

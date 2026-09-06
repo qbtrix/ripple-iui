@@ -43,6 +43,10 @@
       "types": "./dist/schema/index.d.ts",
       "default": "./dist/schema/index.js"
     },
+    "./headless": {
+      "types": "./dist/headless/index.d.ts",
+      "default": "./dist/headless/index.js"
+    },
     "./streaming": {
       "types": "./dist/streaming/index.d.ts",
       "svelte": "./dist/streaming/index.js",
