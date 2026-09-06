@@ -130,7 +130,14 @@
         });
     });
 
-    const columns = $derived.by(() => {
+    type NormalizedColumn = {
+        accessorKey: string;
+        header: string;
+        sortable: boolean;
+        editable: boolean;
+        href?: string;
+    };
+    const columns: NormalizedColumn[] = $derived.by(() => {
         const colsArr = safeArray<TableColumn | string>(rawColumns, {
             widget: "table",
             key: "columns",
