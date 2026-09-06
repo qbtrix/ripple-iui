@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-09-06T13:05:45.081Z",
+  "generatedAt": "2026-09-06T14:24:09.345Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",

@@ -12,6 +12,11 @@
      editable cells get role="button" + tabindex=0 + Enter/Space to open; the editor
      commits on Enter/blur and cancels on Escape; data-editable / data-editing attrs
      for styling and tests.
+     Modified: 2026-09-06 — the href is run through `safeHref` (shared
+     url-sanitizer): a /browser result table carries URLs scraped from an
+     untrusted page, so a raw `javascript:`/`data:` href would be XSS. A cell
+     whose URL fails the scheme check renders as plain text, not a dead/unsafe
+     link.
      Modified: 2026-09-06 — column `href`: name a row field that holds a URL and the cell
      text becomes a link to it (new tab, rel=noopener). Read-only cells only; an
      editable cell keeps its editor. Added for /browser results (a story title that
@@ -23,6 +28,7 @@
     import { getContext } from "svelte";
     import { cn } from "$lib/utils.js";
     import { safeArray } from "$lib/utils/safe-props.js";
+    import { safeHref } from "$lib/utils/url-sanitizer.js";
     import { asText } from "$lib/widgets/text-coerce";
     import type { EventHandlerOrArray } from "../../schema/event-handler.js";
     import type { EventDispatcher } from "../../core/event-dispatcher.js";
@@ -457,9 +463,9 @@
                                         >
                                             {cellValue}
                                         </span>
-                                    {:else if col.href && typeof row[col.href] === "string" && row[col.href]}
+                                    {:else if col.href && safeHref(row[col.href])}
                                         <a
-                                            href={row[col.href]}
+                                            href={safeHref(row[col.href])}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             data-link-cell="true"

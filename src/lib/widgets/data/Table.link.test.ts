@@ -31,6 +31,19 @@ describe('Table column href', () => {
     expect(container.textContent).not.toContain('https://cloudinabottle.org');
   });
 
+  it('does NOT render a link for a javascript: (or other unsafe) URL', () => {
+    // A /browser result table carries URLs scraped from an untrusted page.
+    const evil = [
+      { title: 'Click me', url: 'javascript:alert(1)', points: 9 },
+      { title: 'Also me', url: 'data:text/html,<script>1</script>', points: 8 }
+    ];
+    const { container } = render(Table, { props: { columns, rows: evil } });
+    // No anchors at all — both unsafe URLs fall back to plain text.
+    expect(container.querySelectorAll('a').length).toBe(0);
+    expect(container.textContent).toContain('Click me');
+    expect(container.querySelector('[href^="javascript:"]')).toBeNull();
+  });
+
   it('falls back to plain text when the row has no URL, and leaves other columns alone', () => {
     const { container } = render(Table, { props: { columns, rows } });
     expect(container.textContent).toContain('No link here');
