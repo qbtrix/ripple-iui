@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-07-08T13:44:00.153Z",
+  "generatedAt": "2026-09-06T13:05:45.081Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -13542,9 +13542,9 @@
           "description": "Row objects."
         },
         "columns": {
-          "type": "Array<{ header?: string; accessorKey?: string; sortable?: boolean }>",
+          "type": "Array<{ header?: string; accessorKey?: string; sortable?: boolean; href?: string }>",
           "required": true,
-          "description": "Column definitions."
+          "description": "Column definitions. `href` names a row field holding a URL; that column's cell text then links to it (new tab). Keep the URL in its own row field, not in the visible text."
         },
         "variant": {
           "type": "\"default\" | \"compact\" | \"striped\" | \"minimal\"",
@@ -13584,23 +13584,34 @@
               "header": "Revenue",
               "accessorKey": "revenue",
               "sortable": true
+            },
+            {
+              "header": "Site",
+              "accessorKey": "site",
+              "href": "url"
             }
           ],
           "rows": [
             {
               "name": "Acme Corp",
               "status": "Active",
-              "revenue": "$52k"
+              "revenue": "$52k",
+              "site": "acme.com",
+              "url": "https://acme.com"
             },
             {
               "name": "Tech Inc",
               "status": "Pending",
-              "revenue": "$18k"
+              "revenue": "$18k",
+              "site": "tech.inc",
+              "url": "https://tech.inc"
             },
             {
               "name": "Growth Ltd",
               "status": "Active",
-              "revenue": "$98k"
+              "revenue": "$98k",
+              "site": "growth.ltd",
+              "url": "https://growth.ltd"
             }
           ],
           "sortable": true,
