@@ -1,43 +1,61 @@
-// Updated: C4 diagram, textarea+modal (#20), Skeleton for streaming (#22), ConfirmDialog overlay (#23), type `WidgetRegistry` renamed to `WidgetMap` to free the name for the runtime class in core/widget-registry.ts
-// Updated 2026-05-22: registered the `media/` escape-hatch widgets — ModelViewer (declarative 3D, type `model-viewer`/`3d`/`model`) and Embed (sandboxed iframe, type `embed`/`iframe`) for Increment 5.
-// Updated 2026-05-30: registered the `motion/` sugar widgets — Reveal (type `reveal`) and Parallax (type `parallax`), which desugar to a motion field (RFC 12 animation primitive).
-// Updated 2026-05-30: registered the `marketing/` widget pack — Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud (+ aliases) for the RFC 12 landing-page pack (Phase 3).
-// Updated 2026-05-30: registered the full `premium/` MIT-ported pack (Phase 4) — Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora (+ aurora-background), Spotlight, BentoGrid (+ bento), TextEffect (+ animated-text).
-// Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`/`pomodoro`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
-// Updated 2026-06-09: marketing-pack enrich — registered Faq (native <details>, type `faq`/`faqs`) and MarketingHero (bespoke static-safe hero, type `marketing-hero`).
-// Updated 2026-06-24: registered the `ai/` AI-native display tier — StreamText (progressive/streaming text, type `stream-text`/aliases), ToolCall (tool-invocation card, type `tool-call`/aliases), ReasoningTrace (collapsible thinking steps, type `reasoning-trace`/aliases). Read-only widgets a generative-UI engine uses to show an agent's work.
-// Updated 2026-06-24: registered ApprovalGate (type `approval-gate`/`approval`/`approve-card`/`human-gate`) — the human-in-the-loop approve/deny/diff-review organism (the Instinct "human mans the gate" layer); composes Diff + ToolCall in its body and persists its decision via the bind contract.
+// @file src/lib/widgets/index.ts
+// @description GENERATED FILE — DO NOT EDIT BY HAND.
+//   Produced by `bun run gen:widgets` from src/lib/widgets/registry.data.ts,
+//   which is the source of truth for every widget type string and alias.
+//   To add, rename, or alias a widget: edit registry.data.ts and regenerate.
+//   `bun run lint:widgets` (and the vitest gate) fail if this file drifts.
+
 import type { Component } from 'svelte';
 
-import { Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal, Accordion, Sheet, Separator, PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible } from './layout/index.js';
-import { Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, RichTextDisplay, CodeBlock, EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code, ProgressRing, Mention, LinkPreview, Qr, Diff, LedClock, GlyphGrid, FillGrid, StreakBars } from './display/index.js';
-import { Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker } from './input/index.js';
-import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, Map as MapWidget, Seismograph } from './data/index.js';
+import Workflow from './Workflow.svelte';
+import {
+  Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot, GlassCard, Modal, Accordion, Sheet, Separator,
+  PageHeader, Hero, Section, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible,
+} from './layout/index.js';
+import { DesignSystemEditor } from './design-system/index.js';
+import {
+  Alert, DropdownMenu, ContextMenu, NotificationCenter, ErrorState, Coachmark, ConfirmDialog, Tooltip,
+  Popover, HoverCard, Toast, CommandPalette,
+} from './overlay/index.js';
+import {
+  EmptyState, ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta, Text, Heading,
+  Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, Code, ProgressRing,
+  RichTextDisplay, Mention, LinkPreview, Qr, Diff, Loading, Chip, Kbd, StatusDot, Trend, Icon, Copy, LedClock,
+  GlyphGrid, FillGrid, StreakBars,
+} from './display/index.js';
+import {
+  Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar,
+  Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form, NumberInput, OtpInput, Segmented,
+  ColorPicker, RichText, CodeEditor, Search, LocationPicker,
+} from './input/index.js';
+import {
+  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap,
+  GanttChart, TreeTable, Calendar, Map as MapWidget, Seismograph,
+} from './data/index.js';
+import {
+  PricingTable, SettingsList, CommentThread, AuditLog, ApiKey, BulkActionBar, SavedViews, PeoplePicker,
+  PermissionMatrix, OrgChart, InvoiceLines,
+} from './vertical/index.js';
+import {
+  Terminal, RippleFrame, ComparisonLayout, EntityDetail, FormLayout, WizardLayout, AskUserQuestions,
+  ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, ExecDashboard, OpsDashboard, AnalyticsDashboard,
+  PipelineDashboard, ProjectDashboard, AvatarGroup,
+} from './composite/index.js';
 import { If, Each } from './control/index.js';
 import {
-  Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
-  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
-  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions,
-} from './composite/index.js';
-import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
-import {
-  SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
-  CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
-  AnalystBar, RangeBar
+  SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp, CompanyHeader, Ticker, KvTable, Timeline, Callout,
+  NewsCard, AnalystBar, RangeBar,
 } from './research/index.js';
-import Workflow from './Workflow.svelte';
 import { C4Diagram } from './c4/index.js';
-import {
-  PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
-  BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines
-} from './vertical/index.js';
 import { ModelViewer, Embed, AudioPlayer, VideoPlayer } from './media/index.js';
 import { Reveal, Parallax } from './motion/index.js';
-import { Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero } from './marketing/index.js';
-import { Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect } from './premium/index.js';
+import {
+  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
+} from './marketing/index.js';
+import {
+  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
+} from './premium/index.js';
 import { TodoList, DrawingCanvas, Timer, Flashcard } from './interactive/index.js';
-import { DesignSystemEditor } from './design-system/index.js';
 import { StreamText, ToolCall, ReasoningTrace, ApprovalGate } from './ai/index.js';
 
 /** Map of widget type name → Svelte component. Internal registry format. */
@@ -95,6 +113,7 @@ const defaultRegistry: WidgetMap = {
   'master-detail': MasterDetail,
   'list-detail': MasterDetail,
   text: Text,
+  label: Text,
   heading: Heading,
   image: Image,
   badge: Badge,
@@ -107,7 +126,8 @@ const defaultRegistry: WidgetMap = {
   markdown: Markdown,
   md: Markdown,
   'code-block': CodeBlock,
-  code: Code,                         // CHANGED — inline; use 'code-block' for fenced
+  // CHANGED — inline; use 'code-block' for fenced
+  code: Code,
   button: Button,
   input: Input,
   select: Select,
@@ -171,13 +191,13 @@ const defaultRegistry: WidgetMap = {
   'color-picker': ColorPicker,
   color: ColorPicker,
   'rich-text': RichText,
+  wysiwyg: RichText,
   // CONTRACT CHANGE (editor chrome, 2026-06-30): `richtext` (no hyphen) now maps
   // to the DISPLAY widget RichTextDisplay (renders trusted rich HTML), not the
   // WYSIWYG input. The input editor is still reachable as `rich-text` / `wysiwyg`.
   // Captain accepted this so the visual editor's inline TipTap path authors a
   // `richtext` node's `html` prop and the same node renders the committed result.
   richtext: RichTextDisplay,
-  wysiwyg: RichText,
   'code-editor': CodeEditor,
   codeeditor: CodeEditor,
   editor: CodeEditor,
@@ -398,8 +418,6 @@ const defaultRegistry: WidgetMap = {
   approval: ApprovalGate,
   'approve-card': ApprovalGate,
   'human-gate': ApprovalGate,
-  // Aliases
-  label: Text,
 };
 
 let registry: WidgetMap = { ...defaultRegistry };
@@ -429,34 +447,24 @@ export function resetRegistry(): void {
 }
 
 export {
-  Container, Flex, Grid, Card, GlassCard, Tabs, Dashboard, DashboardSlot, Modal,
-  Accordion, Sheet, Separator, Alert, PageHeader, Hero, Section, EmptyState, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Collapsible, DropdownMenu,
-  ProsCons, ComparisonTable, Steps, Quote, Highlight, DefinitionList, ArticleMeta,
-  Text, Heading, Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, RichTextDisplay, CodeBlock,
-  Button, Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox, MultiSelect, DatePicker, TimePicker, FileUpload, Form,
-  NumberInput, OtpInput, Segmented, ColorPicker, RichText, CodeEditor, Search, LocationPicker,
-  Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, GanttChart, TreeTable, Calendar, MapWidget,
-  ProgressRing, Mention, LinkPreview, Qr, Diff, Terminal, If, Each,
-  SourceCard, Citation, SourcesBar, DiscoverCard, FollowUp,
-  CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
-  AnalystBar, RangeBar,
-  Workflow,
-  C4Diagram,
-  Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark,
-  PricingTable, SettingsList, CommentThread, AuditLog, ApiKey,
-  BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines,
-  Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
-  AvatarGroup, ComparisonLayout,
-  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
-  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  ModelViewer, Embed, AudioPlayer, VideoPlayer,
-  Reveal, Parallax,
-  Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
-  Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
-  TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions,
-  // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
-  LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
-  // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
-  StreamText, ToolCall, ReasoningTrace, ApprovalGate
+  Container, Flex, Grid, Card, Tabs, Dashboard, DashboardSlot, GlassCard, Modal, Accordion, Sheet, Separator,
+  Alert, DropdownMenu, PageHeader, Hero, Section, EmptyState, ProsCons, ComparisonTable, Steps, Quote,
+  Highlight, DefinitionList, ArticleMeta, Sidebar, AppShell, Breadcrumb, Split, MasterDetail, Text, Heading,
+  Image, Badge, Progress, Avatar, Metric, Stat, SoulStatus, Skeleton, Markdown, CodeBlock, Code, Button,
+  Input, Select, Checkbox, CheckboxGroup, Switch, Textarea, Slider, RadioGroup, Rating, FilterBar, Combobox,
+  MultiSelect, DatePicker, TimePicker, FileUpload, Form, Table, Chart, VirtualList, Tree, Kanban, DataGrid,
+  Sparkline, Gauge, Funnel, Heatmap, Sankey, Treemap, ProgressRing, NumberInput, OtpInput, Segmented,
+  Collapsible, ColorPicker, RichText, RichTextDisplay, CodeEditor, GanttChart, Search, TreeTable, Calendar,
+  MapWidget, LocationPicker, ContextMenu, NotificationCenter, ErrorState, Mention, LinkPreview, Qr, Diff,
+  Coachmark, PricingTable, SettingsList, CommentThread, AuditLog, ApiKey, BulkActionBar, SavedViews,
+  PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines, Terminal, ComparisonLayout, EntityDetail,
+  FormLayout, WizardLayout, AskUserQuestions, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
+  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard, If, Each, SourceCard,
+  Citation, SourcesBar, DiscoverCard, FollowUp, CompanyHeader, Ticker, KvTable, Timeline, Callout, NewsCard,
+  AnalystBar, RangeBar, Workflow, C4Diagram, Tooltip, Popover, HoverCard, Toast, CommandPalette, Loading,
+  Chip, Kbd, StatusDot, Trend, Icon, Copy, AvatarGroup, ModelViewer, Embed, Reveal, Parallax, Navbar, Footer,
+  Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero, Marquee, BorderBeam, Shimmer,
+  AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect, AudioPlayer, VideoPlayer, TodoList, DrawingCanvas,
+  Timer, Flashcard, LedClock, Seismograph, GlyphGrid, FillGrid, StreakBars, StreamText, ToolCall,
+  ReasoningTrace, ApprovalGate,
 };

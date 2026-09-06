@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generated widget registry is fresh
+        run: bun run lint:widgets
+
       - name: Unit tests
         run: bunx vitest run
 
