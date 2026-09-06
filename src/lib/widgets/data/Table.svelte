@@ -12,6 +12,15 @@
      editable cells get role="button" + tabindex=0 + Enter/Space to open; the editor
      commits on Enter/blur and cancels on Escape; data-editable / data-editing attrs
      for styling and tests.
+     Modified: 2026-09-06 — the href is run through `safeHref` (shared
+     url-sanitizer): a /browser result table carries URLs scraped from an
+     untrusted page, so a raw `javascript:`/`data:` href would be XSS. A cell
+     whose URL fails the scheme check renders as plain text, not a dead/unsafe
+     link.
+     Modified: 2026-09-06 — column `href`: name a row field that holds a URL and the cell
+     text becomes a link to it (new tab, rel=noopener). Read-only cells only; an
+     editable cell keeps its editor. Added for /browser results (a story title that
+     opens the story) without putting raw URLs in the visible text.
      Modified: 2026-06-27 — forward node id: bind id + data-ripple-node on the root
      div so the visual editor can select this widget directly (SP-0 id-forwarding). -->
 
@@ -19,6 +28,7 @@
     import { getContext } from "svelte";
     import { cn } from "$lib/utils.js";
     import { safeArray } from "$lib/utils/safe-props.js";
+    import { safeHref } from "$lib/utils/url-sanitizer.js";
     import { asText } from "$lib/widgets/text-coerce";
     import type { EventHandlerOrArray } from "../../schema/event-handler.js";
     import type { EventDispatcher } from "../../core/event-dispatcher.js";
@@ -36,6 +46,10 @@
         sortable?: boolean;
         /** Per-column opt-out: set false to keep this column read-only even when the table is editable. */
         editable?: boolean;
+        /** Row field holding a URL. When set and the row has it, the cell text renders as a
+         *  link to that URL (new tab). Keeps the URL out of the visible text, so a "Title"
+         *  column can be clickable without showing the address. */
+        href?: string;
     }
 
     interface Props {
@@ -116,7 +130,14 @@
         });
     });
 
-    const columns = $derived.by(() => {
+    type NormalizedColumn = {
+        accessorKey: string;
+        header: string;
+        sortable: boolean;
+        editable: boolean;
+        href?: string;
+    };
+    const columns: NormalizedColumn[] = $derived.by(() => {
         const colsArr = safeArray<TableColumn | string>(rawColumns, {
             widget: "table",
             key: "columns",
@@ -135,6 +156,9 @@
                         c.accessorKey ?? c.key ?? c.header ?? c.label ?? "",
                     header: c.header ?? c.label ?? c.accessorKey ?? c.key ?? "",
                     sortable: c.sortable ?? tableSortable,
+                    // Carried through, not defaulted: the normalizer rebuilds the
+                    // column object, so any key not listed here is silently dropped.
+                    href: c.href,
                     // Per-column opt-out: default editable, explicit false stays read-only.
                     editable: c.editable !== false,
                 };
@@ -446,6 +470,16 @@
                                         >
                                             {cellValue}
                                         </span>
+                                    {:else if col.href && safeHref(row[col.href])}
+                                        <a
+                                            href={safeHref(row[col.href])}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            data-link-cell="true"
+                                            class="underline-offset-2 hover:underline focus-visible:underline"
+                                        >
+                                            {cellValue}
+                                        </a>
                                     {:else}
                                         {cellValue}
                                     {/if}
