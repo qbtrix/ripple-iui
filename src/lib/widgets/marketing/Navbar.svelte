@@ -2,6 +2,9 @@
   @file widgets/marketing/Navbar.svelte
   @description Marketing top nav: brand + links + optional CTA. Layout + text.
   @created 2026-05-30 — RFC 12 marketing widget pack.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -36,6 +39,6 @@
     {#if cta}
       <a href={ctaHref} class="text-sm font-medium rounded-md bg-primary text-primary-foreground px-4 py-2 hover:opacity-90 transition-opacity">{cta}</a>
     {/if}
-    {#if hasChildren && children}{@render children()}{/if}
+    {#if hasChildren || children}{@render children?.()}{/if}
   </div>
 </nav>

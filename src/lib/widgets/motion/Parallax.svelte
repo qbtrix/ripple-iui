@@ -5,6 +5,9 @@
   @created 2026-05-30 — RFC 12 animation primitive.
   @updated 2026-06-09 — silence state_referenced_locally: the `motion` config
     reads `distance` once at setup (intentional, not reactive).
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -32,5 +35,5 @@
 </script>
 
 <div {id} class={cn('block', className)} style={styleString} data-ripple-motion use:withMotion={motion}>
-  {#if hasChildren && children}{@render children()}{/if}
+  {#if hasChildren || children}{@render children?.()}{/if}
 </div>

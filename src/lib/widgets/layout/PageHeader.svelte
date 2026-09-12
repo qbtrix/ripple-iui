@@ -1,3 +1,9 @@
+<!--
+  PageHeader.svelte
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
+-->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -48,7 +54,7 @@
       </div>
     {/if}
   </div>
-  {#if hasChildren && children}
-    <div>{@render children()}</div>
+  {#if hasChildren || children}
+    <div>{@render children?.()}</div>
   {/if}
 </header>

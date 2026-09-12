@@ -1,3 +1,9 @@
+<!--
+  Hero.svelte
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
+-->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -49,9 +55,9 @@
       align === 'center' && 'max-w-xl'
     )}>{subtitle}</p>
   {/if}
-  {#if hasChildren && children}
+  {#if hasChildren || children}
     <div class={cn('flex flex-wrap gap-3', align === 'center' && 'justify-center')}>
-      {@render children()}
+      {@render children?.()}
     </div>
   {/if}
 </section>
