@@ -43,7 +43,7 @@
   <HoverCard.Trigger>
     {#snippet child({ props: triggerProps })}
       <span {...triggerProps} {id} class={cn(className)} style={styleString}>
-        {#if hasChildren && children}
+        {#if children}
           {@render children()}
         {:else if isString(trigger)}
           {trigger}

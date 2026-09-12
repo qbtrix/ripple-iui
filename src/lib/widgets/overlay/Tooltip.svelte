@@ -44,7 +44,7 @@
 <Tooltip.Provider delayDuration={delay}>
   <Tooltip.Root>
     <Tooltip.Trigger {id} class={cn(className)} style={styleString}>
-      {#if hasChildren && children}
+      {#if children}
         {@render children()}
       {:else if triggerIsString}
         {trigger}

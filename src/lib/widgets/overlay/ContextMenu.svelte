@@ -68,7 +68,7 @@
 
 <CM.Root>
   <CM.Trigger {id} class={cn('inline-block', className)} style={styleString}>
-    {#if hasChildren && children}
+    {#if children}
       {@render children()}
     {:else if isString(trigger)}
       <span class="rounded-md border border-dashed border-border bg-muted/30 px-3 py-6 text-sm text-muted-foreground">

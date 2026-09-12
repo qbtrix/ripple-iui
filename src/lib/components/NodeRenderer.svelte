@@ -508,6 +508,17 @@
 			'data-ripple-node': node.id,
 			'data-ripple-type': node.type
 		}}
+		<!-- The default-children snippet is passed as a PROP (below) and only when
+		     `defaultKids` is non-empty. Inlining it as component content passed an
+		     always-truthy `children` to every widget, so a widget could not tell
+		     "renderer, zero kids" from "hand-written caller with kids" — which is
+		     why `hasChildren` had to exist. Matching header/footer/sidebar/topbar/
+		     actions makes `children` a truthful signal for both callers. -->
+		{#snippet defaultSnippet()}
+			{#each defaultKids as child, i (child.id ?? i)}
+				<Self node={child} {loopContext} />
+			{/each}
+		{/snippet}
 		{#snippet headerSnippet()}
 			{#each headerKids as child, i (child.id ?? i)}
 				<Self node={child} {loopContext} />
@@ -554,13 +565,8 @@
 					sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
 					topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
 					actions={actionsKids.length > 0 ? actionsSnippet : undefined}
-				>
-					{#snippet children()}
-						{#each defaultKids as child, i (child.id ?? i)}
-							<Self node={child} {loopContext} />
-						{/each}
-					{/snippet}
-				</WidgetComponent>
+					children={defaultKids.length > 0 ? defaultSnippet : undefined}
+				/>
 			</div>
 		{:else}
 			<WidgetComponent
@@ -570,13 +576,8 @@
 				sidebar={sidebarKids.length > 0 ? sidebarSnippet : undefined}
 				topbar={topbarKids.length > 0 ? topbarSnippet : undefined}
 				actions={actionsKids.length > 0 ? actionsSnippet : undefined}
-			>
-				{#snippet children()}
-					{#each defaultKids as child, i (child.id ?? i)}
-						<Self node={child} {loopContext} />
-					{/each}
-				{/snippet}
-			</WidgetComponent>
+				children={defaultKids.length > 0 ? defaultSnippet : undefined}
+			/>
 		{/if}
 			{#snippet failed(error, reset)}
 				<!-- Wire the boundary's reset() to ErrorState's "Try again" action.

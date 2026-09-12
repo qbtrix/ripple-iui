@@ -216,7 +216,7 @@
     <span data-slot="button-leading" class="inline-flex shrink-0">{@render leading()}</span>
   {/if}
 
-  {#if hasChildren && children}
+  {#if children}
     {@render children()}
   {:else if label}
     <span data-slot="button-label">{label}</span>

@@ -63,7 +63,7 @@
   {/if}
   {#if description}
     <Alert.Description>{description}</Alert.Description>
-  {:else if hasChildren && children}
+  {:else if children}
     <Alert.Description>{@render children()}</Alert.Description>
   {/if}
 </Alert.Root>

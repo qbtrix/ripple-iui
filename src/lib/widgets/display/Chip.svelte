@@ -62,7 +62,7 @@
     )}
     style={styleString}
   >
-    {#if hasChildren && children}
+    {#if children}
       {@render children()}
     {:else if label}
       {label}
@@ -87,7 +87,7 @@
     class={cn('inline-flex items-center rounded-full border font-medium', variantClass, sizeClass, className)}
     style={styleString}
   >
-    {#if hasChildren && children}
+    {#if children}
       {@render children()}
     {:else if label}
       {label}
