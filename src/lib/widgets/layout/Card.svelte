@@ -77,9 +77,13 @@
   }
 </script>
 
+<!-- Always a div, never a real <button>. An interactive Card still has to be
+     able to hold buttons, links and inputs in its body and footer, and a
+     <button> wrapping those is invalid nesting that browsers reflow and
+     keyboards cannot reach. role + tabindex + the Enter/Space handler below
+     give the same semantics and keyboard behaviour without the restriction. -->
 <svelte:element
-  this={isInteractive ? 'button' : 'div'}
-  type={isInteractive ? 'button' : undefined}
+  this={'div'}
   {id}
   class={cn(card({ variant, density, interactive: isInteractive }), className)}
   style={styleString}
