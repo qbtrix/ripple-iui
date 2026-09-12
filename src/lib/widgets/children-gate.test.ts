@@ -82,7 +82,10 @@ const DIRECT: Array<[string, unknown, Record<string, unknown>]> = [
 test.each(DIRECT)(
   '%s renders children for a plain Svelte caller that never passes hasChildren',
   (name, Component, props) => {
-    const { container } = render(Component as never, {
+    // The tuple stores components as `unknown` (they have 21 different prop
+    // types). Cast to what render() accepts rather than `as never`, which makes
+    // svelte-check infer `props: undefined` and rejects the props object.
+    const { container } = render(Component as Parameters<typeof render>[0], {
       props: { ...props, children: kid(`child-of-${name}`) },
     });
     expect(container.textContent).toContain(`child-of-${name}`);
