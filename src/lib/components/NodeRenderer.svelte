@@ -10,6 +10,11 @@
     - Fixed: Use self-import instead of deprecated svelte:self
     - Wired on_focus and on_blur handlers through widget props
     - Warn on unknown slot names (non-blocking, aids spec debugging)
+    - 2026-09-12: pass the default-children snippet as a PROP, and only when
+      `defaultKids` is non-empty. It used to be inline component content, which
+      handed every widget a truthy-but-empty `children`; widgets could not tell
+      a childless spec node from a hand-written caller. `hasChildren` is still
+      sent unchanged.
     - 2026-05-22: unknown-widget branch fails loud — shows the node id and a
       clear "not in the catalog" message instead of a bare red box
       (Increment 5 catalog-as-allowlist).
