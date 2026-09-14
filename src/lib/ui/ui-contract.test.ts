@@ -63,6 +63,10 @@ const PROPS: Record<string, Record<string, unknown>> = {
   StreamText: { text: 'streaming' },
   ToolCall: { name: 'read_file', status: 'success' },
   ReasoningTrace: { steps: [{ title: 'Thinking' }] },
+  // With `rows: []` TaskRows still renders its (empty) list wrapper, so it is
+  // NOT in RENDERS_NOTHING_WHEN_EMPTY. A row here so the mount proves the row
+  // markup, not just the wrapper.
+  TaskRows: { rows: [{ key: 'verify', label: 'Verified vendor records', status: 'done' }] },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},

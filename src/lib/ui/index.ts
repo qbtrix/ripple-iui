@@ -78,8 +78,13 @@ export * as Command from '../components/ui/command/index.js';
 export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
-   Own behaviour and state. The AI-native four: the product's core surfaces. */
+   Own behaviour and state. The AI-native tier: the product's core surfaces.
+   TaskRows and PromptBar joined it in the beautiful-ui re-skin (2026-09-14) and
+   are deliberately absent from the spec registry and the manifest — they reach
+   callers through this surface only, which is why the manifest still reports
+   189 widgets. */
 export { default as ApprovalGate } from '../widgets/ai/ApprovalGate.svelte';
 export { default as StreamText } from '../widgets/ai/StreamText.svelte';
 export { default as ToolCall } from '../widgets/ai/ToolCall.svelte';
 export { default as ReasoningTrace } from '../widgets/ai/ReasoningTrace.svelte';
+export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
