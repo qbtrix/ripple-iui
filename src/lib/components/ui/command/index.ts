@@ -1,3 +1,6 @@
+// command/index.ts — Command composable namespace. Added 2026-09-14 (ripple overlay
+// canonical): copied from paw-enterprise, re-tokened to ripple surface tokens,
+// exported through `@ripple-ui/svelte/ui`.
 import Root from "./command.svelte";
 import Loading from "./command-loading.svelte";
 import Dialog from "./command-dialog.svelte";

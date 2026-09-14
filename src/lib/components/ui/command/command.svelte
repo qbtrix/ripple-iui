@@ -1,3 +1,6 @@
+<!-- command.svelte — re-tokened 2026-09-14 (ripple overlay canonical): host-only
+     bg-popover / border swapped for bg-ripple-surface + ring-ripple-border +
+     backdrop-blur-md, the same glass-in-tokens surface as ripple Card. -->
 <script lang="ts">
 	import { cn } from "$lib/utils.js";
 	import { Command as CommandPrimitive } from "bits-ui";
@@ -21,7 +24,7 @@
 	bind:ref
 	data-slot="command"
 	class={cn(
-		"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-xl",
+		"bg-ripple-surface text-ripple-surface-foreground backdrop-blur-md flex h-full w-full flex-col overflow-hidden rounded-xl",
 		className
 	)}
 	{...restProps}

@@ -1,3 +1,6 @@
+// context-menu/index.ts — ContextMenu composable namespace. Added 2026-09-14 (ripple overlay
+// canonical): copied from paw-enterprise, re-tokened to ripple surface tokens,
+// exported through `@ripple-ui/svelte/ui`.
 // index.ts — vendored shadcn-svelte ContextMenu barrel, carrying the paw
 // frosted-popover canon on Content / SubContent. Mirrors ui/dropdown-menu's
 // index idiom. bits-ui ContextMenu is cursor-anchored (Trigger wraps the

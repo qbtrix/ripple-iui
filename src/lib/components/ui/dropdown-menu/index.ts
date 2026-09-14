@@ -1,3 +1,6 @@
+// dropdown-menu/index.ts — DropdownMenu composable namespace. Added 2026-09-14 (ripple overlay
+// canonical): copied from paw-enterprise, re-tokened to ripple surface tokens,
+// exported through `@ripple-ui/svelte/ui`.
 import Root from "./dropdown-menu.svelte";
 import Sub from "./dropdown-menu-sub.svelte";
 import CheckboxGroup from "./dropdown-menu-checkbox-group.svelte";
