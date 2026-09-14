@@ -20,10 +20,18 @@
  *   `Dialog.Content`, `Sheet.Content` and `DropdownMenu.Content` (the check that
  *   catches a wrapper dropping `{...restProps}`). Focus trap and Escape are
  *   bits-ui's own behaviour and are deliberately not tested here.
+ *
+ *   Updated 2026-09-14 (review): three changes. The static context rule now
+ *   asserts coverage PER namespace directory rather than against a total file
+ *   count, so a namespace can no longer fall out of coverage silently when a
+ *   path move breaks its prefix. A new guard fails if any packaged source
+ *   reaches for the shorthand state variants that only resolve inside ripple's
+ *   own build. And the ResizeObserver shim moved to src/test-setup.ts, so this
+ *   file no longer leaves it on globalThis for whatever runs next.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
-import { afterEach, beforeAll, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
 import * as ui from './index.js';
 import OverlayFixture from './ui-contract-overlay.test.svelte';
 
@@ -116,8 +124,15 @@ test('every context read on the ./ui surface is optional, not required', () => {
     (m) => m[1]
   );
   expect(dirs.length).toBe(namespaces.length);
+  // Per-directory, not a total. A floor on the total passes even when one
+  // namespace contributes zero files, which is what happens the moment a path
+  // move stops the directory prefix from matching the glob keys — the rule
+  // below then silently stops covering that namespace. Name the dir that broke.
+  for (const dir of dirs) {
+    const matched = Object.keys(SOURCES).filter((k) => k.startsWith(dir + '/'));
+    expect(matched.length, `no sources found under ${dir} — the glob no longer reaches it`).toBeGreaterThan(0);
+  }
   const files = [...rels, ...Object.keys(SOURCES).filter((k) => dirs.some((d) => k.startsWith(d + '/')))];
-  expect(files.length).toBeGreaterThan(rels.length + namespaces.length);
 
   const required: string[] = [];
   for (const rel of files) {
@@ -131,6 +146,34 @@ test('every context read on the ./ui surface is optional, not required', () => {
     }
   }
   expect(required).toEqual([]);
+});
+
+/**
+ * The shorthand state variants (`data-open:`, `data-checked:`, `data-vertical:`
+ * …) exist only because src/lib/styles.css declares them with
+ * `@custom-variant`. A consumer imports `@ripple-ui/svelte/theme.css` and never
+ * loads that file, so in the consumer's Tailwind build the shorthand compiles
+ * to `[data-open]` — an attribute bits-ui never emits — and the rule is
+ * silently dead. Overlay enter/exit animations disappeared in paw-enterprise
+ * exactly this way, with no error anywhere. Library sources spell the state out.
+ */
+// Wider than SOURCES on purpose: `./editor` ships .svelte files too, and every
+// packaged component has to carry its own variant meaning, not just the ./ui ones.
+const ALL_SVELTE = import.meta.glob('../**/*.svelte', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+test('no library source relies on the shorthand state variants from styles.css', () => {
+  const shorthand =
+    /\bdata-(open|closed|checked|unchecked|active|inactive|vertical|horizontal):/g;
+  expect(Object.keys(ALL_SVELTE).length).toBeGreaterThan(Object.keys(SOURCES).length);
+  const offenders: string[] = [];
+  for (const [rel, src] of Object.entries(ALL_SVELTE)) {
+    for (const m of src.matchAll(shorthand)) offenders.push(`${rel} ${m[0]}`);
+  }
+  expect(offenders).toEqual([]);
 });
 
 test('the ./ui surface is not empty and every name is a component, namespace or store', () => {
@@ -168,17 +211,6 @@ test.each(names)('%s mounts standalone, with no renderer context', (name) => {
 /* ── a11y: the overlay canonical ──────────────────────────────────────────
    bits-ui portals content to <body>, so query the document, not `container`. */
 
-beforeAll(() => {
-  // jsdom has no ResizeObserver; bits-ui's floating content constructs one.
-  if (typeof globalThis.ResizeObserver === 'undefined') {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
-});
-
 test('Dialog.Content inside an open Dialog.Root is a modal dialog', () => {
   render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg' } });
   const dialog = screen.getByRole('dialog');
@@ -197,8 +229,9 @@ test.each([
 });
 
 test('a caller width on Dialog.Content replaces the default instead of stacking on it', () => {
-  // ripple's cn is clsx without twMerge, so if both classes land the base
-  // sm:max-w-sm wins by source order and the caller's width is ignored.
+  // `cn` runs twMerge, so the caller's sm:max-w-[400px] should REPLACE the
+  // base sm:max-w-sm rather than stack with it. If both land, the winner is
+  // decided by Tailwind's emitted stylesheet order, not by the caller.
   render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg-w', contentClass: 'sm:max-w-[400px]' } });
   const cls = screen.getByRole('dialog').className;
   expect(cls).toContain('sm:max-w-[400px]');
