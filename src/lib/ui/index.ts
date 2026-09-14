@@ -88,3 +88,4 @@ export { default as StreamText } from '../widgets/ai/StreamText.svelte';
 export { default as ToolCall } from '../widgets/ai/ToolCall.svelte';
 export { default as ReasoningTrace } from '../widgets/ai/ReasoningTrace.svelte';
 export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
+export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';

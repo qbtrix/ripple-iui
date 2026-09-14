@@ -67,6 +67,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // NOT in RENDERS_NOTHING_WHEN_EMPTY. A row here so the mount proves the row
   // markup, not just the wrapper.
   TaskRows: { rows: [{ key: 'verify', label: 'Verified vendor records', status: 'done' }] },
+  // PromptBar paints its composer with no props at all; the placeholder just
+  // makes the mounted output legible if this ever fails.
+  PromptBar: { placeholder: 'Ask anything' },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},
