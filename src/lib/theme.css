@@ -35,8 +35,12 @@
   /* Signature ease of the beautiful-ui skin (MIT — see NOTICE). Overridable
      per context like every other --ripple-* property. Components reach for it
      two ways: the `ease-ripple-out` utility, or var(--ripple-ease-out) inside a
-     scoped <style> block, which is where the per-component keyframes live. */
-  --ripple-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+     scoped <style> block, which is where the per-component keyframes live.
+     The value is the curve the source actually uses: cubic-bezier(0.23,1,0.32,1)
+     appears 83 times across its CSS and components, while the 0.22/0.36 variant
+     the arc brief quoted appears exactly once. Visually near-identical; this is
+     the one carrying the look. */
+  --ripple-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @theme inline {
