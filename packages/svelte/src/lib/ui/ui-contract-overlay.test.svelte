@@ -7,12 +7,16 @@
 <script lang="ts">
 	import { Dialog, Sheet, DropdownMenu } from './index.js';
 
-	let { kind, testid }: { kind: 'dialog' | 'sheet' | 'dropdown'; testid: string } = $props();
+	let {
+		kind,
+		testid,
+		contentClass,
+	}: { kind: 'dialog' | 'sheet' | 'dropdown'; testid: string; contentClass?: string } = $props();
 </script>
 
 {#if kind === 'dialog'}
 	<Dialog.Root open={true}>
-		<Dialog.Content data-testid={testid}>
+		<Dialog.Content data-testid={testid} class={contentClass}>
 			<Dialog.Title>Title</Dialog.Title>
 			<Dialog.Description>Body</Dialog.Description>
 		</Dialog.Content>

@@ -195,3 +195,12 @@ test.each([
   // A wrapper that drops {...restProps} loses the attribute here.
   expect(document.body.querySelector(`[data-testid="${testid}"]`), `${label} dropped data-testid`).not.toBeNull();
 });
+
+test('a caller width on Dialog.Content replaces the default instead of stacking on it', () => {
+  // ripple's cn is clsx without twMerge, so if both classes land the base
+  // sm:max-w-sm wins by source order and the caller's width is ignored.
+  render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg-w', contentClass: 'sm:max-w-[400px]' } });
+  const cls = screen.getByRole('dialog').className;
+  expect(cls).toContain('sm:max-w-[400px]');
+  expect(cls).not.toMatch(/max-w-sm\b/);
+});
