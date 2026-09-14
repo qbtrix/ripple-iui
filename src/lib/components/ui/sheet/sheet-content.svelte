@@ -12,9 +12,13 @@
      draws the edge (a border plus the ring doubled the leading edge line), and
      `bg-clip-padding` went with them — it only ever existed to stop a
      translucent fill bleeding under those borders.
-     2026-09-14 review: `will-change: transform` is scoped to the open/closed
-     states instead of riding on every mounted sheet, and `backdrop-filter`
-     drops its `!important` so a consumer can still override the blur.
+     2026-09-14 review: `will-change: transform` is gone. bits-ui keeps
+     `data-state` on the element for as long as it is mounted, so no state
+     selector could scope it to the 200ms slide — it pinned a compositing layer
+     for however long the sheet stayed open. The browser already promotes an
+     element while a CSS animation runs, so the hint bought nothing.
+     `backdrop-filter` also drops its `!important` so a consumer can still
+     override the blur.
      2026-09-14: state variants written out in full (`data-[state=open]:` …) instead of
      ripple's `data-open`-style shorthand. The shorthand resolves only where styles.css's
      @custom-variant declarations are loaded; a consumer importing theme.css alone got
@@ -86,13 +90,5 @@
 	   or low-end profile. */
 	:global([data-slot="sheet-content"]) {
 		backdrop-filter: blur(10px);
-	}
-
-	/* will-change only while the panel is actually animating. Applied
-	   unconditionally it pins a compositing layer for the whole lifetime of
-	   every mounted sheet, which is the opposite of the intent. */
-	:global([data-slot="sheet-content"][data-state="open"]),
-	:global([data-slot="sheet-content"][data-state="closed"]) {
-		will-change: transform;
 	}
 </style>
