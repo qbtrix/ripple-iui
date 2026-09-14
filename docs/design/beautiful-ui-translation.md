@@ -18,6 +18,15 @@ silently in a lane.
 
 ---
 
+## Two rules the lanes learned the hard way
+
+1. Inside a scoped `<style>` block reference `var(--ripple-*)`, **never**
+   `var(--color-ripple-*)`. The `--color-*` names exist only for Tailwind's
+   compiler; used directly in CSS they resolve to nothing and fail silently —
+   the same shape as the `data-open:` variant bug the foundation phase fixed.
+2. Text colour on a tint is not the same token as text on a solid fill; see the
+   `text-accent-ink` rows below.
+
 ## 1. Why translate instead of copying the token layer
 
 beautiful-ui's `text-ink-2` works because *its* `@theme inline` maps
@@ -60,7 +69,8 @@ Plus `--radius-ripple` (utility `rounded-ripple`) and, as of this slice,
 | `bg-inset`, `bg-field` | `bg-ripple-muted` | |
 | `bg-hover`, `bg-hover-2` | `hover:bg-ripple-accent/10` | |
 | `text-accent`, `bg-accent` | `text-ripple-accent`, `bg-ripple-accent` | |
-| `text-accent-ink` | `text-ripple-accent-foreground` | |
+| `text-accent-ink` on a SOLID accent fill | `text-ripple-accent-foreground` | |
+| `text-accent-ink` on a TINT (accent/10 wash) | `text-ripple-accent` | `--ripple-accent-foreground` resolves to `--primary-foreground`, near-white — it vanishes on a tint. Lane A hit this on Badge and Chip. |
 | `bg-accent-tint` | `bg-ripple-accent/10` | source tint is the colour at 14% alpha; ripple's Badge convention is `/10` — match Badge, not the source |
 | `text-green`, `bg-green-tint` | `text-ripple-success`, `bg-ripple-success/10` | exactly ripple Badge's existing `success` variant |
 | `text-orange`, `bg-orange-tint` | `text-ripple-warning`, `bg-ripple-warning/10` | exactly Badge's existing `warning` variant |
