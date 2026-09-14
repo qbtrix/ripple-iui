@@ -20,6 +20,14 @@
  *   `Dialog.Content`, `Sheet.Content` and `DropdownMenu.Content` (the check that
  *   catches a wrapper dropping `{...restProps}`). Focus trap and Escape are
  *   bits-ui's own behaviour and are deliberately not tested here.
+ *
+ *   Updated 2026-09-14 (review): three changes. The static context rule now
+ *   asserts coverage PER namespace directory rather than against a total file
+ *   count, so a namespace can no longer fall out of coverage silently when a
+ *   path move breaks its prefix. A new guard fails if any packaged source
+ *   reaches for the shorthand state variants that only resolve inside ripple's
+ *   own build. And the ResizeObserver shim moved to src/test-setup.ts, so this
+ *   file no longer leaves it on globalThis for whatever runs next.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -149,11 +157,20 @@ test('every context read on the ./ui surface is optional, not required', () => {
  * silently dead. Overlay enter/exit animations disappeared in paw-enterprise
  * exactly this way, with no error anywhere. Library sources spell the state out.
  */
+// Wider than SOURCES on purpose: `./editor` ships .svelte files too, and every
+// packaged component has to carry its own variant meaning, not just the ./ui ones.
+const ALL_SVELTE = import.meta.glob('../**/*.svelte', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
 test('no library source relies on the shorthand state variants from styles.css', () => {
   const shorthand =
     /\bdata-(open|closed|checked|unchecked|active|inactive|vertical|horizontal):/g;
+  expect(Object.keys(ALL_SVELTE).length).toBeGreaterThan(Object.keys(SOURCES).length);
   const offenders: string[] = [];
-  for (const [rel, src] of Object.entries(SOURCES)) {
+  for (const [rel, src] of Object.entries(ALL_SVELTE)) {
     for (const m of src.matchAll(shorthand)) offenders.push(`${rel} ${m[0]}`);
   }
   expect(offenders).toEqual([]);
