@@ -28,6 +28,15 @@
  *   2026-09-12 UI audit settled on. Ripple already had `molecules/` and
  *   `organisms/` and no atoms layer at all; this names the missing base without
  *   relocating the parts.
+ *
+ *   OVERLAYS (2026-09-14). The overlay kinds are exported as shadcn composable
+ *   NAMESPACES (`Dialog.Root`, `Dialog.Content`, …) from `components/ui/`, not
+ *   as spec-shaped widgets: paw-enterprise's ~130 call sites use exactly that
+ *   shape, so they migrate by import path alone. The three widget exports that
+ *   shared these names (`Tooltip`, `Popover`, `DropdownMenu` from
+ *   `widgets/overlay/`) came off this surface for that reason; they are still on
+ *   `./widgets`. `confirmDialog` is exported by name as well as inside its
+ *   namespace because 33 call sites import the store, not the component.
  */
 
 /* ── atoms ─────────────────────────────────────────────────────────────────
@@ -52,10 +61,21 @@ export { default as Tabs } from '../widgets/layout/Tabs.svelte';
 export { default as Collapsible } from '../widgets/layout/Collapsible.svelte';
 export { default as CodeBlock } from '../widgets/display/CodeBlock.svelte';
 export { default as Markdown } from '../widgets/display/Markdown.svelte';
-export { default as Tooltip } from '../widgets/overlay/Tooltip.svelte';
-export { default as Popover } from '../widgets/overlay/Popover.svelte';
-export { default as DropdownMenu } from '../widgets/overlay/DropdownMenu.svelte';
 export { default as Toast } from '../widgets/overlay/Toast.svelte';
+
+/* ── overlays ──────────────────────────────────────────────────────────────
+   The canonical overlay set, one namespace per kind (anchored / modal /
+   palette; Toast above is the transient kind). shadcn composable shape. */
+export * as Tooltip from '../components/ui/tooltip/index.js';
+export * as Popover from '../components/ui/popover/index.js';
+export * as HoverCard from '../components/ui/hover-card/index.js';
+export * as DropdownMenu from '../components/ui/dropdown-menu/index.js';
+export * as ContextMenu from '../components/ui/context-menu/index.js';
+export * as Dialog from '../components/ui/dialog/index.js';
+export * as Sheet from '../components/ui/sheet/index.js';
+export * as ConfirmDialog from '../components/ui/confirm-dialog/index.js';
+export * as Command from '../components/ui/command/index.js';
+export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
    Own behaviour and state. The AI-native four: the product's core surfaces. */
