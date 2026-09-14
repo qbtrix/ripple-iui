@@ -216,8 +216,9 @@ test.each([
 });
 
 test('a caller width on Dialog.Content replaces the default instead of stacking on it', () => {
-  // ripple's cn is clsx without twMerge, so if both classes land the base
-  // sm:max-w-sm wins by source order and the caller's width is ignored.
+  // `cn` runs twMerge, so the caller's sm:max-w-[400px] should REPLACE the
+  // base sm:max-w-sm rather than stack with it. If both land, the winner is
+  // decided by Tailwind's emitted stylesheet order, not by the caller.
   render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg-w', contentClass: 'sm:max-w-[400px]' } });
   const cls = screen.getByRole('dialog').className;
   expect(cls).toContain('sm:max-w-[400px]');
