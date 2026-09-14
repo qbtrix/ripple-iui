@@ -9,7 +9,12 @@
      matching ui/dialog) lets a caller with its own header X hide the built-in
      one; overlay-click and Escape still dismiss.
      2026-09-14 skin fix: the per-side border-* classes are gone; the ring alone
-     draws the edge (a border plus the ring doubled the leading edge line).
+     draws the edge (a border plus the ring doubled the leading edge line), and
+     `bg-clip-padding` went with them — it only ever existed to stop a
+     translucent fill bleeding under those borders.
+     2026-09-14 review: `will-change: transform` is scoped to the open/closed
+     states instead of riding on every mounted sheet, and `backdrop-filter`
+     drops its `!important` so a consumer can still override the blur.
      2026-09-14: state variants written out in full (`data-[state=open]:` …) instead of
      ripple's `data-open`-style shorthand. The shorthand resolves only where styles.css's
      @custom-variant declarations are loaded; a consumer importing theme.css alone got
@@ -51,7 +56,7 @@
 		data-slot="sheet-content"
 		data-side={side}
 		class={cn(
-			"bg-ripple-surface text-ripple-surface-foreground ring-1 ring-ripple-border fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[side=bottom]:data-[state=open]:slide-in-from-bottom-10 data-[side=left]:data-[state=open]:slide-in-from-left-10 data-[side=right]:data-[state=open]:slide-in-from-right-10 data-[side=top]:data-[state=open]:slide-in-from-top-10 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[side=bottom]:data-[state=closed]:slide-out-to-bottom-10 data-[side=left]:data-[state=closed]:slide-out-to-left-10 data-[side=right]:data-[state=closed]:slide-out-to-right-10 data-[side=top]:data-[state=closed]:slide-out-to-top-10",
+			"bg-ripple-surface text-ripple-surface-foreground ring-1 ring-ripple-border fixed z-50 flex flex-col gap-4 text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[side=bottom]:data-[state=open]:slide-in-from-bottom-10 data-[side=left]:data-[state=open]:slide-in-from-left-10 data-[side=right]:data-[state=open]:slide-in-from-right-10 data-[side=top]:data-[state=open]:slide-in-from-top-10 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[side=bottom]:data-[state=closed]:slide-out-to-bottom-10 data-[side=left]:data-[state=closed]:slide-out-to-left-10 data-[side=right]:data-[state=closed]:slide-out-to-right-10 data-[side=top]:data-[state=closed]:slide-out-to-top-10",
 			className
 		)}
 		{...restProps}
@@ -73,11 +78,21 @@
 <style>
 	/* Slide performance: a 24px backdrop-filter re-rasterizes every frame while
 	   the sheet slides in, which tanks FPS. 10px for the sheet specifically
-	   (dialogs that don't slide keep backdrop-blur-xl) and promote the transform.
-	   Single standard backdrop-filter, no -webkit pairing, so Lightning CSS
-	   won't drop it. */
+	   (dialogs that don't slide keep backdrop-blur-xl). Single standard
+	   backdrop-filter, no -webkit pairing, so Lightning CSS won't drop it.
+	   No !important: this rule is unlayered component CSS while Tailwind
+	   utilities sit in @layer utilities, so it already wins — and without the
+	   flag a consumer can still override the blur for a reduced-transparency
+	   or low-end profile. */
 	:global([data-slot="sheet-content"]) {
-		backdrop-filter: blur(10px) !important;
+		backdrop-filter: blur(10px);
+	}
+
+	/* will-change only while the panel is actually animating. Applied
+	   unconditionally it pins a compositing layer for the whole lifetime of
+	   every mounted sheet, which is the opposite of the intent. */
+	:global([data-slot="sheet-content"][data-state="open"]),
+	:global([data-slot="sheet-content"][data-state="closed"]) {
 		will-change: transform;
 	}
 </style>
