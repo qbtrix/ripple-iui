@@ -10,11 +10,22 @@
  *   nothing would notice. Two such defects shipped that way. A component that
  *   reads `getContext('ui-events' | 'ui-state' | 'ui-data')` unguarded throws
  *   here rather than in a consumer's page.
+ *
+ *   Updated 2026-09-14 (overlay canonical): the surface now carries nine overlay
+ *   NAMESPACES (`Dialog.Root` …) plus the named `confirmDialog` store, so the
+ *   contract has three shapes — component, namespace, store. Namespaces mount
+ *   their `Root` standalone; the static context rule scans every source under
+ *   the namespace's directory; and an a11y block proves `Dialog.Content` is a
+ *   real modal dialog and that `data-testid` reaches the DOM through
+ *   `Dialog.Content`, `Sheet.Content` and `DropdownMenu.Content` (the check that
+ *   catches a wrapper dropping `{...restProps}`). Focus trap and Escape are
+ *   bits-ui's own behaviour and are deliberately not tested here.
  */
-import { render, cleanup } from '@testing-library/svelte';
+import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, beforeAll, expect, test } from 'vitest';
 import * as ui from './index.js';
+import OverlayFixture from './ui-contract-overlay.test.svelte';
 
 afterEach(cleanup);
 
@@ -35,9 +46,6 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Collapsible: { title: 'More', children: kid('body') },
   CodeBlock: { code: 'const a = 1;', language: 'ts' },
   Markdown: { content: '# Title' },
-  Tooltip: { content: 'hint', children: kid('target') },
-  Popover: { children: kid('target') },
-  DropdownMenu: { items: [{ label: 'Open' }], children: kid('trigger') },
   // Toast is the container for the toast bus, not a single toast. With an
   // empty bus it correctly renders nothing, so it is exempt from the
   // renders-something assertion below — mounting without throwing is the
@@ -53,7 +61,17 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Skeleton: {},
 };
 
-const names = Object.keys(ui).sort();
+/** Exported by name but not mountable: the confirm-dialog store. */
+const STORES = new Set(['confirmDialog']);
+const names = Object.keys(ui).filter((n) => !STORES.has(n)).sort();
+/** shadcn composable namespaces: plain objects whose `Root` is the mount entry. */
+const namespaces = names.filter((n) => typeof (ui as Record<string, unknown>)[n] === 'object');
+const components = names.filter((n) => !namespaces.includes(n));
+/** A namespace's standalone entry: its `Root`, or the single component it wraps. */
+const entry = (ns: string): unknown => {
+  const mod = (ui as unknown as Record<string, Record<string, unknown>>)[ns];
+  return mod.Root ?? mod[ns];
+};
 
 /**
  * The real context rule, checked statically.
@@ -77,7 +95,7 @@ const names = Object.keys(ui).sort();
  */
 // Vite's raw glob, not node:fs — ripple's tsconfig carries no node types, and
 // the sources are already in the module graph.
-const SOURCES = import.meta.glob('../widgets/**/*.svelte', {
+const SOURCES = import.meta.glob(['../widgets/**/*.svelte', '../components/ui/**/*.svelte'], {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -92,12 +110,18 @@ test('every context read on the ./ui surface is optional, not required', () => {
   const index = Object.values(INDEX)[0];
   expect(index).toBeTypeOf('string');
   const rels = [...index.matchAll(/from '(\.\.\/[^']+\.svelte)'/g)].map((m) => m[1]);
-  expect(rels.length).toBe(names.length);
+  expect(rels.length).toBe(components.length);
+  // A namespace export names a directory; every .svelte under it is on the surface.
+  const dirs = [...index.matchAll(/export \* as \w+ from '(\.\.\/components\/ui\/[^']+)\/index\.js'/g)].map(
+    (m) => m[1]
+  );
+  expect(dirs.length).toBe(namespaces.length);
+  const files = [...rels, ...Object.keys(SOURCES).filter((k) => dirs.some((d) => k.startsWith(d + '/')))];
+  expect(files.length).toBeGreaterThan(rels.length + namespaces.length);
 
   const required: string[] = [];
-  for (const rel of rels) {
-    const key = rel.replace(/^\.\./, '..');
-    const src = SOURCES[key];
+  for (const rel of files) {
+    const src = SOURCES[rel];
     expect(src, `source not found for ${rel}`).toBeTypeOf('string');
     for (const m of src.matchAll(/getContext\s*(<[^>]*>)?\s*\(/g)) {
       const typeArg = m[1] ?? '';
@@ -109,16 +133,25 @@ test('every context read on the ./ui surface is optional, not required', () => {
   expect(required).toEqual([]);
 });
 
-test('the ./ui surface is not empty and every name is a component', () => {
+test('the ./ui surface is not empty and every name is a component, namespace or store', () => {
   expect(names.length).toBeGreaterThanOrEqual(25);
-  for (const n of names) expect(typeof (ui as never)[n]).toBe('function');
+  for (const n of components) expect(typeof (ui as never)[n]).toBe('function');
+  expect(namespaces.sort()).toEqual(
+    ['Command', 'ConfirmDialog', 'ContextMenu', 'Dialog', 'DropdownMenu', 'HoverCard', 'Popover', 'Sheet', 'Tooltip']
+  );
+  for (const n of namespaces) expect(typeof entry(n), `${n} has no Root`).toBe('function');
+  expect(typeof ui.confirmDialog).toBe('function');
 });
 
-/** Bus- or collection-driven containers legitimately render nothing when empty. */
-const RENDERS_NOTHING_WHEN_EMPTY = new Set(['Toast']);
+/**
+ * Bus- or collection-driven containers legitimately render nothing when empty,
+ * and so does every overlay Root: it is a context provider around a closed
+ * portal. `Command.Root` is the exception — it paints its own frame.
+ */
+const RENDERS_NOTHING_WHEN_EMPTY = new Set(['Toast', ...namespaces.filter((n) => n !== 'Command')]);
 
 test.each(names)('%s mounts standalone, with no renderer context', (name) => {
-  const Component = (ui as Record<string, unknown>)[name];
+  const Component = namespaces.includes(name) ? entry(name) : (ui as Record<string, unknown>)[name];
   // Throwing here means the component needs something only <Ripple spec>
   // supplies — renderer context, or a prop the registry always passes. Either
   // way it does not belong on this surface until that dependency is guarded.
@@ -130,4 +163,35 @@ test.each(names)('%s mounts standalone, with no renderer context', (name) => {
   if (!RENDERS_NOTHING_WHEN_EMPTY.has(name)) {
     expect(container.firstElementChild).not.toBeNull();
   }
+});
+
+/* ── a11y: the overlay canonical ──────────────────────────────────────────
+   bits-ui portals content to <body>, so query the document, not `container`. */
+
+beforeAll(() => {
+  // jsdom has no ResizeObserver; bits-ui's floating content constructs one.
+  if (typeof globalThis.ResizeObserver === 'undefined') {
+    globalThis.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+  }
+});
+
+test('Dialog.Content inside an open Dialog.Root is a modal dialog', () => {
+  render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg' } });
+  const dialog = screen.getByRole('dialog');
+  expect(dialog.getAttribute('aria-modal')).toBe('true');
+});
+
+test.each([
+  ['dialog', 'Dialog.Content'],
+  ['sheet', 'Sheet.Content'],
+  ['dropdown', 'DropdownMenu.Content'],
+] as const)('a custom data-testid passed to %s reaches the DOM', (kind, label) => {
+  const testid = `overlay-${kind}`;
+  render(OverlayFixture, { props: { kind, testid } });
+  // A wrapper that drops {...restProps} loses the attribute here.
+  expect(document.body.querySelector(`[data-testid="${testid}"]`), `${label} dropped data-testid`).not.toBeNull();
 });
