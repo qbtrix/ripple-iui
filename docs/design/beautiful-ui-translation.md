@@ -105,7 +105,7 @@ convention (raw `--ripple-*` property in `:root` for host override, aliased into
 `@theme inline` for the utility):
 
 ```css
-:root       { --ripple-ease-out: cubic-bezier(0.22, 1, 0.36, 1); }
+:root       { --ripple-ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
 @theme inline { --ease-ripple-out: var(--ripple-ease-out); }
 ```
 
@@ -119,7 +119,7 @@ Two ways to use it:
 | beautiful-ui | ripple |
 |---|---|
 | `--ease-out-strong` / inline `cubic-bezier(0.23,1,0.32,1)` | `var(--ripple-ease-out)` |
-| `cubic-bezier(0.22, 1, 0.36, 1)` (ApprovalCard `SLIDE`) | `var(--ripple-ease-out)` |
+| `cubic-bezier(0.23, 1, 0.32, 1)` (the 83-site curve) and `cubic-bezier(0.22, 1, 0.36, 1)` (ApprovalCard `SLIDE`, 1 site) | `var(--ripple-ease-out)` — token value is the 83-site curve |
 | `--ease-in-out-strong`, `--ease-link` | *not ported* — no pilot component uses them |
 
 **Two deviations from the brief, both deliberate:**
