@@ -133,6 +133,25 @@ test('every context read on the ./ui surface is optional, not required', () => {
   expect(required).toEqual([]);
 });
 
+/**
+ * The shorthand state variants (`data-open:`, `data-checked:`, `data-vertical:`
+ * …) exist only because src/lib/styles.css declares them with
+ * `@custom-variant`. A consumer imports `@ripple-ui/svelte/theme.css` and never
+ * loads that file, so in the consumer's Tailwind build the shorthand compiles
+ * to `[data-open]` — an attribute bits-ui never emits — and the rule is
+ * silently dead. Overlay enter/exit animations disappeared in paw-enterprise
+ * exactly this way, with no error anywhere. Library sources spell the state out.
+ */
+test('no library source relies on the shorthand state variants from styles.css', () => {
+  const shorthand =
+    /\bdata-(open|closed|checked|unchecked|active|inactive|vertical|horizontal):/g;
+  const offenders: string[] = [];
+  for (const [rel, src] of Object.entries(SOURCES)) {
+    for (const m of src.matchAll(shorthand)) offenders.push(`${rel} ${m[0]}`);
+  }
+  expect(offenders).toEqual([]);
+});
+
 test('the ./ui surface is not empty and every name is a component, namespace or store', () => {
   expect(names.length).toBeGreaterThanOrEqual(25);
   for (const n of components) expect(typeof (ui as never)[n]).toBe('function');

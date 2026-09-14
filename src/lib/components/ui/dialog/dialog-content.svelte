@@ -4,7 +4,11 @@
      bg-popover / ring-foreground/10 dropped.
      2026-09-14 skin fix: the default width `sm:max-w-sm` is applied only when the
      caller's `class` carries no `max-w-` of its own. ripple's `cn` is clsx without
-     twMerge, so stacking both left the caller's width losing by source order. -->
+     twMerge, so stacking both left the caller's width losing by source order.
+     2026-09-14: state variants written out in full (`data-[state=open]:` …) instead of
+     ripple's `data-open`-style shorthand. The shorthand resolves only where styles.css's
+     @custom-variant declarations are loaded; a consumer importing theme.css alone got
+     `[data-open]`, which bits-ui never emits — so these classes were silently dead. -->
 <script lang="ts">
 	import { Dialog as DialogPrimitive } from "bits-ui";
 	import DialogPortal from "./dialog-portal.svelte";
@@ -37,7 +41,7 @@
 		bind:ref
 		data-slot="dialog-content"
 		class={cn(
-			"bg-ripple-surface text-ripple-surface-foreground backdrop-blur-xl data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-ripple-border grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
+			"bg-ripple-surface text-ripple-surface-foreground backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 ring-ripple-border grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
 			defaultWidth,
 			className
 		)}
