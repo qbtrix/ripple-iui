@@ -65,6 +65,7 @@
     "./theme.css": "./dist/theme.css"
   },
   "files": [
+    "NOTICE",
     "dist",
     "!dist/**/*.test.*",
     "!dist/**/__fixtures__/**"
