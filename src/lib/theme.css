@@ -28,6 +28,11 @@
   --ripple-input: var(--background);
   --ripple-input-foreground: var(--foreground);
   --ripple-radius: var(--radius);
+  /* Signature ease of the beautiful-ui skin (MIT — see NOTICE). Overridable
+     per context like every other --ripple-* property. Components reach for it
+     two ways: the `ease-ripple-out` utility, or var(--ripple-ease-out) inside a
+     scoped <style> block, which is where the per-component keyframes live. */
+  --ripple-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
@@ -50,4 +55,5 @@
   --color-ripple-input: var(--ripple-input);
   --color-ripple-input-foreground: var(--ripple-input-foreground);
   --radius-ripple: var(--ripple-radius);
+  --ease-ripple-out: var(--ripple-ease-out);
 }
