@@ -10,7 +10,7 @@
 	 */
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Button } from "$lib/components/ui/button";
-	import { _handleConfirm, _handleCancel, _getDialogState } from "./confirm-dialog.svelte.ts";
+	import { _handleConfirm, _handleCancel, _getDialogState } from "./confirm-dialog.svelte.js";
 
 	const dialogState = _getDialogState();
 </script>
