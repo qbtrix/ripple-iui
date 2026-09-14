@@ -223,7 +223,11 @@
     return kind;
   });
 
-  const base = $derived(id ?? 'prompt-bar');
+  // $props.id() is per-instance: the literal fallback gave every PromptBar on a
+  // page the same menu and option ids, so aria-activedescendant resolved to the
+  // first instance's list. Same defect ToolCall and ReasoningTrace carried.
+  const uid = $props.id();
+  const base = $derived(id ?? uid);
   const menuId = $derived(`${base}-menu`);
   const optionId = (i: number) => `${base}-option-${i}`;
 

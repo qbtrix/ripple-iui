@@ -96,7 +96,11 @@
     ontoggle?.(row.key, next);
   }
 
-  const panelId = (key: string) => `${id ?? 'task-rows'}-${key}-panel`;
+  // $props.id() is per-instance: a literal fallback gave every TaskRows on a
+  // page the same panel ids, so each row's aria-controls pointed at the first
+  // instance's panel. Same defect ToolCall and ReasoningTrace carried.
+  const uid = $props.id();
+  const panelId = (key: string) => `${id ?? uid}-${key}-panel`;
 
   // Ring geometry, matched to the source: 24px box, 2px stroke, a 28% arc.
   const RING = 24;
