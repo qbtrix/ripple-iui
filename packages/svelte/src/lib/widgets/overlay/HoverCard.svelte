@@ -1,4 +1,11 @@
-<!-- src/lib/widgets/overlay/HoverCard.svelte -->
+<!--
+  src/lib/widgets/overlay/HoverCard.svelte
+  Updated 2026-09-12: the children branch gates on `children` alone, not
+  `hasChildren && children`, so a hand-written Svelte caller that passes
+  children renders them. Gating on `hasChildren` here would drop the
+  fallback branch below; NodeRenderer now only passes `children` when the
+  spec node actually has default kids, which makes the snippet truthful.
+-->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -43,7 +50,7 @@
   <HoverCard.Trigger>
     {#snippet child({ props: triggerProps })}
       <span {...triggerProps} {id} class={cn(className)} style={styleString}>
-        {#if hasChildren && children}
+        {#if children}
           {@render children()}
         {:else if isString(trigger)}
           {trigger}

@@ -5,6 +5,9 @@
   Used for monthly reports, audit findings, financial summaries, status
   reports, contract reviews. Includes print-friendly CSS and a "Print" action
   by default; hosts can override via `actions`.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -162,8 +165,8 @@
   <div class="rreport-divider"></div>
 
   <main class="rreport-body">
-    {#if hasChildren && children}
-      {@render children()}
+    {#if hasChildren || children}
+      {@render children?.()}
     {/if}
   </main>
 

@@ -4,6 +4,9 @@
   of section anchors, content slot, optional progress, sticky save bar with
   submit/cancel and a "dirty" / "saving" indicator. Used for onboarding,
   settings, application forms, RFP submissions, account profile, etc.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -156,8 +159,8 @@
     {/if}
 
     <div class="rform-content">
-      {#if hasChildren && children}
-        {@render children()}
+      {#if hasChildren || children}
+        {@render children?.()}
       {/if}
     </div>
   </div>

@@ -3,6 +3,9 @@
   Updated 2026-07-08: widened the `icon` union (+columns/check-square/file-text/clock/table)
   and their $derived mapping so the intent layouts render the real icon instead of hitting a
   type error and falling back to the inbox glyph.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -69,7 +72,7 @@
       <p class="text-sm text-muted-foreground max-w-sm">{description}</p>
     {/if}
   </div>
-  {#if hasChildren && children}
-    <div class="mt-1">{@render children()}</div>
+  {#if hasChildren || children}
+    <div class="mt-1">{@render children?.()}</div>
   {/if}
 </div>
