@@ -11,11 +11,26 @@
 // Updated: 2026-05-30 — RFC 12 motion, Task 1.10: also scan scripts/ for the
 //   build-tooling lint-gate test (check-no-toplevel-anim-imports.test.ts) so
 //   the workerd-SSR contract gate is asserted as part of `bun run test`.
+// Updated: 2026-09-14 — Alias `@ripple-ui/core` (and its subpaths) to
+//   packages/core/src. Bun's `file:../core` dependency lands a nested COPY of
+//   core in packages/svelte/node_modules that has no dist/ and shadows the root
+//   workspace symlink, so vite's resolver hard-failed with "Failed to resolve
+//   entry for package @ripple-ui/core" in 62 test files. Resolving straight to
+//   source removes the build-order dependency and the stale-copy hazard.
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
 
 const $lib = resolve(__dirname, 'src/lib');
+const core = resolve(__dirname, '../core/src');
+const alias = [
+  { find: '$lib', replacement: $lib },
+  // Mirror packages/core/package.json "exports" — `./motion` maps to engine.ts.
+  { find: /^@ripple-ui\/core$/, replacement: `${core}/index.ts` },
+  { find: /^@ripple-ui\/core\/headless$/, replacement: `${core}/headless/index.ts` },
+  { find: /^@ripple-ui\/core\/schema$/, replacement: `${core}/schema/index.ts` },
+  { find: /^@ripple-ui\/core\/motion$/, replacement: `${core}/motion/engine.ts` },
+];
 const sveltePlugin = () => svelte({ compilerOptions: { runes: true }, hot: false });
 
 export default defineConfig({
@@ -24,7 +39,7 @@ export default defineConfig({
       {
         plugins: [sveltePlugin()],
         resolve: {
-          alias: { $lib },
+          alias,
           // Browser build for the bulk of the suite (jsdom component tests +
           // shadcn fan-out via $lib/utils.js needs the browser condition).
           conditions: ['browser'],
@@ -41,7 +56,7 @@ export default defineConfig({
       {
         plugins: [sveltePlugin()],
         resolve: {
-          alias: { $lib },
+          alias,
           // Server build — svelte/server renders the component with $effect
           // compiled out, so SSR shows the resting/final frame and never
           // throws effect_orphan.
