@@ -160,13 +160,13 @@ have (`@media (prefers-reduced-motion: reduce) { … animation: none; }`) — se
 | # | source name | what it animates | ripple name | owner (lane) |
 |---|---|---|---|---|
 | 1 | `shimmer-text` | `background-position` 150% → -50%, drives a masked gradient across text | **already exists** as `ripple-reasoning-sweep` (ReasoningTrace) and `ripple-shimmer-sweep` (premium/Shimmer) | reuse — ReasoningTrace (B), Shimmer (A) |
-| 2 | `fade-up` | opacity 0→1 + `translateY(8px)`→0; the staggered list entry | `ripple-tool-fade-up`, `ripple-stream-fade-up`, `ripple-task-fade-up` | ToolCall + StreamText (B), TaskRows (C) |
+| 2 | `fade-up` | opacity 0→1 + `translateY(8px)`→0; the staggered list entry | `ripple-tool-fade-up`, `ripple-stream-fade-up`, `ripple-reasoning-fade-up`, `ripple-approval-fade-up`, `ripple-task-fade-up` | **all four AI widgets** (B) — ToolCall, StreamText, ReasoningTrace (`ThinkingState.tsx:213,251`), ApprovalGate (`ApprovalCard.tsx:278`) — and TaskRows (C) |
 | 3 | `records-pulse` | opacity .35/scale .8 ↔ opacity 1/scale 1, 1.1s infinite | — | **no owner this arc.** Only RecordsTable and AgentScreen use it, and neither is ported. Do not add. |
-| 4 | `fade-in` | opacity 0→1 | `ripple-tool-fade-in`, `ripple-stream-fade-in`, `ripple-task-fade-in` | ToolCall + StreamText (B), TaskRows (C) |
+| 4 | `fade-in` | opacity 0→1 | `ripple-tool-fade-in`, `ripple-stream-fade-in`, `ripple-reasoning-fade-in`, `ripple-task-fade-in` | ToolCall, StreamText, ReasoningTrace (`ThinkingState.tsx:180,291`) — all B — and TaskRows (C) |
 | 5 | `eq-bounce` | `scaleY` .35 ↔ 1 — the audio-equalizer bars | `ripple-prompt-eq-bounce` | PromptBar (C) — its only call site in the source |
 | 6 | `caret-blink` | opacity 1 ↔ 0, `step-end` — the streaming caret | **already exists** as `ripple-stream-blink` (StreamText.svelte) | reuse — StreamText (B). Do not add. |
-| 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-task-pop-in` | ToolCall + StreamText (B), TaskRows (C) |
-| 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` (C, TaskRows' ring). Do not add a 5th copy. |
+| 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-approval-pop-in`, `ripple-task-pop-in` | ToolCall, StreamText, ApprovalGate (`ApprovalCard.tsx:260`) — all B — and TaskRows (C) |
+| 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` — TaskRows' ring (C) and ReasoningTrace's small ring (`ThinkingState.tsx:231`, B). Do not add a 5th copy. |
 | 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | — | **no owner this arc.** Only `LoadingState.tsx` uses it and it is not ported. Do not add. |
 
 Net: **3 already exist** (reuse), **2 have no owner** (do not port), **4 to
@@ -236,15 +236,34 @@ the answer for a bound, mutable, spec-driven checklist. TaskRows is the
 read-only compact display and **must not grow a `value`/`onchange` bind
 surface** — the moment it does, it is a worse ChecklistLayout.
 
-**Where it lands.** `./ui` (`src/lib/ui/index.ts`) is a *re-export* surface, not
-a component directory — every name there points at a file under `widgets/`. So
-TaskRows is a new file under `widgets/` re-exported from `./ui`, with **no
-entry in the spec registry (`widgets/index.ts`) and no manifest entry file
-under `src/lib/manifest/entries/`**. The manifest is hand-authored per widget
-(adding one requires both a new entry file and an array entry), so skipping both
-is what keeps the arc's proof — **189 widgets, unchanged shapes** — true while
-lanes A/B/C add components. Same rule for PromptBar. Making either spec-drivable
-is a deliberate follow-up that bumps the count on purpose.
+**Where it lands** — checked against the repo's own guards, not assumed:
+
+The file goes under `src/lib/widgets/` and is re-exported from
+`src/lib/ui/index.ts`, with **no entry in the spec registry
+(`widgets/index.ts`) and no manifest entry file under
+`src/lib/manifest/entries/`**. Same rule for PromptBar.
+
+**It must not live in `src/lib/ui/` itself**, tempting as that looks — two
+assertions in `ui-contract.test.ts` would fail:
+
+- it counts imports matching `from '(\.\.\/[^']+\.svelte)'` and asserts that
+  count equals the number of component exports, so a sibling import
+  (`'./TaskRows.svelte'`) does not match and leaves the count one short;
+- it then looks each path up in a glob of `../widgets/**/*.svelte` and
+  `../components/ui/**/*.svelte`, so a file outside those two trees fails
+  `source not found for …`.
+
+Avoid `widgets/premium/` specifically — `premium.test.ts` globs `./*.svelte`
+in that directory and applies pack-specific rules.
+
+Nothing pulls the other way. `manifest.test.ts`'s only cross-check is
+manifest entry → registry type (the "no ghosts" test); there is **no** reverse
+assertion that every `widgets/**/*.svelte` has a registry or manifest entry, and
+`getWidgetTypes()` reads the registry rather than scanning the filesystem. So an
+unregistered component under `widgets/` passes every gate, which is what keeps
+the arc's proof — **189 widgets, unchanged shapes** — true while lanes A/B/C add
+components. Making either component spec-drivable later is a deliberate
+follow-up that bumps the count on purpose.
 
 ---
 
@@ -274,6 +293,12 @@ Tone mapping for lane A — `tone` becomes `variant`, no new prop:
 | `red` | `destructive` |
 | `accent` | `default` |
 | `neutral` | `secondary` |
+
+One consequence to go in with eyes open: `default` and `secondary` are
+**solid-fill** variants today, while StatusPill's `accent` and `neutral` are
+tints like the rest. Re-skinning Badge therefore changes how every existing
+spec's default Badge looks. That is the intended effect of a re-skin, not a
+mismatch to paper over by adding two more variants.
 
 **The dot is dropped.** Badge's props are recorded verbatim in
 `static/manifest.json`, so an additive `dot` prop is a manifest shape change,

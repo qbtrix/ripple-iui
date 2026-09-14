@@ -52,7 +52,12 @@ SOFTWARE.
 Other MIT upstreams already incorporated
 -------------------------------------------------------------------------------
 
-Each is MIT licensed; the per-file `@provenance` headers carry the detail.
+Each is MIT licensed. The per-file `@provenance` headers name the upstream
+project for each port, but they record the project rather than a copyright
+holder, and the copyright lines below have not been verified against the
+upstream LICENSE files. Reproducing them here in full is a follow-up; treat
+this section as an index of what is incorporated, not as completed attribution
+for these four.
 
   Fluid Functionalism  — https://github.com/mickadesign/fluid-functionalism
     The 8-step surface/elevation ladder (`src/lib/systems/elevation.css`), the
