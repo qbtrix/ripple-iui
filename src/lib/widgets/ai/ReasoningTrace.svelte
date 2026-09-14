@@ -72,7 +72,10 @@
         : `Reasoned for ${count} step${count === 1 ? '' : 's'}`
   );
 
-  const bodyId = $derived(`${id ?? 'reasoning-trace'}-body`);
+  // Per-instance fallback so two unidentified traces on one page don't share a
+  // DOM id and point both aria-controls at the first body.
+  const uid = $props.id();
+  const bodyId = $derived(`${id ?? uid}-body`);
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

@@ -140,7 +140,11 @@
     return `${(durationMs / 1000).toFixed(durationMs < 10000 ? 1 : 0)}s`;
   });
 
-  const bodyId = $derived(`${id ?? 'tool-call'}-body`);
+  // Per-instance fallback: ApprovalGate renders a LIST of ToolCalls and passes
+  // no `id`, so a literal fallback gave every body the same DOM id and pointed
+  // every aria-controls at the first one.
+  const uid = $props.id();
+  const bodyId = $derived(`${id ?? uid}-body`);
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
@@ -164,7 +168,12 @@
       aria-expanded={isOpen}
       aria-controls={bodyId}
       onclick={toggle}
-      class="group -mx-1 flex min-w-0 shrink items-center gap-2 rounded-md px-1 py-0.5 text-left transition-colors duration-100 hover:bg-ripple-accent/10"
+      class={cn(
+        'group -mx-1 flex min-w-0 shrink items-center gap-2 rounded-md px-1 py-0.5 text-left transition-colors duration-100 hover:bg-ripple-accent/10',
+        // With no chip there is nothing else competing for the row, so the
+        // disclosure keeps the full-width hit area it had before the re-skin.
+        !chipText && 'flex-1'
+      )}
     >
       <!-- The source's trick: the glyph gives way to a chevron on hover/open. -->
       <span class="relative flex size-4 shrink-0 items-center justify-center" aria-hidden="true">
@@ -196,13 +205,17 @@
       <span class="truncate font-mono text-[12.5px] font-medium">{name}</span>
     </button>
 
-    <div class="min-w-0 flex-1">
-      {#if chipText}
+    {#if chipText}
+      <div class="min-w-0 flex-1">
         <HoverCard.Root openDelay={120} closeDelay={80}>
+          <!-- tabindex: the trigger renders an <a> with no href, which bits-ui
+               stamps role="button" + aria-expanded and wires onfocus/onblur to.
+               Without a tab stop that role is unreachable from the keyboard. -->
           <HoverCard.Trigger
-            class="inline-flex h-[22px] max-w-full items-center truncate rounded-md bg-ripple-muted px-1.5 font-mono text-[11.5px] text-ripple-muted-foreground transition-colors duration-100 hover:bg-ripple-accent/10 hover:text-ripple-surface-foreground"
+            tabindex={0}
+            class="inline-flex h-[22px] max-w-full cursor-default items-center rounded-md bg-ripple-muted px-1.5 font-mono text-[11.5px] text-ripple-muted-foreground transition-colors duration-100 hover:bg-ripple-accent/10 hover:text-ripple-surface-foreground focus-visible:ring-1 focus-visible:ring-ripple-ring focus-visible:outline-none"
           >
-            {chipText}
+            <span class="min-w-0 truncate">{chipText}</span>
           </HoverCard.Trigger>
           <HoverCard.Content align="start" class="w-72 overflow-hidden p-0">
             <div
@@ -214,8 +227,8 @@
               class="max-h-56 overflow-auto px-2.5 py-1.5 font-mono text-[11px] leading-[1.6] whitespace-pre-wrap">{argsText}</pre>
           </HoverCard.Content>
         </HoverCard.Root>
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     {#if duration}
       <span
