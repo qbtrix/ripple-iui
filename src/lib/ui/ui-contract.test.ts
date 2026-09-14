@@ -23,7 +23,7 @@
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
-import { afterEach, beforeAll, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
 import * as ui from './index.js';
 import OverlayFixture from './ui-contract-overlay.test.svelte';
 
@@ -116,8 +116,15 @@ test('every context read on the ./ui surface is optional, not required', () => {
     (m) => m[1]
   );
   expect(dirs.length).toBe(namespaces.length);
+  // Per-directory, not a total. A floor on the total passes even when one
+  // namespace contributes zero files, which is what happens the moment a path
+  // move stops the directory prefix from matching the glob keys — the rule
+  // below then silently stops covering that namespace. Name the dir that broke.
+  for (const dir of dirs) {
+    const matched = Object.keys(SOURCES).filter((k) => k.startsWith(dir + '/'));
+    expect(matched.length, `no sources found under ${dir} — the glob no longer reaches it`).toBeGreaterThan(0);
+  }
   const files = [...rels, ...Object.keys(SOURCES).filter((k) => dirs.some((d) => k.startsWith(d + '/')))];
-  expect(files.length).toBeGreaterThan(rels.length + namespaces.length);
 
   const required: string[] = [];
   for (const rel of files) {
@@ -186,17 +193,6 @@ test.each(names)('%s mounts standalone, with no renderer context', (name) => {
 
 /* ── a11y: the overlay canonical ──────────────────────────────────────────
    bits-ui portals content to <body>, so query the document, not `container`. */
-
-beforeAll(() => {
-  // jsdom has no ResizeObserver; bits-ui's floating content constructs one.
-  if (typeof globalThis.ResizeObserver === 'undefined') {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
-});
 
 test('Dialog.Content inside an open Dialog.Root is a modal dialog', () => {
   render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg' } });
