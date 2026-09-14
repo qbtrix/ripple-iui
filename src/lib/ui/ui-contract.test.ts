@@ -81,6 +81,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Textarea: { value: '' },
   Separator: {},
   Skeleton: {},
+  // Shimmer paints a sweeping gradient through its children's glyphs; with no
+  // child it still renders its own span, so it is not exempt below.
+  Shimmer: { children: kid('shimmering') },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */

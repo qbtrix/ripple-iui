@@ -55,6 +55,7 @@ export { default as Chip } from '../widgets/display/Chip.svelte';
 export { default as Badge } from '../widgets/display/Badge.svelte';
 export { default as StatusDot } from '../widgets/display/StatusDot.svelte';
 export { default as Skeleton } from '../widgets/display/Skeleton.svelte';
+export { default as Shimmer } from '../widgets/premium/Shimmer.svelte';
 export { default as Separator } from '../widgets/layout/Separator.svelte';
 
 /* ── molecules ─────────────────────────────────────────────────────────────
