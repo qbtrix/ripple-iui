@@ -1,6 +1,6 @@
 /**
  * @file event-dispatcher.ts
- * @description Runs event handlers against a StateManager, emits host events,
+ * @description Runs event handlers against a StateStore, emits host events,
  * and chains multi-step flows (flow / branch / confirm / validate / delay /
  * invoke) plus async continuations on `api` actions.
  * @changes
@@ -30,13 +30,16 @@
  *   - FlowAbortError for `validate` failures + flow-level error recovery
  *   - Enforces max nested flow depth to stop run-away recursion
  *   - Wires the new per-instance WidgetRegistry through the constructor
+ *   - 2026-08-25: takes a `StateStore` instead of the concrete rune-based
+ *     `StateManager`, so the dispatcher runs unchanged on the headless
+ *     runtime. Type-only widening, no behaviour change.
  */
 
 import type {
 	EventHandler,
 	EventHandlerOrArray
 } from '../schema/event-handler.js';
-import type { StateManager } from './state-manager.svelte.js';
+import type { StateStore } from './state-store.js';
 import {
 	resolveString,
 	resolveValue,
@@ -112,7 +115,7 @@ export class EventDispatcher {
 	private confirmRegistry = new Map<string, ConfirmResolver>();
 
 	constructor(
-		private stateManager: StateManager,
+		private stateManager: StateStore,
 		private onEvent?: OnEventCallback,
 		private widgetRegistry?: WidgetRegistry,
 		/**
@@ -903,7 +906,7 @@ export class EventDispatcher {
 }
 
 export function createEventDispatcher(
-	stateManager: StateManager,
+	stateManager: StateStore,
 	onEvent?: OnEventCallback,
 	widgetRegistry?: WidgetRegistry,
 	getAnimateRoot?: () => HTMLElement | null | undefined
