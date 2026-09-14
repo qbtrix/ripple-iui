@@ -28,6 +28,13 @@
  *   reaches for the shorthand state variants that only resolve inside ripple's
  *   own build. And the ResizeObserver shim moved to src/test-setup.ts, so this
  *   file no longer leaves it on globalThis for whatever runs next.
+ *
+ *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two PROPS entries added,
+ *   for the new `TaskRows` and `PromptBar` exports. The re-skin lanes keep this
+ *   map UNCHANGED — that is the arc's proof that a re-skin did not move a prop.
+ *   Lane C is the exception because it adds exports rather than re-skinning
+ *   one, so the map has to grow with the surface. Neither is in
+ *   RENDERS_NOTHING_WHEN_EMPTY: both paint their own frame with no props.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';

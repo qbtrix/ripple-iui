@@ -37,6 +37,13 @@
  *   `widgets/overlay/`) came off this surface for that reason; they are still on
  *   `./widgets`. `confirmDialog` is exported by name as well as inside its
  *   namespace because 33 call sites import the store, not the component.
+ *
+ *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
+ *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
+ *   on this surface — no spec-registry entry and no manifest entry, so the
+ *   manifest still reports 189 widgets and the arc's proof holds. Everything
+ *   else listed here is also a registered widget. Registering either of the two
+ *   is a deliberate follow-up that moves the count on purpose.
  */
 
 /* ── atoms ─────────────────────────────────────────────────────────────────
