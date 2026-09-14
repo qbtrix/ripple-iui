@@ -17,10 +17,11 @@
      follows a host's retheme. Scoped CSS reads the :root --ripple-* property,
      not the --color-ripple-* @theme alias, which only exists for Tailwind's
      utility compiler.
-  2. It sets `color: transparent` so background-clip:text actually shows.
+  2. It makes the glyphs transparent so background-clip:text actually shows.
      This fixes a latent no-op: the previous version clipped a background to
      the glyphs while leaving the text opaque, so the sweep was painted
-     BEHIND fully-opaque letters and never visible.
+     BEHIND fully-opaque letters and never visible. It uses
+     -webkit-text-fill-color rather than `color` on purpose — see the rule.
 
   `width` keeps its documented meaning — the highlight band's half-width, now
   expressed as the gradient's ramp offset either side of centre rather than a
@@ -66,7 +67,15 @@
     background-size: 200% 100%;
     background-clip: text;
     -webkit-background-clip: text;
-    color: transparent;
+    /* -webkit-text-fill-color, NOT color. This span's child is always another
+       widget, and the canonical one — display/Text.svelte — always sets its own
+       text-foreground / text-muted-foreground class, which would repaint opaque
+       glyphs straight over the clipped gradient and re-hide the sweep one layer
+       down. text-fill-color is inherited AND wins over a descendant's `color`,
+       so the whole subtree stays transparent. It also fails gracefully: a
+       browser without it renders normal opaque text rather than invisible
+       text, which `color: transparent` would not. */
+    -webkit-text-fill-color: transparent;
     animation: ripple-shimmer-sweep var(--shimmer-duration, 2s) linear infinite;
   }
   @keyframes ripple-shimmer-sweep {
@@ -79,7 +88,7 @@
     .ripple-shimmer {
       animation: none;
       background-image: none;
-      color: inherit;
+      -webkit-text-fill-color: currentcolor;
     }
   }
 </style>
