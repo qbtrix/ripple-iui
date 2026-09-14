@@ -37,6 +37,13 @@
  *   `widgets/overlay/`) came off this surface for that reason; they are still on
  *   `./widgets`. `confirmDialog` is exported by name as well as inside its
  *   namespace because 33 call sites import the store, not the component.
+ *
+ *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
+ *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
+ *   on this surface — no spec-registry entry and no manifest entry, so the
+ *   manifest still reports 189 widgets and the arc's proof holds. Everything
+ *   else listed here is also a registered widget. Registering either of the two
+ *   is a deliberate follow-up that moves the count on purpose.
  */
 
 /* ── atoms ─────────────────────────────────────────────────────────────────
@@ -78,8 +85,14 @@ export * as Command from '../components/ui/command/index.js';
 export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
-   Own behaviour and state. The AI-native four: the product's core surfaces. */
+   Own behaviour and state. The AI-native tier: the product's core surfaces.
+   TaskRows and PromptBar joined it in the beautiful-ui re-skin (2026-09-14) and
+   are deliberately absent from the spec registry and the manifest — they reach
+   callers through this surface only, which is why the manifest still reports
+   189 widgets. */
 export { default as ApprovalGate } from '../widgets/ai/ApprovalGate.svelte';
 export { default as StreamText } from '../widgets/ai/StreamText.svelte';
 export { default as ToolCall } from '../widgets/ai/ToolCall.svelte';
 export { default as ReasoningTrace } from '../widgets/ai/ReasoningTrace.svelte';
+export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
+export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
