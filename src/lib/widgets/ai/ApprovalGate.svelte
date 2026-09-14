@@ -23,6 +23,14 @@
     text (not color); the resolved stamp is announced via aria-live; the controls are
     keyboard-operable. The resolve transition honors prefers-reduced-motion.
   Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
+  Modified: 2026-09-14 — re-skinned on beautiful-ui. The card fades up on mount and
+    the resolved stamp pops in; the decision controls become the source's footer
+    pills (a filled accent Continue, a quiet outlined Deny, a ghost Edit); the
+    frame moves onto ripple surface/border tokens with a ring instead of a border,
+    and every "destructive" tone becomes ripple-error so red matches the
+    success/warning tones in a ripple-rethemed host. Props, events, the bind
+    contract and the a11y live region are untouched.
+  origin: slev12397/beautiful-ui@ff0f74d components/primitives/ApprovalCard.tsx
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -149,15 +157,15 @@
   const RISK: Record<Risk, { label: string; cls: string }> = {
     low: {
       label: 'Low risk',
-      cls: 'bg-ripple-success/10 text-ripple-success border-ripple-success/20',
+      cls: 'bg-ripple-success/10 text-ripple-success ring-ripple-success/20',
     },
     medium: {
       label: 'Medium risk',
-      cls: 'bg-ripple-warning/10 text-ripple-warning border-ripple-warning/20',
+      cls: 'bg-ripple-warning/10 text-ripple-warning ring-ripple-warning/20',
     },
     high: {
       label: 'High risk',
-      cls: 'bg-destructive/10 text-destructive border-destructive/20',
+      cls: 'bg-ripple-error/10 text-ripple-error ring-ripple-error/20',
     },
   };
   const riskMeta = $derived(RISK[risk] ?? RISK.medium);
@@ -165,11 +173,11 @@
   const DECISION_STAMP: Record<Exclude<Decision, 'pending'>, { label: string; cls: string }> = {
     approved: {
       label: 'Approved',
-      cls: 'bg-ripple-success/10 text-ripple-success border-ripple-success/20',
+      cls: 'bg-ripple-success/10 text-ripple-success ring-ripple-success/20',
     },
     denied: {
       label: 'Denied',
-      cls: 'bg-destructive/10 text-destructive border-destructive/20',
+      cls: 'bg-ripple-error/10 text-ripple-error ring-ripple-error/20',
     },
   };
   const stampMeta = $derived(
@@ -223,26 +231,26 @@
   data-decision={localDecision}
   data-resolved={resolved}
   class={cn(
-    'ripple-approval-gate rounded-lg border bg-card overflow-hidden text-sm',
-    risk === 'high' && localDecision === 'pending' ? 'border-destructive/40' : 'border-border',
+    'ripple-approval-gate ripple-approval-fade-up overflow-hidden rounded-ripple bg-ripple-surface text-sm ring-1',
+    risk === 'high' && localDecision === 'pending' ? 'ring-ripple-error/40' : 'ring-ripple-border',
     className
   )}
   style={styleString}
 >
   <!-- Header — title, summary, risk badge -->
-  <div class="flex items-start gap-3 px-4 py-3 border-b border-border">
-    <span class="mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true">
+  <div class="flex items-start gap-3 border-b border-ripple-border px-4 py-3">
+    <span class="mt-0.5 shrink-0 text-ripple-muted-foreground" aria-hidden="true">
       <ShieldIcon size={16} />
     </span>
     <div class="min-w-0 flex-1">
-      <div class="font-medium leading-snug">{title}</div>
+      <div class="text-[14px] font-medium leading-snug">{title}</div>
       {#if summary}
-        <div class="mt-0.5 text-[13px] text-muted-foreground leading-snug">{summary}</div>
+        <div class="mt-0.5 text-[12.5px] leading-snug text-ripple-muted-foreground">{summary}</div>
       {/if}
     </div>
     <span
       class={cn(
-        'shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1',
         riskMeta.cls
       )}
     >
@@ -286,11 +294,11 @@
   {/if}
 
   <!-- Decision controls / resolved stamp -->
-  <div class="flex items-center gap-2 px-4 py-3 border-t border-border bg-muted/20">
+  <div class="flex items-center gap-2 border-t border-ripple-border bg-ripple-muted/20 px-4 py-3">
     {#if resolved && stampMeta}
       <span
         class={cn(
-          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium',
+          'ripple-approval-pop-in inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium ring-1',
           stampMeta.cls
         )}
       >
@@ -299,7 +307,7 @@
         {:else}
           <XIcon size={13} aria-hidden="true" />
         {/if}
-        {stampMeta.label}{#if decidedBy}<span class="font-normal text-muted-foreground"> by {decidedBy}</span>{/if}
+        {stampMeta.label}{#if decidedBy}<span class="font-normal text-ripple-muted-foreground"> by {decidedBy}</span>{/if}
       </span>
     {:else}
       <button
@@ -307,9 +315,9 @@
         onclick={() => decide('approved')}
         disabled={disabled || resolved}
         class={cn(
-          'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium',
-          'bg-primary text-primary-foreground hover:bg-primary/90 transition-colors',
-          'disabled:opacity-50 disabled:pointer-events-none'
+          'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium',
+          'bg-ripple-accent text-ripple-accent-foreground transition-colors duration-150 hover:bg-ripple-accent/90',
+          'disabled:pointer-events-none disabled:opacity-50'
         )}
       >
         <CheckIcon size={14} aria-hidden="true" />
@@ -320,9 +328,9 @@
         onclick={() => decide('denied')}
         disabled={disabled || resolved}
         class={cn(
-          'inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[13px] font-medium',
-          'border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors',
-          'disabled:opacity-50 disabled:pointer-events-none'
+          'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium ring-1',
+          'text-ripple-error ring-ripple-error/40 transition-colors duration-150 hover:bg-ripple-error/10',
+          'disabled:pointer-events-none disabled:opacity-50'
         )}
       >
         <XIcon size={14} aria-hidden="true" />
@@ -334,9 +342,9 @@
           onclick={edit}
           disabled={disabled || resolved}
           class={cn(
-            'ml-auto inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium',
-            'text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
-            'disabled:opacity-50 disabled:pointer-events-none'
+            'ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium',
+            'text-ripple-muted-foreground transition-colors duration-150 hover:bg-ripple-accent/10 hover:text-ripple-surface-foreground',
+            'disabled:pointer-events-none disabled:opacity-50'
           )}
         >
           <PencilIcon size={14} aria-hidden="true" />
@@ -355,3 +363,38 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .ripple-approval-fade-up {
+    animation: ripple-approval-fade-up 380ms var(--ripple-ease-out) both;
+  }
+  .ripple-approval-pop-in {
+    animation: ripple-approval-pop-in 260ms var(--ripple-ease-out) both;
+  }
+  @keyframes ripple-approval-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes ripple-approval-pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-approval-fade-up,
+    .ripple-approval-pop-in {
+      animation: none;
+    }
+  }
+</style>
