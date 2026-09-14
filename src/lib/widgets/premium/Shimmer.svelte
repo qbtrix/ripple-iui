@@ -1,11 +1,32 @@
 <!--
   @file widgets/premium/Shimmer.svelte
-  @description A sweeping highlight gradient that travels across its children via
-    an animated background-position keyframe (Tier 0 — no JS engine, SSR-safe).
-    Useful for shimmering buttons, skeleton text, or "new" badges.
-  @provenance Adapted from svelte-animations (github.com/SikandarJODD/
-    svelte-animations, MIT — Svelte Magic UI port). Ripple-shaped; MIT preserved.
-  @created 2026-05-30 — RFC 12 premium pack.
+  @description A bright band sweeping through the text itself: the label is
+    painted by a clipped gradient that runs muted → foreground → muted, and the
+    gradient's position animates (Tier 0 — pure CSS, no JS engine, SSR-safe).
+    Signals "the agent is working" on a label, a CTA, or skeleton text.
+  @provenance Sweep concept adapted from svelte-animations (github.com/
+    SikandarJODD/svelte-animations, MIT — Svelte Magic UI port); re-skinned
+    2026-09-14 on slev12397/beautiful-ui@ff0f74d components/atoms/Shimmer.tsx
+    (MIT, Copyright (c) 2026 Shane Levine — see NOTICE). MIT preserved for both.
+
+  Updated 2026-09-14 (beautiful-ui re-skin, lane A). Two changes:
+
+  1. The band is now the source's ink ramp on ripple tokens
+     (--ripple-muted-foreground → --ripple-surface-foreground → back) instead
+     of a hardcoded rgba(255,255,255,.85), so it reads on a light theme and
+     follows a host's retheme. Scoped CSS reads the :root --ripple-* property,
+     not the --color-ripple-* @theme alias, which only exists for Tailwind's
+     utility compiler.
+  2. It sets `color: transparent` so background-clip:text actually shows.
+     This fixes a latent no-op: the previous version clipped a background to
+     the glyphs while leaving the text opaque, so the sweep was painted
+     BEHIND fully-opaque letters and never visible.
+
+  `width` keeps its documented meaning — the highlight band's half-width, now
+  expressed as the gradient's ramp offset either side of centre rather than a
+  no-repeat band, which is what makes a full-width clipped gradient possible.
+  Props (duration, width, children, hasChildren) are unchanged.
+
   Updated 2026-09-12: body gate is `hasChildren || children` with an optional
   `children?.()` call, so a hand-written Svelte caller that passes children but no
   `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
@@ -36,16 +57,29 @@
 
 <style>
   .ripple-shimmer {
-    --shimmer-color: rgba(255, 255, 255, 0.85);
-    background: linear-gradient(110deg, transparent 40%, var(--shimmer-color) 50%, transparent 60%) no-repeat;
-    background-size: var(--shimmer-width, 100px) 100%;
+    background-image: linear-gradient(
+      90deg,
+      var(--ripple-muted-foreground) calc(50% - var(--shimmer-width, 100px)),
+      var(--ripple-surface-foreground) 50%,
+      var(--ripple-muted-foreground) calc(50% + var(--shimmer-width, 100px))
+    );
+    background-size: 200% 100%;
     background-clip: text;
     -webkit-background-clip: text;
+    color: transparent;
     animation: ripple-shimmer-sweep var(--shimmer-duration, 2s) linear infinite;
   }
   @keyframes ripple-shimmer-sweep {
-    from { background-position: -150% 0; }
-    to { background-position: 250% 0; }
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
   }
-  @media (prefers-reduced-motion: reduce) { .ripple-shimmer { animation: none; } }
+  /* Reduced motion: no sweep, and the text goes back to painting itself —
+     a frozen gradient would leave half the label muted. */
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-shimmer {
+      animation: none;
+      background-image: none;
+      color: inherit;
+    }
+  }
 </style>
