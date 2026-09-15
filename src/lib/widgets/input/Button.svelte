@@ -1,39 +1,41 @@
 <!--
   Button.svelte — Ripple button widget.
-  Updated 2026-06-08 (Fluid Functionalism redesign): buttons now read as physical,
-  tactile objects — layered depth + a springy press driven by ripple's OWN motion
-  primitive. Same API: tv variants (default/primary/secondary/outline/ghost/link/
-  destructive) + sizes (sm/md/lg/icon) are unchanged.
+  origin: slev12397/beautiful-ui@ff0f74d components/atoms/Button.tsx
 
-  DEPTH (solid fills — default/primary/destructive): a 1px inset top-edge highlight
-  (inset 0 1px 0 rgba(255,255,255,.18) — the only allowed hardcoded color, a
-  white overlay, not a theme color), a soft outer drop shadow, and a faint vertical
-  gradient (slightly lighter top → token base) layered over the token bg so the
-  surface catches light like a real key. Crisp, not heavy. outline/secondary carry
-  a lighter version of the same edge + shadow.
+  Updated 2026-09-14 (beautiful-ui re-skin, lane A). The button is now a PILL —
+  the source's core button shape — instead of a rounded rectangle, with the
+  source's per-size rhythm: roomier symmetric side padding, and a gap that
+  steps with the size (sm 1 / md 1.5 / lg 2) rather than one gap for all. Type
+  was already on the source's 12px/13px/14px medium ladder, so it is unchanged.
+  Colour transitions now ride var(--ripple-ease-out), the skin's signature
+  curve. The dead Tailwind `transition-[…] ease-out` class came off the base:
+  the scoped .ripple-btn shorthand below overrides it, so it described nothing.
 
-  SPRING PRESS (the signature): on :active the button compresses to scale(0.965)
-  and settles with a SPRING bounce-back, not a linear ease. Both the compress and
-  the release reuse ripple's motion vocabulary — see the SPRING TIMING block in
-  the script: physics come from resolvePreset('snappy')/('bouncy') -> springToCssTiming
-  (the same overshoot cubic-bezier the whole motion pack uses), paired with the
-  FF_SPRING_TOKENS authored durations (80ms compress / 160ms release) so the press
-  is consistent with every other ripple spring AND fast enough to feel tactile.
-  Reduced motion: a scoped @media (prefers-reduced-motion: reduce) block drops the
-  transform + collapses the transition, honoring the same policy as the motion
-  runtime (reduce-motion.ts). No $state rune is used for the press — :active + CSS
-  carries it, so there's no vitest "$state is not a function" surface.
+  NOT taken from the source: its `filledShadow`
+  (inset 0 1px 0 rgba(255,255,255,0.14)) and the `shadow-btn` on secondary —
+  every box-shadow stack is dropped this arc, and the faint gradient face below
+  already does that job without one. Its variant palette is dropped too: it is
+  built on --ink/--canvas grounds the host owns. Variant and size NAMES, props,
+  events and defaults are all unchanged.
 
-  HOVER: a small lift — fill brightens slightly + the drop shadow grows a touch.
+  SPRING PRESS (kept, deliberately): on :active the button compresses to
+  scale(0.965) and settles with a spring bounce-back. The physics come from
+  resolvePreset('snappy')/('bouncy') -> springToCssTiming paired with
+  FF_SPRING_TOKENS durations (80ms compress / 160ms release), so the press
+  matches every other ripple spring. This is not decoration the skin may
+  replace — Button.test.ts asserts the injected press custom properties and
+  their 80ms/160ms values, and that test is the contract. The source's flat
+  `active:scale-[0.96] duration-150` would be a strictly worse press anyway.
+  Reduced motion: the scoped @media block drops the transform and collapses the
+  transition, matching reduce-motion.ts. No $state rune is used for the press —
+  :active + CSS carries it, so there is no vitest "$state is not a function"
+  surface.
 
-  GHOST (special): transparent by default with a subtle hover bg so it's clearly a
-  control, not naked text. In its ACTIVE / pressed / aria-pressed (selected) state
-  it "lights up" — label + leading/trailing icons render in the accent (primary)
-  color, still with NO fill. Driven by the data-active attribute below.
+  GHOST (special): transparent by default with a subtle hover bg so it reads as
+  a control, not naked text. When pressed/selected it "lights up" — label and
+  icons take the accent colour with no fill. Driven by data-active below.
 
-  Colors stay token-driven (bg-primary / bg-destructive / --primary etc.); the host
-  theme maps --primary to macOS system blue, so primary reads as Apple blue with no
-  hardcoded blue here.
+  Colors stay token-driven (bg-primary / bg-destructive / --primary etc.).
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -121,12 +123,14 @@
       // box-border makes height immutable: any per-spec padding/border lives
       // INSIDE the fixed size height, so every variant of a given size is the
       // SAME height (canonical) regardless of border/padding/consumer preflight.
-      'ripple-btn box-border relative isolate inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer',
-      'rounded-[var(--radius,0.625rem)] font-medium tracking-[-0.01em] leading-none',
-      // Color/shadow ride a tween; the TRANSFORM (press) rides the spring vars
-      // defined per-state in the scoped style block below. Split so the press keeps
-      // its spring feel while color/shadow stay calm.
-      'transition-[background-color,box-shadow,border-color,color] duration-150 ease-out',
+      'ripple-btn box-border relative isolate inline-flex items-center justify-center whitespace-nowrap select-none cursor-pointer',
+      // Pill — the source's core button shape.
+      'rounded-full font-medium tracking-[-0.01em] leading-none',
+      // Transitions are owned entirely by the scoped .ripple-btn block below:
+      // its shorthand overrides any Tailwind transition-* class set here, so a
+      // class here would only describe something that never applies. Colour
+      // rides a 150ms tween on the skin's ease; the TRANSFORM (press) rides the
+      // spring vars set per-state.
       // Theme-driven focus ring, offset so it reads on any surface.
       'outline-none focus-visible:ring-2 focus-visible:ring-ring/55 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
       // Disabled: quiet, flat, non-interactive — no lingering depth.
@@ -154,11 +158,13 @@
           'ripple-ghost bg-transparent text-foreground hover:bg-muted',
         link: 'bg-transparent text-primary underline-offset-4 hover:underline px-0 h-auto',
       },
+      // The source's pill rhythm: roomier sides than a rounded rectangle needs
+      // (round caps eat visual space), and a gap that steps with the size.
       size: {
-        sm: 'h-7 px-2.5 text-[12px]',
-        md: 'h-8 px-3.5 text-[13px]',
-        lg: 'h-10 px-5 text-sm',
-        icon: 'h-8 w-8 p-0',
+        sm: 'h-7 px-3 text-[12px] gap-1',
+        md: 'h-8 px-4 text-[13px] gap-1.5',
+        lg: 'h-10 px-5 text-sm gap-2',
+        icon: 'h-8 w-8 p-0 gap-0',
       },
     },
     defaultVariants: { variant: 'default', size: 'md' },
@@ -216,7 +222,7 @@
     <span data-slot="button-leading" class="inline-flex shrink-0">{@render leading()}</span>
   {/if}
 
-  {#if hasChildren && children}
+  {#if children}
     {@render children()}
   {:else if label}
     <span data-slot="button-label">{label}</span>
@@ -240,10 +246,10 @@
        if the custom prop is somehow absent. */
     transition:
       transform var(--ripple-press-release, 160ms cubic-bezier(0.34, 1.66, 0.4, 1)),
-      background-color 150ms ease-out,
-      box-shadow 150ms ease-out,
-      border-color 150ms ease-out,
-      color 150ms ease-out;
+      background-color 150ms var(--ripple-ease-out),
+      box-shadow 150ms var(--ripple-ease-out),
+      border-color 150ms var(--ripple-ease-out),
+      color 150ms var(--ripple-ease-out);
   }
 
   /* The signature press: compress + settle on a snappy spring. On pointer down
@@ -253,8 +259,8 @@
     transform: scale(0.965) translateZ(0);
     transition:
       transform var(--ripple-press-compress, 80ms cubic-bezier(0.34, 1.39, 0.4, 1)),
-      background-color 150ms ease-out,
-      box-shadow 150ms ease-out;
+      background-color 150ms var(--ripple-ease-out),
+      box-shadow 150ms var(--ripple-ease-out);
   }
   /* link is text, not a physical key — it shouldn't compress. */
   .ripple-btn[data-variant='link']:active {

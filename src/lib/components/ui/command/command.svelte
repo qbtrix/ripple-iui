@@ -1,0 +1,31 @@
+<!-- command.svelte — re-tokened 2026-09-14 (ripple overlay canonical): host-only
+     bg-popover / border swapped for bg-ripple-surface + ring-ripple-border +
+     backdrop-blur-md, the same glass-in-tokens surface as ripple Card. -->
+<script lang="ts">
+	import { cn } from "$lib/utils.js";
+	import { Command as CommandPrimitive } from "bits-ui";
+
+	export type CommandRootApi = CommandPrimitive.Root;
+
+	let {
+		api = $bindable(null),
+		ref = $bindable(null),
+		value = $bindable(""),
+		class: className,
+		...restProps
+	}: CommandPrimitive.RootProps & {
+		api?: CommandRootApi | null;
+	} = $props();
+</script>
+
+<CommandPrimitive.Root
+	bind:this={api}
+	bind:value
+	bind:ref
+	data-slot="command"
+	class={cn(
+		"bg-ripple-surface text-ripple-surface-foreground backdrop-blur-md flex h-full w-full flex-col overflow-hidden rounded-xl",
+		className
+	)}
+	{...restProps}
+/>

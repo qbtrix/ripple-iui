@@ -5,6 +5,10 @@
    shadcn token set. Defaults below cascade from the host's shadcn tokens
    so doing nothing keeps the existing look. */
 
+/* 2026-09-14 — added --ripple-ease-out (+ its --ease-ripple-out alias), the
+   signature easing of the beautiful-ui skin. See NOTICE and
+   docs/design/beautiful-ui-translation.md §3. */
+
 /* Fluid Functionalism 8-step surface/elevation ladder (MIT). */
 @import './systems/elevation.css';
 
@@ -28,6 +32,15 @@
   --ripple-input: var(--background);
   --ripple-input-foreground: var(--foreground);
   --ripple-radius: var(--radius);
+  /* Signature ease of the beautiful-ui skin (MIT — see NOTICE). Overridable
+     per context like every other --ripple-* property. Components reach for it
+     two ways: the `ease-ripple-out` utility, or var(--ripple-ease-out) inside a
+     scoped <style> block, which is where the per-component keyframes live.
+     The value is the curve the source actually uses: cubic-bezier(0.23,1,0.32,1)
+     appears 83 times across its CSS and components, while the 0.22/0.36 variant
+     the arc brief quoted appears exactly once. Visually near-identical; this is
+     the one carrying the look. */
+  --ripple-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @theme inline {
@@ -50,4 +63,5 @@
   --color-ripple-input: var(--ripple-input);
   --color-ripple-input-foreground: var(--ripple-input-foreground);
   --radius-ripple: var(--ripple-radius);
+  --ease-ripple-out: var(--ripple-ease-out);
 }

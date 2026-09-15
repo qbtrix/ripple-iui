@@ -8,7 +8,17 @@
    variants. bits-ui exposes `data-state="checked|unchecked|active|open|closed"`
    etc. — without these declarations, classes like `data-checked:bg-primary`
    silently match nothing because Tailwind's default `data-foo:` matches
-   `[data-foo]` (boolean), not `[data-state="foo"]`. */
+   `[data-foo]` (boolean), not `[data-state="foo"]`.
+
+   LIBRARY COMPONENTS MUST NOT USE THESE. They are for ripple's own app and
+   docs, which import this file. A consumer of the package imports
+   `@ripple-ui/svelte/theme.css` and never sees these declarations, so a
+   component written against `data-open:` compiles in the consumer's build to
+   `[data-open]` — an attribute bits-ui never emits — and the rule is silently
+   dead. That is exactly how the overlay enter/exit animations went missing in
+   paw-enterprise. Everything under src/lib/components and src/lib/widgets
+   spells the state out: `data-[state=open]:`, `data-[orientation=vertical]:`.
+   The contract test in src/lib/ui/ui-contract.test.ts enforces it. */
 @custom-variant data-checked (&[data-state="checked"]);
 @custom-variant data-unchecked (&[data-state="unchecked"]);
 @custom-variant data-active (&[data-state="active"]);

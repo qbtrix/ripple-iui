@@ -1,3 +1,8 @@
+<!-- accordion-content.svelte — shadcn-svelte primitive wrapper over bits-ui.
+     2026-09-14: state variants written out in full (`data-[state=open]:` …) instead of
+     ripple's `data-open`-style shorthand. The shorthand resolves only where styles.css's
+     @custom-variant declarations are loaded; a consumer importing theme.css alone got
+     `[data-open]`, which bits-ui never emits — so these classes were silently dead. -->
 <script lang="ts">
 	import { Accordion as AccordionPrimitive } from "bits-ui";
 	import { cn, type WithoutChild } from "$lib/utils.js";
@@ -13,7 +18,7 @@
 <AccordionPrimitive.Content
 	bind:ref
 	data-slot="accordion-content"
-	class="data-open:animate-accordion-down data-closed:animate-accordion-up text-sm overflow-hidden"
+	class="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up text-sm overflow-hidden"
 	{...restProps}
 >
 	<div

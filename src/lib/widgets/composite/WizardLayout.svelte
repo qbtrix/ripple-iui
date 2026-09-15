@@ -5,6 +5,9 @@
   is rendered by the children snippet (author uses `if` / `each` against
   `state.currentStep` to switch panels). On the final step the next button
   switches to `finishLabel` and runs `finishActions`.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
     import type { Snippet } from "svelte";
@@ -235,8 +238,8 @@
     {/if}
 
     <div class="rwizard-content">
-        {#if hasChildren && children}
-            {@render children()}
+        {#if hasChildren || children}
+            {@render children?.()}
         {/if}
     </div>
 

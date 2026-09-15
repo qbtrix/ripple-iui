@@ -6,6 +6,9 @@
   @provenance Adapted from aceternity.sveltekit.io (MIT — Svelte Aceternity
     port). Ripple-shaped; MIT preserved.
   @created 2026-05-30 — RFC 12 premium pack.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -41,7 +44,7 @@
     aria-hidden="true"
     class="ripple-aurora pointer-events-none absolute inset-0 -z-10"
   ></div>
-  {#if hasChildren && children}{@render children()}{/if}
+  {#if hasChildren || children}{@render children?.()}{/if}
 </div>
 
 <style>

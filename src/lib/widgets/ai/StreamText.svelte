@@ -15,6 +15,13 @@
     in-flight state. The caret is decorative (aria-hidden) and frozen under
     reduced motion.
   Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
+  Modified: 2026-09-14 — re-skinned on beautiful-ui. The caret becomes the source's
+    thin rounded bar (2px wide, 0.85em tall, full-radius) instead of a half-em
+    block, and fades in on appearance rather than popping. Body type moves to the
+    skin's 13px rhythm at the default size. The blink keyframe was ALREADY here
+    (ripple-stream-blink) and is reused, not duplicated. Props, events and the
+    typewriter timing are untouched.
+  origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -103,9 +110,12 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  // The skin's body rhythm is 13px. Only the default size moves — the source
+  // publishes exactly one text size, so sm/lg keep ripple's existing steps
+  // rather than inventing a ladder the source never had.
   const sizeClass: Record<string, string> = {
     sm: 'text-xs',
-    md: 'text-sm',
+    md: 'text-[13px]',
     lg: 'text-base',
   };
 </script>
@@ -132,15 +142,18 @@
 </div>
 
 <style>
+  /* The skin's caret: a thin full-radius bar riding the baseline, not a block. */
   .ripple-stream-caret {
     display: inline-block;
-    width: 0.5em;
-    height: 1.05em;
-    margin-left: 1px;
-    vertical-align: text-bottom;
+    width: 2px;
+    height: 0.85em;
+    margin-left: 2px;
+    border-radius: 999px;
+    transform: translateY(0.08em);
     background: currentColor;
-    opacity: 0.85;
-    animation: ripple-stream-blink 1s step-end infinite;
+    animation:
+      ripple-stream-fade-in 150ms var(--ripple-ease-out) both,
+      ripple-stream-blink 1s step-end infinite;
   }
   .ripple-stream-caret--static {
     animation: none;
@@ -148,6 +161,14 @@
   @media (prefers-reduced-motion: reduce) {
     .ripple-stream-caret {
       animation: none;
+    }
+  }
+  @keyframes ripple-stream-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
   @keyframes ripple-stream-blink {

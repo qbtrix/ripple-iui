@@ -39,9 +39,18 @@
       "svelte": "./dist/widgets/index.js",
       "default": "./dist/widgets/index.js"
     },
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "svelte": "./dist/ui/index.js",
+      "default": "./dist/ui/index.js"
+    },
     "./schema": {
       "types": "./dist/schema/index.d.ts",
       "default": "./dist/schema/index.js"
+    },
+    "./headless": {
+      "types": "./dist/headless/index.d.ts",
+      "default": "./dist/headless/index.js"
     },
     "./streaming": {
       "types": "./dist/streaming/index.d.ts",
@@ -56,6 +65,7 @@
     "./theme.css": "./dist/theme.css"
   },
   "files": [
+    "NOTICE",
     "dist",
     "!dist/**/*.test.*",
     "!dist/**/__fixtures__/**"

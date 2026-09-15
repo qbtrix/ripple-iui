@@ -5,6 +5,9 @@
   @provenance Adapted from svelte-animations (github.com/SikandarJODD/
     svelte-animations, MIT — Svelte Magic UI port). Ripple-shaped; MIT preserved.
   @created 2026-05-30 — RFC 12 premium pack.
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -33,7 +36,7 @@
 <div {id} class={cn('group flex overflow-hidden', vertical ? 'flex-col' : 'flex-row', className)} style={styleString} data-marquee data-reverse={reverse} data-pause-hover={pauseOnHover}>
   {#each [0, 1] as _}
     <div data-marquee-track class={cn('flex shrink-0 items-center justify-around gap-4', vertical ? 'flex-col' : 'flex-row', 'ripple-marquee-track', vertical ? 'ripple-marquee-v' : 'ripple-marquee-h', reverse && 'ripple-marquee-reverse')} aria-hidden={_ === 1 ? 'true' : undefined}>
-      {#if hasChildren && children}{@render children()}{/if}
+      {#if hasChildren || children}{@render children?.()}{/if}
     </div>
   {/each}
 </div>

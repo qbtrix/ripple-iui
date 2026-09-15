@@ -1,4 +1,31 @@
-<!-- src/lib/widgets/display/Chip.svelte -->
+<!--
+  src/lib/widgets/display/Chip.svelte
+  origin: slev12397/beautiful-ui@ff0f74d components/atoms/Chip.tsx
+
+  Updated 2026-09-14 (beautiful-ui re-skin, lane A): the chip takes the
+  source's geometry and its borderless tint — rounded-md (the source's 6px
+  chip radius, not the pill it was), tight px/py, 12px leading-none, and the
+  border dropped so the tint alone carries the tone. Colour follows the
+  translation doc: the neutral default is now bg-inset/text-ink-2 translated
+  to ripple-muted + ripple-muted-foreground, i.e. a quieter chip than the
+  full-strength foreground it had. Transitions ride var(--ripple-ease-out).
+  Deliberately NOT taken: the source chip is a monospace CODE token
+  ("for code values like `updated_at`") and is `display:inline` with an
+  optical align-[-1px]. Ripple already ships display/Code.svelte and Kbd for
+  that; this widget is registered as both `chip` and `tag`, and setting
+  font-mono would render every existing spec's tags as code. Geometry and
+  tint in, the code-token identity out.
+  Props, variant names, sizes, events unchanged.
+
+  Updated 2026-09-12: the children branch gates on `children` alone, not
+  `hasChildren && children`, so a hand-written Svelte caller that passes
+  children renders them. Gating on `hasChildren` here would drop the
+  fallback branch below; NodeRenderer now only passes `children` when the
+  spec node actually has default kids, which makes the snippet truthful.
+  Also 2026-09-12: success/warning/destructive now use the semantic
+  --ripple-success / --ripple-warning / --ripple-error tokens instead of
+  hardcoded emerald/amber/rose, so the chip follows a host's --paw-* remap.
+-->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -32,16 +59,21 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
+  // Borderless tints, per the source. The accent tint takes text-ripple-accent,
+  // NOT text-ripple-accent-foreground: the translation table's
+  // `text-accent-ink → text-ripple-accent-foreground` row is written for a
+  // FILLED accent, and --ripple-accent-foreground resolves to
+  // --primary-foreground, which on a 10% tint is white on near-white.
   const variantClass = $derived(
-    variant === 'primary' ? 'bg-primary/10 text-primary border-primary/20'
-    : variant === 'success' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
-    : variant === 'warning' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
-    : variant === 'destructive' ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
-    : 'bg-muted text-foreground border-border'
+    variant === 'primary' ? 'bg-ripple-accent/10 text-ripple-accent'
+    : variant === 'success' ? 'bg-ripple-success/10 text-ripple-success'
+    : variant === 'warning' ? 'bg-ripple-warning/10 text-ripple-warning'
+    : variant === 'destructive' ? 'bg-ripple-error/10 text-ripple-error'
+    : 'bg-ripple-muted text-ripple-muted-foreground'
   );
 
   const sizeClass = $derived(
-    size === 'sm' ? 'text-[11px] px-2 py-0.5 gap-1' : 'text-xs px-2.5 py-1 gap-1.5'
+    size === 'sm' ? 'text-[11px] px-1.5 py-0.5 gap-1' : 'text-[12px] px-2 py-0.5 gap-1.5'
   );
 
   const iconSize = $derived(size === 'sm' ? 10 : 12);
@@ -57,12 +89,12 @@
       onclick?.(e);
     }}
     class={cn(
-      'inline-flex items-center rounded-full border font-medium cursor-pointer transition-colors hover:brightness-95',
+      'inline-flex items-center rounded-md font-medium leading-none cursor-pointer transition-colors duration-150 ease-ripple-out hover:brightness-95',
       variantClass, sizeClass, className
     )}
     style={styleString}
   >
-    {#if hasChildren && children}
+    {#if children}
       {@render children()}
     {:else if label}
       {label}
@@ -84,10 +116,10 @@
 {:else}
   <span
     {id}
-    class={cn('inline-flex items-center rounded-full border font-medium', variantClass, sizeClass, className)}
+    class={cn('inline-flex items-center rounded-md font-medium leading-none', variantClass, sizeClass, className)}
     style={styleString}
   >
-    {#if hasChildren && children}
+    {#if children}
       {@render children()}
     {:else if label}
       {label}
