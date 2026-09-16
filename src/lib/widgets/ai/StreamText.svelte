@@ -21,7 +21,20 @@
     skin's 13px rhythm at the default size. The blink keyframe was ALREADY here
     (ripple-stream-blink) and is reused, not duplicated. Props, events and the
     typewriter timing are untouched.
+  Modified: 2026-09-16 — the BLUR TAIL. The first re-skin pass mapped this file to
+    primitives/StreamingText.tsx on function and never opened atoms/StreamText.tsx,
+    which carries the same component name, the same character-level reveal, and the
+    effect the source advertises as "words resolve out of blur": the newest few
+    characters sit behind filter: blur(1.6px) under a left-to-right mask ramp, so
+    the leading edge dissolves instead of snapping in. Ported here as CSS only —
+    the reveal splits into a head and a 6-character tail while busy. Fixed at 6
+    because the source's blurTail knob would be a new prop, and the arc's proof is
+    unchanged shapes. Two limits, both deliberate: the tail applies to the
+    plain-text branch only (the markdown branch hands its string to the Markdown
+    widget, which owns its own tree and cannot be sliced), and it is skipped
+    entirely under reduced motion, matching how the caret already freezes.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
+  origin: slev12397/beautiful-ui@ff0f74d components/atoms/StreamText.tsx (blur tail)
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -106,6 +119,19 @@
   // The caret rides at the end of the revealed text while busy.
   const showCaret = $derived(busy);
 
+  // How many trailing characters carry the soft blur edge. The source exposes
+  // this as a `blurTail` prop; here it is fixed, because a new prop is a
+  // manifest shape change and the skin's proof is that no shape moved.
+  const TAIL = 6;
+  // Split point for the reveal. Only while busy, only on the plain-text branch
+  // (Markdown renders its own tree and cannot be sliced), and never under
+  // reduced motion — the same condition that freezes the caret.
+  const tailStart = $derived(
+    busy && !markdown && !reduceMotion ? Math.max(0, shown.length - TAIL) : shown.length
+  );
+  const head = $derived(shown.slice(0, tailStart));
+  const tail = $derived(shown.slice(tailStart));
+
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
@@ -134,7 +160,10 @@
   {#if markdown}
     <span class="ripple-stream-text__body align-baseline"><Markdown content={shown} /></span>
   {:else}
-    <span class="ripple-stream-text__body whitespace-pre-wrap">{shown}</span>
+    <!-- One line on purpose: whitespace-pre-wrap would render any indentation
+         between the head and the tail as literal spaces in the stream. --><span
+      class="ripple-stream-text__body whitespace-pre-wrap"
+    >{head}{#if tail}<span class="ripple-stream-tail">{tail}</span>{/if}</span>
   {/if}{#if showCaret}<span
       class={cn('ripple-stream-caret', reduceMotion && 'ripple-stream-caret--static')}
       aria-hidden="true"
@@ -158,9 +187,24 @@
   .ripple-stream-caret--static {
     animation: none;
   }
+  /* The newest characters resolve out of a soft blur behind a left-to-right
+     mask ramp. Copied from the source's atoms block verbatim. */
+  .ripple-stream-tail {
+    filter: blur(1.6px);
+    -webkit-mask-image: linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2));
+    mask-image: linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2));
+  }
   @media (prefers-reduced-motion: reduce) {
     .ripple-stream-caret {
       animation: none;
+    }
+    /* Belt and braces: the tail span is not rendered at all once reduceMotion
+       resolves, but that only happens on mount, so the first paint is covered
+       here rather than flashing a blur. */
+    .ripple-stream-tail {
+      filter: none;
+      -webkit-mask-image: none;
+      mask-image: none;
     }
   }
   @keyframes ripple-stream-fade-in {
