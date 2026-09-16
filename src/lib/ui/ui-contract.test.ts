@@ -35,6 +35,11 @@
  *   Lane C is the exception because it adds exports rather than re-skinning
  *   one, so the map has to grow with the surface. Neither is in
  *   RENDERS_NOTHING_WHEN_EMPTY: both paint their own frame with no props.
+ *
+ *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): two more entries
+ *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
+ *   re-skins. No existing entry was edited, which is the thing this map is the
+ *   proof of.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -77,6 +82,10 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // PromptBar paints its composer with no props at all; the placeholder just
   // makes the mounted output legible if this ever fails.
   PromptBar: { placeholder: 'Ask anything' },
+  // AnswerBlock paints its body wrapper and action row with no props, but a
+  // body segment here means the mount proves the StreamText composition too —
+  // the part that would break if StreamText's shape ever moved under it.
+  AnswerBlock: { body: [{ text: 'Pistachio is the fastest-growing flavor.' }] },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},
