@@ -176,11 +176,45 @@ have (`@media (prefers-reduced-motion: reduce) { … animation: none; }`) — se
 | 5 | `eq-bounce` | `scaleY` .35 ↔ 1 — the audio-equalizer bars | `ripple-prompt-eq-bounce` | PromptBar (C) — its only call site in the source |
 | 6 | `caret-blink` | opacity 1 ↔ 0, `step-end` — the streaming caret | **already exists** as `ripple-stream-blink` (StreamText.svelte) | reuse — StreamText (B). Do not add. |
 | 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-approval-pop-in`, `ripple-task-pop-in` | ToolCall, StreamText, ApprovalGate (`ApprovalCard.tsx:260`) — all B — and TaskRows (C) |
-| 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` — TaskRows' ring (C) and ReasoningTrace's small ring (`ThinkingState.tsx:231`, B). Do not add a 5th copy. |
+| 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` — TaskRows' ring (C) and ReasoningTrace's small ring (`ThinkingState.tsx:231`, B). Do not add a 5th copy. **Pair it with a guard handle — see the footnote.** |
 | 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | — | **no owner this arc.** Only `LoadingState.tsx` uses it and it is not ported. Do not add. |
 
 Net: **3 already exist** (reuse), **2 have no owner** (do not port), **4 to
 paste** (`fade-up`, `fade-in`, `pop-in`, `eq-bounce`).
+
+**Footnote to row 8 — `animate-spin` needs a guard handle.** Tailwind's utility
+ships no `prefers-reduced-motion` rule, and `motion-reduce:` appears nowhere in
+this repo. Reaching for a fifth copy of the keyframe to get something
+targetable is the wrong fix: put a second, local class on the same element and
+target *that* from the component's `@media (prefers-reduced-motion: reduce)`
+block. `.animate-spin` is one bare class, so anything with two classes or a
+Svelte scope hash outranks it.
+
+```svelte
+<span class="ripple-thing-ring animate-spin"></span>
+<style>
+  /* .ripple-thing-ring carries no animation — it exists to be outranked with. */
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-thing-ring { animation: none; }
+  }
+</style>
+```
+
+Both shapes are proven in the repo: `ReasoningTrace.svelte` on a raw element,
+and `TaskRows.svelte` on both a raw `<svg>` and a lucide icon, where the handle
+needs `:global(.ripple-task-rows .ripple-task-retry)` because the class lands on
+a child component's root.
+
+**Footnote to rows 2, 4 and 7 — where ToolCall and StreamText actually landed.**
+The owner columns above were written ahead of the ports and the 2026-09-15
+coverage audit found five rows wrong. What exists now: ToolCall has
+`ripple-tool-fade-up` (300ms, staggered by an `--i` the caller sets) and
+`ripple-tool-pop-in` (250ms) as of the skin-gaps pass, and no `fade-in` — the
+source's owner for that is the "+N more" tail link, which ToolCall does not
+have. StreamText has `ripple-stream-fade-in` only; its blur tail is a static
+filter, not a keyframe. PromptBar has `ripple-prompt-pop-in`, which no row
+assigned to it — the source does use `pop-in` there, on the menu and the
+attachment chips.
 
 Durations and delays copy across as written — they are inline `animation`
 shorthand in the source and become the same shorthand in the scoped block, with

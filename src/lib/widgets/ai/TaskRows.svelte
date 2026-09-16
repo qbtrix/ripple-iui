@@ -31,6 +31,15 @@
     and aria-controls for its panel. Status is conveyed by a text pill and an
     icon, never by colour alone; the badge SVGs are aria-hidden and the status
     is read out in the pill or, for running/pending, the step number.
+  Modified: 2026-09-16 — dropped `ripple-task-spin`, which was a fifth copy of a
+    rotate keyframe this repo already had four of. Both spinners now use
+    Tailwind's animate-spin, per the translation table. The reason the copy was
+    added — that a scoped reduced-motion rule cannot reach a Tailwind utility —
+    does not hold: the utility is a single bare class, so any selector with two
+    classes or a Svelte scope hash outranks it. ReasoningTrace had already proved
+    this on an identical raw element. Both handles are kept for exactly that job
+    and carry no animation of their own. Cost: 1.1s and 1.2s become animate-spin's
+    1s, so the ring and the retry glyph now turn at the same speed.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -118,7 +127,7 @@
     <svg
       width={RING}
       height={RING}
-      class={cn('absolute inset-0', active && 'ripple-task-ring')}
+      class={cn('absolute inset-0', active && 'ripple-task-ring animate-spin')}
       aria-hidden="true"
     >
       <circle
@@ -216,7 +225,12 @@
             class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full bg-ripple-error/10 px-2 text-[11.5px] font-medium text-ripple-error"
           >
             {copy.failed}
-            <RotateCwIcon size={12} strokeWidth={3} class="ripple-task-retry" aria-hidden="true" />
+            <RotateCwIcon
+              size={12}
+              strokeWidth={3}
+              class="ripple-task-retry animate-spin"
+              aria-hidden="true"
+            />
           </span>
         {/if}
 
@@ -294,12 +308,11 @@
     opacity: 1;
   }
 
-  .ripple-task-ring {
-    animation: ripple-task-spin 1.1s linear infinite;
-  }
-  :global(.ripple-task-rows .ripple-task-retry) {
-    animation: ripple-task-spin 1.2s linear infinite;
-  }
+  /* Both spinners ride Tailwind's animate-spin. The classes below survive only
+     as guard handles: animate-spin ships no reduced-motion rule of its own, so
+     each needs a selector this component can outrank it with from the @media
+     block. .ripple-task-ring is scope-hashed and :global(.ripple-task-rows
+     .ripple-task-retry) is two classes deep — both beat a bare .animate-spin. */
 
   @keyframes ripple-task-fade-up {
     from {
@@ -329,12 +342,6 @@
       transform: scale(1);
     }
   }
-  @keyframes ripple-task-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   /* The panel's height change is a transition, not an animation, so the
      house `animation: none` block does not reach it — zero it explicitly. */
   @media (prefers-reduced-motion: reduce) {
