@@ -86,6 +86,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // body segment here means the mount proves the StreamText composition too —
   // the part that would break if StreamText's shape ever moved under it.
   AnswerBlock: { body: [{ text: 'Pistachio is the fastest-growing flavor.' }] },
+  // PixelLoader paints its grid, label and timer with no props; the label is
+  // here so the mounted output names itself if this ever fails.
+  PixelLoader: { label: 'Churning' },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},

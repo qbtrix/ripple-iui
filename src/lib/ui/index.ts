@@ -38,10 +38,13 @@
  *   `./widgets`. `confirmDialog` is exported by name as well as inside its
  *   namespace because 33 call sites import the store, not the component.
  *
- *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` joins
- *   them on the same terms — the whole answer surface StreamingText.tsx really
- *   is, which the arc had only ported the text run of. Same placement rule: no
- *   registry entry, no manifest entry, so the count still reads 189.
+ *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
+ *   `PixelLoader` join them on the same terms — the whole answer surface
+ *   StreamingText.tsx really is, which the arc had only ported the text run of,
+ *   and the pixel-grid loader that was never in the arc's scope. Same placement
+ *   rule: no registry entry, no manifest entry, so the count still reads 189.
+ *   PixelLoader does NOT replace `Loading` — that stays the library's generic
+ *   spinner, registered and spec-drivable; this is the agent-work status line.
  *
  *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
  *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
@@ -103,3 +106,4 @@ export { default as ReasoningTrace } from '../widgets/ai/ReasoningTrace.svelte';
 export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
 export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
 export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
+export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
