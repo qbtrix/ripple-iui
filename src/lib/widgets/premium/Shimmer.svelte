@@ -28,6 +28,18 @@
   no-repeat band, which is what makes a full-width clipped gradient possible.
   Props (duration, width, children, hasChildren) are unchanged.
 
+  LAYOUT TRAP — what kills the sweep, and what to do instead. The root is
+  `inline-flex`, so a flex or grid parent blockifies it and the default
+  `align-items: stretch` makes it as wide as the column. Measured: a 206px
+  string rendered 1198px wide. The bright band is positioned with
+  `calc(50% ± var(--shimmer-width))`, i.e. relative to the element, so at that
+  width it sweeps a region the glyphs never occupy and the label just sits
+  there looking static. Nothing is broken and nothing errors — it simply reads
+  dead. Fix it at the call site: pass `class="self-start"` (or `w-fit`), or set
+  `align-items` on the parent to something other than stretch. This is
+  inherited, not introduced — the source's own Shimmer is `inline-block` with
+  width-relative stops and stretches the same way.
+
   Updated 2026-09-12: body gate is `hasChildren || children` with an optional
   `children?.()` call, so a hand-written Svelte caller that passes children but no
   `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
