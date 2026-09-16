@@ -33,8 +33,21 @@
     plain-text branch only (the markdown branch hands its string to the Markdown
     widget, which owns its own tree and cannot be sliced), and it is skipped
     entirely under reduced motion, matching how the caret already freezes.
+  Modified: 2026-09-16 — the CADENCE. The typewriter released ONE character per
+    tick and varied the tick (`Math.max(8, 1000 / speed)`), which made the reveal
+    chunky at low speeds and capped it at 125 chars/sec however high `speed` went
+    — the 8ms floor. The source's atoms/StreamText.tsx does the opposite: a fixed
+    `tickMs = 9` cadence with `charsPerTick = 2`, i.e. the step varies and the
+    beat does not. Re-timed here to that shape. `speed` is untouched as a prop
+    and keeps its meaning (chars/sec); both halves are DERIVED from it —
+    `step = ceil(speed × 9 / 1000)`, `tick = max(9, 1000 × step / speed)` — so a
+    slow caller gets exactly the interval it got before (speed 100 → 1 char per
+    10ms, unchanged) and a fast one now reaches the rate it asked for instead of
+    the old ceiling (speed 222 → the source's 2 chars per 9ms; previously 125/s).
+    No new prop: a prop is a manifest shape change and the arc's proof is that no
+    shape moved.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
-  origin: slev12397/beautiful-ui@ff0f74d components/atoms/StreamText.tsx (blur tail)
+  origin: slev12397/beautiful-ui@ff0f74d components/atoms/StreamText.tsx (blur tail, cadence)
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -74,6 +87,10 @@
   // (the live-stream path — the prop itself is what grows).
   const typewriter = $derived(typeof speed === 'number' && speed > 0);
 
+  // The typewriter's cadence, from the source's `tickMs = 9`. Held fixed; the
+  // number of characters released per tick is what `speed` moves.
+  const TICK_MS = 9;
+
   let reduceMotion = $state(false);
   // How many chars of `text` the typewriter has revealed so far.
   let revealed = $state(0);
@@ -100,11 +117,17 @@
       revealed = len;
       return;
     }
+    // The source's shape: a FIXED cadence with a variable STEP, not one
+    // character per variable tick. `speed` keeps its meaning — chars/sec — and
+    // is the knob both halves are derived from, so no prop moves.
+    const rate = speed as number;
+    const step = Math.max(1, Math.ceil((rate * TICK_MS) / 1000));
+    const tick = Math.max(TICK_MS, (1000 * step) / rate);
     const interval = setInterval(() => {
-      pos += 1;
+      pos = Math.min(pos + step, len);
       revealed = pos;
       if (pos >= len) clearInterval(interval);
-    }, Math.max(8, 1000 / (speed as number)));
+    }, tick);
 
     return () => clearInterval(interval);
   });
