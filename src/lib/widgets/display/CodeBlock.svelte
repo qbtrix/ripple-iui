@@ -13,10 +13,13 @@
      The highlighter is the reason the manifest entry stopped lying: the widget
      has advertised "syntax-highlighted" since it was written and did none. It
      renders as spans built in the template, never as raw HTML, so a code string
-     cannot inject markup. One deviation from the source's version: a quoted
+     cannot inject markup. Two deviations from the source's version. A quoted
      string followed by a colon is coloured as a name rather than a string
-     value. Without it every key and value in a JSON block paints the same
-     orange, and JSON is what ToolCall passes in.
+     value, because without it every key and value in a JSON block paints the
+     same orange, and JSON is what ToolCall passes in. And a block with no
+     `language` is left uncoloured: ToolCall passes an empty language for a
+     plain-string result, and tokenizing prose paints `for`, `if` and `return`
+     as keywords and every number as a literal.
 
      What did not come across: the whole Diff variant (its rows, gutters, hatch
      fill and word-level add/del tints). It needs `diff`, `variant` and a row
@@ -61,7 +64,8 @@
 
   const source = $derived(code ?? text ?? '');
   // One trailing newline is an artifact of the fence, not an empty last line.
-  const lines = $derived(source.replace(/\n$/, '').split('\n'));
+  // An empty block gets no rows at all rather than a numbered blank one.
+  const lines = $derived(source ? source.replace(/\n$/, '').split('\n') : []);
 
   let copied = $state(false);
   let copyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -110,6 +114,11 @@
   }
 
   function highlight(line: string): { text: string; cls: string }[] {
+    // No language means the caller did not say this is code, and ToolCall passes
+    // exactly that for a plain-string result. Tokenizing prose paints `for`,
+    // `if`, `return` and every number as syntax, so an unlabelled block stays
+    // uncoloured.
+    if (!language) return [{ text: line, cls: '' }];
     const out: { text: string; cls: string }[] = [];
     let last = 0;
     for (const m of line.matchAll(TOKEN)) {

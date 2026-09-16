@@ -49,9 +49,26 @@ describe('CodeBlock highlighting', () => {
     expect(classOf('3')).toContain('text-ripple-warning');
   });
 
+  it('leaves an unlabelled block uncoloured', () => {
+    // ToolCall passes language="" for a plain-string result. Prose full of
+    // "for", "if" and numbers must not come back painted as syntax.
+    const { container } = render(CodeBlock, {
+      props: { code: 'Wrote 12 files, if you want to try for a new default.' }
+    });
+    const classes = Array.from(container.querySelectorAll('code span')).map(
+      (el) => el.getAttribute('class')
+    );
+    expect(classes.every((c) => !c)).toBe(true);
+  });
+
+  it('renders no rows for an empty block', () => {
+    const { container } = render(CodeBlock, { props: { code: '' } });
+    expect(codeLines(container)).toEqual([]);
+  });
+
   it('treats a code string as text, never as markup', () => {
     const evil = 'const a = "<img src=x onerror=alert(1)>";';
-    const { container } = render(CodeBlock, { props: { code: evil } });
+    const { container } = render(CodeBlock, { props: { code: evil, language: 'ts' } });
     expect(container.querySelector('img')).toBeNull();
     expect(codeLines(container)).toEqual([evil]);
   });
