@@ -18,6 +18,21 @@
       container div (tabindex="-1" focus-trap) carries no keyboard listener,
       fixing a11y_no_noninteractive_element_interactions. Reverted role to
       "region" (plain landmark, no interactions). Recipe 3.
+    @changes 2026-09-16 — the ODOMETER, closing the beautiful-ui re-skin arc's
+      last outstanding take. The arc's brief listed a rolling counter among the
+      things to take from the source, every lane declined it, and the reason was
+      that the source's one odometer site is ApprovalCard's question-stack step
+      counter, which ripple's ApprovalGate has no equivalent of. It has one here:
+      this widget is the question stack, and this is the counter. So the counter
+      now rolls — keying on the index remounts it and a clip box turns that into
+      a rise from below. CSS only; no new prop, no new state, no timer.
+      CUT FROM THE SOURCE, deliberately: the old value does not roll out as the
+      new one rolls in, and there is no downward direction on Back. The source
+      spends about forty lines of state on holding two strings at once and
+      deriving a direction; a remount buys most of the read for one line. Add
+      the rest only if the two-value cross-fade is actually missed.
+      origin: slev12397/beautiful-ui@ff0f74d components/primitives/ApprovalCard.tsx
+      (RollingDigits)
 
   Spec example:
     {
@@ -315,7 +330,12 @@
     <div class="auq-empty">No questions provided.</div>
   {:else}
     <div class="auq-header">
-      <span class="auq-counter">Question {safeIndex + 1} of {total}</span>
+      <!-- The odometer. Keying on the index remounts the counter, and the clip
+           box turns the remount into a roll: the new count rises into view from
+           below instead of swapping in place. -->
+      <span class="auq-counter auq-counter-clip">
+        {#key safeIndex}<span class="auq-roll">Question {safeIndex + 1} of {total}</span>{/key}
+      </span>
       <h3 class="auq-title">{question.title}</h3>
     </div>
 
@@ -439,6 +459,21 @@
     font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--muted-foreground, rgba(255,255,255,0.45));
     font-variation-settings: 'wght' 600;
+  }
+  /* The clip box is what makes the remount read as a roll rather than a fade —
+     the incoming count is hidden until it climbs into the line box. Transforms
+     do not affect layout, so this never changes the header's height. */
+  .auq-counter-clip { overflow: hidden; }
+  .auq-roll {
+    display: inline-block;
+    animation: auq-roll 360ms var(--ripple-ease-out) both;
+  }
+  @keyframes auq-roll {
+    from { opacity: 0; transform: translateY(0.9em); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .auq-roll { animation: none; }
   }
   .auq-title {
     font-size: 16px; line-height: 1.35; margin: 0;
