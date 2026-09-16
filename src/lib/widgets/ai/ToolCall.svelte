@@ -19,6 +19,13 @@
     status glyph swaps to a chevron on hover, the way the source's tool rows do.
     The body height-animates via grid-template-rows instead of snapping, and the
     frame moves onto ripple surface/border tokens. Props and events are untouched.
+  Modified: 2026-09-16 — the ENTRY MOTION the first pass never wrote. The card
+    fades up on the source's row timing (300ms), and the inline argument chip
+    pops in on the source's chip timing (250ms). A list of these — ApprovalGate
+    renders one per proposed call — staggers 80ms apart, driven by an `--i`
+    custom property the caller sets on `style`; with no `--i` a lone card falls
+    back to 0 and simply fades up. Same mechanism TaskRows uses for its rows, and
+    it needs no new prop.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ToolChips.tsx
 -->
 <script lang="ts">
@@ -157,7 +164,7 @@
   data-variant="default"
   data-state={status}
   class={cn(
-    'ripple-tool-call overflow-hidden rounded-ripple bg-ripple-surface text-sm ring-1 ring-ripple-border',
+    'ripple-tool-call ripple-tool-fade-up overflow-hidden rounded-ripple bg-ripple-surface text-sm ring-1 ring-ripple-border',
     className
   )}
   style={styleString}
@@ -206,7 +213,10 @@
     </button>
 
     {#if chipText}
-      <div class="min-w-0 flex-1">
+      <!-- The chip pops in on the source's chip timing. It sits on this wrapper
+           rather than on the trigger: the trigger is rendered by bits-ui, so
+           styling it from here would need a :global escape. -->
+      <div class="ripple-tool-pop-in min-w-0 flex-1">
         <HoverCard.Root openDelay={120} closeDelay={80}>
           <!-- tabindex: the trigger renders an <a> with no href, which bits-ui
                stamps role="button" + aria-expanded and wires onfocus/onblur to.
@@ -307,8 +317,37 @@
 </div>
 
 <style>
+  /* The card's entry. 300ms is the source's own tool-row timing. The 80ms
+     stagger unit is the source's too (it staggers its chip strip by i * 80ms),
+     and it only bites when a caller numbers the cards via --i. */
+  .ripple-tool-fade-up {
+    animation: ripple-tool-fade-up 300ms var(--ripple-ease-out) calc(var(--i, 0) * 80ms) both;
+  }
+  .ripple-tool-pop-in {
+    animation: ripple-tool-pop-in 250ms var(--ripple-ease-out) both;
+  }
   :global(.ripple-tool-call .ripple-tool-spin) {
     animation: ripple-tool-spin 0.9s linear infinite;
+  }
+  @keyframes ripple-tool-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes ripple-tool-pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
   @keyframes ripple-tool-spin {
     to {
@@ -316,6 +355,10 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    .ripple-tool-fade-up,
+    .ripple-tool-pop-in {
+      animation: none;
+    }
     :global(.ripple-tool-call .ripple-tool-spin) {
       animation: none;
     }

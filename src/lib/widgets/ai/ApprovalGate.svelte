@@ -30,6 +30,10 @@
     and every "destructive" tone becomes ripple-error so red matches the
     success/warning tones in a ripple-rethemed host. Props, events, the bind
     contract and the a11y live region are untouched.
+  Modified: 2026-09-16 — number the proposed tool calls. Each ToolCall now gets
+    its index as an `--i` custom property through the `style` prop it already
+    had, which is what ToolCall's own entry animation reads to stagger a list
+    80ms apart instead of landing the whole run at once. No prop added anywhere.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ApprovalCard.tsx
 -->
 <script lang="ts">
@@ -279,6 +283,7 @@
         <div class="space-y-2">
           {#each calls as call, i (i)}
             <ToolCall
+              style={{ '--i': String(i) }}
               name={call.name}
               status={call.status ?? 'pending'}
               args={call.args}
