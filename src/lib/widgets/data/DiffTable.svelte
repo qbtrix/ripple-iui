@@ -36,6 +36,8 @@
     of an included removal is struck, so a removal never rests on red alone.
     Row text is the status colour mixed 50/50 with the foreground (the raw
     green token is 2.3:1 on white); figures are in the skin-diff status file.
+  Modified: 2026-09-17 — an excluded change row no longer takes an accent
+    hover wash; muted text on it measured 4.07:1 on ripple's light host.
   @a11y Checkbox names read "Include removing <first cell>" / "Include adding
     <first cell>". The applied confirmation sits in a polite live region that
     exists from mount, so it is announced.
@@ -124,7 +126,9 @@
   const ROW_LIVE = {
     out: 'bg-ripple-error/10 hover:bg-ripple-error/15',
     in: 'bg-ripple-success/10 hover:bg-ripple-success/15',
-    idle: 'hover:bg-ripple-accent/10'
+    // No hover wash on an untinted row: muted text on accent/10 measures 4.07:1
+    // on ripple's own light host. The pointer cursor carries the affordance.
+    idle: 'hover:bg-transparent'
   };
 
   function rowClass(row: DiffTableRow) {
