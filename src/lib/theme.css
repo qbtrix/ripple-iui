@@ -9,12 +9,47 @@
    signature easing of the beautiful-ui skin. See NOTICE and
    docs/design/beautiful-ui-translation.md §3. */
 
+/* 2026-09-17 (fix/port-gaps) — added --ripple-popover and
+   --ripple-popover-foreground (+ their --color-* utilities), aliasing the host's
+   --popover. Every floating layer (popover, menus, hover card, command, chart
+   tooltip, dialog, sheet, PromptBar's listbox) used to fill with
+   --ripple-surface, which aliases --card: an in-flow card tint, 6% white in
+   paw-enterprise dark and fully transparent inside its .ripple-root. Page text
+   read straight through the menus. --popover is the token hosts publish for a
+   layer over content. In-flow surfaces (Card, the PromptBar composer) stay on
+   --ripple-surface. */
+
+/* 2026-09-17 (fix/port-gaps, second pass) — --ripple-error and its foreground
+   alias the host's --destructive pair instead of a hard-coded
+   oklch(0.65 0.22 25). Seventeen widgets already painted red through
+   --destructive; the five on --ripple-error split from them wherever a host
+   tunes --destructive, as paw-enterprise does for dark glass. The host's red
+   is canonical, the same as --ripple-accent following --primary. See
+   docs/design/beautiful-ui-translation.md §7. */
+
+/* 2026-09-17 (fix/port-gaps, third pass) — readable status text. The status
+   tones are fill colours; painted as text they measured 1.6-3.3:1 in light
+   mode (error 2.90 on its /10 tint, success 1.96, warning 1.64, info 2.25).
+   --ripple-{tone}-text blends each tone toward the surface ink, so it darkens
+   on a light ground and lightens on a dark one, and every text use of a tone
+   now reads these. Fills and tints stay on the raw tones. The ratios are
+   tuned by measurement to keep each tone recognisable while reaching 4.5:1
+   on its /10 and /15 tints and on the plain ground in both themes
+   (src/lib/ui/status-text.test.ts). They are declared on :where(.ripple-root)
+   as well as :root, so a host that re-points a tone on .ripple-root (as
+   paw-enterprise does) gets text blended from that tone, not from the :root
+   one; :where keeps the selector at zero specificity so any host override of
+   the -text token itself still wins. */
+
 /* Fluid Functionalism 8-step surface/elevation ladder (MIT). */
 @import './systems/elevation.css';
 
 :root {
   --ripple-surface: var(--card);
   --ripple-surface-foreground: var(--card-foreground);
+  /* Floating layers over content. Not the card tint: see the header. */
+  --ripple-popover: var(--popover);
+  --ripple-popover-foreground: var(--popover-foreground);
   --ripple-muted: var(--muted);
   --ripple-muted-foreground: var(--muted-foreground);
   --ripple-accent: var(--primary);
@@ -25,8 +60,8 @@
   --ripple-success-foreground: oklch(1 0 0);
   --ripple-warning: oklch(0.80 0.16 80);
   --ripple-warning-foreground: oklch(0.15 0 0);
-  --ripple-error: oklch(0.65 0.22 25);
-  --ripple-error-foreground: oklch(1 0 0);
+  --ripple-error: var(--destructive);
+  --ripple-error-foreground: var(--destructive-foreground);
   --ripple-info: oklch(0.70 0.12 250);
   --ripple-info-foreground: oklch(1 0 0);
   --ripple-input: var(--background);
@@ -43,9 +78,20 @@
   --ripple-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* Readable status text: see the third-pass note at the top. */
+:root,
+:where(.ripple-root) {
+  --ripple-error-text: color-mix(in oklab, var(--ripple-error) 60%, var(--ripple-surface-foreground));
+  --ripple-success-text: color-mix(in oklab, var(--ripple-success) 55%, var(--ripple-surface-foreground));
+  --ripple-warning-text: color-mix(in oklab, var(--ripple-warning) 50%, var(--ripple-surface-foreground));
+  --ripple-info-text: color-mix(in oklab, var(--ripple-info) 55%, var(--ripple-surface-foreground));
+}
+
 @theme inline {
   --color-ripple-surface: var(--ripple-surface);
   --color-ripple-surface-foreground: var(--ripple-surface-foreground);
+  --color-ripple-popover: var(--ripple-popover);
+  --color-ripple-popover-foreground: var(--ripple-popover-foreground);
   --color-ripple-muted: var(--ripple-muted);
   --color-ripple-muted-foreground: var(--ripple-muted-foreground);
   --color-ripple-accent: var(--ripple-accent);
@@ -54,12 +100,16 @@
   --color-ripple-ring: var(--ripple-ring);
   --color-ripple-success: var(--ripple-success);
   --color-ripple-success-foreground: var(--ripple-success-foreground);
+  --color-ripple-success-text: var(--ripple-success-text);
   --color-ripple-warning: var(--ripple-warning);
   --color-ripple-warning-foreground: var(--ripple-warning-foreground);
+  --color-ripple-warning-text: var(--ripple-warning-text);
   --color-ripple-error: var(--ripple-error);
   --color-ripple-error-foreground: var(--ripple-error-foreground);
+  --color-ripple-error-text: var(--ripple-error-text);
   --color-ripple-info: var(--ripple-info);
   --color-ripple-info-foreground: var(--ripple-info-foreground);
+  --color-ripple-info-text: var(--ripple-info-text);
   --color-ripple-input: var(--ripple-input);
   --color-ripple-input-foreground: var(--ripple-input-foreground);
   --radius-ripple: var(--ripple-radius);

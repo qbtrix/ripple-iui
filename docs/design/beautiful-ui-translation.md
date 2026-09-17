@@ -13,6 +13,12 @@
   reuse concrete. Nothing else in the table moved.
   Updated 2026-09-17 by the skin-diff lane: one paragraph under §4 recording
   DiffTable's keyframe copies and its two component-local keyframes.
+  Updated 2026-09-17 by fix/port-gaps: §2 gains the popover row (floating
+  layers are not cards). §7's red gap first recorded that the two red tokens
+  split in paw-enterprise dark, then the decision taken: option (a),
+  `--ripple-error` aliases `--destructive`, with the host override caveat and
+  the light-mode contrast finding, then the readable status-text tokens that
+  close it.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -70,7 +76,8 @@ Plus `--radius-ripple` (utility `rounded-ripple`) and, as of this slice,
 
 | beautiful-ui | ripple | note |
 |---|---|---|
-| `bg-surface` | `bg-ripple-surface` | |
+| `bg-surface` | `bg-ripple-surface` | in-flow surfaces only: Card, a composer body |
+| a layer that floats over content (menu, popover, hover card, command, dialog, sheet, a typeahead list) | `bg-ripple-popover text-ripple-popover-foreground` + `backdrop-blur-md` | `--ripple-surface` is the host's `--card`, a card tint that is 6% white in paw-enterprise dark and transparent inside its `.ripple-root`, so text under a floating layer reads through. `--ripple-popover` aliases `--popover`. Added 2026-09-17 |
 | `text-ink` | `text-ripple-surface-foreground` | |
 | `text-ink-2`, `text-ink-3` | `text-ripple-muted-foreground` | two greys collapse to one — ripple publishes no second muted step |
 | `border-line`, `border-line-strong` | `ring-1 ring-ripple-border` | ripple Card uses a ring, not a border; see §5. **Two exceptions, both proven:** a divider *inside* an already-ringed card stays a border (`border-b border-ripple-border`, CodeBlock's header); and where the source paints the line colour as a *background* rather than an edge, it is `bg-ripple-border` at whatever alpha the source used — `bg-line/60` → `bg-ripple-border/60` (Segmented's track), `bg-line` → `bg-ripple-border` (CodeBlock's gutter rule). |
@@ -80,9 +87,10 @@ Plus `--radius-ripple` (utility `rounded-ripple`) and, as of this slice,
 | `text-accent-ink` on a SOLID accent fill | `text-ripple-accent-foreground` | |
 | `text-accent-ink` on a TINT (accent/10 wash) | `text-ripple-accent` | `--ripple-accent-foreground` resolves to `--primary-foreground`, near-white — it vanishes on a tint. Lane A hit this on Badge and Chip. |
 | `bg-accent-tint` | `bg-ripple-accent/10` | source tint is the colour at 14% alpha; ripple's Badge convention is `/10` — match Badge, not the source |
-| `text-green`, `bg-green-tint` | `text-ripple-success`, `bg-ripple-success/10` | exactly ripple Badge's existing `success` variant |
-| `text-orange`, `bg-orange-tint` | `text-ripple-warning`, `bg-ripple-warning/10` | exactly Badge's existing `warning` variant |
-| `text-red`, `bg-red-tint` | `text-ripple-error`, `bg-ripple-error/10` | **see the gap in §7** — Badge maps red to shadcn `destructive`, not `ripple-error` |
+| `text-green`, `bg-green-tint` | `text-ripple-success-text`, `bg-ripple-success/10` | Badge's `success` variant. Text takes the `-text` token, never the raw tone: see the status-text row below |
+| `text-orange`, `bg-orange-tint` | `text-ripple-warning-text`, `bg-ripple-warning/10` | Badge's `warning` variant |
+| `text-red`, `bg-red-tint` | `text-ripple-error-text`, `bg-ripple-error/10` | `--ripple-error` aliases `--destructive` (§7) |
+| any status colour used as **text** | `text-ripple-{error,success,warning,info}-text` | Added 2026-09-17. The raw tones are fill colours and measured 1.6 to 3.3:1 as text in light mode. The `-text` tokens blend each tone toward the surface ink and reach 4.5:1 on the plain ground and on the tone's own tints in both themes. `src/lib/ui/status-text.test.ts` fails on any raw-tone text class, `text-destructive` included |
 | `--tooltip-bg` / `-fg` / `-muted` / `-border` | *drop* | ripple's overlay canonical (`Tooltip` from `./ui`) already owns tooltip colour |
 | `--page`, `--canvas`, `--stripe`, `--stripe-bg` | *drop* | the host owns the ground — see §5 |
 
@@ -385,6 +393,53 @@ lane-A decision.
   ripple-rethemed host will not match `success`/`warning`, which do use ripple
   tokens. Real inconsistency, pre-existing, and adding a variant is a manifest
   shape change. Flag it; do not fix it here.
+
+  **2026-09-17, decided: option (a), the host's `--destructive` is canonical.**
+  `theme.css` now aliases `--ripple-error: var(--destructive)` and
+  `--ripple-error-foreground: var(--destructive-foreground)`, the same way
+  `--ripple-accent` follows `--primary`. The hard-coded `oklch(0.65 0.22 25)` was
+  exactly the kind of drift this arc removes. Five widgets painted red through
+  `ripple-error` (ApprovalGate, TaskRows, ToolCall, Chip, Stat) and seventeen
+  through `destructive`. The two agreed in paw-enterprise light mode and split
+  in dark, where the host lifts `--destructive` for dark glass:
+
+  | | light | dark |
+  |---|---|---|
+  | `--destructive` | `oklch(0.65 0.22 25)` | `oklch(0.704 0.191 22.216)` |
+  | `--paw-error` | `oklch(0.65 0.22 25)` | `oklch(0.65 0.22 25)` |
+
+  Why (a) over (b): it moves the five toward the red the host tuned for dark,
+  rather than dimming the seventeen away from it. It also closes the Badge vs
+  Chip mismatch above as a ripple default: a `destructive` Badge and a red Chip
+  now resolve to the same token.
+
+  **What does not change on screen yet in paw-enterprise.** Its `global.css`
+  sets `.ripple-root { --ripple-error: var(--paw-error) }`, and all five widgets
+  render inside `.ripple-root`, so they keep `--paw-error` there. They only lift
+  once the host drops that line or points `--paw-error` at `--destructive` in
+  dark. That is a paw-enterprise follow-up. Outside `.ripple-root`, and in any
+  host without that override, the alias takes effect now. ripple's own
+  `styles.css` dark `--destructive` moved from shadcn's old
+  `hsl(0 62.8% 30.6%)` (about 2:1 on its dark ground) to the current
+  `oklch(0.704 0.191 22.216)`, so ripple's app does not go dark red.
+
+  Measured in Chromium with paw-enterprise tokens. The rows are error text on
+  its own `bg-ripple-error/10` tint (the badge, pill, chip and stat delta), then
+  the ToolCall error body on `/5`, then the Deny button.
+
+  | | light | dark, host as is | dark, override dropped |
+  |---|---|---|---|
+  | text on `/10` tint | **2.89** | 5.23 | 6.36 |
+  | ToolCall error body on `/5` | **3.07** | 5.46 | 6.70 |
+  | ApprovalGate Deny | **3.22** | 5.53 | 6.85 |
+  | TaskRows solid badge icon (3:1 applies) | 3.58 | 3.58 | **2.89** |
+
+  **Error text failed 4.5:1 in light mode, before and after the alias.** The
+  value was the same in both tokens. It is how every status colour behaves as
+  text on a light ground. Fixed the same day, for all four tones, by the
+  `--ripple-{tone}-text` tokens (§2). Error text now measures 6.43 to 7.30:1 in
+  light and 8.39 to 9.21:1 in dark, and TaskRows' solid badge fill is deepened
+  so its icon clears 3:1.
 - `display/StatusDot.svelte` hard-codes hex colours (`#10b981`, `#ef4444`,
   `#f59e0b`, `#9ca3af`) instead of ripple tokens — drift that predates this arc
   and is out of scope for it.

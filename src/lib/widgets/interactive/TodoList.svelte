@@ -7,6 +7,11 @@
   @created 2026-05-31 — composite consumer widgets migration. Lowest-friction
     port: already matches Ripple's default bind contract (prop `value`, event
     `onchange`), so a spec can two-way-bind it with `bind: "state.tasks"`.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -152,7 +157,7 @@
           </label>
           <button
             onclick={() => deleteItem(item.id)}
-            class="text-muted-foreground hover:text-destructive transition-colors px-2"
+            class="text-muted-foreground hover:text-ripple-error-text transition-colors px-2"
             aria-label="Delete task"
           >
             ×

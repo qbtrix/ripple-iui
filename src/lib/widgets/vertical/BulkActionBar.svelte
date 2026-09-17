@@ -1,4 +1,10 @@
-<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
+<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check).
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+-->
 <!-- src/lib/widgets/vertical/BulkActionBar.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -87,7 +93,7 @@
           onclick={() => onaction?.(a.id)}
           class={cn(
             'inline-flex items-center gap-1.5 rounded-md px-2.5 h-8 text-sm font-medium transition-colors disabled:opacity-50',
-            a.variant === 'destructive' && 'text-destructive hover:bg-destructive/10',
+            a.variant === 'destructive' && 'text-ripple-error-text hover:bg-destructive/10',
             a.variant === 'outline' && 'border border-border hover:bg-muted/60',
             (!a.variant || a.variant === 'default') && 'hover:bg-muted/60'
           )}

@@ -4,6 +4,10 @@
   + actions) → KPI strip (4–6 tiles, optionally with sparklines) → primary
   chart (2/3) + activity rail (1/3) → optional secondary chart row → optional
   bottom data table.
+  @changes 2026-09-17 (fix/port-gaps) — the refresh icon's loading spin stops
+  under prefers-reduced-motion, from a scoped @media block (the pattern
+  ReasoningTrace and TaskRows use). While loading, the button is still disabled
+  at 60% opacity, so a still icon still reads as busy.
 -->
 <script lang="ts">
   import { getContext } from 'svelte';
@@ -878,6 +882,9 @@
   .rdash-icon-spin-wrap { display: inline-flex; }
   .rdash-spin { animation: rdash-spin 0.9s linear infinite; }
   @keyframes rdash-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .rdash-spin { animation: none; }
+  }
 
   /* Buttons */
   .rdash-btn {

@@ -14,6 +14,10 @@
   @changes 2026-06-09 — a11y: the clickable row `<li>` now carries role="button",
   tabindex="0" and an onkeydown (Enter/Space) handler so it is keyboard
   accessible (fixes a11y_no_noninteractive_element_interactions). Recipe 3.
+  @changes 2026-09-17 (fix/port-gaps) — the in-progress spinner stops under
+  prefers-reduced-motion, from a scoped @media block (the pattern ReasoningTrace
+  and TaskRows use). Still, it is a faint ring with one solid segment, which
+  still reads as in progress.
 -->
 <script lang="ts">
   import { getContext } from 'svelte';
@@ -490,6 +494,11 @@
   }
   @keyframes rcheck-spin {
     to { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rcheck-toggle-spin {
+      animation: none;
+    }
   }
   .rcheck-body {
     flex: 1;

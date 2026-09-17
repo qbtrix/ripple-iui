@@ -1,7 +1,15 @@
 <!-- sheet-content.svelte — ripple's canonical slide-over panel.
-     Reconciled 2026-09-14 (overlay canonical): glass in tokens — bg-ripple-surface
-     text-ripple-surface-foreground ring-1 ring-ripple-border — so the sheet reads
-     as the host's glass wherever --ripple-surface aliases a translucent --card.
+     Reconciled 2026-09-14 (overlay canonical): glass in tokens — bg-ripple-popover
+     text-ripple-popover-foreground ring-1 ring-ripple-border.
+     2026-09-17 (fix/port-gaps): fill moved from bg-ripple-surface to bg-ripple-popover
+     (+ text-ripple-popover-foreground). --ripple-surface aliases the host's --card, an
+     in-flow card tint (6% white in paw-enterprise dark), so page text read straight
+     through this layer; --ripple-popover aliases the host's --popover, the token made
+     for a layer over content.
+     A sheet is panel-shaped, but this one is portaled, fixed and drawn over a
+     scrim on top of the page, so it floats the same way a dialog does and takes
+     the same token. An in-flow side panel that is part of a layout is a Card's
+     job and stays on --ripple-surface.
      Perf (carried over from paw-enterprise, 2026-07-16): the sheet blurs its
      backdrop at 10px instead of the dialog's 24px and promotes the transform to
      its own layer, so the slide-in stays smooth instead of re-rasterizing a full
@@ -60,7 +68,7 @@
 		data-slot="sheet-content"
 		data-side={side}
 		class={cn(
-			"bg-ripple-surface text-ripple-surface-foreground ring-1 ring-ripple-border fixed z-50 flex flex-col gap-4 text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[side=bottom]:data-[state=open]:slide-in-from-bottom-10 data-[side=left]:data-[state=open]:slide-in-from-left-10 data-[side=right]:data-[state=open]:slide-in-from-right-10 data-[side=top]:data-[state=open]:slide-in-from-top-10 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[side=bottom]:data-[state=closed]:slide-out-to-bottom-10 data-[side=left]:data-[state=closed]:slide-out-to-left-10 data-[side=right]:data-[state=closed]:slide-out-to-right-10 data-[side=top]:data-[state=closed]:slide-out-to-top-10",
+			"bg-ripple-popover text-ripple-popover-foreground ring-1 ring-ripple-border fixed z-50 flex flex-col gap-4 text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[side=bottom]:data-[state=open]:slide-in-from-bottom-10 data-[side=left]:data-[state=open]:slide-in-from-left-10 data-[side=right]:data-[state=open]:slide-in-from-right-10 data-[side=top]:data-[state=open]:slide-in-from-top-10 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[side=bottom]:data-[state=closed]:slide-out-to-bottom-10 data-[side=left]:data-[state=closed]:slide-out-to-left-10 data-[side=right]:data-[state=closed]:slide-out-to-right-10 data-[side=top]:data-[state=closed]:slide-out-to-top-10",
 			className
 		)}
 		{...restProps}

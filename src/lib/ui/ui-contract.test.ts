@@ -44,6 +44,9 @@
  *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` and `DiffTable`
  *   entries added — a registered widget newly listed on this surface, and a new
  *   export. No existing entry was edited.
+ *   Updated 2026-09-17 (fix/port-gaps): two more entries, `Switch` and
+ *   `ProgressRing`, for the two atoms that joined the surface. Again no existing
+ *   entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -112,6 +115,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // Shimmer paints a sweeping gradient through its children's glyphs; with no
   // child it still renders its own span, so it is not exempt below.
   Shimmer: { children: kid('shimmering') },
+  // Both paint with no props; these make the mounted output name itself.
+  Switch: { label: 'Notifications' },
+  ProgressRing: { value: 40 },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */

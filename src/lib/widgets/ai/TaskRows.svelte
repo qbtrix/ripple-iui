@@ -40,6 +40,13 @@
     this on an identical raw element. Both handles are kept for exactly that job
     and carry no animation of their own. Cost: 1.1s and 1.2s become animate-spin's
     1s, so the ring and the retry glyph now turn at the same speed.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+  Same pass: the solid done/failed badges deepen their fill 20% toward black
+  (scoped .ripple-task-badge-done/-failed), so the white icon clears 3:1.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -191,13 +198,13 @@
         <span class="flex size-6 shrink-0 items-center justify-center">
           {#if status === 'done'}
             <span
-              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-success text-ripple-success-foreground"
+              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-success text-ripple-success-foreground ripple-task-badge-done"
             >
               <CheckIcon size={13} strokeWidth={3.5} aria-hidden="true" />
             </span>
           {:else if status === 'failed'}
             <span
-              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-error text-ripple-error-foreground"
+              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-error text-ripple-error-foreground ripple-task-badge-failed"
             >
               <XIcon size={12} strokeWidth={3.5} aria-hidden="true" />
             </span>
@@ -216,13 +223,13 @@
 
         {#if status === 'done'}
           <span
-            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-success/10 px-2 text-[11.5px] font-medium text-ripple-success"
+            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-success/10 px-2 text-[11.5px] font-medium text-ripple-success-text"
           >
             {copy.done}
           </span>
         {:else if status === 'failed'}
           <span
-            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full bg-ripple-error/10 px-2 text-[11.5px] font-medium text-ripple-error"
+            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full bg-ripple-error/10 px-2 text-[11.5px] font-medium text-ripple-error-text"
           >
             {copy.failed}
             <RotateCwIcon
@@ -306,6 +313,18 @@
   .ripple-task-panel[data-state='open'] {
     grid-template-rows: 1fr;
     opacity: 1;
+  }
+
+  /* Solid badges: the tone deepened 20% toward black under the white icon.
+     Raw, white on success measured 2.31:1 and white on the dark-mode
+     --destructive 2.89:1, under the 3:1 a status graphic needs. At 80% they
+     measure 4.09:1 and 4.96:1. The bg-ripple-* utility stays as the token the
+     hue comes from; this unlayered rule wins over it. */
+  .ripple-task-badge-done {
+    background-color: color-mix(in oklab, var(--ripple-success) 80%, black);
+  }
+  .ripple-task-badge-failed {
+    background-color: color-mix(in oklab, var(--ripple-error) 80%, black);
   }
 
   /* Both spinners ride Tailwind's animate-spin. The classes below survive only

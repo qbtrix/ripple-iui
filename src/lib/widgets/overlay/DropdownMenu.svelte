@@ -1,4 +1,10 @@
-<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
+<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check).
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+-->
 <script lang="ts">
   import { DropdownMenu as DM } from 'bits-ui';
   import { cn } from '$lib/utils.js';
@@ -106,7 +112,7 @@
               'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors',
               'data-[highlighted]:bg-muted data-[highlighted]:text-foreground',
               'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-              item.variant === 'destructive' && 'text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive'
+              item.variant === 'destructive' && 'text-ripple-error-text data-[highlighted]:bg-destructive/10 data-[highlighted]:text-ripple-error-text'
             )}
           >
             {#if ItemIcon}<ItemIcon size={14} />{/if}

@@ -36,7 +36,30 @@
 
      Note the outer `pre` element is gone: the body is a grid, one row per line,
      which cannot live inside a preformatted element. Line numbers carry
-     `select-none` so a copy of the rendered text does not pick them up. -->
+     `select-none` so a copy of the rendered text does not pick them up.
+
+     2026-09-17 (fix/port-gaps) — strings and numbers measured 1.74:1 in
+     paw-enterprise light mode, and ToolCall's JSON arguments inherit that.
+     They painted `text-ripple-warning`, a status fill at oklch L 0.80: right as
+     a badge tint, too pale to be text on a light surface. They now carry
+     `ripple-code-literal`, a prefixed global rule that mixes the warning hue half-and-half
+     with the surface ink. The ink is dark in light mode and pale in dark mode, so
+     one rule darkens the amber where it needs to and lightens it where it needs
+     to. No single fixed colour reaches 4.5:1 on both near-white and near-black.
+     The `text-ripple-warning` utility stays on the span as the token the hue
+     comes from; that rule is unlayered, so it wins over the utility.
+
+     2026-09-17 (fix/port-gaps, second pass) — keywords get the same treatment.
+     `text-ripple-accent` is the host's `--primary`, which measured 3.59:1 on
+     paw-enterprise's dark ground. `ripple-code-keyword` mixes the accent 70% with
+     the surface ink: a smaller pull than the literals get, so keywords stay
+     clearly blue.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import CopyIcon from '@lucide/svelte/icons/copy';
@@ -108,8 +131,8 @@
     // ever renders TypeScript so it never hit this; ToolCall passes JSON, where
     // without it every key and value lands on the same colour.
     if (quoted && /^\s*:/.test(rest)) return NAME;
-    if (quoted || /^\d/.test(tok)) return 'text-ripple-warning';
-    if (KEYWORDS.has(tok)) return 'text-ripple-accent';
+    if (quoted || /^\d/.test(tok)) return 'text-ripple-warning-text ripple-code-literal';
+    if (KEYWORDS.has(tok)) return 'text-ripple-accent ripple-code-keyword';
     return NAME;
   }
 
@@ -156,7 +179,7 @@
           class={cn(
             '-mr-1 ml-auto flex h-6 items-center gap-1 rounded-md px-1.5 text-[12px] font-medium transition-colors duration-100 ease-ripple-out hover:bg-ripple-accent/10',
             copied
-              ? 'text-ripple-success'
+              ? 'text-ripple-success-text'
               : 'text-ripple-muted-foreground hover:text-ripple-surface-foreground'
           )}
           aria-label="Copy code"
@@ -185,3 +208,18 @@
     {/each}
   </div>
 </div>
+
+<style>
+  /* Readable amber: the warning hue pulled halfway toward the surface ink. See
+     the header for why. var(--ripple-*), never var(--color-*). Global and
+     prefixed rather than scoped: a scoped selector against the dynamic class
+     would stamp a hash class onto every token span, including the ones an
+     unlabelled block leaves deliberately class-free. */
+  :global(.ripple-code-literal) {
+    color: color-mix(in oklab, var(--ripple-warning) 50%, var(--ripple-surface-foreground));
+  }
+  /* Keywords: the accent pulled 30% toward the ink, enough to clear 4.5:1 in dark. */
+  :global(.ripple-code-keyword) {
+    color: color-mix(in oklab, var(--ripple-accent) 70%, var(--ripple-surface-foreground));
+  }
+</style>

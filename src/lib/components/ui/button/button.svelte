@@ -1,3 +1,9 @@
+<!-- button.svelte
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged. -->
 <script lang="ts" module>
 	import { cn, type WithElementRef } from "$lib/utils.js";
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
@@ -11,7 +17,7 @@
 				outline: "border-ripple-border bg-ripple-surface hover:bg-ripple-muted hover:text-ripple-surface-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-ripple-muted aria-expanded:text-ripple-surface-foreground",
 				secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
 				ghost: "hover:bg-ripple-muted hover:text-ripple-surface-foreground dark:hover:bg-ripple-muted/50 aria-expanded:bg-ripple-muted aria-expanded:text-ripple-surface-foreground",
-				destructive: "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30",
+				destructive: "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-ripple-error-text focus-visible:border-destructive/40 dark:hover:bg-destructive/30",
 				link: "text-ripple-accent underline-offset-4 hover:underline",
 			},
 			size: {

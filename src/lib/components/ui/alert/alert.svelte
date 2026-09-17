@@ -1,3 +1,9 @@
+<!-- alert.svelte
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged. -->
 <script lang="ts" module>
 	import { type VariantProps, tv } from "tailwind-variants";
 
@@ -6,7 +12,7 @@
 		variants: {
 			variant: {
 				default: "bg-ripple-surface text-ripple-surface-foreground",
-				destructive: "text-destructive bg-ripple-surface *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
+				destructive: "text-ripple-error-text bg-ripple-surface *:data-[slot=alert-description]:text-ripple-error-text/90 *:[svg]:text-current",
 			},
 		},
 		defaultVariants: {
