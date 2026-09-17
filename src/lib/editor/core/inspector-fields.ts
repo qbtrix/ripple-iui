@@ -1,5 +1,7 @@
 /**
  * @file editor/core/inspector-fields.ts
+ * @changes 2026-09-17: coerceFieldValue's text fallback routes through asText
+ *   (objects → JSON, not "[object Object]") — oxlint no-base-to-string sweep.
  * @description L1 (PURE TS, zero Svelte/DOM) manifest-driven field inference for
  *   the Ripple visual editor's properties panel (`RippleInspector`). Given a
  *   node, it reads the widget manifest's prop specs and derives a typed, editable
@@ -17,6 +19,7 @@
  */
 import { manifestEntries } from '../../manifest/index.js';
 import type { UINode } from '../../schema/ui-spec.js';
+import { asText } from '../../widgets/text-coerce.js';
 
 export type FieldKind = 'text' | 'textarea' | 'number' | 'boolean' | 'select' | 'readonly';
 
@@ -104,7 +107,7 @@ export function coerceFieldValue(kind: FieldKind, raw: unknown, numeric = false)
     return Number.isFinite(n) ? n : 0;
   }
   if (kind === 'boolean') return raw === true || raw === 'true' || raw === 'on';
-  return raw == null ? '' : String(raw);
+  return asText(raw);
 }
 
 /**

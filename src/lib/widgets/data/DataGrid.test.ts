@@ -1,4 +1,6 @@
 // src/lib/widgets/data/DataGrid.test.ts
+// 2026-09-17: pagination test now awaits the Next click and asserts page 2
+// actually renders (oxlint no-floating-promises).
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import DataGrid from './DataGrid.svelte';
@@ -32,7 +34,7 @@ describe('DataGrid', () => {
     expect(tr!.textContent).toContain('Bob');
   });
 
-  it('paginates correctly with pageSize smaller than row count', () => {
+  it('paginates correctly with pageSize smaller than row count', async () => {
     const { container, getByText } = render(DataGrid, {
       props: { columns, rows, pageSize: 2, searchable: false }
     });
@@ -42,7 +44,9 @@ describe('DataGrid', () => {
     expect(container.textContent).not.toContain('Carol');
     // Click next page.
     const nextBtn = container.querySelector('[aria-label="Next page"]') as HTMLElement;
-    fireEvent.click(nextBtn);
+    await fireEvent.click(nextBtn);
+    expect(container.textContent).toContain('Page 2 of 2');
+    expect(container.textContent).toContain('Carol');
   });
 
   it('emits onchange with the row id when a row is clicked', async () => {

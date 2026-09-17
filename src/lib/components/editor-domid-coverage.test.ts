@@ -15,6 +15,8 @@ import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
 import type { UINode } from '$lib/schema/ui-spec.js';
+// 2026-09-17: type label coerces via asText (oxlint no-base-to-string sweep).
+import { asText } from '$lib/widgets/text-coerce.js';
 
 // ---------------------------------------------------------------------------
 // Representative spec. Every node carries an explicit, unique `n_xxxxxxxx` id
@@ -79,7 +81,7 @@ interface NodeRef {
 
 function collectNodes(node: UINode, out: NodeRef[] = []): NodeRef[] {
   if (node && typeof node === 'object') {
-    if (node.id) out.push({ id: node.id, type: String((node as { type?: unknown }).type ?? 'unknown') });
+    if (node.id) out.push({ id: node.id, type: asText((node as { type?: unknown }).type ?? 'unknown') });
     for (const key of ['children', 'else_children'] as const) {
       const kids = (node as Record<string, unknown>)[key];
       if (Array.isArray(kids)) for (const k of kids) collectNodes(k as UINode, out);

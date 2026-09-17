@@ -4,6 +4,8 @@
  * `ui` widget tree, so a goal-pick step's bare buttons can be re-rendered as
  * polished OptionList cards (issue c) WITHOUT changing the spec contract.
  * @created 2026-06-07
+ * @changes 2026-09-17: option field coercions route through asText (objects →
+ * JSON, not "[object Object]") — oxlint no-base-to-string sweep.
  *
  * A flow `select` step today ships its choices as raw `button` nodes whose
  * `on_click` is an `emit` action targeting a flow verb (`flow.next` / `flow.submit`)
@@ -16,6 +18,7 @@
  */
 
 import type { UINode } from '../schema/ui-spec.js';
+import { asText } from '../widgets/text-coerce.js';
 
 /** A flow option distilled from one option button in the step's `ui` tree. */
 export interface FlowOption {
@@ -50,7 +53,7 @@ function isFlowSelectClick(onClick: unknown): boolean {
 
 function labelOf(node: Record<string, unknown>): string {
 	const props = asRecord(node.props) ?? {};
-	return String(props.label ?? props.text ?? '');
+	return asText(props.label ?? props.text);
 }
 
 function selectionOf(onClick: Record<string, unknown>): Record<string, unknown> | null {
@@ -78,10 +81,10 @@ export function extractFlowOptions(root: UINode | undefined): FlowOption[] {
 			const label = labelOf(n);
 			const props = asRecord(n.props) ?? {};
 			out.push({
-				id: String(sel?.id ?? sel?.value ?? label),
+				id: asText(sel?.id ?? sel?.value ?? label),
 				label,
-				description: sel?.description != null ? String(sel.description) : (props.description != null ? String(props.description) : undefined),
-				icon: sel?.icon != null ? String(sel.icon) : (props.icon != null ? String(props.icon) : undefined),
+				description: sel?.description != null ? asText(sel.description) : (props.description != null ? asText(props.description) : undefined),
+				icon: sel?.icon != null ? asText(sel.icon) : (props.icon != null ? asText(props.icon) : undefined),
 				onClick
 			});
 		}

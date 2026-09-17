@@ -3,12 +3,16 @@
  * @description Detects UI patterns (quiz, results) and transforms data.
  * Extracted from IntentRenderer for modularity.
  * @changes
+ *   - 2026-09-17: field coercions route through asText (objects → JSON, not
+ *     "[object Object]") — oxlint no-base-to-string sweep
  *   - 2026-06-08: isQuizPattern / isResultsPattern now require EVERY item to fit
  *     (was `.some(...)`). A single matching item no longer flips a mixed array to
  *     quiz/results — that false-positive could also drop the non-matching items.
  *     `length === 0 → false` guard and intent checks unchanged; isChartPattern's
  *     first-item heuristic is intentionally left as-is.
  */
+
+import { asText } from '../widgets/text-coerce.js';
 
 // ============================================================================
 // Types
@@ -78,8 +82,8 @@ export function toQuizOptions(
   const titleField = fields?.title || 'title';
 
   return items.map((item) => ({
-    id: String(item[idField] || item.id),
-    text: String(item[titleField] || item.option || item.text || ''),
+    id: asText(item[idField] || item.id),
+    text: asText(item[titleField] || item.option || item.text || ''),
     correct: Boolean(item.correct)
   }));
 }
@@ -91,9 +95,9 @@ export function toResultsItems(
   items: Record<string, unknown>[]
 ): ResultsItem[] {
   return items.map((item) => ({
-    label: String(item.label || ''),
-    value: String(item.value || ''),
-    icon: item.icon ? String(item.icon) : undefined,
+    label: asText(item.label || ''),
+    value: asText(item.value || ''),
+    icon: item.icon ? asText(item.icon) : undefined,
     highlight: Boolean(item.highlight)
   }));
 }
@@ -148,7 +152,7 @@ export function toChartData(
   const valueField = fields?.value || fields?.price || 'value';
 
   return items.map(item => ({
-    label: String(item[labelField] || item.label || item.name || item.category || ''),
+    label: asText(item[labelField] || item.label || item.name || item.category || ''),
     value: Number(item[valueField] || item.value || 0),
     ...item
   }));

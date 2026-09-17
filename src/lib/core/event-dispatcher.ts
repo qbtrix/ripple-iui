@@ -4,6 +4,12 @@
  * and chains multi-step flows (flow / branch / confirm / validate / delay /
  * invoke) plus async continuations on `api` actions.
  * @changes
+ *   - 2026-09-17 (oxlint bug-class sweep): fire-and-forget host emits
+ *     (navigate/toast/emit/pin/unpin, animate's observer echo, validate's
+ *     abort toast) route through notifyHost so a rejecting async host is
+ *     logged instead of an unhandled rejection — never awaited, so event
+ *     ordering and the sync completion contract are unchanged; handleInvoke
+ *     awaits only real Promises; resolveTarget coerces via asText
  *   - Initial 8-action dispatcher (set/open/api/navigate/toast/emit/pin/unpin)
  *   - Converted to a discriminated-union-aware dispatcher with narrowing
  *   - Added flow actions (flow, branch, confirm, validate, delay, invoke)
@@ -45,6 +51,7 @@ import {
 } from './expression-resolver.js';
 import type { RippleEvent, RippleEventResult } from '../types.js';
 import type { WidgetRegistry } from './widget-registry.js';
+import { asText } from '../widgets/text-coerce.js';
 
 /** Maximum nested `flow` depth. Guards against run-away specs. */
 export const MAX_FLOW_DEPTH = 8;
@@ -258,7 +265,7 @@ export class EventDispatcher {
 	private resolveTarget(target: string, context: ResolverContext): string {
 		if (!target.includes('{')) return target;
 		const result = resolveString(target, context);
-		return typeof result === 'string' ? result : String(result ?? '');
+		return typeof result === 'string' ? result : asText(result);
 	}
 
 	private handleSet(
@@ -437,7 +444,7 @@ export class EventDispatcher {
 			event.payload = value;
 		}
 
-		this.onEvent(event);
+		this.notifyHost(event);
 	}
 
 	/**
@@ -495,7 +502,7 @@ export class EventDispatcher {
 		if (this.onEvent) {
 			const event: RippleEvent = { type: 'animate', target };
 			(event as { motion?: unknown }).motion = handler.motion;
-			this.onEvent(event);
+			this.notifyHost(event);
 		}
 	}
 
@@ -855,7 +862,7 @@ export class EventDispatcher {
 
 		const message = resolveString(handler.message, context) as string;
 		if (this.onEvent) {
-			this.onEvent({
+			this.notifyHost({
 				type: 'toast',
 				message,
 				variant: handler.variant ?? 'error'
@@ -883,12 +890,32 @@ export class EventDispatcher {
 			typeof arg === 'string' ? resolveString(arg, context) : arg
 		);
 		const result = this.widgetRegistry.invoke(handler.target, handler.method, args);
-		if (result && typeof (result as Promise<unknown>).then === 'function') {
+		// Async widget methods return a real Promise; `instanceof` both narrows the
+		// `unknown` return for the type checker and keeps sync methods sync.
+		if (result instanceof Promise) {
 			await result;
 		}
 	}
 
 	// -- helpers ------------------------------------------------------------
+
+	/**
+	 * Fire-and-forget host emit for actions with no result chaining
+	 * (navigate/toast/emit/pin/unpin, animate's observer echo, validate's
+	 * abort toast). The host may return a promise; a rejection is logged via
+	 * the dispatcher's soft-error path (console.warn, like every other
+	 * dispatcher no-op) instead of becoming an unhandled rejection. Never
+	 * awaited — these actions complete synchronously by contract, so caller
+	 * behavior and event ordering are unchanged.
+	 */
+	private notifyHost(event: RippleEvent): void {
+		const maybe = this.onEvent?.(event);
+		if (maybe) {
+			maybe.catch((err: unknown) => {
+				console.warn(`EventDispatcher: host onEvent for "${event.type}" rejected —`, err);
+			});
+		}
+	}
 
 	/**
 	 * Return a new ResolverContext snapshot — continuations always read the
