@@ -8,6 +8,10 @@
   Updated 2026-09-16 by the skin-answer lane: keyframe rows 1 and 9 and the net
   count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
   reuse concrete. Nothing else in the table moved.
+  Updated 2026-09-17 by fix/port-gaps: §2 gains the popover row (floating
+  layers are not cards), and §7's red gap now records that the two red tokens
+  resolve to different colours in paw-enterprise dark, left as a captain
+  decision.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -65,7 +69,8 @@ Plus `--radius-ripple` (utility `rounded-ripple`) and, as of this slice,
 
 | beautiful-ui | ripple | note |
 |---|---|---|
-| `bg-surface` | `bg-ripple-surface` | |
+| `bg-surface` | `bg-ripple-surface` | in-flow surfaces only: Card, a composer body |
+| a layer that floats over content (menu, popover, hover card, command, dialog, sheet, a typeahead list) | `bg-ripple-popover text-ripple-popover-foreground` + `backdrop-blur-md` | `--ripple-surface` is the host's `--card`, a card tint that is 6% white in paw-enterprise dark and transparent inside its `.ripple-root`, so text under a floating layer reads through. `--ripple-popover` aliases `--popover`. Added 2026-09-17 |
 | `text-ink` | `text-ripple-surface-foreground` | |
 | `text-ink-2`, `text-ink-3` | `text-ripple-muted-foreground` | two greys collapse to one — ripple publishes no second muted step |
 | `border-line`, `border-line-strong` | `ring-1 ring-ripple-border` | ripple Card uses a ring, not a border; see §5. **Two exceptions, both proven:** a divider *inside* an already-ringed card stays a border (`border-b border-ripple-border`, CodeBlock's header); and where the source paints the line colour as a *background* rather than an edge, it is `bg-ripple-border` at whatever alpha the source used — `bg-line/60` → `bg-ripple-border/60` (Segmented's track), `bg-line` → `bg-ripple-border` (CodeBlock's gutter rule). |
@@ -375,6 +380,29 @@ lane-A decision.
   ripple-rethemed host will not match `success`/`warning`, which do use ripple
   tokens. Real inconsistency, pre-existing, and adding a variant is a manifest
   shape change. Flag it; do not fix it here.
+
+  **2026-09-17, still open, and it is now a captain decision.** Five widgets
+  colour errors with `ripple-error` (ApprovalGate, TaskRows, ToolCall, Chip,
+  Stat) and seventeen with `destructive`. The brief was to pick the canonical one
+  and move the minority set only if no rendered colour changed in paw-enterprise.
+  It would change:
+
+  | | light | dark |
+  |---|---|---|
+  | `--destructive` | `oklch(0.65 0.22 25)` | `oklch(0.704 0.191 22.216)` |
+  | `--ripple-error` → `--paw-error` | `oklch(0.65 0.22 25)` | `oklch(0.65 0.22 25)` |
+
+  They agree in light and differ in dark. paw-enterprise lifts `--destructive`
+  for dark glass but leaves `--paw-error` alone. The drift exists because
+  `theme.css` hard-codes `--ripple-error: oklch(0.65 0.22 25)` instead of
+  aliasing `--destructive`, the way `--ripple-accent` aliases `--primary`. So
+  every ripple surface outside a paw `.ripple-root` (portaled overlays included)
+  gets the fixed value too. The options: (a) make `destructive` canonical and
+  alias `--ripple-error: var(--destructive)`, which lifts the five `ripple-error`
+  widgets in dark; (b) make `ripple-error` canonical and move the seventeen,
+  which dims them in dark; (c) have paw-enterprise set `--paw-error` to follow
+  `--destructive` in dark, after which either pick changes nothing on screen.
+  Nothing was changed.
 - `display/StatusDot.svelte` hard-codes hex colours (`#10b981`, `#ef4444`,
   `#f59e0b`, `#9ca3af`) instead of ripple tokens — drift that predates this arc
   and is out of scope for it.
