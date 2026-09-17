@@ -15,6 +15,11 @@
 //      (`text-ripple-error`, `text-destructive`, …); it uses the `-text` token.
 //   3. TaskRows' solid done/failed badges keep their white icon at 3:1, the
 //      non-text threshold, against the fill.
+//   4. UPDATED 2026-09-17: the destructive Button and ErrorState's action
+//      button put a white label on solid red, 3.59:1 light and 2.89:1 dark.
+//      Each darkens its fill toward black in its own scoped CSS (the host's
+//      --destructive is left alone), at rest and on hover, and the label must
+//      reach 4.5:1 in every state while hover stays distinct from rest.
 import { test, expect } from 'vitest';
 import { oklch, toRgb, mix, over, contrast, type Lab } from './__fixtures__/contrast.js';
 
@@ -106,6 +111,37 @@ test("TaskRows' solid badges keep a white icon at 3:1 against the fill", async (
       const fill = toRgb(mix(h[tone], oklch(0, 0, 0), p));
       const ratio = contrast(white, fill);
       if (ratio < 3) failures.push(`${tone} badge ${name}: ${ratio.toFixed(2)}`);
+    }
+  }
+  expect(failures).toEqual([]);
+});
+
+test('solid destructive buttons keep a white label at 4.5:1 at rest and on hover', async () => {
+  // paw-enterprise --destructive, light and dark; --destructive-foreground is white in both.
+  const RED: Record<string, Lab> = {
+    light: oklch(0.65, 0.22, 25),
+    dark: oklch(0.704, 0.191, 22.216),
+  };
+  const white = toRgb(oklch(1, 0, 0));
+  const failures: string[] = [];
+  for (const file of ['src/lib/widgets/input/Button.svelte', 'src/lib/widgets/overlay/ErrorState.svelte']) {
+    const src = await read(file);
+    const rules = [
+      ...src.matchAll(
+        /([^{}]*)\{\s*background-color:\s*color-mix\(in oklab,\s*var\(--destructive\)\s+([\d.]+)%,\s*black\);?\s*\}/g
+      ),
+    ].map((m) => ({ selector: m[1].trim(), p: Number(m[2]) / 100 }));
+    const rest = rules.find((r) => !/:hover|:active/.test(r.selector));
+    const hover = rules.find((r) => /:hover/.test(r.selector));
+    if (!rest) failures.push(`${file}: no darkened rest fill`);
+    if (!hover) failures.push(`${file}: no darkened hover fill`);
+    if (rest && hover && rest.p === hover.p) failures.push(`${file}: hover fill equals rest`);
+    const states = rules.length ? rules : [{ selector: 'raw --destructive', p: 1 }];
+    for (const { selector, p } of states) {
+      for (const [theme, red] of Object.entries(RED)) {
+        const ratio = contrast(white, toRgb(mix(red, oklch(0, 0, 0), p)));
+        if (ratio < 4.5) failures.push(`${file} ${selector} ${theme}: ${ratio.toFixed(2)}`);
+      }
     }
   }
   expect(failures).toEqual([]);

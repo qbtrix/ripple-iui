@@ -37,6 +37,14 @@
 
   Colors stay token-driven (bg-primary / bg-destructive / --primary etc.).
 
+  Updated 2026-09-17 (fix/port-gaps, destructive label): the destructive
+  variant darkens its fill toward black in the scoped CSS below (78% rest, 70%
+  hover, 64% pressed). White on the raw --destructive measured 3.59:1 light
+  and 2.89:1 dark, under 4.5 for a label; darkened it is 5.25:1 or better in
+  every state. The host's --destructive is untouched, so nothing else that
+  paints it changes. The dead hover:bg-destructive/95 utility came off: the
+  unlayered scoped rule would beat it anyway.
+
   Updated 2026-09-17 (fix/port-gaps): the loading spinner stops under
   prefers-reduced-motion (`motion-reduce:animate-none`, the same variant
   Segmented uses). Tailwind's animate-spin ships no guard of its own. The
@@ -150,7 +158,7 @@
         primary:
           'ripple-solid bg-primary text-primary-foreground hover:bg-primary/95',
         destructive:
-          'ripple-solid bg-destructive text-destructive-foreground hover:bg-destructive/95',
+          'ripple-solid ripple-solid-destructive bg-destructive text-destructive-foreground',
         // Secondary: a real filled neutral key with a softer edge + shadow.
         secondary:
           'ripple-raised bg-secondary text-secondary-foreground hover:bg-secondary/80',
@@ -290,6 +298,19 @@
       rgba(0, 0, 0, 0.05),
       rgba(0, 0, 0, 0) 60%
     );
+  }
+
+  /* Destructive key: the host red deepened toward black so the white label
+     reads at 4.5:1 in both themes (raw it was 3.59 light, 2.89 dark). Each
+     state steps darker, so hover and press stay distinct from rest. */
+  .ripple-solid-destructive {
+    background-color: color-mix(in oklab, var(--destructive) 78%, black);
+  }
+  .ripple-solid-destructive:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--destructive) 70%, black);
+  }
+  .ripple-solid-destructive:active:not(:disabled) {
+    background-color: color-mix(in oklab, var(--destructive) 64%, black);
   }
 
   /* ── Raised keys (secondary / outline): flat, no shadow (border/fill carry) ── */
