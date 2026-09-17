@@ -36,6 +36,11 @@
   icons take the accent colour with no fill. Driven by data-active below.
 
   Colors stay token-driven (bg-primary / bg-destructive / --primary etc.).
+
+  Updated 2026-09-17 (fix/port-gaps): the loading spinner stops under
+  prefers-reduced-motion (`motion-reduce:animate-none`, the same variant
+  Segmented uses). Tailwind's animate-spin ships no guard of its own. The
+  static Loader2 glyph still reads as loading.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -216,7 +221,7 @@
 >
   {#if loading}
     <span data-slot="button-spinner" class="inline-flex shrink-0">
-      <Loader2 size={iconSize} class="animate-spin" />
+      <Loader2 size={iconSize} class="animate-spin motion-reduce:animate-none" />
     </span>
   {:else if leading}
     <span data-slot="button-leading" class="inline-flex shrink-0">{@render leading()}</span>
