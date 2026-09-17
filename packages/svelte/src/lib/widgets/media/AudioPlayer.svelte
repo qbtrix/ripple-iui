@@ -9,6 +9,9 @@
     `Math.random` waveform is removed; `showWaveform` now renders a simple
     static bar strip (a real PCM analyser is out of scope and not needed for the
     spec-driven use case). Lives in `media/` alongside ModelViewer / Embed.
+  @changed 2026-09-17 (fix/port-gaps) — the buffering ring stops under
+    prefers-reduced-motion (`motion-reduce:animate-none`, the variant Segmented
+    uses). A still ring with one open side still reads as loading.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -191,7 +194,7 @@
         aria-label={isPlaying ? 'Pause' : 'Play'}
       >
         {#if isLoading}
-          <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+          <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin motion-reduce:animate-none"></div>
         {:else if isPlaying}
           <Pause size={20} />
         {:else}

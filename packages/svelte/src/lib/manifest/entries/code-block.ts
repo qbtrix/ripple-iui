@@ -3,7 +3,8 @@ import type { WidgetManifestEntry } from '../index.js';
 export const codeBlockEntry: WidgetManifestEntry = {
   type: 'code-block',
   category: 'display',
-  description: 'Syntax-highlighted fenced code block with language label and copy button.',
+  description:
+    'Fenced code block with line numbers, light syntax highlighting, a language label and a copy button. Long lines wrap rather than scrolling.',
   props: {
     code: { type: 'string', required: false, description: 'Code source.' },
     text: { type: 'string', required: false, description: 'Alias for code.' },

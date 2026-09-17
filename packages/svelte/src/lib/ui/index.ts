@@ -37,6 +37,41 @@
  *   `widgets/overlay/`) came off this surface for that reason; they are still on
  *   `./widgets`. `confirmDialog` is exported by name as well as inside its
  *   namespace because 33 call sites import the store, not the component.
+ *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` joins the
+ *   molecules. It was always a registered, context-free widget; it is listed now
+ *   because its re-skin is CodeBlock's Diff mode, and a caller pairing the two
+ *   needs both from the same surface. `DiffTable` joins the organisms on the
+ *   same terms as TaskRows: no registry entry, no manifest entry, count 189.
+ *   Updated 2026-09-17 (fix/port-gaps): `Switch` and `ProgressRing` join the
+ *   atoms. Both were re-skinned in the arc but reachable only through
+ *   `./widgets`. Both are registered widgets already, so the manifest count does
+ *   not move; this only adds them to the hand-written-caller surface.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): `ContextCards`
+ *   and `RecommendationCard` join on the same terms: the retrieved chunks an
+ *   agent cites, and the suggestion it asks you to accept. Neither is registered, so the count still reads 189. The source
+ *   chip they share with AnswerBlock (`widgets/ai/SourceChip.svelte`) is a part,
+ *   not an export.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
+ *   and `SelectionActions` join on the same terms. FineTuneCard is an inspector
+ *   composed from Card, Segmented, Input, Select and Button; SelectionActions
+ *   wraps a passage and anchors a Popover toolbar to the reader's text
+ *   selection. Both ./ui-only, so the manifest still reads 189.
+ *
+ *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
+ *   `PixelLoader` join them on the same terms — the whole answer surface
+ *   StreamingText.tsx really is, which the arc had only ported the text run of,
+ *   and the pixel-grid loader that was never in the arc's scope. Same placement
+ *   rule: no registry entry, no manifest entry, so the count still reads 189.
+ *   PixelLoader does NOT replace `Loading` — that stays the library's generic
+ *   spinner, registered and spec-drivable; this is the agent-work status line.
+ *
+ *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
+ *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
+ *   on this surface — no spec-registry entry and no manifest entry, so the
+ *   manifest still reports 189 widgets and the arc's proof holds. Everything
+ *   else listed here is also a registered widget. Registering either of the two
+ *   is a deliberate follow-up that moves the count on purpose.
  */
 
 /* ── atoms ─────────────────────────────────────────────────────────────────
@@ -44,10 +79,13 @@
 export { default as Button } from '../widgets/input/Button.svelte';
 export { default as Input } from '../widgets/input/Input.svelte';
 export { default as Textarea } from '../widgets/input/Textarea.svelte';
+export { default as Switch } from '../widgets/input/Switch.svelte';
 export { default as Chip } from '../widgets/display/Chip.svelte';
 export { default as Badge } from '../widgets/display/Badge.svelte';
 export { default as StatusDot } from '../widgets/display/StatusDot.svelte';
 export { default as Skeleton } from '../widgets/display/Skeleton.svelte';
+export { default as ProgressRing } from '../widgets/display/ProgressRing.svelte';
+export { default as Shimmer } from '../widgets/premium/Shimmer.svelte';
 export { default as Separator } from '../widgets/layout/Separator.svelte';
 
 /* ── molecules ─────────────────────────────────────────────────────────────
@@ -60,6 +98,7 @@ export { default as Search } from '../widgets/input/Search.svelte';
 export { default as Tabs } from '../widgets/layout/Tabs.svelte';
 export { default as Collapsible } from '../widgets/layout/Collapsible.svelte';
 export { default as CodeBlock } from '../widgets/display/CodeBlock.svelte';
+export { default as Diff } from '../widgets/display/Diff.svelte';
 export { default as Markdown } from '../widgets/display/Markdown.svelte';
 export { default as Toast } from '../widgets/overlay/Toast.svelte';
 
@@ -78,8 +117,21 @@ export * as Command from '../components/ui/command/index.js';
 export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
-   Own behaviour and state. The AI-native four: the product's core surfaces. */
+   Own behaviour and state. The AI-native tier: the product's core surfaces.
+   TaskRows and PromptBar joined it in the beautiful-ui re-skin (2026-09-14) and
+   are deliberately absent from the spec registry and the manifest — they reach
+   callers through this surface only, which is why the manifest still reports
+   189 widgets. */
 export { default as ApprovalGate } from '../widgets/ai/ApprovalGate.svelte';
 export { default as StreamText } from '../widgets/ai/StreamText.svelte';
 export { default as ToolCall } from '../widgets/ai/ToolCall.svelte';
 export { default as ReasoningTrace } from '../widgets/ai/ReasoningTrace.svelte';
+export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
+export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
+export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
+export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
+export { default as DiffTable } from '../widgets/data/DiffTable.svelte';
+export { default as ContextCards } from '../widgets/ai/ContextCards.svelte';
+export { default as RecommendationCard } from '../widgets/ai/RecommendationCard.svelte';
+export { default as FineTuneCard } from '../widgets/ai/FineTuneCard.svelte';
+export { default as SelectionActions } from '../widgets/ai/SelectionActions.svelte';

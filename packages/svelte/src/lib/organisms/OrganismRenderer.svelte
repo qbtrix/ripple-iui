@@ -11,6 +11,11 @@
   (layouts): given `{ organism, props }` it renders the matching organism. Lets a
   spec reference an organism by name instead of inlining a full widget tree. Pure
   presentation — props in, UI out. No data fetching.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import OptionList from './OptionList.svelte';
@@ -73,7 +78,7 @@
   <Component {...props} {...handlers} />
 {:else}
   <div
-    class="rounded-ripple border border-ripple-error/30 bg-ripple-error/10 p-4 text-sm text-ripple-error"
+    class="rounded-ripple border border-ripple-error/30 bg-ripple-error/10 p-4 text-sm text-ripple-error-text"
     role="alert"
   >
     Unknown organism: {organism}

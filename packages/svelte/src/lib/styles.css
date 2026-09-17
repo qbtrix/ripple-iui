@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* 2026-09-17 (fix/port-gaps): the .dark --destructive is the current shadcn dark red.
+   --ripple-error aliases --destructive now, so the old near-black red would have
+   carried every error widget in this app's dark mode. */
 /* Ripple's --ripple-* token base + the ripple-* Tailwind utilities (bg-ripple-surface,
    rounded-ripple, …) that Card and ~16 other components depend on. Without this the
    utilities resolve to nothing (cards lose their surface fill + radius). */
@@ -118,7 +121,11 @@
   --muted-foreground: hsl(0 0% 63.9%);
   --accent: hsl(0 0% 14.9%);
   --accent-foreground: hsl(0 0% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
+  /* 2026-09-17 (fix/port-gaps): was hsl(0 62.8% 30.6%), shadcn's old dark red,
+     about 2:1 on this dark ground. --ripple-error now aliases --destructive, so
+     this is the red every error widget in ripple's own app reads in dark mode.
+     Current shadcn dark value, the same one paw-enterprise uses. */
+  --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(0 0% 14.9%);
   --input: hsl(0 0% 14.9%);

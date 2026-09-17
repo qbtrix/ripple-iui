@@ -4,6 +4,10 @@
   professional-grade layout, interactive pan/zoom, minimap, and group node nesting.
   Supports all 4 C4 levels (Context, Container, Component, Code) with drill-down.
   Modified: 2026-04-10 — Add cancellation to $effect layout call to prevent stale results from race conditions.
+  Modified: 2026-09-17 (fix/port-gaps) — the layout spinner stops under
+  prefers-reduced-motion, from a scoped @media block (the pattern ReasoningTrace
+  and TaskRows use). Still, it is a ring with one coloured segment next to
+  "Computing layout", which still reads as loading.
 -->
 <script lang="ts">
   import { SvelteFlow, Background, Controls, MiniMap, Position } from '@xyflow/svelte';
@@ -455,6 +459,12 @@
 
   @keyframes c4-spin {
     to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-spinner {
+      animation: none;
+    }
   }
 
   /* ---- Legend ---- */

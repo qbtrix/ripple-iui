@@ -28,6 +28,31 @@
  *   reaches for the shorthand state variants that only resolve inside ripple's
  *   own build. And the ResizeObserver shim moved to src/test-setup.ts, so this
  *   file no longer leaves it on globalThis for whatever runs next.
+ *
+ *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two PROPS entries added,
+ *   for the new `TaskRows` and `PromptBar` exports. The re-skin lanes keep this
+ *   map UNCHANGED — that is the arc's proof that a re-skin did not move a prop.
+ *   Lane C is the exception because it adds exports rather than re-skinning
+ *   one, so the map has to grow with the surface. Neither is in
+ *   RENDERS_NOTHING_WHEN_EMPTY: both paint their own frame with no props.
+ *
+ *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): two more entries
+ *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
+ *   re-skins. No existing entry was edited, which is the thing this map is the
+ *   proof of.
+ *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` and `DiffTable`
+ *   entries added — a registered widget newly listed on this surface, and a new
+ *   export. No existing entry was edited.
+ *   Updated 2026-09-17 (fix/port-gaps): two more entries, `Switch` and
+ *   `ProgressRing`, for the two atoms that joined the surface. Again no existing
+ *   entry was edited.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): two more entries,
+ *   `ContextCards` and `RecommendationCard`, again new exports rather than
+ *   re-skins. No existing entry was edited.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
+ *   and `SelectionActions` added, both new exports. No existing entry was
+ *   edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -53,6 +78,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Tabs: { tabs: [{ value: 'one', label: 'One' }], value: 'one' },
   Collapsible: { title: 'More', children: kid('body') },
   CodeBlock: { code: 'const a = 1;', language: 'ts' },
+  // Diff computes its rows after a lazy import, so the mount proves the frame
+  // and header; Diff.skin.test.ts covers the rows.
+  Diff: { before: 'const a = 1;', after: 'const a = 2;', title: 'a.ts' },
   Markdown: { content: '# Title' },
   // Toast is the container for the toast bus, not a single toast. With an
   // empty bus it correctly renders nothing, so it is exempt from the
@@ -63,10 +91,54 @@ const PROPS: Record<string, Record<string, unknown>> = {
   StreamText: { text: 'streaming' },
   ToolCall: { name: 'read_file', status: 'success' },
   ReasoningTrace: { steps: [{ title: 'Thinking' }] },
+  // With `rows: []` TaskRows still renders its (empty) list wrapper, so it is
+  // NOT in RENDERS_NOTHING_WHEN_EMPTY. A row here so the mount proves the row
+  // markup, not just the wrapper.
+  TaskRows: { rows: [{ key: 'verify', label: 'Verified vendor records', status: 'done' }] },
+  // PromptBar paints its composer with no props at all; the placeholder just
+  // makes the mounted output legible if this ever fails.
+  PromptBar: { placeholder: 'Ask anything' },
+  // AnswerBlock paints its body wrapper and action row with no props, but a
+  // body segment here means the mount proves the StreamText composition too —
+  // the part that would break if StreamText's shape ever moved under it.
+  AnswerBlock: { body: [{ text: 'Pistachio is the fastest-growing flavor.' }] },
+  // PixelLoader paints its grid, label and timer with no props; the label is
+  // here so the mounted output names itself if this ever fails.
+  PixelLoader: { label: 'Churning' },
+  // A removal and an addition, so the mount proves the checkbox column and the
+  // footer, not just an empty table.
+  DiffTable: {
+    columns: [{ key: 'flavor', label: 'Flavor' }],
+    rows: [
+      { key: 'rocky', cells: { flavor: 'Rocky Road' }, change: 'removed' },
+      { key: 'pistachio', cells: { flavor: 'Pistachio' }, change: 'added' },
+    ],
+  },
+  // ContextCards paints its header with no chunks; one chunk here so the mount
+  // proves the card and the SourceChip composition as well.
+  ContextCards: { chunks: [{ title: 'Vendor rule', body: 'Verify cold-chain first.', source: 'SOP.pdf' }] },
+  // RecommendationCard paints its question with no options; one option here so
+  // the mount proves the Chip composition and the footer too.
+  RecommendationCard: {
+    title: 'Place this order?',
+    options: [{ key: 'a', body: [{ text: 'Reorder from ' }, { entity: 'Cone King' }], signal: 3 }],
+  },
+  // FineTuneCard paints its frame, fields and select from defaults alone; the
+  // title makes the mounted output legible if this ever fails.
+  FineTuneCard: { labels: { title: 'Flavor card' } },
+  // SelectionActions renders its passage wrapper; the toolbar only exists once
+  // text is selected, so the passage is what proves the mount.
+  SelectionActions: { children: kid('Pistachio holds the top slot all weekend.') },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},
   Skeleton: {},
+  // Shimmer paints a sweeping gradient through its children's glyphs; with no
+  // child it still renders its own span, so it is not exempt below.
+  Shimmer: { children: kid('shimmering') },
+  // Both paint with no props; these make the mounted output name itself.
+  Switch: { label: 'Notifications' },
+  ProgressRing: { value: 40 },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */

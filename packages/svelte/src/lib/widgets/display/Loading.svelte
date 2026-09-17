@@ -1,4 +1,8 @@
-<!-- src/lib/widgets/display/Loading.svelte -->
+<!-- src/lib/widgets/display/Loading.svelte
+     Updated 2026-09-17 (fix/port-gaps): the spinner stops under
+     prefers-reduced-motion (`motion-reduce:animate-none`, the variant Segmented
+     uses). Tailwind's animate-spin ships no guard; the static loader glyph
+     still reads as loading. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import LoaderIcon from '@lucide/svelte/icons/loader-2';
@@ -30,7 +34,7 @@
 </script>
 
 <span {id} class={cn(wrapperClass, className)} style={styleString} role="status" aria-live="polite">
-  <LoaderIcon {size} class="animate-spin text-muted-foreground" aria-hidden="true" />
+  <LoaderIcon {size} class="animate-spin motion-reduce:animate-none text-muted-foreground" aria-hidden="true" />
   {#if showLabel}
     <span class="text-sm text-muted-foreground">{label}</span>
   {:else}

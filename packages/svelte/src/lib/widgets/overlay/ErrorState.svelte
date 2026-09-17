@@ -1,4 +1,14 @@
-<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
+<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check).
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+  Same day, destructive label: the action button darkens its red toward black
+  (scoped .ripple-error-action, 78% rest / 70% hover) so the white label clears
+  4.5:1; raw --destructive measured 3.59:1 light and 2.89:1 dark. The host token
+  is untouched.
+-->
 <!-- src/lib/widgets/overlay/ErrorState.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -61,7 +71,7 @@
   )}
   style={styleString}
 >
-  <span class="grid place-items-center h-12 w-12 rounded-full bg-destructive/10 text-destructive">
+  <span class="grid place-items-center h-12 w-12 rounded-full bg-destructive/10 text-ripple-error-text">
     <Icon size={20} />
   </span>
   <div class="flex flex-col gap-1 max-w-md">
@@ -90,7 +100,7 @@
         <button
           type="button"
           onclick={() => onaction?.()}
-          class="inline-flex items-center justify-center h-9 px-3 rounded-md bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
+          class="inline-flex items-center justify-center h-9 px-3 rounded-md bg-destructive text-destructive-foreground text-sm font-medium transition-colors ripple-error-action"
         >
           {actionLabel}
         </button>
@@ -98,3 +108,14 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* The host red deepened toward black so the white label reads at 4.5:1 in
+     both themes; the hover state steps darker still. */
+  .ripple-error-action {
+    background-color: color-mix(in oklab, var(--destructive) 78%, black);
+  }
+  .ripple-error-action:hover {
+    background-color: color-mix(in oklab, var(--destructive) 70%, black);
+  }
+</style>

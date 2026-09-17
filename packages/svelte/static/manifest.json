@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-09-16T06:10:44.027Z",
+  "generatedAt": "2026-09-16T08:25:28.550Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -1260,7 +1260,7 @@
     {
       "type": "badge",
       "category": "display",
-      "description": "Colored label with semantic variants (success, warning, destructive).",
+      "description": "Tinted pill label with semantic variants (success, warning, destructive). For a square-cornered tag, use chip.",
       "props": {
         "text": {
           "type": "string",
@@ -2040,7 +2040,7 @@
     {
       "type": "chip",
       "category": "display",
-      "description": "Pill-shaped tag with optional close button.",
+      "description": "Small square-cornered tag with optional close button. For a rounded pill, use badge.",
       "props": {
         "label": {
           "type": "string",
@@ -2180,7 +2180,7 @@
     {
       "type": "code-block",
       "category": "display",
-      "description": "Syntax-highlighted fenced code block with language label and copy button.",
+      "description": "Fenced code block with line numbers, light syntax highlighting, a language label and a copy button. Long lines wrap rather than scrolling.",
       "props": {
         "code": {
           "type": "string",
@@ -12838,7 +12838,7 @@
     {
       "type": "shimmer",
       "category": "display",
-      "description": "Sweeps a moving highlight band across its children (pure CSS). Use on a CTA label, a \"new\" badge, or skeleton text to draw the eye.",
+      "description": "Sweeps a moving highlight through the text of its children (pure CSS). Use on a CTA label or skeleton text. In a flex column pass self-start, or it stretches and the sweep misses the text.",
       "props": {
         "duration": {
           "type": "number",
@@ -12848,7 +12848,7 @@
         "width": {
           "type": "string",
           "required": false,
-          "description": "Highlight band width (CSS length). Default 100px."
+          "description": "How far either side of centre the bright band ramps (CSS length). Default 100px."
         }
       },
       "example": {
