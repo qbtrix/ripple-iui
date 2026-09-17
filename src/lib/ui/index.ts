@@ -39,9 +39,8 @@
  *   namespace because 33 call sites import the store, not the component.
  *
  *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): `ContextCards`
- *   joins on the same terms, and `RecommendationCard` follows it in the next
- *   commit: the retrieved chunks an agent cites, and the suggestion it asks you
- *   to accept. Neither is registered, so the count still reads 189. The source
+ *   and `RecommendationCard` join on the same terms: the retrieved chunks an
+ *   agent cites, and the suggestion it asks you to accept. Neither is registered, so the count still reads 189. The source
  *   chip they share with AnswerBlock (`widgets/ai/SourceChip.svelte`) is a part,
  *   not an export.
  *
@@ -115,3 +114,4 @@ export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
 export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
 export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
 export { default as ContextCards } from '../widgets/ai/ContextCards.svelte';
+export { default as RecommendationCard } from '../widgets/ai/RecommendationCard.svelte';
