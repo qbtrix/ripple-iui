@@ -31,8 +31,9 @@
     The label reuses `premium/Shimmer` rather than pasting a fifth sweep
     keyframe — the translation table's row 1 calls shimmer a reuse, and this is
     the reuse.
-  @a11y `role="status"` on the row, so the label and the elapsed time are
-    announced. The grid is decorative and aria-hidden. Under
+  @a11y `role="status"` wraps the label only, so a change of label is
+    announced. The elapsed timer sits outside the live region: it is readable
+    on demand but never announced. The grid is decorative and aria-hidden. Under
     prefers-reduced-motion the grid freezes to its dim state — the source's own
     behaviour — while the timer keeps ticking, because elapsed time is
     information rather than decoration.
@@ -45,6 +46,12 @@
     `--dur`, the same custom-property stagger ToolCall and TaskRows use with
     `--i`. Rejected: marking the keyframe global, which would let it collide
     with any other keyframe of the same name on the page.
+  FIXED 2026-09-17 (pre-merge review): the status role sat on the whole row,
+    which holds a timer that re-renders every 100ms, so a screen reader got a
+    queue of "0.1s, 0.2s..." for as long as the agent worked. The role moved to
+    a wrapper around the label. Rejected: `aria-hidden` on the timer inside
+    the region. The region is implicitly aria-atomic, and a browser may still
+    re-read the whole region, label included, on every hidden mutation.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/LoadingState.tsx
 -->
 <script lang="ts">
@@ -106,7 +113,6 @@
   {id}
   data-ripple-node={id}
   data-variant={variant}
-  role="status"
   class={cn('ripple-pixel-loader flex w-fit items-center gap-2.5', className)}
   style={styleString}
 >
@@ -128,9 +134,13 @@
     {/each}
   </span>
 
-  <Shimmer class="w-fit shrink-0 text-[13px] font-medium" duration={1.4} width="60px">
-    {label}
-  </Shimmer>
+  <!-- The live region holds the label only. Shimmer takes no role prop, so the
+       role sits on a wrapper; `flex` keeps Shimmer a flex item as before. -->
+  <span role="status" class="flex shrink-0">
+    <Shimmer class="w-fit shrink-0 text-[13px] font-medium" duration={1.4} width="60px">
+      {label}
+    </Shimmer>
+  </span>
 
   <span class="font-mono text-[12px] tabular-nums text-ripple-muted-foreground">{elapsed}</span>
 </span>
