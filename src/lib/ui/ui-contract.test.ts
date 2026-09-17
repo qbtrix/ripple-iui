@@ -50,6 +50,9 @@
  *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): two more entries,
  *   `ContextCards` and `RecommendationCard`, again new exports rather than
  *   re-skins. No existing entry was edited.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
+ *   and `SelectionActions` added, both new exports. No existing entry was
+ *   edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -120,6 +123,12 @@ const PROPS: Record<string, Record<string, unknown>> = {
     title: 'Place this order?',
     options: [{ key: 'a', body: [{ text: 'Reorder from ' }, { entity: 'Cone King' }], signal: 3 }],
   },
+  // FineTuneCard paints its frame, fields and select from defaults alone; the
+  // title makes the mounted output legible if this ever fails.
+  FineTuneCard: { labels: { title: 'Flavor card' } },
+  // SelectionActions renders its passage wrapper; the toolbar only exists once
+  // text is selected, so the passage is what proves the mount.
+  SelectionActions: { children: kid('Pistachio holds the top slot all weekend.') },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},

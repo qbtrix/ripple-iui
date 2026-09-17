@@ -19,6 +19,10 @@
   `--ripple-error` aliases `--destructive`, with the host override caveat and
   the light-mode contrast finding, then the readable status-text tokens that
   close it.
+  Updated 2026-09-17 by the skin-selection lane: row 7 gains FineTuneCard's
+  `ripple-finetune-pop-in`, and §8 gains three things a floating or composed
+  component will otherwise rediscover (the hide boundary, the page-wide
+  highlight registry, Segmented's labels).
 -->
 
 # beautiful-ui → ripple: the translation
@@ -191,7 +195,7 @@ have (`@media (prefers-reduced-motion: reduce) { … animation: none; }`) — se
 | 4 | `fade-in` | opacity 0→1 | `ripple-tool-fade-in`, `ripple-stream-fade-in`, `ripple-reasoning-fade-in`, `ripple-task-fade-in` | ToolCall, StreamText, ReasoningTrace (`ThinkingState.tsx:180,291`) — all B — and TaskRows (C) |
 | 5 | `eq-bounce` | `scaleY` .35 ↔ 1 — the audio-equalizer bars | `ripple-prompt-eq-bounce` | PromptBar (C) — its only call site in the source |
 | 6 | `caret-blink` | opacity 1 ↔ 0, `step-end` — the streaming caret | **already exists** as `ripple-stream-blink` (StreamText.svelte) | reuse — StreamText (B). Do not add. |
-| 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-approval-pop-in`, `ripple-task-pop-in` | ToolCall, StreamText, ApprovalGate (`ApprovalCard.tsx:260`) — all B — and TaskRows (C) |
+| 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-approval-pop-in`, `ripple-task-pop-in`, `ripple-finetune-pop-in` | ToolCall, StreamText, ApprovalGate (`ApprovalCard.tsx:260`) — all B — TaskRows (C), and FineTuneCard's "Edited" label (skin-selection). SelectionActions' bar also pops in in the source, but there the overlay canonical's own `animate-in` does it, so it owns no copy. |
 | 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` — TaskRows' ring (C) and ReasoningTrace's small ring (`ThinkingState.tsx:231`, B). Do not add a 5th copy. **Pair it with a guard handle — see the footnote.** |
 | 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | `ripple-loader-pixel-on` | **PixelLoader** (skin-answer, 2026-09-16). This row said "no owner — do not add" while `LoadingState.tsx` was out of scope; the captain asked for the loading state and it now has one. The animation is declared on `.ripple-pixel-lit` in PixelLoader's own stylesheet, and each cell passes only `--delay` inline. An earlier inline `animation` named the keyframe before Svelte hashed it, so it never ran (fixed 2026-09-17). The reduced-motion guard wins on source order at equal specificity. Its `!important` only keeps it winning if the lit selector ever grows. |
 
@@ -469,6 +473,21 @@ less than it looks like it proves. Pre-existing; note it, leave it.
   `createPortal`→ the overlay canonical (`Tooltip`/`HoverCard` from `./ui`).
 - **Provenance header on every re-skinned file:**
   `origin: slev12397/beautiful-ui@ff0f74d components/primitives/ThinkingState.tsx`
+- **A floating layer anchored inside a scroll pane needs `collisionBoundary`.**
+  bits-ui's default boundary is empty, so floating-ui's `hide` middleware
+  (`hideWhenDetached`) checks only the viewport: the layer stays visible over
+  the pane's chrome after its anchor scrolls out of the pane. SelectionActions
+  passes the anchor's nearest clipping ancestor.
+- **The CSS Custom Highlight registry is page-wide.** A component that paints a
+  range with `CSS.highlights.set(name, …)` shares that name with every other
+  instance on the page, so a closed instance must not `delete` it.
+  SelectionActions found this with two instances on one page.
+- **Segmented cannot do icon-only segments accessibly.** It always renders the
+  option label and has no per-option aria-label, so an icon-only option is an
+  unnamed radio. Give it short visible labels (FineTuneCard's Row / Column /
+  Grid). Its unselected label also measures 4.14:1 on ripple's light defaults
+  (`muted-foreground` on the `border/60` track), which is a Segmented fix, not a
+  per-caller override.
 - The source's pilot components are Tailwind-utility styled, but others in that
   repo use semantic CSS classes in `globals.css`. If a lane hits one, translate
   it to utilities rather than copying a CSS block into a repo that has none.
