@@ -5,12 +5,12 @@
   src/lib/theme.css actually publishes. Contains: the token/utility table, the
   9 keyframes with owners, what we drop, and the two decisions lanes A and C
   were blocked on (TaskRows, StatusPill).
-  Updated 2026-09-16 by the skin-answer lane: keyframe rows 1 and 9 and the net
-  count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
-  reuse concrete. Nothing else in the table moved.
   Corrected 2026-09-17 (pre-merge review, fix-129): row 9 gave a stale reason
   for PixelLoader's `!important`. The reason was true before the grid's
   keyframe fix and stopped being true with it.
+  Updated 2026-09-16 by the skin-answer lane: keyframe rows 1 and 9 and the net
+  count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
+  reuse concrete. Nothing else in the table moved.
 -->
 
 # beautiful-ui → ripple: the translation

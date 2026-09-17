@@ -45,6 +45,7 @@
     the accessibility tree. Action buttons carry real labels rather than the
     source's four identical "Action" ones. Every animation freezes under
     prefers-reduced-motion, which also paints the whole body at once.
+  origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
   FIXED 2026-09-17: two sources from the same domain, or a repeated follow-up,
     crashed the block. The source lists were keyed by `source.domain` and the
     follow-ups by their text, and Svelte 5 throws `each_key_duplicate` on a
@@ -54,7 +55,6 @@
     unique per item (`href` can repeat as well), and no prop was added for an
     id. Position keys are safe because these rows hold no local state that
     would need to follow an item when the list is reordered.
-  origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
