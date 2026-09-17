@@ -40,6 +40,10 @@
  *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
  *   re-skins. No existing entry was edited, which is the thing this map is the
  *   proof of.
+ *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): one more entry,
+ *   `ContextCards`, again a new export rather than a re-skin. No existing entry
+ *   was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -89,6 +93,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // PixelLoader paints its grid, label and timer with no props; the label is
   // here so the mounted output names itself if this ever fails.
   PixelLoader: { label: 'Churning' },
+  // ContextCards paints its header with no chunks; one chunk here so the mount
+  // proves the card and the SourceChip composition as well.
+  ContextCards: { chunks: [{ title: 'Vendor rule', body: 'Verify cold-chain first.', source: 'SOP.pdf' }] },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},
