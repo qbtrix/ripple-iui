@@ -5,6 +5,8 @@
  * what an intent layout needs, WITHOUT adopting genesis's IntentSpec wholesale.
  * @created 2026-06-07
  * @changes
+ *   - 2026-09-17: display coercions route through asText (objects → JSON, not
+ *     "[object Object]") — oxlint no-base-to-string sweep
  *   - 2026-06-07: wire `review_rows` (pocketpaw start_flow confirm contract) —
  *     `review_rows: [{label, value}]` emitted by the pocketpaw builder on confirm
  *     steps is treated equivalently to `form_fields` for mode detection, and
@@ -30,6 +32,7 @@
 import type { UniversalSpec } from '@ripple-ui/core';
 import type { LayoutMetadata } from './layout-engine.js';
 import { getLayoutMetadata } from './layout-engine.js';
+import { asText } from '../widgets/text-coerce.js';
 
 /**
  * A spec extended with the optional genesis-style data fields ripple tolerates.
@@ -135,7 +138,7 @@ export function summaryItemsFromContext(
 			display = String(value);
 		} else if (typeof value === 'object') {
 			const v = value as Record<string, unknown>;
-			display = String(v.label ?? v.title ?? v.name ?? v.id ?? Object.values(v)[0] ?? '');
+			display = asText(v.label ?? v.title ?? v.name ?? v.id ?? Object.values(v)[0]);
 		}
 		if (display) rows.push({ title: formatLabel(key), subtitle: display });
 	}
@@ -162,9 +165,9 @@ export function toLayoutInput(
 			// understands regardless of the generic field mapping.
 			items = s.review_rows.map((r) => ({
 				title: r.label,
-				subtitle: String(r.value ?? ''),
+				subtitle: asText(r.value),
 				label: r.label,
-				value: String(r.value ?? '')
+				value: asText(r.value)
 			}));
 		} else {
 			items = s.data?.items ?? s.data?.stats ?? [];

@@ -22,10 +22,14 @@
  *
  * @changes
  *   - 2026-08-25: created (monorepo split, wave 2).
+ *   - 2026-09-17: export asText (moved here from the svelte package's widgets/).
  */
 
 // ---------------------------------------------------------------- schema
 export * from './schema/index.js';
+
+// ------------------------------------------------------------ text coercion
+export { asText } from './core/text-coerce.js';
 
 // ------------------------------------------------------------------ state
 // The rune-based `StateManager` is NOT here: `$state` needs the Svelte

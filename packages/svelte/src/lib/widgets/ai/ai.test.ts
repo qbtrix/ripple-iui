@@ -202,7 +202,7 @@ describe('ApprovalGate (widget level)', () => {
     expect(getByText('High risk')).toBeTruthy();
   });
 
-  it('shows Approve / Deny controls while pending; Edit only when onedit is supplied', () => {
+  it('shows Approve / Deny controls while pending; Edit only when onedit is supplied', async () => {
     const { getByText, queryByText, rerender } = render(ApprovalGate, {
       props: { title: 'x', risk: 'low' },
     });
@@ -211,7 +211,9 @@ describe('ApprovalGate (widget level)', () => {
     expect(queryByText('Edit')).toBeNull();
 
     // Edit appears once an onedit callback is wired.
-    rerender({ title: 'x', risk: 'low', onedit: vi.fn() });
+    // rerender is async in @testing-library/svelte — await it so the DOM
+    // assertion below runs against the updated tree (oxlint no-floating-promises).
+    await rerender({ title: 'x', risk: 'low', onedit: vi.fn() });
     expect(getByText('Edit')).toBeTruthy();
   });
 
