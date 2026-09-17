@@ -10,6 +10,11 @@
 //   TaskRows and PromptBar this widget is not in the spec registry, so there is
 //   deliberately no registry-wiring test — it reaches callers through
 //   `$lib/ui` only.
+// UPDATED 2026-09-17 (fix: duplicate each keys): a reproduction block at the
+//   bottom. The source lists were keyed by `domain` and the follow-ups by their
+//   text, and Svelte 5 throws on a duplicate key in production builds as well as
+//   dev, so two cited pages from one site, or a repeated follow-up, crashed the
+//   whole block. Committed red first; the tests above are untouched.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import AnswerBlock from './AnswerBlock.svelte';
@@ -223,5 +228,39 @@ describe('AnswerBlock — follow-ups', () => {
     const inline = [...container.querySelectorAll('[style]')].map((el) => el.getAttribute('style')).join(';');
     expect(inline, 'no staggered follow-up rendered').toContain('animation');
     expect(danglingKeyframes(source, inline)).toEqual([]);
+  });
+});
+
+// Reproduces a pre-merge review finding (2026-09-17): a real answer routinely
+// cites two pages from the same site, and a model can repeat a follow-up. Both
+// lists were keyed on a value that is not unique per item, and a keyed each
+// block with a duplicate key throws (`each_key_duplicate`) — the whole block
+// fails to mount.
+describe('AnswerBlock — duplicate values in its lists', () => {
+  const SAME_DOMAIN = [
+    { name: 'Svelte runes', domain: 'github.com', href: 'https://github.com/sveltejs/svelte/runes' },
+    { name: 'Svelte issues', domain: 'github.com', href: 'https://github.com/sveltejs/svelte/issues' },
+  ];
+
+  it('renders two sources from the same domain', async () => {
+    const { container, getByText } = await settled({
+      body: [{ text: 'See both. ' }, { cite: 0 }, { cite: 1 }],
+      sources: SAME_DOMAIN,
+    });
+    const panel = container.querySelector('.ripple-answer-panel');
+    expect(panel?.textContent).toContain('Svelte runes');
+    expect(panel?.textContent).toContain('Svelte issues');
+    expect(container.querySelectorAll('.ripple-answer-chip')).toHaveLength(2);
+    expect(getByText('2 sources')).toBeTruthy();
+  });
+
+  it('renders a repeated follow-up and reports the one that was clicked', async () => {
+    const onfollowup = vi.fn();
+    const repeated = ['Compare gelato margins', 'Compare gelato margins'];
+    const { getAllByText } = await settled({ followUps: repeated, onfollowup });
+    const buttons = getAllByText('Compare gelato margins').map((n) => n.closest('button')!);
+    expect(buttons).toHaveLength(2);
+    await fireEvent.click(buttons[1]);
+    expect(onfollowup).toHaveBeenCalledWith('Compare gelato margins', 1);
   });
 });
