@@ -36,7 +36,18 @@
 
      Note the outer `pre` element is gone: the body is a grid, one row per line,
      which cannot live inside a preformatted element. Line numbers carry
-     `select-none` so a copy of the rendered text does not pick them up. -->
+     `select-none` so a copy of the rendered text does not pick them up.
+
+     2026-09-17 (fix/port-gaps) — strings and numbers measured 1.74:1 in
+     paw-enterprise light mode, and ToolCall's JSON arguments inherit that.
+     They painted `text-ripple-warning`, a status fill at oklch L 0.80: right as
+     a badge tint, too pale to be text on a light surface. They now carry
+     `ripple-code-literal`, a prefixed global rule that mixes the warning hue half-and-half
+     with the surface ink. The ink is dark in light mode and pale in dark mode, so
+     one rule darkens the amber where it needs to and lightens it where it needs
+     to. No single fixed colour reaches 4.5:1 on both near-white and near-black.
+     The `text-ripple-warning` utility stays on the span as the token the hue
+     comes from; that rule is unlayered, so it wins over the utility. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import CopyIcon from '@lucide/svelte/icons/copy';
@@ -108,7 +119,7 @@
     // ever renders TypeScript so it never hit this; ToolCall passes JSON, where
     // without it every key and value lands on the same colour.
     if (quoted && /^\s*:/.test(rest)) return NAME;
-    if (quoted || /^\d/.test(tok)) return 'text-ripple-warning';
+    if (quoted || /^\d/.test(tok)) return 'text-ripple-warning ripple-code-literal';
     if (KEYWORDS.has(tok)) return 'text-ripple-accent';
     return NAME;
   }
@@ -185,3 +196,14 @@
     {/each}
   </div>
 </div>
+
+<style>
+  /* Readable amber: the warning hue pulled halfway toward the surface ink. See
+     the header for why. var(--ripple-*), never var(--color-*). Global and
+     prefixed rather than scoped: a scoped selector against the dynamic class
+     would stamp a hash class onto every token span, including the ones an
+     unlabelled block leaves deliberately class-free. */
+  :global(.ripple-code-literal) {
+    color: color-mix(in oklab, var(--ripple-warning) 50%, var(--ripple-surface-foreground));
+  }
+</style>
