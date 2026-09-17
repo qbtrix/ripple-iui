@@ -1,4 +1,26 @@
-<!-- src/lib/widgets/display/ProgressRing.svelte -->
+<!-- origin: slev12397/beautiful-ui@ff0f74d components/atoms/ProgressRing.tsx
+
+     2026-09-16 — re-skinned against the source atom, and against the copy of this
+     geometry already living in widgets/ai/TaskRows.svelte. The two now agree:
+     track on `stroke-ripple-border`, a round cap, and the dasharray arc.
+
+     What moved: track `stroke-muted` → `stroke-ripple-border`; arc
+     `stroke-primary` → `stroke-ripple-accent`; the dashoffset transition from
+     300ms `ease-out` to the source's 400ms on `ease-ripple-out`, with the
+     reduced-motion guard Segmented already uses; centre label onto
+     `text-ripple-surface-foreground`.
+
+     What did NOT move: `thickness` stays at 6. The source ring is 2px on a 28px
+     box because it is a fixed task badge; this widget defaults to 64px and its
+     stroke is a documented prop default, so changing it would restyle every
+     existing spec for no source mandate. A caller wanting the source's hairline
+     passes `thickness={2}`.
+
+     The source's `tone` enum (orange | green | red | accent) did not come across
+     — `color` already accepts any CSS colour, and a tone enum would be a new
+     prop. Default arc is accent, not the source's orange: a general-purpose
+     meter should not read as a warning. -->
+
 <script lang="ts">
   import { cn } from '$lib/utils.js';
 
@@ -64,7 +86,7 @@
       r={radius}
       fill="none"
       stroke-width={thickness}
-      class={cn(!trackColor && 'stroke-muted')}
+      class={cn(!trackColor && 'stroke-ripple-border')}
       stroke={trackColor}
     />
     <circle
@@ -76,13 +98,16 @@
       stroke-linecap="round"
       stroke-dasharray={circumference}
       stroke-dashoffset={offset}
-      class={cn('transition-[stroke-dashoffset] duration-300 ease-out', !color && 'stroke-primary')}
+      class={cn(
+        'transition-[stroke-dashoffset] duration-[400ms] ease-ripple-out motion-reduce:transition-none',
+        !color && 'stroke-ripple-accent'
+      )}
       stroke={color}
     />
   </svg>
   {#if !hideLabel}
     <span
-      class="absolute inset-0 grid place-items-center text-xs font-semibold tabular-nums text-foreground"
+      class="absolute inset-0 grid place-items-center text-xs font-semibold tabular-nums text-ripple-surface-foreground"
     >
       {displayLabel}
     </span>
