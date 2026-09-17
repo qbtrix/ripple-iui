@@ -12,6 +12,8 @@
  *   undefined under bun. version.test.ts asserts this stays in lockstep with
  *   package.json so a release bump can't silently drift.
  * @created 2026-06-28 (SP-1c-b — feat/ripple-editor-sp1cb)
+ * @updated 2026-09-17 — 0.7.0, the first release on the packages/ workspace
+ *   layout (ripple #119). v0.6.0 was tagged at 0.5.0; this brings them back in step.
  */
 
-export const RIPPLE_VERSION = '0.5.0';
+export const RIPPLE_VERSION = '0.7.0';
