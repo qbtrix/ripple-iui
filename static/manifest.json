@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.5.0",
-  "generatedAt": "2026-09-16T06:22:37.000Z",
+  "generatedAt": "2026-09-16T08:25:28.550Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -2180,7 +2180,7 @@
     {
       "type": "code-block",
       "category": "display",
-      "description": "Syntax-highlighted fenced code block with language label and copy button.",
+      "description": "Fenced code block with line numbers, light syntax highlighting, a language label and a copy button. Long lines wrap rather than scrolling.",
       "props": {
         "code": {
           "type": "string",
