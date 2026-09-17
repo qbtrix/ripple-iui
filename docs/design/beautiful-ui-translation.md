@@ -5,6 +5,12 @@
   src/lib/theme.css actually publishes. Contains: the token/utility table, the
   9 keyframes with owners, what we drop, and the two decisions lanes A and C
   were blocked on (TaskRows, StatusPill).
+  Corrected 2026-09-17 (pre-merge review, fix-129): row 9 gave a stale reason
+  for PixelLoader's `!important`. The reason was true before the grid's
+  keyframe fix and stopped being true with it.
+  Updated 2026-09-16 by the skin-answer lane: keyframe rows 1 and 9 and the net
+  count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
+  reuse concrete. Nothing else in the table moved.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -169,7 +175,7 @@ have (`@media (prefers-reduced-motion: reduce) { … animation: none; }`) — se
 
 | # | source name | what it animates | ripple name | owner (lane) |
 |---|---|---|---|---|
-| 1 | `shimmer-text` | `background-position` 150% → -50%, drives a masked gradient across text | **already exists** as `ripple-reasoning-sweep` (ReasoningTrace) and `ripple-shimmer-sweep` (premium/Shimmer) | reuse — ReasoningTrace (B), Shimmer (A) |
+| 1 | `shimmer-text` | `background-position` 150% → -50%, drives a masked gradient across text | **already exists** as `ripple-reasoning-sweep` (ReasoningTrace) and `ripple-shimmer-sweep` (premium/Shimmer) | reuse — ReasoningTrace (B), Shimmer (A). PixelLoader's label is the reuse in practice: it renders `premium/Shimmer` rather than pasting a third sweep (skin-answer, 2026-09-16). |
 | 2 | `fade-up` | opacity 0→1 + `translateY(8px)`→0; the staggered list entry | `ripple-tool-fade-up`, `ripple-stream-fade-up`, `ripple-reasoning-fade-up`, `ripple-approval-fade-up`, `ripple-task-fade-up` | **all four AI widgets** (B) — ToolCall, StreamText, ReasoningTrace (`ThinkingState.tsx:213,251`), ApprovalGate (`ApprovalCard.tsx:278`) — and TaskRows (C) |
 | 3 | `records-pulse` | opacity .35/scale .8 ↔ opacity 1/scale 1, 1.1s infinite | — | **no owner this arc.** Only RecordsTable and AgentScreen use it, and neither is ported. Do not add. |
 | 4 | `fade-in` | opacity 0→1 | `ripple-tool-fade-in`, `ripple-stream-fade-in`, `ripple-reasoning-fade-in`, `ripple-task-fade-in` | ToolCall, StreamText, ReasoningTrace (`ThinkingState.tsx:180,291`) — all B — and TaskRows (C) |
@@ -177,10 +183,14 @@ have (`@media (prefers-reduced-motion: reduce) { … animation: none; }`) — se
 | 6 | `caret-blink` | opacity 1 ↔ 0, `step-end` — the streaming caret | **already exists** as `ripple-stream-blink` (StreamText.svelte) | reuse — StreamText (B). Do not add. |
 | 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-approval-pop-in`, `ripple-task-pop-in` | ToolCall, StreamText, ApprovalGate (`ApprovalCard.tsx:260`) — all B — and TaskRows (C) |
 | 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` — TaskRows' ring (C) and ReasoningTrace's small ring (`ThinkingState.tsx:231`, B). Do not add a 5th copy. **Pair it with a guard handle — see the footnote.** |
-| 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | — | **no owner this arc.** Only `LoadingState.tsx` uses it and it is not ported. Do not add. |
+| 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | `ripple-loader-pixel-on` | **PixelLoader** (skin-answer, 2026-09-16). This row said "no owner — do not add" while `LoadingState.tsx` was out of scope; the captain asked for the loading state and it now has one. The animation is declared on `.ripple-pixel-lit` in PixelLoader's own stylesheet, and each cell passes only `--delay` inline. An earlier inline `animation` named the keyframe before Svelte hashed it, so it never ran (fixed 2026-09-17). The reduced-motion guard wins on source order at equal specificity. Its `!important` only keeps it winning if the lit selector ever grows. |
 
-Net: **3 already exist** (reuse), **2 have no owner** (do not port), **4 to
-paste** (`fade-up`, `fade-in`, `pop-in`, `eq-bounce`).
+Net at the end of the arc: **3 already existed** (reuse), **2 had no owner**,
+**4 to paste** (`fade-up`, `fade-in`, `pop-in`, `eq-bounce`). The skin-answer
+lane moved one of the two ownerless rows: `pixel-on` is now PixelLoader's, so it
+is **4 existing / 1 ownerless (`records-pulse`) / 5 pasted**. AnswerBlock pastes
+its own `pop-in`, `fade-in` and `fade-up` under the `ripple-answer-` prefix, per
+the each-owner-keeps-a-copy rule two paragraphs up.
 
 **Footnote to row 8 — `animate-spin` needs a guard handle.** Tailwind's utility
 ships no `prefers-reduced-motion` rule, and `motion-reduce:` appears nowhere in

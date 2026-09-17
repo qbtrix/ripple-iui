@@ -6,8 +6,11 @@
 //   wiring that silently went missing last time: the animated class reaching
 //   the card at all, and ApprovalGate numbering a run of calls so they stagger
 //   instead of landing together.
-//   Separate file because ai.test.ts is byte-identical to its pre-arc base and
-//   the arc leans on that.
+//   Separate file because ai.test.ts was byte-identical to its pre-arc base
+//   when this was written, and the arc leaned on that.
+// UPDATED 2026-09-17 (comment only): that proof no longer holds. skin-answer
+//   (ripple #129) added one test to ai.test.ts, ReasoningTrace's scoped-keyframe
+//   check. It changed no existing test.
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import ToolCall from './ToolCall.svelte';
