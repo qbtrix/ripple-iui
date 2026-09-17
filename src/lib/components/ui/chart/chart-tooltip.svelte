@@ -1,3 +1,10 @@
+<!-- chart-tooltip.svelte — shadcn-svelte chart tooltip over layerchart.
+     2026-09-17 (fix/port-gaps): fill moved from bg-ripple-surface to bg-ripple-popover
+     (+ text-ripple-popover-foreground). --ripple-surface aliases the host's --card, an
+     in-flow card tint (6% white in paw-enterprise dark), so page text read straight
+     through this layer; --ripple-popover aliases the host's --popover, the token made
+     for a layer over content.
+     backdrop-blur-md added with it, matching every other ripple floating layer. -->
 <script lang="ts">
 	import { cn, type WithElementRef, type WithoutChildren } from "$lib/utils.js";
 	import type { HTMLAttributes } from "svelte/elements";
@@ -86,7 +93,7 @@
 <TooltipPrimitive.Root variant="none">
 	<div
 		class={cn(
-			"border-border/50 bg-ripple-surface grid min-w-[9rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
+			"border-border/50 bg-ripple-popover text-ripple-popover-foreground backdrop-blur-md grid min-w-[9rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
 			className
 		)}
 		{...restProps}

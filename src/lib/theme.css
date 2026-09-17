@@ -9,12 +9,25 @@
    signature easing of the beautiful-ui skin. See NOTICE and
    docs/design/beautiful-ui-translation.md §3. */
 
+/* 2026-09-17 (fix/port-gaps) — added --ripple-popover and
+   --ripple-popover-foreground (+ their --color-* utilities), aliasing the host's
+   --popover. Every floating layer (popover, menus, hover card, command, chart
+   tooltip, dialog, sheet, PromptBar's listbox) used to fill with
+   --ripple-surface, which aliases --card: an in-flow card tint, 6% white in
+   paw-enterprise dark and fully transparent inside its .ripple-root. Page text
+   read straight through the menus. --popover is the token hosts publish for a
+   layer over content. In-flow surfaces (Card, the PromptBar composer) stay on
+   --ripple-surface. */
+
 /* Fluid Functionalism 8-step surface/elevation ladder (MIT). */
 @import './systems/elevation.css';
 
 :root {
   --ripple-surface: var(--card);
   --ripple-surface-foreground: var(--card-foreground);
+  /* Floating layers over content. Not the card tint: see the header. */
+  --ripple-popover: var(--popover);
+  --ripple-popover-foreground: var(--popover-foreground);
   --ripple-muted: var(--muted);
   --ripple-muted-foreground: var(--muted-foreground);
   --ripple-accent: var(--primary);
@@ -46,6 +59,8 @@
 @theme inline {
   --color-ripple-surface: var(--ripple-surface);
   --color-ripple-surface-foreground: var(--ripple-surface-foreground);
+  --color-ripple-popover: var(--ripple-popover);
+  --color-ripple-popover-foreground: var(--ripple-popover-foreground);
   --color-ripple-muted: var(--ripple-muted);
   --color-ripple-muted-foreground: var(--ripple-muted-foreground);
   --color-ripple-accent: var(--ripple-accent);

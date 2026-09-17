@@ -1,7 +1,15 @@
 <!-- dialog-content.svelte — reconciled 2026-09-14 (ripple overlay canonical): glass in tokens.
-     bg-ripple-surface text-ripple-surface-foreground ring-1 ring-ripple-border +
-     backdrop-blur, the same surface treatment as ripple Card; host-only
-     bg-popover / ring-foreground/10 dropped.
+     bg-ripple-popover text-ripple-popover-foreground ring-1 ring-ripple-border +
+     backdrop-blur; host-only bg-popover / ring-foreground/10 dropped.
+     2026-09-17 (fix/port-gaps): fill moved from bg-ripple-surface to bg-ripple-popover
+     (+ text-ripple-popover-foreground). --ripple-surface aliases the host's --card, an
+     in-flow card tint (6% white in paw-enterprise dark), so page text read straight
+     through this layer; --ripple-popover aliases the host's --popover, the token made
+     for a layer over content.
+     A dialog is portaled to the document body above a scrim and covers content, so it is a
+     floating layer, not a card. paw-enterprise names a separate --panel for
+     modals, but it is not a shadcn token and equals --popover in dark, so ripple
+     publishes one alias; --ripple-panel is the follow-up if the two ever diverge.
      2026-09-14: the default width `sm:max-w-sm` is back inline in the base class.
      It had been hoisted into a `defaultWidth` derived that regex-sniffed the
      caller's `class` for `max-w-`, because `cn` was clsx without twMerge and
@@ -41,7 +49,7 @@
 		bind:ref
 		data-slot="dialog-content"
 		class={cn(
-			"bg-ripple-surface text-ripple-surface-foreground backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 ring-ripple-border grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none sm:max-w-sm",
+			"bg-ripple-popover text-ripple-popover-foreground backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 ring-ripple-border grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none sm:max-w-sm",
 			className
 		)}
 		{...restProps}

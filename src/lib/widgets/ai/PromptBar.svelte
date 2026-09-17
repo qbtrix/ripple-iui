@@ -48,6 +48,13 @@
     a menu and uses the canonical `DropdownMenu` overlay, which brings its own
     focus handling, Escape and outside-click. Every icon-only control carries an
     aria-label; the dictation button carries `aria-pressed`.
+  @changed 2026-09-17 (fix/port-gaps) — the `@` / `/` listbox fills with
+    `bg-ripple-popover` and blurs its backdrop like every other floating layer.
+    It sat on `bg-ripple-surface`, the host's in-flow `--card` tint, which
+    paw-enterprise makes fully transparent inside `.ripple-root` — in dark mode
+    the page text underneath read straight through the list (captain's
+    screenshot). Row names follow onto the popover foreground. The composer
+    body is in-flow and stays on the surface token.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -386,7 +393,7 @@
         id={menuId}
         role="listbox"
         aria-label={menu === 'at' ? 'Data sources and files' : 'Commands'}
-        class="ripple-prompt-menu absolute inset-x-0 bottom-full z-10 mb-2 rounded-ripple bg-ripple-surface p-1 ring-1 ring-ripple-border"
+        class="ripple-prompt-menu absolute inset-x-0 bottom-full z-10 mb-2 rounded-ripple bg-ripple-popover text-ripple-popover-foreground p-1 ring-1 ring-ripple-border backdrop-blur-md"
       >
         <!-- One highlight glides between rows instead of each row painting its own. -->
         <span
@@ -418,7 +425,7 @@
                 <Icon name={source.icon ?? 'paperclip'} size={15} strokeWidth={1.8} />
               </span>
             {/if}
-            <span class="shrink-0 text-[12.5px] font-medium text-ripple-surface-foreground">{row.name}</span>
+            <span class="shrink-0 text-[12.5px] font-medium text-ripple-popover-foreground">{row.name}</span>
             {#if row.desc}
               <span class="min-w-0 flex-1 truncate text-[12px] text-ripple-muted-foreground">{row.desc}</span>
             {/if}
