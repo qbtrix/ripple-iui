@@ -45,6 +45,15 @@
     the accessibility tree. Action buttons carry real labels rather than the
     source's four identical "Action" ones. Every animation freezes under
     prefers-reduced-motion, which also paints the whole body at once.
+  FIXED 2026-09-17: two sources from the same domain, or a repeated follow-up,
+    crashed the block. The source lists were keyed by `source.domain` and the
+    follow-ups by their text, and Svelte 5 throws `each_key_duplicate` on a
+    repeated key in production builds too, not only in dev. Citing two pages
+    from one site is the normal case for a grounded answer. All three lists
+    now key by position, like the body loop. Nothing in `AnswerSource` is
+    unique per item (`href` can repeat as well), and no prop was added for an
+    id. Position keys are safe because these rows hold no local state that
+    would need to follow an item when the list is reordered.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
 -->
 <script lang="ts">
@@ -295,7 +304,7 @@
         class="ml-1.5 flex items-center gap-1.5 rounded-md px-1 py-0.5 text-left transition-colors duration-150 hover:bg-ripple-accent/10"
       >
         <span class="flex -space-x-1" aria-hidden="true">
-          {#each sources as source (source.domain)}
+          {#each sources as source, i (i)}
             {@render avatar(source, 'size-3.5', 'rounded-full ring-2 ring-ripple-surface')}
           {/each}
         </span>
@@ -315,7 +324,7 @@
   >
     <div class="overflow-hidden">
       <div class="mt-1.5 flex flex-col rounded-ripple bg-ripple-muted p-1 ring-1 ring-ripple-border">
-        {#each sources as source (source.domain)}
+        {#each sources as source, i (i)}
           <svelte:element
             this={source.href ? 'a' : 'span'}
             href={source.href}
@@ -338,7 +347,7 @@
     <div class={cn('mt-2.5', !finished && 'pointer-events-none opacity-0')} inert={!finished}>
       <p class="text-[12px] font-medium text-ripple-muted-foreground">{followUpLabel}</p>
       <div class="mt-0.5 flex flex-col">
-        {#each followUps as text, i (text)}
+        {#each followUps as text, i (i)}
           <button
             type="button"
             onclick={() => onfollowup?.(text, i)}
