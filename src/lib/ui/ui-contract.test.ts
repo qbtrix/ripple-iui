@@ -40,6 +40,9 @@
  *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
  *   re-skins. No existing entry was edited, which is the thing this map is the
  *   proof of.
+ *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
+ *   added, a new export. No existing entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -89,6 +92,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // PixelLoader paints its grid, label and timer with no props; the label is
   // here so the mounted output names itself if this ever fails.
   PixelLoader: { label: 'Churning' },
+  // FineTuneCard paints its frame, fields and select from defaults alone; the
+  // title makes the mounted output legible if this ever fails.
+  FineTuneCard: { labels: { title: 'Flavor card' } },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},
