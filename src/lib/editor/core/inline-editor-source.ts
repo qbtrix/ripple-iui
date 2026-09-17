@@ -37,6 +37,23 @@
  *   (the EP-1 stuck-outline fix). `destroy` is idempotent. All focus / Selection calls
  *   are guarded so the jsdom unit path never throws.
  *
+ *   XSS POSTURE — DELIBERATELY NOT SANITIZED (unlike the TipTap impl). The sibling
+ *   `inline-editor-tiptap` sanitizes its seed because that seed is the RAW SPEC PROP:
+ *   model content that was never rendered, so writing it to `innerHTML` grants the
+ *   page a capability it did not have. This impl is the opposite case — its seed is
+ *   `el.innerHTML`, a snapshot of the LIVE element. Whatever is in there was already
+ *   parsed and rendered by the host (in the ripple lane, by RichTextDisplay, which
+ *   sanitizes before `{@html}`), so restoring it re-creates the status quo and grants
+ *   nothing new. Running the seed through `sanitizeHtml` here would therefore add no
+ *   security while DESTROYING the contract this file exists for: the sanitizer's
+ *   profile FORBIDS `style` and drops non-schema markup, so hand-authored source in
+ *   the EP-6 svelte lane would silently lose legitimate attributes on every cancel —
+ *   the exact round-trip damage that got TipTap and Squire rejected above. The
+ *   invariant is "faithful to what the host rendered", and the host owns sanitizing
+ *   what it renders. If a future lane ever renders UNSANITIZED model HTML into the
+ *   element this mounts on, that lane's RENDER path is the bug, not this restore.
+ *   Guarded by a test in `editor/inline-editor.security.test.ts`.
+ *
  *   REAL-BROWSER NOTE. Native contenteditable can inject `<br>` / normalize whitespace
  *   on certain edits; that is a browser concern (not exercised by the jsdom suite). If
  *   EP-6 sees spurious diffs in a live browser, add a normalization guard at the lane's
@@ -60,7 +77,12 @@ function caretToEnd(el: HTMLElement): void {
   }
 }
 
-/** Restore the element's content to its seed markup. Guarded for jsdom. */
+/**
+ * Restore the element's content to its seed markup. NOT sanitized on purpose — the
+ * seed is a snapshot of this element's own live content, so this restores the status
+ * quo rather than introducing model HTML, and sanitizing would break byte-stability
+ * (see the XSS POSTURE section in the header). Guarded for jsdom.
+ */
 function restoreInner(el: HTMLElement, inner: string): void {
   try {
     el.innerHTML = inner;

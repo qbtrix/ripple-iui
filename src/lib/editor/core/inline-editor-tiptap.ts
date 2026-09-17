@@ -21,8 +21,22 @@
  *   teardown path also clears the host's `data-ripple-editing` attribute — the EP-1
  *   stuck-outline fix (the rich commit branch used to leak the indigo outline).
  *   All DOM / TipTap calls are guarded so the jsdom unit path never throws.
+ *
+ *   XSS POSTURE. The seed is SPEC content — LLM-authored and prompt-injectable —
+ *   and every teardown path writes it to `el.innerHTML` on a LIVE element, which
+ *   bypasses ProseMirror's schema completely. (The MOUNT path does not: ProseMirror
+ *   parses in an inert document and StarterKit has no image node, so a payload dies
+ *   there. Only the teardown restore was exploitable.) So the seed is sanitized on
+ *   intake, the `restoreRichHtml` sink sanitizes again defensively, and the COMMITTED
+ *   value is sanitized so the editor can never launder script-capable HTML back into
+ *   the spec for the next reader. Sanitizing the seed on intake (rather than at each
+ *   write) also keeps the `changed` comparison clean-vs-clean, so an unchanged commit
+ *   still emits no op. Structural StarterKit markup is untouched by the profile.
  * @created 2026-06-30 (EP-3 — pluggable InlineEditor slot)
+ * @changes 2026-08-04 (security): closed the raw-`innerHTML` XSS sink — sanitize the
+ *   seed on intake, inside `restoreRichHtml`, and on the committed value.
  */
+import { sanitizeHtml } from '../../utils/sanitize-html.js';
 import { registerInlineEditor } from './inline-editor.js';
 import type { InlineEditor, InlineEditorHandle, InlineEditorMountOpts } from './inline-editor.js';
 
@@ -35,10 +49,15 @@ function safeDestroy(editor: unknown): void {
   }
 }
 
-/** Write model HTML straight into the element (Svelte won't repaint an unchanged {@html}). Guarded for jsdom. */
+/**
+ * Write model HTML into the element (Svelte won't repaint an unchanged {@html}).
+ * This is a RAW innerHTML write on a live, in-document element, so it sanitizes at
+ * the sink — the callers already pass sanitized strings, but hardening the write
+ * itself keeps any future call site safe by construction. Guarded for jsdom.
+ */
 function restoreRichHtml(el: HTMLElement, html: string): void {
   try {
-    el.innerHTML = html;
+    el.innerHTML = sanitizeHtml(html);
   } catch {
     /* jsdom */
   }
@@ -47,7 +66,9 @@ function restoreRichHtml(el: HTMLElement, html: string): void {
 /** The rich-HTML editor backed by TipTap StarterKit — the ripple 'tiptap' built-in. */
 export const TipTapInlineEditor: InlineEditor = {
   mount(el: HTMLElement, opts: InlineEditorMountOpts): InlineEditorHandle {
-    const seed = opts.content;
+    // Sanitize the SPEC-controlled seed once, here: every teardown path writes it
+    // straight to innerHTML, and `changed` is measured against it (see header).
+    const seed = sanitizeHtml(opts.content);
     let editor: unknown = null; // TipTap Editor once mounted (typed `any` at the call sites)
     let disposed = false; // guards the async TipTap import against a teardown race
 
@@ -60,6 +81,9 @@ export const TipTapInlineEditor: InlineEditor = {
       } catch {
         html = seed;
       }
+      // The value about to be written back into the SPEC — sanitize so a committed
+      // edit can never re-poison the node for every future reader of that spec.
+      html = sanitizeHtml(html);
       safeDestroy(editor);
       el.removeAttribute('data-ripple-editing'); // clear the editing outline (the EP-1 fix)
       const changed = html !== seed;
