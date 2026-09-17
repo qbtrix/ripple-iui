@@ -47,6 +47,9 @@
  *   Updated 2026-09-17 (fix/port-gaps): two more entries, `Switch` and
  *   `ProgressRing`, for the two atoms that joined the surface. Again no existing
  *   entry was edited.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): two more entries,
+ *   `ContextCards` and `RecommendationCard`, again new exports rather than
+ *   re-skins. No existing entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -107,6 +110,15 @@ const PROPS: Record<string, Record<string, unknown>> = {
       { key: 'rocky', cells: { flavor: 'Rocky Road' }, change: 'removed' },
       { key: 'pistachio', cells: { flavor: 'Pistachio' }, change: 'added' },
     ],
+  },
+  // ContextCards paints its header with no chunks; one chunk here so the mount
+  // proves the card and the SourceChip composition as well.
+  ContextCards: { chunks: [{ title: 'Vendor rule', body: 'Verify cold-chain first.', source: 'SOP.pdf' }] },
+  // RecommendationCard paints its question with no options; one option here so
+  // the mount proves the Chip composition and the footer too.
+  RecommendationCard: {
+    title: 'Place this order?',
+    options: [{ key: 'a', body: [{ text: 'Reorder from ' }, { entity: 'Cone King' }], signal: 3 }],
   },
   Input: { value: '' },
   Textarea: { value: '' },

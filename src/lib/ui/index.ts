@@ -47,6 +47,11 @@
  *   atoms. Both were re-skinned in the arc but reachable only through
  *   `./widgets`. Both are registered widgets already, so the manifest count does
  *   not move; this only adds them to the hand-written-caller surface.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): `ContextCards`
+ *   and `RecommendationCard` join on the same terms: the retrieved chunks an
+ *   agent cites, and the suggestion it asks you to accept. Neither is registered, so the count still reads 189. The source
+ *   chip they share with AnswerBlock (`widgets/ai/SourceChip.svelte`) is a part,
+ *   not an export.
  *
  *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
  *   `PixelLoader` join them on the same terms — the whole answer surface
@@ -121,3 +126,5 @@ export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
 export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
 export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
 export { default as DiffTable } from '../widgets/data/DiffTable.svelte';
+export { default as ContextCards } from '../widgets/ai/ContextCards.svelte';
+export { default as RecommendationCard } from '../widgets/ai/RecommendationCard.svelte';
