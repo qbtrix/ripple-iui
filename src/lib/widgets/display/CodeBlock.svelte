@@ -47,7 +47,13 @@
      one rule darkens the amber where it needs to and lightens it where it needs
      to. No single fixed colour reaches 4.5:1 on both near-white and near-black.
      The `text-ripple-warning` utility stays on the span as the token the hue
-     comes from; that rule is unlayered, so it wins over the utility. -->
+     comes from; that rule is unlayered, so it wins over the utility.
+
+     2026-09-17 (fix/port-gaps, second pass) — keywords get the same treatment.
+     `text-ripple-accent` is the host's `--primary`, which measured 3.59:1 on
+     paw-enterprise's dark ground. `ripple-code-keyword` mixes the accent 70% with
+     the surface ink: a smaller pull than the literals get, so keywords stay
+     clearly blue. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import CopyIcon from '@lucide/svelte/icons/copy';
@@ -120,7 +126,7 @@
     // without it every key and value lands on the same colour.
     if (quoted && /^\s*:/.test(rest)) return NAME;
     if (quoted || /^\d/.test(tok)) return 'text-ripple-warning ripple-code-literal';
-    if (KEYWORDS.has(tok)) return 'text-ripple-accent';
+    if (KEYWORDS.has(tok)) return 'text-ripple-accent ripple-code-keyword';
     return NAME;
   }
 
@@ -205,5 +211,9 @@
      unlabelled block leaves deliberately class-free. */
   :global(.ripple-code-literal) {
     color: color-mix(in oklab, var(--ripple-warning) 50%, var(--ripple-surface-foreground));
+  }
+  /* Keywords: the accent pulled 30% toward the ink, enough to clear 4.5:1 in dark. */
+  :global(.ripple-code-keyword) {
+    color: color-mix(in oklab, var(--ripple-accent) 70%, var(--ripple-surface-foreground));
   }
 </style>

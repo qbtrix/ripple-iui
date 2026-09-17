@@ -10,6 +10,9 @@
 // otherwise the span's `text-ripple-*` utility applies. That colour is then measured against the
 // page ground under paw-enterprise's real light and dark tokens, and must reach
 // WCAG AA for body text, 4.5:1, in both.
+// UPDATED 2026-09-17 (fix/port-gaps, second pass): keywords are covered too.
+//   They painted `text-ripple-accent` (paw-enterprise `--primary`,
+//   oklch(0.533 0.26 262.6)), which measured 3.59:1 on the dark ground.
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import CodeBlock from './CodeBlock.svelte';
@@ -25,11 +28,13 @@ type Oklch = [number, number, number];
 const HOST: Record<'light' | 'dark', Record<string, Oklch>> = {
   light: {
     'ripple-warning': [0.8, 0.16, 80],
+    'ripple-accent': [0.533, 0.26, 262.6],
     'ripple-surface-foreground': [0.15, 0.015, 260],
     ground: [0.97, 0.005, 260],
   },
   dark: {
     'ripple-warning': [0.8, 0.16, 80],
+    'ripple-accent': [0.533, 0.26, 262.6],
     'ripple-surface-foreground': [0.95, 0.005, 260],
     ground: [0.13, 0.015, 260],
   },
@@ -92,15 +97,15 @@ function inkOf(span: Element): string {
 
 describe('CodeBlock literal contrast', () => {
   const { container } = render(CodeBlock, {
-    props: { code: '{"name": "pistachio", "count": 42}', language: 'json' },
+    props: { code: '{"name": "pistachio", "count": 42, "ok": true}', language: 'json' },
   });
   const spans = Array.from(container.querySelectorAll('code span'));
   const span = (text: string) => spans.find((el) => el.textContent === text)!;
 
   for (const theme of ['light', 'dark'] as const) {
-    it(`strings and numbers reach 4.5:1 on the ${theme} ground`, () => {
+    it(`strings, numbers and keywords reach 4.5:1 on the ${theme} ground`, () => {
       const ground = toLab(HOST[theme].ground);
-      for (const text of ['"pistachio"', '42']) {
+      for (const text of ['"pistachio"', '42', 'true']) {
         const ratio = contrast(resolve(inkOf(span(text)), theme), ground);
         expect(ratio, `${text} in ${theme}`).toBeGreaterThanOrEqual(4.5);
       }
