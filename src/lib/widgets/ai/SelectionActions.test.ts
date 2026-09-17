@@ -178,6 +178,20 @@ describe('SelectionActions — keyboard', () => {
     expect(toolbar()).not.toBeNull();
   });
 
+  it('reopens when the reader drags over the same words again after dismissing', async () => {
+    const { getByTestId } = render(Harness);
+    await selectBatch();
+    await fireEvent.keyDown(document.body, { key: 'Escape' });
+    await tick();
+    expect(toolbar()).toBeNull();
+    await fireEvent.pointerDown(getByTestId('passage'));
+    await selectBatch(); // ignored mid-drag
+    expect(toolbar()).toBeNull();
+    await fireEvent.pointerUp(document);
+    await tick();
+    expect(toolbar()).not.toBeNull();
+  });
+
   it('moves focus into the toolbar on Alt+F10', async () => {
     render(Harness);
     await selectBatch();

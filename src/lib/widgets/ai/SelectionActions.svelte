@@ -35,8 +35,10 @@
       text is what actions send, and the captured range is painted with the CSS
       Custom Highlight API so the passage still reads as selected.
     - Escape, outside-click, or running an action closes the bar and remembers
-      the range, so the same selection does not immediately reopen it. If focus
-      was in the toolbar, the text selection and focus go back where they were.
+      the range, so the same selection does not immediately reopen it. A new
+      pointer gesture in the passage forgets it, so re-selecting the same words
+      does. If focus was in the toolbar, the text selection and focus go back
+      where they were.
 
     CHANGED FROM THE SOURCE, and why:
     - The source is a scripted demo: a fixed passage, a timer that shows the bar,
@@ -51,7 +53,8 @@
       dropped (glass); the canonical popover keeps its own.
   @a11y The bar is `role="toolbar"` with a label, and does NOT take focus when it
     opens, because stealing focus would end a keyboard selection mid-extend.
-    Alt+F10 (the editor convention for "go to the toolbar") moves focus into it,
+    Alt+F10 (the editor convention for "go to the toolbar"; Fn+Option+F10 on a
+    default Mac keyboard) moves focus into it,
     and a polite live region says so when it appears. Tab moves through its
     controls; Escape closes it and returns focus. The instruction input and the
     icon-only controls carry labels; `›` carries aria-pressed. Tabbing out of
@@ -232,6 +235,9 @@
     };
     const onPointerDown = (e: PointerEvent) => {
       dragging = !!host && host.contains(e.target as Node);
+      // A new gesture in the passage starts a new selection, even one over the
+      // exact range the reader just dismissed.
+      if (dragging) captured = null;
     };
     const onPointerUp = () => {
       if (!dragging) return;
