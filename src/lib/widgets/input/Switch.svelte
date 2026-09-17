@@ -15,10 +15,29 @@
      outright — and that transparent 2px border is what produces the source's
      2px thumb inset, which makes the travel exactly 16px (40 - 2 - 2 - 20).
 
-     Dropped for glass: the thumb's `0 1px 2px rgba(0,0,0,0.2)`. The track fills
-     stay the primitive's `bg-primary` / `bg-input` rather than the source's
-     `bg-ink` / `bg-line-strong` — a switch reading in the host's accent is
-     ripple's convention and the brief here was geometry.
+     Dropped for glass: the thumb's `0 1px 2px rgba(0,0,0,0.2)`. The checked
+     track stays the primitive's `bg-primary` rather than the source's `bg-ink` —
+     a switch reading in the host's accent is ripple's convention.
+
+     2026-09-17 (fix/port-gaps) — fills. Unchecked, the thumb measured 1.02:1
+     against its track in paw-enterprise light mode, and checked it was 1.36:1
+     against the accent. The host was not the cause. The primitive fills the
+     track with `bg-input` and the thumb with `bg-background`, and both are
+     washes of the page ground (5% black and a 20%-alpha page tint in a glass
+     host), so thumb and track came out the same near-white. Now:
+     - unchecked track `bg-ripple-border`: the source's `bg-line-strong`, which
+       the translation table maps to the border token when it is painted as a
+       fill. twMerge replaces the primitive's classes, so no `!` is needed. The
+       `dark:` twin is overridden too, or dark mode would keep `bg-input/80`.
+     - unchecked thumb `bg-ripple-muted-foreground`: an opaque ink in both
+       themes. The source's thumb is white, but no ripple token is reliably
+       opaque white in both themes, and the thumb's shadow is gone for glass.
+     - checked thumb `bg-ripple-accent-foreground`: the ink made for the accent
+       fill underneath it.
+     Measured with paw-enterprise tokens in Chromium: unchecked thumb-to-track
+     is 7.16:1 light and 7.85:1 dark (was 1.02 light), checked is 5.61:1 in both
+     (was 1.36 light). Both thumb overrides carry `!` for the
+     same reason as the geometry ones below.
 
      Also fixed, not shape: `label for` pointed at an `id` that is undefined
      unless a spec sets one, so the label was not wired to anything. Now
@@ -78,6 +97,9 @@
   // assembled from a template variable is a class that compiles to nothing.
   const skin =
     'h-6! w-10! border-2 duration-200 ease-ripple-out ' +
+    'data-[state=unchecked]:bg-ripple-border dark:data-[state=unchecked]:bg-ripple-border ' +
+    '[&_[data-slot=switch-thumb]]:bg-ripple-accent-foreground! ' +
+    '[&_[data-slot=switch-thumb]]:data-[state=unchecked]:bg-ripple-muted-foreground! ' +
     '[&_[data-slot=switch-thumb]]:size-5! ' +
     '[&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-4! ' +
     '[&_[data-slot=switch-thumb]]:rtl:data-[state=checked]:-translate-x-4! ' +
