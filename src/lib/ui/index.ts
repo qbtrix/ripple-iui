@@ -39,8 +39,10 @@
  *   namespace because 33 call sites import the store, not the component.
  *
  *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
- *   joins on the same terms — an inspector composed from Card, Segmented, Input,
- *   Select and Button, ./ui-only, so the manifest still reads 189.
+ *   and `SelectionActions` join on the same terms. FineTuneCard is an inspector
+ *   composed from Card, Segmented, Input, Select and Button; SelectionActions
+ *   wraps a passage and anchors a Popover toolbar to the reader's text
+ *   selection. Both ./ui-only, so the manifest still reads 189.
  *
  *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
  *   `PixelLoader` join them on the same terms — the whole answer surface
@@ -112,3 +114,4 @@ export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
 export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
 export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
 export { default as FineTuneCard } from '../widgets/ai/FineTuneCard.svelte';
+export { default as SelectionActions } from '../widgets/ai/SelectionActions.svelte';
