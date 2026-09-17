@@ -11,6 +11,7 @@
 //   fight would look identical in a mounted DOM.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
+import { compile } from 'svelte/compiler';
 import PixelLoader from './PixelLoader.svelte';
 import source from './PixelLoader.svelte?raw';
 
@@ -115,5 +116,42 @@ describe('PixelLoader — reduced motion', () => {
     expect(guard).not.toContain('tabular-nums');
     // And it really does tick: the effect has no reduced-motion branch at all.
     expect(source).not.toMatch(/matchMedia/);
+  });
+});
+
+// Reproduces a captain-reported bug (2026-09-17): the pixels do not animate,
+// while the elapsed timer beside them keeps counting. Svelte scopes every
+// `@keyframes` declared in a component <style> block, renaming it to a hashed
+// `svelte-<hash>-<name>`, and rewrites the references it can see inside that
+// same stylesheet. An `animation` set through an inline `style:` directive is
+// invisible to that rewrite, so it keeps pointing at the bare name, which no
+// longer exists. The browser drops the animation without a warning. The
+// existing tests read the inline string and pass, which is how this shipped.
+describe('PixelLoader — the grid actually animates', () => {
+  /** Keyframe-looking tokens, hashed or bare, in an animation value. */
+  const keyframeTokens = (value: string) =>
+    [...value.matchAll(/(?:svelte-[a-z0-9]+-)?ripple-[\w-]+/g)].map((m) => m[0]);
+
+  it('references only keyframes the compiled stylesheet declares', () => {
+    const { css } = compile(source, { filename: 'PixelLoader.svelte', css: 'external' });
+    const compiled = css?.code ?? '';
+    const declared = new Set([...compiled.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]));
+
+    // Everything a cell could animate with: its inline style on a real render,
+    // plus any animation declared for it in the compiled stylesheet.
+    const { container } = render(PixelLoader, { props: { variant: 'drive' } });
+    const fromInline = cells(container).flatMap((el) => keyframeTokens(el.style.animation));
+    const fromCss = [...compiled.matchAll(/animation(?:-name)?\s*:\s*([^;}]+)/g)].flatMap((m) =>
+      keyframeTokens(m[1])
+    );
+    const referenced = [...new Set([...fromInline, ...fromCss])];
+
+    expect(referenced.length, 'no cell animates with any keyframe at all').toBeGreaterThan(0);
+    for (const name of referenced) {
+      expect(
+        declared.has(name),
+        `a cell animates "${name}", but the compiled CSS only declares: ${[...declared].join(', ') || '(none)'}`
+      ).toBe(true);
+    }
   });
 });
