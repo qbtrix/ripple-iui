@@ -30,8 +30,21 @@
     * `mode=srcdoc` content is bound through Svelte (attribute-encoded) and
       capped at ~64KB. It runs in the same opaque-origin sandbox, so it
       injects into a quarantined DOM — never the pocket's.
+    * The capability bridge (2026-08-25) prepends a renderer-built shim
+      script to `mode=srcdoc` content when — and only when — a HOST has
+      published a bridge on Svelte context. It changes NOTHING about the
+      security posture: `postMessage` crosses an opaque origin by design,
+      so EMBED_SANDBOX, EMBED_ALLOW_ENUM and EMBED_SRCDOC_MAX are all
+      byte-identical to before. The 64KB cap still measures AUTHOR content
+      only, so the shim can never eat an author's budget. The token is
+      minted by the host per widget INSTANCE, never by the spec (context
+      cannot be set from JSON), and is revoked on destroy.
   @changes
     - Initial creation.
+    - 2026-08-25 (widget capability bridge T1): srcdoc composition prepends
+      the `invoke_tool/v1` shim when a host bridge is present, and attaches
+      the frame's contentWindow to the token so the host can check
+      `event.source`. Sandbox / permissions enum / size cap untouched.
 -->
 <script lang="ts" module>
   /**
@@ -90,6 +103,14 @@
 </script>
 
 <script lang="ts">
+  import { getContext, onDestroy } from 'svelte';
+  import {
+    WIDGET_BRIDGE_CONTEXT_KEY,
+    type WidgetBridgeHost,
+    type WidgetBridgeHandle
+  } from '../../core/widget-bridge-protocol.js';
+  import { buildWidgetBridgeShimScript } from '../../core/widget-bridge-shim.js';
+
   interface Props {
     id?: string;
     class?: string;
@@ -148,6 +169,40 @@
       (mode === 'srcdoc' && safeSrcdoc === undefined)
   );
 
+  // -- capability bridge (mode=srcdoc only) ---------------------------------
+  // A host publishes this on context; a spec cannot, because a spec is JSON
+  // and JSON carries no functions. No host, no bridge, no shim — the widget
+  // then renders exactly as it did before this feature existed.
+  const bridgeHost = getContext<WidgetBridgeHost | undefined>(WIDGET_BRIDGE_CONTEXT_KEY);
+  // Capturing `mode` / `id` once at init is deliberate: a token belongs to
+  // one widget INSTANCE for its whole life. It is minted here and revoked in
+  // onDestroy — it must not be re-minted when a prop changes.
+  // svelte-ignore state_referenced_locally
+  const bridge: WidgetBridgeHandle | undefined =
+    mode === 'srcdoc' && bridgeHost ? bridgeHost.connect({ widgetId: id }) : undefined;
+
+  let frameEl = $state<HTMLIFrameElement | null>(null);
+
+  // Bind the token to THIS frame's window, so the host can answer "which
+  // widget sent this?" by comparing `event.source` before trusting a token.
+  $effect(() => {
+    if (!bridge) return;
+    bridge.attach(frameEl?.contentWindow ?? null);
+  });
+
+  // Revocation is synchronous with teardown: a torn-down widget's token
+  // stops working immediately, and in-flight calls can never be delivered
+  // to a later instance.
+  onDestroy(() => bridge?.revoke());
+
+  // The shim is PREPENDED after the cap has already been applied to author
+  // content, so the 64KB budget still measures author bytes only.
+  const frameSrcdoc = $derived.by(() => {
+    if (safeSrcdoc === undefined) return undefined;
+    if (!bridge) return safeSrcdoc;
+    return buildWidgetBridgeShimScript({ token: bridge.token }) + safeSrcdoc;
+  });
+
   const frameStyle = $derived.by(() => {
     const s: string[] = ['width:100%', 'border:0', 'display:block'];
     if (aspectRatio) {
@@ -190,12 +245,17 @@
     loading="lazy"
   ></iframe>
 {:else}
+  <!--
+    srcdoc = shim (when a host bridge exists) + the capped author content.
+    sandbox / allow / referrerpolicy below are unchanged and unchangeable.
+  -->
   <iframe
+    bind:this={frameEl}
     {id}
     class={className}
     style={frameStyle}
     {title}
-    srcdoc={safeSrcdoc}
+    srcdoc={frameSrcdoc}
     sandbox={EMBED_SANDBOX}
     allow={allowAttr || undefined}
     referrerpolicy="no-referrer"
