@@ -8,9 +8,18 @@
 //   derives both halves from it, so the thing worth pinning is the arithmetic:
 //   that a slow caller's interval did not move, that a fast caller now reaches
 //   the rate it asked for, and that the step never over-runs the string.
-//   Separate from StreamText.tail.test.ts on purpose — that file is the blur
-//   tail's, and ai.test.ts is byte-identical to its pre-arc base, which is a
-//   proof the arc leans on.
+//   Separate from StreamText.tail.test.ts on purpose, since that file is the
+//   blur tail's.
+// UPDATED 2026-09-17 (pre-merge review corrections): two claims here were
+//   wrong. (1) This header said ai.test.ts is byte-identical to its pre-arc
+//   base. The same PR adds one test to ai.test.ts (ReasoningTrace's
+//   scoped-keyframe check). No existing test in it changed, so its `speed: 100`
+//   cases still run as they did, but the file is not byte-identical. (2) "A slow
+//   caller keeps exactly the interval it had before" holds only up to
+//   1000/9 ≈ 111.1 chars/sec, where the step is still 1. From there to 125 the
+//   rate is unchanged but the reveal is chunkier: 2 characters every 16-18ms
+//   where it used to be 1 every 8-9ms. The test name now says where the line is,
+//   and a new test pins that band.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import StreamText from './StreamText.svelte';
@@ -38,11 +47,20 @@ describe('StreamText — cadence', () => {
     expect(await revealAfter(222, 19)).toBe('abcd');
   });
 
-  it('leaves a slow caller on exactly the interval it had before', async () => {
+  it('leaves a caller at or below 111 chars/sec on exactly the interval it had before', async () => {
     // 100 chars/sec → step 1, tick 10ms. This is the pre-change behaviour and
     // the contract `speed` has always published: chars per second.
     expect(await revealAfter(100, 10)).toBe('a');
     expect(await revealAfter(100, 50)).toBe('abcde');
+  });
+
+  it('keeps the rate but doubles the step between 111 and 125 chars/sec', async () => {
+    // 120/s: the old code released 1 char every 8.3ms, so 'a' was on screen by
+    // 9ms. The step ceils to 2 and the tick stretches to 16.7ms: nothing at 9ms,
+    // then a pair. Same 120/s, in pairs.
+    expect(await revealAfter(120, 9)).toBe('');
+    expect(await revealAfter(120, 17)).toBe('ab');
+    expect(await revealAfter(120, 34)).toBe('abcd');
   });
 
   it('holds the chars/sec contract across the step boundary', async () => {

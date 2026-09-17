@@ -7,8 +7,12 @@
 //   markdown branch (Markdown owns its tree and cannot be sliced), that reduced
 //   motion drops it, and above all that splitting the string never changes the
 //   text the user reads or the assistive tech announces.
-//   Lives beside ai.test.ts rather than inside it: ai.test.ts is byte-identical
-//   to its pre-arc base and that is a proof the arc leans on.
+//   Lives beside ai.test.ts rather than inside it: ai.test.ts was byte-identical
+//   to its pre-arc base when this was written, and that was a proof the arc
+//   leaned on.
+// UPDATED 2026-09-17 (comment only): that proof no longer holds. skin-answer
+//   (ripple #129) added one test to ai.test.ts, ReasoningTrace's scoped-keyframe
+//   check. It changed no existing test.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import StreamText from './StreamText.svelte';

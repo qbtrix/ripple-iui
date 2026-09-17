@@ -8,6 +8,9 @@
   Updated 2026-09-16 by the skin-answer lane: keyframe rows 1 and 9 and the net
   count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
   reuse concrete. Nothing else in the table moved.
+  Corrected 2026-09-17 (pre-merge review, fix-129): row 9 gave a stale reason
+  for PixelLoader's `!important`. The reason was true before the grid's
+  keyframe fix and stopped being true with it.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -180,7 +183,7 @@ have (`@media (prefers-reduced-motion: reduce) { … animation: none; }`) — se
 | 6 | `caret-blink` | opacity 1 ↔ 0, `step-end` — the streaming caret | **already exists** as `ripple-stream-blink` (StreamText.svelte) | reuse — StreamText (B). Do not add. |
 | 7 | `pop-in` | opacity 0 + `scale(.95)` → 1 | `ripple-tool-pop-in`, `ripple-stream-pop-in`, `ripple-approval-pop-in`, `ripple-task-pop-in` | ToolCall, StreamText, ApprovalGate (`ApprovalCard.tsx:260`) — all B — and TaskRows (C) |
 | 8 | `spin` | `rotate(360deg)` | **already exists** 4× (`ripple-tool-spin`, `rcheck-spin`, `rdash-spin`, `c4-spin`) — and Tailwind ships `animate-spin`, which `display/Loading.svelte` already uses | use `animate-spin` — TaskRows' ring (C) and ReasoningTrace's small ring (`ThinkingState.tsx:231`, B). Do not add a 5th copy. **Pair it with a guard handle — see the footnote.** |
-| 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | `ripple-loader-pixel-on` | **PixelLoader** (skin-answer, 2026-09-16). This row said "no owner — do not add" while `LoadingState.tsx` was out of scope; the captain asked for the loading state and it now has one. The copy carries `animation: none !important` in its reduced-motion guard, because the per-cell delay is an inline style and a plain rule loses to it. |
+| 9 | `pixel-on` | opacity .15 → 1 → .15, staggered per grid cell | `ripple-loader-pixel-on` | **PixelLoader** (skin-answer, 2026-09-16). This row said "no owner — do not add" while `LoadingState.tsx` was out of scope; the captain asked for the loading state and it now has one. The animation is declared on `.ripple-pixel-lit` in PixelLoader's own stylesheet, and each cell passes only `--delay` inline. An earlier inline `animation` named the keyframe before Svelte hashed it, so it never ran (fixed 2026-09-17). The reduced-motion guard wins on source order at equal specificity. Its `!important` only keeps it winning if the lit selector ever grows. |
 
 Net at the end of the arc: **3 already existed** (reuse), **2 had no owner**,
 **4 to paste** (`fade-up`, `fade-in`, `pop-in`, `eq-bounce`). The skin-answer

@@ -41,11 +41,17 @@
     beat does not. Re-timed here to that shape. `speed` is untouched as a prop
     and keeps its meaning (chars/sec); both halves are DERIVED from it —
     `step = ceil(speed × 9 / 1000)`, `tick = max(9, 1000 × step / speed)` — so a
-    slow caller gets exactly the interval it got before (speed 100 → 1 char per
-    10ms, unchanged) and a fast one now reaches the rate it asked for instead of
-    the old ceiling (speed 222 → the source's 2 chars per 9ms; previously 125/s).
+    caller at or below 1000/9 ≈ 111 chars/sec gets exactly the interval it got
+    before (speed 100 → 1 char per 10ms, unchanged), and a fast one now reaches
+    the rate it asked for instead of the old ceiling (speed 222 → the source's 2
+    chars per 9ms; previously 125/s). Between 111 and 125 chars/sec the rate is
+    unchanged but the reveal is chunkier: 2 chars every 16-18ms where it was 1
+    every 8-9ms.
     No new prop: a prop is a manifest shape change and the arc's proof is that no
     shape moved.
+  Modified: 2026-09-17 — comment only. The cadence note above used to say every
+    "slow caller" kept its old interval. That holds only up to ~111 chars/sec,
+    and the note now gives the bound and describes the 111-125 band.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
   origin: slev12397/beautiful-ui@ff0f74d components/atoms/StreamText.tsx (blur tail, cadence)
 -->
