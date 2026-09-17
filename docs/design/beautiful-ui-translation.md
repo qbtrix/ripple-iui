@@ -11,6 +11,8 @@
   Updated 2026-09-16 by the skin-answer lane: keyframe rows 1 and 9 and the net
   count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
   reuse concrete. Nothing else in the table moved.
+  Updated 2026-09-17 by the skin-diff lane: one paragraph under §4 recording
+  DiffTable's keyframe copies and its two component-local keyframes.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -191,6 +193,11 @@ lane moved one of the two ownerless rows: `pixel-on` is now PixelLoader's, so it
 is **4 existing / 1 ownerless (`records-pulse`) / 5 pasted**. AnswerBlock pastes
 its own `pop-in`, `fade-in` and `fade-up` under the `ripple-answer-` prefix, per
 the each-owner-keeps-a-copy rule two paragraphs up.
+DiffTable (skin-diff, 2026-09-17) does the same under `ripple-difftable-`, and
+adds two of its own that no row above covers: `ripple-difftable-mark` (a removal's
+tint, colour and strike arriving at 180ms) and `ripple-difftable-reveal` (an
+addition opening `0fr → 1fr` at 440ms). Both stand in for the source's `useStage`
+timer, which was demo state rather than motion.
 
 **Footnote to row 8 — `animate-spin` needs a guard handle.** Tailwind's utility
 ships no `prefers-reduced-motion` rule. Reaching for a fifth copy of the

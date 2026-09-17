@@ -40,6 +40,10 @@
  *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
  *   re-skins. No existing entry was edited, which is the thing this map is the
  *   proof of.
+ *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` and `DiffTable`
+ *   entries added — a registered widget newly listed on this surface, and a new
+ *   export. No existing entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -65,6 +69,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Tabs: { tabs: [{ value: 'one', label: 'One' }], value: 'one' },
   Collapsible: { title: 'More', children: kid('body') },
   CodeBlock: { code: 'const a = 1;', language: 'ts' },
+  // Diff computes its rows after a lazy import, so the mount proves the frame
+  // and header; Diff.skin.test.ts covers the rows.
+  Diff: { before: 'const a = 1;', after: 'const a = 2;', title: 'a.ts' },
   Markdown: { content: '# Title' },
   // Toast is the container for the toast bus, not a single toast. With an
   // empty bus it correctly renders nothing, so it is exempt from the
@@ -89,6 +96,15 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // PixelLoader paints its grid, label and timer with no props; the label is
   // here so the mounted output names itself if this ever fails.
   PixelLoader: { label: 'Churning' },
+  // A removal and an addition, so the mount proves the checkbox column and the
+  // footer, not just an empty table.
+  DiffTable: {
+    columns: [{ key: 'flavor', label: 'Flavor' }],
+    rows: [
+      { key: 'rocky', cells: { flavor: 'Rocky Road' }, change: 'removed' },
+      { key: 'pistachio', cells: { flavor: 'Pistachio' }, change: 'added' },
+    ],
+  },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},

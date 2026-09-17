@@ -38,6 +38,12 @@
  *   `./widgets`. `confirmDialog` is exported by name as well as inside its
  *   namespace because 33 call sites import the store, not the component.
  *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` joins the
+ *   molecules. It was always a registered, context-free widget; it is listed now
+ *   because its re-skin is CodeBlock's Diff mode, and a caller pairing the two
+ *   needs both from the same surface. `DiffTable` joins the organisms on the
+ *   same terms as TaskRows: no registry entry, no manifest entry, count 189.
+ *
  *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
  *   `PixelLoader` join them on the same terms — the whole answer surface
  *   StreamingText.tsx really is, which the arc had only ported the text run of,
@@ -76,6 +82,7 @@ export { default as Search } from '../widgets/input/Search.svelte';
 export { default as Tabs } from '../widgets/layout/Tabs.svelte';
 export { default as Collapsible } from '../widgets/layout/Collapsible.svelte';
 export { default as CodeBlock } from '../widgets/display/CodeBlock.svelte';
+export { default as Diff } from '../widgets/display/Diff.svelte';
 export { default as Markdown } from '../widgets/display/Markdown.svelte';
 export { default as Toast } from '../widgets/overlay/Toast.svelte';
 
@@ -107,3 +114,4 @@ export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
 export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
 export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
 export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
+export { default as DiffTable } from '../widgets/data/DiffTable.svelte';
