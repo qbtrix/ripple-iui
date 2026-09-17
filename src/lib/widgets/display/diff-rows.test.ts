@@ -3,7 +3,9 @@
 //   classification behind Diff.svelte's re-skin against the real `diff` library,
 //   imported statically here because the widget loads it lazily. The gutter
 //   numbering, the trailing-newline rule and when word-level pieces appear are
-//   all things a reader cannot check by looking at a rendered diff.
+//   all things a reader cannot check by looking at a rendered diff. The pairing
+//   cases use the source's own CodeBlock fixture, where a rewrite and an
+//   insertion share one hunk.
 import { describe, it, expect } from 'vitest';
 import { diffLines, diffWordsWithSpace } from 'diff';
 import { diffRows, splitRows, type DiffRow } from './diff-rows.js';
@@ -50,9 +52,30 @@ describe('diffRows — word-level pieces', () => {
     expect(text(add)).toBe('temp: "-16C"');
   });
 
-  it('leaves unequal runs whole — line i is not the rewrite of line i', () => {
-    const out = rows('a = 1\n', 'a = 2\nb = 3\n');
-    expect(out.every((r) => r.pieces.length === 1 && !r.pieces[0].changed)).toBe(true);
+  it('pairs a rewrite that shares its hunk with an insertion — the source fixture', () => {
+    const out = rows(
+      '  await freezer.store(base, { temp: "-14C" });\n  return base.gallons;\n',
+      '  await freezer.store(base, { temp: "-16C" });\n  if (!base.approved) return null;\n  return base.gallons;\n'
+    );
+    const changed = (r: DiffRow) => r.pieces.filter((p) => p.changed).map((p) => p.text);
+    expect(out.map((r) => [r.kind, changed(r)])).toEqual([
+      ['removed', ['14C']],
+      ['added', ['16C']],
+      ['added', []],
+      ['context', []],
+    ]);
+  });
+
+  it('skips past an insertion that comes before the rewrite', () => {
+    const out = rows('let temp = "-14C";\n', 'log("start");\nlet temp = "-16C";\n');
+    expect(out.map((r) => r.pieces.some((p) => p.changed))).toEqual([true, false, true]);
+    expect(out[2].pieces.find((p) => p.changed)?.text).toBe('16C');
+  });
+
+  it('shows a hunk too large to pair as whole lines', () => {
+    const a = Array.from({ length: 21 }, (_, i) => `value ${i} = old`).join('\n') + '\n';
+    const b = Array.from({ length: 20 }, (_, i) => `value ${i} = new`).join('\n') + '\n';
+    expect(rows(a, b).every((r) => r.pieces.length === 1)).toBe(true);
   });
 
   it('leaves a line with nothing in common whole', () => {
