@@ -7,6 +7,8 @@
 //   imports MUST be dynamic + client-only. Run as `bun run lint:anim`; also
 //   asserted by check-no-toplevel-anim-imports.test.ts.
 // @created 2026-05-30 — RFC 12 animation primitive.
+// @changed 2026-09-16 — test-file filter uses String#endsWith instead of a
+//   regex (oxlint unicorn/prefer-string-starts-ends-with); behavior identical.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve, dirname, join, relative } from 'node:path';
@@ -44,7 +46,7 @@ function walk(dir: string, acc: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) walk(full, acc);
-    else if (/\.(ts|svelte)$/.test(name) && !/\.test\.ts$/.test(name)) acc.push(full);
+    else if (/\.(ts|svelte)$/.test(name) && !name.endsWith('.test.ts')) acc.push(full);
   }
   return acc;
 }
