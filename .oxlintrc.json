@@ -1,7 +1,9 @@
-// New file: oxlint first-pass config — correctness at error, suspicious at warn,
+// oxlint first-pass config — correctness at error, suspicious at warn,
 // type-aware via oxlint-tsgolint. Rules with pre-existing findings are downgraded
 // to warn (documented in the PR) so the gate lands green; unicorn/no-thenable is
 // off because ripple's flow-action DSL uses `then` as a schema field.
+// 2026-09-17: ratcheted no-base-to-string, no-floating-promises and
+// await-thenable to error — their findings were fixed (fix/oxlint-bug-classes).
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "options": {
@@ -13,10 +15,10 @@
   },
   "rules": {
     "unicorn/no-thenable": "off",
-    "typescript/no-base-to-string": "warn",
-    "typescript/no-floating-promises": "warn",
+    "typescript/no-base-to-string": "error",
+    "typescript/no-floating-promises": "error",
     "typescript/no-redundant-type-constituents": "warn",
-    "typescript/await-thenable": "warn",
+    "typescript/await-thenable": "error",
     "no-unused-vars": "warn",
     "no-useless-escape": "warn",
     "no-unused-expressions": "warn",
