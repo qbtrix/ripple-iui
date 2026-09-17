@@ -200,7 +200,7 @@
     <span class="flex shrink-0 items-center gap-1">
       {#if edited}
         <span class="ripple-finetune-edited flex items-center gap-1 text-[12px] font-medium text-ripple-muted-foreground">
-          <CheckIcon size={12} strokeWidth={3} class="text-ripple-success" aria-hidden="true" />
+          <CheckIcon size={12} strokeWidth={3} class="text-ripple-success-text" aria-hidden="true" />
           {text.edited}
         </span>
       {/if}
