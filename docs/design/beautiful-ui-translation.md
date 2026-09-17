@@ -12,7 +12,8 @@
   layers are not cards). §7's red gap first recorded that the two red tokens
   split in paw-enterprise dark, then the decision taken: option (a),
   `--ripple-error` aliases `--destructive`, with the host override caveat and
-  the light-mode contrast finding.
+  the light-mode contrast finding, then the readable status-text tokens that
+  close it.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -81,9 +82,10 @@ Plus `--radius-ripple` (utility `rounded-ripple`) and, as of this slice,
 | `text-accent-ink` on a SOLID accent fill | `text-ripple-accent-foreground` | |
 | `text-accent-ink` on a TINT (accent/10 wash) | `text-ripple-accent` | `--ripple-accent-foreground` resolves to `--primary-foreground`, near-white — it vanishes on a tint. Lane A hit this on Badge and Chip. |
 | `bg-accent-tint` | `bg-ripple-accent/10` | source tint is the colour at 14% alpha; ripple's Badge convention is `/10` — match Badge, not the source |
-| `text-green`, `bg-green-tint` | `text-ripple-success`, `bg-ripple-success/10` | exactly ripple Badge's existing `success` variant |
-| `text-orange`, `bg-orange-tint` | `text-ripple-warning`, `bg-ripple-warning/10` | exactly Badge's existing `warning` variant |
-| `text-red`, `bg-red-tint` | `text-ripple-error`, `bg-ripple-error/10` | **see the gap in §7** — Badge maps red to shadcn `destructive`, not `ripple-error` |
+| `text-green`, `bg-green-tint` | `text-ripple-success-text`, `bg-ripple-success/10` | Badge's `success` variant. Text takes the `-text` token, never the raw tone: see the status-text row below |
+| `text-orange`, `bg-orange-tint` | `text-ripple-warning-text`, `bg-ripple-warning/10` | Badge's `warning` variant |
+| `text-red`, `bg-red-tint` | `text-ripple-error-text`, `bg-ripple-error/10` | `--ripple-error` aliases `--destructive` (§7) |
+| any status colour used as **text** | `text-ripple-{error,success,warning,info}-text` | Added 2026-09-17. The raw tones are fill colours and measured 1.6 to 3.3:1 as text in light mode. The `-text` tokens blend each tone toward the surface ink and reach 4.5:1 on the plain ground and on the tone's own tints in both themes. `src/lib/ui/status-text.test.ts` fails on any raw-tone text class, `text-destructive` included |
 | `--tooltip-bg` / `-fg` / `-muted` / `-border` | *drop* | ripple's overlay canonical (`Tooltip` from `./ui`) already owns tooltip colour |
 | `--page`, `--canvas`, `--stripe`, `--stripe-bg` | *drop* | the host owns the ground — see §5 |
 
@@ -422,12 +424,12 @@ lane-A decision.
   | ApprovalGate Deny | **3.22** | 5.53 | 6.85 |
   | TaskRows solid badge icon (3:1 applies) | 3.58 | 3.58 | **2.89** |
 
-  **Error text fails 4.5:1 in light mode, before and after.** The value is the
-  same in both tokens, so this is not caused by the alias. It is how every status
-  colour behaves as text on a light ground; CodeBlock hit the same thing with
-  `--ripple-warning`. Not fixed here. The candidate fix is the one CodeBlock uses,
-  mixing the hue toward the surface ink, applied once as a text token rather
-  than per widget.
+  **Error text failed 4.5:1 in light mode, before and after the alias.** The
+  value was the same in both tokens. It is how every status colour behaves as
+  text on a light ground. Fixed the same day, for all four tones, by the
+  `--ripple-{tone}-text` tokens (§2). Error text now measures 6.43 to 7.30:1 in
+  light and 8.39 to 9.21:1 in dark, and TaskRows' solid badge fill is deepened
+  so its icon clears 3:1.
 - `display/StatusDot.svelte` hard-codes hex colours (`#10b981`, `#ef4444`,
   `#f59e0b`, `#9ca3af`) instead of ripple tokens — drift that predates this arc
   and is out of scope for it.
