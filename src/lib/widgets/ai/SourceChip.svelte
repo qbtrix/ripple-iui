@@ -20,7 +20,10 @@
     CONTRAST. The label is muted-foreground mixed 80% toward surface-foreground
     rather than plain muted-foreground. On ripple's own shadcn light defaults the
     plain pair is 4.35:1 on the muted ground, which fails AA. The mix gives 6.17
-    there and 10.07 / 7.61+ on the paw-enterprise Gallery (light / dark).
+    there and 10.07 / 7.61+ on the paw-enterprise Gallery (light / dark). On
+    hover the label goes to surface-foreground, as the source's `hover:text-ink`
+    does. AnswerBlock had translated that to the accent, which measures
+    2.96:1 on the Gallery's light ground (4.0 dark) against the hover tint.
 
     NOT REGISTERED and not exported from `./ui`. It is a part used by two
     organisms, not a spec widget.
@@ -57,7 +60,7 @@
     base: [
       'ripple-source-chip inline-flex shrink-0 items-center bg-ripple-muted',
       'text-[color-mix(in_oklab,var(--ripple-muted-foreground)_80%,var(--ripple-surface-foreground))]',
-      'transition-colors duration-150 ease-ripple-out hover:bg-ripple-accent/10 hover:text-ripple-accent',
+      'transition-colors duration-150 ease-ripple-out hover:bg-ripple-accent/10 hover:text-ripple-surface-foreground',
     ],
     variants: {
       size: {
