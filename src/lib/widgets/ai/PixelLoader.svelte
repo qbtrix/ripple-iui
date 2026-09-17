@@ -52,6 +52,11 @@
     a wrapper around the label. Rejected: `aria-hidden` on the timer inside
     the region. The region is implicitly aria-atomic, and a browser may still
     re-read the whole region, label included, on every hidden mutation.
+  FIXED 2026-09-17 (pre-merge review): the elapsed time counted interval
+    callbacks, and browsers throttle intervals in background tabs, so after a
+    tab switch it showed far less time than had passed. It is now computed
+    from a performance.now() stamp taken on mount; the interval only drives
+    the re-render. The minute rollover and the unmount cleanup are unchanged.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/LoadingState.tsx
 -->
 <script lang="ts">
@@ -89,12 +94,16 @@
 
   const pattern = $derived(PATTERNS[variant] ?? PATTERNS.drive);
 
-  // Deciseconds since mount. The timer is information, so it runs under reduced
-  // motion too. Reads nothing reactive on setup — `tenths` is written from the
-  // interval callback, which is not tracked.
+  // Deciseconds since mount, read off the clock. The interval only schedules
+  // the re-render: a background tab throttles it to about once a second, so
+  // counting its callbacks would under-report. performance.now() because it is
+  // monotonic, so a system clock change cannot move it. The timer is
+  // information, so it runs under reduced motion too. Reads nothing reactive on
+  // setup: `tenths` is written from the interval callback, which is not tracked.
   let tenths = $state(0);
   $effect(() => {
-    const t = setInterval(() => (tenths += 1), 100);
+    const start = performance.now();
+    const t = setInterval(() => (tenths = Math.floor((performance.now() - start) / 100)), 100);
     return () => clearInterval(t);
   });
 
