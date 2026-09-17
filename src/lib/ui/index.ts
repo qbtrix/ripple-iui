@@ -41,7 +41,8 @@
  *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` joins the
  *   molecules. It was always a registered, context-free widget; it is listed now
  *   because its re-skin is CodeBlock's Diff mode, and a caller pairing the two
- *   needs both from the same surface.
+ *   needs both from the same surface. `DiffTable` joins the organisms on the
+ *   same terms as TaskRows: no registry entry, no manifest entry, count 189.
  *
  *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
  *   `PixelLoader` join them on the same terms — the whole answer surface
@@ -113,3 +114,4 @@ export { default as TaskRows } from '../widgets/ai/TaskRows.svelte';
 export { default as PromptBar } from '../widgets/ai/PromptBar.svelte';
 export { default as AnswerBlock } from '../widgets/ai/AnswerBlock.svelte';
 export { default as PixelLoader } from '../widgets/ai/PixelLoader.svelte';
+export { default as DiffTable } from '../widgets/data/DiffTable.svelte';

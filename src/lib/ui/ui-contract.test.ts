@@ -41,9 +41,9 @@
  *   re-skins. No existing entry was edited, which is the thing this map is the
  *   proof of.
  *
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): a `Diff` entry added —
- *   a registered widget newly listed on this surface. No existing entry was
- *   edited.
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` and `DiffTable`
+ *   entries added — a registered widget newly listed on this surface, and a new
+ *   export. No existing entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -96,6 +96,15 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // PixelLoader paints its grid, label and timer with no props; the label is
   // here so the mounted output names itself if this ever fails.
   PixelLoader: { label: 'Churning' },
+  // A removal and an addition, so the mount proves the checkbox column and the
+  // footer, not just an empty table.
+  DiffTable: {
+    columns: [{ key: 'flavor', label: 'Flavor' }],
+    rows: [
+      { key: 'rocky', cells: { flavor: 'Rocky Road' }, change: 'removed' },
+      { key: 'pistachio', cells: { flavor: 'Pistachio' }, change: 'added' },
+    ],
+  },
   Input: { value: '' },
   Textarea: { value: '' },
   Separator: {},
