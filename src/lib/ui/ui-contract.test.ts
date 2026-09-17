@@ -40,6 +40,10 @@
  *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
  *   re-skins. No existing entry was edited, which is the thing this map is the
  *   proof of.
+ *
+ *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): a `Diff` entry added —
+ *   a registered widget newly listed on this surface. No existing entry was
+ *   edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -65,6 +69,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Tabs: { tabs: [{ value: 'one', label: 'One' }], value: 'one' },
   Collapsible: { title: 'More', children: kid('body') },
   CodeBlock: { code: 'const a = 1;', language: 'ts' },
+  // Diff computes its rows after a lazy import, so the mount proves the frame
+  // and header; Diff.skin.test.ts covers the rows.
+  Diff: { before: 'const a = 1;', after: 'const a = 2;', title: 'a.ts' },
   Markdown: { content: '# Title' },
   // Toast is the container for the toast bus, not a single toast. With an
   // empty bus it correctly renders nothing, so it is exempt from the
