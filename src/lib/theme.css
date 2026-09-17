@@ -19,6 +19,14 @@
    layer over content. In-flow surfaces (Card, the PromptBar composer) stay on
    --ripple-surface. */
 
+/* 2026-09-17 (fix/port-gaps, second pass) — --ripple-error and its foreground
+   alias the host's --destructive pair instead of a hard-coded
+   oklch(0.65 0.22 25). Seventeen widgets already painted red through
+   --destructive; the five on --ripple-error split from them wherever a host
+   tunes --destructive, as paw-enterprise does for dark glass. The host's red
+   is canonical, the same as --ripple-accent following --primary. See
+   docs/design/beautiful-ui-translation.md §7. */
+
 /* Fluid Functionalism 8-step surface/elevation ladder (MIT). */
 @import './systems/elevation.css';
 
@@ -38,8 +46,8 @@
   --ripple-success-foreground: oklch(1 0 0);
   --ripple-warning: oklch(0.80 0.16 80);
   --ripple-warning-foreground: oklch(0.15 0 0);
-  --ripple-error: oklch(0.65 0.22 25);
-  --ripple-error-foreground: oklch(1 0 0);
+  --ripple-error: var(--destructive);
+  --ripple-error-foreground: var(--destructive-foreground);
   --ripple-info: oklch(0.70 0.12 250);
   --ripple-info-foreground: oklch(1 0 0);
   --ripple-input: var(--background);

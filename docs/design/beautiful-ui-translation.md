@@ -9,9 +9,10 @@
   count, because PixelLoader gives `pixel-on` an owner and makes the shimmer
   reuse concrete. Nothing else in the table moved.
   Updated 2026-09-17 by fix/port-gaps: §2 gains the popover row (floating
-  layers are not cards), and §7's red gap now records that the two red tokens
-  resolve to different colours in paw-enterprise dark, left as a captain
-  decision.
+  layers are not cards). §7's red gap first recorded that the two red tokens
+  split in paw-enterprise dark, then the decision taken: option (a),
+  `--ripple-error` aliases `--destructive`, with the host override caveat and
+  the light-mode contrast finding.
 -->
 
 # beautiful-ui → ripple: the translation
@@ -381,28 +382,52 @@ lane-A decision.
   tokens. Real inconsistency, pre-existing, and adding a variant is a manifest
   shape change. Flag it; do not fix it here.
 
-  **2026-09-17, still open, and it is now a captain decision.** Five widgets
-  colour errors with `ripple-error` (ApprovalGate, TaskRows, ToolCall, Chip,
-  Stat) and seventeen with `destructive`. The brief was to pick the canonical one
-  and move the minority set only if no rendered colour changed in paw-enterprise.
-  It would change:
+  **2026-09-17, decided: option (a), the host's `--destructive` is canonical.**
+  `theme.css` now aliases `--ripple-error: var(--destructive)` and
+  `--ripple-error-foreground: var(--destructive-foreground)`, the same way
+  `--ripple-accent` follows `--primary`. The hard-coded `oklch(0.65 0.22 25)` was
+  exactly the kind of drift this arc removes. Five widgets painted red through
+  `ripple-error` (ApprovalGate, TaskRows, ToolCall, Chip, Stat) and seventeen
+  through `destructive`. The two agreed in paw-enterprise light mode and split
+  in dark, where the host lifts `--destructive` for dark glass:
 
   | | light | dark |
   |---|---|---|
   | `--destructive` | `oklch(0.65 0.22 25)` | `oklch(0.704 0.191 22.216)` |
-  | `--ripple-error` → `--paw-error` | `oklch(0.65 0.22 25)` | `oklch(0.65 0.22 25)` |
+  | `--paw-error` | `oklch(0.65 0.22 25)` | `oklch(0.65 0.22 25)` |
 
-  They agree in light and differ in dark. paw-enterprise lifts `--destructive`
-  for dark glass but leaves `--paw-error` alone. The drift exists because
-  `theme.css` hard-codes `--ripple-error: oklch(0.65 0.22 25)` instead of
-  aliasing `--destructive`, the way `--ripple-accent` aliases `--primary`. So
-  every ripple surface outside a paw `.ripple-root` (portaled overlays included)
-  gets the fixed value too. The options: (a) make `destructive` canonical and
-  alias `--ripple-error: var(--destructive)`, which lifts the five `ripple-error`
-  widgets in dark; (b) make `ripple-error` canonical and move the seventeen,
-  which dims them in dark; (c) have paw-enterprise set `--paw-error` to follow
-  `--destructive` in dark, after which either pick changes nothing on screen.
-  Nothing was changed.
+  Why (a) over (b): it moves the five toward the red the host tuned for dark,
+  rather than dimming the seventeen away from it. It also closes the Badge vs
+  Chip mismatch above as a ripple default: a `destructive` Badge and a red Chip
+  now resolve to the same token.
+
+  **What does not change on screen yet in paw-enterprise.** Its `global.css`
+  sets `.ripple-root { --ripple-error: var(--paw-error) }`, and all five widgets
+  render inside `.ripple-root`, so they keep `--paw-error` there. They only lift
+  once the host drops that line or points `--paw-error` at `--destructive` in
+  dark. That is a paw-enterprise follow-up. Outside `.ripple-root`, and in any
+  host without that override, the alias takes effect now. ripple's own
+  `styles.css` dark `--destructive` moved from shadcn's old
+  `hsl(0 62.8% 30.6%)` (about 2:1 on its dark ground) to the current
+  `oklch(0.704 0.191 22.216)`, so ripple's app does not go dark red.
+
+  Measured in Chromium with paw-enterprise tokens. The rows are error text on
+  its own `bg-ripple-error/10` tint (the badge, pill, chip and stat delta), then
+  the ToolCall error body on `/5`, then the Deny button.
+
+  | | light | dark, host as is | dark, override dropped |
+  |---|---|---|---|
+  | text on `/10` tint | **2.89** | 5.23 | 6.36 |
+  | ToolCall error body on `/5` | **3.07** | 5.46 | 6.70 |
+  | ApprovalGate Deny | **3.22** | 5.53 | 6.85 |
+  | TaskRows solid badge icon (3:1 applies) | 3.58 | 3.58 | **2.89** |
+
+  **Error text fails 4.5:1 in light mode, before and after.** The value is the
+  same in both tokens, so this is not caused by the alias. It is how every status
+  colour behaves as text on a light ground; CodeBlock hit the same thing with
+  `--ripple-warning`. Not fixed here. The candidate fix is the one CodeBlock uses,
+  mixing the hue toward the surface ink, applied once as a text token rather
+  than per widget.
 - `display/StatusDot.svelte` hard-codes hex colours (`#10b981`, `#ef4444`,
   `#f59e0b`, `#9ca3af`) instead of ripple tokens — drift that predates this arc
   and is out of scope for it.
