@@ -20,6 +20,12 @@
 //   timer, which re-renders every 100ms, so assistive tech was handed a new
 //   announcement ten times a second. Committed red first; the tests above are
 //   untouched.
+// UPDATED 2026-09-17 (fix: elapsed time drifts low): a second reproduction
+//   block. The timer counted interval ticks, and browsers throttle intervals in
+//   background tabs, so after a tab switch it showed far less time than had
+//   passed. The test stretches the interval the way a throttled tab does.
+//   Committed red first. `afterEach` now also restores spies, before the real
+//   timers come back.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import { compile } from 'svelte/compiler';
@@ -29,7 +35,12 @@ import source from './PixelLoader.svelte?raw';
 const cells = (c: Element) => [...c.querySelectorAll('.ripple-pixel-cell')] as HTMLElement[];
 const delayOf = (el: HTMLElement) => el.style.getPropertyValue('--delay').replace(/ms$/, '') || null;
 
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  // Spies first: a spy wraps the fake setInterval, and restoring it after the
+  // real timers return would put the fake back.
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 describe('PixelLoader — the grid', () => {
   it('draws nine cells', () => {
@@ -189,5 +200,26 @@ describe('PixelLoader — the live region', () => {
     await vi.advanceTimersByTimeAsync(1500);
     expect(getByText('1.5s')).toBeTruthy();
     expect(getByRole('status').textContent).toBe(before);
+  });
+});
+
+// Reproduces a pre-merge review finding (2026-09-17): the elapsed time was a
+// count of 100ms interval callbacks. A background tab throttles intervals to
+// about one a second (less after a few minutes hidden), so a user who came back
+// to a long-running agent saw a fraction of the real time.
+describe('PixelLoader — elapsed time under a throttled timer', () => {
+  it('follows the clock, not the number of ticks that fired', async () => {
+    vi.useFakeTimers();
+    // A throttled tab: every 100ms interval actually fires once a second.
+    const fakeSetInterval = globalThis.setInterval;
+    vi.spyOn(globalThis, 'setInterval').mockImplementation(((
+      fn: () => void,
+      _ms?: number,
+      ...args: unknown[]
+    ) => fakeSetInterval(fn, 1000, ...args)) as typeof setInterval);
+    const { getByText } = render(PixelLoader, { props: {} });
+    // Ten seconds pass, and only ten ticks fire.
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(getByText('10.0s')).toBeTruthy();
   });
 });
