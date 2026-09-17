@@ -15,6 +15,11 @@
 //   lit class", and the reduced-motion comment no longer claims it out-ranks an
 //   inline style. The expected values are unchanged. The reproduction test at
 //   the bottom was committed red first and is untouched.
+// UPDATED 2026-09-17 (fix: live region floods screen readers): a reproduction
+//   block at the bottom. `role="status"` sat on the row that holds the elapsed
+//   timer, which re-renders every 100ms, so assistive tech was handed a new
+//   announcement ten times a second. Committed red first; the tests above are
+//   untouched.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import { compile } from 'svelte/compiler';
@@ -162,5 +167,27 @@ describe('PixelLoader — the grid actually animates', () => {
         `a cell animates "${name}", but the compiled CSS only declares: ${[...declared].join(', ') || '(none)'}`
       ).toBe(true);
     }
+  });
+});
+
+// Reproduces a pre-merge review finding (2026-09-17): the status role was on the
+// whole row, so the ticking elapsed time was inside the live region and a screen
+// reader queued "0.1s, 0.2s, ..." for as long as the agent worked. The label is
+// what belongs in the live region; the timer can be read on demand.
+describe('PixelLoader — the live region', () => {
+  it('keeps the ticking timer out of the status region', () => {
+    const { getByRole, getByText } = render(PixelLoader, { props: {} });
+    const status = getByRole('status');
+    expect(status.textContent).toContain('Churning');
+    expect(status.contains(getByText('0.0s'))).toBe(false);
+  });
+
+  it('does not change the status region on a tick', async () => {
+    vi.useFakeTimers();
+    const { getByRole, getByText } = render(PixelLoader, { props: {} });
+    const before = getByRole('status').textContent;
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(getByText('1.5s')).toBeTruthy();
+    expect(getByRole('status').textContent).toBe(before);
   });
 });
