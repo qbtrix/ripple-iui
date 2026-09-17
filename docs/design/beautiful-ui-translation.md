@@ -68,7 +68,7 @@ Plus `--radius-ripple` (utility `rounded-ripple`) and, as of this slice,
 | `bg-surface` | `bg-ripple-surface` | |
 | `text-ink` | `text-ripple-surface-foreground` | |
 | `text-ink-2`, `text-ink-3` | `text-ripple-muted-foreground` | two greys collapse to one — ripple publishes no second muted step |
-| `border-line`, `border-line-strong` | `ring-1 ring-ripple-border` | ripple Card uses a ring, not a border; see §5 |
+| `border-line`, `border-line-strong` | `ring-1 ring-ripple-border` | ripple Card uses a ring, not a border; see §5. **Two exceptions, both proven:** a divider *inside* an already-ringed card stays a border (`border-b border-ripple-border`, CodeBlock's header); and where the source paints the line colour as a *background* rather than an edge, it is `bg-ripple-border` at whatever alpha the source used — `bg-line/60` → `bg-ripple-border/60` (Segmented's track), `bg-line` → `bg-ripple-border` (CodeBlock's gutter rule). |
 | `bg-inset`, `bg-field` | `bg-ripple-muted` | |
 | `bg-hover`, `bg-hover-2` | `hover:bg-ripple-accent/10` | |
 | `text-accent`, `bg-accent` | `text-ripple-accent`, `bg-ripple-accent` | |
@@ -190,9 +190,8 @@ its own `pop-in`, `fade-in` and `fade-up` under the `ripple-answer-` prefix, per
 the each-owner-keeps-a-copy rule two paragraphs up.
 
 **Footnote to row 8 — `animate-spin` needs a guard handle.** Tailwind's utility
-ships no `prefers-reduced-motion` rule, and `motion-reduce:` appears nowhere in
-this repo. Reaching for a fifth copy of the keyframe to get something
-targetable is the wrong fix: put a second, local class on the same element and
+ships no `prefers-reduced-motion` rule. Reaching for a fifth copy of the
+keyframe to get something targetable is the wrong fix: put a second, local class on the same element and
 target *that* from the component's `@media (prefers-reduced-motion: reduce)`
 block. `.animate-spin` is one bare class, so anything with two classes or a
 Svelte scope hash outranks it.
@@ -211,6 +210,16 @@ Both shapes are proven in the repo: `ReasoningTrace.svelte` on a raw element,
 and `TaskRows.svelte` on both a raw `<svg>` and a lucide icon, where the handle
 needs `:global(.ripple-task-rows .ripple-task-retry)` because the class lands on
 a child component's root.
+
+**Correction (2026-09-16, skin-atoms2).** An earlier draft of this footnote said
+`motion-reduce:` appears nowhere in the repo. It does: lane A used
+`motion-reduce:transition-none` on Segmented's sliding thumb
+(`Segmented.svelte:126`). That is the right tool for a plain **transition** and
+it needs no class handle at all, so a component whose only motion is a
+transition should use it rather than opening a scoped `<style>` block. The
+guard-handle shape above is still the answer for a keyframe **animation**
+applied by a utility (`animate-spin`), which is what row 8 is about. ProgressRing
+and Switch both took the `motion-reduce:` route.
 
 **Footnote to rows 2, 4 and 7 — where ToolCall and StreamText actually landed.**
 The owner columns above were written ahead of the ports and the 2026-09-15
