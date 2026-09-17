@@ -1,0 +1,257 @@
+<!--
+  @file widgets/ai/StreamText.svelte
+  @description NEW (AI-native tier, 2026-06-24). Progressive / streaming text
+    render — the surface a generative-UI engine shows while an agent is still
+    producing tokens. Two modes:
+      1. LIVE STREAM: bind `text` to a state path that GROWS. Whatever is in the
+         prop renders as-is; a blinking caret + aria-busy signal "more coming"
+         while `streaming` is true.
+      2. TYPEWRITER: pass a static `text` + a `speed` (chars/sec) and the string
+         types itself in. Honors prefers-reduced-motion (paints the full string
+         at once, no animation, no timer).
+    When `markdown` is true it REUSES the existing Markdown widget to render the
+    revealed slice — it does not reimplement a parser.
+  @a11y aria-live="polite" announces streamed text; aria-busy reflects the
+    in-flight state. The caret is decorative (aria-hidden) and frozen under
+    reduced motion.
+  Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
+  Modified: 2026-09-14 — re-skinned on beautiful-ui. The caret becomes the source's
+    thin rounded bar (2px wide, 0.85em tall, full-radius) instead of a half-em
+    block, and fades in on appearance rather than popping. Body type moves to the
+    skin's 13px rhythm at the default size. The blink keyframe was ALREADY here
+    (ripple-stream-blink) and is reused, not duplicated. Props, events and the
+    typewriter timing are untouched.
+  Modified: 2026-09-16 — the BLUR TAIL. The first re-skin pass mapped this file to
+    primitives/StreamingText.tsx on function and never opened atoms/StreamText.tsx,
+    which carries the same component name, the same character-level reveal, and the
+    effect the source advertises as "words resolve out of blur": the newest few
+    characters sit behind filter: blur(1.6px) under a left-to-right mask ramp, so
+    the leading edge dissolves instead of snapping in. Ported here as CSS only —
+    the reveal splits into a head and a 6-character tail while busy. Fixed at 6
+    because the source's blurTail knob would be a new prop, and the arc's proof is
+    unchanged shapes. Two limits, both deliberate: the tail applies to the
+    plain-text branch only (the markdown branch hands its string to the Markdown
+    widget, which owns its own tree and cannot be sliced), and it is skipped
+    entirely under reduced motion, matching how the caret already freezes.
+  Modified: 2026-09-16 — the CADENCE. The typewriter released ONE character per
+    tick and varied the tick (`Math.max(8, 1000 / speed)`), which made the reveal
+    chunky at low speeds and capped it at 125 chars/sec however high `speed` went
+    — the 8ms floor. The source's atoms/StreamText.tsx does the opposite: a fixed
+    `tickMs = 9` cadence with `charsPerTick = 2`, i.e. the step varies and the
+    beat does not. Re-timed here to that shape. `speed` is untouched as a prop
+    and keeps its meaning (chars/sec); both halves are DERIVED from it —
+    `step = ceil(speed × 9 / 1000)`, `tick = max(9, 1000 × step / speed)` — so a
+    caller at or below 1000/9 ≈ 111 chars/sec gets exactly the interval it got
+    before (speed 100 → 1 char per 10ms, unchanged), and a fast one now reaches
+    the rate it asked for instead of the old ceiling (speed 222 → the source's 2
+    chars per 9ms; previously 125/s). Between 111 and 125 chars/sec the rate is
+    unchanged but the reveal is chunkier: 2 chars every 16-18ms where it was 1
+    every 8-9ms.
+    No new prop: a prop is a manifest shape change and the arc's proof is that no
+    shape moved.
+  Modified: 2026-09-17 — comment only. The cadence note above used to say every
+    "slow caller" kept its old interval. That holds only up to ~111 chars/sec,
+    and the note now gives the bound and describes the 111-125 band.
+  origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
+  origin: slev12397/beautiful-ui@ff0f74d components/atoms/StreamText.tsx (blur tail, cadence)
+-->
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { cn } from '$lib/utils.js';
+  import Markdown from '$lib/widgets/display/Markdown.svelte';
+
+  interface Props {
+    id?: string;
+    class?: string;
+    style?: Record<string, string>;
+    /** Text to render. In live-stream mode bind this to a growing state path. */
+    text?: string;
+    /** Show the blinking caret + aria-busy. True while the agent is producing. */
+    streaming?: boolean;
+    /** Render the revealed text as markdown (reuses the Markdown widget). */
+    markdown?: boolean;
+    /** Typewriter speed in chars/sec. When set, the string types itself in. */
+    speed?: number;
+    /** Streaming finished — clears busy/caret even if `streaming` was left true. */
+    done?: boolean;
+    size?: 'sm' | 'md' | 'lg';
+  }
+
+  let {
+    id,
+    class: className,
+    style,
+    text = '',
+    streaming = false,
+    markdown = false,
+    speed,
+    done = false,
+    size = 'md',
+  }: Props = $props();
+
+  // Typewriter mode is opt-in via `speed`. Without it we render `text` verbatim
+  // (the live-stream path — the prop itself is what grows).
+  const typewriter = $derived(typeof speed === 'number' && speed > 0);
+
+  // The typewriter's cadence, from the source's `tickMs = 9`. Held fixed; the
+  // number of characters released per tick is what `speed` moves.
+  const TICK_MS = 9;
+
+  let reduceMotion = $state(false);
+  // How many chars of `text` the typewriter has revealed so far.
+  let revealed = $state(0);
+
+  onMount(() => {
+    reduceMotion =
+      typeof window !== 'undefined' &&
+      !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  });
+
+  // Drive the typewriter. Depends on text/speed/typewriter/reduceMotion ONLY —
+  // it must not read `revealed` reactively, or writing `revealed` inside the
+  // interval would re-trigger this effect and thrash the timer. Position is
+  // tracked in a local `pos`; `revealed` is write-only output here.
+  $effect(() => {
+    if (!typewriter || reduceMotion) {
+      revealed = text.length;
+      return;
+    }
+    const len = text.length;
+    let pos = 0; // restart the reveal whenever the source string changes
+    revealed = 0;
+    if (pos >= len) {
+      revealed = len;
+      return;
+    }
+    // The source's shape: a FIXED cadence with a variable STEP, not one
+    // character per variable tick. `speed` keeps its meaning — chars/sec — and
+    // is the knob both halves are derived from, so no prop moves.
+    const rate = speed as number;
+    const step = Math.max(1, Math.ceil((rate * TICK_MS) / 1000));
+    const tick = Math.max(TICK_MS, (1000 * step) / rate);
+    const interval = setInterval(() => {
+      pos = Math.min(pos + step, len);
+      revealed = pos;
+      if (pos >= len) clearInterval(interval);
+    }, tick);
+
+    return () => clearInterval(interval);
+  });
+
+  const shown = $derived(typewriter && !reduceMotion ? text.slice(0, revealed) : text);
+
+  // Busy while streaming and not explicitly done, OR while the typewriter is
+  // still catching up to the source string.
+  const typing = $derived(typewriter && !reduceMotion && revealed < text.length);
+  const busy = $derived((streaming && !done) || typing);
+
+  // The caret rides at the end of the revealed text while busy.
+  const showCaret = $derived(busy);
+
+  // How many trailing characters carry the soft blur edge. The source exposes
+  // this as a `blurTail` prop; here it is fixed, because a new prop is a
+  // manifest shape change and the skin's proof is that no shape moved.
+  const TAIL = 6;
+  // Split point for the reveal. Only while busy, only on the plain-text branch
+  // (Markdown renders its own tree and cannot be sliced), and never under
+  // reduced motion — the same condition that freezes the caret.
+  const tailStart = $derived(
+    busy && !markdown && !reduceMotion ? Math.max(0, shown.length - TAIL) : shown.length
+  );
+  const head = $derived(shown.slice(0, tailStart));
+  const tail = $derived(shown.slice(tailStart));
+
+  const styleString = $derived(
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
+  );
+
+  // The skin's body rhythm is 13px. Only the default size moves — the source
+  // publishes exactly one text size, so sm/lg keep ripple's existing steps
+  // rather than inventing a ladder the source never had.
+  const sizeClass: Record<string, string> = {
+    sm: 'text-xs',
+    md: 'text-[13px]',
+    lg: 'text-base',
+  };
+</script>
+
+<div
+  {id}
+  data-ripple-node={id}
+  data-variant="default"
+  data-size={size}
+  data-state={busy ? 'streaming' : 'done'}
+  class={cn('ripple-stream-text leading-relaxed', sizeClass[size], className)}
+  style={styleString}
+  aria-live="polite"
+  aria-busy={busy}
+>
+  {#if markdown}
+    <span class="ripple-stream-text__body align-baseline"><Markdown content={shown} /></span>
+  {:else}
+    <!-- One line on purpose: whitespace-pre-wrap would render any indentation
+         between the head and the tail as literal spaces in the stream. --><span
+      class="ripple-stream-text__body whitespace-pre-wrap"
+    >{head}{#if tail}<span class="ripple-stream-tail">{tail}</span>{/if}</span>
+  {/if}{#if showCaret}<span
+      class={cn('ripple-stream-caret', reduceMotion && 'ripple-stream-caret--static')}
+      aria-hidden="true"
+    ></span>{/if}
+</div>
+
+<style>
+  /* The skin's caret: a thin full-radius bar riding the baseline, not a block. */
+  .ripple-stream-caret {
+    display: inline-block;
+    width: 2px;
+    height: 0.85em;
+    margin-left: 2px;
+    border-radius: 999px;
+    transform: translateY(0.08em);
+    background: currentColor;
+    animation:
+      ripple-stream-fade-in 150ms var(--ripple-ease-out) both,
+      ripple-stream-blink 1s step-end infinite;
+  }
+  .ripple-stream-caret--static {
+    animation: none;
+  }
+  /* The newest characters resolve out of a soft blur behind a left-to-right
+     mask ramp. Copied from the source's atoms block verbatim. */
+  .ripple-stream-tail {
+    filter: blur(1.6px);
+    -webkit-mask-image: linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2));
+    mask-image: linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-stream-caret {
+      animation: none;
+    }
+    /* Belt and braces: the tail span is not rendered at all once reduceMotion
+       resolves, but that only happens on mount, so the first paint is covered
+       here rather than flashing a blur. */
+    .ripple-stream-tail {
+      filter: none;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+  }
+  @keyframes ripple-stream-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes ripple-stream-blink {
+    0%,
+    50% {
+      opacity: 0.85;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+</style>

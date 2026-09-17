@@ -1,0 +1,80 @@
+{
+  "name": "@ripple-ui/core",
+  "version": "0.5.0",
+  "license": "MIT",
+  "description": "Framework-agnostic spec engine for Ripple: schema, expressions, state, events, and a headless runtime that resolves JSON specs into plain trees.",
+  "keywords": [
+    "ui",
+    "json-spec",
+    "renderer",
+    "ai",
+    "generative-ui",
+    "headless",
+    "framework-agnostic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qbtrix/ripple-iui.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/qbtrix/ripple-iui#readme",
+  "bugs": {
+    "url": "https://github.com/qbtrix/ripple-iui/issues"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./headless": {
+      "source": "./src/headless/index.ts",
+      "types": "./dist/headless/index.d.ts",
+      "default": "./dist/headless/index.js"
+    },
+    "./schema": {
+      "source": "./src/schema/index.ts",
+      "types": "./dist/schema/index.d.ts",
+      "default": "./dist/schema/index.js"
+    },
+    "./motion": {
+      "source": "./src/motion/engine.ts",
+      "types": "./dist/motion/engine.d.ts",
+      "default": "./dist/motion/engine.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/__tests__/**",
+    "!dist/**/fixtures/**"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc -p tsconfig.build.json --noEmit",
+    "test": "vitest --run"
+  },
+  "dependencies": {
+    "esm-env": "^1.2.2",
+    "zod": "^4.0.0"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "svelte": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "svelte": "^5.51.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

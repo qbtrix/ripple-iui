@@ -1,0 +1,106 @@
+<!--
+  @file widgets/premium/Shimmer.svelte
+  @description A bright band sweeping through the text itself: the label is
+    painted by a clipped gradient that runs muted → foreground → muted, and the
+    gradient's position animates (Tier 0 — pure CSS, no JS engine, SSR-safe).
+    Signals "the agent is working" on a label, a CTA, or skeleton text.
+  @provenance Sweep concept adapted from svelte-animations (github.com/
+    SikandarJODD/svelte-animations, MIT — Svelte Magic UI port); re-skinned
+    2026-09-14 on slev12397/beautiful-ui@ff0f74d components/atoms/Shimmer.tsx
+    (MIT, Copyright (c) 2026 Shane Levine — see NOTICE). MIT preserved for both.
+
+  Updated 2026-09-14 (beautiful-ui re-skin, lane A). Two changes:
+
+  1. The band is now the source's ink ramp on ripple tokens
+     (--ripple-muted-foreground → --ripple-surface-foreground → back) instead
+     of a hardcoded rgba(255,255,255,.85), so it reads on a light theme and
+     follows a host's retheme. Scoped CSS reads the :root --ripple-* property,
+     not the --color-ripple-* @theme alias, which only exists for Tailwind's
+     utility compiler.
+  2. It makes the glyphs transparent so background-clip:text actually shows.
+     This fixes a latent no-op: the previous version clipped a background to
+     the glyphs while leaving the text opaque, so the sweep was painted
+     BEHIND fully-opaque letters and never visible. It uses
+     -webkit-text-fill-color rather than `color` on purpose — see the rule.
+
+  `width` keeps its documented meaning — the highlight band's half-width, now
+  expressed as the gradient's ramp offset either side of centre rather than a
+  no-repeat band, which is what makes a full-width clipped gradient possible.
+  Props (duration, width, children, hasChildren) are unchanged.
+
+  LAYOUT TRAP — what kills the sweep, and what to do instead. The root is
+  `inline-flex`, so a flex or grid parent blockifies it and the default
+  `align-items: stretch` makes it as wide as the column. Measured: a 206px
+  string rendered 1198px wide. The bright band is positioned with
+  `calc(50% ± var(--shimmer-width))`, i.e. relative to the element, so at that
+  width it sweeps a region the glyphs never occupy and the label just sits
+  there looking static. Nothing is broken and nothing errors — it simply reads
+  dead. Fix it at the call site: pass `class="self-start"` (or `w-fit`), or set
+  `align-items` on the parent to something other than stretch. This is
+  inherited, not introduced — the source's own Shimmer is `inline-block` with
+  width-relative stops and stretches the same way.
+
+  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
+  `children?.()` call, so a hand-written Svelte caller that passes children but no
+  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
+-->
+<script lang="ts">
+  import type { Snippet } from 'svelte';
+  import { cn } from '$lib/utils.js';
+  interface Props {
+    id?: string; class?: string; style?: Record<string, string>;
+    /** Seconds per sweep. Default 2. */
+    duration?: number;
+    /** Highlight band width (CSS length). Default '100px'. */
+    width?: string;
+    children?: Snippet;
+    hasChildren?: boolean;
+  }
+  let { id, class: className, style, duration = 2, width = '100px', children, hasChildren = false }: Props = $props();
+  const styleString = $derived([
+    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : '',
+    `--shimmer-duration:${duration}s`,
+    `--shimmer-width:${width}`,
+  ].filter(Boolean).join(';'));
+</script>
+
+<span {id} data-shimmer class={cn('ripple-shimmer relative inline-flex items-center', className)} style={styleString}>
+  {#if hasChildren || children}{@render children?.()}{/if}
+</span>
+
+<style>
+  .ripple-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--ripple-muted-foreground) calc(50% - var(--shimmer-width, 100px)),
+      var(--ripple-surface-foreground) 50%,
+      var(--ripple-muted-foreground) calc(50% + var(--shimmer-width, 100px))
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    /* -webkit-text-fill-color, NOT color. This span's child is always another
+       widget, and the canonical one — display/Text.svelte — always sets its own
+       text-foreground / text-muted-foreground class, which would repaint opaque
+       glyphs straight over the clipped gradient and re-hide the sweep one layer
+       down. text-fill-color is inherited AND wins over a descendant's `color`,
+       so the whole subtree stays transparent. It also fails gracefully: a
+       browser without it renders normal opaque text rather than invisible
+       text, which `color: transparent` would not. */
+    -webkit-text-fill-color: transparent;
+    animation: ripple-shimmer-sweep var(--shimmer-duration, 2s) linear infinite;
+  }
+  @keyframes ripple-shimmer-sweep {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+  }
+  /* Reduced motion: no sweep, and the text goes back to painting itself —
+     a frozen gradient would leave half the label muted. */
+  @media (prefers-reduced-motion: reduce) {
+    .ripple-shimmer {
+      animation: none;
+      background-image: none;
+      -webkit-text-fill-color: currentcolor;
+    }
+  }
+</style>
