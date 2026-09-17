@@ -13,6 +13,8 @@
 //   name. The fix for an offender is to keep the name in the stylesheet and pass
 //   only per-element values through custom properties, as ToolCall and TaskRows
 //   do with --i.
+// UPDATED 2026-09-17: explicit 30s timeout. The first push timed out at
+//   vitest's 5s default on CI (7.1s there, 2.2s locally).
 import { test, expect } from 'vitest';
 import { parse } from 'svelte/compiler';
 import { danglingKeyframes } from './__fixtures__/scoped-keyframes.js';
@@ -43,7 +45,9 @@ function inlineStyles(source: string): string {
   return found.join('\n');
 }
 
-test('no inline style names a keyframe that Svelte scoped to a hashed name', () => {
+// Headroom for CI, which ran this about 3x slower than a laptop before the
+// early return in danglingKeyframes cut the compile work. That return is the fix.
+test('no inline style names a keyframe that Svelte scoped to a hashed name', { timeout: 30_000 }, () => {
   expect(Object.keys(ALL_SVELTE).length).toBeGreaterThan(300);
   const offenders = Object.entries(ALL_SVELTE).flatMap(([rel, src]) =>
     danglingKeyframes(src, inlineStyles(src)).map((name) => `${rel} names "${name}"`)

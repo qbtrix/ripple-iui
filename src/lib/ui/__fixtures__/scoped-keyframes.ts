@@ -6,6 +6,9 @@
 //   svelte/compiler, which a shipped module must not. (It started outside
 //   src/lib, but svelte-package then wrote a stray .d.ts beside it on every
 //   build.)
+// UPDATED 2026-09-17: returns early, before parsing, when there is no inline
+//   style or no keyframe to check. Parsing and compiling all 383 components
+//   took 7.1s on CI and timed the guard out; most declare no keyframes.
 //
 // The bug class it names: Svelte scopes every @keyframes declared in a
 // component's style block, renaming it to a hashed name, and rewrites the
@@ -21,6 +24,9 @@ import { compile, parse } from 'svelte/compiler';
  * style in `inline` is safe.
  */
 export function danglingKeyframes(source: string, inline: string): string[] {
+  // Most components write no inline style or declare no keyframes. Skipping the
+  // parse and compile for those keeps the repo-wide guard inside CI's timeout.
+  if (!inline || !source.includes('@keyframes')) return [];
   const styles = parse(source, { modern: true }).css?.content.styles ?? '';
   const compiled = compile(source, { filename: 'Component.svelte', css: 'external' }).css?.code ?? '';
   // Prefix-agnostic: a name is scoped when it does not survive into the
