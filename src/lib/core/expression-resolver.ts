@@ -3,6 +3,10 @@
  * @description Resolves binding expressions like {state.value} and {item.name}.
  * @created 2024-12-XX
  * @changes
+ *   - 2026-09-17 (oxlint no-base-to-string sweep): all string coercions of
+ *     unknown values route through asText, so an object-valued binding
+ *     interpolates / concatenates / sorts as readable JSON instead of
+ *     "[object Object]"
  *   - Initial creation with expression parsing and evaluation
  *   - Support for simple paths, comparisons, and null checks
  *   - Template string resolution for embedded expressions
@@ -12,6 +16,8 @@
  *     `withFlowContext` — not a new expression engine. App state wins on key
  *     collision, so a flow can never shadow real state.
  */
+
+import { asText } from '../widgets/text-coerce.js';
 
 /**
  * Context for resolving expressions.
@@ -219,7 +225,7 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 			const right = evaluateExpression(additive.parts[i + 1], context);
 			if (additive.ops[i] === '+') {
 				if (typeof result === 'string' || typeof right === 'string') {
-					result = String(result ?? '') + String(right ?? '');
+					result = asText(result) + asText(right);
 				} else {
 					result = toNumber(result) + toNumber(right);
 				}
@@ -427,11 +433,11 @@ function applyMethod(receiver: unknown, method: string, args: unknown[]): unknow
 			case 'trim':
 				return receiver.trim();
 			case 'includes':
-				return receiver.includes(String(args[0] ?? ''));
+				return receiver.includes(asText(args[0]));
 			case 'startsWith':
-				return receiver.startsWith(String(args[0] ?? ''));
+				return receiver.startsWith(asText(args[0]));
 			case 'endsWith':
-				return receiver.endsWith(String(args[0] ?? ''));
+				return receiver.endsWith(asText(args[0]));
 		}
 	}
 	if (Array.isArray(receiver)) {
@@ -439,7 +445,7 @@ function applyMethod(receiver: unknown, method: string, args: unknown[]): unknow
 			case 'includes':
 				return receiver.includes(args[0]);
 			case 'join':
-				return receiver.join(String(args[0] ?? ','));
+				return receiver.join(args[0] == null ? ',' : asText(args[0]));
 			case 'sum': {
 				const field = typeof args[0] === 'string' ? (args[0] as string) : null;
 				return receiver.reduce((a: number, v: unknown) => {
@@ -495,7 +501,7 @@ function applyMethod(receiver: unknown, method: string, args: unknown[]): unknow
 					if (bv === null || bv === undefined) return 1;
 					if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
 					return (
-						String(av).localeCompare(String(bv), undefined, { numeric: true }) * dir
+						asText(av).localeCompare(asText(bv), undefined, { numeric: true }) * dir
 					);
 				});
 			}
@@ -660,7 +666,7 @@ function evaluateSimplePath(path: string, context: ResolverContext): unknown {
 		} else {
 			const resolved = evaluateExpression(seg.expr, context);
 			if (resolved === null || resolved === undefined) return undefined;
-			key = typeof resolved === 'number' ? resolved : String(resolved);
+			key = typeof resolved === 'number' ? resolved : asText(resolved);
 		}
 		if (typeof current === 'string' || Array.isArray(current)) {
 			current = (current as unknown as Record<string | number, unknown>)[key];
@@ -928,7 +934,7 @@ export function resolveString(value: string, context: ResolverContext): unknown 
 	return value.replace(EXPRESSION_REGEX, (_, expr) => {
 		try {
 			const result = evaluateExpression(expr, context);
-			return result === null || result === undefined ? '' : String(result);
+			return asText(result);
 		} catch {
 			return '';
 		}

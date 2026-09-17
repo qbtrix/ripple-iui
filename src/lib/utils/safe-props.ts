@@ -1,5 +1,8 @@
 /**
  * @file safe-props.ts
+ * @changes 2026-09-17: shortSample's circular-object fallback is a literal
+ *   '[unserializable]' and option labels coerce via asText (objects → JSON,
+ *   not "[object Object]") — oxlint no-base-to-string sweep.
  * @description Defensive guards for widget props consumed as arrays/objects.
  *
  * Ripple specs are LLM-generated. The expression resolver silently returns
@@ -15,6 +18,8 @@
  * The `widget` / `key` context is what makes the warnings useful — without
  * them you only see a stack trace deep inside Svelte runtime.
  */
+
+import { asText } from '../widgets/text-coerce.js';
 
 interface Ctx {
   widget?: string;
@@ -70,7 +75,7 @@ function shortSample(v: unknown): unknown {
       const s = JSON.stringify(v);
       return s.length > 200 ? s.slice(0, 200) + '…' : s;
     } catch {
-      return String(v).slice(0, 200);
+      return '[unserializable]';
     }
   }
   if (typeof v === 'string') return v.length > 200 ? v.slice(0, 200) + '…' : v;
@@ -170,7 +175,7 @@ export function toCanonicalOption(raw: unknown): CanonicalOption | null {
   const value = (o.value ?? o.id ?? o.key) as string | number | undefined;
   const labelRaw = o.label ?? o.name ?? o.title ?? o.text ?? value;
   if (value === undefined || value === null) return null;
-  const label = labelRaw === undefined || labelRaw === null ? String(value) : String(labelRaw);
+  const label = labelRaw === undefined || labelRaw === null ? String(value) : asText(labelRaw);
   return { ...o, value, label };
 }
 
