@@ -38,6 +38,11 @@
  *   `./widgets`. `confirmDialog` is exported by name as well as inside its
  *   namespace because 33 call sites import the store, not the component.
  *
+ *   Updated 2026-09-17 (fix/port-gaps): `Switch` and `ProgressRing` join the
+ *   atoms. Both were re-skinned in the arc but reachable only through
+ *   `./widgets`. Both are registered widgets already, so the manifest count does
+ *   not move; this only adds them to the hand-written-caller surface.
+ *
  *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
  *   `PixelLoader` join them on the same terms — the whole answer surface
  *   StreamingText.tsx really is, which the arc had only ported the text run of,
@@ -59,10 +64,12 @@
 export { default as Button } from '../widgets/input/Button.svelte';
 export { default as Input } from '../widgets/input/Input.svelte';
 export { default as Textarea } from '../widgets/input/Textarea.svelte';
+export { default as Switch } from '../widgets/input/Switch.svelte';
 export { default as Chip } from '../widgets/display/Chip.svelte';
 export { default as Badge } from '../widgets/display/Badge.svelte';
 export { default as StatusDot } from '../widgets/display/StatusDot.svelte';
 export { default as Skeleton } from '../widgets/display/Skeleton.svelte';
+export { default as ProgressRing } from '../widgets/display/ProgressRing.svelte';
 export { default as Shimmer } from '../widgets/premium/Shimmer.svelte';
 export { default as Separator } from '../widgets/layout/Separator.svelte';
 

@@ -40,6 +40,10 @@
  *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
  *   re-skins. No existing entry was edited, which is the thing this map is the
  *   proof of.
+ *
+ *   Updated 2026-09-17 (fix/port-gaps): two more entries, `Switch` and
+ *   `ProgressRing`, for the two atoms that joined the surface. Again no existing
+ *   entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -96,6 +100,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // Shimmer paints a sweeping gradient through its children's glyphs; with no
   // child it still renders its own span, so it is not exempt below.
   Shimmer: { children: kid('shimmering') },
+  // Both paint with no props; these make the mounted output name itself.
+  Switch: { label: 'Notifications' },
+  ProgressRing: { value: 40 },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */
