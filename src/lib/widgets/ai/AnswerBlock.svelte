@@ -45,12 +45,24 @@
     the accessibility tree. Action buttons carry real labels rather than the
     source's four identical "Action" ones. Every animation freezes under
     prefers-reduced-motion, which also paints the whole body at once.
+  Modified: 2026-09-17 (skin-context lane) — the inline cite chip moved out to
+    `SourceChip.svelte`, because ContextCards needs the same chip and the arc
+    does not keep two copies of one. The chip keeps its `ripple-answer-chip`
+    class, geometry and link behaviour. It now owns its pop-in, so this file's
+    `ripple-answer-pop-in` is gone: a parent's scoped rule cannot reach a child
+    component's root, and the copy would have been dead. Two visible changes.
+    The label text is mixed toward the foreground, because plain
+    muted-on-muted is 4.35:1 on ripple's shadcn light defaults. And the lift is
+    the source's single pixel: the old keyframe added a transform translateY
+    on top of the `translate` utility, so the chip sat 2px high. Nothing else
+    here moved. The avatar snippet stays for the cluster and the list.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/StreamingText.tsx
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import StreamText from './StreamText.svelte';
+  import SourceChip from './SourceChip.svelte';
   import CopyIcon from '@lucide/svelte/icons/copy';
   import RotateCwIcon from '@lucide/svelte/icons/rotate-cw';
   import ThumbsUpIcon from '@lucide/svelte/icons/thumbs-up';
@@ -250,16 +262,13 @@
       {#if segment.cite !== undefined}
         {@const source = sources[segment.cite]}
         {#if source && citeShown(i)}
-          <svelte:element
-            this={source.href ? 'a' : 'span'}
+          <SourceChip
+            class="ripple-answer-chip mr-1"
+            label={source.domain}
             href={source.href}
-            target={source.href ? '_blank' : undefined}
-            rel={source.href ? 'noreferrer' : undefined}
-            class="ripple-answer-chip mr-1 inline-flex h-[18px] -translate-y-px items-center gap-1 rounded-md bg-ripple-muted px-[3px] align-middle font-mono text-[10.5px] text-ripple-muted-foreground transition-colors duration-150 hover:bg-ripple-accent/10 hover:text-ripple-accent"
-          >
-            {@render avatar(source, 'size-3', 'rounded-[3px]')}
-            <span>{source.domain}</span>
-          </svelte:element>
+            image={source.image}
+            mark={source.name.slice(0, 1)}
+          />
         {/if}
       {:else}
         <StreamText class="inline" text={shown(i)} streaming={activeSeg === i} />
@@ -362,24 +371,11 @@
 </div>
 
 <style>
-  .ripple-answer-chip {
-    animation: ripple-answer-pop-in 250ms var(--ripple-ease-out) both;
-  }
   .ripple-answer-fade-in {
     animation: ripple-answer-fade-in 150ms var(--ripple-ease-out) both;
   }
   .ripple-answer-fade-up {
     animation: ripple-answer-fade-up 350ms var(--ripple-ease-out) both;
-  }
-  @keyframes ripple-answer-pop-in {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(-1px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(-1px);
-    }
   }
   @keyframes ripple-answer-fade-in {
     from {
@@ -400,7 +396,6 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .ripple-answer-chip,
     .ripple-answer-fade-in,
     .ripple-answer-fade-up {
       animation: none;
