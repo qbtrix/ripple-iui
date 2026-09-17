@@ -6,9 +6,15 @@
 //   by cell. The elapsed timer is pinned including the minute rollover, which is
 //   the branch that only runs after 60 seconds and would otherwise never be
 //   exercised. The reduced-motion rule is asserted against the source text
-//   because the freeze is CSS-only: the cell delays are inline styles, so the
-//   guard has to out-rank them, and a stylesheet rule that quietly lost that
-//   fight would look identical in a mounted DOM.
+//   because the freeze is CSS-only, and a stylesheet rule that quietly lost the
+//   cascade would look identical in a mounted DOM.
+// UPDATED 2026-09-17 (fix: dead grid animation): the cells no longer carry an
+//   inline `animation`; the keyframe is named in the scoped stylesheet on
+//   `.ripple-pixel-lit`, and each cell passes only `--delay`. So the delay ramp
+//   is read from `--delay`, the dark orbit centre is pinned as "never gets the
+//   lit class", and the reduced-motion comment no longer claims it out-ranks an
+//   inline style. The expected values are unchanged. The reproduction test at
+//   the bottom was committed red first and is untouched.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import { compile } from 'svelte/compiler';
@@ -16,7 +22,7 @@ import PixelLoader from './PixelLoader.svelte';
 import source from './PixelLoader.svelte?raw';
 
 const cells = (c: Element) => [...c.querySelectorAll('.ripple-pixel-cell')] as HTMLElement[];
-const delayOf = (el: HTMLElement) => el.style.animation.match(/(\d+)ms infinite/)?.[1] ?? null;
+const delayOf = (el: HTMLElement) => el.style.getPropertyValue('--delay').replace(/ms$/, '') || null;
 
 afterEach(() => vi.useRealTimers());
 
@@ -48,8 +54,10 @@ describe('PixelLoader — the grid', () => {
     const grid = cells(container);
     // Perimeter order 0,1,2,5,8,7,6,3 at 110ms apart.
     expect(grid.map(delayOf)).toEqual(['0', '110', '220', '770', null, '330', '660', '550', '440']);
-    // The centre never lights: no animation, and dimmer than its neighbours.
-    expect(grid[4].style.animation).toBe('none');
+    // The centre never lights: no lit class (so no animation), and dimmer than
+    // its neighbours.
+    expect(grid[4].classList.contains('ripple-pixel-lit')).toBe(false);
+    expect(grid[0].classList.contains('ripple-pixel-lit')).toBe(true);
     expect(grid[4].style.opacity).toBe('0.07');
     expect(grid[0].style.opacity).toBe('0.15');
   });
@@ -101,10 +109,11 @@ describe('PixelLoader — the label and the timer', () => {
 });
 
 describe('PixelLoader — reduced motion', () => {
-  it('carries a guard that can actually out-rank the inline cell delays', () => {
-    // The per-cell animation is an inline style, so a plain stylesheet rule
-    // loses to it. Only `!important` wins. This is the one place in the widget
-    // where dropping a keyword silently disables the accessibility behaviour.
+  it('carries a guard that out-ranks the lit-cell animation', () => {
+    // The animation sits on `.ripple-pixel-lit` in the same stylesheet. The
+    // guard matches its specificity and comes later, and `!important` keeps it
+    // winning if that selector ever grows. Dropping the keyword is the one edit
+    // that could silently disable the accessibility behaviour.
     const guard = source.match(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n  \}/)?.[0];
     expect(guard, 'no reduced-motion block in PixelLoader').toBeTruthy();
     expect(guard).toContain('.ripple-pixel-cell');

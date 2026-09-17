@@ -36,6 +36,15 @@
     prefers-reduced-motion the grid freezes to its dim state — the source's own
     behaviour — while the timer keeps ticking, because elapsed time is
     information rather than decoration.
+    FIXED 2026-09-17: the grid never animated. Each cell named its keyframe in
+    an inline `style:animation`, but Svelte renames a component's keyframes to
+    a hashed name and rewrites only the references inside its own stylesheet,
+    so the inline value pointed at a keyframe that did not exist and the
+    browser silently dropped it. The animation now lives on `.ripple-pixel-lit`
+    in the stylesheet; each cell passes only `--delay`, and the grid passes
+    `--dur`, the same custom-property stagger ToolCall and TaskRows use with
+    `--i`. Rejected: marking the keyframe global, which would let it collide
+    with any other keyframe of the same name on the page.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/LoadingState.tsx
 -->
 <script lang="ts">
@@ -101,17 +110,20 @@
   class={cn('ripple-pixel-loader flex w-fit items-center gap-2.5', className)}
   style={styleString}
 >
-  <span aria-hidden="true" class="grid shrink-0 grid-cols-[repeat(3,4px)] gap-[1.5px]">
+  <span
+    aria-hidden="true"
+    class="grid shrink-0 grid-cols-[repeat(3,4px)] gap-[1.5px]"
+    style:--dur="{pattern.dur}ms"
+  >
     {#each pattern.delays as delay, i (i)}
       <span
         class={cn(
           'ripple-pixel-cell size-[4px] bg-ripple-surface-foreground',
-          pattern.round ? 'rounded-full' : 'rounded-[1px]'
+          pattern.round ? 'rounded-full' : 'rounded-[1px]',
+          delay !== null && 'ripple-pixel-lit'
         )}
         style:opacity={delay === null ? 0.07 : 0.15}
-        style:animation={delay === null
-          ? 'none'
-          : `ripple-loader-pixel-on ${pattern.dur}ms ease-in-out ${delay}ms infinite`}
+        style:--delay={delay === null ? undefined : `${delay}ms`}
       ></span>
     {/each}
   </span>
@@ -124,6 +136,12 @@
 </span>
 
 <style>
+  /* The keyframe is named here and only here. Svelte hashes the keyframe and
+     rewrites this reference with it; the cells pass only their timing, through
+     --delay and --dur. Unlit cells (the orbit's centre) never get the class. */
+  .ripple-pixel-lit {
+    animation: ripple-loader-pixel-on var(--dur) ease-in-out var(--delay) infinite;
+  }
   @keyframes ripple-loader-pixel-on {
     0%,
     100% {
@@ -135,7 +153,9 @@
   }
   /* The source freezes the grid to its dim state rather than leaving a cell
      lit — the wavefront is the information, and without it there is nothing to
-     freeze mid-way to. The timer keeps running; it is not decoration. */
+     freeze mid-way to. The timer keeps running; it is not decoration.
+     Same specificity as the lit rule and later in source, so it already wins;
+     !important keeps it winning if the lit selector ever grows. */
   @media (prefers-reduced-motion: reduce) {
     .ripple-pixel-cell {
       animation: none !important;
