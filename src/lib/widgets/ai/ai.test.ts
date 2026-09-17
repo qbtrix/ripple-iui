@@ -14,6 +14,8 @@ import { getWidget, hasWidget } from '../index.js';
 import StreamText from './StreamText.svelte';
 import ToolCall from './ToolCall.svelte';
 import ReasoningTrace from './ReasoningTrace.svelte';
+import reasoningSource from './ReasoningTrace.svelte?raw';
+import { danglingKeyframes } from '../../ui/__fixtures__/scoped-keyframes.js';
 import ApprovalGate from './ApprovalGate.svelte';
 import Ripple from '$lib/Ripple.svelte';
 
@@ -176,6 +178,16 @@ describe('ReasoningTrace', () => {
     const { container } = render(ReasoningTrace, { props: { steps, collapsed: false } });
     const trigger = container.querySelector('button[aria-expanded]');
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('names none of its scoped keyframes from an inline style', () => {
+    // The PixelLoader bug (2026-09-17): an inline style naming a keyframe that
+    // Svelte hashed points at nothing. The step stagger only sets
+    // animation-delay inline, which is safe; this keeps it that way.
+    const { container } = render(ReasoningTrace, { props: { steps, collapsed: false } });
+    const inline = [...container.querySelectorAll('[style]')].map((el) => el.getAttribute('style')).join(';');
+    expect(inline, 'no staggered step rendered').toContain('animation');
+    expect(danglingKeyframes(reasoningSource, inline)).toEqual([]);
   });
 });
 

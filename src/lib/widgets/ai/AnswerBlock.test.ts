@@ -13,6 +13,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import AnswerBlock from './AnswerBlock.svelte';
+import source from './AnswerBlock.svelte?raw';
+import { danglingKeyframes } from '../../ui/__fixtures__/scoped-keyframes.js';
 
 const WORD_MS = 55;
 
@@ -210,5 +212,16 @@ describe('AnswerBlock — follow-ups', () => {
   it('renders nothing for them when the caller supplies none', async () => {
     const { container } = await settled();
     expect(container.textContent).not.toContain('Follow-ups');
+  });
+
+  it('names none of its scoped keyframes from an inline style', async () => {
+    // The PixelLoader bug (2026-09-17): Svelte hashes the keyframe names in this
+    // component's stylesheet, and an inline style that names one bare points at
+    // nothing. The stagger here only sets animation-delay inline, which is safe;
+    // this keeps it that way.
+    const { container } = await settled({ followUps: FOLLOW_UPS });
+    const inline = [...container.querySelectorAll('[style]')].map((el) => el.getAttribute('style')).join(';');
+    expect(inline, 'no staggered follow-up rendered').toContain('animation');
+    expect(danglingKeyframes(source, inline)).toEqual([]);
   });
 });
