@@ -27,6 +27,20 @@
    is canonical, the same as --ripple-accent following --primary. See
    docs/design/beautiful-ui-translation.md §7. */
 
+/* 2026-09-17 (fix/port-gaps, third pass) — readable status text. The status
+   tones are fill colours; painted as text they measured 1.6-3.3:1 in light
+   mode (error 2.90 on its /10 tint, success 1.96, warning 1.64, info 2.25).
+   --ripple-{tone}-text blends each tone toward the surface ink, so it darkens
+   on a light ground and lightens on a dark one, and every text use of a tone
+   now reads these. Fills and tints stay on the raw tones. The ratios are
+   tuned by measurement to keep each tone recognisable while reaching 4.5:1
+   on its /10 and /15 tints and on the plain ground in both themes
+   (src/lib/ui/status-text.test.ts). They are declared on :where(.ripple-root)
+   as well as :root, so a host that re-points a tone on .ripple-root (as
+   paw-enterprise does) gets text blended from that tone, not from the :root
+   one; :where keeps the selector at zero specificity so any host override of
+   the -text token itself still wins. */
+
 /* Fluid Functionalism 8-step surface/elevation ladder (MIT). */
 @import './systems/elevation.css';
 
@@ -64,6 +78,15 @@
   --ripple-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* Readable status text: see the third-pass note at the top. */
+:root,
+:where(.ripple-root) {
+  --ripple-error-text: color-mix(in oklab, var(--ripple-error) 60%, var(--ripple-surface-foreground));
+  --ripple-success-text: color-mix(in oklab, var(--ripple-success) 55%, var(--ripple-surface-foreground));
+  --ripple-warning-text: color-mix(in oklab, var(--ripple-warning) 50%, var(--ripple-surface-foreground));
+  --ripple-info-text: color-mix(in oklab, var(--ripple-info) 55%, var(--ripple-surface-foreground));
+}
+
 @theme inline {
   --color-ripple-surface: var(--ripple-surface);
   --color-ripple-surface-foreground: var(--ripple-surface-foreground);
@@ -77,12 +100,16 @@
   --color-ripple-ring: var(--ripple-ring);
   --color-ripple-success: var(--ripple-success);
   --color-ripple-success-foreground: var(--ripple-success-foreground);
+  --color-ripple-success-text: var(--ripple-success-text);
   --color-ripple-warning: var(--ripple-warning);
   --color-ripple-warning-foreground: var(--ripple-warning-foreground);
+  --color-ripple-warning-text: var(--ripple-warning-text);
   --color-ripple-error: var(--ripple-error);
   --color-ripple-error-foreground: var(--ripple-error-foreground);
+  --color-ripple-error-text: var(--ripple-error-text);
   --color-ripple-info: var(--ripple-info);
   --color-ripple-info-foreground: var(--ripple-info-foreground);
+  --color-ripple-info-text: var(--ripple-info-text);
   --color-ripple-input: var(--ripple-input);
   --color-ripple-input-foreground: var(--ripple-input-foreground);
   --radius-ripple: var(--ripple-radius);

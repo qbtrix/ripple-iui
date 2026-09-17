@@ -1,4 +1,10 @@
-<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
+<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check).
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+-->
 <!-- src/lib/widgets/overlay/ErrorState.svelte -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -61,7 +67,7 @@
   )}
   style={styleString}
 >
-  <span class="grid place-items-center h-12 w-12 rounded-full bg-destructive/10 text-destructive">
+  <span class="grid place-items-center h-12 w-12 rounded-full bg-destructive/10 text-ripple-error-text">
     <Icon size={20} />
   </span>
   <div class="flex flex-col gap-1 max-w-md">

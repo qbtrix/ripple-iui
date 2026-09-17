@@ -7,6 +7,11 @@
   Price display with an optional original (strikethrough) price and an
   optional discount badge derived from the two numeric values. Pure
   presentation — props in, UI out. No data fetching, no services.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -76,7 +81,7 @@
   </span>
   {#if discountPct != null}
     <span
-      class="shrink-0 rounded-full bg-ripple-success/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-ripple-success"
+      class="shrink-0 rounded-full bg-ripple-success/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-ripple-success-text"
     >
       -{discountPct}%
     </span>

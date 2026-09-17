@@ -2,6 +2,11 @@
   Stat.svelte — single metric display (label + formatted value + optional delta).
   Change: formatValue now guards non-finite coercions (undefined/null/object)
   and renders blank instead of the literal "NaN". Strings still pass through.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { tv } from 'tailwind-variants';
@@ -158,8 +163,8 @@
     base: 'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
     variants: {
       sentiment: {
-        positive: 'text-ripple-success bg-ripple-success/10',
-        negative: 'text-ripple-error bg-ripple-error/10',
+        positive: 'text-ripple-success-text bg-ripple-success/10',
+        negative: 'text-ripple-error-text bg-ripple-error/10',
         neutral: 'text-muted-foreground bg-muted',
       },
     },

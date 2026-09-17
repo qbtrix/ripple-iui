@@ -1,3 +1,9 @@
+<!-- Input.svelte
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged. -->
 <script lang="ts">
   // Updated: 2026-04-21 — opts into the WidgetRegistry when `id` is set so
   // the `invoke` flow action can call `focus` remotely.
@@ -135,7 +141,7 @@
       class="text-[13px] font-medium leading-none text-foreground"
     >
       {label}
-      {#if required}<span class="text-destructive" aria-hidden="true">*</span>{/if}
+      {#if required}<span class="text-ripple-error-text" aria-hidden="true">*</span>{/if}
     </label>
   {/if}
 
@@ -172,7 +178,7 @@
   </div>
 
   {#if error}
-    <span id={msgId} data-slot="input-error" class="text-[12px] text-destructive">
+    <span id={msgId} data-slot="input-error" class="text-[12px] text-ripple-error-text">
       {error}
     </span>
   {:else if helper}

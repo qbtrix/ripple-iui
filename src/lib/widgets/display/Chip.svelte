@@ -25,6 +25,11 @@
   Also 2026-09-12: success/warning/destructive now use the semantic
   --ripple-success / --ripple-warning / --ripple-error tokens instead of
   hardcoded emerald/amber/rose, so the chip follows a host's --paw-* remap.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -66,9 +71,9 @@
   // --primary-foreground, which on a 10% tint is white on near-white.
   const variantClass = $derived(
     variant === 'primary' ? 'bg-ripple-accent/10 text-ripple-accent'
-    : variant === 'success' ? 'bg-ripple-success/10 text-ripple-success'
-    : variant === 'warning' ? 'bg-ripple-warning/10 text-ripple-warning'
-    : variant === 'destructive' ? 'bg-ripple-error/10 text-ripple-error'
+    : variant === 'success' ? 'bg-ripple-success/10 text-ripple-success-text'
+    : variant === 'warning' ? 'bg-ripple-warning/10 text-ripple-warning-text'
+    : variant === 'destructive' ? 'bg-ripple-error/10 text-ripple-error-text'
     : 'bg-ripple-muted text-ripple-muted-foreground'
   );
 

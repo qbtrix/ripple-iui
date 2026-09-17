@@ -55,6 +55,11 @@
     the page text underneath read straight through the list (captain's
     screenshot). Row names follow onto the popover foreground. The composer
     body is in-flow and stays on the surface token.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -433,7 +438,7 @@
               <span
                 class={cn(
                   'ml-auto shrink-0 text-[12px] font-medium',
-                  source.connected ? 'text-ripple-success' : 'text-ripple-accent'
+                  source.connected ? 'text-ripple-success-text' : 'text-ripple-accent'
                 )}
               >
                 {source.connected ? 'Connected' : 'Connect'}

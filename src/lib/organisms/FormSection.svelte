@@ -10,6 +10,11 @@
   right ripple widget per field descriptor, surfaces label + validation error,
   and emits value changes. Pure presentation — props in, UI out; the host owns
   form state via `values` + `onChange`. No data fetching, no services.
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -161,7 +166,7 @@
         {/if}
 
         {#if error && field.type !== undefined && field.type !== 'text' && field.type !== 'email' && field.type !== 'tel' && field.type !== 'url' && field.type !== 'password' && field.type !== 'date'}
-          <p class="flex items-center gap-1 text-xs font-medium text-ripple-error">
+          <p class="flex items-center gap-1 text-xs font-medium text-ripple-error-text">
             {error}
           </p>
         {/if}

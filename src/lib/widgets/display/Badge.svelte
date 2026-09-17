@@ -16,7 +16,13 @@
 
      2026-06-27: forward node id — bind id + data-ripple-node on root (passed
      through the shadcn Badge restProps) so the visual editor can select this
-     widget directly (SP-0 id-forwarding codemod). -->
+     widget directly (SP-0 id-forwarding codemod).
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+-->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
@@ -43,8 +49,8 @@
   const variantMap: Record<string, string> = {
     default: 'bg-ripple-accent/10 text-ripple-accent border-transparent',
     secondary: 'bg-ripple-muted text-ripple-muted-foreground border-transparent',
-    success: 'bg-ripple-success/10 text-ripple-success border-transparent',
-    warning: 'bg-ripple-warning/10 text-ripple-warning border-transparent',
+    success: 'bg-ripple-success/10 text-ripple-success-text border-transparent',
+    warning: 'bg-ripple-warning/10 text-ripple-warning-text border-transparent',
   };
 
   const shadcnVariant = $derived(

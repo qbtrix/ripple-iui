@@ -27,6 +27,11 @@
     back to 0 and simply fades up. Same mechanism TaskRows uses for its rows, and
     it needs no new prop.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ToolChips.tsx
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -94,9 +99,9 @@
 
   const STATUS: Record<ToolStatus, { label: string; cls: string }> = {
     pending: { label: 'Pending', cls: 'bg-ripple-muted text-ripple-muted-foreground ring-ripple-border' },
-    running: { label: 'Running', cls: 'bg-ripple-info/10 text-ripple-info ring-ripple-info/20' },
-    success: { label: 'Success', cls: 'bg-ripple-success/10 text-ripple-success ring-ripple-success/20' },
-    error: { label: 'Error', cls: 'bg-ripple-error/10 text-ripple-error ring-ripple-error/20' },
+    running: { label: 'Running', cls: 'bg-ripple-info/10 text-ripple-info-text ring-ripple-info/20' },
+    success: { label: 'Success', cls: 'bg-ripple-success/10 text-ripple-success-text ring-ripple-success/20' },
+    error: { label: 'Error', cls: 'bg-ripple-error/10 text-ripple-error-text ring-ripple-error/20' },
   };
   const statusMeta = $derived(STATUS[status] ?? STATUS.pending);
 
@@ -193,9 +198,9 @@
           {#if status === 'running'}
             <LoaderIcon size={14} class="ripple-tool-spin" />
           {:else if status === 'success'}
-            <CheckIcon size={14} class="text-ripple-success" />
+            <CheckIcon size={14} class="text-ripple-success-text" />
           {:else if status === 'error'}
-            <XIcon size={14} class="text-ripple-error" />
+            <XIcon size={14} class="text-ripple-error-text" />
           {:else}
             <WrenchIcon size={14} />
           {/if}
@@ -273,10 +278,10 @@
       <div class="space-y-3 border-t border-ripple-border px-3 py-2.5">
         {#if hasError}
           <div class="rounded-md bg-ripple-error/5 px-2.5 py-2 ring-1 ring-ripple-error/20">
-            <div class="mb-1 text-[11px] font-semibold tracking-wide text-ripple-error uppercase">
+            <div class="mb-1 text-[11px] font-semibold tracking-wide text-ripple-error-text uppercase">
               Error
             </div>
-            <div class="text-[12.5px] whitespace-pre-wrap text-ripple-error">{error}</div>
+            <div class="text-[12.5px] whitespace-pre-wrap text-ripple-error-text">{error}</div>
           </div>
         {/if}
 

@@ -35,6 +35,11 @@
     had, which is what ToolCall's own entry animation reads to stagger a list
     80ms apart instead of landing the whole run at once. No prop added anywhere.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ApprovalCard.tsx
+  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
+  text tokens (text-ripple-{error,success,warning,info}-text; red text that
+  read text-destructive now reads text-ripple-error-text, the same hue since
+  --ripple-error aliases --destructive). The raw tones are fill colours and
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -161,15 +166,15 @@
   const RISK: Record<Risk, { label: string; cls: string }> = {
     low: {
       label: 'Low risk',
-      cls: 'bg-ripple-success/10 text-ripple-success ring-ripple-success/20',
+      cls: 'bg-ripple-success/10 text-ripple-success-text ring-ripple-success/20',
     },
     medium: {
       label: 'Medium risk',
-      cls: 'bg-ripple-warning/10 text-ripple-warning ring-ripple-warning/20',
+      cls: 'bg-ripple-warning/10 text-ripple-warning-text ring-ripple-warning/20',
     },
     high: {
       label: 'High risk',
-      cls: 'bg-ripple-error/10 text-ripple-error ring-ripple-error/20',
+      cls: 'bg-ripple-error/10 text-ripple-error-text ring-ripple-error/20',
     },
   };
   const riskMeta = $derived(RISK[risk] ?? RISK.medium);
@@ -177,11 +182,11 @@
   const DECISION_STAMP: Record<Exclude<Decision, 'pending'>, { label: string; cls: string }> = {
     approved: {
       label: 'Approved',
-      cls: 'bg-ripple-success/10 text-ripple-success ring-ripple-success/20',
+      cls: 'bg-ripple-success/10 text-ripple-success-text ring-ripple-success/20',
     },
     denied: {
       label: 'Denied',
-      cls: 'bg-ripple-error/10 text-ripple-error ring-ripple-error/20',
+      cls: 'bg-ripple-error/10 text-ripple-error-text ring-ripple-error/20',
     },
   };
   const stampMeta = $derived(
@@ -334,7 +339,7 @@
         disabled={disabled || resolved}
         class={cn(
           'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium ring-1',
-          'text-ripple-error ring-ripple-error/40 transition-colors duration-150 hover:bg-ripple-error/10',
+          'text-ripple-error-text ring-ripple-error/40 transition-colors duration-150 hover:bg-ripple-error/10',
           'disabled:pointer-events-none disabled:opacity-50'
         )}
       >
