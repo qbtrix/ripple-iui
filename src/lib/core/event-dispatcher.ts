@@ -910,7 +910,9 @@ export class EventDispatcher {
 	 */
 	private notifyHost(event: RippleEvent): void {
 		const maybe = this.onEvent?.(event);
-		if (maybe) {
+		// instanceof (not truthiness): a JS consumer returning non-promise junk
+		// must be ignored like before, not crash on .catch.
+		if (maybe instanceof Promise) {
 			maybe.catch((err: unknown) => {
 				console.warn(`EventDispatcher: host onEvent for "${event.type}" rejected —`, err);
 			});
