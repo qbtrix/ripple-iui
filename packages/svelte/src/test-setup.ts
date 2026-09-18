@@ -5,6 +5,7 @@
 // 2026-09-14: ResizeObserver moved here from a `beforeAll` inside
 // ui/ui-contract.test.ts, where it leaked onto globalThis for whatever ran next
 // and only covered the one file that happened to install it.
+// 2026-09-18: matchMedia added, for the `./primitives` surface — see below.
 import '@testing-library/jest-dom/vitest';
 
 // jsdom has no ResizeObserver. bits-ui's floating content constructs one, and
@@ -46,4 +47,32 @@ if (typeof Element !== 'undefined' && !Element.prototype.animate) {
 			oncancel: null,
 		} as unknown as Animation;
 	};
+}
+
+// jsdom does not implement `window.matchMedia` at all. Svelte's
+// `prefersReducedMotion` is a module-level `new MediaQuery(...)` inside
+// `svelte/motion`, and its constructor calls `window.matchMedia` eagerly — so
+// merely IMPORTING anything that reaches svelte/motion throws here, before a
+// single test runs. layerchart does reach it, which makes the chart twin on the
+// `./primitives` surface the first thing in this repo to trip it.
+// Reports no preference, which is the browser default. Writable + configurable
+// like the others: actions/with-motion.test.ts stubs its own to assert the
+// reduced-motion path.
+if (typeof globalThis.matchMedia === 'undefined') {
+	Object.defineProperty(globalThis, 'matchMedia', {
+		value: (query: string) => ({
+			matches: false,
+			media: query,
+			onchange: null,
+			addEventListener() {},
+			removeEventListener() {},
+			addListener() {},
+			removeListener() {},
+			dispatchEvent() {
+				return false;
+			},
+		}),
+		writable: true,
+		configurable: true,
+	});
 }
