@@ -45,6 +45,11 @@
       "svelte": "./dist/ui/index.js",
       "default": "./dist/ui/index.js"
     },
+    "./primitives": {
+      "types": "./dist/primitives/index.d.ts",
+      "svelte": "./dist/primitives/index.js",
+      "default": "./dist/primitives/index.js"
+    },
     "./schema": {
       "types": "./dist/schema/index.d.ts",
       "default": "./dist/schema/index.js"
