@@ -12,6 +12,7 @@
     "dev": "bun --filter @ripple-ui/svelte dev",
     "build": "bun run --filter '*' build",
     "check": "bun run --filter '*' check",
+    "lint": "bun run --filter @ripple-ui/svelte lint",
     "test": "bun run --filter '*' test",
     "verify": "bun run scripts/verify.mjs"
   },
