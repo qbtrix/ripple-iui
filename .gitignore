@@ -10,6 +10,10 @@ dist
 # `/.svelte-kit` was root-anchored when the repo was a single package; the
 # generated dir now lives inside the Svelte package.
 .svelte-kit
+# svelte-package emits declarations for test files too; CommandPalette.test.ts
+# imports the teardown drain from test-setup.ts, which drags a stray .d.ts next
+# to it on every build.
+packages/svelte/src/test-setup.d.ts
 
 # OS
 .DS_Store
