@@ -4,6 +4,13 @@
 # Before this workflow the repo had no CI test gate, so a failing unit test and
 # 33 svelte-check errors sat on main undetected. Keep it minimal: install, test,
 # type-check. The separate release-manifest.yml handles tag publishes.
+# Updated 2026-09-19: lint is a CI step here rather than the first half of
+# @ripple-ui/svelte's build script. It ran inside the build, so every style
+# rule in the repo gated the deploy image that builds ripple from source --
+# a finding in a Playwright spec that svelte-package never ships was enough
+# to fail the whole docker layer. Same coverage, failing the PR instead of a
+# consumer's build. The workerd-SSR anim-import guard (lint:anim) is NOT
+# style and stays inside build, where it gates the artifact it protects.
 # Updated (review): pin the bun toolchain (deps are already lockfile-frozen),
 # cancel superseded runs per ref, and cap the job so a hung test process
 # can't hold a runner for GitHub's 6-hour default.
@@ -37,8 +44,26 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # Build before check: @ripple-ui/core publishes its types from dist/, which
+      # only exists after `tsc -p tsconfig.build.json` runs, so svelte-check in
+      # packages/svelte cannot resolve the module on a fresh checkout. Also the
+      # first time CI has exercised the build at all.
+      - name: Build
+        run: bun run build
+
+      - name: Lint
+        # oxlint, incl. the type-aware pass. Runs after Build so tsgolint can
+        # resolve @ripple-ui/core's published types and the generated
+        # .svelte-kit/tsconfig.json, exactly as it did when it lived in build.
+        run: bun run lint
+
       - name: Unit tests
-        run: bunx vitest run
+        # `bun run test` at the root fans out with --filter '*' so each package
+        # uses its OWN vitest config. Bare `bunx vitest run` has no root config
+        # after the monorepo split: no $lib alias and no @ripple-ui/core
+        # resolution, so whole test files fail to import rather than fail an
+        # assertion (26/26, 29/29 ... in run 34844664804).
+        run: bun run test
 
       - name: Type check
         run: bun run check

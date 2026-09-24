@@ -1,0 +1,94 @@
+NOTICE
+======
+
+@ripple-ui/svelte is MIT licensed (see LICENSE, Copyright (c) 2026 Qbtrix).
+
+It incorporates work from the MIT-licensed projects below. MIT requires the
+copyright notice and permission notice to travel with the work, which is what
+this file is for. Per-file `@provenance` headers name the specific upstream file
+each port came from.
+
+
+-------------------------------------------------------------------------------
+beautiful-ui
+-------------------------------------------------------------------------------
+
+  Source:    https://github.com/slev12397/beautiful-ui
+  Commit:    ff0f74d
+  Copyright: Copyright (c) 2026 Shane Levine
+  Licence:   MIT (full text below)
+
+Used as the visual source for ripple's component re-skin: design tokens, the
+`cubic-bezier(0.22, 1, 0.36, 1)` ease published as `--ripple-ease-out`, several
+CSS `@keyframes`, and the layout and type rhythm of a set of atoms and AI
+primitives. No source file is copied or imported; each component is a
+translation into Svelte 5 against ripple's own tokens. The mapping is recorded
+in `docs/design/beautiful-ui-translation.md`.
+
+MIT License
+
+Copyright (c) 2026 Shane Levine
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+-------------------------------------------------------------------------------
+Other MIT upstreams already incorporated
+-------------------------------------------------------------------------------
+
+Each is MIT licensed. The per-file `@provenance` headers name the upstream
+project for each port, but they record the project rather than a copyright
+holder, and the copyright lines below have not been verified against the
+upstream LICENSE files. Reproducing them here in full is a follow-up; treat
+this section as an index of what is incorporated, not as completed attribution
+for these four.
+
+  Fluid Functionalism  — https://github.com/mickadesign/fluid-functionalism
+    The 8-step surface/elevation ladder (`src/lib/systems/elevation.css`), the
+    spring tokens in `src/lib/motion/presets.ts`, and the moving-indicator
+    primitive generalized from its checkbox-group.
+
+  svelte-animations    — https://github.com/SikandarJODD/svelte-animations
+    Several widgets in the premium pack (Shimmer, Marquee, BorderBeam,
+    TextEffect, BentoGrid).
+
+  Aceternity (Svelte)  — https://aceternity.sveltekit.io
+    Aurora, Spotlight and AnimatedBeam in the premium pack.
+
+  Skeleton v3          — https://skeleton.dev
+    The CSS-custom-property theming architecture followed by
+    `src/lib/core/theme-applier.ts`.
+
+
+-------------------------------------------------------------------------------
+Provenance header convention
+-------------------------------------------------------------------------------
+
+Every file re-skinned from beautiful-ui carries, in its top comment block, the
+line:
+
+  origin: slev12397/beautiful-ui@ff0f74d <path in that repo>
+
+for example:
+
+  origin: slev12397/beautiful-ui@ff0f74d components/primitives/ThinkingState.tsx
+
+Pinning the commit is what makes the claim checkable later — the upstream repo
+moves, and "ported from beautiful-ui" with no commit is unverifiable a year on.
+Cheap to add now, painful to backfill.
