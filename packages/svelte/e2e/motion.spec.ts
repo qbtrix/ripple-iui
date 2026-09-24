@@ -286,8 +286,16 @@ test.describe('checkbox-group — the highlight glides between items', () => {
 		const topB = await readHighlightTop();
 		expect(topA, 'highlight top on row A').not.toBeNull();
 		expect(topB, 'highlight top on row B').not.toBeNull();
+		// Narrow for real rather than asserting `as number`. The expects above are a
+		// RUNTIME check and do not narrow the declared `number | null`, so the casts
+		// told the compiler something it could not verify -- which the type-aware
+		// lint pass flags, and which would turn a genuine null into NaN arithmetic
+		// instead of a readable failure.
+		if (topA === null || topB === null) {
+			throw new Error(`highlight top was null after both not-null assertions (A=${topA} B=${topB})`);
+		}
 		expect(
-			Math.abs((topB as number) - (topA as number)),
+			Math.abs(topB - topA),
 			`highlight top A=${topA} B=${topB} — it must glide between the rows`,
 		).toBeGreaterThan(20);
 	});
