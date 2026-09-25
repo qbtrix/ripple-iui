@@ -220,6 +220,17 @@ describe('ReasoningTrace', () => {
     expect(getByText('Search catalog')).toBeTruthy();
   });
 
+  it('bare renders the steps with no header or disclosure of its own', () => {
+    const { container, getByText } = render(ReasoningTrace, { props: { steps, bare: true } });
+    // A host that draws its own disclosure (paw-enterprise's chat activity
+    // line) gets the step list alone: no toggle, no summary, nothing inert.
+    expect(container.querySelector('button[aria-expanded]')).toBeNull();
+    expect(container.textContent).not.toContain('Reasoned for');
+    expect(container.querySelector('[inert]')).toBeNull();
+    expect(getByText('Parse request')).toBeTruthy();
+    expect(getByText('Search catalog')).toBeTruthy();
+  });
+
   it('honors collapsed={false} to start expanded', () => {
     const { container } = render(ReasoningTrace, { props: { steps, collapsed: false } });
     const trigger = container.querySelector('button[aria-expanded]');

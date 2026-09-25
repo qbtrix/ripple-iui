@@ -31,6 +31,10 @@
     paw-enterprise behaviour and is the one visible default change: a collapsed
     streaming trace with a thinking step now reads that step's title. No prop
     was added, renamed or re-defaulted.
+    Updated 2026-09-25 (feat/ai-widget-gaps): optional `bare` renders the step
+    list alone, with no header and no disclosure, for a host that wraps several
+    traces and tool rows in one disclosure of its own (paw-enterprise's chat
+    activity line). Default false; nothing changes for existing callers.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ThinkingState.tsx
 -->
 <script lang="ts">
@@ -56,6 +60,9 @@
     streaming?: boolean;
     /** Initial collapsed state. Default true (collapsed). */
     collapsed?: boolean;
+    /** Render the step list alone: no header, no disclosure. For a host that
+     *  draws its own disclosure around several traces and tool rows. */
+    bare?: boolean;
   }
 
   let {
@@ -65,11 +72,12 @@
     steps = [],
     streaming = false,
     collapsed = true,
+    bare = false,
   }: Props = $props();
 
   // svelte-ignore state_referenced_locally — one-time seed from `collapsed`.
   let internalOpen = $state(!collapsed);
-  const isOpen = $derived(internalOpen);
+  const isOpen = $derived(bare || internalOpen);
 
   function toggle() {
     internalOpen = !internalOpen;
@@ -104,6 +112,7 @@
   class={cn('ripple-reasoning-trace text-sm', className)}
   style={styleString}
 >
+  {#if !bare}
   <button
     type="button"
     aria-expanded={isOpen}
@@ -143,11 +152,12 @@
       <ChevronDownIcon size={14} />
     </span>
   </button>
+  {/if}
 
   <!-- The height animation: body stays mounted, the grid row goes 0fr → 1fr. -->
   <div
     id={bodyId}
-    inert={!isOpen}
+    inert={!isOpen || undefined}
     class="ripple-reasoning-body grid transition-[grid-template-rows,opacity] duration-[400ms] ease-ripple-out"
     style:grid-template-rows={isOpen ? '1fr' : '0fr'}
     style:opacity={isOpen ? 1 : 0}
