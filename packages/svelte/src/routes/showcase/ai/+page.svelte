@@ -10,6 +10,9 @@
   diff + tool-call body, and pre-resolved approved/denied states. The last gate
   is BOUND (decision persists via state) so the panel demos the full
   click → state → onStateChange round-trip.
+  Updated: 2026-09-25 (chat new-look slice 1) — reasoning-trace gains a
+  collapsed streaming trace (header names the active step) and one with an
+  `error` step; the high-risk gate sets `askDenyReason`.
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -125,6 +128,28 @@
             ],
           },
         },
+        // Collapsed while streaming: the header names the active step.
+        {
+          type: 'reasoning-trace',
+          props: {
+            streaming: true,
+            steps: [
+              { title: 'Parse the request', status: 'done' },
+              { title: 'Reading the vendor ledger', status: 'thinking' },
+            ],
+          },
+        },
+        // A step that failed.
+        {
+          type: 'reasoning-trace',
+          props: {
+            collapsed: false,
+            steps: [
+              { title: 'Parse the request', status: 'done' },
+              { title: 'Call the catalog API', detail: 'Timed out after 30s.', status: 'error' },
+            ],
+          },
+        },
       ],
     },
   };
@@ -161,6 +186,8 @@
             summary: 'Destructive — removes all data in those workspaces.',
             risk: 'high',
             actionId: 'act_high',
+            // Deny asks for an optional reason first.
+            askDenyReason: true,
           },
         },
       ],

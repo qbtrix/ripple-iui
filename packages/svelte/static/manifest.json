@@ -15546,12 +15546,12 @@
         "steps": {
           "type": "array",
           "required": false,
-          "description": "Ordered steps: array of { title, detail?, status: \"thinking\"|\"done\" }."
+          "description": "Ordered steps: array of { title, detail?, status: \"thinking\"|\"done\"|\"error\" }."
         },
         "streaming": {
           "type": "boolean",
           "required": false,
-          "description": "Agent is still reasoning — summary reads \"Reasoning…\"."
+          "description": "Agent is still reasoning — collapsed, the summary names the last thinking step, else \"Reasoning…\"."
         },
         "collapsed": {
           "type": "boolean",
@@ -15636,6 +15636,11 @@
           "type": "boolean",
           "required": false,
           "description": "Disable the controls (e.g. while the host persists the decision)."
+        },
+        "askDenyReason": {
+          "type": "boolean",
+          "required": false,
+          "description": "Deny first asks for an optional reason, passed to the host as ondeny({ actionId, reason }). Default false."
         }
       },
       "example": {
