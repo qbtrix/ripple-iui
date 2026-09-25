@@ -9,9 +9,16 @@
 // UPDATED 2026-09-25 (chat new-look slice 1): a block at the bottom for the new
 //   `cancelled` status — a pill by text, quieter than failed (no solid red
 //   badge, no spinning retry, muted and struck label). Written red first.
+// UPDATED 2026-09-25 (fix/taskrows-approvalgate-labels): a row with no details
+//   is not a disclosure — plain header, no button, no aria-expanded, no chevron,
+//   no panel. The button-count and ontoggle tests now count only rows that have
+//   details, and a new block pins the plain header. Written red first.
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import TaskRows from './TaskRows.svelte';
+
+const rowOf = (c: HTMLElement, key: string) =>
+  [...c.querySelectorAll('.ripple-task-row')].find((r) => r.textContent?.includes(key)) as HTMLElement;
 
 const ROWS = [
   {
@@ -29,9 +36,10 @@ const ROWS = [
 ];
 
 describe('TaskRows — rendering', () => {
-  it('renders one disclosure button per row, with label and meta', () => {
+  it('renders a disclosure button only for rows with details, with label and meta', () => {
     const { getAllByRole, getByText } = render(TaskRows, { props: { rows: ROWS } });
-    expect(getAllByRole('button')).toHaveLength(3);
+    // Only `verify` has details; `index` and `draft` are plain rows.
+    expect(getAllByRole('button')).toHaveLength(1);
     expect(getByText('Verified vendor records')).toBeTruthy();
     expect(getByText('12 suppliers')).toBeTruthy();
   });
@@ -114,11 +122,12 @@ describe('TaskRows — disclosure', () => {
 
   it('fires ontoggle with the row key and the next state', async () => {
     const ontoggle = vi.fn();
-    const { getAllByRole } = render(TaskRows, { props: { rows: ROWS, ontoggle } });
+    const rows = [...ROWS, { key: 'send', label: 'Send emails', details: [{ label: 'inner' }] }];
+    const { getAllByRole } = render(TaskRows, { props: { rows, ontoggle } });
     await fireEvent.click(getAllByRole('button')[1]);
-    expect(ontoggle).toHaveBeenCalledWith('index', true);
+    expect(ontoggle).toHaveBeenCalledWith('send', true);
     await fireEvent.click(getAllByRole('button')[1]);
-    expect(ontoggle).toHaveBeenLastCalledWith('index', false);
+    expect(ontoggle).toHaveBeenLastCalledWith('send', false);
   });
 
   it('does not mutate the rows it was given', async () => {
@@ -137,8 +146,6 @@ describe('TaskRows — cancelled', () => {
     { key: 'draft', label: 'Draft supplier emails', status: 'failed' as const },
     { key: 'send', label: 'Send supplier emails', status: 'cancelled' as const },
   ];
-  const rowOf = (c: HTMLElement, key: string) =>
-    [...c.querySelectorAll('.ripple-task-row')].find((r) => r.textContent?.includes(key)) as HTMLElement;
 
   it('marks the row cancelled and says so in a pill', () => {
     const { container, getByText } = render(TaskRows, { props: { rows } });
@@ -165,5 +172,48 @@ describe('TaskRows — cancelled', () => {
     expect(label.className).toContain('text-ripple-muted-foreground');
     // And the failed row next to it still reads as failed.
     expect(rowOf(container, 'Draft').innerHTML).toMatch(/ripple-error/);
+  });
+});
+
+describe('TaskRows — rows without details', () => {
+
+  it.each([
+    ['missing', undefined],
+    ['empty', []],
+  ])('details %s: a plain header, not a disclosure', (_name, details) => {
+    const rows = [{ key: 'a', label: 'Plain step', meta: '3 files', status: 'done' as const, details }];
+    const { container, queryByRole, getByText } = render(TaskRows, { props: { id: 't', rows } });
+    const row = rowOf(container, 'Plain step');
+    expect(queryByRole('button')).toBeNull();
+    expect(row.querySelector('[aria-expanded]')).toBeNull();
+    expect(row.querySelector('[aria-controls]')).toBeNull();
+    expect(row.querySelector('.ripple-task-panel')).toBeNull();
+    expect(container.querySelector('#t-a-panel')).toBeNull();
+    expect(row.querySelector('.ripple-task-chevron')).toBeNull();
+    // Same content otherwise: label, meta and the status pill.
+    expect(getByText('Plain step')).toBeTruthy();
+    expect(getByText('3 files')).toBeTruthy();
+    expect(getByText('Completed')).toBeTruthy();
+  });
+
+  it('keeps the same header layout classes as a disclosure row', () => {
+    const rows = [
+      { key: 'a', label: 'Plain step' },
+      { key: 'b', label: 'Deep step', details: [{ label: 'inner' }] },
+    ];
+    const { container } = render(TaskRows, { props: { rows } });
+    const plain = rowOf(container, 'Plain step').firstElementChild as HTMLElement;
+    const disclosure = rowOf(container, 'Deep step').firstElementChild as HTMLElement;
+    expect(plain.tagName).toBe('DIV');
+    expect(disclosure.tagName).toBe('BUTTON');
+    expect(disclosure.querySelector('.ripple-task-chevron')).toBeTruthy();
+    expect(plain.className).toBe(disclosure.className);
+  });
+
+  it('ignores a stray open flag on a row with no details', () => {
+    const rows = [{ key: 'a', label: 'Plain step', open: true }];
+    const { container } = render(TaskRows, { props: { rows } });
+    expect(container.querySelector('[aria-expanded]')).toBeNull();
+    expect(container.querySelector('.ripple-task-panel')).toBeNull();
   });
 });

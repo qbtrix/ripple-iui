@@ -27,9 +27,10 @@
     caller must own, so `status` takes `pending | running | done | failed`
     directly and there is no timer. The stagger, which is animation rather than
     state, is kept. (Same rule applied to PromptBar's autoplay — see its header.)
-  @a11y Each row's header is a real <button> disclosure carrying aria-expanded
-    and aria-controls for its panel. Status is conveyed by a text pill and an
-    icon, never by colour alone; the badge SVGs are aria-hidden and the status
+  @a11y A row with details has a real <button> disclosure header carrying
+    aria-expanded and aria-controls for its panel. A row without details has a
+    plain header: no button, no chevron, no panel. Status is conveyed by a text
+    pill and an icon, never by colour alone; the badge SVGs are aria-hidden and the status
     is read out in the pill or, for running/pending, the step number.
   Modified: 2026-09-16 — dropped `ripple-task-spin`, which was a fifth copy of a
     rotate keyframe this repo already had four of. Both spinners now use
@@ -54,6 +55,13 @@
     `labels.cancelled`) and no retry spinner — nothing went wrong, it just
     stopped. Status still reads as text in the pill. Additive: the four
     existing statuses render exactly as before.
+  Modified: 2026-09-25 (fix/taskrows-approvalgate-labels) — a row with no
+    details (missing or empty) is no longer a disclosure. Its header renders as
+    a plain <div> with the same layout classes, badge, label, meta and pill,
+    but no button, no aria-expanded/aria-controls, no chevron and no panel, so
+    it can't open an empty panel and screen readers don't hear a dead button.
+    A stray `open` on such a row is ignored. Rows with details are unchanged;
+    the header content moved into a `header` snippet both paths share.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -136,6 +144,10 @@
   const R = (RING - STROKE) / 2;
   const C = 2 * Math.PI * R;
 
+  // Shared by the disclosure <button> and the plain header of a detail-less row,
+  // so the two look identical.
+  const HEADER = 'flex h-11 w-full items-center gap-2.5 px-2.5 text-left';
+
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
@@ -176,6 +188,73 @@
   </span>
 {/snippet}
 
+{#snippet header(row: TaskRow, status: TaskStatus)}
+  <span class="flex size-6 shrink-0 items-center justify-center">
+    {#if status === 'done'}
+      <span
+        class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-success text-ripple-success-foreground ripple-task-badge-done"
+      >
+        <CheckIcon size={13} strokeWidth={3.5} aria-hidden="true" />
+      </span>
+    {:else if status === 'failed'}
+      <span
+        class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-error text-ripple-error-foreground ripple-task-badge-failed"
+      >
+        <XIcon size={12} strokeWidth={3.5} aria-hidden="true" />
+      </span>
+    {:else if status === 'cancelled'}
+      <span
+        class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full text-ripple-muted-foreground ring-1 ring-ripple-border"
+      >
+        <MinusIcon size={12} strokeWidth={3} aria-hidden="true" />
+      </span>
+    {:else}
+      {@render ring(row.step, status === 'running')}
+    {/if}
+  </span>
+
+  <span
+    class={cn(
+      'min-w-0 flex-1 truncate text-[13px] font-medium',
+      status === 'cancelled'
+        ? 'text-ripple-muted-foreground line-through'
+        : 'text-ripple-surface-foreground'
+    )}
+  >
+    {row.label}
+  </span>
+
+  {#if row.meta}
+    <span class="shrink-0 text-[12.5px] tabular-nums text-ripple-muted-foreground">{row.meta}</span>
+  {/if}
+
+  {#if status === 'done'}
+    <span
+      class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-success/10 px-2 text-[11.5px] font-medium text-ripple-success-text"
+    >
+      {copy.done}
+    </span>
+  {:else if status === 'failed'}
+    <span
+      class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full bg-ripple-error/10 px-2 text-[11.5px] font-medium text-ripple-error-text"
+    >
+      {copy.failed}
+      <RotateCwIcon
+        size={12}
+        strokeWidth={3}
+        class="ripple-task-retry animate-spin"
+        aria-hidden="true"
+      />
+    </span>
+  {:else if status === 'cancelled'}
+    <span
+      class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-muted/40 px-2 text-[11.5px] font-medium text-ripple-muted-foreground"
+    >
+      {copy.cancelled}
+    </span>
+  {/if}
+{/snippet}
+
 <div
   {id}
   data-ripple-node={id}
@@ -188,7 +267,8 @@
   style={styleString}
 >
   {#each rows as row, i (row.key)}
-    {@const open = isOpen(row)}
+    {@const expandable = !!row.details?.length}
+    {@const open = expandable && isOpen(row)}
     {@const status = row.status ?? 'pending'}
     <div
       data-state={status}
@@ -200,120 +280,64 @@
           : cn('bg-ripple-surface ring-1 ring-ripple-border', open ? 'rounded-[14px]' : 'rounded-[22px]')
       )}
     >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={panelId(row.key)}
-        onclick={() => toggle(row)}
-        class="flex h-11 w-full items-center gap-2.5 px-2.5 text-left"
-      >
-        <span class="flex size-6 shrink-0 items-center justify-center">
-          {#if status === 'done'}
-            <span
-              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-success text-ripple-success-foreground ripple-task-badge-done"
-            >
-              <CheckIcon size={13} strokeWidth={3.5} aria-hidden="true" />
-            </span>
-          {:else if status === 'failed'}
-            <span
-              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full bg-ripple-error text-ripple-error-foreground ripple-task-badge-failed"
-            >
-              <XIcon size={12} strokeWidth={3.5} aria-hidden="true" />
-            </span>
-          {:else if status === 'cancelled'}
-            <span
-              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full text-ripple-muted-foreground ring-1 ring-ripple-border"
-            >
-              <MinusIcon size={12} strokeWidth={3} aria-hidden="true" />
-            </span>
-          {:else}
-            {@render ring(row.step, status === 'running')}
-          {/if}
-        </span>
-
-        <span
-          class={cn(
-            'min-w-0 flex-1 truncate text-[13px] font-medium',
-            status === 'cancelled'
-              ? 'text-ripple-muted-foreground line-through'
-              : 'text-ripple-surface-foreground'
-          )}
+      {#if expandable}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={panelId(row.key)}
+          onclick={() => toggle(row)}
+          class={HEADER}
         >
-          {row.label}
-        </span>
-
-        {#if row.meta}
-          <span class="shrink-0 text-[12.5px] tabular-nums text-ripple-muted-foreground">{row.meta}</span>
-        {/if}
-
-        {#if status === 'done'}
+          {@render header(row, status)}
           <span
-            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-success/10 px-2 text-[11.5px] font-medium text-ripple-success-text"
+            aria-hidden="true"
+            class={cn(
+              'ripple-task-chevron -ml-2 flex size-7 shrink-0 items-center justify-center rounded-full text-ripple-muted-foreground transition-transform duration-300 ease-ripple-out',
+              open && 'rotate-180'
+            )}
           >
-            {copy.done}
+            <ChevronDownIcon size={15} strokeWidth={2.2} />
           </span>
-        {:else if status === 'failed'}
-          <span
-            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full bg-ripple-error/10 px-2 text-[11.5px] font-medium text-ripple-error-text"
-          >
-            {copy.failed}
-            <RotateCwIcon
-              size={12}
-              strokeWidth={3}
-              class="ripple-task-retry animate-spin"
-              aria-hidden="true"
-            />
-          </span>
-        {:else if status === 'cancelled'}
-          <span
-            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-muted/40 px-2 text-[11.5px] font-medium text-ripple-muted-foreground"
-          >
-            {copy.cancelled}
-          </span>
-        {/if}
+        </button>
+      {:else}
+        <div class={HEADER}>
+          {@render header(row, status)}
+        </div>
+      {/if}
 
-        <span
-          aria-hidden="true"
-          class={cn(
-            '-ml-2 flex size-7 shrink-0 items-center justify-center rounded-full text-ripple-muted-foreground transition-transform duration-300 ease-ripple-out',
-            open && 'rotate-180'
-          )}
+      {#if expandable}
+        <!-- Detail panel. Height animates through grid-template-rows 0fr -> 1fr,
+             the same expandable grammar the source uses for its chain of thought. -->
+        <div
+          id={panelId(row.key)}
+          data-state={open ? 'open' : 'closed'}
+          class="ripple-task-panel grid"
         >
-          <ChevronDownIcon size={15} strokeWidth={2.2} />
-        </span>
-      </button>
-
-      <!-- Detail panel. Height animates through grid-template-rows 0fr -> 1fr,
-           the same expandable grammar the source uses for its chain of thought. -->
-      <div
-        id={panelId(row.key)}
-        data-state={open ? 'open' : 'closed'}
-        class="ripple-task-panel grid"
-      >
-        <div class="overflow-hidden">
-          <div class="mb-2.5 grid grid-cols-[24px_1fr] gap-2.5 px-2.5">
-            <span aria-hidden="true" class="mx-auto h-full w-px bg-ripple-border"></span>
-            <div class="flex flex-col gap-1.5">
-              {#each row.details ?? [] as detail, j (detail.label)}
-                <div
-                  style={`--j:${j}`}
-                  class={cn(
-                    'flex items-center justify-between',
-                    open && 'ripple-task-detail'
-                  )}
-                >
-                  <span class="text-[12px] text-ripple-muted-foreground">{detail.label}</span>
-                  {#if detail.meta}
-                    <span class="font-mono text-[11.5px] tabular-nums text-ripple-muted-foreground">
-                      {detail.meta}
-                    </span>
-                  {/if}
-                </div>
-              {/each}
+          <div class="overflow-hidden">
+            <div class="mb-2.5 grid grid-cols-[24px_1fr] gap-2.5 px-2.5">
+              <span aria-hidden="true" class="mx-auto h-full w-px bg-ripple-border"></span>
+              <div class="flex flex-col gap-1.5">
+                {#each row.details ?? [] as detail, j (detail.label)}
+                  <div
+                    style={`--j:${j}`}
+                    class={cn(
+                      'flex items-center justify-between',
+                      open && 'ripple-task-detail'
+                    )}
+                  >
+                    <span class="text-[12px] text-ripple-muted-foreground">{detail.label}</span>
+                    {#if detail.meta}
+                      <span class="font-mono text-[11.5px] tabular-nums text-ripple-muted-foreground">
+                        {detail.meta}
+                      </span>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      {/if}
     </div>
   {/each}
 </div>
