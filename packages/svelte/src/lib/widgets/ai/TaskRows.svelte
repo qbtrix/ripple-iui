@@ -47,15 +47,23 @@
   measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
   Same pass: the solid done/failed badges deepen their fill 20% toward black
   (scoped .ripple-task-badge-done/-failed), so the white icon clears 3:1.
+  Modified: 2026-09-25 (chat new-look slice 1) — a fifth status, `cancelled`,
+    for work the user or agent stopped. Deliberately quieter than `failed`: an
+    outlined muted badge with a minus instead of a solid red cross, the label
+    muted and struck through, a muted "Cancelled" pill (copy from
+    `labels.cancelled`) and no retry spinner — nothing went wrong, it just
+    stopped. Status still reads as text in the pill. Additive: the four
+    existing statuses render exactly as before.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
   import XIcon from '@lucide/svelte/icons/x';
+  import MinusIcon from '@lucide/svelte/icons/minus';
   import RotateCwIcon from '@lucide/svelte/icons/rotate-cw';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
-  type TaskStatus = 'pending' | 'running' | 'done' | 'failed';
+  type TaskStatus = 'pending' | 'running' | 'done' | 'failed' | 'cancelled';
 
   interface TaskDetail {
     label: string;
@@ -83,8 +91,8 @@
     rows?: TaskRow[];
     /** `capsules` — separate rounded surfaces. `list` — one divided surface. */
     variant?: 'capsules' | 'list';
-    /** Pill copy. Only `done` and `failed` render a pill. */
-    labels?: { done?: string; failed?: string };
+    /** Pill copy. Only `done`, `failed` and `cancelled` render a pill. */
+    labels?: { done?: string; failed?: string; cancelled?: string };
     /** Disclosure event. Not a data edit — this widget mutates nothing. */
     ontoggle?: (key: string, open: boolean) => void;
   }
@@ -99,7 +107,11 @@
     ontoggle,
   }: Props = $props();
 
-  const copy = $derived({ done: labels?.done ?? 'Completed', failed: labels?.failed ?? 'Failed' });
+  const copy = $derived({
+    done: labels?.done ?? 'Completed',
+    failed: labels?.failed ?? 'Failed',
+    cancelled: labels?.cancelled ?? 'Cancelled',
+  });
   const list = $derived(variant === 'list');
 
   /** Per-row disclosure state. Seeded lazily from each row's own `open`. */
@@ -208,12 +220,25 @@
             >
               <XIcon size={12} strokeWidth={3.5} aria-hidden="true" />
             </span>
+          {:else if status === 'cancelled'}
+            <span
+              class="ripple-task-badge flex size-5.5 shrink-0 items-center justify-center rounded-full text-ripple-muted-foreground ring-1 ring-ripple-border"
+            >
+              <MinusIcon size={12} strokeWidth={3} aria-hidden="true" />
+            </span>
           {:else}
             {@render ring(row.step, status === 'running')}
           {/if}
         </span>
 
-        <span class="min-w-0 flex-1 truncate text-[13px] font-medium text-ripple-surface-foreground">
+        <span
+          class={cn(
+            'min-w-0 flex-1 truncate text-[13px] font-medium',
+            status === 'cancelled'
+              ? 'text-ripple-muted-foreground line-through'
+              : 'text-ripple-surface-foreground'
+          )}
+        >
           {row.label}
         </span>
 
@@ -238,6 +263,12 @@
               class="ripple-task-retry animate-spin"
               aria-hidden="true"
             />
+          </span>
+        {:else if status === 'cancelled'}
+          <span
+            class="ripple-task-pill inline-flex h-5.5 shrink-0 items-center rounded-full bg-ripple-muted/40 px-2 text-[11.5px] font-medium text-ripple-muted-foreground"
+          >
+            {copy.cancelled}
           </span>
         {/if}
 

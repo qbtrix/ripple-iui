@@ -2,6 +2,7 @@
 // @description NEW (AI-native tier, 2026-06-24). Manifest entry for the
 //   approval-gate widget — the human-in-the-loop approve/deny/diff-review
 //   organism. Composes Diff + ToolCall in its body; persists its decision.
+// Updated 2026-09-25 (chat new-look slice 1): the opt-in `askDenyReason` prop.
 import type { WidgetManifestEntry } from '../index.js';
 
 export const approvalGateEntry: WidgetManifestEntry = {
@@ -22,6 +23,7 @@ export const approvalGateEntry: WidgetManifestEntry = {
     body: { type: 'string', required: false, description: 'Markdown body shown alongside the structured parts.' },
     decidedBy: { type: 'string', required: false, description: 'Who decided — shown in the resolved stamp ("Approved by Ada").' },
     disabled: { type: 'boolean', required: false, description: 'Disable the controls (e.g. while the host persists the decision).' },
+    askDenyReason: { type: 'boolean', required: false, description: 'Deny first asks for an optional reason, passed to the host as ondeny({ actionId, reason }). Default false.' },
   },
   example: {
     type: 'approval-gate',

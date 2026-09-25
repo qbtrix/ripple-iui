@@ -57,6 +57,14 @@
     tab switch it showed far less time than had passed. It is now computed
     from a performance.now() stamp taken on mount; the interval only drives
     the re-render. The minute rollover and the unmount cleanup are unchanged.
+  Modified: 2026-09-25 (chat new-look slice 1) — optional `startedAt` (epoch ms,
+    Date.now() scale). A chat host that re-renders its live turn remounts the
+    loader, and a mount-relative timer went back to 0.0s. With `startedAt` the
+    effect backdates its performance.now() anchor by `Date.now() - startedAt`
+    (clamped at 0 for a clock-skewed future stamp) and seeds the display
+    before the first tick, so a remount never flashes 0.0s. The effect reads
+    `startedAt`, so a new value re-anchors the timer. Absent, the behaviour is
+    exactly as before: counted from mount.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/LoadingState.tsx
 -->
 <script lang="ts">
@@ -71,9 +79,14 @@
     label?: string;
     /** `drive` / `dots` — a chevron wavefront. `orbit` — a comet on the rim. */
     variant?: 'drive' | 'dots' | 'orbit';
+    /**
+     * When the work began, as epoch ms (`Date.now()`). The timer counts from
+     * here instead of from mount, so a remount keeps the elapsed time.
+     */
+    startedAt?: number;
   }
 
-  let { id, class: className, style, label = 'Churning', variant = 'drive' }: Props = $props();
+  let { id, class: className, style, label = 'Churning', variant = 'drive', startedAt }: Props = $props();
 
   // The chevron wavefront: delay grows with the column and with the distance
   // from the middle row, which is what bends the front into a chevron.
@@ -98,12 +111,15 @@
   // the re-render: a background tab throttles it to about once a second, so
   // counting its callbacks would under-report. performance.now() because it is
   // monotonic, so a system clock change cannot move it. The timer is
-  // information, so it runs under reduced motion too. Reads nothing reactive on
-  // setup: `tenths` is written from the interval callback, which is not tracked.
+  // information, so it runs under reduced motion too. The only reactive read is
+  // `startedAt`: when given, the anchor is backdated by the wall-clock time
+  // already spent, and a new value re-anchors. `tenths` is only written here.
   let tenths = $state(0);
   $effect(() => {
-    const start = performance.now();
-    const t = setInterval(() => (tenths = Math.floor((performance.now() - start) / 100)), 100);
+    const start = performance.now() - (startedAt == null ? 0 : Math.max(0, Date.now() - startedAt));
+    const tick = () => (tenths = Math.floor((performance.now() - start) / 100));
+    tick(); // seed now, so a remount does not show 0.0s until the first tick
+    const t = setInterval(tick, 100);
     return () => clearInterval(t);
   });
 
