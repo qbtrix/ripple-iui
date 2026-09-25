@@ -40,6 +40,16 @@
   read text-destructive now reads text-ripple-error-text, the same hue since
   --ripple-error aliases --destructive). The raw tones are fill colours and
   measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+  Modified: 2026-09-25 (chat new-look slice 1) — optional reason on deny, opt-in
+    through `askDenyReason` (default false, so every existing caller still
+    denies in one click). When on, Deny swaps the footer for a labelled
+    textarea with Confirm deny / Cancel; the card stays pending until
+    confirmed. Confirm fires `ondeny({ actionId, reason })` with the trimmed
+    reason, and leaves the `reason` key out when it is empty so the payload
+    keeps its old shape. `ondecision(next)` is untouched: it is the bind
+    contract NodeRenderer persists, and it carries the decision string only.
+    Escape in the field backs out. The reason is not shown in the resolved
+    stamp; a host that wants it there owns it.
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -112,6 +122,11 @@
     /** Disable the controls entirely (e.g. while the host is persisting). */
     disabled?: boolean;
     /**
+     * Ask for an optional reason before denying. Deny then opens a text field
+     * with Confirm / Cancel, and the reason rides on `ondeny`. Default false.
+     */
+    askDenyReason?: boolean;
+    /**
      * Fired when the node is bound — carries the NEW decision string so
      * NodeRenderer persists it (default bind contract for `approval-gate` is
      * `{ prop: 'decision', event: 'ondecision' }`).
@@ -119,8 +134,8 @@
     ondecision?: (next: Decision) => void;
     /** Fired on approve — carries the actionId so the host records the decision. */
     onapprove?: (info: { actionId?: string }) => void;
-    /** Fired on deny — carries the actionId. */
-    ondeny?: (info: { actionId?: string }) => void;
+    /** Fired on deny — carries the actionId, plus `reason` when one was given. */
+    ondeny?: (info: { actionId?: string; reason?: string }) => void;
     /** Fired on edit — carries the actionId. Shown only when supplied. */
     onedit?: (info: { actionId?: string }) => void;
   }
@@ -144,6 +159,7 @@
     editLabel = 'Edit',
     decidedBy,
     disabled = false,
+    askDenyReason = false,
     ondecision,
     onapprove,
     ondeny,
@@ -215,7 +231,7 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  function decide(next: Exclude<Decision, 'pending'>) {
+  function decide(next: Exclude<Decision, 'pending'>, reason?: string) {
     if (disabled || resolved) return;
     localDecision = next;
     // Bound-state persistence (Kanban/Table pattern) — only meaningful when the
@@ -223,7 +239,32 @@
     ondecision?.(next);
     // Host callback so Instinct can record the decision via emit / call_binding.
     if (next === 'approved') onapprove?.({ actionId });
-    else ondeny?.({ actionId });
+    else ondeny?.(reason ? { actionId, reason } : { actionId });
+  }
+
+  // The opt-in deny-reason step. `askingReason` swaps the footer for the field.
+  let askingReason = $state(false);
+  let reasonText = $state('');
+  let reasonField = $state<HTMLTextAreaElement>();
+  $effect(() => {
+    if (askingReason) reasonField?.focus();
+  });
+
+  function deny() {
+    if (disabled || resolved) return;
+    if (askDenyReason) askingReason = true;
+    else decide('denied');
+  }
+
+  function confirmDeny(e: SubmitEvent) {
+    e.preventDefault();
+    decide('denied', reasonText.trim() || undefined);
+    if (localDecision === 'denied') askingReason = false;
+  }
+
+  function backOut() {
+    askingReason = false;
+    reasonText = '';
   }
 
   function edit() {
@@ -319,6 +360,42 @@
         {/if}
         {stampMeta.label}{#if decidedBy}<span class="font-normal text-ripple-muted-foreground"> by {decidedBy}</span>{/if}
       </span>
+    {:else if askingReason}
+      <form class="flex w-full flex-col gap-2" onsubmit={confirmDeny}>
+        <textarea
+          bind:this={reasonField}
+          bind:value={reasonText}
+          aria-label="Reason for denying (optional)"
+          placeholder="Why not? (optional)"
+          rows="2"
+          onkeydown={(e) => e.key === 'Escape' && backOut()}
+          class="w-full resize-none rounded-ripple bg-ripple-surface px-2.5 py-1.5 text-[12.5px] ring-1 ring-ripple-border placeholder:text-ripple-muted-foreground focus:outline-none focus-visible:ring-ripple-error/40"
+        ></textarea>
+        <div class="flex items-center gap-2">
+          <button
+            type="submit"
+            {disabled}
+            class={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium ring-1',
+              'text-ripple-error-text ring-ripple-error/40 transition-colors duration-150 hover:bg-ripple-error/10',
+              'disabled:pointer-events-none disabled:opacity-50'
+            )}
+          >
+            <XIcon size={14} aria-hidden="true" />
+            Confirm deny
+          </button>
+          <button
+            type="button"
+            onclick={backOut}
+            class={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium',
+              'text-ripple-muted-foreground transition-colors duration-150 hover:bg-ripple-accent/10 hover:text-ripple-surface-foreground'
+            )}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     {:else}
       <button
         type="button"
@@ -335,7 +412,7 @@
       </button>
       <button
         type="button"
-        onclick={() => decide('denied')}
+        onclick={deny}
         disabled={disabled || resolved}
         class={cn(
           'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium ring-1',

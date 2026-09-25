@@ -370,6 +370,65 @@ describe('ApprovalGate (widget level)', () => {
   });
 });
 
+describe('ApprovalGate — reason on deny (askDenyReason)', () => {
+  const setup = (extra: Record<string, unknown> = {}) => {
+    const ondeny = vi.fn();
+    const ondecision = vi.fn();
+    const r = render(ApprovalGate, {
+      props: { title: 'x', risk: 'high', actionId: 'act_9', askDenyReason: true, ondeny, ondecision, ...extra },
+    });
+    const root = () => r.container.querySelector('.ripple-approval-gate')!;
+    return { ...r, ondeny, ondecision, root };
+  };
+
+  it('Deny opens a labelled reason field instead of resolving', async () => {
+    const { getByText, getByLabelText, ondeny, ondecision, root } = setup();
+    await fireEvent.click(getByText('Deny'));
+    expect(getByLabelText('Reason for denying (optional)')).toBeTruthy();
+    expect(ondeny).not.toHaveBeenCalled();
+    expect(ondecision).not.toHaveBeenCalled();
+    expect(root().getAttribute('data-decision')).toBe('pending');
+  });
+
+  it('confirming passes the trimmed reason through ondeny and resolves to denied', async () => {
+    const { getByText, getByLabelText, ondeny, ondecision, root } = setup();
+    await fireEvent.click(getByText('Deny'));
+    await fireEvent.input(getByLabelText('Reason for denying (optional)'), {
+      target: { value: '  Wrong account tier  ' },
+    });
+    await fireEvent.click(getByText('Confirm deny'));
+    expect(ondeny).toHaveBeenCalledWith({ actionId: 'act_9', reason: 'Wrong account tier' });
+    // ondecision keeps its bind-contract shape: the decision string only.
+    expect(ondecision).toHaveBeenCalledWith('denied');
+    expect(root().getAttribute('data-decision')).toBe('denied');
+  });
+
+  it('an empty reason omits the key, so the payload keeps its old shape', async () => {
+    const { getByText, ondeny } = setup();
+    await fireEvent.click(getByText('Deny'));
+    await fireEvent.click(getByText('Confirm deny'));
+    expect(ondeny).toHaveBeenCalledTimes(1);
+    expect(Object.keys(ondeny.mock.calls[0][0])).toEqual(['actionId']);
+  });
+
+  it('Cancel backs out to the pending controls without firing anything', async () => {
+    const { getByText, queryByLabelText, ondeny, root } = setup();
+    await fireEvent.click(getByText('Deny'));
+    await fireEvent.click(getByText('Cancel'));
+    expect(queryByLabelText('Reason for denying (optional)')).toBeNull();
+    expect(getByText('Approve')).toBeTruthy();
+    expect(ondeny).not.toHaveBeenCalled();
+    expect(root().getAttribute('data-decision')).toBe('pending');
+  });
+
+  it('is off by default: Deny still resolves in one click', async () => {
+    const { getByText, queryByLabelText, ondeny } = setup({ askDenyReason: undefined });
+    await fireEvent.click(getByText('Deny'));
+    expect(queryByLabelText('Reason for denying (optional)')).toBeNull();
+    expect(ondeny).toHaveBeenCalledWith({ actionId: 'act_9' });
+  });
+});
+
 describe('AI-native widgets — node-id forwarding (visual-editor selection)', () => {
   // The visual editor discovers selectable nodes by querying `[data-ripple-node]`
   // (see src/lib/editor/core/bounds-index.ts — `nodeIdOf` reads the stamp and it
