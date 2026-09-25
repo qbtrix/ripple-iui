@@ -1,4 +1,8 @@
 <!-- src/lib/widgets/input/Segmented.svelte
+     Updated 2026-09-25 (shell new-look slice 1): options take an optional
+     `badge` (string or number), rendered as a small accent pill after the
+     label, for per-tab unread counts. Additive; nothing else moved.
+
      origin: slev12397/beautiful-ui@ff0f74d components/atoms/SegmentedControl.tsx
 
      Updated 2026-09-14 (beautiful-ui re-skin, lane A): the bordered strip of
@@ -32,7 +36,7 @@
 
   type Option =
     | string
-    | { value: string | number; label: string; icon?: string; disabled?: boolean };
+    | { value: string | number; label: string; icon?: string; disabled?: boolean; badge?: string | number };
 
   interface Props {
     id?: string;
@@ -150,6 +154,13 @@
       >
         {#if Icon}<Icon size={14} />{/if}
         {opt.label}
+        {#if opt.badge != null && opt.badge !== ''}
+          <span
+            data-segmented-badge
+            class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-ripple-accent/15 px-1 text-[10.5px] font-medium leading-none tabular-nums text-ripple-accent"
+            >{opt.badge}</span
+          >
+        {/if}
       </button>
     {/each}
   </div>
