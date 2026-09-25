@@ -26,6 +26,11 @@
 //   passed. The test stretches the interval the way a throttled tab does.
 //   Committed red first. `afterEach` now also restores spies, before the real
 //   timers come back.
+// UPDATED 2026-09-25 (feat: startedAt, chat new-look slice 1): a block at the
+//   bottom for the optional `startedAt` prop. A chat host that re-renders
+//   remounts the loader, and a mount-relative timer went back to 0.0s. Written
+//   red first. The first assertion runs before any tick, so a 100ms flash of
+//   0.0s on remount fails it too.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import { compile } from 'svelte/compiler';
@@ -221,5 +226,35 @@ describe('PixelLoader — elapsed time under a throttled timer', () => {
     // Ten seconds pass, and only ten ticks fire.
     await vi.advanceTimersByTimeAsync(10_000);
     expect(getByText('10.0s')).toBeTruthy();
+  });
+});
+
+// A chat host re-renders its live turn, which remounts the loader, and the
+// timer counted from mount went back to 0.0s. `startedAt` (epoch ms, Date.now()
+// scale) anchors it to when the work actually began.
+describe('PixelLoader — startedAt', () => {
+  it('counts from startedAt, from the very first paint', async () => {
+    vi.useFakeTimers();
+    const { getByText } = render(PixelLoader, { props: { startedAt: Date.now() - 5000 } });
+    // Before any tick: a remount must not flash 0.0s.
+    expect(getByText('5.0s')).toBeTruthy();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(getByText('6.5s')).toBeTruthy();
+  });
+
+  it('survives a remount', async () => {
+    vi.useFakeTimers();
+    const startedAt = Date.now();
+    const first = render(PixelLoader, { props: { startedAt } });
+    await vi.advanceTimersByTimeAsync(3000);
+    first.unmount();
+    const second = render(PixelLoader, { props: { startedAt } });
+    expect(second.getByText('3.0s')).toBeTruthy();
+  });
+
+  it('clamps a startedAt in the future to zero', () => {
+    vi.useFakeTimers();
+    const { getByText } = render(PixelLoader, { props: { startedAt: Date.now() + 10_000 } });
+    expect(getByText('0.0s')).toBeTruthy();
   });
 });
