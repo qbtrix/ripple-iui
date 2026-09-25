@@ -8,6 +8,12 @@
 //   callback fire, its diff/tool-call composition, and the bound-decision
 //   persist round-trip through Ripple. Plus the a11y attributes
 //   (aria-live/aria-busy/aria-expanded, ordered list, risk/decision-by-text).
+// UPDATED 2026-09-25 (chat new-look slice 1): ReasoningTrace — the "Reasoning…"
+//   test now streams with no thinking step, because a collapsed streaming trace
+//   shows its active step's title instead; new tests pin that label, its
+//   fallback, and the new `error` step status. ApprovalGate — the opt-in
+//   deny-reason flow (`askDenyReason`). Written red first; the existing
+//   ApprovalGate tests are untouched.
 import { describe, it, expect, vi, test } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import { getWidget, hasWidget } from '../index.js';
@@ -159,9 +165,49 @@ describe('ReasoningTrace', () => {
     expect(getByText('Reasoned for 2 steps')).toBeTruthy();
   });
 
-  it('reads "Reasoning…" while streaming', () => {
-    const { getByText } = render(ReasoningTrace, { props: { steps, streaming: true } });
+  it('reads "Reasoning…" while streaming with no active step', () => {
+    const settled = [{ title: 'Parse request', status: 'done' as const }];
+    const { getByText } = render(ReasoningTrace, { props: { steps: settled, streaming: true } });
     expect(getByText('Reasoning…')).toBeTruthy();
+  });
+
+  it('shows the active step title in the header while collapsed and streaming', () => {
+    const { getByRole, queryByText } = render(ReasoningTrace, { props: { steps, streaming: true } });
+    // The header's status region names what the agent is doing right now.
+    expect(getByRole('status').textContent).toContain('Search catalog');
+    expect(queryByText('Reasoning…')).toBeNull();
+  });
+
+  it('names the LAST thinking step when several are active', () => {
+    const many = [
+      { title: 'First', status: 'thinking' as const },
+      { title: 'Second', status: 'thinking' as const },
+    ];
+    const { getByRole } = render(ReasoningTrace, { props: { steps: many, streaming: true } });
+    expect(getByRole('status').textContent).toContain('Second');
+  });
+
+  it('goes back to "Reasoning…" once expanded, where the steps are visible', async () => {
+    const { container, getByRole } = render(ReasoningTrace, { props: { steps, streaming: true } });
+    await fireEvent.click(container.querySelector('button[aria-expanded]') as HTMLButtonElement);
+    expect(getByRole('status').textContent).toContain('Reasoning…');
+  });
+
+  it('renders an error step distinctly, by text and the error token', () => {
+    const failed = [
+      { title: 'Parse request', status: 'done' as const },
+      { title: 'Call the catalog', status: 'error' as const },
+    ];
+    const { container, getByText } = render(ReasoningTrace, { props: { steps: failed, collapsed: false } });
+    const items = [...container.querySelectorAll('ol.ripple-reasoning-steps > li')];
+    expect(items.map((li) => li.getAttribute('data-status'))).toEqual(['done', 'error']);
+    // Status by text, not colour alone.
+    expect(items[1].textContent).toContain('error');
+    expect(items[0].textContent).not.toContain('error');
+    // The title reads in the readable error token, never a raw tone.
+    expect(getByText('Call the catalog').closest('[class*="text-ripple-error-text"]')).toBeTruthy();
+    // No spinner on an error step — it is not in flight.
+    expect(items[1].querySelector('.ripple-reasoning-ring')).toBeNull();
   });
 
   it('expands to an ordered list of steps when toggled', async () => {

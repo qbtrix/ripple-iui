@@ -20,6 +20,17 @@
     connector; steps stagger in with fade-up; the settled summary fades in; the
     thinking step is a spinner ring rather than a pulsing dot. Props, events
     and the disclosure contract are untouched.
+  Modified: 2026-09-25 (chat new-look slice 1) — two additions. (1) A step's
+    `status` may be `error`: a circle-alert icon and the title in the readable
+    error token (text-ripple-error-text), plus sr-only "error" so the status is
+    text, not colour alone. No spinner and no shimmer — it is not in flight.
+    Each step carries `data-status`. (2) While collapsed AND streaming, the
+    header names the active step (the last `thinking` one) instead of the bare
+    "Reasoning…"; with no thinking step, or once expanded (the steps are then
+    on screen), it falls back to "Reasoning…". This restores the 2026-07-10
+    paw-enterprise behaviour and is the one visible default change: a collapsed
+    streaming trace with a thinking step now reads that step's title. No prop
+    was added, renamed or re-defaulted.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ThinkingState.tsx
 -->
 <script lang="ts">
@@ -27,11 +38,12 @@
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
   import BrainIcon from '@lucide/svelte/icons/brain';
   import CheckIcon from '@lucide/svelte/icons/check';
+  import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
 
   interface Step {
     title: string;
     detail?: string;
-    status?: 'thinking' | 'done';
+    status?: 'thinking' | 'done' | 'error';
   }
 
   interface Props {
@@ -64,9 +76,11 @@
   }
 
   const count = $derived(steps.length);
+  // The step the agent is on now: the last one still thinking.
+  const active = $derived([...steps].reverse().find((s) => s.status === 'thinking'));
   const summary = $derived(
     streaming
-      ? 'Reasoning…'
+      ? (!isOpen && active?.title) || 'Reasoning…'
       : count === 0
         ? 'No reasoning steps'
         : `Reasoned for ${count} step${count === 1 ? '' : 's'}`
@@ -149,7 +163,9 @@
           <ol class="ripple-reasoning-steps flex flex-col gap-1 py-1">
             {#each steps as step, i (i)}
               {@const thinking = step.status === 'thinking'}
+              {@const failed = step.status === 'error'}
               <li
+                data-status={step.status ?? 'done'}
                 class={cn(
                   'flex min-h-7 items-start gap-2 rounded-md px-1.5 py-0.5',
                   isOpen && 'ripple-reasoning-fade-up'
@@ -161,6 +177,8 @@
                     <span
                       class="ripple-reasoning-ring size-3 animate-spin rounded-full border-[1.5px] border-ripple-border border-t-ripple-muted-foreground"
                     ></span>
+                  {:else if failed}
+                    <CircleAlertIcon size={13} class="text-ripple-error-text" />
                   {:else}
                     <CheckIcon size={13} class="text-ripple-muted-foreground/70" />
                   {/if}
@@ -169,11 +187,12 @@
                   <div
                     class={cn(
                       'text-[12.5px] font-medium',
-                      thinking && 'ripple-reasoning-shimmer'
+                      thinking && 'ripple-reasoning-shimmer',
+                      failed && 'text-ripple-error-text'
                     )}
                   >
                     {step.title}
-                    <span class="sr-only">— {thinking ? 'thinking' : 'done'}</span>
+                    <span class="sr-only">— {thinking ? 'thinking' : failed ? 'error' : 'done'}</span>
                   </div>
                   {#if step.detail}
                     <div
