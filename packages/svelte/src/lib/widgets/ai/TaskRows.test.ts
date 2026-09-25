@@ -6,6 +6,9 @@
 //   caller's rows), the stagger index, and the two variants. TaskRows is not in
 //   the spec registry, so there is deliberately no registry-wiring test here —
 //   it reaches callers through `$lib/ui` only.
+// UPDATED 2026-09-25 (chat new-look slice 1): a block at the bottom for the new
+//   `cancelled` status — a pill by text, quieter than failed (no solid red
+//   badge, no spinning retry, muted and struck label). Written red first.
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import TaskRows from './TaskRows.svelte';
@@ -126,5 +129,41 @@ describe('TaskRows — disclosure', () => {
     const { getByRole } = render(TaskRows, { props: { rows } });
     await fireEvent.click(getByRole('button'));
     expect(rows).toEqual(snapshot);
+  });
+});
+
+describe('TaskRows — cancelled', () => {
+  const rows = [
+    { key: 'draft', label: 'Draft supplier emails', status: 'failed' as const },
+    { key: 'send', label: 'Send supplier emails', status: 'cancelled' as const },
+  ];
+  const rowOf = (c: HTMLElement, key: string) =>
+    [...c.querySelectorAll('.ripple-task-row')].find((r) => r.textContent?.includes(key)) as HTMLElement;
+
+  it('marks the row cancelled and says so in a pill', () => {
+    const { container, getByText } = render(TaskRows, { props: { rows } });
+    expect(rowOf(container, 'Send').getAttribute('data-state')).toBe('cancelled');
+    expect(getByText('Cancelled')).toBeTruthy();
+  });
+
+  it('takes the pill copy from labels.cancelled', () => {
+    const { getByText, queryByText } = render(TaskRows, {
+      props: { rows, labels: { cancelled: 'Skipped' } },
+    });
+    expect(getByText('Skipped')).toBeTruthy();
+    expect(queryByText('Cancelled')).toBeNull();
+  });
+
+  it('is quieter than failed: no error tone, no retry spinner, a muted struck label', () => {
+    const { container } = render(TaskRows, { props: { rows } });
+    const cancelled = rowOf(container, 'Send');
+    expect(cancelled.innerHTML).not.toMatch(/ripple-error/);
+    expect(cancelled.querySelector('.ripple-task-retry')).toBeNull();
+    expect(cancelled.querySelector('.ripple-task-ring')).toBeNull();
+    const label = [...cancelled.querySelectorAll('span')].find((s) => s.textContent?.trim() === 'Send supplier emails')!;
+    expect(label.className).toContain('line-through');
+    expect(label.className).toContain('text-ripple-muted-foreground');
+    // And the failed row next to it still reads as failed.
+    expect(rowOf(container, 'Draft').innerHTML).toMatch(/ripple-error/);
   });
 });
