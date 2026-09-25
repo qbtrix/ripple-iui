@@ -11,7 +11,8 @@
   inside the host, because interactive content inside a button or anchor is
   invalid and breaks tabbing. They fade in on hover and stay visible while
   focus is anywhere in the row (group-focus-within), so a keyboard user sees
-  what they tab into. On the `touch` size they are always visible.
+  what they tab into. On the `touch` size they are always visible. While they
+  show, the meta text and the unread dot/count fade out under them.
 
   Forwarding. Every prop the component does not name (aria-*, data-*,
   draggable, oncontextmenu, drag events, onkeydown, style) is spread on the
@@ -76,7 +77,11 @@
   const heightClass = $derived(size === 'sm' ? 'h-7' : size === 'touch' ? 'h-11 text-[15px]' : 'h-8');
   const count = $derived(typeof unread === 'number' && unread > 0 ? unread : 0);
   const dot = $derived(unread === true);
-  const padClass = 'pl-[calc(0.5rem+var(--list-row-indent,0)*0.75rem)] pr-2';
+  // Under the overlaid trailing actions, meta and the unread mark fade out.
+  const underTrailing = $derived(
+    trailing && size !== 'touch' ? 'group-hover/row:opacity-0 group-focus-within/row:opacity-0' : ''
+  );
+  const padClass = 'pl-[calc(0.5rem_+_var(--list-row-indent,0)_*_0.75rem)] pr-2';
 </script>
 
 <div
@@ -121,18 +126,21 @@
         <span
           class={cn(
             'shrink-0 text-[12px] tabular-nums text-ripple-muted-foreground',
-            trailing && size !== 'touch' && 'group-hover/row:opacity-0 group-focus-within/row:opacity-0'
+            underTrailing
           )}>{@render meta()}</span
         >
       {/if}
       {#if count > 0}
         <span
           data-unread-count
-          class="inline-flex h-[1.125rem] min-w-[1.125rem] shrink-0 items-center justify-center rounded-full bg-ripple-accent px-1 text-[11px] font-medium leading-none tabular-nums text-ripple-accent-foreground"
+          class={cn(
+            'inline-flex h-[1.125rem] min-w-[1.125rem] shrink-0 items-center justify-center rounded-full bg-ripple-accent px-1 text-[11px] font-medium leading-none tabular-nums text-ripple-accent-foreground',
+            underTrailing
+          )}
           >{count}</span
         >
       {:else if dot}
-        <span data-unread-dot class="size-1.5 shrink-0 rounded-full bg-ripple-accent" aria-hidden="true"></span>
+        <span data-unread-dot class={cn('size-1.5 shrink-0 rounded-full bg-ripple-accent', underTrailing)} aria-hidden="true"></span>
         <span class="sr-only">Unread</span>
       {/if}
     </svelte:element>
