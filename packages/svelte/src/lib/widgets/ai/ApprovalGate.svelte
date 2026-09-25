@@ -50,6 +50,11 @@
     contract NodeRenderer persists, and it carries the decision string only.
     Escape in the field backs out. The reason is not shown in the resolved
     stamp; a host that wants it there owns it.
+  Modified: 2026-09-25 (fix/taskrows-approvalgate-labels) — the confirm button
+    in the deny-reason flow was hard-coded "Confirm deny", so a host with
+    denyLabel="Reject" still read "Confirm deny". New optional
+    `confirmDenyLabel`; its default is `Confirm ${denyLabel.toLowerCase()}`,
+    so the default output is still "Confirm deny".
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -115,6 +120,8 @@
     approveLabel?: string;
     /** Deny button label. */
     denyLabel?: string;
+    /** Confirm button label in the deny-reason flow. Defaults to `Confirm ${denyLabel.toLowerCase()}`. */
+    confirmDenyLabel?: string;
     /** Edit button label. Edit is shown only when `onedit` is supplied. */
     editLabel?: string;
     /** Who decided — shown in the resolved stamp ("Approved by Ada"). */
@@ -156,6 +163,7 @@
     markdown,
     approveLabel = 'Approve',
     denyLabel = 'Deny',
+    confirmDenyLabel,
     editLabel = 'Edit',
     decidedBy,
     disabled = false,
@@ -382,7 +390,7 @@
             )}
           >
             <XIcon size={14} aria-hidden="true" />
-            Confirm deny
+            {confirmDenyLabel ?? `Confirm ${denyLabel.toLowerCase()}`}
           </button>
           <button
             type="button"

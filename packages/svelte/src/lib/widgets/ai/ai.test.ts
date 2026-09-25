@@ -14,6 +14,9 @@
 //   fallback, and the new `error` step status. ApprovalGate — the opt-in
 //   deny-reason flow (`askDenyReason`). Written red first; the existing
 //   ApprovalGate tests are untouched.
+// UPDATED 2026-09-25 (fix/taskrows-approvalgate-labels): the confirm button in
+//   the deny-reason flow follows denyLabel ("Confirm reject") and takes an
+//   explicit `confirmDenyLabel`. Default stays "Confirm deny". Written red first.
 import { describe, it, expect, vi, test } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import { getWidget, hasWidget } from '../index.js';
@@ -430,6 +433,21 @@ describe('ApprovalGate — reason on deny (askDenyReason)', () => {
     expect(getByText('Approve')).toBeTruthy();
     expect(ondeny).not.toHaveBeenCalled();
     expect(root().getAttribute('data-decision')).toBe('pending');
+  });
+
+  it('derives the confirm label from denyLabel', async () => {
+    const { getByText, queryByText, ondeny } = setup({ denyLabel: 'Reject' });
+    await fireEvent.click(getByText('Reject'));
+    expect(queryByText('Confirm deny')).toBeNull();
+    await fireEvent.click(getByText('Confirm reject'));
+    expect(ondeny).toHaveBeenCalledTimes(1);
+  });
+
+  it('takes an explicit confirmDenyLabel over the derived one', async () => {
+    const { getByText, queryByText } = setup({ denyLabel: 'Reject', confirmDenyLabel: 'Yes, reject it' });
+    await fireEvent.click(getByText('Reject'));
+    expect(getByText('Yes, reject it')).toBeTruthy();
+    expect(queryByText('Confirm reject')).toBeNull();
   });
 
   it('is off by default: Deny still resolves in one click', async () => {
