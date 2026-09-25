@@ -23,7 +23,7 @@
   import { cn } from '$lib/utils.js';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
-  interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'class' | 'children'> {
+  interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'class' | 'children' | 'ontoggle'> {
     class?: string;
     label?: string;
     count?: number | string;
