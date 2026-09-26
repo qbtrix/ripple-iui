@@ -1,6 +1,20 @@
 # .github/workflows/release-manifest.yml
-# Publishes @ripple-ui/svelte to npm and attaches the manifest bundle to a
-# GitHub release, on a v* tag push or a manual dispatch.
+# Publishes @ripple-ui/core and @ripple-ui/svelte to npm and attaches the
+# manifest bundle to a GitHub release, on a v* tag push or a manual dispatch.
+# Updated 2026-09-27: fixed for the bun workspace layout (packages/core,
+# packages/svelte). `bun publish` ran at the repo root, whose package.json is
+# the private workspace root, so v0.7.0 failed with "attempted to publish a
+# private package". Each package now publishes from its own directory, core
+# first because svelte depends on it. svelte's `@ripple-ui/core: file:../core`
+# is rewritten to `^<core version>` inside the runner just before publish
+# (bun only rewrites `workspace:` ranges); package.json in git keeps file:, which
+# is what the workspace repos that consume ripple from a checkout rely on. A
+# version already on npm is skipped, so a re-dispatch after a partial publish
+# goes on to the release step. Asset paths moved to packages/svelte/dist, and the
+# schema sources in the zip now come from packages/core/src/schema (svelte's
+# schema/ is a re-export barrel). Earlier tag runs also failed with "missing
+# authentication": the NPM_TOKEN repo secret has to be set for any of this to
+# publish.
 # Updated 2026-08-03: the "Resolve tag" step no longer pastes `${{ inputs.tag }}`
 # into its shell script. Expressions are substituted before bash sees the
 # script, so a dispatch input containing shell syntax would have run as code in
@@ -41,7 +55,8 @@ jobs:
       - name: Build library + manifest
         run: bun run build
 
-      - name: Publish to npm
+      - name: Publish @ripple-ui/core
+        working-directory: packages/core
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -53,16 +68,47 @@ jobs:
           # cancelled workflow run signals the step mid-publish.
           trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          V=$(node -p "require('./package.json').version")
+          if npm view "@ripple-ui/core@$V" version >/dev/null 2>&1; then
+            echo "@ripple-ui/core@$V is already on npm, skipping"
+            exit 0
+          fi
+          bun publish --access public
+
+      - name: Publish @ripple-ui/svelte
+        working-directory: packages/svelte
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          V=$(node -p "require('./package.json').version")
+          if npm view "@ripple-ui/svelte@$V" version >/dev/null 2>&1; then
+            echo "@ripple-ui/svelte@$V is already on npm, skipping"
+            exit 0
+          fi
+          # file:../core means nothing to an npm consumer. Point it at the
+          # published core version, in this runner only.
+          CORE_V=$(node -p "require('../core/package.json').version")
+          node -e '
+            const fs = require("fs");
+            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            if (!p.dependencies || !p.dependencies["@ripple-ui/core"]) throw new Error("no @ripple-ui/core dependency");
+            p.dependencies["@ripple-ui/core"] = "^" + process.argv[1];
+            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
+          ' "$CORE_V"
+          grep -n '"@ripple-ui/core"' package.json
           bun publish --access public
 
       - name: Stage release assets
         run: |
           set -euo pipefail
           mkdir -p release/ripple-manifest/schema
-          cp dist/manifest.json release/manifest.json
-          cp -r dist release/ripple-manifest/dist
-          cp dist/manifest.json release/ripple-manifest/manifest.json
-          cp src/lib/schema/*.ts release/ripple-manifest/schema/
+          cp packages/svelte/dist/manifest.json release/manifest.json
+          cp -r packages/svelte/dist release/ripple-manifest/dist
+          cp packages/svelte/dist/manifest.json release/ripple-manifest/manifest.json
+          find packages/core/src/schema -maxdepth 1 -name '*.ts' ! -name '*.test.ts' -exec cp {} release/ripple-manifest/schema/ \;
           cd release
           zip -r ripple-manifest.zip ripple-manifest
           rm -rf ripple-manifest
