@@ -1,5 +1,8 @@
 <!--
   PageHeader.svelte
+  Updated 2026-09-27 (canon gaps 2): a `titleTrailing` snippet renders inline
+  after the title text, vertically centred, before the actions: a status tag
+  beside the h1. Without it the title markup is unchanged.
   Updated 2026-09-26 (feature pages canon, F1 / G1): exported on `./ui` for
   hand-written feature pages. Two additive snippets: `leading` (an icon tile or
   avatar before the title) and `toolbar` (a row under the title for search,
@@ -29,6 +32,8 @@
     size?: 'md' | 'sm';
     /** Before the title: an icon tile or an avatar. */
     leading?: Snippet;
+    /** Inline after the title text, vertically centred: a status tag. */
+    titleTrailing?: Snippet;
     /** Slot for action buttons rendered on the right. Use `slot: "actions"`. */
     actions?: Snippet;
     /** A row under the title: search, filters, view switches. */
@@ -40,7 +45,7 @@
 
   let {
     id, class: className, style,
-    title, subtitle, eyebrow, size = 'md', leading, actions, toolbar, children, hasChildren = false
+    title, subtitle, eyebrow, size = 'md', leading, titleTrailing, actions, toolbar, children, hasChildren = false
   }: Props = $props();
 
   const styleString = $derived(
@@ -64,12 +69,24 @@
         {#if eyebrow}
           <span class="text-[11px] font-medium uppercase tracking-wide text-ripple-muted-foreground">{eyebrow}</span>
         {/if}
+        {#if titleTrailing}
+          <div class="flex min-w-0 items-center gap-2">
+          <h1
+            class={cn(
+              'truncate font-semibold leading-tight tracking-tight text-ripple-surface-foreground',
+              size === 'sm' ? 'text-[17px]' : 'text-xl'
+            )}
+          >{title}</h1>
+            <div data-page-header-title-trailing class="flex shrink-0 items-center gap-1.5">{@render titleTrailing()}</div>
+          </div>
+        {:else}
         <h1
           class={cn(
             'truncate font-semibold leading-tight tracking-tight text-ripple-surface-foreground',
             size === 'sm' ? 'text-[17px]' : 'text-xl'
           )}
         >{title}</h1>
+        {/if}
         {#if subtitle}
           <p class="text-[13px] text-ripple-muted-foreground">{subtitle}</p>
         {/if}

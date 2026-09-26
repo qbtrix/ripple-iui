@@ -11,7 +11,8 @@
   demos Search mode="filter" with aria-label/autocomplete/spellcheck, an
   InlineAlert with its role overridden, the success/warning Badge variants,
   Segmented option `class` + `leading` dots, Dialog.Content `overlayClass`,
-  and PanelHeader `closeTitle`.
+  and PanelHeader `closeTitle`. The Meetings PageHeader shows `titleTrailing`
+  (a Beta tag beside the title).
 -->
 <script lang="ts">
   import { PageHeader, EmptyState, InlineAlert, Segmented, Search, PanelHeader, Dialog } from '$lib/ui/index.js';
@@ -46,6 +47,7 @@
       {#snippet leading()}
         <span class="inline-flex size-9 items-center justify-center rounded-ripple bg-ripple-accent/10 text-ripple-accent"><BotIcon size={18} /></span>
       {/snippet}
+      {#snippet titleTrailing()}<Badge variant="warning">Beta</Badge>{/snippet}
       {#snippet actions()}
         <Button size="sm" onclick={() => (log = 'new meeting')}><PlusIcon size={14} /> New meeting</Button>
       {/snippet}
