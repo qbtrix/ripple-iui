@@ -1,9 +1,16 @@
+<!-- Updated 2026-09-27 (canon gaps 2): `mode="filter"` makes it a plain search
+     box (role=searchbox) that never opens the results listbox, so a list page
+     can filter in place without a "No results" popover; arrows and Enter are
+     left to the browser there, so a wrapping form still submits. `aria-label`,
+     `autocomplete` and `spellcheck` pass through to the <input> in both modes.
+     The default `mode="suggest"` is unchanged. -->
 <!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
 <!-- src/lib/widgets/input/Search.svelte
      Updated: 2026-06-09 — a11y: the role="combobox" input now wires
      aria-controls to the results listbox (which gets a stable id) so it
      satisfies a11y_role_has_required_aria_props (aria-expanded was already set). -->
 <script lang="ts">
+  import type { HTMLInputAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
   import SearchIcon from '@lucide/svelte/icons/search';
   import XIcon from '@lucide/svelte/icons/x';
@@ -38,6 +45,12 @@
     onchange?: (q: string) => void;
     oninput?: (q: string) => void;
     onselect?: (id: string | number) => void;
+    /** `suggest` (default): combobox with a results dropdown. `filter`: plain
+     *  search box, no dropdown, no "No results" panel. */
+    mode?: 'suggest' | 'filter';
+    'aria-label'?: string;
+    autocomplete?: HTMLInputAttributes['autocomplete'];
+    spellcheck?: boolean;
   }
 
   let {
@@ -52,8 +65,14 @@
     loading = false,
     onchange,
     oninput,
-    onselect
+    onselect,
+    mode = 'suggest',
+    'aria-label': ariaLabel,
+    autocomplete,
+    spellcheck
   }: Props = $props();
+
+  const suggest = $derived(mode !== 'filter');
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
@@ -67,7 +86,7 @@
   // via aria-controls (required by the ARIA combobox role).
   const listboxId = $derived(`${id ?? 'ripple-search'}-listbox`);
 
-  const showDropdown = $derived(focused && (alwaysShow || value.trim().length > 0));
+  const showDropdown = $derived(suggest && focused && (alwaysShow || value.trim().length > 0));
 
   // Group results.
   const grouped = $derived.by(() => {
@@ -101,6 +120,10 @@
   }
 
   function onKeyDown(e: KeyboardEvent) {
+    if (!suggest) {
+      if (e.key === 'Escape' && inputEl) inputEl.blur();
+      return;
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       highlight = Math.min(highlight + 1, results.length - 1);
@@ -137,10 +160,13 @@
     <input
       bind:this={inputEl}
       type="text"
-      role="combobox"
-      aria-expanded={showDropdown}
-      aria-controls={listboxId}
-      aria-autocomplete="list"
+      role={suggest ? 'combobox' : 'searchbox'}
+      aria-expanded={suggest ? showDropdown : undefined}
+      aria-controls={suggest ? listboxId : undefined}
+      aria-autocomplete={suggest ? 'list' : undefined}
+      aria-label={ariaLabel}
+      {autocomplete}
+      {spellcheck}
       {placeholder}
       {value}
       oninput={(e) => {

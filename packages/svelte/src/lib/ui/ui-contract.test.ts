@@ -11,6 +11,9 @@
  *   reads `getContext('ui-events' | 'ui-state' | 'ui-data')` unguarded throws
  *   here rather than in a consumer's page.
  *
+ *   Updated 2026-09-27 (canon gaps 2): Dialog.Content `overlayClass` reaches the
+ *   scrim and can replace its z-50.
+ *
  *   Updated 2026-09-14 (overlay canonical): the surface now carries nine overlay
  *   NAMESPACES (`Dialog.Root` …) plus the named `confirmDialog` store, so the
  *   contract has three shapes — component, namespace, store. Namespaces mount
@@ -321,4 +324,13 @@ test('a caller width on Dialog.Content replaces the default instead of stacking 
   const cls = screen.getByRole('dialog').className;
   expect(cls).toContain('sm:max-w-[400px]');
   expect(cls).not.toMatch(/max-w-sm\b/);
+});
+
+test('Dialog.Content overlayClass reaches the overlay and can replace its z-index (canon gaps 2)', () => {
+  render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg-z', contentClass: 'z-[100]', overlayClass: 'z-[100] bg-black/40' } });
+  const overlay = document.body.querySelector('[data-slot="dialog-overlay"]')!;
+  expect(overlay.className).toContain('z-[100]');
+  expect(overlay.className).toContain('bg-black/40');
+  expect(overlay.className).not.toMatch(/\bz-50\b/);
+  expect(screen.getByRole('dialog').className).toContain('z-[100]');
 });

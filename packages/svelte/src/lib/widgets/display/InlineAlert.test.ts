@@ -1,4 +1,5 @@
 // @file widgets/display/InlineAlert.test.ts
+// Updated 2026-09-27 (canon gaps 2): a caller `role` overrides the tone's role.
 // @description NEW 2026-09-26 (feature pages canon, F1 / G3). Behaviour tests for
 //   InlineAlert, the inline banner/callout on `./ui`: four tones and their live
 //   region roles, title/description/children, the actions snippet, the
@@ -69,5 +70,16 @@ describe('InlineAlert', () => {
     const root = container.querySelector('[data-testid="err-banner"]')!;
     expect(root.hasAttribute('data-inline-alert')).toBe(true);
     expect(root.className).toContain('mb-2');
+  });
+});
+
+describe('InlineAlert role override (canon gaps 2)', () => {
+  it.each([
+    ['warning', 'status'],
+    ['error', 'status'],
+    ['info', 'alert'],
+  ] as const)('tone %s with role=%s keeps the caller role', (tone, role) => {
+    const { container } = render(InlineAlert, { tone, role, title: 't' });
+    expect(container.querySelector('[data-inline-alert]')!.getAttribute('role')).toBe(role);
   });
 });

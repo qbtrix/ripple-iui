@@ -1,4 +1,10 @@
 <!-- src/lib/widgets/input/Segmented.svelte
+     Updated 2026-09-27 (canon gaps 2): an option takes an optional `class`,
+     merged onto that option's button, and the component takes an optional
+     `leading` snippet rendered before each option's icon with the option as
+     its argument. Either lets a host colour or mark one option (a category
+     dot) without :nth-of-type CSS. Additive; nothing else moved.
+
      Updated 2026-09-25 (shell new-look slice 1): options take an optional
      `badge` (string or number), rendered as a small accent pill after the
      label, for per-tab unread counts. Additive; nothing else moved.
@@ -30,13 +36,14 @@
      Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component
      (was unknown, narrowed to {} at the render slot, failing svelte-check). -->
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
   import * as icons from '@lucide/svelte';
 
   type Option =
     | string
-    | { value: string | number; label: string; icon?: string; disabled?: boolean; badge?: string | number };
+    | { value: string | number; label: string; icon?: string; disabled?: boolean; badge?: string | number; class?: string };
 
   interface Props {
     id?: string;
@@ -50,6 +57,8 @@
     size?: 'sm' | 'md';
     disabled?: boolean;
     onchange?: (value: unknown) => void;
+    /** Rendered before each option's icon; gets the normalized option. */
+    leading?: Snippet<[{ value: string | number; label: string; [k: string]: unknown }]>;
   }
 
   let {
@@ -62,7 +71,8 @@
     multiple = false,
     size = 'md',
     disabled = false,
-    onchange
+    onchange,
+    leading
   }: Props = $props();
 
   const styleString = $derived(
@@ -149,9 +159,11 @@
             : 'text-ripple-muted-foreground hover:text-ripple-surface-foreground',
           // No sliding thumb in multiple mode — the segment paints its own surface.
           multiple && selected && 'bg-ripple-surface ring-1 ring-ripple-border',
-          (opt as any).disabled && 'opacity-50 cursor-not-allowed'
+          (opt as any).disabled && 'opacity-50 cursor-not-allowed',
+          typeof opt.class === 'string' ? opt.class : undefined
         )}
       >
+        {#if leading}{@render leading(opt)}{/if}
         {#if Icon}<Icon size={14} />{/if}
         {opt.label}
         {#if opt.badge != null && opt.badge !== ''}

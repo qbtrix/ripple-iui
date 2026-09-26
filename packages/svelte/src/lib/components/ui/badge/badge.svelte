@@ -3,7 +3,10 @@
   text tokens (text-ripple-{error,success,warning,info}-text; red text that
   read text-destructive now reads text-ripple-error-text, the same hue since
   --ripple-error aliases --destructive). The raw tones are fill colours and
-  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged. -->
+  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+  2026-09-27 (canon gaps 2): `success` and `warning` variants, the same shape
+  as `destructive` on the ripple tone tokens (/10 tint, /20 in dark and on link
+  hover, the tone's readable -text token). -->
 <script lang="ts" module>
 	import { type VariantProps, tv } from "tailwind-variants";
 
@@ -14,6 +17,8 @@
 				default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
 				secondary: "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
 				destructive: "bg-destructive/10 [a]:hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-ripple-error-text dark:bg-destructive/20",
+				success: "bg-ripple-success/10 [a]:hover:bg-ripple-success/20 focus-visible:ring-ripple-success/20 dark:focus-visible:ring-ripple-success/40 text-ripple-success-text dark:bg-ripple-success/20",
+				warning: "bg-ripple-warning/10 [a]:hover:bg-ripple-warning/20 focus-visible:ring-ripple-warning/20 dark:focus-visible:ring-ripple-warning/40 text-ripple-warning-text dark:bg-ripple-warning/20",
 				outline: "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
 				ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
 				link: "text-primary underline-offset-4 hover:underline",

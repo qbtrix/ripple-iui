@@ -13,6 +13,10 @@
   buttons under the body. `ondismiss` shows a close button; the component does
   not hide itself, the caller owns visibility. Unnamed props (data-*, aria-*)
   are spread on the root.
+
+  Updated 2026-09-27 (canon gaps 2): `role` overrides the tone's default
+  live-region role (status|alert), for a warning that should not interrupt
+  or a success that should.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -26,7 +30,7 @@
 
   type Tone = 'info' | 'success' | 'warning' | 'error';
 
-  interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'class' | 'children' | 'title'> {
+  interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'class' | 'children' | 'title' | 'role'> {
     class?: string;
     tone?: Tone;
     title?: string;
@@ -39,6 +43,8 @@
     ondismiss?: () => void;
     /** aria-label for the dismiss button. */
     dismissLabel?: string;
+    /** Overrides the tone's default role (warning/error: alert, else status). */
+    role?: 'status' | 'alert';
   }
 
   let {
@@ -50,6 +56,7 @@
     actions,
     ondismiss,
     dismissLabel = 'Dismiss',
+    role,
     ...rest
   }: Props = $props();
 
@@ -83,7 +90,7 @@
   {...rest}
   data-inline-alert
   data-tone={tone}
-  role={tone === 'error' || tone === 'warning' ? 'alert' : 'status'}
+  role={role ?? (tone === 'error' || tone === 'warning' ? 'alert' : 'status')}
   class={s.base({ class: className })}
 >
   <Icon aria-hidden="true" class={s.icon()} />

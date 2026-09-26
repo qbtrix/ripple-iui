@@ -1,4 +1,10 @@
-<!-- dialog-content.svelte — reconciled 2026-09-14 (ripple overlay canonical): glass in tokens.
+<!-- dialog-content.svelte
+     2026-09-27 (canon gaps 2): `overlayClass` goes to the scrim, so a host that
+     stacks dialogs above its own chrome can lift both layers (`class="z-[100]"`
+     plus `overlayClass="z-[100]"`) without portalling into a layer of its own.
+     twMerge lets it replace the default z-50. No zIndex prop: the class pair
+     covers it.
+     reconciled 2026-09-14 (ripple overlay canonical): glass in tokens.
      bg-ripple-popover text-ripple-popover-foreground ring-1 ring-ripple-border +
      backdrop-blur; host-only bg-popover / ring-foreground/10 dropped.
      2026-09-17 (fix/port-gaps): fill moved from bg-ripple-surface to bg-ripple-popover
@@ -35,16 +41,19 @@
 		portalProps,
 		children,
 		showCloseButton = true,
+		overlayClass,
 		...restProps
 	}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
 		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DialogPortal>>;
 		children: Snippet;
 		showCloseButton?: boolean;
+		/** Classes for the scrim (Dialog.Overlay), e.g. a z-index to match `class`. */
+		overlayClass?: string;
 	} = $props();
 </script>
 
 <DialogPortal {...portalProps}>
-	<Dialog.Overlay />
+	<Dialog.Overlay class={overlayClass} />
 	<DialogPrimitive.Content
 		bind:ref
 		data-slot="dialog-content"
