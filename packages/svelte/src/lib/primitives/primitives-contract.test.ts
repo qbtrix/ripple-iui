@@ -1,6 +1,9 @@
 /**
  * @file primitives/primitives-contract.test.ts
- * @description NEW (2026-09-18). The contract behind the `./primitives` export
+ * @description Updated 2026-09-26 (feature pages canon, F1 / G5): `Label` and
+ *   `Textarea` added to EXPECTED and COMPONENTS.
+ *
+ *   NEW (2026-09-18). The contract behind the `./primitives` export
  *   subpath: an exact list of what it exports and what shape each name has.
  *
  *   Deliberately mechanical, and deliberately NOT a mount test. `ui-contract.
@@ -27,11 +30,13 @@ const EXPECTED = [
 	'Card',
 	'Chart',
 	'Input',
+	'Label',
 	'Progress',
 	'Select',
 	'Separator',
 	'Switch',
 	'Tabs',
+	'Textarea',
 	'badgeVariants',
 	'buttonVariants',
 ];
@@ -39,7 +44,7 @@ const EXPECTED = [
 /** Groups with sub-parts, re-exported as namespaces (`Card.Header`, …). */
 const NAMESPACES = ['Card', 'Chart', 'Select', 'Tabs'];
 /** Groups that are a single component. */
-const COMPONENTS = ['Badge', 'Button', 'Input', 'Progress', 'Separator', 'Switch'];
+const COMPONENTS = ['Badge', 'Button', 'Input', 'Label', 'Progress', 'Separator', 'Switch', 'Textarea'];
 /** `tv()` helpers the local barrels already export. */
 const VARIANTS = ['badgeVariants', 'buttonVariants'];
 

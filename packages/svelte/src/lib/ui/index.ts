@@ -72,6 +72,12 @@
  *   shell's sidebars and side panels: no registry entry, no manifest entry, so
  *   the count still reads 189.
  *
+ *   Updated 2026-09-26 (feature pages canon, F1): `PageHeader` joins the
+ *   molecules (a registered widget, newly listed here, now with `leading` and
+ *   `toolbar` snippets) and `InlineAlert` is a new ./ui-only molecule for inline
+ *   banners. EmptyState gained icon-snippet / size / tone / actions in place.
+ *   The manifest count still reads 189.
+ *
  *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
  *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
  *   on this surface — no spec-registry entry and no manifest entry, so the
@@ -111,6 +117,8 @@ export { default as Toast } from '../widgets/overlay/Toast.svelte';
 export { default as ListRow } from '../widgets/layout/ListRow.svelte';
 export { default as SectionHeader } from '../widgets/layout/SectionHeader.svelte';
 export { default as PanelHeader } from '../widgets/layout/PanelHeader.svelte';
+export { default as PageHeader } from '../widgets/layout/PageHeader.svelte';
+export { default as InlineAlert } from '../widgets/display/InlineAlert.svelte';
 
 /* ── overlays ──────────────────────────────────────────────────────────────
    The canonical overlay set, one namespace per kind (anchored / modal /

@@ -56,6 +56,8 @@
  *   Updated 2026-09-25 (shell new-look slice 1): entries for `Kbd`, `ListRow`,
  *   `SectionHeader` and `PanelHeader`, the four shell exports. No existing
  *   entry was edited.
+ *   Updated 2026-09-26 (feature pages canon, F1): entries for `PageHeader`
+ *   and `InlineAlert`. No existing entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -147,6 +149,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   ListRow: { label: 'General' },
   SectionHeader: { label: 'Rooms', count: 4 },
   PanelHeader: { title: 'Thread' },
+  // The feature-page exports.
+  PageHeader: { title: 'Agents' },
+  InlineAlert: { title: 'Could not load agents', tone: 'error' },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */

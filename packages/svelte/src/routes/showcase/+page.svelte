@@ -1,5 +1,8 @@
 <!--
   src/routes/showcase/+page.svelte
+  Updated 2026-09-26 (feature pages canon, F1): the sub-route nav links the new
+  /showcase/feature page (PageHeader, EmptyState, InlineAlert, Segmented counts,
+  Label + Textarea).
   Updated 2026-09-25 (shell new-look slice 1): the sub-route nav links the new
   /showcase/shell page (ListRow, SectionHeader, PanelHeader, Kbd, Segmented badges).
 -->
@@ -5332,6 +5335,7 @@
   <a href="/showcase/motion">Motion</a>
   <a href="/showcase/moving-indicator">Moving indicator</a>
   <a href="/showcase/shell">Shell</a>
+  <a href="/showcase/feature">Feature pages</a>
   <a href="/showcase/checkbox-group">Checkbox group</a>
   <a href="/showcase/marketing">Marketing pack</a>
   <a href="/showcase/premium">Premium pack</a>

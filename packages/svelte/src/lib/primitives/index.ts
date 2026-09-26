@@ -25,11 +25,15 @@
  *   component where it does not, and the variant helpers and types the local
  *   barrel already exports. Nothing is reshaped on the way through.
  *
- *   WHAT IS ABSENT, DELIBERATELY. `label`, `scroll-area` and `skeleton` — the
- *   three atoms paw-enterprise has that ripple has no twin for. They stay local
- *   to their consumer until ripple grows a real one; listing a name here that
- *   resolves to a different component is the exact mistake this file exists to
- *   avoid.
+ *   WHAT IS ABSENT, DELIBERATELY. `scroll-area` and `skeleton` — the atoms
+ *   paw-enterprise has that ripple has no twin for. They stay local to their
+ *   consumer until ripple grows a real one; listing a name here that resolves
+ *   to a different component is the exact mistake this file exists to avoid.
+ *
+ *   Updated 2026-09-26 (feature pages canon, F1 / G5): `Label` (a new shadcn
+ *   twin under components/ui/label, over bits-ui) and `Textarea` (the existing
+ *   components/ui/textarea) join the single components, for feature-page forms.
+ *   `./ui` keeps its own spec-widget `Textarea`; this is the shadcn one.
  */
 
 /* ── with sub-parts: namespaces, same as the overlays on ./ui ───────────── */
@@ -48,6 +52,8 @@ export {
 	type ButtonVariant,
 } from '../components/ui/button/index.js';
 export { Input } from '../components/ui/input/index.js';
+export { Label } from '../components/ui/label/index.js';
 export { Progress } from '../components/ui/progress/index.js';
 export { Separator } from '../components/ui/separator/index.js';
 export { Switch } from '../components/ui/switch/index.js';
+export { Textarea } from '../components/ui/textarea/index.js';
