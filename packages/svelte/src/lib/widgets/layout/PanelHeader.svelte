@@ -9,6 +9,9 @@
   Quiet chrome: a hairline bottom border, the 13px/12px type rhythm, ghost
   icon buttons with the accent/10 hover. Unnamed props (data-*, aria-*,
   handlers) are spread on the <header>.
+
+  Updated 2026-09-27 (canon gaps 2): `closeTitle` sets the close button's
+  title tooltip. Default none, so nothing changes for existing callers.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -23,6 +26,8 @@
     onclose?: () => void;
     /** aria-label for the close button. */
     closeLabel?: string;
+    /** title (tooltip) for the close button. None by default. */
+    closeTitle?: string;
     leading?: Snippet;
     actions?: Snippet;
     /** Replaces `title` when given. */
@@ -35,6 +40,7 @@
     subtitle,
     onclose,
     closeLabel = 'Close',
+    closeTitle,
     leading,
     actions,
     children,
@@ -60,6 +66,7 @@
     <button
       type="button"
       aria-label={closeLabel}
+      title={closeTitle}
       onclick={() => onclose?.()}
       class="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-ripple-muted-foreground outline-none transition-colors duration-150 ease-ripple-out hover:bg-ripple-accent/10 hover:text-ripple-surface-foreground focus-visible:ring-2 focus-visible:ring-ripple-ring/60"
     >

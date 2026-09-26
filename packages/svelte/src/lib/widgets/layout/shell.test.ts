@@ -1,4 +1,6 @@
 // @file widgets/layout/shell.test.ts
+// Updated 2026-09-27 (canon gaps 2): PanelHeader closeTitle, Segmented option
+//   class and leading snippet.
 // @description NEW 2026-09-25 (shell new-look slice 1). Behaviour tests for the
 //   three shell primitives on `./ui`: ListRow, SectionHeader and PanelHeader,
 //   plus the optional per-option badge on Segmented. Written red first.
@@ -237,5 +239,35 @@ describe('Segmented badge', () => {
     const badges = container.querySelectorAll('[data-segmented-badge]');
     expect(badges.length).toBe(1);
     expect(badges[0].textContent!.trim()).toBe('3');
+  });
+});
+
+describe('canon gaps 2: PanelHeader closeTitle, Segmented option class + leading', () => {
+  it('PanelHeader close button has no title by default and takes closeTitle', async () => {
+    const onclose = vi.fn();
+    const { container, rerender } = render(PanelHeader, { title: 'Thread', onclose });
+    expect(container.querySelector('button')!.hasAttribute('title')).toBe(false);
+    await rerender({ title: 'Thread', onclose, closeTitle: 'Close (Esc)' });
+    expect(container.querySelector('button')!.getAttribute('title')).toBe('Close (Esc)');
+  });
+
+  it('Segmented puts a per-option class on that option only', () => {
+    const { container } = render(Segmented, {
+      options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B', class: 'seg-mark-b' }],
+      value: 'a',
+    });
+    const btns = container.querySelectorAll('[role="radio"]');
+    expect(btns[0].classList.contains('seg-mark-b')).toBe(false);
+    expect(btns[1].classList.contains('seg-mark-b')).toBe(true);
+  });
+
+  it('Segmented renders the leading snippet per option with that option', () => {
+    const leading = createRawSnippet((opt: () => { value: string | number }) => ({
+      render: () => `<i data-lead="${opt().value}"></i>`,
+    }));
+    const { container } = render(Segmented, { options: ['x', 'y'], value: 'x', leading });
+    const btns = container.querySelectorAll('[role="radio"]');
+    expect(btns[0].querySelector('[data-lead="x"]')).not.toBeNull();
+    expect(btns[1].querySelector('[data-lead="y"]')).not.toBeNull();
   });
 });

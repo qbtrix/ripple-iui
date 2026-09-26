@@ -3,6 +3,7 @@
 //   PageHeader as a hand-written caller uses it from `./ui`: title, subtitle,
 //   eyebrow, the new `leading` and `toolbar` snippets, `actions`, children, and
 //   the two title sizes. Written red first.
+// Updated 2026-09-27 (canon gaps 2): the `titleTrailing` snippet.
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -57,5 +58,26 @@ describe('PageHeader', () => {
     const header = container.querySelector('header')!;
     expect(header.className).toContain('border-ripple-border');
     expect(container.querySelector('p')!.className).toContain('text-ripple-muted-foreground');
+  });
+});
+
+describe('PageHeader titleTrailing (canon gaps 2)', () => {
+  it('renders titleTrailing inline after the title, inside the title row', () => {
+    const titleTrailing = createRawSnippet(() => ({ render: () => '<span data-tag>Draft</span>' }));
+    const { container } = render(PageHeader, { title: 'Scenario', subtitle: 'Q3', titleTrailing });
+    const h1 = container.querySelector('h1')!;
+    const slot = container.querySelector('[data-page-header-title-trailing]')!;
+    expect(slot).not.toBeNull();
+    expect(slot.querySelector('[data-tag]')!.textContent).toBe('Draft');
+    expect(h1.nextElementSibling).toBe(slot);
+    expect(slot.parentElement!.className).toContain('items-center');
+    // the subtitle stays under the title row, not beside the tag
+    expect(slot.parentElement!.querySelector('p')).toBeNull();
+  });
+
+  it('leaves the title markup unchanged without titleTrailing', () => {
+    const { container } = render(PageHeader, { title: 'Scenario' });
+    expect(container.querySelector('[data-page-header-title-trailing]')).toBeNull();
+    expect(container.querySelector('h1')!.nextElementSibling).toBeNull();
   });
 });

@@ -2,6 +2,7 @@
      (added 2026-09-14, overlay canonical). Composes an OPEN Root around a
      Content for the three overlay kinds the a11y block checks, forwarding
      `data-testid` so the test can prove the wrapper keeps `{...restProps}`.
+     Updated 2026-09-27 (canon gaps 2): forwards `overlayClass` to Dialog.Content.
      `*.test.svelte` is the house fixture name: vitest does not collect it and
      svelte-package does not ship it. -->
 <script lang="ts">
@@ -11,12 +12,13 @@
 		kind,
 		testid,
 		contentClass,
-	}: { kind: 'dialog' | 'sheet' | 'dropdown'; testid: string; contentClass?: string } = $props();
+		overlayClass,
+	}: { kind: 'dialog' | 'sheet' | 'dropdown'; testid: string; contentClass?: string; overlayClass?: string } = $props();
 </script>
 
 {#if kind === 'dialog'}
 	<Dialog.Root open={true}>
-		<Dialog.Content data-testid={testid} class={contentClass}>
+		<Dialog.Content data-testid={testid} class={contentClass} {overlayClass}>
 			<Dialog.Title>Title</Dialog.Title>
 			<Dialog.Description>Body</Dialog.Description>
 		</Dialog.Content>

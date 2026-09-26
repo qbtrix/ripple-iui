@@ -1,3 +1,7 @@
+// src/lib/manifest/entries/search.ts
+// Manifest entry for the `search` widget.
+// Updated 2026-09-27 (canon gaps 2): documents the new `mode` prop
+// (suggest | filter).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const searchEntry: WidgetManifestEntry = {
@@ -12,6 +16,7 @@ export const searchEntry: WidgetManifestEntry = {
     alwaysShow: { type: 'boolean', required: false, description: 'Show dropdown even when query is empty.' },
     emptyText: { type: 'string', required: false, description: 'Empty-results text.' },
     loading: { type: 'boolean', required: false, description: 'Show loading indicator.' },
+    mode: { type: "'suggest' | 'filter'", required: false, description: "suggest (default): results dropdown. filter: plain search box, never opens a dropdown." },
   },
   events: {
     on_input: { type: 'EventAction', required: false, description: 'Fired on every keystroke.' },

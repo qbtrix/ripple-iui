@@ -6,10 +6,17 @@
   (four tones, actions, dismiss) and the Label + Textarea primitives. Imports
   from `$lib/ui/index.js` and `$lib/primitives/index.js` directly, the way a
   hand-written caller does. Dev route only; SvelteKit routes are not packaged.
+
+  Updated 2026-09-27 (canon gaps 2): a "canon gaps 2" section at the bottom
+  demos Search mode="filter" with aria-label/autocomplete/spellcheck, an
+  InlineAlert with its role overridden, the success/warning Badge variants,
+  Segmented option `class` + `leading` dots, Dialog.Content `overlayClass`,
+  and PanelHeader `closeTitle`. The Meetings PageHeader shows `titleTrailing`
+  (a Beta tag beside the title).
 -->
 <script lang="ts">
-  import { PageHeader, EmptyState, InlineAlert, Segmented, Search } from '$lib/ui/index.js';
-  import { Button, Label, Textarea } from '$lib/primitives/index.js';
+  import { PageHeader, EmptyState, InlineAlert, Segmented, Search, PanelHeader, Dialog } from '$lib/ui/index.js';
+  import { Button, Label, Textarea, Badge } from '$lib/primitives/index.js';
   import BotIcon from '@lucide/svelte/icons/bot';
   import PlusIcon from '@lucide/svelte/icons/plus';
 
@@ -18,6 +25,10 @@
   let dismissed = $state<string[]>([]);
   let bio = $state('');
   let log = $state('');
+  let filter = $state('');
+  let category = $state('all');
+  let dialogOpen = $state(false);
+  const dots: Record<string, string> = { chat: 'bg-ripple-info', tool: 'bg-ripple-warning', error: 'bg-ripple-error' };
   const tones = ['info', 'success', 'warning', 'error'] as const;
   const copy: Record<(typeof tones)[number], [string, string]> = {
     info: ['Syncing calendars', 'Events from Google appear in a minute or two.'],
@@ -36,6 +47,7 @@
       {#snippet leading()}
         <span class="inline-flex size-9 items-center justify-center rounded-ripple bg-ripple-accent/10 text-ripple-accent"><BotIcon size={18} /></span>
       {/snippet}
+      {#snippet titleTrailing()}<Badge variant="warning">Beta</Badge>{/snippet}
       {#snippet actions()}
         <Button size="sm" onclick={() => (log = 'new meeting')}><PlusIcon size={14} /> New meeting</Button>
       {/snippet}
@@ -94,6 +106,50 @@
     <Label for="demo-bio">Agent instructions</Label>
     <Textarea id="demo-bio" placeholder="What should this agent do?" bind:value={bio} />
     <p class="text-[12px] text-muted-foreground">{bio.length} characters</p>
+  </section>
+
+  <section class="max-w-xl space-y-3" data-demo="canon-gaps-2">
+    <h2 class="text-sm font-medium">Canon gaps 2</h2>
+    <Search
+      mode="filter"
+      aria-label="Filter activity"
+      autocomplete="off"
+      spellcheck={false}
+      placeholder="Filter activity"
+      value={filter}
+      oninput={(q) => (filter = q)}
+    />
+    <InlineAlert tone="warning" role="status" title="Paste can't be read" description="A warning that does not interrupt: role=status." />
+    <div class="flex gap-2">
+      <Badge variant="success">Live</Badge>
+      <Badge variant="warning">Expiring</Badge>
+      <Badge variant="destructive">Failed</Badge>
+    </div>
+    <Segmented
+      size="sm"
+      value={category}
+      options={[
+        { value: 'all', label: 'All' },
+        { value: 'chat', label: 'Chat' },
+        { value: 'tool', label: 'Tools' },
+        { value: 'error', label: 'Errors', class: 'text-ripple-error-text' },
+      ]}
+      onchange={(v) => (category = String(v))}
+    >
+      {#snippet leading(opt)}
+        {#if dots[String(opt.value)]}<span aria-hidden="true" class="size-1.5 rounded-full {dots[String(opt.value)]}"></span>{/if}
+      {/snippet}
+    </Segmented>
+    <div class="overflow-hidden rounded-ripple ring-1 ring-ripple-border">
+      <PanelHeader title="Thread" subtitle="3 replies" closeTitle="Close (Esc)" onclose={() => (log = 'close thread')} />
+    </div>
+    <Button size="sm" variant="outline" onclick={() => (dialogOpen = true)}>Open dialog at z-[100]</Button>
+    <Dialog.Root bind:open={dialogOpen}>
+      <Dialog.Content class="z-[100]" overlayClass="z-[100]">
+        <Dialog.Title>Stacked dialog</Dialog.Title>
+        <Dialog.Description>Content and scrim both sit at z-[100].</Dialog.Description>
+      </Dialog.Content>
+    </Dialog.Root>
   </section>
 
   <p class="text-sm text-muted-foreground" aria-live="polite">{log}</p>
