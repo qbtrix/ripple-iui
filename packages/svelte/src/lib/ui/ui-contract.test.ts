@@ -53,6 +53,9 @@
  *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
  *   and `SelectionActions` added, both new exports. No existing entry was
  *   edited.
+ *   Updated 2026-09-25 (shell new-look slice 1): entries for `Kbd`, `ListRow`,
+ *   `SectionHeader` and `PanelHeader`, the four shell exports. No existing
+ *   entry was edited.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -139,6 +142,11 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // Both paint with no props; these make the mounted output name itself.
   Switch: { label: 'Notifications' },
   ProgressRing: { value: 40 },
+  // The shell exports. Each paints with just its label or title.
+  Kbd: { keys: ['⌘', 'K'] },
+  ListRow: { label: 'General' },
+  SectionHeader: { label: 'Rooms', count: 4 },
+  PanelHeader: { title: 'Thread' },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */

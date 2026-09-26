@@ -66,6 +66,12 @@
  *   PixelLoader does NOT replace `Loading` — that stays the library's generic
  *   spinner, registered and spec-drivable; this is the agent-work status line.
  *
+ *   Updated 2026-09-25 (shell new-look slice 1): `Kbd` joins the atoms (a
+ *   registered widget, newly listed here). `ListRow`, `SectionHeader` and
+ *   `PanelHeader` join the molecules as new ./ui-only exports for the app
+ *   shell's sidebars and side panels: no registry entry, no manifest entry, so
+ *   the count still reads 189.
+ *
  *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
  *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
  *   on this surface — no spec-registry entry and no manifest entry, so the
@@ -87,6 +93,7 @@ export { default as Skeleton } from '../widgets/display/Skeleton.svelte';
 export { default as ProgressRing } from '../widgets/display/ProgressRing.svelte';
 export { default as Shimmer } from '../widgets/premium/Shimmer.svelte';
 export { default as Separator } from '../widgets/layout/Separator.svelte';
+export { default as Kbd } from '../widgets/display/Kbd.svelte';
 
 /* ── molecules ─────────────────────────────────────────────────────────────
    Compose atoms; still no app state. */
@@ -101,6 +108,9 @@ export { default as CodeBlock } from '../widgets/display/CodeBlock.svelte';
 export { default as Diff } from '../widgets/display/Diff.svelte';
 export { default as Markdown } from '../widgets/display/Markdown.svelte';
 export { default as Toast } from '../widgets/overlay/Toast.svelte';
+export { default as ListRow } from '../widgets/layout/ListRow.svelte';
+export { default as SectionHeader } from '../widgets/layout/SectionHeader.svelte';
+export { default as PanelHeader } from '../widgets/layout/PanelHeader.svelte';
 
 /* ── overlays ──────────────────────────────────────────────────────────────
    The canonical overlay set, one namespace per kind (anchored / modal /
