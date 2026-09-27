@@ -17,6 +17,8 @@
 //   workspace symlink, so vite's resolver hard-failed with "Failed to resolve
 //   entry for package @ripple-ui/core" in 62 test files. Resolving straight to
 //   source removes the build-order dependency and the stale-copy hazard.
+// Updated: 2026-09-27 — aliases for the new core subpaths `./headless/slim`
+//   and `./manifest` (the action grammar and spec envelope moved there).
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
@@ -28,6 +30,8 @@ const alias = [
   // Mirror packages/core/package.json "exports" — `./motion` maps to engine.ts.
   { find: /^@ripple-ui\/core$/, replacement: `${core}/index.ts` },
   { find: /^@ripple-ui\/core\/headless$/, replacement: `${core}/headless/index.ts` },
+  { find: /^@ripple-ui\/core\/headless\/slim$/, replacement: `${core}/headless/slim.ts` },
+  { find: /^@ripple-ui\/core\/manifest$/, replacement: `${core}/manifest/index.ts` },
   { find: /^@ripple-ui\/core\/schema$/, replacement: `${core}/schema/index.ts` },
   { find: /^@ripple-ui\/core\/motion$/, replacement: `${core}/motion/engine.ts` },
 ];

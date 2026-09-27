@@ -11,6 +11,8 @@
  *
  * @changes
  *   - 2026-09-27: created with the slim entry.
+ *   - 2026-09-27: also walks `@ripple-ui/core/manifest`, which a slim host
+ *     loads to build its manifest and must be just as free of both.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -70,9 +72,9 @@ function resolveLocal(fromKey: string, spec: string): string | null {
 	return null;
 }
 
-function crawl(): Set<string> {
+function crawl(entry: string = ENTRY): Set<string> {
 	const seen = new Set<string>();
-	const queue = [ENTRY];
+	const queue = [entry];
 	while (queue.length > 0) {
 		const key = queue.pop()!;
 		if (seen.has(key)) continue;
@@ -103,6 +105,12 @@ describe('@ripple-ui/core/headless/slim imports', () => {
 
 	it('never reaches the schema modules, which run zod at import time', () => {
 		expect([...reached].filter((k) => k.includes('/schema/'))).toEqual([]);
+	});
+
+	it('keeps the manifest entry free of the full dispatcher and the schema too', () => {
+		const manifest = [...crawl('../manifest/index.ts')];
+		expect(manifest).toEqual(expect.arrayContaining(['../manifest/index.ts', '../manifest/slim.ts', '../manifest/actions.ts']));
+		expect(manifest.filter((k) => k.endsWith('/event-dispatcher.ts') || k.includes('/schema/'))).toEqual([]);
 	});
 
 	it('does count a value import, so an erased type import is the only exemption', () => {

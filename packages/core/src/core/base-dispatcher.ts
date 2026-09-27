@@ -15,6 +15,8 @@
  * @changes
  *   - 2026-09-27: created by splitting `event-dispatcher.ts`. The method
  *     bodies moved here unchanged; `EventDispatcher` behaves as before.
+ *   - 2026-09-27: `BASE_ACTIONS` names the actions handled here, for the
+ *     slim manifest.
  */
 
 import type {
@@ -52,6 +54,28 @@ export class FlowAbortError extends Error {
 export type OnEventCallback = (
 	event: RippleEvent
 ) => void | Promise<RippleEventResult | void>;
+
+/**
+ * The actions `BaseDispatcher` runs itself. Anything else goes to
+ * `dispatchOther` (a warning here; the rest of the grammar in
+ * `EventDispatcher`). The slim manifest documents exactly these, and
+ * `manifest/slim.test.ts` dispatches each one's example to hold the two
+ * together.
+ */
+export const BASE_ACTIONS = [
+	'set',
+	'toggle',
+	'push',
+	'remove',
+	'open',
+	'navigate',
+	'toast',
+	'emit',
+	'pin',
+	'unpin'
+] as const;
+
+export type BaseAction = (typeof BASE_ACTIONS)[number];
 
 export class BaseDispatcher {
 	constructor(

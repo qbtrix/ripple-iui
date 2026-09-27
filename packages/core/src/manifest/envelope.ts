@@ -1,0 +1,55 @@
+/**
+ * @file manifest/envelope.ts
+ * @description The top-level spec envelope contract (`ui`, `state`), moved
+ * here from `@ripple-ui/svelte`'s manifest on 2026-09-27 so both the full and
+ * the slim manifest share it. Content unchanged.
+ */
+
+/**
+ * Top-level spec envelope contract — the shape every Ripple spec MUST follow.
+ *
+ * The agent's most expensive failure mode is inventing the wrong field name
+ * for the renderable tree (`root` / `tree` / `view` / `body` / `content`)
+ * and shipping a spec the renderer can't mount. Documenting the envelope
+ * here, in the same artifact that documents widget shapes, anchors the
+ * field names in the LLM context alongside the per-widget reference.
+ */
+export interface SpecEnvelope {
+  /** The required top-level field name for the renderable node tree. */
+  uiField: 'ui';
+  /** The required top-level field name for the StateManager seed. */
+  stateField: 'state';
+  /** Current envelope version. */
+  version: '1.0';
+  /** Aliases the agent sometimes invents — explicitly NOT supported. */
+  aliasesNotAllowed: readonly string[];
+  /** One-line contract summary suitable for prompt injection. */
+  description: string;
+  /** A minimal but complete example showing every required field in place. */
+  example: Record<string, unknown>;
+}
+
+export const specEnvelope: SpecEnvelope = {
+  uiField: 'ui',
+  stateField: 'state',
+  version: '1.0',
+  aliasesNotAllowed: ['root', 'tree', 'view', 'body', 'content'],
+  description:
+    'A Ripple spec is a JSON object with two top-level fields that matter for ' +
+    "rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` " +
+    '(the StateManager seed — required when any node uses `bind` or reads ' +
+    '`{state.*}`). The renderable tree field is named `ui` exactly — never ' +
+    '`root`, `tree`, `view`, `body`, or `content`. Specs that use those ' +
+    'aliases will not render.',
+  example: {
+    version: '1.0',
+    state: { draft: '', items: [] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        { type: 'input', bind: 'draft', props: { placeholder: 'Add an item' } },
+      ],
+    },
+  },
+};

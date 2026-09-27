@@ -27,6 +27,11 @@
 import { RIPPLE_VERSION } from '../version.js';
 
 import { manifestActions } from './actions.js';
+// ActionSpec, SpecEnvelope and specEnvelope moved to @ripple-ui/core/manifest on
+// 2026-09-27 (they describe the engine, not any widget). Re-exported so every
+// existing import from this module keeps working.
+import { specEnvelope, type ActionSpec, type SpecEnvelope } from '@ripple-ui/core/manifest';
+export { specEnvelope, type ActionSpec, type SpecEnvelope };
 import { accordionEntry } from './entries/accordion.js';
 import { alertEntry } from './entries/alert.js';
 import { analystBarEntry } from './entries/analyst-bar.js';
@@ -302,44 +307,7 @@ export interface WidgetManifestEntry {
   pockets?: NamedPocketSpec[];
 }
 
-/**
- * Documents a single EventAction variant — what fields it takes, when to
- * use it, and a minimal valid example. Mirrors `EventHandler` zod schemas
- * in `src/lib/schema/event-handler.ts`. The drift test ensures every
- * `example` here parses against the live schema.
- */
-export interface ActionSpec {
-  /** One-line guidance — what this action does and when to use it. */
-  description: string;
-  /** Field name -> "type — note". Mark required fields with no `?`. */
-  shape: Record<string, string>;
-  /** A minimal valid handler — must parse against EventHandler. */
-  example: Record<string, unknown>;
-}
 
-/**
- * Top-level spec envelope contract — the shape every Ripple spec MUST follow.
- *
- * The agent's most expensive failure mode is inventing the wrong field name
- * for the renderable tree (`root` / `tree` / `view` / `body` / `content`)
- * and shipping a spec the renderer can't mount. Documenting the envelope
- * here, in the same artifact that documents widget shapes, anchors the
- * field names in the LLM context alongside the per-widget reference.
- */
-export interface SpecEnvelope {
-  /** The required top-level field name for the renderable node tree. */
-  uiField: 'ui';
-  /** The required top-level field name for the StateManager seed. */
-  stateField: 'state';
-  /** Current envelope version. */
-  version: '1.0';
-  /** Aliases the agent sometimes invents — explicitly NOT supported. */
-  aliasesNotAllowed: readonly string[];
-  /** One-line contract summary suitable for prompt injection. */
-  description: string;
-  /** A minimal but complete example showing every required field in place. */
-  example: Record<string, unknown>;
-}
 
 export interface WidgetManifest {
   schema: 'ripple.manifest/v1';
@@ -358,30 +326,6 @@ export interface WidgetManifest {
   widgets: WidgetManifestEntry[];
 }
 
-export const specEnvelope: SpecEnvelope = {
-  uiField: 'ui',
-  stateField: 'state',
-  version: '1.0',
-  aliasesNotAllowed: ['root', 'tree', 'view', 'body', 'content'],
-  description:
-    'A Ripple spec is a JSON object with two top-level fields that matter for ' +
-    "rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` " +
-    '(the StateManager seed — required when any node uses `bind` or reads ' +
-    '`{state.*}`). The renderable tree field is named `ui` exactly — never ' +
-    '`root`, `tree`, `view`, `body`, or `content`. Specs that use those ' +
-    'aliases will not render.',
-  example: {
-    version: '1.0',
-    state: { draft: '', items: [] },
-    ui: {
-      type: 'flex',
-      props: { direction: 'column', gap: '12px' },
-      children: [
-        { type: 'input', bind: 'draft', props: { placeholder: 'Add an item' } },
-      ],
-    },
-  },
-};
 
 export const manifestEntries: WidgetManifestEntry[] = [
   accordionEntry,
