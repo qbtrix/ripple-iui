@@ -1,6 +1,14 @@
 # .github/workflows/release-manifest.yml
-# Publishes @ripple-ui/core and @ripple-ui/svelte to npm and attaches the
-# manifest bundle to a GitHub release, on a v* tag push or a manual dispatch.
+# Publishes a GitHub release on a v* tag push or a manual dispatch: the
+# manifest bundle plus a packed tarball of each package. Publishing
+# @ripple-ui/core and @ripple-ui/svelte to npm is opt-in.
+# Updated 2026-09-27 (v0.8.0): npm publishing runs only on a manual dispatch
+# with publish_npm: true. A tag push used to try npm every time, and every
+# such run failed without an NPM_TOKEN; with a token present anywhere (repo
+# or org), a tag would publish to npm whether or not that was intended. The
+# release now also carries ripple-ui-core-<v>.tgz and ripple-ui-svelte-<v>.tgz
+# (svelte's core dependency rewritten to ^<core version>, as for npm), so the
+# GitHub release alone is installable.
 # Updated 2026-09-27: fixed for the bun workspace layout (packages/core,
 # packages/svelte). `bun publish` ran at the repo root, whose package.json is
 # the private workspace root, so v0.7.0 failed with "attempted to publish a
@@ -33,6 +41,11 @@ on:
         description: 'Tag to publish (e.g. v0.2.1). Creates the tag if it does not exist.'
         required: true
         type: string
+      publish_npm:
+        description: 'Also publish both packages to npm (needs NPM_TOKEN).'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -56,6 +69,7 @@ jobs:
         run: bun run build
 
       - name: Publish @ripple-ui/core
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
         working-directory: packages/core
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -76,6 +90,7 @@ jobs:
           bun publish --access public
 
       - name: Publish @ripple-ui/svelte
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
         working-directory: packages/svelte
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -100,6 +115,22 @@ jobs:
           ' "$CORE_V"
           grep -n '"@ripple-ui/core"' package.json
           bun publish --access public
+
+      - name: Pack tarballs
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          (cd packages/core && npm pack --pack-destination ../../release)
+          # Same rewrite as the npm publish step (idempotent if it already ran):
+          # file:../core means nothing outside this repo.
+          CORE_V=$(node -p "require('./packages/core/package.json').version")
+          (cd packages/svelte && node -e '
+            const fs = require("fs");
+            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            p.dependencies["@ripple-ui/core"] = "^" + process.argv[1];
+            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
+          ' "$CORE_V" && npm pack --pack-destination ../../release)
+          ls -la release
 
       - name: Stage release assets
         run: |
@@ -137,3 +168,5 @@ jobs:
           files: |
             release/manifest.json
             release/ripple-manifest.zip
+            release/ripple-ui-core-*.tgz
+            release/ripple-ui-svelte-*.tgz

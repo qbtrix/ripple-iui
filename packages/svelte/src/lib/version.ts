@@ -14,6 +14,8 @@
  * @created 2026-06-28 (SP-1c-b — feat/ripple-editor-sp1cb)
  * @updated 2026-09-17 — 0.7.0, the first release on the packages/ workspace
  *   layout (ripple #119). v0.6.0 was tagged at 0.5.0; this brings them back in step.
+ * @updated 2026-09-27 — 0.8.0 (core 0.6.0): slim headless runtime, slim
+ *   manifest, loop variables in headless handlers (#142, #143).
  */
 
-export const RIPPLE_VERSION = '0.7.0';
+export const RIPPLE_VERSION = '0.8.0';
