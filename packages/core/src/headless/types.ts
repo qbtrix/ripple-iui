@@ -15,6 +15,8 @@
  *
  * @changes
  *   - 2026-08-25: created (headless core, wave 1).
+ *   - 2026-09-27: `ResolvedNode.loop`, the loop variables a node was resolved
+ *     under, so a handler inside `each` can still read `{item.x}` when it runs.
  */
 
 import type { UINode } from '../schema/ui-spec.js';
@@ -55,6 +57,13 @@ export interface ResolvedNode {
 	 * one against live state.
 	 */
 	events?: Record<string, EventHandlerOrArray>;
+	/**
+	 * Loop variables in scope when this node was resolved (`item`, `index`,
+	 * or custom `item_as` / `index_as` names). Present only for nodes inside an
+	 * `each`. `dispatch` layers them back in so `{item.id}` in a handler reads
+	 * the row it was rendered for, as it does in NodeRenderer.
+	 */
+	loop?: Record<string, unknown>;
 	/** The spec node this was resolved from. Useful for editors and debugging. */
 	source?: UINode;
 }

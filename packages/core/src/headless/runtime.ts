@@ -31,6 +31,9 @@
  *
  * @changes
  *   - 2026-08-25: created (headless core, wave 1).
+ *   - 2026-09-27: `dispatch` resolves handlers with the node's loop variables,
+ *     so an action inside `each` reads its own row. It used to see state and
+ *     data only, and `{item.id}` resolved to nothing.
  */
 
 import type { UINode } from '../schema/ui-spec.js';
@@ -146,14 +149,21 @@ export class RippleHeadless {
 		}
 		const handler = node.events?.[event];
 		if (!handler) return;
-		await this.dispatchHandler(handler, value);
+		await this.dispatchHandler(handler, value, node.loop);
 	}
 
-	/** Run a handler spec directly, outside any node. */
-	async dispatchHandler(handler: EventHandlerOrArray, value?: unknown): Promise<void> {
+	/**
+	 * Run a handler spec directly, outside any node. `loop` layers loop
+	 * variables (`item`, `index`, ...) into the resolver context.
+	 */
+	async dispatchHandler(
+		handler: EventHandlerOrArray,
+		value?: unknown,
+		loop?: Record<string, unknown>
+	): Promise<void> {
 		await this.dispatcher.dispatch(
 			handler,
-			{ state: this.state.state, data: this.data },
+			{ state: this.state.state, data: this.data, ...(loop ?? {}) },
 			value
 		);
 	}
