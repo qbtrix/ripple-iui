@@ -74,8 +74,8 @@
   ],
   "scripts": {
     "dev": "vite dev",
-    "build": "bun run lint:anim && svelte-package && bun run scripts/build-manifest.ts",
-    "build:manifest": "bun run scripts/build-manifest.ts",
+    "build": "bun run lint:anim && svelte-package && bun --conditions source scripts/build-manifest.ts",
+    "build:manifest": "bun --conditions source scripts/build-manifest.ts",
     "lint": "oxlint && bun run lint:anim",
     "lint:anim": "bun run scripts/check-no-toplevel-anim-imports.ts",
     "preview": "vite preview",
