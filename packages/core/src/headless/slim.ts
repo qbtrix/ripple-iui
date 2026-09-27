@@ -39,7 +39,13 @@ export function createSlimHeadlessRuntime(options: HeadlessRuntimeOptions): Slim
 }
 
 export { HeadlessRuntimeBase, type HeadlessRuntimeOptions, type DispatcherFactory } from './runtime-base.js';
-export { BaseDispatcher, FlowAbortError, type OnEventCallback } from '../core/base-dispatcher.js';
+export {
+	BaseDispatcher,
+	BASE_ACTIONS,
+	FlowAbortError,
+	type BaseAction,
+	type OnEventCallback
+} from '../core/base-dispatcher.js';
 export { resolveTree } from './resolve-tree.js';
 export { HeadlessStateManager, createHeadlessStateManager } from './state.js';
 export type { ResolvedNode, ResolvedTree, ResolveContext } from './types.js';

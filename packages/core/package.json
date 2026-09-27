@@ -43,6 +43,11 @@
       "types": "./dist/headless/slim.d.ts",
       "default": "./dist/headless/slim.js"
     },
+    "./manifest": {
+      "source": "./src/manifest/index.ts",
+      "types": "./dist/manifest/index.d.ts",
+      "default": "./dist/manifest/index.js"
+    },
     "./schema": {
       "source": "./src/schema/index.ts",
       "types": "./dist/schema/index.d.ts",
