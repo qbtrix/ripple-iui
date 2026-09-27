@@ -9,6 +9,7 @@
  *
  * @changes
  *   - 2026-09-27: created.
+ *   - 2026-09-27: exports SLIM_WIDGETS, the standard atoms for slim hosts.
  */
 
 export { manifestActions, type ActionSpec } from './actions.js';
@@ -22,3 +23,4 @@ export {
 	type SlimWidgetField
 } from './slim.js';
 export { BASE_ACTIONS, type BaseAction } from '../core/base-dispatcher.js';
+export { SLIM_WIDGETS } from './slim-widgets.js';
