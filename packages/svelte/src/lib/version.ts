@@ -16,6 +16,8 @@
  *   layout (ripple #119). v0.6.0 was tagged at 0.5.0; this brings them back in step.
  * @updated 2026-09-27 — 0.8.0 (core 0.6.0): slim headless runtime, slim
  *   manifest, loop variables in headless handlers (#142, #143).
+ * @updated 2026-09-27 — 0.9.0 (core 0.7.0): SLIM_WIDGETS, and the release
+ *   ships manifest.slim.json.
  */
 
-export const RIPPLE_VERSION = '0.8.0';
+export const RIPPLE_VERSION = '0.9.0';
