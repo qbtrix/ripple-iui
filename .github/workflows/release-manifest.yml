@@ -9,6 +9,9 @@
 # release now also carries ripple-ui-core-<v>.tgz and ripple-ui-svelte-<v>.tgz
 # (svelte's core dependency rewritten to ^<core version>, as for npm), so the
 # GitHub release alone is installable.
+# Updated 2026-09-27: the release also attaches manifest.slim.json, the slim
+# manifest (spec envelope + the slim runtime's actions, no widgets), next to
+# the full manifest.json.
 # Updated 2026-09-27: fixed for the bun workspace layout (packages/core,
 # packages/svelte). `bun publish` ran at the repo root, whose package.json is
 # the private workspace root, so v0.7.0 failed with "attempted to publish a
@@ -137,6 +140,7 @@ jobs:
           set -euo pipefail
           mkdir -p release/ripple-manifest/schema
           cp packages/svelte/dist/manifest.json release/manifest.json
+          cp packages/svelte/dist/manifest.slim.json release/manifest.slim.json
           cp -r packages/svelte/dist release/ripple-manifest/dist
           cp packages/svelte/dist/manifest.json release/ripple-manifest/manifest.json
           find packages/core/src/schema -maxdepth 1 -name '*.ts' ! -name '*.test.ts' -exec cp {} release/ripple-manifest/schema/ \;
@@ -167,6 +171,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             release/manifest.json
+            release/manifest.slim.json
             release/ripple-manifest.zip
             release/ripple-ui-core-*.tgz
             release/ripple-ui-svelte-*.tgz
