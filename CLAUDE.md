@@ -59,7 +59,9 @@ The **normalizer** (`src/lib/core/normalizer.ts`) converts UISpec → UniversalS
 - **StateStore** (`state-store.ts`) — the state INTERFACE both runtimes implement. `EventDispatcher` and the headless resolver depend on this, never on a concrete class; that indirection is what keeps the engine renderer-agnostic.
 - **StateManager** — Svelte 5 `$state` rune-based `StateStore`. Path-based get/set with dot notation. Lives in `packages/svelte/src/lib/core/state-manager.svelte.ts`, NOT in core: `$state` needs the Svelte compiler. Its rune-free twin is `packages/core/src/headless/state.ts`; `packages/svelte/src/lib/core/state-parity.test.ts` holds the two to identical semantics (it lives there because it is the only place both classes are reachable).
 - **ExpressionResolver** (`expression-resolver.ts`) — Resolves `{state.foo}`, `{item.price}`, ternaries, comparisons, and template strings within props.
-- **EventDispatcher** (`event-dispatcher.ts`) — Handles actions: `set`, `api`, `navigate`, `toast`, `emit`, `open`, `pin`, `unpin`. Resolves expressions in URLs/body/headers.
+- **BaseDispatcher** (`base-dispatcher.ts`) — The dispatch loop, local state actions (`set`, `toggle`, `push`, `remove`, `open`) and fire-and-forget host actions (`navigate`, `toast`, `emit`, `pin`, `unpin`). Any other action warns and is skipped.
+- **EventDispatcher** (`event-dispatcher.ts`) — Extends `BaseDispatcher` with `animate`, the result-chaining host calls (`api`, `run_source`, `call_binding`, `invoke_tool`) and the flow actions (`flow`, `branch`, `confirm`, `validate`, `delay`, `invoke`). Resolves expressions in URLs/body/headers. The Svelte renderer and `createHeadlessRuntime` use this one.
+- **Slim headless runtime** (`headless/slim.ts`, exported as `@ripple-ui/core/headless/slim`) — `SlimHeadless`: the headless runtime on `BaseDispatcher` only, for size-constrained hosts (about 6 KB gzipped against 7.5 KB). Both runtimes share `headless/runtime-base.ts`. `slim.imports.test.ts` fails if anything reachable from `slim.ts` imports `event-dispatcher.ts` or the schema. A new action goes in `EventDispatcher` unless every host needs it.
 
 ### Rendering Pipeline
 
