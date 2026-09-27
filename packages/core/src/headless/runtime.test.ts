@@ -182,6 +182,37 @@ describe('RippleHeadless', () => {
 		expect(rt.state.get('done')).toBe(1);
 	});
 
+	describe('handlers inside each', () => {
+		const listSpec = node({
+			type: 'each',
+			items: '{state.rows}',
+			item_as: 'row',
+			index_as: 'i',
+			children: [
+				node({
+					type: 'button',
+					on_click: { action: 'set', target: 'picked', value: '{row.id}:{i}' }
+				})
+			]
+		} as Partial<UINode>);
+
+		it('resolves loop variables when the handler runs', async () => {
+			const rt = createHeadlessRuntime({
+				spec: listSpec,
+				state: { rows: [{ id: 'a' }, { id: 'b' }], picked: null }
+			});
+			// Two copies: the second is the discriminating one. With a single row a
+			// lost loop context could still look right by accident.
+			await rt.dispatch(rt.tree.nodes[1], 'onclick');
+			expect(rt.state.get('picked')).toBe('b:1');
+		});
+
+		it('carries loop variables only on nodes that were inside a loop', () => {
+			const rt = createHeadlessRuntime({ spec: counterSpec, state: { count: 0 } });
+			expect(rt.findById('inc')!.loop).toBeUndefined();
+		});
+	});
+
 	it('is a no-op when the node has no handler for the event', async () => {
 		const rt = createHeadlessRuntime({ spec: node({ type: 'text', id: 't' }), state: {} });
 		await expect(rt.dispatch(rt.findById('t')!, 'onclick')).resolves.toBeUndefined();

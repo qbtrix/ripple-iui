@@ -31,6 +31,9 @@
  *
  * @changes
  *   - 2026-08-25: created (headless core, wave 1).
+ *   - 2026-09-27: nodes resolved inside `each` carry their loop variables as
+ *     `loop`, so handlers dispatched later see the same `item` / `index` the
+ *     props were resolved with.
  */
 
 import type { UINode } from '../schema/ui-spec.js';
@@ -215,6 +218,10 @@ function resolveNode(node: UINode, ctx: ResolveContext): ResolvedNode[] {
 
 	const events = collectEvents(node);
 	if (events) resolved.events = events;
+
+	// 6. Loop scope, kept for handlers. Events stay raw specs until dispatch,
+	//    and by then the loop that produced this node is gone.
+	if (ctx.loop && Object.keys(ctx.loop).length > 0) resolved.loop = ctx.loop;
 
 	return [resolved];
 }
