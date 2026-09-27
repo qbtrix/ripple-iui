@@ -1,6 +1,6 @@
 {
   "name": "@ripple-ui/core",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "license": "MIT",
   "description": "Framework-agnostic spec engine for Ripple: schema, expressions, state, events, and a headless runtime that resolves JSON specs into plain trees.",
   "keywords": [
