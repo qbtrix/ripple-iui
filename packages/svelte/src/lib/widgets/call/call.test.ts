@@ -5,6 +5,7 @@
 //   the primitives Button. Written red first. Pure presentation: no media, no
 //   LiveKit. Layout (rects) is stubbed where jsdom has none; CSS-only behaviour
 //   (the bar label hiding under 640px, the glows) is not asserted here.
+//   UPDATED 2026-09-30: FloatingDock `snap={false}` and the centred corners.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -259,6 +260,34 @@ describe('FloatingDock', () => {
     await fireEvent(window, new Event('resize'));
     expect(dock.style.left).toBe('288px');
     expect(dock.style.top).toBe('288px');
+  });
+
+  it('snap={false} clamps in place on release, no side snap', async () => {
+    const onPositionChange = vi.fn();
+    const { container } = render(FloatingDock, { label: 'Call dock', snap: false, onPositionChange, children: html('<p>x</p>') });
+    const dock = container.querySelector('[role="region"]') as HTMLElement;
+    stubLayout(dock);
+    await fireEvent.pointerDown(dock, { clientX: 150, clientY: 150, button: 0, pointerId: 1 });
+    await fireEvent.pointerMove(dock, { clientX: 250, clientY: 450, pointerId: 1 });
+    await fireEvent.pointerUp(dock, { pointerId: 1 });
+    expect(onPositionChange).toHaveBeenLastCalledWith({ x: 200, y: 400 });
+    expect(dock.style.left).toBe('200px');
+    // still clamped inside the bounds
+    await fireEvent.pointerDown(dock, { clientX: 150, clientY: 150, button: 0, pointerId: 1 });
+    await fireEvent.pointerMove(dock, { clientX: 5000, clientY: -500, pointerId: 1 });
+    await fireEvent.pointerUp(dock, { pointerId: 1 });
+    expect(onPositionChange).toHaveBeenLastCalledWith({ x: 788, y: 12 });
+  });
+
+  it('starts at top-center or bottom-center, `gap` from the edge', () => {
+    for (const corner of ['top-center', 'bottom-center'] as const) {
+      const { container } = render(FloatingDock, { label: 'Calls', corner, gap: 20, children: html('<p>x</p>') });
+      const dock = container.querySelector('[role="region"]') as HTMLElement;
+      expect(dock.dataset.corner).toBe(corner);
+      // the corner rules read the gap from this token
+      expect(dock.style.getPropertyValue('--ripple-dock-gap')).toBe('20px');
+      cleanup();
+    }
   });
 });
 
