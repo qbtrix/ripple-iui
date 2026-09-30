@@ -65,6 +65,11 @@ describe('ControlButton', () => {
     expect(btn.dataset.variant).toBe('pill');
   });
 
+  it('marks a wide (hang-up) key', () => {
+    const { container } = render(ControlButton, { 'aria-label': 'Leave call', tone: 'danger', wide: true });
+    expect(container.querySelector('button')!.hasAttribute('data-wide')).toBe(true);
+  });
+
   it('shows the text label only in the bar variant', async () => {
     const { container, rerender } = render(ControlButton, { 'aria-label': 'Mute', label: 'Mute', variant: 'bar' });
     expect(container.querySelector('[data-slot="control-label"]')!.textContent).toBe('Mute');

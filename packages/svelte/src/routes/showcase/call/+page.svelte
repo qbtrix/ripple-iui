@@ -110,7 +110,7 @@
         >
           {#snippet icon()}<MessageSquare />{/snippet}
         </ControlButton>
-        <ControlButton variant={ctl} label="Leave" aria-label="Leave call" tone="danger" class="w-16" onclick={() => (log = 'Leave call')}>
+        <ControlButton variant={ctl} label="Leave" aria-label="Leave call" tone="danger" wide onclick={() => (log = 'Leave call')}>
           {#snippet icon()}<PhoneOff />{/snippet}
         </ControlButton>
       </ControlBar>

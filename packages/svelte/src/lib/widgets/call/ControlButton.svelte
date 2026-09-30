@@ -14,7 +14,9 @@
               the label hides under 640px so a phone keeps an icon row
   tone: default | danger (solid error fill) | accent (lit: tinted accent in
   pill/bar, solid accent in classic). size: default | compact (36px, for the
-  dock and PiP). A hang-up is tone="danger" plus a caller width class.
+  dock and PiP). A hang-up is tone="danger" plus `wide` (a longer key in each
+  look). Width lives in this scoped CSS, which beats a Tailwind width class, so
+  use `wide` (or restyle via :global) rather than w-* utilities.
 
   `count` / `mention` paint a CountBadge on the corner; `badgeTestId` names it.
   Accent text on glass reads `--ripple-accent-on-glass` when the host sets one
@@ -31,6 +33,8 @@
     tone?: 'default' | 'danger' | 'accent';
     size?: 'default' | 'compact';
     variant?: 'pill' | 'bar' | 'classic';
+    /** A longer key (hang-up). */
+    wide?: boolean;
     /** Visible text beside the icon, bar variant only. Keep aria-label for the name. */
     label?: string;
     icon?: Snippet;
@@ -45,6 +49,7 @@
     tone = 'default',
     size = 'default',
     variant = 'classic',
+    wide = false,
     label,
     icon,
     children,
@@ -64,6 +69,7 @@
   data-tone={tone}
   data-size={size}
   data-variant={variant}
+  data-wide={wide ? '' : undefined}
   aria-pressed={pressed === undefined ? undefined : pressed ? 'true' : 'false'}
   {...rest}
 >
@@ -166,6 +172,18 @@
     background: color-mix(in oklch, var(--ripple-accent) 20%, transparent);
   }
 
+  /* wide — the hang-up key */
+  .ripple-ctl[data-wide] {
+    width: 3.5rem;
+  }
+  .ripple-ctl[data-variant='pill'][data-wide] {
+    width: 4rem;
+  }
+  .ripple-ctl[data-variant='bar'][data-wide] {
+    width: auto;
+    padding-inline: 1rem;
+  }
+
   /* compact — dock / PiP */
   .ripple-ctl[data-size='compact'] {
     width: 2.25rem;
@@ -173,6 +191,9 @@
     min-width: 0;
     padding: 0;
     border-radius: 999px;
+  }
+  .ripple-ctl[data-size='compact'][data-wide] {
+    width: 2.75rem;
   }
   .ripple-ctl[data-size='compact'] .ripple-ctl-icon :global(svg) {
     width: 1rem;
