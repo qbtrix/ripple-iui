@@ -78,6 +78,14 @@
  *   banners. EmptyState gained icon-snippet / size / tone / actions in place.
  *   The manifest count still reads 189.
  *
+ *   Updated 2026-09-30 (call UI new look, slice 0): the call parts join as new
+ *   ./ui-only exports (no registry entry, no manifest entry, count still 189):
+ *   `CountBadge` and `ControlButton` (atoms), `ControlBar`, `ParticipantTile`,
+ *   `IncomingCallCard` (molecules), `FloatingDock` and `BottomSheet`
+ *   (organisms: they own drag and stop state). The existing shadcn `Slider`
+ *   joins the overlays' namespace shape (`Slider.Root`) for the call volume
+ *   popover.
+ *
  *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
  *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
  *   on this surface — no spec-registry entry and no manifest entry, so the
@@ -100,6 +108,8 @@ export { default as ProgressRing } from '../widgets/display/ProgressRing.svelte'
 export { default as Shimmer } from '../widgets/premium/Shimmer.svelte';
 export { default as Separator } from '../widgets/layout/Separator.svelte';
 export { default as Kbd } from '../widgets/display/Kbd.svelte';
+export { default as CountBadge } from '../widgets/call/CountBadge.svelte';
+export { default as ControlButton } from '../widgets/call/ControlButton.svelte';
 
 /* ── molecules ─────────────────────────────────────────────────────────────
    Compose atoms; still no app state. */
@@ -119,6 +129,12 @@ export { default as SectionHeader } from '../widgets/layout/SectionHeader.svelte
 export { default as PanelHeader } from '../widgets/layout/PanelHeader.svelte';
 export { default as PageHeader } from '../widgets/layout/PageHeader.svelte';
 export { default as InlineAlert } from '../widgets/display/InlineAlert.svelte';
+export { default as ControlBar } from '../widgets/call/ControlBar.svelte';
+export { default as ParticipantTile } from '../widgets/call/ParticipantTile.svelte';
+export { default as IncomingCallCard } from '../widgets/call/IncomingCallCard.svelte';
+
+/* ── form parts with sub-parts: shadcn composable namespace ────────────── */
+export * as Slider from '../components/ui/slider/index.js';
 
 /* ── overlays ──────────────────────────────────────────────────────────────
    The canonical overlay set, one namespace per kind (anchored / modal /
@@ -153,3 +169,5 @@ export { default as ContextCards } from '../widgets/ai/ContextCards.svelte';
 export { default as RecommendationCard } from '../widgets/ai/RecommendationCard.svelte';
 export { default as FineTuneCard } from '../widgets/ai/FineTuneCard.svelte';
 export { default as SelectionActions } from '../widgets/ai/SelectionActions.svelte';
+export { default as FloatingDock } from '../widgets/call/FloatingDock.svelte';
+export { default as BottomSheet } from '../widgets/call/BottomSheet.svelte';

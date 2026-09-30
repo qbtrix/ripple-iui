@@ -1,5 +1,8 @@
 <!--
   src/routes/showcase/+page.svelte
+  Updated 2026-09-30 (call UI new look, slice 0): the sub-route nav links the new
+  /showcase/call page (ControlButton, ControlBar, ParticipantTile, FloatingDock,
+  IncomingCallCard, BottomSheet, CountBadge, Slider).
   Updated 2026-09-26 (feature pages canon, F1): the sub-route nav links the new
   /showcase/feature page (PageHeader, EmptyState, InlineAlert, Segmented counts,
   Label + Textarea).
@@ -5336,6 +5339,7 @@
   <a href="/showcase/moving-indicator">Moving indicator</a>
   <a href="/showcase/shell">Shell</a>
   <a href="/showcase/feature">Feature pages</a>
+  <a href="/showcase/call">Call</a>
   <a href="/showcase/checkbox-group">Checkbox group</a>
   <a href="/showcase/marketing">Marketing pack</a>
   <a href="/showcase/premium">Premium pack</a>
