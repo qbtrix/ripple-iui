@@ -11,12 +11,12 @@
   - on release it snaps to the nearer side (left/right) and clamps inside its
     bounds, `gap` px from every edge
   - re-clamps on window resize (<svelte:window onresize>, no $effect)
-  - keyboard: the region is focusable; arrow keys move it 16px (clamped) while
-    the region itself has focus
+  - keyboard: a labelled region; its controls stay in the tab order. There is
+    no keyboard move (the production dock has none either)
   bounds: 'window' (position: fixed, the production dock) or 'parent'
   (position: absolute inside the positioned parent, e.g. a lab frame).
   Until the first move it sits in `corner`. onPositionChange({x, y}) fires on
-  drop and on each keyboard move, in bounds-relative px. Tokens only.
+  drop, in bounds-relative px. Tokens only.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -45,7 +45,6 @@
     children?: Snippet;
   } = $props();
 
-  const STEP = 16;
   const NO_DRAG = 'button, a, input, select, textarea, [role="button"]';
 
   let el = $state<HTMLDivElement>();
@@ -64,16 +63,6 @@
       y: Math.max(gap, Math.min(y, b.height - el.offsetHeight - gap)),
     };
   }
-  function current(): Pos {
-    if (pos) return pos;
-    const b = box();
-    const r = el!.getBoundingClientRect();
-    return { x: r.left - b.left, y: r.top - b.top };
-  }
-  function commit(next: Pos) {
-    pos = next;
-    onPositionChange?.(next);
-  }
 
   function down(e: PointerEvent) {
     if (!el || e.button !== 0 || (e.target as Element).closest(NO_DRAG)) return;
@@ -91,15 +80,8 @@
     grab = null;
     if (!pos || !el) return;
     const left = pos.x + el.offsetWidth / 2 < box().width / 2;
-    commit(clamp(left ? gap : Infinity, pos.y));
-  }
-  function key(e: KeyboardEvent) {
-    if (e.target !== el) return;
-    const d = { ArrowLeft: [-STEP, 0], ArrowRight: [STEP, 0], ArrowUp: [0, -STEP], ArrowDown: [0, STEP] }[e.key];
-    if (!d) return;
-    e.preventDefault();
-    const p = current();
-    commit(clamp(p.x + d[0], p.y + d[1]));
+    pos = clamp(left ? gap : Infinity, pos.y);
+    onPositionChange?.(pos);
   }
 </script>
 
@@ -109,7 +91,6 @@
   bind:this={el}
   role="region"
   aria-label={label}
-  tabindex="0"
   data-slot="floating-dock"
   data-corner={corner}
   data-bounds={bounds}
@@ -119,7 +100,6 @@
   onpointermove={move}
   onpointerup={up}
   onpointercancel={up}
-  onkeydown={key}
   {...rest}
 >
   {@render children?.()}
@@ -142,7 +122,6 @@
     transition:
       left 200ms var(--ripple-ease-out),
       top 200ms var(--ripple-ease-out);
-    outline: none;
   }
   .ripple-dock[data-bounds='parent'] {
     position: absolute;
@@ -150,9 +129,6 @@
   .ripple-dock:active {
     cursor: grabbing;
     transition: none;
-  }
-  .ripple-dock:focus-visible {
-    box-shadow: 0 0 0 2px var(--ripple-ring);
   }
   .ripple-dock[data-corner='top-left'] {
     top: 12px;

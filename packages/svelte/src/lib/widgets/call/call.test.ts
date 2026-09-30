@@ -190,11 +190,10 @@ function stubLayout(dock: HTMLElement) {
 }
 
 describe('FloatingDock', () => {
-  it('is a labelled, focusable region starting in the given corner', () => {
+  it('is a labelled region starting in the given corner', () => {
     const { container } = render(FloatingDock, { label: 'Call dock', corner: 'top-left', children: html('<p>x</p>') });
     const dock = container.querySelector('[role="region"]') as HTMLElement;
     expect(dock.getAttribute('aria-label')).toBe('Call dock');
-    expect(dock.tabIndex).toBe(0);
     expect(dock.dataset.corner).toBe('top-left');
   });
 
@@ -255,16 +254,6 @@ describe('FloatingDock', () => {
     await fireEvent(window, new Event('resize'));
     expect(dock.style.left).toBe('288px');
     expect(dock.style.top).toBe('288px');
-  });
-
-  it('moves with the arrow keys when the region itself has focus', async () => {
-    const onPositionChange = vi.fn();
-    const { container } = render(FloatingDock, { label: 'Call dock', onPositionChange, children: html('<p>x</p>') });
-    const dock = container.querySelector('[role="region"]') as HTMLElement;
-    stubLayout(dock);
-    await fireEvent.keyDown(dock, { key: 'ArrowUp' });
-    // From the dock's rect (100,100): up by 16.
-    expect(onPositionChange).toHaveBeenLastCalledWith({ x: 100, y: 84 });
   });
 });
 
