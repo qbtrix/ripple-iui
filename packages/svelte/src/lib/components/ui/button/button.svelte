@@ -1,4 +1,6 @@
 <!-- button.svelte
+  2026-09-30 (call UI new look): a `success` variant (ripple success fill and
+  foreground) for Accept / Join call actions.
   2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
   text tokens (text-ripple-{error,success,warning,info}-text; red text that
   read text-destructive now reads text-ripple-error-text, the same hue since
@@ -19,6 +21,7 @@
 				ghost: "hover:bg-ripple-muted hover:text-ripple-surface-foreground dark:hover:bg-ripple-muted/50 aria-expanded:bg-ripple-muted aria-expanded:text-ripple-surface-foreground",
 				destructive: "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-ripple-error-text focus-visible:border-destructive/40 dark:hover:bg-destructive/30",
 				link: "text-ripple-accent underline-offset-4 hover:underline",
+				success: "bg-ripple-success text-ripple-success-foreground hover:bg-ripple-success/90",
 			},
 			size: {
 				default: "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
