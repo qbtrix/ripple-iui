@@ -1,5 +1,7 @@
 /**
  * @file ui/ui-contract.test.ts
+ * Updated 2026-09-30 (call UI new look, slice 0): PROPS for the call parts and
+ *   `Slider` in the namespace list.
  * @description The contract behind the `./ui` export: every name listed there
  *   must mount as a plain Svelte component, with no `<Ripple spec>` wrapper and
  *   no renderer context.
@@ -155,6 +157,16 @@ const PROPS: Record<string, Record<string, unknown>> = {
   // The feature-page exports.
   PageHeader: { title: 'Agents' },
   InlineAlert: { title: 'Could not load agents', tone: 'error' },
+  // The call parts (2026-09-30). CountBadge paints only with a count.
+  CountBadge: { count: 3 },
+  ControlButton: { 'aria-label': 'Mute' },
+  ControlBar: { label: 'Call controls' },
+  ParticipantTile: { name: 'Ada Lovelace' },
+  IncomingCallCard: { title: 'Maya Chen', subtitle: 'Incoming call' },
+  FloatingDock: { label: 'Call dock' },
+  BottomSheet: { label: 'Call chat' },
+  // bits-ui's Slider.Root is a union on `type`; it paints its track.
+  Slider: { type: 'single', value: 1, max: 2 },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */
@@ -268,7 +280,7 @@ test('the ./ui surface is not empty and every name is a component, namespace or 
   expect(names.length).toBeGreaterThanOrEqual(25);
   for (const n of components) expect(typeof (ui as never)[n]).toBe('function');
   expect(namespaces.sort()).toEqual(
-    ['Command', 'ConfirmDialog', 'ContextMenu', 'Dialog', 'DropdownMenu', 'HoverCard', 'Popover', 'Sheet', 'Tooltip']
+    ['Command', 'ConfirmDialog', 'ContextMenu', 'Dialog', 'DropdownMenu', 'HoverCard', 'Popover', 'Sheet', 'Slider', 'Tooltip']
   );
   for (const n of namespaces) expect(typeof entry(n), `${n} has no Root`).toBe('function');
   expect(typeof ui.confirmDialog).toBe('function');
