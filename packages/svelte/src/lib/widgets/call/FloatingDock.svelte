@@ -9,14 +9,17 @@
     input, select, textarea or [role=button] is ignored; pointer capture keeps
     the drag alive outside the element; primary button only
   - on release it snaps to the nearer side (left/right) and clamps inside its
-    bounds, `gap` px from every edge
+    bounds, `gap` px from every edge; `snap={false}` only clamps (drops in place)
   - re-clamps on window resize (<svelte:window onresize>, no $effect)
   - keyboard: a labelled region; its controls stay in the tab order. There is
     no keyboard move (the production dock has none either)
   bounds: 'window' (position: fixed, the production dock) or 'parent'
   (position: absolute inside the positioned parent, e.g. a lab frame).
-  Until the first move it sits in `corner`. onPositionChange({x, y}) fires on
-  drop, in bounds-relative px. Tokens only.
+  Until the first move it sits in `corner` (four corners, or top-center /
+  bottom-center: horizontally centred), `gap` px from the edges.
+  onPositionChange({x, y}) fires on drop, in bounds-relative px. Tokens only.
+  UPDATED 2026-09-30: `snap` prop and the two centred corners; the corner
+  offsets now follow `gap` (via --ripple-dock-gap) instead of a fixed 12px.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -30,6 +33,7 @@
     corner = 'bottom-right',
     bounds = 'window',
     gap = 12,
+    snap = true,
     onPositionChange,
     class: className,
     style,
@@ -37,9 +41,11 @@
     ...rest
   }: Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
     label: string;
-    corner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    corner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
     bounds?: 'window' | 'parent';
     gap?: number;
+    /** Snap to the nearer side on drop (default). false: stay where dropped, clamped. */
+    snap?: boolean;
     onPositionChange?: (pos: Pos) => void;
     style?: string;
     children?: Snippet;
@@ -79,8 +85,10 @@
     if (!grab) return;
     grab = null;
     if (!pos || !el) return;
-    const left = pos.x + el.offsetWidth / 2 < box().width / 2;
-    pos = clamp(left ? gap : Infinity, pos.y);
+    if (snap) {
+      const left = pos.x + el.offsetWidth / 2 < box().width / 2;
+      pos = clamp(left ? gap : Infinity, pos.y);
+    }
     onPositionChange?.(pos);
   }
 </script>
@@ -95,7 +103,7 @@
   data-corner={corner}
   data-bounds={bounds}
   class={cn('ripple-dock', className)}
-  style="{pos ? `left:${pos.x}px;top:${pos.y}px;right:auto;bottom:auto;` : ''}{style ?? ''}"
+  style="--ripple-dock-gap:{gap}px;{pos ? `left:${pos.x}px;top:${pos.y}px;right:auto;bottom:auto;` : ''}{style ?? ''}"
   onpointerdown={down}
   onpointermove={move}
   onpointerup={up}
@@ -131,20 +139,33 @@
     transition: none;
   }
   .ripple-dock[data-corner='top-left'] {
-    top: 12px;
-    left: 12px;
+    top: var(--ripple-dock-gap);
+    left: var(--ripple-dock-gap);
   }
   .ripple-dock[data-corner='top-right'] {
-    top: 12px;
-    right: 12px;
+    top: var(--ripple-dock-gap);
+    right: var(--ripple-dock-gap);
   }
   .ripple-dock[data-corner='bottom-left'] {
-    bottom: 12px;
-    left: 12px;
+    bottom: var(--ripple-dock-gap);
+    left: var(--ripple-dock-gap);
   }
   .ripple-dock[data-corner='bottom-right'] {
-    bottom: 12px;
-    right: 12px;
+    bottom: var(--ripple-dock-gap);
+    right: var(--ripple-dock-gap);
+  }
+  .ripple-dock[data-corner='top-center'],
+  .ripple-dock[data-corner='bottom-center'] {
+    left: 0;
+    right: 0;
+    width: max-content;
+    margin-inline: auto;
+  }
+  .ripple-dock[data-corner='top-center'] {
+    top: var(--ripple-dock-gap);
+  }
+  .ripple-dock[data-corner='bottom-center'] {
+    bottom: var(--ripple-dock-gap);
   }
   @media (prefers-reduced-motion: reduce) {
     .ripple-dock {
