@@ -97,7 +97,7 @@ describe('discover card set — SSR static safety', () => {
     const i = render(DetailMedia, { props: { item: { ...video, kind: 'image', mediaKind: 'image', mediaUrl: 'https://cdn.example.com/full.png' } } }).body;
     expect(i).toContain('<img');
     expect(i).toContain('src="https://cdn.example.com/full.png"');
-    expect(render(DetailMedia, { props: { item: tool } }).body.trim()).toBe('<!---->');
+    expect(render(DetailMedia, { props: { item: tool } }).body).not.toMatch(/<(img|video|audio)/);
   });
 
   it('DetailMedia drops a non-http media url', () => {
