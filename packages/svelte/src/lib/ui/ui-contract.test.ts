@@ -136,6 +136,7 @@ const PROPS: Record<string, Record<string, unknown>> = {
   CommandPalette: { commands: [{ id: 'dup', label: 'Duplicate', group: 'Commands' }] },
   // Docked, so it paints in flow without an anchor or a measured parent.
   ContextToolbar: { variant: 'docked', children: kid('Font') },
+  PageStrip: { pages: [{ id: 'p1' }, { id: 'p2' }], current: 'p1' },
   AssetPanel: { tabs: [{ id: 'templates', label: 'Templates' }], items: { templates: [{ id: 't1', label: 'Diwali offer' }] } },
   // bits-ui's Slider.Root is a union on `type`; it paints its track.
   Slider: { type: 'single', value: 1, max: 2 },

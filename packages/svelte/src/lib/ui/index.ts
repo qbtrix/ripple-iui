@@ -133,6 +133,8 @@ export { default as AssetPanel } from '../widgets/craft/AssetPanel.svelte';
 /* The drag contract between AssetPanel and a canvas: plain helpers, not components. */
 export { ASSET_MIME, readAssetDrop, isAssetDrag } from '../widgets/craft/asset-panel.js';
 export type { AssetTab, AssetItem, AssetFilter, AssetDrop } from '../widgets/craft/asset-panel.js';
+export { default as PageStrip } from '../widgets/craft/PageStrip.svelte';
+export type { PageItem } from '../widgets/craft/page-strip.js';
 export type {
   CraftTool,
   CanvasGuide,
