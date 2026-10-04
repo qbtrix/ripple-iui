@@ -1,5 +1,5 @@
-// widgets/craft/shell.test.ts — EditorShell slots, tabbed right panel and
-// resize keyboard; InspectorSection toggle; PropertyRow label wiring.
+// widgets/craft/shell.test.ts — EditorShell slots, tabbed right panel, resize
+// keyboard and the quick/pro density; InspectorSection toggle; PropertyRow label wiring.
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, fireEvent, cleanup } from '@testing-library/svelte';
 import { createRawSnippet, flushSync } from 'svelte';
@@ -67,6 +67,57 @@ describe('EditorShell', () => {
     await fireEvent.keyDown(handle, { key: 'ArrowLeft', shiftKey: true });
     expect(handle.getAttribute('aria-valuenow')).toBe('520');
     expect(container.querySelector<HTMLElement>('[data-slot="editor-right"]')!.style.width).toBe('520px');
+  });
+});
+
+describe('EditorShell density', () => {
+  it('defaults to pro: the rail and the resizable left panel render, no quick slots', () => {
+    const { container, getByText } = render(EditorShell, {
+      props: { rail: kid('RAIL'), left: kid('LEFT'), children: kid('CANVAS') },
+    });
+    getByText('RAIL');
+    expect(container.querySelector('[data-slot="editor-shell"]')!.getAttribute('data-density')).toBe('pro');
+    expect(container.querySelector('[data-slot="editor-left"]')!.getAttribute('style')).toContain('width: 240px');
+    expect(container.querySelector('[role="slider"][aria-label="Resize left panel"]')).not.toBeNull();
+    for (const slot of ['editor-floating', 'editor-prompt', 'editor-pages']) {
+      expect(container.querySelector(`[data-slot="${slot}"]`)).toBeNull();
+    }
+  });
+
+  it('quick drops the rail and sizes the left panel by its content, with no resize handle', () => {
+    const { container, queryByText, getByText } = render(EditorShell, {
+      props: { density: 'quick', rail: kid('RAIL'), left: kid('ASSETS'), children: kid('CANVAS') },
+    });
+    expect(queryByText('RAIL')).toBeNull();
+    getByText('ASSETS');
+    const left = container.querySelector('[data-slot="editor-left"]')!;
+    expect(left.getAttribute('style') ?? '').not.toContain('width');
+    expect(container.querySelector('[aria-label="Resize left panel"]')).toBeNull();
+  });
+
+  it('renders floating over the canvas, prompt under it and pages above the status bar', () => {
+    const { container } = render(EditorShell, {
+      props: {
+        density: 'quick',
+        children: kid('CANVAS'),
+        floating: kid('TOOLBAR'),
+        prompt: kid('ASK'),
+        pages: kid('PAGES'),
+        status: kid('62%'),
+      },
+    });
+    const center = container.querySelector('[data-slot="editor-center"]')!;
+    const floating = container.querySelector('[data-slot="editor-floating"]')!;
+    expect(center.contains(floating)).toBe(true);
+    expect(floating.className).toContain('pointer-events-none');
+    expect(floating.textContent).toBe('TOOLBAR');
+    const prompt = container.querySelector('[data-slot="editor-prompt"]')!;
+    expect(center.contains(prompt)).toBe(false);
+    expect(center.compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const pages = container.querySelector('[data-slot="editor-pages"]')!;
+    const status = container.querySelector('[data-slot="editor-status"]')!;
+    expect(pages.textContent).toBe('PAGES');
+    expect(pages.nextElementSibling).toBe(status);
   });
 });
 
