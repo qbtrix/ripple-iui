@@ -40,11 +40,11 @@ const song: DiscoverItem = { ...video, id: 'song-1', kind: 'music', mediaKind: '
 
 describe('discover card set — SSR static safety', () => {
   it('DiscoverTile bakes the image, the links and the labels into server markup', () => {
-    const { body } = render(DiscoverTile, { props: { item: tool, href: '/tools/invoice-maker' } });
+    const { body } = render(DiscoverTile, { props: { item: tool, href: '/free-tools/invoice-maker' } });
     expect(body).toContain('<img');
     expect(body).toContain('src="https://cdn.example.com/invoice.png"');
     expect(body).toContain('loading="lazy"');
-    expect(body).toContain('href="/tools/invoice-maker"');
+    expect(body).toContain('href="/free-tools/invoice-maker"');
     expect(body).toContain('href="https://invoice.example.com/"');
     expect(body).toContain('Invoice maker');
     expect(body).toContain('Staff pick');
@@ -108,7 +108,7 @@ describe('discover card set — SSR static safety', () => {
 
 describe('itemHref', () => {
   it('routes by kind', () => {
-    expect(itemHref('tool', 'invoice-maker')).toBe('/tools/invoice-maker');
+    expect(itemHref('tool', 'invoice-maker')).toBe('/free-tools/invoice-maker');
     expect(itemHref('game', 'snake')).toBe('/play/snake');
     expect(itemHref('site', 'dentist')).toBe('/templates/dentist');
     expect(itemHref('video', 'vid-1')).toBe('/discover/vid-1');
