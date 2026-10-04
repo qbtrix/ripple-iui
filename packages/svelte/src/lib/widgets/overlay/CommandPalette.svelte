@@ -15,6 +15,7 @@
   - Triggers: the global `shortcut` (default mod+k, '' turns it off) toggles it,
     `slash` also opens it on `/` when no text field has focus. `value` is
     bindable, and the widget registry's open/close lets spec flows `invoke` it.
+  - It sits near the top of the screen, so it doesn't jump as results shrink.
   - Keyboard: Up/Down wrap, PageUp/PageDown jump 8, Enter picks, Escape closes.
     The input is a combobox with aria-activedescendant over a listbox of grouped
     options; the active row scrolls into view.
@@ -206,6 +207,8 @@
   });
 
   const rows = $derived(view.sections.flatMap((s) => s.items));
+  /** Some row has a thumbnail or icon: rows without one keep a blank slot so labels align. */
+  const anyMedia = $derived(rows.some((r) => r.thumb || r.icon));
 
   $effect(() => {
     void query;
@@ -266,7 +269,7 @@
   <Dialog.Content
     {id}
     showCloseButton={false}
-    class={cn('gap-0 overflow-hidden p-0 sm:max-w-xl', className)}
+    class={cn('top-[12vh] gap-0 overflow-hidden p-0 translate-y-0 sm:max-w-xl', className)}
     style={styleString}
   >
     <Dialog.Title class="sr-only">{label}</Dialog.Title>
@@ -331,6 +334,8 @@
                   <span class="flex size-9 shrink-0 items-center justify-center rounded-md bg-ripple-muted/60 text-ripple-muted-foreground">
                     <Icon size={16} aria-hidden="true" />
                   </span>
+                {:else if anyMedia}
+                  <span class="size-9 shrink-0" aria-hidden="true"></span>
                 {/if}
                 <span class="min-w-0 flex-1">
                   <span class="block truncate">{item.label}</span>

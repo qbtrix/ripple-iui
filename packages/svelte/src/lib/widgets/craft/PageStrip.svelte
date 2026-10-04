@@ -70,7 +70,7 @@
   let drag = $state<{ id: string; over: number; after: boolean } | null>(null);
 
   const name = (p: PageItem, i: number) => p.label ?? `Page ${i + 1}`;
-  const thumbW = (p: PageItem) => Math.round(thumbH * (p.width && p.height ? Math.min(2, Math.max(0.5, p.width / p.height)) : 1));
+  const thumbW = (p: PageItem) => Math.round(thumbH * (p.width && p.height ? Math.min(3, Math.max(0.5, p.width / p.height)) : 1));
 
   /** The context-menu trigger's props with our handlers chained after its own. */
   function withHandlers(props: Record<string, unknown>, own: Record<string, (e: never) => void>) {

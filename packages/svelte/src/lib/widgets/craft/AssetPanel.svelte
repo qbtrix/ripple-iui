@@ -35,7 +35,7 @@
     items?: Record<string, AssetItem[] | undefined>;
     /** Bindable. */
     collapsed?: boolean;
-    /** Flyout width in px (the rail adds 72). */
+    /** Flyout width in px (the rail adds 76). */
     width?: number;
     /** Minimum tile width in px; the grid fits as many columns as it can. */
     tileWidth?: number;
@@ -152,7 +152,7 @@
 </script>
 
 <div data-slot="asset-panel" data-collapsed={collapsed || undefined} class={cn('flex h-full min-h-0', className)}>
-  <div class="flex w-[72px] shrink-0 flex-col items-stretch gap-1 border-r border-ripple-border p-1.5">
+  <div class="flex w-[76px] shrink-0 flex-col items-stretch gap-1 border-r border-ripple-border p-1">
     <div role="tablist" aria-label={label} aria-orientation="vertical" tabindex="-1" class="flex flex-col gap-1" onkeydown={onRailKey}>
       {#each tabs as t (t.id)}
         {@const selected = t.id === tab}
@@ -165,7 +165,7 @@
           tabindex={selected ? 0 : -1}
           onclick={() => choose(t.id)}
           class={cn(
-            'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-[11px] font-medium leading-tight transition-colors duration-150 ease-ripple-out focus-visible:outline-2 focus-visible:outline-ripple-ring motion-reduce:transition-none',
+            'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-0.5 py-1.5 text-[11px] font-medium leading-tight transition-colors duration-150 ease-ripple-out focus-visible:outline-2 focus-visible:outline-ripple-ring motion-reduce:transition-none',
             selected && !collapsed
               ? 'bg-ripple-accent/10 text-ripple-accent'
               : 'text-ripple-muted-foreground hover:bg-ripple-muted hover:text-ripple-surface-foreground',
