@@ -1,7 +1,8 @@
 // discover/art.ts — placeholder art rules for a Discover item with no picture:
 // a stable tint picked from the id and the title's initial. Both are total: any
-// id yields a palette entry, any title yields a glyph. Every tint is a theme
-// token, so the placeholder re-themes with the page.
+// id yields a palette entry, any title yields a glyph. Every tint is a coloured
+// theme token (no neutral, which would read as a loading frame), so the
+// placeholder re-themes with the page.
 
 export const CARD_PALETTE = [
   'var(--ripple-success)',
@@ -9,7 +10,7 @@ export const CARD_PALETTE = [
   'var(--ripple-warning)',
   'var(--ripple-error)',
   'var(--ripple-info)',
-  'var(--ripple-muted-foreground)',
+  'var(--ripple-info-text)',
 ] as const;
 
 export function tintFor(id: string): string {
