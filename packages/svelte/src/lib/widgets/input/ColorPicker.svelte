@@ -22,6 +22,9 @@
      - `compact` trigger: fills its row and is a size container; the swatch and hex
        never shrink, and the C/M/Y/K readout only shows when the row is 10rem or
        wider, so a narrow inspector never ellipsises the colour itself.
+     - Accessible name of the trigger: "<field>: <hex or None>", the field being
+       `aria-label`, else `label`, else the enclosing PropertyRow's label
+       (input/field-name.ts), else "Colour". Never the bare hex or CMYK readout.
      - Back-compatible: value/presets/showInput/label/disabled/onchange behave as
        before; `presets` shows as the palette when no `swatches` are passed.
      The square and strips need literal gradient stops (white, black, hsl());
@@ -33,6 +36,7 @@
   import Plus from '@lucide/svelte/icons/plus';
   import NumberInput from './NumberInput.svelte';
   import Segmented from './Segmented.svelte';
+  import { useFieldName } from './field-name.js';
   import {
     cmykToRgb,
     hexToRgb,
@@ -92,6 +96,8 @@
     open?: boolean;
     /** Popover side; an inspector at the right edge passes 'left'. */
     side?: 'top' | 'right' | 'bottom' | 'left';
+    /** The field's name for the trigger ("Fill"), when there is no visible `label`. */
+    'aria-label'?: string;
   }
 
   let {
@@ -126,14 +132,17 @@
     compact = false,
     open = $bindable(false),
     side = 'bottom',
+    'aria-label': ariaLabel,
     mixed = false,
   }: Props = $props();
+  const rowName = useFieldName();
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
   const isNone = $derived(!mixed && !normalizeHex(value));
+  const triggerName = $derived(`${ariaLabel ?? label ?? rowName() ?? 'Colour'}: ${mixed ? 'Mixed' : isNone ? 'None' : value}`);
   let triggerEl = $state<HTMLElement | null>(null);
   /** Beside an inspector, anchor to the whole PropertyRow so the popover clears its label column. */
   const rowAnchor = $derived(
@@ -282,6 +291,7 @@
       {id}
       {disabled}
       data-slot="color-picker-trigger"
+      aria-label={triggerName}
       data-mixed={mixed ? '' : undefined}
       class={cn(
         'inline-flex items-center gap-2 rounded-md border border-input bg-background text-sm shadow-xs outline-none',

@@ -7,8 +7,9 @@
      The field never shows text it didn't apply: on commit (compact) and on
      change/blur (both modes), empty, unparseable or clamped text is replaced
      by the formatted current `value`.
-     `suffix` is a muted unit after the number, inside the box ("mm", "pt", "%", "°"),
-     and names the field when there is no label.
+     `suffix` is a muted unit after the number, inside the box ("mm", "pt", "%", "°").
+     Accessible name: `label`, else `aria-label`, else the enclosing PropertyRow's
+     label (input/field-name.ts), and only then the unit.
      The root is min-w-0 in both modes, so a field in a grid or flex track
      shrinks with it instead of pushing its siblings out of a dialog.
      `name` is rendered on the native input so a static <form> POST submits it. -->
@@ -16,6 +17,7 @@
   import { cn } from '$lib/utils.js';
   import MinusIcon from '@lucide/svelte/icons/minus';
   import PlusIcon from '@lucide/svelte/icons/plus';
+  import { useFieldName } from './field-name.js';
 
   interface Props {
     id?: string;
@@ -41,6 +43,8 @@
     compact?: boolean;
     /** A muted unit shown after the number, inside the box ("mm", "pt", "%"). */
     suffix?: string;
+    /** Accessible name when there is no visible `label` (a toolbar field). */
+    'aria-label'?: string;
   }
 
   let {
@@ -59,8 +63,11 @@
     parser,
     onchange,
     compact = false,
-    suffix
+    suffix,
+    'aria-label': ariaLabel
   }: Props = $props();
+
+  const rowName = useFieldName();
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
@@ -146,7 +153,7 @@
       {name}
       type="text"
       inputmode="decimal"
-      aria-label={label ?? suffix}
+      aria-label={label ?? ariaLabel ?? rowName() ?? suffix}
       {placeholder}
       {disabled}
       value={display}
