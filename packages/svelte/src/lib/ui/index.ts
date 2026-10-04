@@ -20,7 +20,9 @@
  *   SHAPE. Grouped atom / molecule / organism. Overlays and parts with
  *   sub-parts are shadcn composable namespaces (`Dialog.Root`, `Slider.Root`),
  *   the shape paw-enterprise's call sites already use. `confirmDialog` is also
- *   exported by name because callers import the store, not the component.
+ *   exported by name because callers import the store, not the component, and
+ *   the asset drag helpers (ASSET_MIME, readAssetDrop, isAssetDrag) are plain
+ *   functions beside AssetPanel.
  *
  *   Some exports are ./ui-only (no spec-registry or manifest entry): the AI
  *   surfaces, the shell and call parts, and the craft editor parts (ToolRail,
@@ -127,6 +129,10 @@ export { default as TransformBox } from '../widgets/craft/TransformBox.svelte';
 export { default as Tree } from '../widgets/data/Tree.svelte';
 export { default as ContextToolbar } from '../widgets/craft/ContextToolbar.svelte';
 export type { ToolbarPlacement } from '../widgets/craft/toolbar-math.js';
+export { default as AssetPanel } from '../widgets/craft/AssetPanel.svelte';
+/* The drag contract between AssetPanel and a canvas: plain helpers, not components. */
+export { ASSET_MIME, readAssetDrop, isAssetDrag } from '../widgets/craft/asset-panel.js';
+export type { AssetTab, AssetItem, AssetFilter, AssetDrop } from '../widgets/craft/asset-panel.js';
 export type {
   CraftTool,
   CanvasGuide,

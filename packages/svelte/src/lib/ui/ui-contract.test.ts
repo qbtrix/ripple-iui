@@ -136,13 +136,16 @@ const PROPS: Record<string, Record<string, unknown>> = {
   CommandPalette: { commands: [{ id: 'dup', label: 'Duplicate', group: 'Commands' }] },
   // Docked, so it paints in flow without an anchor or a measured parent.
   ContextToolbar: { variant: 'docked', children: kid('Font') },
+  AssetPanel: { tabs: [{ id: 'templates', label: 'Templates' }], items: { templates: [{ id: 't1', label: 'Diwali offer' }] } },
   // bits-ui's Slider.Root is a union on `type`; it paints its track.
   Slider: { type: 'single', value: 1, max: 2 },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */
 const STORES = new Set(['confirmDialog']);
-const names = Object.keys(ui).filter((n) => !STORES.has(n)).sort();
+/** Plain helpers and constants beside a component: AssetPanel's drag contract. */
+const HELPERS = new Set(['ASSET_MIME', 'readAssetDrop', 'isAssetDrag']);
+const names = Object.keys(ui).filter((n) => !STORES.has(n) && !HELPERS.has(n)).sort();
 /** shadcn composable namespaces: plain objects whose `Root` is the mount entry. */
 const namespaces = names.filter((n) => typeof (ui as Record<string, unknown>)[n] === 'object');
 const components = names.filter((n) => !namespaces.includes(n));
@@ -255,6 +258,8 @@ test('the ./ui surface is not empty and every name is a component, namespace or 
   );
   for (const n of namespaces) expect(typeof entry(n), `${n} has no Root`).toBe('function');
   expect(typeof ui.confirmDialog).toBe('function');
+  expect(typeof ui.ASSET_MIME).toBe('string');
+  for (const h of ['readAssetDrop', 'isAssetDrag'] as const) expect(typeof ui[h]).toBe('function');
 });
 
 /**
