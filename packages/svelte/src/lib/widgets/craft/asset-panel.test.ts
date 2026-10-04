@@ -5,7 +5,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/svelte';
 import { flushSync } from 'svelte';
 import AssetPanel from './AssetPanel.svelte';
-import { ASSET_MIME, filterAssets, isAssetDrag, readAssetDrop, writeAssetDrag, type AssetItem } from './asset-panel.js';
+import { ASSET_MIME, filterAssets, gridColumns, isAssetDrag, readAssetDrop, writeAssetDrag, type AssetItem } from './asset-panel.js';
 
 afterEach(cleanup);
 
@@ -40,6 +40,14 @@ describe('asset-panel model', () => {
     dt.setData(ASSET_MIME, '{not json');
     expect(readAssetDrop(dt)).toBeNull();
     expect(readAssetDrop(null)).toBeNull();
+  });
+
+  it('counts grid columns from the resolved tracks, or from what auto-fill fits', () => {
+    expect(gridColumns('96px 96px 96px', 0, 96)).toBe(3);
+    // The default flyout: 320 - 24 padding = 296px fits 2 tiles of 96 with an 8px gap, not 3.
+    expect(gridColumns('repeat(auto-fill, minmax(96px, 1fr))', 296, 96)).toBe(2);
+    expect(gridColumns('', 304, 96)).toBe(3);
+    expect(gridColumns('', 0, 96)).toBe(1);
   });
 
   it('filters by every token over label and tags, and by the active chip', () => {

@@ -60,7 +60,9 @@
   let root = $state<HTMLElement | null>(null);
   const grid = $derived(view === 'grid');
   const thumbH = $derived(grid ? 128 : 56);
-  const index = $derived(Math.max(0, pages.findIndex((p) => p.id === current)));
+  /* Derived, not only the effect below, so a server render already marks the first page. */
+  const active = $derived(pages.some((p) => p.id === current) ? current : pages[0]?.id);
+  const index = $derived(Math.max(0, pages.findIndex((p) => p.id === active)));
   const hasMenu = $derived(!!(onduplicate || ondelete));
 
   $effect.pre(() => {
@@ -140,7 +142,7 @@
 </script>
 
 {#snippet option(p: PageItem, i: number, menuProps: Record<string, unknown> = {})}
-  {@const selected = p.id === current}
+  {@const selected = p.id === active}
   {@const marker = drag && drag.over === i && drag.id !== p.id ? (drag.after ? 'after' : 'before') : undefined}
   <div
     {...withHandlers(menuProps, {

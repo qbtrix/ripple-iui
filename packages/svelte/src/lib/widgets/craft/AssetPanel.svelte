@@ -26,7 +26,7 @@
   import Icon from '../display/Icon.svelte';
   import ChevronsLeftIcon from '@lucide/svelte/icons/chevrons-left';
   import ChevronsRightIcon from '@lucide/svelte/icons/chevrons-right';
-  import { filterAssets, writeAssetDrag, type AssetItem, type AssetTab } from './asset-panel.js';
+  import { filterAssets, gridColumns, writeAssetDrag, type AssetItem, type AssetTab } from './asset-panel.js';
 
   interface Props {
     tabs: AssetTab[];
@@ -78,16 +78,18 @@
     if (tabs.length && !tabs.some((t) => t.id === tab)) tab = tabs[0].id;
   });
 
-  const current = $derived(tabs.find((t) => t.id === tab));
+  /* Derived, not only the effect below, so a server render already paints the first tab. */
+  const current = $derived(tabs.find((t) => t.id === tab) ?? tabs[0]);
   let queries = $state<Record<string, string>>({});
   let chips = $state<Record<string, string | null>>({});
-  const query = $derived((tab && queries[tab]) || '');
-  const chip = $derived((tab && chips[tab]) || null);
-  const raw = $derived(tab ? items[tab] : undefined);
+  const active = $derived(current?.id);
+  const query = $derived((active && queries[active]) || '');
+  const chip = $derived((active && chips[active]) || null);
+  const raw = $derived(active ? items[active] : undefined);
   const shown = $derived(raw && filter ? filterAssets(raw, query, chip) : (raw ?? []));
   let focusIndex = $state(0);
   $effect(() => {
-    void tab;
+    void active;
     void query;
     void chip;
     focusIndex = 0;
@@ -96,19 +98,19 @@
   let gridEl = $state<HTMLElement | null>(null);
 
   function choose(id: string) {
-    if (id === tab && !collapsed) {
+    if (id === active && !collapsed) {
       collapsed = true;
       return;
     }
     collapsed = false;
-    if (id !== tab) {
+    if (id !== active) {
       tab = id;
       ontab?.(id);
     }
   }
 
   function onRailKey(e: KeyboardEvent) {
-    const i = tabs.findIndex((t) => t.id === tab);
+    const i = tabs.findIndex((t) => t.id === active);
     let next = -1;
     if (e.key === 'ArrowDown') next = (i + 1) % tabs.length;
     else if (e.key === 'ArrowUp') next = (i - 1 + tabs.length) % tabs.length;
@@ -122,21 +124,21 @@
   }
 
   function setQuery(q: string) {
-    if (!tab) return;
-    queries[tab] = q;
-    onsearch?.(tab, q);
+    if (!active) return;
+    queries[active] = q;
+    onsearch?.(active, q);
   }
 
   function setChip(id: string | null) {
-    if (!tab) return;
-    chips[tab] = id;
-    onfilter?.(tab, id);
+    if (!active) return;
+    chips[active] = id;
+    onfilter?.(active, id);
   }
 
   function onGridKey(e: KeyboardEvent) {
     const n = shown.length;
     if (!n || !gridEl) return;
-    const cols = Math.max(1, Math.floor(gridEl.clientWidth / tileWidth));
+    const cols = gridColumns(getComputedStyle(gridEl).gridTemplateColumns, gridEl.clientWidth, tileWidth);
     const step: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols };
     let next = focusIndex;
     if (e.key in step) next = Math.min(n - 1, Math.max(0, focusIndex + step[e.key]));
@@ -155,7 +157,7 @@
   <div class="flex w-[76px] shrink-0 flex-col items-stretch gap-1 border-r border-ripple-border p-1">
     <div role="tablist" aria-label={label} aria-orientation="vertical" tabindex="-1" class="flex flex-col gap-1" onkeydown={onRailKey}>
       {#each tabs as t (t.id)}
-        {@const selected = t.id === tab}
+        {@const selected = t.id === active}
         <button
           type="button"
           role="tab"

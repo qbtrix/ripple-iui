@@ -4,6 +4,7 @@
 // its label as text/plain); the canvas reads it back with `readAssetDrop`.
 // `filterAssets` is the panel's local search: every query token must appear in
 // the label or a tag, and an active filter chip must be one of the item's tags.
+// `gridColumns` is the column count the grid's Up/Down keys step by.
 
 export const ASSET_MIME = 'application/x-ripple-asset+json';
 
@@ -88,4 +89,12 @@ export function filterAssets(items: AssetItem[], query: string, chip: string | n
     const hay = [it.label, ...(it.tags ?? [])].join(' ').toLowerCase();
     return tokens.every((t) => hay.includes(t));
   });
+}
+
+/** Columns in the tile grid: the browser's resolved tracks, or (when it reports the
+ *  unresolved `repeat(...)`, as jsdom does) what auto-fill fits at this width. */
+export function gridColumns(templateColumns: string, width: number, minTile: number, gap = 8): number {
+  const tracks = templateColumns.trim();
+  if (tracks && !tracks.startsWith('repeat(')) return tracks.split(/\s+/).length;
+  return Math.max(1, Math.floor((width + gap) / (minTile + gap)));
 }
