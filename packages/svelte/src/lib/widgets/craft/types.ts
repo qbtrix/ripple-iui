@@ -106,3 +106,13 @@ export type TransformHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 /** What a TransformBox commit was: a pointer move, a handle resize, or a keyboard nudge / resize burst. */
 export type TransformKind = 'move' | 'resize' | 'nudge';
+
+/** A rectangle in SCREEN space: the coordinate frame of the canvas stage, the same one
+ *  CanvasViewport's `overlay` snippet and EditorShell's `floating` layer use
+ *  (a document point d sits at pan + d * zoom). ContextToolbar anchors to one. */
+export interface ScreenRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}

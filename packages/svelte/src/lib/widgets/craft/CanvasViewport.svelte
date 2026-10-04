@@ -33,6 +33,8 @@
     with an inset focus-visible ring; a click also focuses it, blurring
     inspector fields. It consumes no keys but Space, so arrows and editor
     shortcuts bubble to the host, which owns them.
+    A press on an element marked `data-canvas-ui` (a ContextToolbar) is never
+    a gesture.
   Tokens only, no colour literals.
 -->
 <script lang="ts">
@@ -175,7 +177,11 @@
     });
   }
 
+  /** A press on UI laid over the canvas (a ContextToolbar marks itself `data-canvas-ui`). */
+  const onCanvasUi = (e: Event) => !!(e.target as Element | null)?.closest?.('[data-canvas-ui]');
+
   function onpointerdown(e: PointerEvent) {
+    if (onCanvasUi(e)) return;
     root?.focus({ preventScroll: true });
     const wantsPan = e.button === 1 || (e.button === 0 && (spaceDown || pan));
     if (!wantsPan && e.button !== 0) return;
@@ -229,7 +235,7 @@
         hovered = false;
         cursorAt = null;
       }),
-      on('dblclick', (e) => e.button === 0 && !spaceDown && !pan && emit('doubleclick', e)),
+      on('dblclick', (e) => e.button === 0 && !onCanvasUi(e) && !spaceDown && !pan && emit('doubleclick', e)),
       on('mousedown', (e) => e.button === 1 && e.preventDefault()),
     ];
     const onWheel = (e: WheelEvent) => {
