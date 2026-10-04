@@ -325,7 +325,7 @@
                 onkeydown={(e) => e.key === 'Enter' && pick(item)}
                 class={cn(
                   'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2.5 py-1.5 text-sm transition-colors duration-100 ease-ripple-out motion-reduce:transition-none',
-                  idx === highlight ? 'bg-ripple-muted text-ripple-surface-foreground' : 'text-ripple-surface-foreground/90',
+                  idx === highlight ? 'bg-ripple-muted text-ripple-popover-foreground' : 'text-ripple-popover-foreground/90',
                 )}
               >
                 {#if item.thumb}

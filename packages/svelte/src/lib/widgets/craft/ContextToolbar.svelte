@@ -140,7 +140,7 @@
       <Popover.Trigger
         aria-label={moreLabel}
         title={moreLabel}
-        class="ml-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-ripple-muted-foreground transition-colors duration-150 ease-ripple-out hover:bg-ripple-muted hover:text-ripple-surface-foreground focus-visible:outline-2 focus-visible:outline-ripple-ring aria-expanded:bg-ripple-muted aria-expanded:text-ripple-surface-foreground motion-reduce:transition-none"
+        class="ml-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-ripple-muted-foreground transition-colors duration-150 ease-ripple-out hover:bg-ripple-muted hover:text-current focus-visible:outline-2 focus-visible:outline-ripple-ring aria-expanded:bg-ripple-muted aria-expanded:text-current motion-reduce:transition-none"
       >
         <ChevronsRightIcon size={18} aria-hidden="true" />
       </Popover.Trigger>
