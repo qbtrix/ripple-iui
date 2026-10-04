@@ -110,6 +110,8 @@ describe('EditorShell density', () => {
     const floating = container.querySelector('[data-slot="editor-floating"]')!;
     expect(center.contains(floating)).toBe(true);
     expect(floating.className).toContain('pointer-events-none');
+    // ...but what you can click in it takes clicks: a badge or button floated over the canvas is not see-through
+    expect(floating.className).toContain('[&_:is(button,a[href],input,select,textarea,[role=button])]:pointer-events-auto');
     expect(floating.textContent).toBe('TOOLBAR');
     const prompt = container.querySelector('[data-slot="editor-prompt"]')!;
     expect(center.contains(prompt)).toBe(false);

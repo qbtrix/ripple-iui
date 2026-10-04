@@ -16,8 +16,10 @@
   right floor `minRight` 240) hidden with `leftOpen` / `rightOpen`. `rightTabs`
   tabs the right panel and `right` gets the active tab id (only that tab mounts).
   `data-slot="editor-center"` wraps the canvas: `relative`, clipping, sized.
-  `floating` is a pointer-transparent layer over the canvas (a ContextToolbar sets
-  pointer-events back on itself), `prompt` sits under the canvas, `pages` above
+  `floating` is a pointer-transparent layer over the canvas whose interactive children
+  (buttons, links, inputs, role=button) take clicks again, so a badge or toolbar floated
+  there works; a ContextToolbar also sets pointer-events back on itself, and while hidden
+  it is visibility: hidden, so it never swallows a canvas click. `prompt` sits under the canvas, `pages` above
   the status bar. All three render at either density.
 
   density 'pro' (default) is the layout above. 'quick' is the simple front door:
@@ -43,7 +45,7 @@
     children?: Snippet;
     right?: Snippet<[string]>;
     status?: Snippet;
-    /** Pointer-transparent layer over the canvas, for a floating ContextToolbar. */
+    /** Pointer-transparent layer over the canvas (its buttons, links and inputs still take clicks), for a floating ContextToolbar or badges. */
     floating?: Snippet;
     /** Row under the canvas, for a prompt bar. */
     prompt?: Snippet;
@@ -103,7 +105,8 @@
   >
     {@render children?.()}
     {#if floating}
-      <div data-slot="editor-floating" class="pointer-events-none absolute inset-0 z-10">{@render floating()}</div>
+      <!-- See-through over the canvas, except what can be clicked: a hidden ContextToolbar stays unclickable (visibility: hidden). -->
+      <div data-slot="editor-floating" class="pointer-events-none absolute inset-0 z-10 [&_:is(button,a[href],input,select,textarea,[role=button])]:pointer-events-auto">{@render floating()}</div>
     {/if}
   </main>
 {/snippet}
