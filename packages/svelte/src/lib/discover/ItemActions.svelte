@@ -2,8 +2,10 @@
      primary pill (a link when the item has a live page, a button otherwise), then
      Play / View, Remix and Report as icon buttons. Each button renders only when
      its callback is passed, so a static page gets just the links. The live link
-     points at user-submitted content, so it carries rel="nofollow ugc noopener";
-     internal item-page links (href prop on the tile and row) carry no rel. -->
+     points at user-submitted content, so it carries rel="nofollow ugc noopener
+     noreferrer": no rank, no window handle, no catalogue url in the Referer.
+     Item-page links (the href prop on the tile and row) carry whatever rel
+     the consumer passes. -->
 <script lang="ts">
   import Flag from '@lucide/svelte/icons/flag';
   import GitFork from '@lucide/svelte/icons/git-fork';
@@ -33,7 +35,7 @@
 
 <div class="flex shrink-0 items-center gap-0.5">
   {#if primary?.href}
-    <Button size="sm" class="rounded-full px-4" href={primary.href} target="_blank" rel="nofollow ugc noopener" aria-label={`${primary.label} ${item.title} (opens in a new tab)`}>{primary.label}</Button>
+    <Button size="sm" class="rounded-full px-4" href={primary.href} target="_blank" rel="nofollow ugc noopener noreferrer" aria-label={`${primary.label} ${item.title} (opens in a new tab)`}>{primary.label}</Button>
   {:else if primary && onremix}
     <Button size="sm" class="rounded-full px-4" disabled={busy} onclick={() => onremix(item)}>{primary.label}</Button>
   {/if}
