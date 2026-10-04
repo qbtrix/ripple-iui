@@ -2,7 +2,8 @@
 // add, drag and keyboard reorder, context menu, grid toggle and thumbnails.
 import { describe, it, expect, vi, afterEach, afterAll } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/svelte';
-import { flushSync, tick } from 'svelte';
+import { flushSync, mount, tick, unmount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import PageStrip from './PageStrip.svelte';
 import { PAGE_MIME, reorderIndex } from './page-strip.js';
 import { drainDeferredOverlayTeardown } from '../../../test-setup.js';
@@ -51,6 +52,23 @@ describe('PageStrip', () => {
     expect(opts()[0].querySelector('img')!.getAttribute('loading')).toBe('lazy');
     // A4 portrait keeps its aspect at the strip height.
     expect(opts()[0].querySelector('span')!.style.width).toBe(`${Math.round(56 * 210 / 297)}px`);
+  });
+
+  it('keeps a host-set current page that arrives before the page list does (a page just added)', () => {
+    // A getter-only prop, as a host passes `current={String(page)}`: a write inside PageStrip is a local override.
+    const host = new SvelteMap<string, typeof pages>([['pages', pages.slice(0, 1)]]);
+    const target = document.body.appendChild(document.createElement('div'));
+    const app = mount(PageStrip, { target, props: { get pages() { return host.get('pages')!; }, get current() { return 'p2'; } } });
+    try {
+      flushSync();
+      expect(opts().map((o) => o.getAttribute('aria-selected'))).toEqual(['true']); // falls back to the first page meanwhile
+      host.set('pages', pages.slice(0, 2)); // the list catches up; the host's current never changed
+      flushSync();
+      expect(opts().map((o) => o.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+    } finally {
+      unmount(app);
+      target.remove();
+    }
   });
 
   it('selects on click and with the arrow keys', async () => {

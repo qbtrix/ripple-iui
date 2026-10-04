@@ -60,14 +60,12 @@
   let root = $state<HTMLElement | null>(null);
   const grid = $derived(view === 'grid');
   const thumbH = $derived(grid ? 128 : 56);
-  /* Derived, not only the effect below, so a server render already marks the first page. */
+  /* The page shown as current: the host's, or the first page while the host's is not in the list
+     (a page just added, before the host's list catches up). Never written back to `current`, so the
+     host's value wins as soon as its page arrives. */
   const active = $derived(pages.some((p) => p.id === current) ? current : pages[0]?.id);
   const index = $derived(Math.max(0, pages.findIndex((p) => p.id === active)));
   const hasMenu = $derived(!!(onduplicate || ondelete));
-
-  $effect.pre(() => {
-    if (pages.length && !pages.some((p) => p.id === current)) current = pages[0].id;
-  });
 
   let drag = $state<{ id: string; over: number; after: boolean } | null>(null);
 
