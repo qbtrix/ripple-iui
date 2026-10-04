@@ -15,7 +15,9 @@
     again. Clicking any tab while collapsed opens it. `collapsed` is bindable.
   - Rail: role="tablist" (vertical, roving tabindex, Up/Down/Home/End select).
     Grid: one tab stop; arrows move between tiles, Enter inserts.
-  - Big targets and visible labels, since its people are not designers.
+  - Big targets and visible labels, since its people are not designers: filter
+    chips wrap (no hidden sideways scroller) and captions take up to two lines
+    (bilingual names), marked `data-wrap-ok` for layout checkers.
   Reuses Search (mode="filter"), EmptyState and Icon. Tokens only.
 -->
 <script lang="ts">
@@ -214,7 +216,7 @@
           />
         {/key}
         {#if current.filters?.length}
-          <div role="group" aria-label="Filters" class="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none]">
+          <div role="group" aria-label="Filters" class="flex flex-wrap gap-1.5 pb-0.5">
             {#each [{ id: '', label: 'All' }, ...current.filters] as f (f.id)}
               {@const on = (f.id || null) === chip}
               <button
@@ -285,7 +287,7 @@
                   {/if}
                 </span>
                 {#if current.captions !== false}
-                  <span class="truncate px-0.5 text-[12px] text-ripple-surface-foreground/85">{it.label}</span>
+                  <span data-wrap-ok class="line-clamp-2 px-0.5 text-[12px] leading-snug text-ripple-surface-foreground/85">{it.label}</span>
                 {/if}
               </button>
             {/each}
