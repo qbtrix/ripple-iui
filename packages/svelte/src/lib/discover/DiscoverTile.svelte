@@ -36,7 +36,7 @@
 <article class={cn('group flex min-w-0 flex-col gap-3', className)} data-testid={`discover-item-${item.id}`}>
   <div class="relative overflow-hidden rounded-2xl transition-transform duration-200 ease-out group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
     {#snippet art()}
-      <ItemArt imageUrl={item.imageUrl} alt={item.mediaKind === 'video' ? `Video poster for ${item.title}` : `Preview of ${item.title}`} mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
+      <ItemArt imageUrl={item.imageUrl} title={item.title} mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
     {/snippet}
     {#if href}
       <a {href} tabindex="-1" aria-hidden="true" class="block">{@render art()}</a>

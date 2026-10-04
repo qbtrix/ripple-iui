@@ -79,12 +79,33 @@ describe('discover card set — SSR static safety', () => {
   });
 
   it('ItemArt prints a lazy <img> or the music cover', () => {
-    const img = render(ItemArt, { props: { imageUrl: 'https://cdn.example.com/a.png', alt: 'Preview of A', tint: 'var(--ripple-accent)', initial: 'A' } }).body;
+    const img = render(ItemArt, { props: { imageUrl: 'https://cdn.example.com/a.png', title: 'A', tint: 'var(--ripple-accent)', initial: 'A' } }).body;
     expect(img).toContain('<img');
     expect(img).toContain('alt="Preview of A"');
-    const cover = render(ItemArt, { props: { imageUrl: null, alt: 'Song cover', mediaKind: 'audio', tint: 'var(--ripple-accent)', initial: 'S' } }).body;
+    const cover = render(ItemArt, { props: { imageUrl: null, title: 'S', mediaKind: 'audio', tint: 'var(--ripple-accent)', initial: 'S' } }).body;
     expect(cover).toContain('discover-music-cover');
     expect(cover).toContain('<svg');
+  });
+
+  it('ItemArt keeps the play badge on a video with no poster and does not claim one', () => {
+    const { body } = render(ItemArt, { props: { imageUrl: null, title: 'Clip', mediaKind: 'video', tint: 'var(--ripple-accent)', initial: 'C' } });
+    expect(body).toContain('discover-video-badge');
+    expect(body).not.toContain('<img');
+    expect(body).toContain('aria-label="Preview of Clip"');
+    expect(body).not.toContain('Video poster');
+  });
+
+  it.each(['javascript:alert(1)', 'data:image/png;base64,AAAA', '//evil.example.com/a.png', '/relative.png'])('a non-http preview %s renders the placeholder, not an <img>', (imageUrl) => {
+    const { body } = render(DiscoverTile, { props: { item: { ...tool, imageUrl } } });
+    expect(body).not.toContain('<img');
+    expect(body).not.toContain(imageUrl);
+    expect(body).toContain('>I<');
+  });
+
+  it('DetailMedia drops a non-http poster but keeps the video', () => {
+    const { body } = render(DetailMedia, { props: { item: { ...video, imageUrl: 'data:image/png;base64,AAAA' } } });
+    expect(body).toContain('<video');
+    expect(body).not.toContain('poster=');
   });
 
   it('DetailMedia renders video, audio and image with src in the markup', () => {

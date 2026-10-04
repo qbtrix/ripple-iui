@@ -35,7 +35,7 @@
 <div class={cn('flex items-center gap-4 px-3 py-2.5', className)} role="listitem" data-testid={`discover-item-${item.id}`}>
   <div class="w-24 shrink-0" aria-hidden="true">
     {#snippet art()}
-      <ItemArt imageUrl={item.imageUrl} alt="" mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
+      <ItemArt imageUrl={item.imageUrl} title={item.title} mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
     {/snippet}
     {#if href}
       <a {href} tabindex="-1" class="block">{@render art()}</a>
