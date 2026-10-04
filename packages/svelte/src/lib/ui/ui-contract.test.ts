@@ -131,6 +131,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   EditorShell: { children: kid('canvas') },
   TransformBox: { rect: { x: 10, y: 10, width: 80, height: 30 }, zoom: 1, panX: 0, panY: 0 },
   Tree: { nodes: [{ id: 'a', label: 'Layer 1', visible: true }] },
+  // Closed, the palette is a Dialog.Root around a closed portal: it renders
+  // nothing, like the overlay namespaces (see RENDERS_NOTHING_WHEN_EMPTY).
+  CommandPalette: { commands: [{ id: 'dup', label: 'Duplicate', group: 'Commands' }] },
   // Docked, so it paints in flow without an anchor or a measured parent.
   ContextToolbar: { variant: 'docked', children: kid('Font') },
   // bits-ui's Slider.Root is a union on `type`; it paints its track.
@@ -256,10 +259,10 @@ test('the ./ui surface is not empty and every name is a component, namespace or 
 
 /**
  * Bus- or collection-driven containers legitimately render nothing when empty,
- * and so does every overlay Root: it is a context provider around a closed
+ * and so does every overlay Root (and CommandPalette, a closed Dialog.Root): it is a context provider around a closed
  * portal. `Command.Root` is the exception — it paints its own frame.
  */
-const RENDERS_NOTHING_WHEN_EMPTY = new Set(['Toast', ...namespaces.filter((n) => n !== 'Command')]);
+const RENDERS_NOTHING_WHEN_EMPTY = new Set(['Toast', 'CommandPalette', ...namespaces.filter((n) => n !== 'Command')]);
 
 test.each(names)('%s mounts standalone, with no renderer context', (name) => {
   const Component = namespaces.includes(name) ? entry(name) : (ui as Record<string, unknown>)[name];

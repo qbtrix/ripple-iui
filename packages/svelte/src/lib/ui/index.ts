@@ -91,6 +91,9 @@ export * as Dialog from '../components/ui/dialog/index.js';
 export * as Sheet from '../components/ui/sheet/index.js';
 export * as ConfirmDialog from '../components/ui/confirm-dialog/index.js';
 export * as Command from '../components/ui/command/index.js';
+/* The palette over commands AND content (Quick mode's `/` and ⌘K). Also a spec widget. */
+export { default as CommandPalette } from '../widgets/overlay/CommandPalette.svelte';
+export type { PaletteItem } from '../widgets/overlay/palette-search.js';
 export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
