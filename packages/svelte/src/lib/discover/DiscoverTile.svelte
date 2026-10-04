@@ -1,8 +1,9 @@
 <!-- discover/DiscoverTile.svelte — one Discover item in a grid or shelf: the
      picture as a borderless rounded tile, then title, one line and the usage
      line, with the actions beside them. With `href`, the art and the title are
-     links; the art link is decorative (the title carries the name). Renders
-     fully on the server. -->
+     links; the art link is decorative (the title carries the name). `target`
+     and `rel` pass through to both, for consumers whose item pages are
+     off-site. Renders fully on the server. -->
 <script lang="ts">
   import GitFork from '@lucide/svelte/icons/git-fork';
   import Chip from '../widgets/display/Chip.svelte';
@@ -16,6 +17,8 @@
   let {
     item,
     href,
+    target,
+    rel,
     onremix,
     onreport,
     onopen,
@@ -25,6 +28,9 @@
     item: DiscoverItem;
     /** The item's own page. When set, the art and title link to it. */
     href?: string;
+    /** Passed to both links. Off-site consumers pass target="_blank" rel="noopener". */
+    target?: string;
+    rel?: string;
     onremix?: (item: DiscoverItem) => void;
     onreport?: (item: DiscoverItem) => void;
     onopen?: (item: DiscoverItem) => void;
@@ -39,7 +45,7 @@
       <ItemArt imageUrl={item.imageUrl} title={item.title} mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
     {/snippet}
     {#if href}
-      <a {href} tabindex="-1" aria-hidden="true" class="block">{@render art()}</a>
+      <a {href} {target} {rel} tabindex="-1" aria-hidden="true" class="block">{@render art()}</a>
     {:else}
       {@render art()}
     {/if}
@@ -50,7 +56,7 @@
   <div class="flex items-start gap-3">
     <div class="flex min-w-0 flex-1 flex-col">
       {#if href}
-        <a {href} class="truncate text-sm font-semibold text-foreground hover:underline">{item.title}</a>
+        <a {href} {target} {rel} class="truncate text-sm font-semibold text-foreground hover:underline">{item.title}</a>
       {:else}
         <span class="truncate text-sm font-semibold text-foreground">{item.title}</span>
       {/if}
