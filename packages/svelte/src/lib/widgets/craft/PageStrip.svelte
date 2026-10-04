@@ -4,7 +4,9 @@
   canvas, or (the grid toggle) a wrapping grid of larger pages. On `./ui` only.
 
   - The current page is marked (aria-selected + an accent ring); a click or the
-    arrow keys select (`onselect`, `current` is bindable).
+    arrow keys select (`onselect`, `current` is bindable). While `current` is not
+    in `pages` (a page just added or deleted) the first page is shown as current,
+    but `current` is never rewritten: the host owns it.
   - "+" adds a page after the current one (`onadd(index)`), drag reorders
     (`onmove(id, index)`, the index it should hold afterwards; maths in
     page-strip.ts), and Alt+Left/Right moves the focused page by one.
