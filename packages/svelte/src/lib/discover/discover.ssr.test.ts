@@ -46,6 +46,9 @@ describe('discover card set — SSR static safety', () => {
     expect(body).toContain('loading="lazy"');
     expect(body).toContain('href="/free-tools/invoice-maker"');
     expect(body).toContain('href="https://invoice.example.com/"');
+    expect(body).toMatch(/<a [^>]*href="https:\/\/invoice\.example\.com\/"[^>]*rel="nofollow ugc noopener"/);
+    expect(body).toMatch(/<a [^>]*href="https:\/\/invoice\.example\.com\/"[^>]*target="_blank"/);
+    expect(body).not.toMatch(/<a [^>]*href="\/free-tools\/invoice-maker"[^>]*rel=/);
     expect(body).toContain('Invoice maker');
     expect(body).toContain('Staff pick');
     expect(body).toContain('1.2k remixes');
