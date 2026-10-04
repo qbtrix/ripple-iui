@@ -137,6 +137,29 @@ describe('PageStrip', () => {
     expect(getByRole('menuitem', { name: 'Delete page' }).hasAttribute('data-disabled')).toBe(true);
   });
 
+  it('a quick right-click (or two-finger tap) opens the menu without picking an item', async () => {
+    // The menu opens under the pointer on contextmenu (pointerdown on macOS); the gesture's own
+    // pointerup then lands on the first item with no pointerdown on it.
+    const onduplicate = vi.fn();
+    const ondelete = vi.fn();
+    const { getByRole } = render(PageStrip, { props: { pages, onduplicate, ondelete } });
+    await fireEvent.pointerDown(opts()[1], { button: 2, pointerType: 'mouse' });
+    await fireEvent.contextMenu(opts()[1]);
+    flushSync();
+    const dup = getByRole('menuitem', { name: 'Duplicate page' });
+    const del = getByRole('menuitem', { name: 'Delete page' });
+    await fireEvent.pointerUp(dup, { button: 2, pointerType: 'mouse' });
+    await fireEvent.pointerUp(del, { button: 0, pointerType: 'mouse' });
+    expect(onduplicate).not.toHaveBeenCalled();
+    expect(ondelete).not.toHaveBeenCalled();
+    // A deliberate click on the item still works.
+    await fireEvent.pointerDown(dup, { button: 0, pointerType: 'mouse' });
+    await fireEvent.pointerUp(dup, { button: 0, pointerType: 'mouse' });
+    await fireEvent.click(dup);
+    expect(onduplicate).toHaveBeenCalledTimes(1);
+    expect(onduplicate).toHaveBeenCalledWith('p2');
+  });
+
   it('toggles a larger page grid', async () => {
     const { getByRole, container } = render(PageStrip, { props: { pages } });
     const toggle = getByRole('button', { name: 'Show all pages' });

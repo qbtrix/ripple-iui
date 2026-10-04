@@ -10,7 +10,10 @@
   - "+" adds a page after the current one (`onadd(index)`), drag reorders
     (`onmove(id, index)`, the index it should hold afterwards; maths in
     page-strip.ts), and Alt+Left/Right moves the focused page by one.
-  - Right-click (or Shift+F10) opens a menu with Duplicate and Delete.
+  - Right-click (or Shift+F10) opens a menu with Duplicate and Delete. Its items
+    act only on a real click (press and release on the item) or the keyboard: the
+    opening gesture's own release, which lands on the first item when the menu
+    opens under the pointer (a quick right-click, a two-finger tap), never picks.
   - Each control renders only when its handler is passed, like Tree's layer
     mode; Delete is disabled on the last page. The host owns the page list.
   - Thumbnails: the `thumbnail` snippet, else `thumb` (an image), else a blank
@@ -83,6 +86,11 @@
     }
     return out;
   }
+
+  /* bits-ui turns a pointerup with no pointerdown on the item into a click, so the release of
+     the right-click that opened the menu would select the item under it. Cancelling it leaves
+     selection to the native click (down and up on the item) and Enter/Space. */
+  const deliberate = (e: PointerEvent) => e.preventDefault();
 
   function select(id: string) {
     current = id;
@@ -191,10 +199,10 @@
       </ContextMenu.Trigger>
       <ContextMenu.Content class="w-44">
         {#if onduplicate}
-          <ContextMenu.Item onSelect={() => onduplicate(p.id)}><CopyIcon size={14} aria-hidden="true" />Duplicate page</ContextMenu.Item>
+          <ContextMenu.Item onpointerup={deliberate} onSelect={() => onduplicate(p.id)}><CopyIcon size={14} aria-hidden="true" />Duplicate page</ContextMenu.Item>
         {/if}
         {#if ondelete}
-          <ContextMenu.Item disabled={pages.length < 2} onSelect={() => ondelete(p.id)}><TrashIcon size={14} aria-hidden="true" />Delete page</ContextMenu.Item>
+          <ContextMenu.Item onpointerup={deliberate} disabled={pages.length < 2} onSelect={() => ondelete(p.id)}><TrashIcon size={14} aria-hidden="true" />Delete page</ContextMenu.Item>
         {/if}
       </ContextMenu.Content>
     </ContextMenu.Root>
