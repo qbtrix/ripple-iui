@@ -20,12 +20,15 @@
  *   SHAPE. Grouped atom / molecule / organism. Overlays and parts with
  *   sub-parts are shadcn composable namespaces (`Dialog.Root`, `Slider.Root`),
  *   the shape paw-enterprise's call sites already use. `confirmDialog` is also
- *   exported by name because callers import the store, not the component.
+ *   exported by name because callers import the store, not the component, and
+ *   the asset drag helpers (ASSET_MIME, readAssetDrop, isAssetDrag) are plain
+ *   functions beside AssetPanel.
  *
  *   Some exports are ./ui-only (no spec-registry or manifest entry): the AI
  *   surfaces, the shell and call parts, and the craft editor parts (ToolRail,
- *   CanvasViewport, EditorShell, TransformBox, InspectorSection, PropertyRow). The manifest
- *   widget count does not move when one of those is added.
+ *   CanvasViewport, EditorShell, TransformBox, InspectorSection, PropertyRow,
+ *   and the Quick mode parts ContextToolbar, AssetPanel, PageStrip). The
+ *   manifest widget count does not move when one of those is added.
  */
 
 /* ── atoms ─────────────────────────────────────────────────────────────────
@@ -90,6 +93,9 @@ export * as Dialog from '../components/ui/dialog/index.js';
 export * as Sheet from '../components/ui/sheet/index.js';
 export * as ConfirmDialog from '../components/ui/confirm-dialog/index.js';
 export * as Command from '../components/ui/command/index.js';
+/* The palette over commands AND content (Quick mode's `/` and ⌘K). Also a spec widget. */
+export { default as CommandPalette } from '../widgets/overlay/CommandPalette.svelte';
+export type { PaletteItem } from '../widgets/overlay/palette-search.js';
 export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
@@ -121,6 +127,14 @@ export { default as CanvasViewport } from '../widgets/craft/CanvasViewport.svelt
 export { default as EditorShell } from '../widgets/craft/EditorShell.svelte';
 export { default as TransformBox } from '../widgets/craft/TransformBox.svelte';
 export { default as Tree } from '../widgets/data/Tree.svelte';
+export { default as ContextToolbar } from '../widgets/craft/ContextToolbar.svelte';
+export type { ToolbarPlacement } from '../widgets/craft/toolbar-math.js';
+export { default as AssetPanel } from '../widgets/craft/AssetPanel.svelte';
+/* The drag contract between AssetPanel and a canvas: plain helpers, not components. */
+export { ASSET_MIME, readAssetDrop, isAssetDrag } from '../widgets/craft/asset-panel.js';
+export type { AssetTab, AssetItem, AssetFilter, AssetDrop } from '../widgets/craft/asset-panel.js';
+export { default as PageStrip } from '../widgets/craft/PageStrip.svelte';
+export type { PageItem } from '../widgets/craft/page-strip.js';
 export type {
   CraftTool,
   CanvasGuide,
@@ -134,4 +148,5 @@ export type {
   LayerNode,
   TransformHandle,
   TransformKind,
+  ScreenRect,
 } from '../widgets/craft/types.js';

@@ -9,12 +9,14 @@
   - `stacked` puts the label above a full-width control (a textarea, a long
     icon group) for rows that need the whole panel width.
   - Pass `for` with the control's id to get a real <label>; otherwise the label
-    is a span and the control should carry its own aria-label. `hint` is the
-    row's tooltip. Tokens only.
+    is a span. Either way the row publishes its label (input/field-name.ts), and
+    a NumberInput or ColorPicker inside it with no label of its own takes it as
+    its accessible name. `hint` is the row's tooltip. Tokens only.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
+  import { provideFieldName } from '../input/field-name.js';
 
   interface Props {
     label: string;
@@ -28,6 +30,7 @@
   }
 
   let { label, for: htmlFor, hint, labelWidth = '4.5rem', stacked = false, children, class: className }: Props = $props();
+  provideFieldName(() => label);
 </script>
 
 {#snippet text()}
