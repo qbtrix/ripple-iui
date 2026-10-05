@@ -100,3 +100,9 @@ export interface CanvasRect {
   width: number;
   height: number;
 }
+
+/** A TransformBox handle: a corner (nw, ne, se, sw) or an edge midpoint (n, e, s, w). */
+export type TransformHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+
+/** What a TransformBox commit was: a pointer move, a handle resize, or a keyboard nudge / resize burst. */
+export type TransformKind = 'move' | 'resize' | 'nudge';

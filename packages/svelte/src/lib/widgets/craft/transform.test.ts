@@ -110,14 +110,16 @@ describe('TransformBox', () => {
 
   it('a corner handle resizes with the aspect locked; Shift frees it', async () => {
     const oncommit = vi.fn();
-    const { container } = render(TransformBox, { rect: R, ...view, aspect: true, oncommit });
+    const { container, rerender } = render(TransformBox, { rect: R, ...view, aspect: true, oncommit });
     const se = container.querySelector('[data-handle=se]')!;
     await drag(se, [450, 200], [570, 200]);
     const [locked] = oncommit.mock.calls[0];
     expect(locked.width).toBeCloseTo(180);
     expect(locked.height).toBeCloseTo(60);
-    await drag(se, [450, 200], [570, 200], { shiftKey: true });
-    expect(oncommit.mock.calls[1][0]).toEqual({ x: 100, y: 50, width: 180, height: 40 });
+    // The host applies it; the next drag starts from there.
+    await rerender({ rect: { x: 100, y: 50, width: 180, height: 60 } });
+    await drag(se, [570, 240], [690, 240], { shiftKey: true });
+    expect(oncommit.mock.calls[1][0]).toEqual({ x: 100, y: 50, width: 240, height: 60 });
     expect(oncommit.mock.calls[1][1]).toBe('resize');
   });
 

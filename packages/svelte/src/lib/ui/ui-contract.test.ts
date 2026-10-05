@@ -129,6 +129,7 @@ const PROPS: Record<string, Record<string, unknown>> = {
   InspectorSection: { title: 'Fill', children: kid('row') },
   CanvasViewport: { docWidth: 800, docHeight: 600 },
   EditorShell: { children: kid('canvas') },
+  TransformBox: { rect: { x: 10, y: 10, width: 80, height: 30 }, zoom: 1, panX: 0, panY: 0 },
   Tree: { nodes: [{ id: 'a', label: 'Layer 1', visible: true }] },
   // bits-ui's Slider.Root is a union on `type`; it paints its track.
   Slider: { type: 'single', value: 1, max: 2 },

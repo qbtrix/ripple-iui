@@ -24,7 +24,7 @@
  *
  *   Some exports are ./ui-only (no spec-registry or manifest entry): the AI
  *   surfaces, the shell and call parts, and the craft editor parts (ToolRail,
- *   CanvasViewport, EditorShell, InspectorSection, PropertyRow). The manifest
+ *   CanvasViewport, EditorShell, TransformBox, InspectorSection, PropertyRow). The manifest
  *   widget count does not move when one of those is added.
  */
 
@@ -119,6 +119,7 @@ export { default as BottomSheet } from '../widgets/call/BottomSheet.svelte';
    registered widget; its opt-in layer props make it the layer list. */
 export { default as CanvasViewport } from '../widgets/craft/CanvasViewport.svelte';
 export { default as EditorShell } from '../widgets/craft/EditorShell.svelte';
+export { default as TransformBox } from '../widgets/craft/TransformBox.svelte';
 export { default as Tree } from '../widgets/data/Tree.svelte';
 export type {
   CraftTool,
@@ -131,4 +132,6 @@ export type {
   EditorPanelTab,
   LayerMove,
   LayerNode,
+  TransformHandle,
+  TransformKind,
 } from '../widgets/craft/types.js';
