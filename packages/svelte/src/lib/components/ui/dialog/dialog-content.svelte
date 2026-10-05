@@ -1,30 +1,20 @@
 <!-- dialog-content.svelte
-     2026-09-27 (canon gaps 2): `overlayClass` goes to the scrim, so a host that
-     stacks dialogs above its own chrome can lift both layers (`class="z-[100]"`
-     plus `overlayClass="z-[100]"`) without portalling into a layer of its own.
-     twMerge lets it replace the default z-50. No zIndex prop: the class pair
-     covers it.
-     reconciled 2026-09-14 (ripple overlay canonical): glass in tokens.
-     bg-ripple-popover text-ripple-popover-foreground ring-1 ring-ripple-border +
-     backdrop-blur; host-only bg-popover / ring-foreground/10 dropped.
-     2026-09-17 (fix/port-gaps): fill moved from bg-ripple-surface to bg-ripple-popover
-     (+ text-ripple-popover-foreground). --ripple-surface aliases the host's --card, an
-     in-flow card tint (6% white in paw-enterprise dark), so page text read straight
-     through this layer; --ripple-popover aliases the host's --popover, the token made
-     for a layer over content.
-     A dialog is portaled to the document body above a scrim and covers content, so it is a
-     floating layer, not a card. paw-enterprise names a separate --panel for
-     modals, but it is not a shadcn token and equals --popover in dark, so ripple
-     publishes one alias; --ripple-panel is the follow-up if the two ever diverge.
-     2026-09-14: the default width `sm:max-w-sm` is back inline in the base class.
-     It had been hoisted into a `defaultWidth` derived that regex-sniffed the
-     caller's `class` for `max-w-`, because `cn` was clsx without twMerge and
-     stacking both widths left the caller's losing by source order. `cn` now runs
-     twMerge, which resolves that conflict properly, so the special case is gone.
-     2026-09-14: state variants written out in full (`data-[state=open]:` …) instead of
-     ripple's `data-open`-style shorthand. The shorthand resolves only where styles.css's
-     @custom-variant declarations are loaded; a consumer importing theme.css alone got
-     `[data-open]`, which bits-ui never emits — so these classes were silently dead. -->
+     The modal box: portaled above a scrim (Dialog.Overlay), centred, glass in
+     tokens (bg-ripple-popover + backdrop-blur, ring-ripple-border). It is a
+     floating layer over content, so it uses --ripple-popover, not the in-flow
+     --ripple-surface card tint.
+     - Width: max-w-[calc(100%-2rem)] on phones, sm:max-w-sm by default. `cn`
+       runs twMerge, so a host widens it with a same-variant class
+       (`sm:max-w-lg`); a bare `max-w-md` loses to sm:max-w-sm on desktop.
+     - The single grid track is minmax(0,1fr), so a wide child (a long
+       Segmented, a table) can never stretch the track past the box. Without it
+       Dialog.Footer's -mx-4 bleed followed the stretched track out past the
+       right edge.
+     - `overlayClass` goes to the scrim, so a host stacking dialogs above its
+       own chrome lifts both layers (`class="z-[100]"` + `overlayClass="z-[100]"`).
+     - State variants are written in full (`data-[state=open]:`), not ripple's
+       shorthand, which resolves only where styles.css's @custom-variant rules
+       load. -->
 <script lang="ts">
 	import { Dialog as DialogPrimitive } from "bits-ui";
 	import DialogPortal from "./dialog-portal.svelte";
@@ -58,7 +48,7 @@
 		bind:ref
 		data-slot="dialog-content"
 		class={cn(
-			"bg-ripple-popover text-ripple-popover-foreground backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 ring-ripple-border grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none sm:max-w-sm",
+			"bg-ripple-popover text-ripple-popover-foreground backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 ring-ripple-border grid grid-cols-[minmax(0,1fr)] max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none sm:max-w-sm",
 			className
 		)}
 		{...restProps}

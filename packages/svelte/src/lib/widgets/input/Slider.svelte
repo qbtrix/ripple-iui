@@ -1,3 +1,6 @@
+<!-- src/lib/widgets/input/Slider.svelte
+     A labelled single-value slider: the label and the current value above a
+     ui Slider. The label also names the role="slider" thumb (aria-label). -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { Slider } from '$lib/components/ui/slider/index.js';
@@ -54,6 +57,7 @@
     {max}
     {step}
     {disabled}
+    aria-label={label}
     onValueChange={handleChange}
   />
 </div>
