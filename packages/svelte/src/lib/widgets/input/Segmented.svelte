@@ -1,40 +1,16 @@
 <!-- src/lib/widgets/input/Segmented.svelte
-     Updated 2026-09-27 (canon gaps 2): an option takes an optional `class`,
-     merged onto that option's button, and the component takes an optional
-     `leading` snippet rendered before each option's icon with the option as
-     its argument. Either lets a host colour or mark one option (a category
-     dot) without :nth-of-type CSS. Additive; nothing else moved.
-
-     Updated 2026-09-25 (shell new-look slice 1): options take an optional
-     `badge` (string or number), rendered as a small accent pill after the
-     label, for per-tab unread counts. Additive; nothing else moved.
-
-     origin: slev12397/beautiful-ui@ff0f74d components/atoms/SegmentedControl.tsx
-
-     Updated 2026-09-14 (beautiful-ui re-skin, lane A): the bordered strip of
-     buttons becomes the source's pill track with a sliding thumb. The track is
-     an inline-grid of equal-width segments on a tinted ground; a single
-     absolutely-positioned thumb carries the selection and translates between
-     columns on var(--ripple-ease-out), instead of each button painting its own
-     selected background. Type is the source's 13px/medium.
-
-     The thumb is single-select only. In `multiple` mode there is no one
-     position to slide to, so it is hidden and the selected segments paint
-     their own surface — same colours, no animation. It is also hidden when the
-     current value matches no option, which is what stops a stray thumb parking
-     under the first segment.
-
-     Per the translation doc: the source's shadow-hairline under the thumb
-     becomes ring-1 ring-ripple-border (shadows are dropped this arc), and
-     bg-line/60 becomes bg-ripple-border/60 — a background use of the line
-     colour that the table has no row for.
-
-     Props, options shape, value/multiple/size/disabled and onchange are
-     unchanged; the roles stay radiogroup/radio and group/checkbox, and the
-     thumb is aria-hidden so it never joins the option count.
-
-     Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component
-     (was unknown, narrowed to {} at the render slot, failing svelte-check). -->
+     A pill track of mutually exclusive (radiogroup/radio) or toggled
+     (group/checkbox, `multiple`) options. One aria-hidden thumb slides under the
+     selected segment in single mode; in multiple mode, or when the value matches
+     no option, there is no thumb and selected segments paint their own surface.
+     Options take an optional icon (Lucide slug), `badge` (a small accent count
+     pill), `class` and `disabled`; the `leading` snippet renders before each
+     option's icon so a host can mark one (a category dot).
+     Overflow: labels never wrap (whitespace-nowrap) and the track is capped at
+     its container (max-w-full) and scrolls sideways when the options do not fit,
+     so a long option list can never spill over the rows below it. Segments stay
+     equal width, so the thumb maths (100% / columns) holds while scrolled.
+     origin: slev12397/beautiful-ui@ff0f74d components/atoms/SegmentedControl.tsx -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -128,7 +104,7 @@
     class={cn(
       // w-fit is kept from the pre-skin version: the source renders standalone,
       // but here the track is a child of a column flex, which would stretch it.
-      'relative inline-grid w-fit select-none rounded-full bg-ripple-border/60 p-0.5',
+      'relative inline-grid w-fit max-w-full select-none overflow-x-auto rounded-full bg-ripple-border/60 p-0.5 [scrollbar-width:none]',
       sizeClass,
       disabled && 'opacity-50 cursor-not-allowed'
     )}
@@ -152,7 +128,7 @@
         disabled={disabled || (opt as any).disabled}
         onclick={() => pick(opt.value)}
         class={cn(
-          'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full font-medium transition-colors duration-150 ease-ripple-out',
+          'relative z-10 inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-medium transition-colors duration-150 ease-ripple-out',
           padClass,
           selected
             ? 'text-ripple-surface-foreground'
