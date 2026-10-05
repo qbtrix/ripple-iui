@@ -66,7 +66,7 @@ describe('PageStrip', () => {
       flushSync();
       expect(opts().map((o) => o.getAttribute('aria-selected'))).toEqual(['false', 'true']);
     } finally {
-      unmount(app);
+      void unmount(app);
       target.remove();
     }
   });
