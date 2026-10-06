@@ -663,6 +663,24 @@
     --xy-minimap-background-color: var(--ripple-surface);
     --xy-minimap-mask-background-color: color-mix(in oklab, var(--ripple-surface-foreground) 7%, transparent);
     --xy-minimap-mask-stroke-color: var(--ripple-border);
+    /* Everything else xyflow colours, so the fixed palette behind colorMode never shows. */
+    --xy-background-color: transparent;
+    --xy-attribution-background-color: transparent;
+    --xy-connectionline-stroke: var(--ripple-muted-foreground);
+    --xy-edge-stroke-selected: var(--ripple-accent);
+    --xy-node-color: var(--ripple-surface-foreground);
+    --xy-node-background-color: transparent;
+    --xy-node-border: none;
+    --xy-node-group-background-color: transparent;
+    --xy-node-boxshadow-hover: none;
+    --xy-node-boxshadow-selected: none;
+    --xy-handle-background-color: var(--ripple-muted-foreground);
+    --xy-handle-border-color: var(--ripple-surface);
+    --xy-selection-background-color: color-mix(in oklab, var(--ripple-accent) 8%, transparent);
+    --xy-selection-border: 1px dotted color-mix(in oklab, var(--ripple-accent) 60%, transparent);
+    --xy-minimap-node-background-color: color-mix(in oklab, var(--ripple-muted-foreground) 45%, transparent);
+    --xy-minimap-node-stroke-color: transparent;
+    --xy-resize-background-color: var(--ripple-accent);
   }
 
   /* ---- Loading / Error states ---- */
@@ -865,9 +883,9 @@
   .c4-canvas :global(.c4-component-node.is-code) {
     padding-inline: 10px;
   }
-  /* A file name is one long token: a mono face at a size that fits the box. */
+  /* A file name is one long token: the host's mono face (font-mono on the
+     element) at a size that fits the box. */
   .c4-canvas :global(.c4-component-node.is-code .c4-node-name) {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: calc(12px / clamp(0.5, var(--c4-zoom, 1), 1));
     font-weight: 500;
     letter-spacing: 0;

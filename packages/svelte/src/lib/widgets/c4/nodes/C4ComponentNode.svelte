@@ -40,7 +40,7 @@
   title={data.description ?? data.name}
 >
   <div class="c4-node-kind">{typeLabel}</div>
-  <div class="c4-node-name">{data.name}</div>
+  <div class="c4-node-name" class:font-mono={isCode}>{data.name}</div>
 
   {#if data.technology}
     <div class="c4-node-tech">{data.technology}</div>

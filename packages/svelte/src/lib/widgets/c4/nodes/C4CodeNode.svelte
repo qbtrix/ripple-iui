@@ -38,7 +38,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="c4-code-node" onclick={handleClick}>
   <div class="c4-code-head">
-    <span class="c4-code-name">{data.name}</span>
+    <span class="c4-code-name font-mono">{data.name}</span>
     {#if data.technology}<span class="c4-node-tech">{data.technology}</span>{/if}
     {#if isNew}<span class="c4-code-tag">New file</span>{/if}
     {#if canSwitch}
@@ -98,7 +98,6 @@
   }
 
   .c4-code-name {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
