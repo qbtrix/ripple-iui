@@ -102,6 +102,7 @@ export interface PortItem {
   from: string;
   to: string;
   label?: string;
+  style?: C4Relationship['style'];
 }
 
 export interface LiftedEdge {
@@ -159,7 +160,7 @@ export function liftRelationships(
     if (i === pa.length || i === pb.length) continue; // one end contains the other
     const lca = i === 0 ? null : pa[i - 1];
     const [sa, sb] = [pa[i], pb[i]];
-    const item: PortItem = { from: r.from, to: r.to, label: labelOf(r) || undefined };
+    const item: PortItem = { from: r.from, to: r.to, label: labelOf(r) || undefined, ...(r.style ? { style: r.style } : {}) };
 
     if (lca === null || vis.boundaries.has(lca)) {
       if (drawn.has(sa) && drawn.has(sb)) {

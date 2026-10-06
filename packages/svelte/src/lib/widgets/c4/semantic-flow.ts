@@ -8,7 +8,7 @@
 
 import type { Edge, Node } from '@xyflow/svelte';
 import { BOUNDARY_TOP, computeSemanticLayout, getNodeDimensions, getNodeType, type LayoutPosition } from './elk-layout.js';
-import { EDGE_STROKE } from './live.js';
+import { edgeLook, sharedStyle } from './live.js';
 import {
   childrenOf,
   codePanelSize,
@@ -126,13 +126,15 @@ export async function buildSemanticFlow(
     const route = routes.get(e.key);
     const ghost = ghosts.has(e.from) && ghosts.has(e.to);
     const items = named(e.items);
+    const look = edgeLook(sharedStyle(e.items.map((it) => it.style)));
     return {
       id: `edge-${e.key}`,
       source: e.from,
       target: e.to,
       type: route ? 'c4' : 'smoothstep',
       label: e.label,
-      style: `stroke: ${EDGE_STROKE}; stroke-width: 1.25px;`,
+      style: look.style,
+      animated: look.animated,
       ...(ghost ? { class: 'c4-ghost' } : {}),
       data: {
         points: route?.points,

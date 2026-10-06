@@ -1,7 +1,8 @@
 // live.ts — the pure half of C4Diagram's live layer: how `status` and
 // `selectedId` decorate SvelteFlow nodes, which statuses the legend lists,
 // where the camera goes when the node set, the focus or follow mode changes,
-// and the rounded path C4Edge draws through an ELK route. No DOM, no Svelte:
+// the rounded path C4Edge draws through an ELK route, and the stroke each
+// relationship style gets (both the plain and the semantic-zoom graph use it). No DOM, no Svelte:
 // C4Diagram, C4LiveLayer and C4Edge call these, tests call them direct.
 //
 // Invariant: with no live input, decorateNodes returns the SAME array and node
@@ -9,7 +10,7 @@
 // it did before they existed.
 
 import type { Node } from '@xyflow/svelte';
-import type { C4Status } from './types.js';
+import type { C4Relationship, C4Status } from './types.js';
 
 /** Legend order: what needs attention first; `planned` (not built yet) last. */
 export const STATUS_ORDER: C4Status[] = ['failed', 'changing', 'drift', 'changed', 'landed', 'planned'];
@@ -114,6 +115,19 @@ export function roundedPath(points: readonly { x: number; y: number }[], radius:
 /** Edge strokes on ripple tokens, as strings: SvelteFlow takes an edge's style inline. */
 export const EDGE_STROKE = 'color-mix(in oklab, var(--ripple-muted-foreground) 55%, transparent)';
 export const EVENT_STROKE = 'color-mix(in oklab, var(--ripple-warning) 70%, transparent)';
+
+/** How a relationship style draws: sync solid, async dashed and animated, event dashed in the warning tone. */
+export function edgeLook(style?: C4Relationship['style']): { style: string; animated: boolean } {
+  if (style === 'event') return { style: `stroke: ${EVENT_STROKE}; stroke-width: 1.25px; stroke-dasharray: 4 4;`, animated: false };
+  if (style === 'async') return { style: `stroke: ${EDGE_STROKE}; stroke-width: 1.25px; stroke-dasharray: 8 4;`, animated: true };
+  return { style: `stroke: ${EDGE_STROKE}; stroke-width: 1.25px;`, animated: false };
+}
+
+/** One style for an edge that stands for several relationships: theirs if they all share it, else sync. */
+export function sharedStyle(styles: readonly (C4Relationship['style'] | undefined)[]): C4Relationship['style'] {
+  const first = styles[0] ?? 'sync';
+  return styles.every((s) => (s ?? 'sync') === first) ? first : 'sync';
+}
 
 /** A CSS cubic-bezier() as a function of progress t in [0, 1]: Newton steps, bisection fallback. */
 export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number {

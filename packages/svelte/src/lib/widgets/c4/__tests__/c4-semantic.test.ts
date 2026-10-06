@@ -1,10 +1,12 @@
 // c4-semantic.test.ts — semantic zoom's pure core: what an `expanded` set draws (cards, boundaries,
 // code panels), how relationships lift onto drawn siblings with counts, port badges and scope
-// chips, which nodes are ghosted context, where markers roll up, and what a code panel shows.
+// chips, which nodes are ghosted context, where markers roll up, what a code panel shows, and
+// that an edge keeps its relationships' async/event dash in the semantic graph.
 
 import { describe, it, expect } from 'vitest';
 import type { C4Element, C4Relationship, C4Code } from '$lib/widgets/c4/types.js';
 import { computeSemanticLayout } from '../elk-layout.js';
+import { buildSemanticFlow } from '../semantic-flow.js';
 import {
   codePanelSize,
   codeView,
@@ -198,3 +200,32 @@ describe('computeSemanticLayout', { timeout: 30000 }, () => {
     expect(Math.hypot(route.tail!.x - start.x, route.tail!.y - start.y)).toBeLessThan(200);
   });
 });
+
+describe('semantic edges keep relationship style', () => {
+  const sys = (id: string): C4Element => ({ id, name: id.toUpperCase(), kind: 'system' });
+  const flow = (relationships: C4Relationship[]) =>
+    buildSemanticFlow({ level: 'context', title: '', elements: [sys('a'), sys('b'), sys('c')], relationships }, new Set(), undefined, {});
+
+  it('dashes and animates an async edge, dashes an event edge in the warning tone', async () => {
+    const { edges } = await flow([
+      { from: 'a', to: 'b', label: 'queues', style: 'async' },
+      { from: 'b', to: 'c', label: 'emits', style: 'event' },
+    ]);
+    const ab = edges.find((e) => e.source === 'a')!;
+    const bc = edges.find((e) => e.source === 'b')!;
+    expect([ab.animated, ab.style]).toEqual([true, expect.stringContaining('stroke-dasharray: 8 4')]);
+    expect([bc.animated, bc.style]).toEqual([false, expect.stringContaining('--ripple-warning')]);
+    expect(bc.style).toContain('stroke-dasharray: 4 4');
+  });
+
+  it('draws an edge solid when the relationships behind it mix styles', async () => {
+    const { edges } = await flow([
+      { from: 'a', to: 'b', label: 'calls' },
+      { from: 'a', to: 'b', label: 'queues', style: 'async' },
+    ]);
+    expect(edges).toHaveLength(1);
+    expect(edges[0].animated).toBe(false);
+    expect(edges[0].style).not.toContain('dasharray');
+  });
+});
+

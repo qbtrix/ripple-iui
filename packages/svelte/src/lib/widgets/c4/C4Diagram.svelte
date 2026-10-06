@@ -56,7 +56,7 @@
     unionRect,
     STATUS_LABELS,
     EDGE_STROKE,
-    EVENT_STROKE,
+    edgeLook,
   } from './live.js';
   import { liftMarkers, representative, type C4Tree, type Visibility } from './semantic.js';
   import { buildSemanticFlow } from './semantic-flow.js';
@@ -302,14 +302,7 @@
     const edges: Edge[] = [];
     diagram.relationships.forEach((r, i) => {
       if (!allElementIds.has(r.from) || !allElementIds.has(r.to)) return;
-      const isAsync = r.style === 'async';
-      const isEvent = r.style === 'event';
-
-      const edgeStyle = isEvent
-        ? `stroke: ${EVENT_STROKE}; stroke-width: 1.25px; stroke-dasharray: 4 4;`
-        : isAsync
-          ? `stroke: ${EDGE_STROKE}; stroke-width: 1.25px; stroke-dasharray: 8 4;`
-          : `stroke: ${EDGE_STROKE}; stroke-width: 1.25px;`;
+      const look = edgeLook(r.style);
 
       const route = routes.get(i);
       edges.push({
@@ -318,8 +311,8 @@
         target: r.to,
         type: route ? 'c4' : 'smoothstep',
         label: edgeLabelText(r) || undefined,
-        animated: isAsync,
-        style: edgeStyle,
+        animated: look.animated,
+        style: look.style,
         ...(route ? { data: { points: route.points, labelBox: route.label } } : {}),
       });
     });
