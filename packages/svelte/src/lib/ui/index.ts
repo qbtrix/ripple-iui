@@ -1,97 +1,34 @@
 /**
  * @file ui/index.ts
- * @description NEW (2026-09-14). The hand-written-caller surface: the subset of
- *   ripple that is safe and intended to be imported as plain Svelte components,
- *   outside `<Ripple spec>`.
+ * @description The hand-written-caller surface: the subset of ripple that is
+ *   safe and intended to be imported as plain Svelte components, outside
+ *   `<Ripple spec>`. Ripple is the UI source of truth for its hosts
+ *   (paw-enterprise, paw-sites), and this is the door they come through.
  *
- *   WHY THIS EXISTS. Ripple has 189 widgets and has only ever been driven by the
- *   spec renderer. paw-enterprise imports `@ripple-ui/svelte` in 32 files and not
- *   one of them imports a widget — every import is the renderer, the editor, or a
- *   registry helper. So "ripple is the source of truth" was true on paper and
- *   never exercised, and the two defects that fell out of first exercising it
- *   (widgets swallowing children, Card wrapping children in a <button>) were both
- *   invisible for exactly that reason.
+ *   Not a copy of anything: every name is re-exported from where it already
+ *   lives, so the spec registry and direct callers share one component and a
+ *   fix lands once.
  *
- *   WHAT THIS IS NOT. Not a new copy of anything. Every name below is re-exported
- *   from where it already lives; there is no fourth atoms directory and no file
- *   moved. The spec registry keeps using the same components, so a fix lands once
- *   and both callers get it.
+ *   WHAT BELONGS HERE. A component that is context-free: it renders correctly
+ *   with no renderer `getContext`. A context read is allowed only when typed
+ *   `| undefined` and guarded. `widgets/data/Table.svelte` is absent because
+ *   it reads `ui-events`/`ui-state`/`ui-data` as required.
+ *   `ui-contract.test.ts` mounts every export standalone and checks that rule
+ *   statically; a new export needs a PROPS entry there. Type exports go
+ *   through a `.ts` module, never `from '….svelte'` (the test counts those).
  *
- *   WHAT BELONGS HERE. A component earns a place when it is context-free — it
- *   must render correctly with no `getContext` from the renderer. `widgets/data/
- *   Table.svelte` is deliberately absent for that reason: it reads `ui-events`,
- *   `ui-state` and `ui-data` unguarded and needs a provider before it can be
- *   listed. `ui-contract.test.ts` next to this file enforces the rule by mounting
- *   every export standalone.
+ *   SHAPE. Grouped atom / molecule / organism. Overlays and parts with
+ *   sub-parts are shadcn composable namespaces (`Dialog.Root`, `Slider.Root`),
+ *   the shape paw-enterprise's call sites already use. `confirmDialog` is also
+ *   exported by name because callers import the store, not the component, and
+ *   the asset drag helpers (ASSET_MIME, readAssetDrop, isAssetDrag) are plain
+ *   functions beside AssetPanel.
  *
- *   LAYERING. Grouped atom / molecule / organism, which is the taxonomy the
- *   2026-09-12 UI audit settled on. Ripple already had `molecules/` and
- *   `organisms/` and no atoms layer at all; this names the missing base without
- *   relocating the parts.
- *
- *   OVERLAYS (2026-09-14). The overlay kinds are exported as shadcn composable
- *   NAMESPACES (`Dialog.Root`, `Dialog.Content`, …) from `components/ui/`, not
- *   as spec-shaped widgets: paw-enterprise's ~130 call sites use exactly that
- *   shape, so they migrate by import path alone. The three widget exports that
- *   shared these names (`Tooltip`, `Popover`, `DropdownMenu` from
- *   `widgets/overlay/`) came off this surface for that reason; they are still on
- *   `./widgets`. `confirmDialog` is exported by name as well as inside its
- *   namespace because 33 call sites import the store, not the component.
- *
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` joins the
- *   molecules. It was always a registered, context-free widget; it is listed now
- *   because its re-skin is CodeBlock's Diff mode, and a caller pairing the two
- *   needs both from the same surface. `DiffTable` joins the organisms on the
- *   same terms as TaskRows: no registry entry, no manifest entry, count 189.
- *   Updated 2026-09-17 (fix/port-gaps): `Switch` and `ProgressRing` join the
- *   atoms. Both were re-skinned in the arc but reachable only through
- *   `./widgets`. Both are registered widgets already, so the manifest count does
- *   not move; this only adds them to the hand-written-caller surface.
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): `ContextCards`
- *   and `RecommendationCard` join on the same terms: the retrieved chunks an
- *   agent cites, and the suggestion it asks you to accept. Neither is registered, so the count still reads 189. The source
- *   chip they share with AnswerBlock (`widgets/ai/SourceChip.svelte`) is a part,
- *   not an export.
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
- *   and `SelectionActions` join on the same terms. FineTuneCard is an inspector
- *   composed from Card, Segmented, Input, Select and Button; SelectionActions
- *   wraps a passage and anchors a Popover toolbar to the reader's text
- *   selection. Both ./ui-only, so the manifest still reads 189.
- *
- *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): `AnswerBlock` and
- *   `PixelLoader` join them on the same terms — the whole answer surface
- *   StreamingText.tsx really is, which the arc had only ported the text run of,
- *   and the pixel-grid loader that was never in the arc's scope. Same placement
- *   rule: no registry entry, no manifest entry, so the count still reads 189.
- *   PixelLoader does NOT replace `Loading` — that stays the library's generic
- *   spinner, registered and spec-drivable; this is the agent-work status line.
- *
- *   Updated 2026-09-25 (shell new-look slice 1): `Kbd` joins the atoms (a
- *   registered widget, newly listed here). `ListRow`, `SectionHeader` and
- *   `PanelHeader` join the molecules as new ./ui-only exports for the app
- *   shell's sidebars and side panels: no registry entry, no manifest entry, so
- *   the count still reads 189.
- *
- *   Updated 2026-09-26 (feature pages canon, F1): `PageHeader` joins the
- *   molecules (a registered widget, newly listed here, now with `leading` and
- *   `toolbar` snippets) and `InlineAlert` is a new ./ui-only molecule for inline
- *   banners. EmptyState gained icon-snippet / size / tone / actions in place.
- *   The manifest count still reads 189.
- *
- *   Updated 2026-09-30 (call UI new look, slice 0): the call parts join as new
- *   ./ui-only exports (no registry entry, no manifest entry, count still 189):
- *   `CountBadge` and `ControlButton` (atoms), `ControlBar`, `ParticipantTile`,
- *   `IncomingCallCard` (molecules), `FloatingDock` and `BottomSheet`
- *   (organisms: they own drag and stop state). The existing shadcn `Slider`
- *   joins the overlays' namespace shape (`Slider.Root`) for the call volume
- *   popover.
- *
- *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two organisms added,
- *   `TaskRows` and `PromptBar`. They are the first exports here that exist ONLY
- *   on this surface — no spec-registry entry and no manifest entry, so the
- *   manifest still reports 189 widgets and the arc's proof holds. Everything
- *   else listed here is also a registered widget. Registering either of the two
- *   is a deliberate follow-up that moves the count on purpose.
+ *   Some exports are ./ui-only (no spec-registry or manifest entry): the AI
+ *   surfaces, the shell and call parts, and the craft editor parts (ToolRail,
+ *   CanvasViewport, EditorShell, TransformBox, InspectorSection, PropertyRow,
+ *   and the Quick mode parts ContextToolbar, AssetPanel, PageStrip). The
+ *   manifest widget count does not move when one of those is added.
  */
 
 /* ── atoms ─────────────────────────────────────────────────────────────────
@@ -100,6 +37,7 @@ export { default as Button } from '../widgets/input/Button.svelte';
 export { default as Input } from '../widgets/input/Input.svelte';
 export { default as Textarea } from '../widgets/input/Textarea.svelte';
 export { default as Switch } from '../widgets/input/Switch.svelte';
+export { default as Checkbox } from '../widgets/input/Checkbox.svelte';
 export { default as Chip } from '../widgets/display/Chip.svelte';
 export { default as Badge } from '../widgets/display/Badge.svelte';
 export { default as StatusDot } from '../widgets/display/StatusDot.svelte';
@@ -117,6 +55,10 @@ export { default as Card } from '../widgets/layout/Card.svelte';
 export { default as EmptyState } from '../widgets/display/EmptyState.svelte';
 export { default as Avatar } from '../widgets/display/Avatar.svelte';
 export { default as Segmented } from '../widgets/input/Segmented.svelte';
+export { default as ColorPicker } from '../widgets/input/ColorPicker.svelte';
+export { default as NumberInput } from '../widgets/input/NumberInput.svelte';
+export { default as ChoiceGrid } from '../widgets/input/ChoiceGrid.svelte';
+export type { ChoiceOption } from '../widgets/input/choice-grid.js';
 export { default as Search } from '../widgets/input/Search.svelte';
 export { default as Tabs } from '../widgets/layout/Tabs.svelte';
 export { default as Collapsible } from '../widgets/layout/Collapsible.svelte';
@@ -132,6 +74,9 @@ export { default as InlineAlert } from '../widgets/display/InlineAlert.svelte';
 export { default as ControlBar } from '../widgets/call/ControlBar.svelte';
 export { default as ParticipantTile } from '../widgets/call/ParticipantTile.svelte';
 export { default as IncomingCallCard } from '../widgets/call/IncomingCallCard.svelte';
+export { default as ToolRail } from '../widgets/craft/ToolRail.svelte';
+export { default as PropertyRow } from '../widgets/craft/PropertyRow.svelte';
+export { default as InspectorSection } from '../widgets/craft/InspectorSection.svelte';
 
 /* ── form parts with sub-parts: shadcn composable namespace ────────────── */
 export * as Slider from '../components/ui/slider/index.js';
@@ -148,6 +93,9 @@ export * as Dialog from '../components/ui/dialog/index.js';
 export * as Sheet from '../components/ui/sheet/index.js';
 export * as ConfirmDialog from '../components/ui/confirm-dialog/index.js';
 export * as Command from '../components/ui/command/index.js';
+/* The palette over commands AND content (Quick mode's `/` and ⌘K). Also a spec widget. */
+export { default as CommandPalette } from '../widgets/overlay/CommandPalette.svelte';
+export type { PaletteItem } from '../widgets/overlay/palette-search.js';
 export { confirmDialog, type ConfirmDialogOptions } from '../components/ui/confirm-dialog/index.js';
 
 /* ── organisms ─────────────────────────────────────────────────────────────
@@ -171,3 +119,34 @@ export { default as FineTuneCard } from '../widgets/ai/FineTuneCard.svelte';
 export { default as SelectionActions } from '../widgets/ai/SelectionActions.svelte';
 export { default as FloatingDock } from '../widgets/call/FloatingDock.svelte';
 export { default as BottomSheet } from '../widgets/call/BottomSheet.svelte';
+
+/* ── craft editor organisms ────────────────────────────────────────────────
+   The shared frame of the craft editors (vector, photo, layout). `Tree` is the
+   registered widget; its opt-in layer props make it the layer list. */
+export { default as CanvasViewport } from '../widgets/craft/CanvasViewport.svelte';
+export { default as EditorShell } from '../widgets/craft/EditorShell.svelte';
+export { default as TransformBox } from '../widgets/craft/TransformBox.svelte';
+export { default as Tree } from '../widgets/data/Tree.svelte';
+export { default as ContextToolbar } from '../widgets/craft/ContextToolbar.svelte';
+export type { ToolbarPlacement } from '../widgets/craft/toolbar-math.js';
+export { default as AssetPanel } from '../widgets/craft/AssetPanel.svelte';
+/* The drag contract between AssetPanel and a canvas: plain helpers, not components. */
+export { ASSET_MIME, readAssetDrop, isAssetDrag } from '../widgets/craft/asset-panel.js';
+export type { AssetTab, AssetItem, AssetFilter, AssetDrop } from '../widgets/craft/asset-panel.js';
+export { default as PageStrip } from '../widgets/craft/PageStrip.svelte';
+export type { PageItem } from '../widgets/craft/page-strip.js';
+export type {
+  CraftTool,
+  CanvasGuide,
+  CanvasGuideChange,
+  CanvasRect,
+  CanvasPointer,
+  CanvasMods,
+  ViewTransform,
+  EditorPanelTab,
+  LayerMove,
+  LayerNode,
+  TransformHandle,
+  TransformKind,
+  ScreenRect,
+} from '../widgets/craft/types.js';

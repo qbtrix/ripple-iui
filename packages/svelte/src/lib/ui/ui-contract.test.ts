@@ -1,68 +1,22 @@
 /**
  * @file ui/ui-contract.test.ts
- * Updated 2026-09-30 (call UI new look, slice 0): PROPS for the call parts and
- *   `Slider` in the namespace list.
  * @description The contract behind the `./ui` export: every name listed there
  *   must mount as a plain Svelte component, with no `<Ripple spec>` wrapper and
  *   no renderer context.
  *
- *   This is the guard for the failure that motivated the whole surface. Ripple
- *   had only ever been driven by the spec renderer, so a component could depend
- *   on renderer-supplied context, or on a prop only the renderer passes, and
- *   nothing would notice. Two such defects shipped that way. A component that
- *   reads `getContext('ui-events' | 'ui-state' | 'ui-data')` unguarded throws
- *   here rather than in a consumer's page.
+ *   Three export shapes: component, shadcn namespace (mounted through its
+ *   `Root`), and the `confirmDialog` store. PROPS holds the minimum props each
+ *   export needs to paint; a new export adds an entry, and existing entries
+ *   only move when a prop really changes (a re-skin must leave them alone).
  *
- *   Updated 2026-09-27 (canon gaps 2): Dialog.Content `overlayClass` reaches the
- *   scrim and can replace its z-50.
- *
- *   Updated 2026-09-14 (overlay canonical): the surface now carries nine overlay
- *   NAMESPACES (`Dialog.Root` …) plus the named `confirmDialog` store, so the
- *   contract has three shapes — component, namespace, store. Namespaces mount
- *   their `Root` standalone; the static context rule scans every source under
- *   the namespace's directory; and an a11y block proves `Dialog.Content` is a
- *   real modal dialog and that `data-testid` reaches the DOM through
- *   `Dialog.Content`, `Sheet.Content` and `DropdownMenu.Content` (the check that
- *   catches a wrapper dropping `{...restProps}`). Focus trap and Escape are
- *   bits-ui's own behaviour and are deliberately not tested here.
- *
- *   Updated 2026-09-14 (review): three changes. The static context rule now
- *   asserts coverage PER namespace directory rather than against a total file
- *   count, so a namespace can no longer fall out of coverage silently when a
- *   path move breaks its prefix. A new guard fails if any packaged source
- *   reaches for the shorthand state variants that only resolve inside ripple's
- *   own build. And the ResizeObserver shim moved to src/test-setup.ts, so this
- *   file no longer leaves it on globalThis for whatever runs next.
- *
- *   Updated 2026-09-14 (beautiful-ui re-skin, lane C): two PROPS entries added,
- *   for the new `TaskRows` and `PromptBar` exports. The re-skin lanes keep this
- *   map UNCHANGED — that is the arc's proof that a re-skin did not move a prop.
- *   Lane C is the exception because it adds exports rather than re-skinning
- *   one, so the map has to grow with the surface. Neither is in
- *   RENDERS_NOTHING_WHEN_EMPTY: both paint their own frame with no props.
- *
- *   Updated 2026-09-16 (beautiful-ui re-skin, skin-answer): two more entries
- *   added, `AnswerBlock` and `PixelLoader`, on the same terms — new exports, not
- *   re-skins. No existing entry was edited, which is the thing this map is the
- *   proof of.
- *
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-diff): `Diff` and `DiffTable`
- *   entries added — a registered widget newly listed on this surface, and a new
- *   export. No existing entry was edited.
- *   Updated 2026-09-17 (fix/port-gaps): two more entries, `Switch` and
- *   `ProgressRing`, for the two atoms that joined the surface. Again no existing
- *   entry was edited.
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-context): two more entries,
- *   `ContextCards` and `RecommendationCard`, again new exports rather than
- *   re-skins. No existing entry was edited.
- *   Updated 2026-09-17 (beautiful-ui re-skin, skin-selection): `FineTuneCard`
- *   and `SelectionActions` added, both new exports. No existing entry was
- *   edited.
- *   Updated 2026-09-25 (shell new-look slice 1): entries for `Kbd`, `ListRow`,
- *   `SectionHeader` and `PanelHeader`, the four shell exports. No existing
- *   entry was edited.
- *   Updated 2026-09-26 (feature pages canon, F1): entries for `PageHeader`
- *   and `InlineAlert`. No existing entry was edited.
+ *   Also checked here: every `getContext` on the surface is typed optional
+ *   (statically, per file and per namespace directory, so a path move cannot
+ *   drop a namespace out of coverage); no packaged source uses the shorthand
+ *   state variants that only resolve inside ripple's own build; and the overlay
+ *   a11y basics (Dialog.Content is a modal dialog, data-testid reaches the DOM
+ *   through Content wrappers, caller widths and overlayClass replace the
+ *   defaults). Focus trap and Escape are bits-ui's own behaviour and are not
+ *   tested here. The ResizeObserver shim lives in src/test-setup.ts.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
@@ -83,6 +37,9 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Card: { title: 'Card' },
   EmptyState: { title: 'Nothing here' },
   Avatar: { name: 'Ada Lovelace' },
+  ColorPicker: { value: '#ff0000' },
+  NumberInput: { value: 12 },
+  ChoiceGrid: { options: [{ value: 'a4', label: 'A4', detail: '210 × 297 mm', thumb: { width: 210, height: 297 } }], value: 'a4' },
   Segmented: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }], value: 'a' },
   Search: { placeholder: 'Search' },
   Tabs: { tabs: [{ value: 'one', label: 'One' }], value: 'one' },
@@ -148,6 +105,7 @@ const PROPS: Record<string, Record<string, unknown>> = {
   Shimmer: { children: kid('shimmering') },
   // Both paint with no props; these make the mounted output name itself.
   Switch: { label: 'Notifications' },
+  Checkbox: { label: 'Include in the merge' },
   ProgressRing: { value: 40 },
   // The shell exports. Each paints with just its label or title.
   Kbd: { keys: ['⌘', 'K'] },
@@ -165,13 +123,30 @@ const PROPS: Record<string, Record<string, unknown>> = {
   IncomingCallCard: { title: 'Maya Chen', subtitle: 'Incoming call' },
   FloatingDock: { label: 'Call dock' },
   BottomSheet: { label: 'Call chat' },
+  // The craft editor parts. Each paints its own frame with these alone.
+  ToolRail: { tools: [{ id: 'pen', label: 'Pen', hotkey: 'p' }], active: 'pen' },
+  PropertyRow: { label: 'Width', children: kid('120') },
+  InspectorSection: { title: 'Fill', children: kid('row') },
+  CanvasViewport: { docWidth: 800, docHeight: 600 },
+  EditorShell: { children: kid('canvas') },
+  TransformBox: { rect: { x: 10, y: 10, width: 80, height: 30 }, zoom: 1, panX: 0, panY: 0 },
+  Tree: { nodes: [{ id: 'a', label: 'Layer 1', visible: true }] },
+  // Closed, the palette is a Dialog.Root around a closed portal: it renders
+  // nothing, like the overlay namespaces (see RENDERS_NOTHING_WHEN_EMPTY).
+  CommandPalette: { commands: [{ id: 'dup', label: 'Duplicate', group: 'Commands' }] },
+  // Docked, so it paints in flow without an anchor or a measured parent.
+  ContextToolbar: { variant: 'docked', children: kid('Font') },
+  PageStrip: { pages: [{ id: 'p1' }, { id: 'p2' }], current: 'p1' },
+  AssetPanel: { tabs: [{ id: 'templates', label: 'Templates' }], items: { templates: [{ id: 't1', label: 'Diwali offer' }] } },
   // bits-ui's Slider.Root is a union on `type`; it paints its track.
   Slider: { type: 'single', value: 1, max: 2 },
 };
 
 /** Exported by name but not mountable: the confirm-dialog store. */
 const STORES = new Set(['confirmDialog']);
-const names = Object.keys(ui).filter((n) => !STORES.has(n)).sort();
+/** Plain helpers and constants beside a component: AssetPanel's drag contract. */
+const HELPERS = new Set(['ASSET_MIME', 'readAssetDrop', 'isAssetDrag']);
+const names = Object.keys(ui).filter((n) => !STORES.has(n) && !HELPERS.has(n)).sort();
 /** shadcn composable namespaces: plain objects whose `Root` is the mount entry. */
 const namespaces = names.filter((n) => typeof (ui as Record<string, unknown>)[n] === 'object');
 const components = names.filter((n) => !namespaces.includes(n));
@@ -284,14 +259,16 @@ test('the ./ui surface is not empty and every name is a component, namespace or 
   );
   for (const n of namespaces) expect(typeof entry(n), `${n} has no Root`).toBe('function');
   expect(typeof ui.confirmDialog).toBe('function');
+  expect(typeof ui.ASSET_MIME).toBe('string');
+  for (const h of ['readAssetDrop', 'isAssetDrag'] as const) expect(typeof ui[h]).toBe('function');
 });
 
 /**
  * Bus- or collection-driven containers legitimately render nothing when empty,
- * and so does every overlay Root: it is a context provider around a closed
+ * and so does every overlay Root (and CommandPalette, a closed Dialog.Root): it is a context provider around a closed
  * portal. `Command.Root` is the exception — it paints its own frame.
  */
-const RENDERS_NOTHING_WHEN_EMPTY = new Set(['Toast', ...namespaces.filter((n) => n !== 'Command')]);
+const RENDERS_NOTHING_WHEN_EMPTY = new Set(['Toast', 'CommandPalette', ...namespaces.filter((n) => n !== 'Command')]);
 
 test.each(names)('%s mounts standalone, with no renderer context', (name) => {
   const Component = namespaces.includes(name) ? entry(name) : (ui as Record<string, unknown>)[name];

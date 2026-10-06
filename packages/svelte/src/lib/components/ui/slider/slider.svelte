@@ -1,8 +1,9 @@
 <!-- slider.svelte — shadcn-svelte primitive wrapper over bits-ui.
-     2026-09-14: state variants written out in full (`data-[state=open]:` …) instead of
-     ripple's `data-open`-style shorthand. The shorthand resolves only where styles.css's
-     @custom-variant declarations are loaded; a consumer importing theme.css alone got
-     `[data-open]`, which bits-ui never emits — so these classes were silently dead. -->
+     State variants are written out in full (`data-[orientation=vertical]:` …), not
+     ripple's `data-open`-style shorthand, which resolves only where styles.css's
+     @custom-variant declarations load.
+     `aria-label` / `aria-labelledby` go on each Thumb (the role="slider" element),
+     not the Root, so a labelled slider has an accessible name. -->
 <script lang="ts">
 	import { Slider as SliderPrimitive } from "bits-ui";
 	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
@@ -12,8 +13,13 @@
 		value = $bindable(),
 		orientation = "horizontal",
 		class: className,
+		"aria-label": ariaLabel,
+		"aria-labelledby": ariaLabelledby,
 		...restProps
-	}: WithoutChildrenOrChild<SliderPrimitive.RootProps> = $props();
+	}: WithoutChildrenOrChild<SliderPrimitive.RootProps> & {
+		"aria-label"?: string;
+		"aria-labelledby"?: string;
+	} = $props();
 </script>
 
 <!--
@@ -50,6 +56,8 @@ get along, so we shut typescript up by casting `value` to `never`.
 			<SliderPrimitive.Thumb
 				data-slot="slider-thumb"
 				index={thumb.index}
+				aria-label={ariaLabel}
+				aria-labelledby={ariaLabelledby}
 				class="border-ring ring-ring/50 relative size-3 rounded-full border bg-white transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
 			/>
 		{/each}
