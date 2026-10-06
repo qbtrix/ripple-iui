@@ -21,7 +21,7 @@
     "b7bae91d591d4f96"
   ],
   "backlinks": null,
-  "word_count": 249,
+  "word_count": 270,
   "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
@@ -41,7 +41,7 @@
 - A label row inside the top of the box: the kind (`Software System`, `External System`, `Container`, `Component`, `Code`, from `kindLabel`), the name, and the technology.
 - In semantic zoom, the scope boundary's crossings drawn further out appear as `C4PortBadge` chips right after the label, so they stay in sight when the boundary is wider than the view. Each chip's tooltip lists the relationships behind it.
 
-The box itself passes pointer events through, so the canvas still pans from inside a boundary; only the label row is clickable and calls `onclick`. On the semantic canvas the frame fades in when a card opens into it (instantly under reduced motion). When zoomed far out, the kind and technology drop away and the name counter-scales.
+The box itself passes pointer events through, so the canvas still pans from inside a boundary; only the label row is clickable and calls `onclick`, and Enter or Space on the focused boundary does the same. A boundary never drills, even when its element is drillable. On the semantic canvas the frame fades in when a card opens into it (instantly under reduced motion). When zoomed far out, the kind and technology drop away and the name counter-scales.
 
 ## Status
 

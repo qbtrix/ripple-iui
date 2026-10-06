@@ -26,7 +26,7 @@
     "dca4824057c9d36d"
   ],
   "backlinks": null,
-  "word_count": 833,
+  "word_count": 881,
   "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
@@ -58,11 +58,11 @@
 
 ## Layout and edges
 
-ELK lays out every element, with an element's non-empty `containers` nested inside a dashed boundary (with `kind` set, `containers` can hold any lower level: a container's components, a component's code). `children` is read only by semantic zoom. Every card is fixed to its ELK box, and edges follow ELK's orthogonal routes with rounded corners (`C4Edge`), labels in the space ELK reserved. If ELK returns no route the edge falls back to a smoothstep. `async` relationships are dashed and animated, `event` relationships dashed in the warning tone. Layer spacing is 56px.
+ELK lays out every element, with an element's non-empty `containers` nested inside a dashed boundary (with `kind` set, `containers` can hold any lower level: a container's components, a component's code). `children` is read only by semantic zoom. Every card is fixed to its ELK box, and edges follow ELK's orthogonal routes with rounded corners (`C4Edge`), labels in the space ELK reserved. If ELK returns no route the edge falls back to a smoothstep. `async` relationships are dashed and animated, `event` relationships dashed in the warning tone (`edgeLook` in `live.ts`, used by both the plain and the semantic graph). Layer spacing is 56px.
 
 ## Canvas, header and legend
 
-The canvas is styled only with `--ripple-*` tokens, so it follows the host's light or dark theme; cards sit on an opaque ground derived from the ink so translucent hosts do not show edges through them. The canvas fills a parent that gives it a height and falls back to 480px. An empty `title` hides the header, for hosts that draw their own chrome. The legend lists the statuses present when `status` is passed, otherwise the C4 shapes. Connection handles are hidden: nothing is connectable.
+The canvas is styled only with `--ripple-*` tokens, every xyflow colour variable included, so it follows the host's light or dark theme; cards sit on an opaque ground derived from the ink so translucent hosts do not show edges through them. The canvas fills a parent that gives it a height and falls back to 480px. An empty `title` hides the header, for hosts that draw their own chrome. The legend lists the statuses present when `status` is passed, otherwise the C4 shapes. Connection handles are hidden: nothing is connectable.
 
 SvelteFlow stays mounted across diagram swaps. Only the first layout shows the loading state; a stale layout (the diagram changed before ELK finished) is discarded; a failed layout shows an error message.
 
@@ -79,7 +79,7 @@ SvelteFlow stays mounted across diagram swaps. Only the first layout shows the l
 | `landed` | Success ring |
 | `planned` | Dashed muted outline, no card fill, content dimmed: a blueprint for something not in code yet |
 
-`planned` is distinct from the scope ghost (the whole node faded, outline unchanged) and the two compose. Markers are drawn in screen space (`C4LiveLayer`), so dots keep their size at every zoom. With `follow`, the camera eases to `focusId`; a user gesture calls `onmanualcamera` so the host can drop follow mode. Enter or Space on a focused node drills or clicks, like a pointer.
+`planned` is distinct from the scope ghost (the whole node faded, outline unchanged) and the two compose. Markers are drawn in screen space (`C4LiveLayer`), so dots keep their size at every zoom. With `follow`, the camera eases to `focusId`; a user gesture calls `onmanualcamera` so the host can drop follow mode. Enter or Space on a focused node runs exactly what a click on it runs (`activateNode` in `activate.ts`): cards drill when drillable, boundaries, databases, queues and code panels only click.
 
 ## Legibility at any zoom
 
@@ -87,7 +87,7 @@ SvelteFlow stays mounted across diagram swaps. Only the first layout shows the l
 
 ## Semantic zoom
 
-Passing `expanded` (even `[]`) switches to one canvas for the whole tree. An expanded element opens in place as a boundary around its children; an expanded code element with a `code` excerpt opens as a code panel (`C4CodeNode`) with the file's own line numbers, the change tinted and a Before/After switch. `scopeId` ghosts what lies outside it. Relationships lift onto the drawn siblings with counts; where an edge meets an expanded boundary it carries a port badge, and crossings drawn further out become chips on the scope boundary. Markers on hidden elements roll up to their drawn ancestor. Between layouts nodes glide and resize on the ripple ease, leaving nodes fade, and the camera eases to ELK's final box; all instant under reduced motion. The pure logic lives in `semantic.ts` and `semantic-flow.ts`.
+Passing `expanded` (even `[]`) switches to one canvas for the whole tree. An expanded element opens in place as a boundary around its children; an expanded code element with a `code` excerpt opens as a code panel (`C4CodeNode`) with the file's own line numbers, the change tinted and a Before/After switch. `scopeId` ghosts what lies outside it. Relationships lift onto the drawn siblings with counts, and an edge keeps its dash when every relationship behind it shares a style; where an edge meets an expanded boundary it carries a port badge, and crossings drawn further out become chips on the scope boundary. Markers on hidden elements roll up to their drawn ancestor. Between layouts nodes glide and resize on the ripple ease, leaving nodes fade, and the camera eases to ELK's final box; all instant under reduced motion. The pure logic lives in `semantic.ts` and `semantic-flow.ts`.
 
 ## Known gaps
 

@@ -19,7 +19,7 @@
     "39312d103168469c"
   ],
   "backlinks": null,
-  "word_count": 218,
+  "word_count": 243,
   "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
@@ -52,6 +52,6 @@ export { default as C4CodeNode }      from './C4CodeNode.svelte';
 
 ## Shared rules
 
-The card-shaped nodes (person, system, container, component) render the classes `c4-node`, `c4-node-kind`, `c4-node-name`, `c4-node-tech`, `c4-node-desc`, `c4-node-docs` and `c4-node-drill`. Their rules live once in `C4Diagram.svelte`, on ripple tokens: the card fills its ELK box, names counter-scale with zoom, and secondary lines drop away when zoomed far out. Every node renders four hidden handles, which only anchor edges. Status rings and the `planned` blueprint treatment are drawn on the SvelteFlow wrapper, so no node component knows about status.
+The card-shaped nodes (person, system, container, component) render the classes `c4-node`, `c4-node-kind`, `c4-node-name`, `c4-node-tech`, `c4-node-desc`, `c4-node-docs` and `c4-node-drill`. Their rules live once in `C4Diagram.svelte`, on ripple tokens: the card fills its ELK box, names counter-scale with zoom, and secondary lines drop away when zoomed far out. Every node renders four hidden handles, which only anchor edges. Every node's click goes through `activateNode` (`activate.ts`), which `C4Diagram` also calls on Enter or Space, so keyboard and pointer behave the same for each type. Status rings and the `planned` blueprint treatment are drawn on the SvelteFlow wrapper, so no node component knows about status.
 
 The barrel is internal to the C4 widget; it is not part of `@ripple-ui/svelte/widgets`.
