@@ -110,6 +110,26 @@ describe('C4Diagram live props', () => {
     expect(onclick).not.toHaveBeenCalled();
   });
 
+  it('activates a focused node from the keyboard, drilling when drillable', async () => {
+    const onclick = vi.fn();
+    const ondrilldown = vi.fn();
+    const keyed: C4DiagramData = {
+      level: 'component',
+      title: '',
+      elements: [
+        { id: 'craft', name: 'Craft Studio', kind: 'component', drillable: true },
+        { id: 'stores', name: 'Stores', kind: 'component' },
+      ],
+      relationships: [],
+    };
+    const { container } = render(C4Diagram, { diagram: keyed, onclick, ondrilldown });
+    await waitFor(() => expect(wrapper(container, 'stores')).not.toBeNull());
+    await fireEvent.keyDown(wrapper(container, 'craft')!, { key: 'Enter' });
+    expect(ondrilldown).toHaveBeenCalledWith('craft', 'code');
+    await fireEvent.keyDown(wrapper(container, 'stores')!, { key: ' ' });
+    expect(onclick).toHaveBeenCalledWith('stores');
+  });
+
   it('renders a legacy diagram as before: header, shape legend, no live attributes', async () => {
     const { container, getByText } = render(C4Diagram, { diagram: legacy });
     await waitFor(() => expect(wrapper(container, 'user')).not.toBeNull());

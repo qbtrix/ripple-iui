@@ -342,6 +342,26 @@
   function onCanvasClick(event: MouseEvent) {
     if ((event.target as Element | null)?.closest?.('.svelte-flow__controls')) onmanualcamera?.();
   }
+
+  const NEXT_LEVEL: Record<C4Diagram['level'], string> = {
+    context: 'container',
+    container: 'component',
+    component: 'code',
+    code: 'code',
+  };
+
+  // Keyboard twin of a node click: SvelteFlow makes node wrappers focusable,
+  // and Enter or Space on one drills (when drillable) or clicks, as a pointer would.
+  function onCanvasKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const id = (event.target as Element | null)?.closest?.('.svelte-flow__node')?.getAttribute('data-id');
+    const node = id ? flowNodes.find((n) => n.id === id) : undefined;
+    if (!node) return;
+    event.preventDefault();
+    const data = node.data as unknown as C4NodeData;
+    if (data.drillable && ondrilldown) ondrilldown(node.id, NEXT_LEVEL[diagram.level]);
+    else onclick?.(node.id);
+  }
 </script>
 
 <div
@@ -365,7 +385,7 @@
   <!-- Flow canvas -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="c4-canvas" onclickcapture={onCanvasClick}>
+  <div class="c4-canvas" onclickcapture={onCanvasClick} onkeydown={onCanvasKeydown}>
     {#if !layoutReady}
       <!-- Loading state -->
       <div class="c4-loading" aria-live="polite">
