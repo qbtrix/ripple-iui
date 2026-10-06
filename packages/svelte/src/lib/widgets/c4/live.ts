@@ -11,8 +11,8 @@
 import type { Node } from '@xyflow/svelte';
 import type { C4Status } from './types.js';
 
-/** Legend order: what needs attention first. */
-export const STATUS_ORDER: C4Status[] = ['failed', 'changing', 'drift', 'changed', 'landed'];
+/** Legend order: what needs attention first; `planned` (not built yet) last. */
+export const STATUS_ORDER: C4Status[] = ['failed', 'changing', 'drift', 'changed', 'landed', 'planned'];
 
 export const STATUS_LABELS: Record<C4Status, string> = {
   failed: 'Failed check',
@@ -20,6 +20,7 @@ export const STATUS_LABELS: Record<C4Status, string> = {
   drift: 'Drift',
   changed: 'Changed',
   landed: 'Landed',
+  planned: 'Planned',
 };
 
 export interface LiveInput {

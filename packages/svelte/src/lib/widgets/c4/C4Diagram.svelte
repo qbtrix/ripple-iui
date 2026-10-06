@@ -5,7 +5,8 @@
 
   Live layer (all optional; absent, the widget behaves as it always did):
   `status` paints a node's state through a `data-c4-status` attribute on its
-  SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves),
+  SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves;
+  `planned` draws a blueprint: dashed outline, no fill, content dimmed),
   `markers` pins dots to nodes, `selectedId` controls selection, and
   `focusId` + `follow` keep the camera on one node. A user pan or zoom (the
   zoom buttons and the minimap included) calls `onmanualcamera`, so a host can
@@ -1102,5 +1103,30 @@
   }
   .c4-status-swatch[data-c4-swatch='drift'] {
     border-style: dashed;
+  }
+
+  /* Planned: a node that does not exist in code yet, drawn as a blueprint. A
+     dashed muted outline over a card with no fill or border of its own, its
+     content dimmed. Distinct from the scope ghost (the whole node faded, its
+     outline unchanged) and from drift (a dashed warning ring on a full card).
+     The dim is on the content, not the wrapper, so it composes with the ghost's
+     wrapper opacity instead of fighting it; the handles stay hidden. */
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned']),
+  .c4-status-swatch[data-c4-swatch='planned'] {
+    --c4-tone: color-mix(in oklab, var(--ripple-muted-foreground) 75%, transparent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned'])::after {
+    border-style: dashed;
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned'] > :not(.c4-handle)) {
+    opacity: 0.6;
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned'] .c4-node) {
+    background: transparent;
+    border-color: transparent;
+  }
+  .c4-status-swatch[data-c4-swatch='planned'] {
+    border-style: dashed;
+    background: transparent;
   }
 </style>

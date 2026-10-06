@@ -10,8 +10,9 @@
 export type C4Kind = 'person' | 'system' | 'container' | 'component' | 'code';
 
 /** Live state of an element. `changing` is the only one that moves (a calm
- *  pulse); the rest are static treatments. */
-export type C4Status = 'changing' | 'changed' | 'landed' | 'drift' | 'failed';
+ *  pulse); the rest are static treatments. `planned` marks a blueprint node
+ *  that does not exist in code yet (dashed outline, dimmed, no card fill). */
+export type C4Status = 'changing' | 'changed' | 'landed' | 'drift' | 'failed' | 'planned';
 
 /** A small dot on a node: who (or what) is there right now. `color` is any CSS
  *  colour, including a `var(--…)` token. */

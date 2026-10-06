@@ -1,6 +1,6 @@
 // c4-diagram-live.test.ts — mounts the real C4Diagram (SvelteFlow + ELK) in
 // jsdom and checks the live props reach the DOM: status rings on the node
-// wrappers, the status legend, marker dots, controlled selection, the
+// wrappers (planned included), the status legend, marker dots, controlled selection, the
 // zoom-button report, the kind labels, and an untouched legacy render.
 
 import { describe, it, expect, vi } from 'vitest';
@@ -53,6 +53,21 @@ describe('C4Diagram live props', { timeout: 30000 }, () => {
     expect(wrapper(container, 'f.index')?.hasAttribute('data-c4-status')).toBe(false);
     expect(getByText('Changing now')).toBeInTheDocument();
     expect(getByText('Drift')).toBeInTheDocument();
+  });
+
+  it('marks a planned node on its wrapper and gives it a dashed legend entry', async () => {
+    const { container, getByText } = render(C4Diagram, {
+      diagram,
+      status: { 'f.curve': 'planned', 'f.index': 'landed' },
+    });
+    await waitFor(() => expect(wrapper(container, 'f.curve')).not.toBeNull());
+    expect(wrapper(container, 'f.curve')?.getAttribute('data-c4-status')).toBe('planned');
+    // A status, not the scope ghost: the two treatments stay independent.
+    expect(wrapper(container, 'f.curve')?.hasAttribute('data-c4-ghost')).toBe(false);
+    const items = [...container.querySelectorAll('[aria-label="Status legend"] [role="listitem"]')];
+    expect(items.map((li) => li.textContent?.trim())).toEqual(['Landed', 'Planned']);
+    expect(items[1].querySelector('[data-c4-swatch="planned"]')).not.toBeNull();
+    expect(getByText('Planned')).toBeInTheDocument();
   });
 
   it('draws marker dots on the nodes they name, skipping ids not on the map', async () => {

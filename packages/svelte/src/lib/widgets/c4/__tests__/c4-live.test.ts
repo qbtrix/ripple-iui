@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Node } from '@xyflow/svelte';
 import { getNodeType, computeElkLayout, computeElkGraph } from '../elk-layout.js';
-import { decorateNodes, statusesPresent, nodeSetKey, planCamera, roundedPath } from '../live.js';
+import { decorateNodes, statusesPresent, nodeSetKey, planCamera, roundedPath, STATUS_LABELS } from '../live.js';
 import type { C4Diagram, C4System, C4Component } from '$lib/widgets/c4/types.js';
 
 const node = (id: string, extra: Partial<Node> = {}): Node => ({
@@ -96,6 +96,13 @@ describe('statusesPresent', () => {
     const status = { a: 'landed', b: 'failed', c: 'drift', z: 'changing' } as const;
     expect(statusesPresent(status, ['a', 'b', 'c'])).toEqual(['failed', 'drift', 'landed']);
     expect(statusesPresent(undefined, ['a'])).toEqual([]);
+  });
+
+  it('lists planned last, with its own label', () => {
+    const status = { a: 'planned', b: 'landed', c: 'failed' } as const;
+    expect(statusesPresent(status, ['a', 'b', 'c'])).toEqual(['failed', 'landed', 'planned']);
+    expect(STATUS_LABELS.planned).toBe('Planned');
+    expect(decorateNodes([node('a')], { status }).at(0)?.domAttributes).toEqual({ 'data-c4-status': 'planned' });
   });
 });
 
