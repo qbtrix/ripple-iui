@@ -95,6 +95,12 @@
     startLine = 1, highlight: highlightRange, highlightTone = 'accent'
   }: Props = $props();
 
+
+  const source = $derived(code ?? text ?? '');
+  // One trailing newline is an artifact of the fence, not an empty last line.
+  // An empty block gets no rows at all rather than a numbered blank one.
+  const lines = $derived(source ? source.replace(/\n$/, '').split('\n') : []);
+
   // 20px holds two digits; an excerpt deep in a file needs more.
   const gutter = $derived(Math.max(20, String(startLine + Math.max(0, lines.length - 1)).length * 7 + 6));
   const toneClass = $derived(
@@ -103,11 +109,6 @@
     : 'bg-ripple-accent/10'
   );
   const marked = (n: number) => !!highlightRange && n >= highlightRange[0] && n <= highlightRange[1];
-
-  const source = $derived(code ?? text ?? '');
-  // One trailing newline is an artifact of the fence, not an empty last line.
-  // An empty block gets no rows at all rather than a numbered blank one.
-  const lines = $derived(source ? source.replace(/\n$/, '').split('\n') : []);
 
   let copied = $state(false);
   let copyTimer: ReturnType<typeof setTimeout> | null = null;
