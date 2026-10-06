@@ -1,8 +1,8 @@
 /**
  * @file widgets/display/diff-rows.ts
- * @description NEW (2026-09-17, beautiful-ui re-skin, skin-diff). The row model
- *   behind display/Diff.svelte's re-skin, kept out of the component so it can be
- *   tested without the lazy `import('diff')` the widget does.
+ * @description The row model behind display/Diff.svelte, kept out of the
+ *   component so it can be tested without the lazy `import('diff')` the widget
+ *   does.
  *
  *   origin: slev12397/beautiful-ui@ff0f74d components/primitives/CodeBlock.tsx
  *   (its `DiffRow`/`CodePiece` shape, which the source writes by hand; here it is
@@ -10,7 +10,8 @@
  *
  *   Three rules, each pinned in diff-rows.test.ts:
  *   - One gutter. A removed line keeps its old number, an added or unchanged
- *     line shows its new one, as in the source.
+ *     line shows its new one, as in the source. Numbering starts at `oldStart`
+ *     and `newStart` (1 by default), so an excerpt shows its real file lines.
  *   - A trailing newline ends the last line; it is not an empty extra line.
  *   - Word-level pieces only on a removed line paired with the added line that
  *     rewrote it. Pairing walks both runs in order and takes the first added
@@ -56,11 +57,14 @@ function isRewrite(parts: DiffPart[], a: string, b: string): boolean {
 // hunk past this size is shown whole. A proper line-similarity alignment would lift it.
 const MAX_PAIRING = 400;
 
-/** Unified rows from a line diff. Pass `words` to get word-level pieces on rewrites. */
-export function diffRows(parts: DiffPart[], words?: WordDiff): DiffRow[] {
+/**
+ * Unified rows from a line diff. Pass `words` to get word-level pieces on
+ * rewrites, and `oldStart`/`newStart` to number from a file's own lines.
+ */
+export function diffRows(parts: DiffPart[], words?: WordDiff, oldStart = 1, newStart = 1): DiffRow[] {
   const rows: DiffRow[] = [];
-  let oldNo = 1;
-  let newNo = 1;
+  let oldNo = oldStart;
+  let newNo = newStart;
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     const lines = linesOf(part.value);

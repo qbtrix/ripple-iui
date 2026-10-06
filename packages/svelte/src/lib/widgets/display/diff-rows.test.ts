@@ -1,11 +1,11 @@
 // @file widgets/display/diff-rows.test.ts
-// @description NEW (2026-09-17, beautiful-ui re-skin, skin-diff). Pins the line
-//   classification behind Diff.svelte's re-skin against the real `diff` library,
-//   imported statically here because the widget loads it lazily. The gutter
-//   numbering, the trailing-newline rule and when word-level pieces appear are
-//   all things a reader cannot check by looking at a rendered diff. The pairing
-//   cases use the source's own CodeBlock fixture, where a rewrite and an
-//   insertion share one hunk.
+// @description Pins the line classification behind Diff.svelte against the real
+//   `diff` library, imported statically here because the widget loads it lazily.
+//   The gutter numbering (including an excerpt's start lines), the
+//   trailing-newline rule and when word-level pieces appear are all things a
+//   reader cannot check by looking at a rendered diff. The pairing cases use the
+//   source's own CodeBlock fixture, where a rewrite and an insertion share one
+//   hunk.
 import { describe, it, expect } from 'vitest';
 import { diffLines, diffWordsWithSpace } from 'diff';
 import { diffRows, splitRows, type DiffRow } from './diff-rows.js';
@@ -39,6 +39,26 @@ describe('diffRows — classification', () => {
 
   it('returns nothing for two empty strings', () => {
     expect(rows('', '')).toEqual([]);
+  });
+
+  it('numbers an excerpt from its real file lines', () => {
+    const out = diffRows(diffLines('a\nb\nc\n', 'a\nB\nc\nd\n'), diffWordsWithSpace, 192, 192);
+    expect(out.map((r) => [r.kind, gutter(r)])).toEqual([
+      ['context', 192],
+      ['removed', 193],
+      ['added', 193],
+      ['context', 194],
+      ['added', 195],
+    ]);
+  });
+
+  it('keeps the old and new starts apart', () => {
+    const out = diffRows(diffLines('a\nb\n', 'a\nB\n'), diffWordsWithSpace, 192, 210);
+    expect(out.map((r) => [r.kind, r.oldNo, r.newNo])).toEqual([
+      ['context', 192, 210],
+      ['removed', 193, undefined],
+      ['added', undefined, 211],
+    ]);
   });
 });
 
