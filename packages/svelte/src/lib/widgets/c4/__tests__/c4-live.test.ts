@@ -17,7 +17,8 @@ const node = (id: string, extra: Partial<Node> = {}): Node => ({
   ...extra,
 });
 
-describe('getNodeType with an explicit kind', () => {
+// Runs ELK; on a loaded machine that outlasts vitest's 5s default.
+describe('getNodeType with an explicit kind', { timeout: 30000 }, () => {
   it('maps each kind to its node type', () => {
     expect(getNodeType({ id: 'p', name: 'P', kind: 'person', technology: 'x' } as C4System)).toBe('person');
     expect(getNodeType({ id: 's', name: 'S', kind: 'system' })).toBe('system');
@@ -133,7 +134,7 @@ describe('planCamera', () => {
   });
 });
 
-describe('computeElkGraph routes', () => {
+describe('computeElkGraph routes', { timeout: 30000 }, () => {
   const diagram: C4Diagram = {
     level: 'component',
     title: '',

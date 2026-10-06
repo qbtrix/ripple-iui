@@ -55,6 +55,8 @@ export type {
   C4Kind,
   C4Status,
   C4Marker,
+  C4Code,
+  C4PortView,
 } from './c4/index.js';
 
 const defaultRegistry: WidgetMap = {

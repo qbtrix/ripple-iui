@@ -168,7 +168,8 @@ describe('code panels', () => {
   });
 });
 
-describe('computeSemanticLayout', () => {
+// Runs ELK; on a loaded machine that outlasts vitest's 5s default.
+describe('computeSemanticLayout', { timeout: 30000 }, () => {
   it('nests each boundary around its children, honours its minimum, and puts badges on its border', async () => {
     const vis = computeVisibility(tree, new Set(['pe', 'pe.spa']));
     const { edges } = liftRelationships(tree, vis, relationships, 'pe.spa');

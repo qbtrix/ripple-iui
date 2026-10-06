@@ -17,6 +17,16 @@
   SvelteFlow stays mounted across diagram swaps: only the first layout shows
   the loading state, and C4LiveLayer refits when the node set changes. The
   layout spinner stops under prefers-reduced-motion.
+
+  Semantic zoom (pass `expanded`): one canvas for the whole tree. An expanded
+  element opens in place as a boundary around its children (an expanded code
+  element with an excerpt opens as a code panel), `scopeId` ghosts what lies
+  outside it, edges lift onto drawn siblings with port badges and counts, and
+  markers on hidden elements roll up to their drawn ancestor (semantic.ts,
+  semantic-flow.ts). Between layouts nodes glide and resize with the ripple
+  ease, leaving nodes fade where they were, edges and markers sit out the move,
+  and the camera eases to the new frame; all instant under reduced motion.
+  Without `expanded` none of this runs and the widget renders as before.
 -->
 <script lang="ts">
   import { SvelteFlow, Background, Controls, MiniMap } from '@xyflow/svelte';
@@ -34,8 +44,20 @@
   } from './nodes/index.js';
   import C4LiveLayer from './C4LiveLayer.svelte';
   import C4Edge from './C4Edge.svelte';
-  import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode } from './elk-layout.js';
-  import { decorateNodes, nodeSetKey, statusesPresent, STATUS_LABELS } from './live.js';
+  import { C4CodeNode } from './nodes/index.js';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode, type LayoutPosition } from './elk-layout.js';
+  import {
+    decorateNodes,
+    nodeSetKey,
+    statusesPresent,
+    unionRect,
+    STATUS_LABELS,
+    EDGE_STROKE,
+    EVENT_STROKE,
+  } from './live.js';
+  import { liftMarkers, representative, type C4Tree, type Visibility } from './semantic.js';
+  import { buildSemanticFlow } from './semantic-flow.js';
   // From types.ts, NOT the barrel, and aliased: this component is itself named
   // C4Diagram, and svelte-package emits `declare const C4Diagram` plus
   // `type C4Diagram` in the .d.ts. An unaliased type import of the same name
@@ -66,6 +88,10 @@
     selectedId?: string;
     /** A user pan, zoom or zoom-button press moved the camera. */
     onmanualcamera?: () => void;
+    /** Semantic zoom: ids drawn open on one canvas. Passing it (even []) turns the mode on. */
+    expanded?: string[];
+    /** Semantic zoom: the element being looked inside; everything outside it is ghosted. */
+    scopeId?: string;
   }
 
   let {
@@ -79,6 +105,8 @@
     follow,
     selectedId,
     onmanualcamera,
+    expanded,
+    scopeId,
   }: Props = $props();
 
   // Register all C4 node types for SvelteFlow
@@ -90,6 +118,7 @@
     queue: C4QueueNode as any,
     component: C4ComponentNode as any,
     group: C4GroupNode as any,
+    code: C4CodeNode as any,
   };
 
   const edgeTypes: EdgeTypes = { c4: C4Edge as any };
@@ -104,8 +133,6 @@
 
   // Ripple tokens, so the canvas follows the host theme. Edges and the minimap
   // take colours as strings, which is why these are constants, not CSS.
-  const EDGE_STROKE = 'color-mix(in oklab, var(--ripple-muted-foreground) 55%, transparent)';
-  const EVENT_STROKE = 'color-mix(in oklab, var(--ripple-warning) 70%, transparent)';
   const MINIMAP_NODE = 'color-mix(in oklab, var(--ripple-muted-foreground) 45%, transparent)';
   const MINIMAP_GROUP = 'color-mix(in oklab, var(--ripple-muted-foreground) 10%, transparent)';
 
@@ -300,19 +327,72 @@
   // True once a layout has landed. Plain (not $state): only the effect reads it.
   let hasLayout = false;
 
-  // Run ELK layout whenever the diagram input changes. After the first layout
-  // the previous graph stays on screen until the next one is ready.
+  // ---- Semantic zoom state ----
+  /** The last semantic layout: what is drawn, and every element's absolute box. */
+  let semanticInfo = $state.raw<{ tree: C4Tree; vis: Visibility; rects: Map<string, LayoutPosition> } | null>(null);
+  /** Nodes that just left the map, fading where they were until the move settles. */
+  let leaving = $state.raw<Node[]>([]);
+  /** True while nodes glide between layouts: edges and markers sit it out. */
+  let moving = $state(false);
+  const MOVE_MS = 560;
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // Keyed on strings: a host deriving `expanded` per frame must not re-run ELK per frame.
+  const expandedKey = $derived(expanded === undefined ? null : expanded.join('\n'));
+
+  function beginMove(prev: Node[], next: Node[], prevRects: Map<string, LayoutPosition> | undefined) {
+    clearTimeout(settleTimer);
+    if (prev.length === 0 || prefersReducedMotion.current) {
+      leaving = [];
+      moving = false;
+      return;
+    }
+    const nextIds = new Set(next.map((n) => n.id));
+    leaving = prev.flatMap((n) => {
+      const r = prevRects?.get(n.id);
+      if (nextIds.has(n.id) || !r) return [];
+      // Absolute and unparented: its parent may be gone or shrinking.
+      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: 'c4-leaving', selectable: false, focusable: false, zIndex: 1000, domAttributes: undefined }];
+    });
+    moving = true;
+    settleTimer = setTimeout(() => {
+      moving = false;
+      leaving = [];
+    }, MOVE_MS + 60);
+  }
+
+  // Run ELK layout whenever the diagram (or, in semantic zoom, the expanded set
+  // or scope) changes. After the first layout the previous graph stays on
+  // screen until the next one is ready.
   $effect(() => {
     const currentDiagram = diagram;
+    const ek = expandedKey;
+    const scope = ek === null ? undefined : scopeId;
     let cancelled = false;
     if (!hasLayout) layoutReady = false;
     layoutError = null;
 
-    buildFlowGraph(currentDiagram)
-      .then(({ nodes, edges }) => {
+    // Handlers read the props when called, so the layout never tracks their identity.
+    const handlers = {
+      onclick: (id: string) => onclick?.(id),
+      ondrilldown: (id: string, level: string) => ondrilldown?.(id, level),
+    };
+    const job =
+      ek === null
+        ? buildFlowGraph(currentDiagram).then((g) => ({ ...g, semantic: null }))
+        : buildSemanticFlow(currentDiagram, new Set(ek ? ek.split('\n') : []), scope, handlers).then((f) => ({
+            nodes: f.nodes,
+            edges: f.edges,
+            semantic: { tree: f.tree, vis: f.vis, rects: f.rects },
+          }));
+
+    job
+      .then(({ nodes, edges, semantic }) => {
         if (cancelled) return;
+        if (semantic) beginMove(flowNodes, nodes, semanticInfo?.rects);
         flowNodes = nodes;
         flowEdges = edges;
+        semanticInfo = semantic;
         layoutReady = true;
         hasLayout = true;
       })
@@ -327,9 +407,36 @@
   });
 
   // ---- Live layer ----
-  const shownNodes = $derived(decorateNodes(flowNodes, { status, selectedId }));
+  const shownNodes = $derived(
+    decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { status, selectedId })
+  );
   const nodeIds = $derived(nodeSetKey(flowNodes));
   const legendStatuses = $derived(statusesPresent(status, nodeIds.split('\n')));
+  const shownMarkers = $derived(
+    semanticInfo && markers ? liftMarkers(semanticInfo.tree, semanticInfo.vis, markers) : markers
+  );
+
+  // Semantic camera: what to frame and the signature that decides when to move.
+  // Following, it frames the focus (its drawn ancestor if hidden) and refits when
+  // that box changes; manually, it frames the open code panel or the scope and
+  // refits only when what is drawn, the scope or the open panel changes.
+  const frame = $derived.by(() => {
+    if (!semanticInfo) return undefined;
+    const { tree, vis, rects } = semanticInfo;
+    const panels = [...vis.panels];
+    const target =
+      follow && focusId
+        ? representative(tree, vis, focusId)
+        : (panels.at(-1) ?? (scopeId && rects.has(scopeId) ? scopeId : undefined));
+    let rect = target ? (rects.get(target) ?? null) : null;
+    // A code panel keeps its boundary's label row in view, so the nesting reads.
+    const box = target && vis.panels.has(target) ? rects.get(tree.parent.get(target) ?? '') : undefined;
+    if (rect && box) rect = unionRect([rect, { x: rect.x, y: box.y, width: rect.width, height: 1 }]);
+    rect ??= unionRect(rects.values());
+    const r = rect ? [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(',') : '';
+    const key = follow ? `F|${target}|${r}` : `M|${nodeIds}|${scopeId ?? ''}|${panels.join(',')}`;
+    return { key, rect, follow: !!follow };
+  });
 
   // A user gesture carries its DOM event; programmatic moves (fitView, the
   // follow camera) pass null. Report once per gesture.
@@ -358,9 +465,13 @@
 
   // Keyboard twin of a node click: SvelteFlow makes node wrappers focusable,
   // and Enter or Space on one drills (when drillable) or clicks, as a pointer would.
+  // Only on the wrapper itself: a control inside a node (a link, a panel's
+  // Before/After switch, a port badge) keeps its own keys.
   function onCanvasKeydown(event: KeyboardEvent) {
     if (event.key !== 'Enter' && event.key !== ' ') return;
-    const id = (event.target as Element | null)?.closest?.('.svelte-flow__node')?.getAttribute('data-id');
+    const t = event.target as Element | null;
+    if (!t?.classList?.contains('svelte-flow__node')) return;
+    const id = t.getAttribute('data-id');
     const node = id ? flowNodes.find((n) => n.id === id) : undefined;
     if (!node) return;
     event.preventDefault();
@@ -392,7 +503,8 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="c4-canvas"
+    class={semanticInfo ? 'c4-canvas c4-semantic' : 'c4-canvas'}
+    data-c4-moving={moving ? '' : undefined}
     onpointerdowncapture={onCanvasGesture}
     onwheelcapture={onCanvasGesture}
     onkeydown={onCanvasKeydown}
@@ -434,7 +546,7 @@
         onmovestart={onMoveStart}
         onmove={onMove}
       >
-        <C4LiveLayer ids={nodeIds} {focusId} {follow} {markers} />
+        <C4LiveLayer ids={nodeIds} {focusId} {follow} markers={shownMarkers} {frame} />
         <Background
           gap={24}
         />
@@ -843,6 +955,73 @@
   .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-desc),
   .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-docs) {
     display: none;
+  }
+
+  /* ---- Semantic zoom ----
+     Nodes glide and resize to their new layout on the ripple curve (the camera
+     eases on the same curve in C4LiveLayer), fade in where they first appear,
+     and fade out where they were when they leave. Edges and marker dots are
+     drawn for the final layout, so they sit the move out. Ghosts are context. */
+  .c4-semantic :global(.svelte-flow__node) {
+    transition:
+      transform 560ms var(--ripple-ease-out),
+      width 560ms var(--ripple-ease-out),
+      height 560ms var(--ripple-ease-out),
+      opacity 280ms var(--ripple-ease-out);
+    animation: c4-node-in 360ms var(--ripple-ease-out) 140ms backwards;
+  }
+
+  @keyframes c4-node-in {
+    from { opacity: 0; }
+  }
+
+  .c4-semantic :global(.svelte-flow__node[data-c4-ghost]) {
+    opacity: 0.38;
+  }
+
+  .c4-semantic :global(.svelte-flow__node.c4-leaving) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .c4-semantic :global(.svelte-flow__edges),
+  .c4-semantic :global(.svelte-flow__edge-labels),
+  .c4-semantic :global(.svelte-flow__node-toolbar) {
+    transition: opacity 240ms var(--ripple-ease-out);
+  }
+
+  .c4-semantic[data-c4-moving] :global(.svelte-flow__edges),
+  .c4-semantic[data-c4-moving] :global(.svelte-flow__edge-labels),
+  .c4-semantic[data-c4-moving] :global(.svelte-flow__node-toolbar) {
+    opacity: 0;
+    transition-duration: 120ms;
+  }
+
+  .c4-semantic :global(.svelte-flow__edge.c4-ghost) {
+    opacity: 0.35;
+  }
+
+  .c4-canvas :global(.svelte-flow__edge-label.c4-ghost-label) {
+    opacity: 0.45;
+  }
+
+  /* A port badge is its own pill; its EdgeLabel wrapper draws nothing. */
+  .c4-canvas :global(.svelte-flow__edge-label.c4-badge-label) {
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-semantic :global(.svelte-flow__node) {
+      transition: none;
+      animation: none;
+    }
+    .c4-semantic :global(.svelte-flow__edges),
+    .c4-semantic :global(.svelte-flow__edge-labels),
+    .c4-semantic :global(.svelte-flow__node-toolbar) {
+      transition: none;
+    }
   }
 
   /* ---- Live status: data-c4-status on the SvelteFlow node wrapper ----

@@ -1,5 +1,5 @@
-// C4 Model diagram widget — the component, its data and live-state types, and
-// the layout utilities.
+// C4 Model diagram widget — the component, its data, live-state and semantic
+// zoom types, and the layout utilities.
 
 export { default as C4Diagram } from './C4Diagram.svelte';
 export { computeElkLayout, getNodeType, isGroupNode } from './elk-layout.js';
@@ -7,6 +7,8 @@ export type {
   C4Kind,
   C4Status,
   C4Marker,
+  C4Code,
+  C4PortView,
   C4Person,
   C4System,
   C4Container,

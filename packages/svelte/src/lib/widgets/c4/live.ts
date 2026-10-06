@@ -109,3 +109,65 @@ export function roundedPath(points: readonly { x: number; y: number }[], radius:
   const last = points[points.length - 1];
   return `${d} L ${n(last.x)} ${n(last.y)}`;
 }
+
+/** Edge strokes on ripple tokens, as strings: SvelteFlow takes an edge's style inline. */
+export const EDGE_STROKE = 'color-mix(in oklab, var(--ripple-muted-foreground) 55%, transparent)';
+export const EVENT_STROKE = 'color-mix(in oklab, var(--ripple-warning) 70%, transparent)';
+
+/** A CSS cubic-bezier() as a function of progress t in [0, 1]: Newton steps, bisection fallback. */
+export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number {
+  const ax = 3 * x1 - 3 * x2 + 1;
+  const bx = 3 * x2 - 6 * x1;
+  const cx = 3 * x1;
+  const ay = 3 * y1 - 3 * y2 + 1;
+  const by = 3 * y2 - 6 * y1;
+  const cy = 3 * y1;
+  const x = (s: number) => ((ax * s + bx) * s + cx) * s;
+  const y = (s: number) => ((ay * s + by) * s + cy) * s;
+  const dx = (s: number) => (3 * ax * s + 2 * bx) * s + cx;
+  return (t) => {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    let s = t;
+    for (let i = 0; i < 8; i++) {
+      const err = x(s) - t;
+      if (Math.abs(err) < 1e-6) return y(s);
+      const d = dx(s);
+      if (Math.abs(d) < 1e-6) break;
+      s -= err / d;
+    }
+    let lo = 0;
+    let hi = 1;
+    s = t;
+    while (hi - lo > 1e-6) {
+      if (x(s) < t) lo = s;
+      else hi = s;
+      s = (lo + hi) / 2;
+    }
+    return y(s);
+  };
+}
+
+/** The camera's curve: the same as --ripple-ease-out, so camera and layout move as one. */
+export const rippleEase = cubicBezier(0.23, 1, 0.32, 1);
+
+export type Rect = { x: number; y: number; width: number; height: number };
+
+export function unionRect(rects: Iterable<Rect>): Rect | null {
+  let out: Rect | null = null;
+  for (const r of rects) {
+    if (!out) {
+      out = { ...r };
+      continue;
+    }
+    const x = Math.min(out.x, r.x);
+    const y = Math.min(out.y, r.y);
+    out = {
+      x,
+      y,
+      width: Math.max(out.x + out.width, r.x + r.width) - x,
+      height: Math.max(out.y + out.height, r.y + r.height) - y,
+    };
+  }
+  return out;
+}

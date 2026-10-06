@@ -19,6 +19,15 @@ export function childrenOf(el: C4Element): C4Element[] {
   return e.children ?? e.containers ?? e.components ?? [];
 }
 
+/** The boundary/eyebrow label for an element's C4 kind. */
+export function kindLabel(el: Pick<C4Element, 'kind'> & { external?: boolean }): string {
+  if (el.kind === 'container') return 'Container';
+  if (el.kind === 'component') return 'Component';
+  if (el.kind === 'code') return 'Code';
+  if (el.kind === 'person') return 'Person';
+  return el.external ? 'External System' : 'Software System';
+}
+
 export interface C4Tree {
   byId: Map<string, C4Element>;
   parent: Map<string, string | null>;

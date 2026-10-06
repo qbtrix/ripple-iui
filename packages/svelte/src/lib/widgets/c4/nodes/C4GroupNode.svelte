@@ -3,21 +3,21 @@
   that nests the next level down (a system's containers, or with `kind` a
   container's components or a component's code). Its corner label names the
   boundary's kind and is the clickable part; the box itself lets pointer
-  events through to the pane so the canvas still pans from inside it.
+  events through to the pane so the canvas still pans from inside it. In
+  semantic zoom the scope boundary also lists its far connections as chips at
+  the right of the label row (C4PortBadge), and a frame fades in when a card
+  opens into it.
 -->
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
+  import C4PortBadge from '../C4PortBadge.svelte';
+  import { kindLabel } from '../semantic.js';
 
   let { data }: { data: C4NodeData } = $props();
 
   const isExternal = $derived(data.external ?? false);
-  const kindLabel = $derived(
-    data.kind === 'container' ? 'Container'
-      : data.kind === 'component' ? 'Component'
-      : data.kind === 'code' ? 'Code'
-      : isExternal ? 'External System' : 'Software System'
-  );
+  const label = $derived(kindLabel({ kind: data.kind, external: isExternal }));
 
   function handleClick() {
     if (data.onclick && data.element) {
@@ -35,10 +35,17 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="group-label" onclick={handleClick} title={data.description ?? data.name}>
-    <span class="group-type">{kindLabel}</span>
+    <span class="group-type">{label}</span>
     <span class="group-name">{data.name}</span>
     {#if data.technology}
       <span class="group-tech">{data.technology}</span>
+    {/if}
+    {#if data.ports?.length}
+      <span class="group-ports">
+        {#each data.ports as port, i (i)}
+          <C4PortBadge {port} />
+        {/each}
+      </span>
     {/if}
   </div>
 </div>
@@ -53,6 +60,29 @@
     background: color-mix(in oklab, var(--ripple-surface-foreground) 2.5%, transparent);
     position: relative;
     pointer-events: none;
+  }
+
+  /* Only on the semantic canvas, where a card opens into this frame in place. */
+  :global(.c4-semantic) .c4-group-node {
+    animation: c4-frame-in 360ms var(--ripple-ease-out) both;
+  }
+
+  @keyframes c4-frame-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.c4-semantic) .c4-group-node {
+      animation: none;
+    }
+  }
+
+  .group-ports {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .c4-group-node.is-external {

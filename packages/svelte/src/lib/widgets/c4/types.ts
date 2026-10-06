@@ -37,6 +37,13 @@ export interface C4Code {
   language?: string;
 }
 
+/** One aggregated connection as a badge or chip shows it: the text, and the
+ *  relationships behind it (names, not ids) for its hover list. */
+export interface C4PortView {
+  text: string;
+  items: { from: string; to: string; label?: string }[];
+}
+
 /** Fields every element may carry on top of its own shape. */
 interface C4ElementBase {
   /** Explicit C4 kind; overrides shape inference. */
@@ -145,6 +152,10 @@ export interface C4NodeData {
   tags?: string[];
   /** Explicit C4 kind, when the element set one */
   kind?: C4Kind;
+  /** Semantic zoom: chips on the scope boundary for crossings drawn further out. */
+  ports?: C4PortView[];
+  /** Semantic zoom: the excerpt an expanded code element's panel shows. */
+  code?: C4Code;
   /** Original C4 element for click handlers */
   element: C4Element;
   /** Callback when element is clicked */

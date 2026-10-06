@@ -1,0 +1,102 @@
+// c4-diagram-semantic.test.ts — mounts C4Diagram in semantic zoom (the `expanded` prop) and checks
+// the expansion state reaches the DOM: boundaries nest their children in place, the scope ghosts
+// its outside, a code element opens as a panel with true line numbers and its change tinted, the
+// Before/After switch works, the scope lists far connections as chips, and markers roll up.
+
+import { describe, it, expect } from 'vitest';
+import { render, waitFor, fireEvent } from '@testing-library/svelte';
+import C4Diagram from '../C4Diagram.svelte';
+import type { C4Diagram as C4DiagramData } from '$lib/widgets/c4/types.js';
+
+const diagram: C4DiagramData = {
+  level: 'context',
+  title: '',
+  elements: [
+    {
+      id: 'pe', name: 'Paw Enterprise', kind: 'system',
+      children: [{ id: 'pe.spa', name: 'SPA', kind: 'container', children: [{ id: 'craft', name: 'Craft Studio', kind: 'component' }] }],
+    },
+    {
+      id: 'rp', name: 'Ripple', kind: 'system',
+      children: [
+        {
+          id: 'rp.svelte', name: '@ripple-ui/svelte', kind: 'container',
+          children: [
+            {
+              id: 'ui', name: 'Editor parts', kind: 'component',
+              children: [
+                {
+                  id: 'f.inspector', name: 'PhotoInspector.svelte', kind: 'code', technology: 'Svelte',
+                  code: {
+                    startLine: 185,
+                    before: Array.from({ length: 13 }, (_, i) => `old ${185 + i}`),
+                    changed: [192, 197],
+                    after: Array.from({ length: 6 }, (_, i) => `new ${192 + i}`),
+                  },
+                },
+                { id: 'f.index', name: 'index.ts', kind: 'code' },
+              ],
+            },
+          ],
+        },
+        { id: 'rp.core', name: '@ripple-ui/core', kind: 'container' },
+      ],
+    },
+  ],
+  relationships: [{ from: 'craft', to: 'ui', label: 'uses parts' }],
+};
+
+const DEEP = ['rp', 'rp.svelte', 'ui', 'f.inspector'];
+const wrapper = (c: HTMLElement, id: string) => c.querySelector<HTMLElement>(`.svelte-flow__node[data-id="${id}"]`);
+
+// Each case mounts SvelteFlow and runs ELK; on a loaded machine that outlasts vitest's 5s default.
+describe('C4Diagram semantic zoom', { timeout: 30000 }, () => {
+  it('draws only the top level as cards when nothing is expanded', async () => {
+    const { container } = render(C4Diagram, { diagram, expanded: [] });
+    await waitFor(() => expect(wrapper(container, 'rp')).not.toBeNull());
+    expect(wrapper(container, 'rp')?.classList.contains('svelte-flow__node-system')).toBe(true);
+    expect(wrapper(container, 'rp.svelte')).toBeNull();
+    expect(container.querySelector('.c4-canvas')?.classList.contains('c4-semantic')).toBe(true);
+  });
+
+  it('opens each expanded element in place and ghosts what lies outside the scope', async () => {
+    const { container } = render(C4Diagram, { diagram, expanded: DEEP, scopeId: 'ui' });
+    await waitFor(() => expect(wrapper(container, 'f.index')).not.toBeNull());
+    for (const id of ['rp', 'rp.svelte', 'ui']) expect(wrapper(container, id)?.classList.contains('svelte-flow__node-group')).toBe(true);
+    expect(wrapper(container, 'pe')?.hasAttribute('data-c4-ghost')).toBe(true);
+    expect(wrapper(container, 'rp.core')?.hasAttribute('data-c4-ghost')).toBe(true);
+    expect(wrapper(container, 'rp')?.hasAttribute('data-c4-ghost')).toBe(false);
+    expect(wrapper(container, 'f.index')?.hasAttribute('data-c4-ghost')).toBe(false);
+  });
+
+  it('opens a code element as a panel with true line numbers and the change tinted', async () => {
+    const { container, getByRole } = render(C4Diagram, { diagram, expanded: DEEP, scopeId: 'ui' });
+    await waitFor(() => expect(container.querySelector('.c4-code-node')).not.toBeNull());
+    const panel = wrapper(container, 'f.inspector')!;
+    expect(panel.classList.contains('svelte-flow__node-code')).toBe(true);
+    const numbers = [...panel.querySelectorAll('code')].map((c) => c.parentElement?.querySelector('.select-none')?.textContent);
+    expect(numbers[0]).toBe('185');
+    expect(numbers.at(-1)).toBe('197');
+    const tinted = [...panel.querySelectorAll('[data-highlight="added"] .select-none')].map((n) => n.textContent);
+    expect(tinted).toEqual(['192', '193', '194', '195', '196', '197']);
+    expect(panel.textContent).toContain('new 192');
+
+    await fireEvent.click(getByRole('radio', { name: 'Before' }));
+    await waitFor(() => expect(panel.textContent).toContain('old 192'));
+    expect(panel.querySelectorAll('[data-highlight="removed"]')).toHaveLength(6);
+  });
+
+  it('lists a crossing drawn further out as a chip on the scope', async () => {
+    const { container } = render(C4Diagram, { diagram, expanded: DEEP, scopeId: 'ui' });
+    await waitFor(() => expect(wrapper(container, 'ui')).not.toBeNull());
+    expect(wrapper(container, 'ui')?.querySelector('.c4-port')?.textContent?.trim()).toBe('← Paw Enterprise · 1');
+  });
+
+  it('rolls a marker on a hidden element up to its drawn ancestor', async () => {
+    const dot = { id: 'dev', label: 'dev·ripple', color: 'red' };
+    const { container, findByLabelText } = render(C4Diagram, { diagram, expanded: [], markers: { 'f.inspector': [dot] } });
+    await waitFor(() => expect(wrapper(container, 'rp')).not.toBeNull());
+    const marker = await findByLabelText('dev·ripple');
+    expect(marker.closest('.svelte-flow__node-toolbar')?.getAttribute('data-id')).toBe('rp');
+  });
+});

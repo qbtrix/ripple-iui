@@ -11,11 +11,25 @@
   The refit on a new node set is also what keeps the legacy drill-down fitted:
   C4Diagram keeps SvelteFlow mounted across diagram swaps, so its `fitView`
   prop only fires once.
+
+  Semantic zoom passes `frame` instead: a box from ELK's final layout and a
+  signature. The camera eases (the ripple curve, instant under reduced motion)
+  to that box whenever the signature changes, except when follow has just
+  turned off: a user who took the camera keeps it. Fitting ELK's box rather
+  than measured nodes means a node still growing on screen frames correctly.
 -->
 <script lang="ts">
-  import { NodeToolbar, Position, useNodesInitialized, useStore, useSvelteFlow } from '@xyflow/svelte';
+  import {
+    NodeToolbar,
+    Position,
+    getViewportForBounds,
+    useNodesInitialized,
+    useStore,
+    useSvelteFlow,
+    useViewportInitialized,
+  } from '@xyflow/svelte';
   import { prefersReducedMotion } from 'svelte/motion';
-  import { planCamera, type CameraState } from './live.js';
+  import { planCamera, rippleEase, type CameraState, type Rect } from './live.js';
   import type { C4Marker } from './types.js';
 
   interface Props {
@@ -24,9 +38,11 @@
     focusId?: string;
     follow?: boolean;
     markers?: Record<string, C4Marker[]>;
+    /** Semantic zoom's camera: frame `rect` when `key` changes. */
+    frame?: { key: string; rect: Rect | null; follow: boolean };
   }
 
-  let { ids, focusId, follow, markers }: Props = $props();
+  let { ids, focusId, follow, markers, frame }: Props = $props();
 
   /** Below this zoom the cards keep only name and technology (data-c4-far):
    *  the 11px lines would read under 10px, and the counter-scaled name needs
@@ -36,6 +52,8 @@
   const flow = useSvelteFlow();
   const store = useStore();
   const initialized = useNodesInitialized();
+  const viewportReady = useViewportInitialized();
+  const MOVE_MS = 560;
 
   // DOM sync: the node cards read the zoom from CSS, so names counter-scale
   // and stay legible when the map is zoomed out.
@@ -54,6 +72,7 @@
   // new level's nodes are still unadopted resolves against an empty set and
   // parks the camera on the origin.
   $effect(() => {
+    if (frame) return;
     const next: CameraState = { ids, focusId, follow };
     if (!initialized.current) return;
     const move = planCamera(prev, next);
@@ -65,6 +84,23 @@
         ? { nodes: [{ id: move.nodeId }], padding: 0.35, maxZoom: 1, duration }
         : { padding: 0.1, maxZoom: 1, duration }
     );
+  });
+
+  // Semantic camera (see the header).
+  let prevFrame: { key: string; follow: boolean } | null = null;
+  $effect(() => {
+    if (!frame || !viewportReady.current) return;
+    const { key, rect, follow: following } = frame;
+    const first = prevFrame === null;
+    const letGo = !!prevFrame?.follow && !following;
+    const same = prevFrame?.key === key;
+    prevFrame = { key, follow: following };
+    if (!rect || (!first && (letGo || same))) return;
+    const vp = getViewportForBounds(rect, store.width, store.height, 0.15, 1, 0.08);
+    void flow.setViewport(vp, {
+      duration: first || prefersReducedMotion.current ? 0 : MOVE_MS,
+      ease: rippleEase,
+    });
   });
 
   const onMap = $derived.by(() => {
