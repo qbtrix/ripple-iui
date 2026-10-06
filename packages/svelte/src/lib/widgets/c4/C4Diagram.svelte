@@ -36,12 +36,12 @@
   import C4Edge from './C4Edge.svelte';
   import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode } from './elk-layout.js';
   import { decorateNodes, nodeSetKey, statusesPresent, STATUS_LABELS } from './live.js';
-  // From types.ts, NOT the barrel. `index.ts` exports THIS component as
-  // `C4Diagram`, so importing the name from the barrel resolved `diagram` to
-  // the component's own props type — a self-referential collision that made
-  // every field access below an error.
+  // From types.ts, NOT the barrel, and aliased: this component is itself named
+  // C4Diagram, and svelte-package emits `declare const C4Diagram` plus
+  // `type C4Diagram` in the .d.ts. An unaliased type import of the same name
+  // collided with both, so consumers saw the component as type-only.
   import type {
-    C4Diagram,
+    C4Diagram as C4DiagramData,
     C4Element,
     C4System,
     C4Container,
@@ -51,7 +51,7 @@
   } from './types.js';
 
   interface Props {
-    diagram: C4Diagram;
+    diagram: C4DiagramData;
     class?: string;
     onclick?: (elementId: string) => void;
     ondrilldown?: (elementId: string, level: string) => void;
@@ -150,7 +150,7 @@
    * Build the full flat list of C4 elements to layout, including nested
    * containers/components that live inside parent system nodes.
    */
-  function collectAllElements(diagram: C4Diagram): C4Element[] {
+  function collectAllElements(diagram: C4DiagramData): C4Element[] {
     const all: C4Element[] = [];
     for (const el of diagram.elements) {
       all.push(el);
@@ -178,7 +178,7 @@
   /**
    * Convert the C4 diagram to SvelteFlow Node[] using ELK-computed positions.
    */
-  async function buildFlowGraph(diagram: C4Diagram): Promise<{ nodes: Node[]; edges: Edge[] }> {
+  async function buildFlowGraph(diagram: C4DiagramData): Promise<{ nodes: Node[]; edges: Edge[] }> {
     const { positions, routes } = await computeElkGraph(diagram);
 
     // Gather all elements (top-level and nested children for group nodes)
@@ -349,7 +349,7 @@
     if (t?.closest?.('.svelte-flow__controls, .svelte-flow__minimap')) onmanualcamera?.();
   }
 
-  const NEXT_LEVEL: Record<C4Diagram['level'], string> = {
+  const NEXT_LEVEL: Record<C4DiagramData['level'], string> = {
     context: 'container',
     container: 'component',
     component: 'code',
