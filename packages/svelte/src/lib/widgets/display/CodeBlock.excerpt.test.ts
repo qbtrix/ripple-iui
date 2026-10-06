@@ -1,6 +1,7 @@
-// CodeBlock.excerpt.test.ts — the excerpt props: `startLine` numbers rows from a real file line
-// (widening the gutter only past two digits) and `highlight` tints an inclusive line range in
-// `highlightTone`. Without them the rows must render exactly as before: ToolCall depends on it.
+// CodeBlock.excerpt.test.ts — the excerpt and panel props: `startLine` numbers rows from a real
+// file line (widening the gutter only past two digits), `highlight` tints an inclusive line range
+// in `highlightTone`, `title` names the file in the header and `compact` tightens the block.
+// Without them the block must render exactly as before: ToolCall depends on it.
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import CodeBlock from './CodeBlock.svelte';
@@ -36,5 +37,48 @@ describe('CodeBlock excerpt props', () => {
       .map((r) => r.querySelector('.select-none')?.textContent);
     expect(tinted).toEqual(['192', '193', '194', '195', '196', '197']);
     expect(rows(container)[7].className).toContain('bg-ripple-error/10');
+  });
+});
+
+describe('CodeBlock title and compact', () => {
+  const header = (root: ParentNode) => root.querySelector<HTMLElement>('.border-b');
+  const body = (root: ParentNode) => rows(root)[0].parentElement!;
+
+  it('keeps the default header and body when neither is set', () => {
+    const { container } = render(CodeBlock, { props: { code: 'a', language: 'ts' } });
+    expect(header(container)!.className).toBe(
+      'flex h-9 items-center gap-2 border-b border-ripple-border px-4 text-[12.5px]'
+    );
+    expect(body(container).className).toBe(
+      'relative py-3 font-mono text-[12.5px] leading-[1.65] text-ripple-muted-foreground'
+    );
+    expect(header(container)!.querySelectorAll('.font-mono')).toHaveLength(1);
+    expect(header(container)!.textContent).toContain('ts');
+  });
+
+  it('puts the file name in the header with the language beside it', () => {
+    const { container } = render(CodeBlock, {
+      props: { code: 'a', language: 'svelte', title: 'PhotoInspector.svelte' }
+    });
+    const labels = [...header(container)!.querySelectorAll('.font-mono')].map((el) => el.textContent);
+    expect(labels).toEqual(['PhotoInspector.svelte', 'svelte']);
+  });
+
+  it('shows the title alone under hideLanguage, and keeps a header with no copy button', () => {
+    const { container } = render(CodeBlock, {
+      props: { code: 'a', language: 'svelte', hideLanguage: true, hideCopy: true, title: 'a.ts' }
+    });
+    const labels = [...header(container)!.querySelectorAll('.font-mono')].map((el) => el.textContent);
+    expect(labels).toEqual(['a.ts']);
+    expect(container.querySelector('button')).toBeNull();
+  });
+
+  it('tightens the header, padding and leading when compact', () => {
+    const { container } = render(CodeBlock, { props: { code: 'a\nb', title: 'a.ts', compact: true } });
+    expect(header(container)!.className).toContain('h-8');
+    expect(header(container)!.className).toContain('px-3');
+    expect(body(container).className).toContain('py-1.5');
+    expect(body(container).className).toContain('leading-[1.5]');
+    expect(numbers(container)).toEqual(['1', '2']);
   });
 });
