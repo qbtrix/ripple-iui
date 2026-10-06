@@ -28,8 +28,10 @@
 
   let { ids, focusId, follow, markers }: Props = $props();
 
-  /** Below this zoom the node cards drop their secondary lines (data-c4-far). */
-  const FAR_ZOOM = 0.72;
+  /** Below this zoom the cards keep only name and technology (data-c4-far):
+   *  the 11px lines would read under 10px, and the counter-scaled name needs
+   *  their room inside the fixed ELK box. */
+  const FAR_ZOOM = 0.9;
 
   const flow = useSvelteFlow();
   const store = useStore();
@@ -61,7 +63,7 @@
     void flow.fitView(
       move.nodeId
         ? { nodes: [{ id: move.nodeId }], padding: 0.35, maxZoom: 1, duration }
-        : { padding: 0.2, maxZoom: 1, duration }
+        : { padding: 0.1, maxZoom: 1, duration }
     );
   });
 

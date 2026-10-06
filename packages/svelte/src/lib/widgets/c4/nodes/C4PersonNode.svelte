@@ -64,11 +64,6 @@
 </div>
 
 <style>
-  .c4-person-node {
-    min-width: 140px;
-    max-width: 160px;
-  }
-
   .person-head {
     width: 34px;
     height: 34px;

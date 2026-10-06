@@ -81,24 +81,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .c4-component-node {
-    min-width: 160px;
-    max-width: 180px;
-  }
-
-  /* A file name is one long token: give it the full ELK box and a mono face.
-     (Its radius and padding are per-type overrides in C4Diagram.) */
-  .is-code {
-    min-width: 200px;
-    max-width: 200px;
-  }
-
-  .is-code .c4-node-name {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: calc(12px / clamp(0.5, var(--c4-zoom, 1), 1));
-    font-weight: 500;
-    letter-spacing: 0;
-  }
-</style>

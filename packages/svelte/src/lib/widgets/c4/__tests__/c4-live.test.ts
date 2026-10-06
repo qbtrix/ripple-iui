@@ -1,11 +1,12 @@
 // c4-live.test.ts — the live layer of the C4 widget: explicit `kind`, the node
-// decoration behind `status`/`selectedId`, the legend's status list, and the
-// camera plan behind `focusId`/`follow`. Pure functions, no DOM.
+// decoration behind `status`/`selectedId`, the legend's status list, the
+// camera plan behind `focusId`/`follow`, and ELK's edge routes with the
+// rounded path drawn through them. Pure functions, no DOM.
 
 import { describe, it, expect } from 'vitest';
 import type { Node } from '@xyflow/svelte';
-import { getNodeType, computeElkLayout } from '../elk-layout.js';
-import { decorateNodes, statusesPresent, nodeSetKey, planCamera } from '../live.js';
+import { getNodeType, computeElkLayout, computeElkGraph } from '../elk-layout.js';
+import { decorateNodes, statusesPresent, nodeSetKey, planCamera, roundedPath } from '../live.js';
 import type { C4Diagram, C4System, C4Component } from '$lib/widgets/c4/types.js';
 
 const node = (id: string, extra: Partial<Node> = {}): Node => ({
@@ -129,5 +130,61 @@ describe('planCamera', () => {
 
   it('fits everything when the focus is not on this map', () => {
     expect(planCamera({ ids, follow: true, focusId: 'a' }, { ids, follow: true, focusId: 'zz' })).toEqual({ nodeId: undefined, animate: true });
+  });
+});
+
+describe('computeElkGraph routes', () => {
+  const diagram: C4Diagram = {
+    level: 'component',
+    title: '',
+    elements: [
+      {
+        id: 'spa', name: 'SPA', kind: 'container',
+        containers: [
+          { id: 'craft', name: 'Craft', kind: 'component' },
+          { id: 'stores', name: 'Stores', kind: 'component' },
+        ],
+      },
+      { id: 'ui', name: 'Editor parts', kind: 'component', external: true },
+    ],
+    relationships: [
+      { from: 'craft', to: 'ghost', label: 'dropped: unknown end' },
+      { from: 'craft', to: 'stores', label: 'session state' },
+      { from: 'craft', to: 'ui', label: 'uses parts' },
+    ],
+  };
+
+  it('keys routes by relationship index and starts/ends them on the node boxes', async () => {
+    const { positions, routes } = await computeElkGraph(diagram);
+    expect(routes.has(0)).toBe(false);
+    for (const [i, from, to] of [[1, 'craft', 'stores'], [2, 'craft', 'ui']] as const) {
+      const route = routes.get(i)!;
+      const [a, b] = [positions.get(from)!, positions.get(to)!];
+      const start = route.points[0];
+      const end = route.points.at(-1)!;
+      // absolute coordinates: on the source box's border, and on the target's
+      expect(start.x).toBeGreaterThanOrEqual(a.x - 0.5);
+      expect(start.x).toBeLessThanOrEqual(a.x + a.width + 0.5);
+      expect([a.y, a.y + a.height].some((y) => Math.abs(start.y - y) < 0.5) || [a.x, a.x + a.width].some((x) => Math.abs(start.x - x) < 0.5)).toBe(true);
+      expect([b.y, b.y + b.height].some((y) => Math.abs(end.y - y) < 0.5) || [b.x, b.x + b.width].some((x) => Math.abs(end.x - x) < 0.5)).toBe(true);
+      expect(route.label?.width).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps computeElkLayout returning the positions map', async () => {
+    const pos = await computeElkLayout(diagram);
+    expect([...pos.keys()].sort()).toEqual(['craft', 'spa', 'stores', 'ui']);
+  });
+});
+
+describe('roundedPath', () => {
+  it('draws straight runs and rounds each corner', () => {
+    expect(roundedPath([], 8)).toBe('');
+    expect(roundedPath([{ x: 0, y: 0 }, { x: 0, y: 50 }], 8)).toBe('M 0 0 L 0 50');
+    expect(roundedPath([{ x: 0, y: 0 }, { x: 0, y: 50 }, { x: 40, y: 50 }], 8)).toBe('M 0 0 L 0 42 Q 0 50 8 50 L 40 50');
+  });
+
+  it('shrinks the radius on a short jog', () => {
+    expect(roundedPath([{ x: 0, y: 0 }, { x: 0, y: 6 }, { x: 30, y: 6 }], 8)).toBe('M 0 0 L 0 3 Q 0 6 3 6 L 30 6');
   });
 });

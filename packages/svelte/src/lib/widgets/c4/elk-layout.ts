@@ -2,6 +2,12 @@
 // from a C4 element to its SvelteFlow node type. An element with a non-empty
 // `containers` array becomes a nested parent box (a boundary) whatever its
 // `kind`. ELK is instantiated per call: a shared instance raced between layouts.
+//
+// computeElkGraph also returns ELK's orthogonal edge routes (absolute points,
+// keyed by the relationship's index in `diagram.relationships`) and a box for
+// each label, which ELK reserves space for, so edges go around nodes and labels
+// do not stack. ELK reports an edge's points relative to its `container` (the
+// lowest common ancestor of its ends); they are offset back to absolute here.
 
 import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
 // From types.ts, NOT the barrel: `index.ts` also exports a COMPONENT named
@@ -9,7 +15,7 @@ import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.j
 // The barrel import here typed `diagram` as a Svelte component instead of a
 // diagram — pre-existing, and invisible until the test stopped making the
 // same mistake.
-import type { C4Diagram, C4Element, C4System, C4Container } from './types.js';
+import type { C4Diagram, C4Element, C4System, C4Container, C4Relationship } from './types.js';
 
 
 // Default node dimensions by element shape
@@ -33,6 +39,24 @@ export interface LayoutPosition {
   width: number;
   height: number;
 }
+
+export interface EdgeRoute {
+  /** Absolute points: start on the source box, bends, end on the target box. */
+  points: { x: number; y: number }[];
+  /** Where ELK put the label (absolute, top-left), when the edge has one. */
+  label?: LayoutPosition;
+}
+
+/** The text an edge's label shows: its label, then [technology]. */
+export function edgeLabelText(r: C4Relationship): string {
+  const parts: string[] = [];
+  if (r.label) parts.push(r.label);
+  if (r.technology) parts.push(`[${r.technology}]`);
+  return parts.join(' ');
+}
+
+/** ELK needs a label's size up front; this matches the 11px/500 pill C4Diagram draws. */
+const labelSize = (text: string) => ({ width: Math.ceil(text.length * 6.3) + 16, height: 20 });
 
 /** Determine ELK node dimensions for a given C4 element */
 function getNodeDimensions(el: C4Element): { width: number; height: number } {
@@ -62,16 +86,27 @@ export async function computeElkLayout(
   diagram: C4Diagram,
   options: ElkLayoutOptions = {}
 ): Promise<Map<string, LayoutPosition>> {
+  return (await computeElkGraph(diagram, options)).positions;
+}
+
+/** computeElkLayout plus ELK's edge routes and label boxes (empty if ELK failed). */
+export async function computeElkGraph(
+  diagram: C4Diagram,
+  options: ElkLayoutOptions = {}
+): Promise<{ positions: Map<string, LayoutPosition>; routes: Map<number, EdgeRoute> }> {
   const {
     direction = 'DOWN',
     nodeSpacing = 60,
-    layerSpacing = 80,
+    // Each labelled edge adds a label row between two layers, so a tighter
+    // layer gap keeps a labelled diagram from fitting at a tiny zoom.
+    layerSpacing = 56,
   } = options;
 
   const elk = new ELK();
   const positions = new Map<string, LayoutPosition>();
+  const routes = new Map<number, EdgeRoute>();
 
-  if (diagram.elements.length === 0) return positions;
+  if (diagram.elements.length === 0) return { positions, routes };
 
   // Separate systems (potential parent nodes) from flat elements
   const systems = diagram.elements.filter(
@@ -129,14 +164,19 @@ export async function computeElkLayout(
     }
   }
 
-  // Map relationships to ELK edges (only between known elements)
-  const elkEdges: ElkExtendedEdge[] = diagram.relationships
-    .filter((r) => allElementIds.has(r.from) && allElementIds.has(r.to))
-    .map((r, i) => ({
+  // Map relationships to ELK edges (only between known elements), keyed by the
+  // relationship's own index so routes map back to it.
+  const elkEdges: ElkExtendedEdge[] = [];
+  diagram.relationships.forEach((r, i) => {
+    if (!allElementIds.has(r.from) || !allElementIds.has(r.to)) return;
+    const text = edgeLabelText(r);
+    elkEdges.push({
       id: `edge-${i}`,
       sources: [r.from],
       targets: [r.to],
-    }));
+      ...(text ? { labels: [{ text, ...labelSize(text) }] } : {}),
+    });
+  });
 
   const graph: ElkNode = {
     id: 'root',
@@ -183,6 +223,29 @@ export async function computeElkLayout(
     }
 
     extractPositions(laid);
+
+    // Edge points are relative to the edge's container; offset them back.
+    type LaidEdge = ElkExtendedEdge & { container?: string };
+    const collectEdges = (node: ElkNode) => {
+      for (const e of (node.edges ?? []) as LaidEdge[]) {
+        const index = Number(e.id.slice('edge-'.length));
+        const box = e.container && e.container !== 'root' ? positions.get(e.container) : undefined;
+        const ox = box?.x ?? 0;
+        const oy = box?.y ?? 0;
+        const section = e.sections?.[0];
+        if (!section || Number.isNaN(index)) continue;
+        const pts = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint];
+        const lab = e.labels?.[0];
+        routes.set(index, {
+          points: pts.map((p) => ({ x: p.x + ox, y: p.y + oy })),
+          ...(lab && lab.x !== undefined && lab.y !== undefined
+            ? { label: { x: lab.x + ox, y: lab.y + oy, width: lab.width ?? 0, height: lab.height ?? 0 } }
+            : {}),
+        });
+      }
+      for (const c of node.children ?? []) collectEdges(c);
+    };
+    collectEdges(laid);
   } catch (err) {
     console.error('[C4 ELK layout error]', err);
     // Fallback: simple grid layout if ELK fails
@@ -205,7 +268,7 @@ export async function computeElkLayout(
     }
   }
 
-  return positions;
+  return { positions, routes };
 }
 
 /**

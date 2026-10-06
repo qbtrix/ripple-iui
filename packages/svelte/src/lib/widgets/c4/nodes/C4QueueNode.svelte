@@ -55,8 +55,8 @@
 
 <style>
   .c4-queue-node {
-    min-width: 180px;
-    max-width: 200px;
+    width: 100%;
+    height: 100%;
     cursor: pointer;
     position: relative;
     color: var(--ripple-surface-foreground);
@@ -68,6 +68,9 @@
   }
 
   .queue-shape {
+    box-sizing: border-box;
+    height: 100%;
+    justify-content: center;
     background: linear-gradient(color-mix(in oklab, var(--ripple-warning) 16%, transparent) 0 0), var(--c4-card);
     clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
     padding: 12px 26px;

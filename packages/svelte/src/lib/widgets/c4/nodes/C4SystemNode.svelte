@@ -58,10 +58,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .c4-system-node {
-    min-width: 180px;
-    max-width: 200px;
-  }
-</style>

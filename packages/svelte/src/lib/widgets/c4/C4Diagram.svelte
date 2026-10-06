@@ -16,7 +16,7 @@
 -->
 <script lang="ts">
   import { SvelteFlow, Background, Controls, MiniMap } from '@xyflow/svelte';
-  import type { Node, Edge, NodeTypes } from '@xyflow/svelte';
+  import type { Node, Edge, NodeTypes, EdgeTypes } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
   import {
@@ -29,7 +29,8 @@
     C4GroupNode,
   } from './nodes/index.js';
   import C4LiveLayer from './C4LiveLayer.svelte';
-  import { computeElkLayout, getNodeType, isGroupNode } from './elk-layout.js';
+  import C4Edge from './C4Edge.svelte';
+  import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode } from './elk-layout.js';
   import { decorateNodes, nodeSetKey, statusesPresent, STATUS_LABELS } from './live.js';
   // From types.ts, NOT the barrel. `index.ts` exports THIS component as
   // `C4Diagram`, so importing the name from the barrel resolved `diagram` to
@@ -86,6 +87,8 @@
     component: C4ComponentNode as any,
     group: C4GroupNode as any,
   };
+
+  const edgeTypes: EdgeTypes = { c4: C4Edge as any };
 
   // Level badge labels
   const levelLabels: Record<string, string> = {
@@ -172,7 +175,7 @@
    * Convert the C4 diagram to SvelteFlow Node[] using ELK-computed positions.
    */
   async function buildFlowGraph(diagram: C4Diagram): Promise<{ nodes: Node[]; edges: Edge[] }> {
-    const positions = await computeElkLayout(diagram);
+    const { positions, routes } = await computeElkGraph(diagram);
 
     // Gather all elements (top-level and nested children for group nodes)
     const allElements = collectAllElements(diagram);
@@ -246,6 +249,9 @@
         data: nodeData as unknown as Record<string, unknown>,
         draggable: false,
         selectable: true,
+        // Every node takes its ELK box, so ELK's edge routes meet the card edges.
+        width: pos.width,
+        height: pos.height,
         // Group nodes need explicit dimensions for SvelteFlow to render the bounding box
         ...(isGroup ? { style: `width: ${pos.width}px; height: ${pos.height}px;` } : {}),
         ...(parentId ? { parentId } : {}),
@@ -256,34 +262,33 @@
       nodes.push(node);
     }
 
-    // Build edges from relationships
+    // Build edges from relationships. An edge ELK routed draws its route (C4Edge);
+    // without one (ELK fell back to a grid) it stays a smoothstep.
     const allElementIds = new Set(allElements.map((e) => e.id));
-    const edges: Edge[] = diagram.relationships
-      .filter((r) => allElementIds.has(r.from) && allElementIds.has(r.to))
-      .map((r, i) => {
-        const isAsync = r.style === 'async';
-        const isEvent = r.style === 'event';
+    const edges: Edge[] = [];
+    diagram.relationships.forEach((r, i) => {
+      if (!allElementIds.has(r.from) || !allElementIds.has(r.to)) return;
+      const isAsync = r.style === 'async';
+      const isEvent = r.style === 'event';
 
-        const edgeStyle = isEvent
-          ? `stroke: ${EVENT_STROKE}; stroke-width: 1.25px; stroke-dasharray: 4 4;`
-          : isAsync
-            ? `stroke: ${EDGE_STROKE}; stroke-width: 1.25px; stroke-dasharray: 8 4;`
-            : `stroke: ${EDGE_STROKE}; stroke-width: 1.25px;`;
+      const edgeStyle = isEvent
+        ? `stroke: ${EVENT_STROKE}; stroke-width: 1.25px; stroke-dasharray: 4 4;`
+        : isAsync
+          ? `stroke: ${EDGE_STROKE}; stroke-width: 1.25px; stroke-dasharray: 8 4;`
+          : `stroke: ${EDGE_STROKE}; stroke-width: 1.25px;`;
 
-        const labelParts: string[] = [];
-        if (r.label) labelParts.push(r.label);
-        if (r.technology) labelParts.push(`[${r.technology}]`);
-
-        return {
-          id: `edge-${i}-${r.from}-${r.to}`,
-          source: r.from,
-          target: r.to,
-          type: 'smoothstep',
-          label: labelParts.join(' ') || undefined,
-          animated: isAsync,
-          style: edgeStyle,
-        } satisfies Edge;
+      const route = routes.get(i);
+      edges.push({
+        id: `edge-${i}-${r.from}-${r.to}`,
+        source: r.from,
+        target: r.to,
+        type: route ? 'c4' : 'smoothstep',
+        label: edgeLabelText(r) || undefined,
+        animated: isAsync,
+        style: edgeStyle,
+        ...(route ? { data: { points: route.points, labelBox: route.label } } : {}),
       });
+    });
 
     return { nodes, edges };
   }
@@ -380,6 +385,7 @@
         nodes={shownNodes}
         edges={flowEdges}
         {nodeTypes}
+        {edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.25 }}
         colorMode="dark"
@@ -685,9 +691,15 @@
      secondary lines drop away once it is far out (data-c4-far). */
   .c4-canvas :global(.c4-node) {
     position: relative;
+    box-sizing: border-box;
+    /* Fill the ELK box SvelteFlow sizes the wrapper to: routes end on this edge. */
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: safe center;
     gap: 4px;
     padding: 12px 14px;
     border-radius: 10px;
@@ -701,6 +713,10 @@
       transform 150ms var(--ripple-ease-out);
   }
 
+  .c4-canvas :global(.c4-node > *) {
+    flex-shrink: 0;
+  }
+
   /* Per-type card overrides live here, after the shared rule they refine. */
   .c4-canvas :global(.c4-person-node) {
     border-radius: 12px;
@@ -711,6 +727,13 @@
   }
   .c4-canvas :global(.c4-component-node.is-code) {
     padding-inline: 10px;
+  }
+  /* A file name is one long token: a mono face at a size that fits the box. */
+  .c4-canvas :global(.c4-component-node.is-code .c4-node-name) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: calc(12px / clamp(0.5, var(--c4-zoom, 1), 1));
+    font-weight: 500;
+    letter-spacing: 0;
   }
 
   .c4-canvas :global(.c4-node:hover) {
@@ -749,10 +772,15 @@
     line-height: 1.35;
     text-align: center;
     color: var(--ripple-muted-foreground);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
   }
 
   .c4-canvas :global(.c4-node-tech) {
-    font-size: 11px;
+    font-size: calc(11px / clamp(0.6, var(--c4-zoom, 1), 1));
     line-height: 1.3;
     color: var(--ripple-muted-foreground);
     background: var(--ripple-muted);
@@ -782,7 +810,6 @@
 
   .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-kind),
   .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-desc),
-  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-tech),
   .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-docs) {
     display: none;
   }

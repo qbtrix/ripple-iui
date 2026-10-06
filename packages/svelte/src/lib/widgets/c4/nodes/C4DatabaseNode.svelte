@@ -73,8 +73,8 @@
     --db-fill: linear-gradient(color-mix(in oklab, var(--ripple-info) 12%, transparent) 0 0), var(--c4-card);
     display: flex;
     flex-direction: column;
-    min-width: 160px;
-    max-width: 180px;
+    width: 100%;
+    height: 100%;
     cursor: pointer;
     position: relative;
     color: var(--ripple-surface-foreground);
@@ -105,6 +105,8 @@
 
   .db-body {
     position: relative;
+    flex: 1;
+    justify-content: center;
     display: flex;
     flex-direction: column;
     align-items: center;
