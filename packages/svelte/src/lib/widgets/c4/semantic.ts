@@ -12,6 +12,7 @@
 // view you are inside never loses its outside connections.
 
 import type { C4Code, C4Element, C4Marker, C4Relationship } from './types.js';
+import { codeBlockGutter } from '../display/gutter.js';
 
 /** Nested children of any kind: `children`, else `containers`, else `components`. */
 export function childrenOf(el: C4Element): C4Element[] {
@@ -283,8 +284,7 @@ export function codePanelSize(code: C4Code): { width: number; height: number } {
   const rows = Math.max(
     0,
     ...sides.map((v) => {
-      const lastNo = v.startLine + Math.max(0, v.lineCount - 1);
-      const gutter = Math.max(20, String(lastNo).length * 7 + 6);
+      const gutter = codeBlockGutter(v.startLine, v.lineCount);
       const perLine = Math.floor((CODE_PANEL.width - 2 - gutter - 16) / CODE_PANEL.charWidth);
       // Word wrap breaks a little early: a small allowance and one spare row. Past
       // that the panel body scrolls rather than clipping.

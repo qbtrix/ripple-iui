@@ -24,7 +24,8 @@
        in dark ones without a `dark:` variant.
      - No syntax colouring: there is no `language` prop, and CodeBlock's rule is
        that a block nobody labelled as code stays uncoloured.
-     - The gutter widens past 20px once line numbers reach four digits.
+     - The gutter is 20px up to two-digit line numbers and ~7px a digit past
+       that (21px at three digits), from display/gutter.ts.
 
      No shadow and no max width: a ripple widget sizes to its host's layout. -->
 <script lang="ts">
@@ -32,6 +33,7 @@
   import { asText } from '$lib/widgets/text-coerce';
   import FileIcon from '@lucide/svelte/icons/code-xml';
   import { diffRows, splitRows, type DiffPart, type DiffRow } from './diff-rows.js';
+  import { gutterWidth } from './gutter.js';
 
   type Mode = 'lines' | 'words' | 'chars';
 
@@ -102,11 +104,7 @@
   const added = $derived(rows.filter((r) => r.kind === 'added').length);
   const removed = $derived(rows.filter((r) => r.kind === 'removed').length);
 
-  // 20px holds three digits at 11px mono; past that, ~7px a digit.
-  const gutter = $derived.by(() => {
-    const last = rows.reduce((n, r) => Math.max(n, r.oldNo ?? 0, r.newNo ?? 0), 0);
-    return Math.max(20, String(last).length * 7);
-  });
+  const gutter = $derived(gutterWidth(rows.reduce((n, r) => Math.max(n, r.oldNo ?? 0, r.newNo ?? 0), 0)));
   const columns = $derived(`${showLineNumbers ? `${gutter}px ` : ''}16px minmax(0,1fr)`);
 </script>
 

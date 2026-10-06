@@ -1,5 +1,5 @@
 // CodeBlock.excerpt.test.ts — the excerpt and panel props: `startLine` numbers rows from a real
-// file line (widening the gutter only past two digits), `highlight` tints an inclusive line range
+// file line (the gutter fits the numbers; from line 1 it stays 20px), `highlight` tints a line range
 // in `highlightTone`, `title` names the file in the header and `compact` tightens the block.
 // Without them the block must render exactly as before: ToolCall depends on it.
 import { describe, it, expect } from 'vitest';
@@ -20,11 +20,26 @@ describe('CodeBlock excerpt props', () => {
     expect(numbers(container)).toEqual(['1', '2', '3']);
   });
 
-  it('numbers from startLine and widens the gutter for three digits', () => {
+  it('keeps the 20px gutter from line 1 however long the block is', () => {
+    // ToolCall renders long JSON results with default props; they must not shift.
+    const code = Array.from({ length: 120 }, (_, i) => `"k${i}": ${i},`).join('\n');
+    const { container } = render(CodeBlock, { props: { code, language: 'json' } });
+    expect(numbers(container).at(-1)).toBe('120');
+    for (const row of rows(container)) {
+      expect(row.className).toContain('grid-cols-[20px_minmax(0,1fr)]');
+      expect(row.getAttribute('style')).toBeNull();
+    }
+    const rule = container.querySelector<HTMLElement>('.w-px')!;
+    expect(rule.className).toContain('left-5');
+    expect(rule.getAttribute('style')).toBeNull();
+  });
+
+  it('numbers from startLine and fits the gutter to three digits', () => {
     const code = Array.from({ length: 13 }, (_, i) => `line ${i}`).join('\n');
     const { container } = render(CodeBlock, { props: { code, startLine: 185 } });
     expect(numbers(container)).toEqual(Array.from({ length: 13 }, (_, i) => String(185 + i)));
-    expect(rows(container)[0].getAttribute('style')).toContain('grid-template-columns: 27px minmax(0, 1fr)');
+    expect(rows(container)[0].getAttribute('style')).toContain('grid-template-columns: 21px minmax(0, 1fr)');
+    expect(container.querySelector('.w-px')!.getAttribute('style')).toContain('left: 21px');
   });
 
   it('tints exactly the highlighted range in its tone', () => {

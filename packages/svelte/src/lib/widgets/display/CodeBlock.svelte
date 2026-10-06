@@ -17,7 +17,7 @@
 
      Optional props, all off by default (the default render must not change,
      ToolCall depends on it): `startLine` numbers rows from a real file line (the
-     gutter widens past two digits only), `highlight` tints an inclusive
+     gutter then fits the numbers, display/gutter.ts), `highlight` tints an inclusive
      [first, last] range in `highlightTone`, `title` puts a file name in the
      header with the language beside it, and `compact` tightens the header and
      body for an inspector or side panel.
@@ -30,6 +30,7 @@
   import CopyIcon from '@lucide/svelte/icons/copy';
   import CheckIcon from '@lucide/svelte/icons/check';
   import FileIcon from '@lucide/svelte/icons/code-xml';
+  import { codeBlockGutter, GUTTER_MIN } from './gutter.js';
 
   interface Props {
     id?: string;
@@ -67,8 +68,7 @@
   // An empty block gets no rows at all rather than a numbered blank one.
   const lines = $derived(source ? source.replace(/\n$/, '').split('\n') : []);
 
-  // 20px holds two digits; an excerpt deep in a file needs more.
-  const gutter = $derived(Math.max(20, String(startLine + Math.max(0, lines.length - 1)).length * 7 + 6));
+  const gutter = $derived(codeBlockGutter(startLine, lines.length));
   const toneClass = $derived(
     highlightTone === 'added' ? 'bg-ripple-success/10'
     : highlightTone === 'removed' ? 'bg-ripple-error/10'
@@ -196,12 +196,12 @@
   >
     <span
       class="pointer-events-none absolute inset-y-0 left-5 w-px bg-ripple-border"
-      style={gutter === 20 ? undefined : `left: ${gutter}px`}
+      style={gutter === GUTTER_MIN ? undefined : `left: ${gutter}px`}
     ></span>
     {#each lines as line, i (i)}
       <div
         class={cn('grid grid-cols-[20px_minmax(0,1fr)] items-start', marked(startLine + i) && toneClass)}
-        style={gutter === 20 ? undefined : `grid-template-columns: ${gutter}px minmax(0, 1fr)`}
+        style={gutter === GUTTER_MIN ? undefined : `grid-template-columns: ${gutter}px minmax(0, 1fr)`}
         data-highlight={marked(startLine + i) ? highlightTone : undefined}
       >
         <span class="select-none text-center text-[11px] text-ripple-muted-foreground">{startLine + i}</span>
