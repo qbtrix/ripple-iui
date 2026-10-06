@@ -104,7 +104,7 @@ describe('C4Diagram live props', () => {
     };
     const { container } = render(C4Diagram, { diagram: drill, onclick, ondrilldown });
     await waitFor(() => expect(container.querySelector('.c4-component-node')).not.toBeNull());
-    expect(container.querySelector('.c4-component-node .drill-indicator')).not.toBeNull();
+    expect(container.querySelector('.c4-component-node .c4-node-drill')).not.toBeNull();
     await fireEvent.click(container.querySelector('.c4-component-node')!);
     expect(ondrilldown).toHaveBeenCalledWith('craft', 'code');
     expect(onclick).not.toHaveBeenCalled();

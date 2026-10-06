@@ -95,20 +95,25 @@
     code: 'Code',
   };
 
-  // C4 color palette for the minimap node coloring
-  const NODE_TYPE_COLORS: Record<string, string> = {
-    person: '#0A84FF',
-    system: '#2563EB',
-    container: '#1D4ED8',
-    database: '#7C3AED',
-    queue: '#F59E0B',
-    component: '#3B82F6',
-    group: 'rgba(37,99,235,0.3)',
-  };
+  // Ripple tokens, so the canvas follows the host theme. Edges and the minimap
+  // take colours as strings, which is why these are constants, not CSS.
+  const EDGE_STROKE = 'color-mix(in oklab, var(--ripple-muted-foreground) 55%, transparent)';
+  const EVENT_STROKE = 'color-mix(in oklab, var(--ripple-warning) 70%, transparent)';
+  const MINIMAP_NODE = 'color-mix(in oklab, var(--ripple-muted-foreground) 45%, transparent)';
+  const MINIMAP_GROUP = 'color-mix(in oklab, var(--ripple-muted-foreground) 10%, transparent)';
+
+  const SHAPE_LEGEND = [
+    { shape: 'person', label: 'Person' },
+    { shape: 'system', label: 'System' },
+    { shape: 'container', label: 'Container' },
+    { shape: 'database', label: 'Database' },
+    { shape: 'queue', label: 'Queue' },
+    { shape: 'external', label: 'External' },
+  ];
 
   // ---- ELK layout state ----
-  let flowNodes = $state<Node[]>([]);
-  let flowEdges = $state<Edge[]>([]);
+  let flowNodes = $state.raw<Node[]>([]);
+  let flowEdges = $state.raw<Edge[]>([]);
   let layoutReady = $state(false);
   let layoutError = $state<string | null>(null);
 
@@ -260,10 +265,10 @@
         const isEvent = r.style === 'event';
 
         const edgeStyle = isEvent
-          ? 'stroke: rgba(245,158,11,0.55); stroke-width: 1.5px; stroke-dasharray: 4 4;'
+          ? `stroke: ${EVENT_STROKE}; stroke-width: 1.25px; stroke-dasharray: 4 4;`
           : isAsync
-            ? 'stroke: rgba(255,255,255,0.2); stroke-width: 1.5px; stroke-dasharray: 8 4;'
-            : 'stroke: rgba(255,255,255,0.2); stroke-width: 1.5px;';
+            ? `stroke: ${EDGE_STROKE}; stroke-width: 1.25px; stroke-dasharray: 8 4;`
+            : `stroke: ${EDGE_STROKE}; stroke-width: 1.25px;`;
 
         const labelParts: string[] = [];
         if (r.label) labelParts.push(r.label);
@@ -277,7 +282,6 @@
           label: labelParts.join(' ') || undefined,
           animated: isAsync,
           style: edgeStyle,
-          labelStyle: 'fill: rgba(255,255,255,0.55); font-size: 9px; font-weight: 500;',
         } satisfies Edge;
       });
 
@@ -388,7 +392,7 @@
         elementsSelectable={selectedId === undefined}
         minZoom={0.15}
         maxZoom={4}
-        defaultMarkerColor="rgba(255,255,255,0.25)"
+        defaultMarkerColor={EDGE_STROKE}
         proOptions={{ hideAttribution: true }}
         onmovestart={onMoveStart}
         onmove={onMove}
@@ -403,11 +407,10 @@
         />
         <MiniMap
           position="bottom-left"
-          maskColor="rgba(0,0,0,0.6)"
-          bgColor="rgba(255,255,255,0.02)"
-          nodeColor={(node) => {
-            return NODE_TYPE_COLORS[(node.type as string) ?? 'system'] ?? '#3B82F6';
-          }}
+          width={160}
+          height={110}
+          nodeColor={(node) => (node.type === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
+          nodeBorderRadius={4}
         />
       </SvelteFlow>
     {/if}
@@ -427,30 +430,12 @@
     {/if}
   {:else if layoutReady && !layoutError}
     <div class="c4-legend" role="list" aria-label="Diagram legend">
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #0A84FF; border-radius: 50%;"></span>
-        <span>Person</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #2563EB;"></span>
-        <span>System</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #1D4ED8;"></span>
-        <span>Container</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #7C3AED;"></span>
-        <span>Database</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #F59E0B;"></span>
-        <span>Queue</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: rgba(107,114,128,0.5); border: 1px dashed rgba(107,114,128,0.7);"></span>
-        <span>External</span>
-      </div>
+      {#each SHAPE_LEGEND as item (item.shape)}
+        <div class="c4-legend-item" role="listitem">
+          <span class="c4-legend-swatch" data-c4-shape={item.shape}></span>
+          <span>{item.label}</span>
+        </div>
+      {/each}
     </div>
   {/if}
 </div>
@@ -461,7 +446,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ripple-surface-foreground);
   }
 
   /* ---- Header ---- */
@@ -481,29 +466,31 @@
     margin: 0;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.005em;
+    color: var(--ripple-surface-foreground);
   }
 
   .c4-level-badge {
     font-size: 10px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(37, 99, 235, 0.5);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ripple-accent);
+    background: color-mix(in oklab, var(--ripple-accent) 12%, transparent);
     padding: 2px 8px;
     border-radius: 9999px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
   }
 
   .c4-description {
     margin: 0;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--ripple-muted-foreground);
   }
 
-  /* ---- Canvas ---- */
-  /* 480px in an auto-height parent (the legacy size); fills a parent that
-     gives the diagram a height. */
+  /* ---- Canvas ----
+     480px in an auto-height parent (the legacy size); fills a parent that
+     gives the diagram a height. SvelteFlow's theme variables are mapped to
+     ripple tokens here, so the canvas follows the host's light/dark theme. */
   .c4-canvas {
     width: 100%;
     flex: 1 1 480px;
@@ -511,8 +498,28 @@
     border-radius: 12px;
     overflow: hidden;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(10, 15, 30, 0.6);
+    border: 1px solid var(--ripple-border);
+    background: var(--ripple-surface);
+    /* An opaque ground for things that sit ON the map (node cards, edge
+       labels, controls). The host's surfaces may be translucent glass, which
+       lets edges and the grid read through; this inverts the ink's lightness
+       instead (dark ink -> near-white ground, light ink -> near-black), and
+       cards layer the host's card tint over it. */
+    --c4-ground: oklch(from var(--ripple-surface-foreground) calc(1.13 - l * 0.96) calc(c * 0.5) h);
+    --c4-card: linear-gradient(var(--ripple-surface) 0 0), var(--c4-ground);
+    --xy-background-pattern-color: var(--ripple-border);
+    --xy-edge-stroke: color-mix(in oklab, var(--ripple-muted-foreground) 55%, transparent);
+    --xy-edge-label-background-color: var(--ripple-surface);
+    --xy-edge-label-color: var(--ripple-muted-foreground);
+    --xy-controls-button-background-color: var(--ripple-surface);
+    --xy-controls-button-background-color-hover: var(--ripple-muted);
+    --xy-controls-button-color: var(--ripple-muted-foreground);
+    --xy-controls-button-color-hover: var(--ripple-surface-foreground);
+    --xy-controls-button-border-color: var(--ripple-border);
+    --xy-controls-box-shadow: none;
+    --xy-minimap-background-color: var(--ripple-surface);
+    --xy-minimap-mask-background-color: color-mix(in oklab, var(--ripple-surface-foreground) 7%, transparent);
+    --xy-minimap-mask-stroke-color: var(--ripple-border);
   }
 
   /* ---- Loading / Error states ---- */
@@ -525,18 +532,18 @@
     justify-content: center;
     gap: 10px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--ripple-muted-foreground);
   }
 
   .c4-error {
-    color: rgba(239, 68, 68, 0.75);
+    color: var(--ripple-error-text);
   }
 
   .c4-spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-top-color: rgba(59, 130, 246, 0.7);
+    border: 2px solid var(--ripple-border);
+    border-top-color: var(--ripple-accent);
     border-radius: 50%;
     animation: c4-spin 0.7s linear infinite;
     flex-shrink: 0;
@@ -546,40 +553,54 @@
     to { transform: rotate(360deg); }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .c4-spinner {
-      animation: none;
-    }
-  }
-
   /* ---- Legend ---- */
   .c4-legend {
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
-    padding: 2px 0;
+    padding: 2px 4px;
   }
 
   .c4-legend-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.4);
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ripple-muted-foreground);
   }
 
   .c4-legend-swatch {
     width: 10px;
     height: 10px;
-    border-radius: 2px;
+    border-radius: 3px;
     flex-shrink: 0;
+    border: 1px solid color-mix(in oklab, var(--ripple-surface-foreground) 30%, transparent);
+    background: var(--ripple-surface);
+  }
+  .c4-legend-swatch[data-c4-shape='person'] {
+    border-radius: 50%;
+    border-color: transparent;
+    background: color-mix(in oklab, var(--ripple-accent) 40%, transparent);
+  }
+  .c4-legend-swatch[data-c4-shape='container'] {
+    border-radius: 2px;
+  }
+  .c4-legend-swatch[data-c4-shape='database'] {
+    border-radius: 50% / 30%;
+    border-color: color-mix(in oklab, var(--ripple-info) 55%, transparent);
+    background: color-mix(in oklab, var(--ripple-info) 20%, transparent);
+  }
+  .c4-legend-swatch[data-c4-shape='queue'] {
+    border-color: transparent;
+    background: color-mix(in oklab, var(--ripple-warning) 35%, transparent);
+  }
+  .c4-legend-swatch[data-c4-shape='external'] {
+    border-style: dashed;
+    background: transparent;
   }
 
-  /* ---- SvelteFlow dark theme overrides ---- */
-  .c4-canvas :global(.svelte-flow) {
-    background: transparent !important;
-  }
-
+  /* ---- SvelteFlow overrides ---- */
+  .c4-canvas :global(.svelte-flow),
   .c4-canvas :global(.svelte-flow__background) {
     background: transparent !important;
   }
@@ -589,15 +610,24 @@
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
+    border-radius: var(--c4-r);
   }
 
-  .c4-canvas :global(.svelte-flow__node.selected) {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.55) !important;
-    border-radius: 10px !important;
+  /* Selection (and keyboard focus): an accent ring set off from the node, so
+     a status ring stays readable inside it. */
+  .c4-canvas :global(.svelte-flow__node:focus) {
+    outline: none;
+  }
+  .c4-canvas :global(.svelte-flow__node.selected),
+  .c4-canvas :global(.svelte-flow__node:focus-visible) {
+    outline: 2px solid var(--ripple-accent);
+    outline-offset: 3px;
   }
 
-  .c4-canvas :global(.svelte-flow__edge-path) {
-    stroke: rgba(255, 255, 255, 0.2);
+  /* Handles only anchor edges here (nothing is connectable), so hide them. */
+  .c4-canvas :global(.c4-handle) {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .c4-canvas :global(.svelte-flow__edge.animated .svelte-flow__edge-path) {
@@ -606,52 +636,26 @@
   }
 
   .c4-canvas :global(.svelte-flow__edge.selected .svelte-flow__edge-path) {
-    stroke: rgba(59, 130, 246, 0.7);
+    stroke: var(--ripple-accent) !important;
     stroke-width: 2px;
   }
 
-  .c4-canvas :global(.svelte-flow__edge-text) {
-    fill: rgba(255, 255, 255, 0.6);
-    font-size: 9px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  .c4-canvas :global(.svelte-flow__edge-label) {
+    font-size: calc(11px / clamp(0.6, var(--c4-zoom, 1), 1));
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--ripple-border);
+    background: var(--c4-card);
   }
 
-  .c4-canvas :global(.svelte-flow__edge-textbg) {
-    fill: rgba(10, 15, 30, 0.85);
-  }
-
-  .c4-canvas :global(.svelte-flow__controls) {
-    background: rgba(20, 25, 40, 0.88) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__controls-button) {
-    background: transparent !important;
-    border: none !important;
-    color: rgba(255, 255, 255, 0.6) !important;
-    fill: rgba(255, 255, 255, 0.6) !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__controls-button:hover) {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    fill: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__controls-button svg) {
-    fill: inherit !important;
-  }
-
+  .c4-canvas :global(.svelte-flow__controls),
   .c4-canvas :global(.svelte-flow__minimap) {
-    background: rgba(15, 20, 35, 0.85) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    border-radius: 8px !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__minimap-mask) {
-    fill: rgba(0, 0, 0, 0.55) !important;
+    border: 1px solid var(--ripple-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--c4-card);
   }
 
   /* Group node bounding box sizing — SvelteFlow requires explicit width/height on parent nodes */
@@ -663,6 +667,124 @@
 
   @keyframes c4-dash {
     to { stroke-dashoffset: -12; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-spinner {
+      animation: none;
+    }
+    .c4-canvas :global(.svelte-flow__edge.animated .svelte-flow__edge-path) {
+      animation: none;
+    }
+  }
+
+  /* ---- The shared node card ----
+     Every node component renders these classes; the rules live here once.
+     Names counter-scale with the zoom (C4LiveLayer writes --c4-zoom on the
+     flow root) so they stay legible when the map is zoomed out, and the
+     secondary lines drop away once it is far out (data-c4-far). */
+  .c4-canvas :global(.c4-node) {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--ripple-border);
+    background: var(--c4-card);
+    color: var(--ripple-surface-foreground);
+    text-align: center;
+    cursor: pointer;
+    transition:
+      border-color 150ms var(--ripple-ease-out),
+      transform 150ms var(--ripple-ease-out);
+  }
+
+  /* Per-type card overrides live here, after the shared rule they refine. */
+  .c4-canvas :global(.c4-person-node) {
+    border-radius: 12px;
+    gap: 6px;
+  }
+  .c4-canvas :global(.c4-component-node) {
+    border-radius: 8px;
+  }
+  .c4-canvas :global(.c4-component-node.is-code) {
+    padding-inline: 10px;
+  }
+
+  .c4-canvas :global(.c4-node:hover) {
+    border-color: color-mix(in oklab, var(--ripple-surface-foreground) 24%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .c4-canvas :global(.c4-node.is-external) {
+    border-style: dashed;
+    border-color: color-mix(in oklab, var(--ripple-surface-foreground) 20%, transparent);
+  }
+
+  .c4-canvas :global(.c4-node.is-external .c4-node-name) {
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.c4-node-kind) {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.c4-node-name) {
+    font-size: calc(13px / clamp(0.5, var(--c4-zoom, 1), 1));
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .c4-canvas :global(.c4-node-desc) {
+    font-size: 11px;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.c4-node-tech) {
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--ripple-muted-foreground);
+    background: var(--ripple-muted);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .c4-canvas :global(.c4-node-docs) {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: var(--ripple-accent);
+    text-decoration: none;
+  }
+
+  .c4-canvas :global(.c4-node-docs:hover) {
+    text-decoration: underline;
+  }
+
+  .c4-canvas :global(.c4-node-drill) {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-kind),
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-desc),
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-tech),
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-docs) {
+    display: none;
   }
 
   /* ---- Live status: data-c4-status on the SvelteFlow node wrapper ----

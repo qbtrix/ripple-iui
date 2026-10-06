@@ -2,7 +2,8 @@
   C4GroupNode.svelte — SvelteFlow parent node for a C4 boundary: the dashed box
   that nests the next level down (a system's containers, or with `kind` a
   container's components or a component's code). Its corner label names the
-  boundary's kind; the box itself lets pointer events through to the pane.
+  boundary's kind and is the clickable part; the box itself lets pointer
+  events through to the pane so the canvas still pans from inside it.
 -->
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
@@ -30,77 +31,74 @@
 <Handle type="source" position={Position.Bottom} class="c4-handle" />
 <Handle type="source" position={Position.Right} class="c4-handle" />
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-  class="c4-group-node"
-  style="
-    border-color: {isExternal ? 'rgba(107,114,128,0.35)' : 'rgba(37,99,235,0.3)'};
-  "
-  onclick={handleClick}
->
-  <!-- Label in the top-left corner of the group box -->
-  <div class="group-label">
+<div class="c4-group-node" class:is-external={isExternal}>
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="group-label" onclick={handleClick} title={data.description ?? data.name}>
     <span class="group-type">{kindLabel}</span>
     <span class="group-name">{data.name}</span>
     {#if data.technology}
-      <span class="group-tech">[{data.technology}]</span>
+      <span class="group-tech">{data.technology}</span>
     {/if}
   </div>
 </div>
 
 <style>
   .c4-group-node {
-    /* Group nodes need width/height set by SvelteFlow from ELK layout */
+    /* SvelteFlow sizes the wrapper from the ELK layout; fill it. */
     width: 100%;
     height: 100%;
     border-radius: 12px;
-    border: 1.5px dashed;
-    background: rgba(37, 99, 235, 0.04);
-    cursor: default;
+    border: 1px dashed color-mix(in oklab, var(--ripple-surface-foreground) 24%, transparent);
+    background: color-mix(in oklab, var(--ripple-surface-foreground) 2.5%, transparent);
     position: relative;
     pointer-events: none;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .c4-group-node.is-external {
+    border-color: var(--ripple-border);
   }
 
   .group-label {
     position: absolute;
-    top: -1px;
-    left: 12px;
+    top: 10px;
+    left: 14px;
+    right: 14px;
     display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(10, 15, 30, 0.85);
-    padding: 2px 8px;
-    border-radius: 0 0 6px 6px;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
     pointer-events: auto;
     cursor: pointer;
   }
 
   .group-type {
-    font-size: 8px;
-    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(147, 197, 253, 0.6);
+    letter-spacing: 0.06em;
+    color: var(--ripple-muted-foreground);
   }
 
   .group-name {
-    font-size: 11px;
+    font-size: calc(13px / clamp(0.5, var(--c4-zoom, 1), 1));
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: -0.005em;
+    color: var(--ripple-surface-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .group-tech {
-    font-size: 8px;
-    color: rgba(255, 255, 255, 0.35);
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--ripple-muted-foreground);
   }
 
-  :global(.c4-handle) {
-    width: 7px !important;
-    height: 7px !important;
-    background: rgba(255, 255, 255, 0.2) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
-    border-radius: 50% !important;
+  :global(.svelte-flow[data-c4-far]) .group-type,
+  :global(.svelte-flow[data-c4-far]) .group-tech {
+    display: none;
   }
 </style>

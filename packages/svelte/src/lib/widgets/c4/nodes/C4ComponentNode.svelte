@@ -1,9 +1,9 @@
 <!--
   C4ComponentNode.svelte — SvelteFlow node for C4 Component and Code elements:
-  the smaller box with a type label (the subtype, "Component", or "Code" with a
-  monospace name for a file), an optional KB link, and a drill affordance when
-  the element is drillable. kb_article URLs go through safeKbUrl (no
-  javascript:/data: schemes).
+  the shared ringed card (rules in C4Diagram), a type label (the subtype,
+  "Component", or "Code" with a monospace name for a file), an optional KB
+  link, and a drill affordance when the element is drillable. kb_article URLs
+  go through safeKbUrl (no javascript:/data: schemes).
 -->
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
@@ -13,6 +13,7 @@
   let { data }: { data: C4NodeData } = $props();
 
   const isCode = $derived(data.kind === 'code');
+  const isExternal = $derived(data.external ?? false);
   const hasDrilldown = $derived(data.drillable ?? false);
   const typeLabel = $derived(
     isCode ? 'Code'
@@ -37,31 +38,21 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="c4-component-node"
+  class="c4-node c4-component-node"
   class:is-code={isCode}
+  class:is-external={isExternal}
   onclick={handleClick}
   title={data.description ?? data.name}
 >
-  <!-- Small component icon in corner -->
-  <div class="component-icon">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>
-  </div>
-
-  <div class="node-type-label">{typeLabel}</div>
-
-  <div class="node-name">{data.name}</div>
+  <div class="c4-node-kind">{typeLabel}</div>
+  <div class="c4-node-name">{data.name}</div>
 
   {#if data.technology}
-    <div class="tech-badge">[{data.technology}]</div>
+    <div class="c4-node-tech">{data.technology}</div>
   {/if}
 
   {#if data.description}
-    <div class="node-desc">
+    <div class="c4-node-desc">
       {data.description.length > 50 ? data.description.slice(0, 50) + '…' : data.description}
     </div>
   {/if}
@@ -71,10 +62,10 @@
       href={safeKbUrl(data.kb_article)}
       target="_blank"
       rel="noopener noreferrer"
-      class="kb-link"
+      class="c4-node-docs"
       onclick={(e) => e.stopPropagation()}
     >
-      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
         <path d="M12 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
         <path d="M14 2v6h6"/>
       </svg>
@@ -83,8 +74,8 @@
   {/if}
 
   {#if hasDrilldown}
-    <div class="drill-indicator" title="Drill down">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <div class="c4-node-drill" title="Drill down">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
         <path d="M7 17L17 7M7 7h10v10"/>
       </svg>
     </div>
@@ -93,102 +84,21 @@
 
 <style>
   .c4-component-node {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 8px 12px 8px;
-    border-radius: 8px;
-    border: 1px solid rgba(59, 130, 246, 0.4);
-    background: rgba(59, 130, 246, 0.12);
-    min-width: 150px;
-    max-width: 170px;
-    cursor: pointer;
-    position: relative;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    transition: box-shadow 0.15s ease, transform 0.1s ease;
+    min-width: 160px;
+    max-width: 180px;
   }
 
-  .c4-component-node:hover {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-    transform: translateY(-1px);
+  /* A file name is one long token: give it the full ELK box and a mono face.
+     (Its radius and padding are per-type overrides in C4Diagram.) */
+  .is-code {
+    min-width: 200px;
+    max-width: 200px;
   }
 
-  .component-icon {
-    position: absolute;
-    top: 6px;
-    left: 8px;
-    color: rgba(147, 197, 253, 0.5);
-  }
-
-  .node-type-label {
-    font-size: 8px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #93C5FD;
-    opacity: 0.8;
-  }
-
-  .node-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.88);
-    text-align: center;
-    line-height: 1.3;
-    word-break: break-word;
-  }
-
-  .is-code .node-name {
+  .is-code .c4-node-name {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: calc(12px / clamp(0.5, var(--c4-zoom, 1), 1));
     font-weight: 500;
-  }
-
-  .drill-indicator {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  .tech-badge {
-    font-size: 9px;
-    color: rgba(147, 197, 253, 0.65);
-    background: rgba(255, 255, 255, 0.06);
-    padding: 1px 5px;
-    border-radius: 4px;
-  }
-
-  .node-desc {
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.4);
-    text-align: center;
-    line-height: 1.4;
-  }
-
-  .kb-link {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 8px;
-    color: rgba(147, 197, 253, 0.6);
-    text-decoration: none;
-    margin-top: 1px;
-  }
-
-  .kb-link:hover {
-    color: rgba(147, 197, 253, 1);
-  }
-
-  :global(.c4-handle) {
-    width: 7px !important;
-    height: 7px !important;
-    background: rgba(255, 255, 255, 0.2) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
-    border-radius: 50% !important;
-  }
-
-  :global(.c4-handle:hover) {
-    background: rgba(255, 255, 255, 0.45) !important;
+    letter-spacing: 0;
   }
 </style>
