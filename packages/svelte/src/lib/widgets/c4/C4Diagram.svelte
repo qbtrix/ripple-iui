@@ -1,16 +1,21 @@
 <!--
-  C4Diagram.svelte — SvelteFlow + ELK.js based C4 Model diagram widget.
-  Modified: 2026-04-07 — Complete rewrite from SVG-based to SvelteFlow/ELK for
-  professional-grade layout, interactive pan/zoom, minimap, and group node nesting.
-  Supports all 4 C4 levels (Context, Container, Component, Code) with drill-down.
-  Modified: 2026-04-10 — Add cancellation to $effect layout call to prevent stale results from race conditions.
-  Modified: 2026-09-17 (fix/port-gaps) — the layout spinner stops under
-  prefers-reduced-motion, from a scoped @media block (the pattern ReasoningTrace
-  and TaskRows use). Still, it is a ring with one coloured segment next to
-  "Computing layout", which still reads as loading.
+  C4Diagram.svelte — SvelteFlow + ELK.js C4 model diagram: all four levels
+  (Context, Container, Component, Code), pan/zoom, minimap, nested boundaries
+  and drill-down through `ondrilldown`.
+
+  Live layer (all optional; absent, the widget behaves as it always did):
+  `status` paints a node's state through a `data-c4-status` attribute on its
+  SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves),
+  `markers` pins dots to nodes, `selectedId` controls selection, and
+  `focusId` + `follow` keep the camera on one node. A user pan or zoom (and
+  the zoom buttons) calls `onmanualcamera`, so a host can drop follow mode.
+
+  SvelteFlow stays mounted across diagram swaps: only the first layout shows
+  the loading state, and C4LiveLayer refits when the node set changes. The
+  layout spinner stops under prefers-reduced-motion.
 -->
 <script lang="ts">
-  import { SvelteFlow, Background, Controls, MiniMap, Position } from '@xyflow/svelte';
+  import { SvelteFlow, Background, Controls, MiniMap } from '@xyflow/svelte';
   import type { Node, Edge, NodeTypes } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
@@ -23,18 +28,39 @@
     C4ComponentNode,
     C4GroupNode,
   } from './nodes/index.js';
+  import C4LiveLayer from './C4LiveLayer.svelte';
   import { computeElkLayout, getNodeType, isGroupNode } from './elk-layout.js';
+  import { decorateNodes, nodeSetKey, statusesPresent, STATUS_LABELS } from './live.js';
   // From types.ts, NOT the barrel. `index.ts` exports THIS component as
   // `C4Diagram`, so importing the name from the barrel resolved `diagram` to
   // the component's own props type — a self-referential collision that made
   // every field access below an error.
-  import type { C4Diagram, C4Element, C4System, C4Container, C4Component, C4NodeData } from './types.js';
+  import type {
+    C4Diagram,
+    C4Element,
+    C4System,
+    C4Container,
+    C4NodeData,
+    C4Status,
+    C4Marker,
+  } from './types.js';
 
   interface Props {
     diagram: C4Diagram;
     class?: string;
     onclick?: (elementId: string) => void;
     ondrilldown?: (elementId: string, level: string) => void;
+    /** Live state per element id. */
+    status?: Record<string, C4Status>;
+    /** Dots per element id (who is working there). */
+    markers?: Record<string, C4Marker[]>;
+    /** The element the camera frames while `follow` is true. */
+    focusId?: string;
+    follow?: boolean;
+    /** Controlled selection; leave undefined to let clicks select. */
+    selectedId?: string;
+    /** A user pan, zoom or zoom-button press moved the camera. */
+    onmanualcamera?: () => void;
   }
 
   let {
@@ -42,6 +68,12 @@
     class: className = '',
     onclick,
     ondrilldown,
+    status,
+    markers,
+    focusId,
+    follow,
+    selectedId,
+    onmanualcamera,
   }: Props = $props();
 
   // Register all C4 node types for SvelteFlow
@@ -90,6 +122,7 @@
   }
 
   function hasDrillDown(el: C4Element): boolean {
+    if (el.drillable !== undefined) return el.drillable;
     return (
       ('containers' in el && Array.isArray((el as C4System).containers) && ((el as C4System).containers?.length ?? 0) > 0) ||
       ('components' in el && Array.isArray((el as C4Container).components) && ((el as C4Container).components?.length ?? 0) > 0)
@@ -180,6 +213,7 @@
         drillable: hasDrillDown(el),
         kb_article: 'kb_article' in el ? (el as { kb_article?: string }).kb_article : undefined,
         tags: 'tags' in el ? (el as { tags?: string[] }).tags : undefined,
+        kind: el.kind,
         element: el,
         diagramLevel: diagram.level,
         onclick: onclick ? (element: C4Element) => onclick(element.id) : undefined,
@@ -250,11 +284,15 @@
     return { nodes, edges };
   }
 
-  // Run ELK layout whenever the diagram input changes
+  // True once a layout has landed. Plain (not $state): only the effect reads it.
+  let hasLayout = false;
+
+  // Run ELK layout whenever the diagram input changes. After the first layout
+  // the previous graph stays on screen until the next one is ready.
   $effect(() => {
     const currentDiagram = diagram;
     let cancelled = false;
-    layoutReady = false;
+    if (!hasLayout) layoutReady = false;
     layoutError = null;
 
     buildFlowGraph(currentDiagram)
@@ -263,6 +301,7 @@
         flowNodes = nodes;
         flowEdges = edges;
         layoutReady = true;
+        hasLayout = true;
       })
       .catch((err) => {
         if (cancelled) return;
@@ -273,22 +312,51 @@
 
     return () => { cancelled = true; };
   });
+
+  // ---- Live layer ----
+  const shownNodes = $derived(decorateNodes(flowNodes, { status, selectedId }));
+  const nodeIds = $derived(nodeSetKey(flowNodes));
+  const legendStatuses = $derived(statusesPresent(status, nodeIds.split('\n')));
+
+  // A user gesture carries its DOM event; programmatic moves (fitView, the
+  // follow camera) pass null. Report once per gesture.
+  let manualReported = false;
+  function onMoveStart() {
+    manualReported = false;
+  }
+  function onMove(event: MouseEvent | TouchEvent | null) {
+    if (!event || manualReported) return;
+    manualReported = true;
+    onmanualcamera?.();
+  }
+  // The zoom buttons move the camera programmatically, so catch the press.
+  function onCanvasClick(event: MouseEvent) {
+    if ((event.target as Element | null)?.closest?.('.svelte-flow__controls')) onmanualcamera?.();
+  }
 </script>
 
-<div class="c4-diagram {className}" role="figure" aria-label={diagram.title}>
-  <!-- Header -->
-  <div class="c4-header">
-    <div class="c4-title-row">
-      <h3 class="c4-title">{diagram.title}</h3>
-      <span class="c4-level-badge">{levelLabels[diagram.level] ?? diagram.level}</span>
+<div
+  class="c4-diagram {className}"
+  role="figure"
+  aria-label={diagram.title || (levelLabels[diagram.level] ?? diagram.level)}
+>
+  <!-- Header: a host that draws its own chrome passes an empty title. -->
+  {#if diagram.title}
+    <div class="c4-header">
+      <div class="c4-title-row">
+        <h3 class="c4-title">{diagram.title}</h3>
+        <span class="c4-level-badge">{levelLabels[diagram.level] ?? diagram.level}</span>
+      </div>
+      {#if diagram.description}
+        <p class="c4-description">{diagram.description}</p>
+      {/if}
     </div>
-    {#if diagram.description}
-      <p class="c4-description">{diagram.description}</p>
-    {/if}
-  </div>
+  {/if}
 
   <!-- Flow canvas -->
-  <div class="c4-canvas">
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="c4-canvas" onclickcapture={onCanvasClick}>
     {#if !layoutReady}
       <!-- Loading state -->
       <div class="c4-loading" aria-live="polite">
@@ -305,7 +373,7 @@
       </div>
     {:else}
       <SvelteFlow
-        nodes={flowNodes}
+        nodes={shownNodes}
         edges={flowEdges}
         {nodeTypes}
         fitView
@@ -317,12 +385,15 @@
         zoomOnDoubleClick
         nodesDraggable={false}
         nodesConnectable={false}
-        elementsSelectable
+        elementsSelectable={selectedId === undefined}
         minZoom={0.15}
         maxZoom={4}
         defaultMarkerColor="rgba(255,255,255,0.25)"
         proOptions={{ hideAttribution: true }}
+        onmovestart={onMoveStart}
+        onmove={onMove}
       >
+        <C4LiveLayer ids={nodeIds} {focusId} {follow} {markers} />
         <Background
           gap={24}
         />
@@ -342,8 +413,19 @@
     {/if}
   </div>
 
-  <!-- Legend -->
-  {#if layoutReady && !layoutError}
+  <!-- Legend: the live statuses on the map when `status` is given, else the C4 shapes. -->
+  {#if layoutReady && !layoutError && status}
+    {#if legendStatuses.length > 0}
+      <div class="c4-legend" role="list" aria-label="Status legend">
+        {#each legendStatuses as st (st)}
+          <div class="c4-legend-item" role="listitem">
+            <span class="c4-status-swatch" data-c4-swatch={st}></span>
+            <span>{STATUS_LABELS[st]}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  {:else if layoutReady && !layoutError}
     <div class="c4-legend" role="list" aria-label="Diagram legend">
       <div class="c4-legend-item" role="listitem">
         <span class="c4-legend-swatch" style="background: #0A84FF; border-radius: 50%;"></span>
@@ -420,9 +502,12 @@
   }
 
   /* ---- Canvas ---- */
+  /* 480px in an auto-height parent (the legacy size); fills a parent that
+     gives the diagram a height. */
   .c4-canvas {
     width: 100%;
-    height: 480px;
+    flex: 1 1 480px;
+    min-height: 0;
     border-radius: 12px;
     overflow: hidden;
     position: relative;
@@ -578,5 +663,85 @@
 
   @keyframes c4-dash {
     to { stroke-dashoffset: -12; }
+  }
+
+  /* ---- Live status: data-c4-status on the SvelteFlow node wrapper ----
+     One ring drawn over the node's own edge, so every node shape gets the same
+     treatment without each node component knowing about status. Tones are
+     ripple tokens; `changing` is the only one that moves. */
+  .c4-canvas :global(.svelte-flow__node) {
+    --c4-r: 10px;
+  }
+  .c4-canvas :global(.svelte-flow__node-person),
+  .c4-canvas :global(.svelte-flow__node-group) {
+    --c4-r: 12px;
+  }
+  .c4-canvas :global(.svelte-flow__node-component) {
+    --c4-r: 8px;
+  }
+
+  .c4-canvas :global(.svelte-flow__node[data-c4-status])::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--c4-r);
+    border: 1.5px solid var(--c4-tone);
+    pointer-events: none;
+    transition: border-color 180ms var(--ripple-ease-out), box-shadow 180ms var(--ripple-ease-out);
+  }
+
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='changing']),
+  .c4-status-swatch[data-c4-swatch='changing'] {
+    --c4-tone: var(--ripple-accent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='changed']),
+  .c4-status-swatch[data-c4-swatch='changed'] {
+    --c4-tone: color-mix(in oklab, var(--ripple-accent) 55%, transparent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='landed']),
+  .c4-status-swatch[data-c4-swatch='landed'] {
+    --c4-tone: var(--ripple-success);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='failed']),
+  .c4-status-swatch[data-c4-swatch='failed'] {
+    --c4-tone: var(--ripple-error);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='drift']),
+  .c4-status-swatch[data-c4-swatch='drift'] {
+    --c4-tone: var(--ripple-warning);
+  }
+
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='drift'])::after {
+    border-style: dashed;
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='failed'])::after {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--ripple-error) 16%, transparent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='changing'])::after {
+    animation: c4-breathe 2.4s ease-in-out infinite;
+  }
+
+  @keyframes c4-breathe {
+    0%, 100% { box-shadow: 0 0 0 2px color-mix(in oklab, var(--ripple-accent) 10%, transparent); }
+    50% { box-shadow: 0 0 0 7px color-mix(in oklab, var(--ripple-accent) 22%, transparent); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-canvas :global(.svelte-flow__node[data-c4-status='changing'])::after {
+      animation: none;
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--ripple-accent) 18%, transparent);
+    }
+  }
+
+  .c4-status-swatch {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    border: 1.5px solid var(--c4-tone);
+    background: color-mix(in oklab, var(--c4-tone) 18%, transparent);
+  }
+  .c4-status-swatch[data-c4-swatch='drift'] {
+    border-style: dashed;
   }
 </style>

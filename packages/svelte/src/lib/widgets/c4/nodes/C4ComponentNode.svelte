@@ -1,7 +1,9 @@
 <!--
-  C4ComponentNode.svelte — SvelteFlow custom node for C4 Component elements.
-  Created: 2026-04-07 — Smaller blue-500 box with component type label and KB link support.
-  Modified: 2026-04-10 — Sanitize kb_article URL to prevent XSS via javascript:/data: schemes.
+  C4ComponentNode.svelte — SvelteFlow node for C4 Component and Code elements:
+  the smaller box with a type label (the subtype, "Component", or "Code" with a
+  monospace name for a file), an optional KB link, and a drill affordance when
+  the element is drillable. kb_article URLs go through safeKbUrl (no
+  javascript:/data: schemes).
 -->
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
@@ -10,8 +12,18 @@
 
   let { data }: { data: C4NodeData } = $props();
 
+  const isCode = $derived(data.kind === 'code');
+  const hasDrilldown = $derived(data.drillable ?? false);
+  const typeLabel = $derived(
+    isCode ? 'Code'
+      : data.subtype ? data.subtype.charAt(0).toUpperCase() + data.subtype.slice(1)
+      : 'Component'
+  );
+
   function handleClick() {
-    if (data.onclick && data.element) {
+    if (hasDrilldown && data.ondrilldown && data.element) {
+      data.ondrilldown(data.element, 'code');
+    } else if (data.onclick && data.element) {
       data.onclick(data.element);
     }
   }
@@ -26,6 +38,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="c4-component-node"
+  class:is-code={isCode}
   onclick={handleClick}
   title={data.description ?? data.name}
 >
@@ -39,9 +52,7 @@
     </svg>
   </div>
 
-  <div class="node-type-label">
-    {data.subtype ? data.subtype.charAt(0).toUpperCase() + data.subtype.slice(1) : 'Component'}
-  </div>
+  <div class="node-type-label">{typeLabel}</div>
 
   <div class="node-name">{data.name}</div>
 
@@ -69,6 +80,14 @@
       </svg>
       Docs
     </a>
+  {/if}
+
+  {#if hasDrilldown}
+    <div class="drill-indicator" title="Drill down">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M7 17L17 7M7 7h10v10"/>
+      </svg>
+    </div>
   {/if}
 </div>
 
@@ -118,6 +137,18 @@
     text-align: center;
     line-height: 1.3;
     word-break: break-word;
+  }
+
+  .is-code .node-name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 500;
+  }
+
+  .drill-indicator {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    color: rgba(255, 255, 255, 0.4);
   }
 
   .tech-badge {

@@ -1,7 +1,8 @@
 <!--
-  C4GroupNode.svelte — SvelteFlow custom node for C4 system boundary group containers.
-  Created: 2026-04-07 — Dashed border container used to draw system boundary boxes
-  that nest child container nodes. Rendered as a SvelteFlow parent/group node.
+  C4GroupNode.svelte — SvelteFlow parent node for a C4 boundary: the dashed box
+  that nests the next level down (a system's containers, or with `kind` a
+  container's components or a component's code). Its corner label names the
+  boundary's kind; the box itself lets pointer events through to the pane.
 -->
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
@@ -10,6 +11,12 @@
   let { data }: { data: C4NodeData } = $props();
 
   const isExternal = $derived(data.external ?? false);
+  const kindLabel = $derived(
+    data.kind === 'container' ? 'Container'
+      : data.kind === 'component' ? 'Component'
+      : data.kind === 'code' ? 'Code'
+      : isExternal ? 'External System' : 'Software System'
+  );
 
   function handleClick() {
     if (data.onclick && data.element) {
@@ -34,9 +41,7 @@
 >
   <!-- Label in the top-left corner of the group box -->
   <div class="group-label">
-    <span class="group-type">
-      {isExternal ? 'External System' : 'Software System'}
-    </span>
+    <span class="group-type">{kindLabel}</span>
     <span class="group-name">{data.name}</span>
     {#if data.technology}
       <span class="group-tech">[{data.technology}]</span>
