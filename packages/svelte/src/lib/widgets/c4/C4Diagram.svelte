@@ -7,8 +7,12 @@
   `status` paints a node's state through a `data-c4-status` attribute on its
   SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves),
   `markers` pins dots to nodes, `selectedId` controls selection, and
-  `focusId` + `follow` keep the camera on one node. A user pan or zoom (and
-  the zoom buttons) calls `onmanualcamera`, so a host can drop follow mode.
+  `focusId` + `follow` keep the camera on one node. A user pan or zoom (the
+  zoom buttons and the minimap included) calls `onmanualcamera`, so a host can
+  drop follow mode. Enter or Space on a focused node acts like a click.
+
+  Edges follow ELK's orthogonal routes (C4Edge) and every card fills its ELK
+  box, so routes meet card edges and labels sit in the space ELK reserved.
 
   SvelteFlow stays mounted across diagram swaps: only the first layout shows
   the loading state, and C4LiveLayer refits when the node set changes. The
