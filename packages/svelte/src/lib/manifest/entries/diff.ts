@@ -11,6 +11,8 @@ export const diffEntry: WidgetManifestEntry = {
     layout: { type: '"unified" | "split"', required: false, description: 'View layout.' },
     showLineNumbers: { type: 'boolean', required: false, description: 'Show line numbers (lines mode only).' },
     title: { type: 'string', required: false, description: 'Header title.' },
+    oldStart: { type: 'number', required: false, description: 'File line number of the first "before" line, for an excerpt. Default 1.' },
+    newStart: { type: 'number', required: false, description: 'File line number of the first "after" line, for an excerpt. Default 1.' },
   },
   example: { type: 'diff', props: { before: 'const x = 1;', after: 'const x = 42;', mode: 'lines', layout: 'unified', showLineNumbers: true } },
 };
