@@ -58,6 +58,9 @@ export type {
   C4Code,
   C4PortView,
 } from './c4/index.js';
+// Tree helpers C4Diagram uses, for hosts that index or walk the same element tree.
+export { childrenOf, indexTree, pathTo, codeView } from './c4/index.js';
+export type { C4Tree, CodeSide, CodeView } from './c4/index.js';
 
 const defaultRegistry: WidgetMap = {
   container: Container,
