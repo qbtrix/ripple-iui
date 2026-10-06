@@ -286,9 +286,10 @@ export function codePanelSize(code: C4Code): { width: number; height: number } {
       const lastNo = v.startLine + Math.max(0, v.lineCount - 1);
       const gutter = Math.max(20, String(lastNo).length * 7 + 6);
       const perLine = Math.floor((CODE_PANEL.width - 2 - gutter - 16) / CODE_PANEL.charWidth);
-      // Word wrap breaks early; a 15% allowance keeps the last row inside the box.
+      // Word wrap breaks a little early: a small allowance and one spare row. Past
+      // that the panel body scrolls rather than clipping.
       const wrapped = v.text ? v.text.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / perLine)), 0) : 0;
-      return Math.ceil(wrapped * 1.15);
+      return Math.ceil(wrapped * 1.05) + 1;
     })
   );
   const height = CODE_PANEL.header + CODE_PANEL.padY + rows * CODE_PANEL.lineHeight + 8;

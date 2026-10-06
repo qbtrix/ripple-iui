@@ -78,8 +78,10 @@
     }
   }
 
+  /* Right after the label, not at the frame's far edge: a scope frame is often
+     wider than the view, and its connections must stay in sight. */
   .group-ports {
-    margin-left: auto;
+    margin-left: 8px;
     display: flex;
     gap: 6px;
     flex-shrink: 0;
