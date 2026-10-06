@@ -1,21 +1,16 @@
 ---
 {
   "title": "C4 Widget Public API Barrel — Exports for Component, Types, and Layout",
-  "summary": "The barrel export file for the C4 diagram widget subsystem. It re-exports the `C4Diagram` Svelte component, layout utilities, and all TypeScript type definitions from a single import path, establishing the public API surface of the C4 module.",
+  "summary": "widgets/c4/index.ts is the C4 widget's public surface: the C4Diagram component, three layout helpers, and the data, live-state and semantic-zoom types. The widgets barrel re-exports the component and the data types for hosts.",
   "concepts": [
-    "barrel export",
+    "barrel exports",
+    "public API",
     "C4Diagram",
     "C4DiagramData",
-    "C4System",
-    "C4Container",
-    "C4Person",
-    "C4Component",
-    "C4Relationship",
-    "C4NodeData",
-    "LayoutNode",
-    "public API",
-    "module index",
-    "tree-shaking"
+    "name collision",
+    "C4Status",
+    "C4Code",
+    "widgets barrel"
   ],
   "categories": [
     "module",
@@ -26,8 +21,8 @@
     "37396c86a22fe1b2"
   ],
   "backlinks": null,
-  "word_count": 335,
-  "compiled_at": "2026-04-23T18:36:05Z",
+  "word_count": 237,
+  "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
   "audience": "human",
@@ -38,56 +33,36 @@
 
 ## Overview
 
-`lib/widgets/c4/index.ts` is the single entry point for consumers of the C4 widget. Rather than importing from internal paths like `./C4Diagram.svelte` or `./elk-layout.js`, callers import everything from `@ripple/widgets/c4` (or the relative equivalent). This pattern is standard in library design and carries real maintenance benefits.
+`lib/widgets/c4/index.ts` is what the rest of Ripple, and hosts, import from. Internal files (`live.ts`, `semantic.ts`, `semantic-flow.ts`, the node components) stay private.
 
-## What Is Exported
+## Exports
 
-### Component
 ```typescript
 export { default as C4Diagram } from './C4Diagram.svelte';
-```
-The main renderable component. Named export (not default) so it can be tree-shaken and used alongside other named imports.
-
-### Layout Utilities
-```typescript
 export { computeElkLayout, getNodeType, isGroupNode } from './elk-layout.js';
-```
-These are exported because callers may want to pre-compute layouts server-side or in tests without mounting the Svelte component.
-
-### Types
-```typescript
 export type {
+  C4Kind, C4Status, C4Marker, C4Code, C4PortView,
   C4Person, C4System, C4Container, C4Component,
   C4Relationship, C4Element,
   C4Diagram as C4DiagramData,
-  C4NodeData,
-  LayoutNode,
+  C4NodeData, LayoutNode,
 } from './types.js';
 ```
 
-Note the alias `C4Diagram as C4DiagramData` — this avoids a name collision between the Svelte component (`C4Diagram`) and the TypeScript interface (`C4Diagram` from `types.ts`). Both exist at the same public scope, so one must be renamed. The data type becomes `C4DiagramData` to signal that it carries diagram data, not a component reference.
+The layout helpers let a caller or a test compute positions and node types without mounting the component.
 
-## Why a Barrel File Matters
+## From a host
 
-Without a barrel, consumers would write:
+`@ripple-ui/svelte/widgets` exports `C4Diagram` and the data types a host needs to build a diagram: `C4DiagramData`, `C4Element`, `C4Person`, `C4System`, `C4Container`, `C4Component`, `C4Relationship`, `C4Kind`, `C4Status`, `C4Marker`, `C4Code` and `C4PortView`. In a JSON spec the widget type is `c4`; its props are listed in the manifest entry `manifest/entries/c4.ts`.
+
 ```typescript
-import C4Diagram from '../../widgets/c4/C4Diagram.svelte';
-import type { C4System } from '../../widgets/c4/types.js';
-import { computeElkLayout } from '../../widgets/c4/elk-layout.js';
+import { C4Diagram, type C4DiagramData, type C4Status } from '@ripple-ui/svelte/widgets';
 ```
 
-With the barrel, they write:
-```typescript
-import { C4Diagram, computeElkLayout } from '$lib/widgets/c4';
-import type { C4System, C4DiagramData } from '$lib/widgets/c4';
-```
+## The name collision
 
-This also lets the internal file structure change freely — as long as `index.ts` keeps exporting the same names, no consumer code breaks.
+The component and the data interface are both called `C4Diagram`, so the barrel exports the data type as `C4DiagramData`. Inside the package, import data types from `./types.js`: importing `C4Diagram` as a type from the barrel resolves to the component, and svelte-package would emit a `.d.ts` where the two names clash. `C4Diagram.svelte` itself imports the type aliased for the same reason.
 
-## Versioning Note
+## Known gaps
 
-The file header notes a 2026-04-07 update for the SvelteFlow + ELK rewrite. The previous SVG-based implementation had a different internal structure, but this barrel's export names remained stable — callers importing `C4Diagram` did not need to change.
-
-## Known Gaps
-
-No known gaps. This file is intentionally minimal. If the C4 widget gains sub-widgets (e.g., a dedicated `C4Legend` component), they should be added here before being consumed by external code.
+- `C4Status` is a closed union. A host that keeps a `Record<C4Status, ...>` must add an entry whenever a status is added (`planned` is the latest).
