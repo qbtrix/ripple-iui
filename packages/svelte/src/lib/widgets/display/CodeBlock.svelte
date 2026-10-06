@@ -54,6 +54,10 @@
      paw-enterprise's dark ground. `ripple-code-keyword` mixes the accent 70% with
      the surface ink: a smaller pull than the literals get, so keywords stay
      clearly blue.
+     Optional excerpt props: `startLine` numbers the rows from a real file line
+     (the gutter widens past two digits only), and `highlight` tints an
+     inclusive [first, last] range of those line numbers in `highlightTone`
+     (accent, added, removed). Without them the block renders exactly as before.
   2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
   text tokens (text-ripple-{error,success,warning,info}-text; red text that
   read text-destructive now reads text-ripple-error-text, the same hue since
@@ -78,12 +82,27 @@
     hideLanguage?: boolean;
     /** Hide the copy button. */
     hideCopy?: boolean;
+    /** Number of the first line, for an excerpt of a longer file. */
+    startLine?: number;
+    /** Inclusive [first, last] line numbers to tint. */
+    highlight?: [number, number];
+    highlightTone?: 'accent' | 'added' | 'removed';
   }
 
   let {
     id, class: className, style, code, text,
-    language, hideLanguage = false, hideCopy = false
+    language, hideLanguage = false, hideCopy = false,
+    startLine = 1, highlight: highlightRange, highlightTone = 'accent'
   }: Props = $props();
+
+  // 20px holds two digits; an excerpt deep in a file needs more.
+  const gutter = $derived(Math.max(20, String(startLine + Math.max(0, lines.length - 1)).length * 7 + 6));
+  const toneClass = $derived(
+    highlightTone === 'added' ? 'bg-ripple-success/10'
+    : highlightTone === 'removed' ? 'bg-ripple-error/10'
+    : 'bg-ripple-accent/10'
+  );
+  const marked = (n: number) => !!highlightRange && n >= highlightRange[0] && n <= highlightRange[1];
 
   const source = $derived(code ?? text ?? '');
   // One trailing newline is an artifact of the fence, not an empty last line.
@@ -197,10 +216,17 @@
   {/if}
 
   <div class="relative py-3 font-mono text-[12.5px] leading-[1.65] text-ripple-muted-foreground">
-    <span class="pointer-events-none absolute inset-y-0 left-5 w-px bg-ripple-border"></span>
+    <span
+      class="pointer-events-none absolute inset-y-0 left-5 w-px bg-ripple-border"
+      style={gutter === 20 ? undefined : `left: ${gutter}px`}
+    ></span>
     {#each lines as line, i (i)}
-      <div class="grid grid-cols-[20px_minmax(0,1fr)] items-start">
-        <span class="select-none text-center text-[11px] text-ripple-muted-foreground">{i + 1}</span>
+      <div
+        class={cn('grid grid-cols-[20px_minmax(0,1fr)] items-start', marked(startLine + i) && toneClass)}
+        style={gutter === 20 ? undefined : `grid-template-columns: ${gutter}px minmax(0, 1fr)`}
+        data-highlight={marked(startLine + i) ? highlightTone : undefined}
+      >
+        <span class="select-none text-center text-[11px] text-ripple-muted-foreground">{startLine + i}</span>
         <code class="pr-3 pl-1 break-words whitespace-pre-wrap"
           >{#each highlight(line) as piece}<span class={piece.cls}>{piece.text}</span>{/each}</code
         >
