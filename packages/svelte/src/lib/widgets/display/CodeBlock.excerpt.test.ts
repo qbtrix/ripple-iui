@@ -40,10 +40,10 @@ describe('CodeBlock excerpt props', () => {
   });
 });
 
-describe('CodeBlock title and compact', () => {
-  const header = (root: ParentNode) => root.querySelector<HTMLElement>('.border-b');
-  const body = (root: ParentNode) => rows(root)[0].parentElement!;
+const header = (root: ParentNode) => root.querySelector<HTMLElement>('.border-b');
+const body = (root: ParentNode) => rows(root)[0].parentElement!;
 
+describe('CodeBlock title and compact', () => {
   it('keeps the default header and body when neither is set', () => {
     const { container } = render(CodeBlock, { props: { code: 'a', language: 'ts' } });
     expect(header(container)!.className).toBe(
