@@ -21,6 +21,22 @@ export interface C4Marker {
   color: string;
 }
 
+/** An excerpt of a code element's file, shown in-map when the element is
+ *  expanded (semantic zoom). Line numbers are the file's own. */
+export interface C4Code {
+  /** Line number of `before[0]` (or of `after[0]` for a new file). */
+  startLine: number;
+  /** The lines as they are, or were before the change. Empty for a new file. */
+  before: string[];
+  /** The replacement for `changed`, or the whole new file. Its presence turns
+   *  on the Before/After toggle. */
+  after?: string[];
+  /** Inclusive [first, last] line numbers of `before` that `after` replaces. */
+  changed?: [number, number];
+  /** Highlighter hint (any truthy value colours the code). */
+  language?: string;
+}
+
 /** Fields every element may carry on top of its own shape. */
 interface C4ElementBase {
   /** Explicit C4 kind; overrides shape inference. */
@@ -28,6 +44,12 @@ interface C4ElementBase {
   /** Show the drill affordance and route clicks to `ondrilldown`, even when
    *  the children are not part of this diagram. */
   drillable?: boolean;
+  /** Nested elements of the next level down, any kind. In semantic zoom (the
+   *  `expanded` prop) they are drawn inside this element when it is expanded;
+   *  `containers` and `components` count as children too. */
+  children?: C4Element[];
+  /** For a `code` element: the excerpt its expanded panel shows. */
+  code?: C4Code;
 }
 
 export interface C4Person extends C4ElementBase {

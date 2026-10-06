@@ -16,6 +16,7 @@ import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.j
 // diagram — pre-existing, and invisible until the test stopped making the
 // same mistake.
 import type { C4Diagram, C4Element, C4System, C4Container, C4Relationship } from './types.js';
+import { childrenOf, type C4Tree, type LiftedEdge, type Visibility } from './semantic.js';
 
 
 // Default node dimensions by element shape
@@ -59,7 +60,7 @@ export function edgeLabelText(r: C4Relationship): string {
 const labelSize = (text: string) => ({ width: Math.ceil(text.length * 6.3) + 16, height: 20 });
 
 /** Determine ELK node dimensions for a given C4 element */
-function getNodeDimensions(el: C4Element): { width: number; height: number } {
+export function getNodeDimensions(el: C4Element): { width: number; height: number } {
   // Person: an explicit kind, or no technology, type, containers, or components
   const isPerson = el.kind
     ? el.kind === 'person'
@@ -193,59 +194,13 @@ export async function computeElkGraph(
   };
 
   try {
-    const laid = await elk.layout(graph);
-
-    // Extract positions from result — traverse children recursively
-    function extractPositions(node: ElkNode & { children?: ElkNode[] }, offsetX = 0, offsetY = 0) {
-      if (node.id !== 'root') {
-        const x = (node.x ?? 0) + offsetX;
-        const y = (node.y ?? 0) + offsetY;
-        positions.set(node.id, {
-          x,
-          y,
-          width: node.width ?? DIMENSIONS.default.width,
-          height: node.height ?? DIMENSIONS.default.height,
-        });
-        // Recurse into children using the parent's position as offset
-        if (node.children) {
-          for (const child of node.children) {
-            extractPositions(child, x, y);
-          }
-        }
-      } else {
-        // Root node — just recurse with no offset
-        if (node.children) {
-          for (const child of node.children) {
-            extractPositions(child, 0, 0);
-          }
-        }
-      }
+    const read = readLayout(await elk.layout(graph));
+    for (const [id, box] of read.positions) positions.set(id, box);
+    for (const [id, e] of read.edges) {
+      const index = Number(id.slice('edge-'.length));
+      if (Number.isNaN(index)) continue;
+      routes.set(index, { points: e.points, ...(e.labels[0] ? { label: e.labels[0] } : {}) });
     }
-
-    extractPositions(laid);
-
-    // Edge points are relative to the edge's container; offset them back.
-    type LaidEdge = ElkExtendedEdge & { container?: string };
-    const collectEdges = (node: ElkNode) => {
-      for (const e of (node.edges ?? []) as LaidEdge[]) {
-        const index = Number(e.id.slice('edge-'.length));
-        const box = e.container && e.container !== 'root' ? positions.get(e.container) : undefined;
-        const ox = box?.x ?? 0;
-        const oy = box?.y ?? 0;
-        const section = e.sections?.[0];
-        if (!section || Number.isNaN(index)) continue;
-        const pts = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint];
-        const lab = e.labels?.[0];
-        routes.set(index, {
-          points: pts.map((p) => ({ x: p.x + ox, y: p.y + oy })),
-          ...(lab && lab.x !== undefined && lab.y !== undefined
-            ? { label: { x: lab.x + ox, y: lab.y + oy, width: lab.width ?? 0, height: lab.height ?? 0 } }
-            : {}),
-        });
-      }
-      for (const c of node.children ?? []) collectEdges(c);
-    };
-    collectEdges(laid);
   } catch (err) {
     console.error('[C4 ELK layout error]', err);
     // Fallback: simple grid layout if ELK fails
@@ -269,6 +224,148 @@ export async function computeElkGraph(
   }
 
   return { positions, routes };
+}
+
+type LaidEdge = ElkExtendedEdge & { container?: string };
+
+/**
+ * Absolute boxes for every laid-out node, and each edge's absolute points and label boxes (in the
+ * order the labels were given). ELK reports an edge relative to its container; offset it back.
+ */
+function readLayout(laid: ElkNode): {
+  positions: Map<string, LayoutPosition>;
+  edges: Map<string, { points: { x: number; y: number }[]; labels: LayoutPosition[] }>;
+} {
+  const positions = new Map<string, LayoutPosition>();
+  const walk = (node: ElkNode, ox: number, oy: number) => {
+    for (const child of node.children ?? []) {
+      const x = (child.x ?? 0) + ox;
+      const y = (child.y ?? 0) + oy;
+      positions.set(child.id, {
+        x,
+        y,
+        width: child.width ?? DIMENSIONS.default.width,
+        height: child.height ?? DIMENSIONS.default.height,
+      });
+      walk(child, x, y);
+    }
+  };
+  walk(laid, 0, 0);
+
+  const edges = new Map<string, { points: { x: number; y: number }[]; labels: LayoutPosition[] }>();
+  const collect = (node: ElkNode) => {
+    for (const e of (node.edges ?? []) as LaidEdge[]) {
+      const section = e.sections?.[0];
+      if (!section) continue;
+      const box = e.container && e.container !== 'root' ? positions.get(e.container) : undefined;
+      const ox = box?.x ?? 0;
+      const oy = box?.y ?? 0;
+      const pts = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint];
+      edges.set(e.id, {
+        points: pts.map((p) => ({ x: p.x + ox, y: p.y + oy })),
+        labels: (e.labels ?? [])
+          .filter((l) => l.x !== undefined && l.y !== undefined)
+          .map((l) => ({ x: (l.x ?? 0) + ox, y: (l.y ?? 0) + oy, width: l.width ?? 0, height: l.height ?? 0 })),
+      });
+    }
+    for (const c of node.children ?? []) collect(c);
+  };
+  collect(laid);
+  return { positions, edges };
+}
+
+/** A semantic edge's route: its middle label and the port badges at either end, all absolute. */
+export interface SemanticRoute {
+  points: { x: number; y: number }[];
+  label?: LayoutPosition;
+  /** Badge by `to` (ELK's head). */
+  head?: LayoutPosition;
+  /** Badge by `from` (ELK's tail). */
+  tail?: LayoutPosition;
+}
+
+/** Boundary label row height: ELK leaves it free above the children. */
+export const BOUNDARY_TOP = 48;
+
+/**
+ * Layout for semantic zoom: every drawn element, nested to any depth. A boundary is an ELK compound
+ * sized around its children (never smaller than `minBoundary`, so its label row fits); everything
+ * else is a leaf of `sizeOf`. Port badges are ELK end labels, so they sit beside the line right
+ * where it meets the boundary, with space reserved.
+ */
+export async function computeSemanticLayout(
+  tree: C4Tree,
+  vis: Visibility,
+  edges: readonly LiftedEdge[],
+  sizeOf: (id: string) => { width: number; height: number },
+  minBoundary: (id: string) => { width: number; height: number },
+  options: ElkLayoutOptions = {}
+): Promise<{ positions: Map<string, LayoutPosition>; routes: Map<string, SemanticRoute> }> {
+  const { direction = 'DOWN', nodeSpacing = 60, layerSpacing = 56 } = options;
+  const vertical = direction === 'DOWN' || direction === 'UP';
+  const drawn = new Set(vis.visible);
+
+  const build = (id: string): ElkNode => {
+    if (vis.boundaries.has(id)) {
+      const min = minBoundary(id);
+      const el = tree.byId.get(id);
+      return {
+        id,
+        layoutOptions: {
+          'elk.padding': `[top=${BOUNDARY_TOP},left=24,bottom=24,right=24]`,
+          'elk.nodeSize.constraints': 'MINIMUM_SIZE',
+          // ELK reads a compound's minimum in its internal left-to-right frame, so
+          // for a vertical layout it is (height, width). Measured, elkjs 0.11.
+          'elk.nodeSize.minimum': vertical
+            ? `(${Math.ceil(min.height)}, ${Math.ceil(min.width)})`
+            : `(${Math.ceil(min.width)}, ${Math.ceil(min.height)})`,
+        },
+        children: (el ? childrenOf(el) : []).filter((c) => drawn.has(c.id)).map((c) => build(c.id)),
+      };
+    }
+    return { id, ...sizeOf(id) };
+  };
+
+  const label = (text: string, placement: 'CENTER' | 'HEAD' | 'TAIL') => ({
+    text,
+    ...labelSize(text),
+    ...(placement === 'CENTER' ? {} : { width: labelSize(text).width + 10, layoutOptions: { 'elk.edgeLabels.placement': placement } }),
+  });
+  const order = new Map<string, ('label' | 'tail' | 'head')[]>();
+  const elkEdges: ElkExtendedEdge[] = edges.map((e) => {
+    const labels = [];
+    const kinds: ('label' | 'tail' | 'head')[] = [];
+    if (e.label) (labels.push(label(e.label, 'CENTER')), kinds.push('label'));
+    if (e.fromBadge) (labels.push(label(e.fromBadge, 'TAIL')), kinds.push('tail'));
+    if (e.toBadge) (labels.push(label(e.toBadge, 'HEAD')), kinds.push('head'));
+    order.set(e.key, kinds);
+    return { id: e.key, sources: [e.from], targets: [e.to], labels };
+  });
+
+  const graph: ElkNode = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': direction,
+      'elk.spacing.nodeNode': String(nodeSpacing),
+      'elk.layered.spacing.nodeNodeBetweenLayers': String(layerSpacing),
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+      'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+    },
+    children: vis.visible.filter((id) => tree.parent.get(id) === null).map(build),
+    edges: elkEdges,
+  };
+
+  const read = readLayout(await new ELK().layout(graph));
+  const routes = new Map<string, SemanticRoute>();
+  for (const [key, e] of read.edges) {
+    const route: SemanticRoute = { points: e.points };
+    (order.get(key) ?? []).forEach((kind, i) => {
+      if (e.labels[i]) route[kind] = e.labels[i];
+    });
+    routes.set(key, route);
+  }
+  return { positions: read.positions, routes };
 }
 
 /**

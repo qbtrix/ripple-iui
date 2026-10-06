@@ -40,7 +40,8 @@ function wrapper(container: HTMLElement, id: string) {
   return container.querySelector(`.svelte-flow__node[data-id="${id}"]`);
 }
 
-describe('C4Diagram live props', () => {
+// Each case mounts SvelteFlow and runs ELK; on a loaded machine that outlasts vitest's 5s default.
+describe('C4Diagram live props', { timeout: 30000 }, () => {
   it('paints status on the node wrappers and lists it in the legend', async () => {
     const { container, getByText } = render(C4Diagram, {
       diagram,
