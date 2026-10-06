@@ -8,6 +8,7 @@
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
+  import { activateNode } from '../activate.js';
   import { safeKbUrl } from '../url-sanitizer.js';
 
   let { data }: { data: C4NodeData } = $props();
@@ -21,13 +22,7 @@
       : 'Component'
   );
 
-  function handleClick() {
-    if (hasDrilldown && data.ondrilldown && data.element) {
-      data.ondrilldown(data.element, 'code');
-    } else if (data.onclick && data.element) {
-      data.onclick(data.element);
-    }
-  }
+  const handleClick = () => activateNode('component', data);
 </script>
 
 <Handle type="target" position={Position.Top} class="c4-handle" />

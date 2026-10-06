@@ -1,7 +1,8 @@
 // c4-diagram-live.test.ts — mounts the real C4Diagram (SvelteFlow + ELK) in
 // jsdom and checks the live props reach the DOM: status rings on the node
 // wrappers (planned included), the status legend, marker dots, controlled selection, the
-// zoom-button report, the kind labels, and an untouched legacy render.
+// zoom-button report, the kind labels, keyboard activation doing exactly what a click does for
+// every node type, and an untouched legacy render.
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor, fireEvent } from '@testing-library/svelte';
@@ -157,4 +158,72 @@ describe('C4Diagram live props', { timeout: 30000 }, () => {
     expect(container.querySelector('.svelte-flow__node-toolbar')).toBeNull();
     expect(wrapper(container, 'user')?.classList.contains('svelte-flow__node-person')).toBe(true);
   });
+});
+
+// One element of every node type, every drillable flag on, so a keyboard path that drills where
+// the click does not (or passes another level) shows up.
+const everyType = (level: C4DiagramData['level']): C4DiagramData => ({
+  level,
+  title: '',
+  elements: [
+    { id: 'p', name: 'Person', kind: 'person', drillable: true },
+    { id: 's', name: 'System', kind: 'system', drillable: true },
+    {
+      id: 'g',
+      name: 'Boundary',
+      kind: 'system',
+      containers: [
+        { id: 'c', name: 'Container', kind: 'container', drillable: true },
+        { id: 'db', name: 'Store', kind: 'container', type: 'database', drillable: true },
+        { id: 'q', name: 'Queue', kind: 'container', type: 'queue', drillable: true },
+      ],
+    },
+    { id: 'cmp', name: 'Component', kind: 'component', drillable: true },
+    { id: 'file', name: 'a.ts', kind: 'code', drillable: true },
+  ],
+  relationships: [],
+});
+
+const TYPES = { p: 'person', s: 'system', g: 'group', c: 'container', db: 'database', q: 'queue', cmp: 'component', file: 'component' };
+const CLICKABLE = '.c4-node, .c4-database-node, .c4-queue-node, .group-label, .c4-code-node';
+
+describe('C4Diagram keyboard activation', { timeout: 60000 }, () => {
+  for (const level of ['context', 'container', 'component'] as const) {
+    it(`does what a click does for every node type on a ${level} diagram`, async () => {
+      const onclick = vi.fn();
+      const ondrilldown = vi.fn();
+      const { container } = render(C4Diagram, { diagram: everyType(level), onclick, ondrilldown });
+      await waitFor(() => expect(wrapper(container, 'file')).not.toBeNull());
+      const take = () => {
+        const out = [...onclick.mock.calls.map((c) => ['click', ...c]), ...ondrilldown.mock.calls.map((c) => ['drill', ...c])];
+        onclick.mockClear();
+        ondrilldown.mockClear();
+        return out;
+      };
+
+      const byClick: Record<string, unknown[]> = {};
+      for (const [id, type] of Object.entries(TYPES)) {
+        const w = wrapper(container, id)!;
+        expect(w.classList.contains(`svelte-flow__node-${type}`), id).toBe(true);
+        await fireEvent.click(w.querySelector(CLICKABLE)!);
+        byClick[id] = take();
+        await fireEvent.keyDown(w, { key: 'Enter' });
+        expect(take(), `${id} Enter`).toEqual(byClick[id]);
+        await fireEvent.keyDown(w, { key: ' ' });
+        expect(take(), `${id} Space`).toEqual(byClick[id]);
+      }
+
+      const step = level === 'context' ? 'container' : level === 'container' ? 'component' : 'code';
+      expect(byClick).toEqual({
+        p: [['drill', 'p', step]],
+        s: [['drill', 's', step]],
+        g: [['click', 'g']],
+        c: [['drill', 'c', level === 'container' ? 'component' : 'code']],
+        db: [['click', 'db']],
+        q: [['click', 'q']],
+        cmp: [['drill', 'cmp', 'code']],
+        file: [['drill', 'file', 'code']],
+      });
+    });
+  }
 });

@@ -10,7 +10,8 @@
   `markers` pins dots to nodes, `selectedId` controls selection, and
   `focusId` + `follow` keep the camera on one node. A user pan or zoom (the
   zoom buttons and the minimap included) calls `onmanualcamera`, so a host can
-  drop follow mode. Enter or Space on a focused node acts like a click.
+  drop follow mode. Enter or Space on a focused node runs exactly what a click
+  on it runs (activate.ts), for every node type.
 
   Edges follow ELK's orthogonal routes (C4Edge) and every card fills its ELK
   box, so routes meet card edges and labels sit in the space ELK reserved.
@@ -59,6 +60,7 @@
   } from './live.js';
   import { liftMarkers, representative, type C4Tree, type Visibility } from './semantic.js';
   import { buildSemanticFlow } from './semantic-flow.js';
+  import { activateNode } from './activate.js';
   // From types.ts, NOT the barrel, and aliased: this component is itself named
   // C4Diagram, and svelte-package emits `declare const C4Diagram` plus
   // `type C4Diagram` in the .d.ts. An unaliased type import of the same name
@@ -457,15 +459,8 @@
     if (t?.closest?.('.svelte-flow__controls, .svelte-flow__minimap')) onmanualcamera?.();
   }
 
-  const NEXT_LEVEL: Record<C4DiagramData['level'], string> = {
-    context: 'container',
-    container: 'component',
-    component: 'code',
-    code: 'code',
-  };
-
   // Keyboard twin of a node click: SvelteFlow makes node wrappers focusable,
-  // and Enter or Space on one drills (when drillable) or clicks, as a pointer would.
+  // and Enter or Space on one runs the same activateNode its click runs.
   // Only on the wrapper itself: a control inside a node (a link, a panel's
   // Before/After switch, a port badge) keeps its own keys.
   function onCanvasKeydown(event: KeyboardEvent) {
@@ -476,9 +471,7 @@
     const node = id ? flowNodes.find((n) => n.id === id) : undefined;
     if (!node) return;
     event.preventDefault();
-    const data = node.data as unknown as C4NodeData;
-    if (data.drillable && ondrilldown) ondrilldown(node.id, NEXT_LEVEL[diagram.level]);
-    else onclick?.(node.id);
+    activateNode(node.type, node.data as unknown as C4NodeData);
   }
 </script>
 

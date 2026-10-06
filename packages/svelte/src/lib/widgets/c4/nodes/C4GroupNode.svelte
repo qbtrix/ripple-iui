@@ -11,6 +11,7 @@
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
+  import { activateNode } from '../activate.js';
   import C4PortBadge from '../C4PortBadge.svelte';
   import { kindLabel } from '../semantic.js';
 
@@ -19,11 +20,7 @@
   const isExternal = $derived(data.external ?? false);
   const label = $derived(kindLabel({ kind: data.kind, external: isExternal }));
 
-  function handleClick() {
-    if (data.onclick && data.element) {
-      data.onclick(data.element);
-    }
-  }
+  const handleClick = () => activateNode('group', data);
 </script>
 
 <Handle type="target" position={Position.Top} class="c4-handle" />

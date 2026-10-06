@@ -7,6 +7,7 @@
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
+  import { activateNode } from '../activate.js';
   import { safeKbUrl } from '../url-sanitizer.js';
 
   let { data }: { data: C4NodeData } = $props();
@@ -14,14 +15,7 @@
   const hasDrilldown = $derived(data.drillable ?? false);
   const isExternal = $derived(data.external ?? false);
 
-  function handleClick() {
-    if (hasDrilldown && data.ondrilldown && data.element) {
-      const nextLevel = data.diagramLevel === 'container' ? 'component' : 'code';
-      data.ondrilldown(data.element, nextLevel);
-    } else if (data.onclick && data.element) {
-      data.onclick(data.element);
-    }
-  }
+  const handleClick = () => activateNode('container', data);
 </script>
 
 <Handle type="target" position={Position.Top} class="c4-handle" />

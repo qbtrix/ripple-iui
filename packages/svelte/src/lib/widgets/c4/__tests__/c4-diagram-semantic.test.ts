@@ -1,9 +1,10 @@
 // c4-diagram-semantic.test.ts — mounts C4Diagram in semantic zoom (the `expanded` prop) and checks
 // the expansion state reaches the DOM: boundaries nest their children in place, the scope ghosts
 // its outside, a code element opens as a panel with true line numbers and its change tinted, the
-// Before/After switch works, the scope lists far connections as chips, and markers roll up.
+// Before/After switch works, the scope lists far connections as chips, markers roll up, `planned`
+// and the scope ghost stay independent, and keyboard activation does what a click does.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor, fireEvent } from '@testing-library/svelte';
 import C4Diagram from '../C4Diagram.svelte';
 import type { C4Diagram as C4DiagramData } from '$lib/widgets/c4/types.js';
@@ -98,5 +99,54 @@ describe('C4Diagram semantic zoom', { timeout: 30000 }, () => {
     await waitFor(() => expect(wrapper(container, 'rp')).not.toBeNull());
     const marker = await findByLabelText('dev·ripple');
     expect(marker.closest('.svelte-flow__node-toolbar')?.getAttribute('data-id')).toBe('rp');
+  });
+
+  it('keeps planned and the scope ghost independent on the same node', async () => {
+    const { container } = render(C4Diagram, {
+      diagram,
+      expanded: DEEP,
+      scopeId: 'ui',
+      status: { pe: 'planned', 'f.index': 'planned', 'rp.core': 'landed' },
+    });
+    await waitFor(() => expect(wrapper(container, 'f.index')).not.toBeNull());
+    const attrs = (id: string) => [wrapper(container, id)?.getAttribute('data-c4-status'), wrapper(container, id)?.hasAttribute('data-c4-ghost')];
+    // Outside the scope and planned: both treatments. Inside and planned: the status only.
+    expect(attrs('pe')).toEqual(['planned', true]);
+    expect(attrs('f.index')).toEqual(['planned', false]);
+    expect(attrs('rp.core')).toEqual(['landed', true]);
+  });
+
+  it('runs on Enter and Space exactly what a click runs, for every drawn node', async () => {
+    const onclick = vi.fn();
+    const ondrilldown = vi.fn();
+    const { container } = render(C4Diagram, { diagram, expanded: DEEP, scopeId: 'ui', onclick, ondrilldown });
+    await waitFor(() => expect(container.querySelector('.c4-code-node')).not.toBeNull());
+    const take = () => {
+      const out = [...onclick.mock.calls.map((c) => ['click', ...c]), ...ondrilldown.mock.calls.map((c) => ['drill', ...c])];
+      onclick.mockClear();
+      ondrilldown.mockClear();
+      return out;
+    };
+    const ids = ['pe', 'rp', 'rp.svelte', 'ui', 'f.inspector', 'f.index', 'rp.core'];
+    const byClick: Record<string, unknown[]> = {};
+    for (const id of ids) {
+      const w = wrapper(container, id)!;
+      await fireEvent.click(w.querySelector('.c4-node, .group-label, .c4-code-node')!);
+      byClick[id] = take();
+      await fireEvent.keyDown(w, { key: 'Enter' });
+      expect(take(), `${id} Enter`).toEqual(byClick[id]);
+      await fireEvent.keyDown(w, { key: ' ' });
+      expect(take(), `${id} Space`).toEqual(byClick[id]);
+    }
+    // Open boundaries and the code panel click; a closed card with children drills.
+    expect(byClick).toEqual({
+      pe: [['drill', 'pe', 'container']],
+      rp: [['click', 'rp']],
+      'rp.svelte': [['click', 'rp.svelte']],
+      ui: [['click', 'ui']],
+      'f.inspector': [['click', 'f.inspector']],
+      'f.index': [['click', 'f.index']],
+      'rp.core': [['click', 'rp.core']],
+    });
   });
 });

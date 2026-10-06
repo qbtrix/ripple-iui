@@ -11,6 +11,7 @@
 <script lang="ts">
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
+  import { activateNode } from '../activate.js';
   import CodeBlock from '../../display/CodeBlock.svelte';
   import Segmented from '../../input/Segmented.svelte';
   import { codeView, defaultCodeSide, type CodeSide } from '../semantic.js';
@@ -25,9 +26,7 @@
   const canSwitch = $derived(!!code.after && code.before.length > 0);
   const isNew = $derived(code.before.length === 0);
 
-  function handleClick() {
-    if (data.onclick && data.element) data.onclick(data.element);
-  }
+  const handleClick = () => activateNode('code', data);
 </script>
 
 <Handle type="target" position={Position.Top} class="c4-handle" />
