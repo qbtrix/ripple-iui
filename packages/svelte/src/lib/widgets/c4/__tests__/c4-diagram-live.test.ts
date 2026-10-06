@@ -77,12 +77,14 @@ describe('C4Diagram live props', () => {
     expect(wrapper(container, 'f.index')?.classList.contains('selected')).toBe(false);
   });
 
-  it('reports a zoom-button press as a manual camera move', async () => {
+  it('reports a zoom-button press or a minimap gesture as a manual camera move', async () => {
     const onmanualcamera = vi.fn();
     const { container } = render(C4Diagram, { diagram, follow: true, focusId: 'f.curve', onmanualcamera });
     await waitFor(() => expect(container.querySelector('.svelte-flow__controls button')).not.toBeNull());
-    await fireEvent.click(container.querySelector('.svelte-flow__controls button')!);
+    await fireEvent.pointerDown(container.querySelector('.svelte-flow__controls button')!);
     expect(onmanualcamera).toHaveBeenCalledTimes(1);
+    await fireEvent.wheel(container.querySelector('.svelte-flow__minimap')!);
+    expect(onmanualcamera).toHaveBeenCalledTimes(2);
   });
 
   it('labels a kind: component boundary and code nodes', async () => {

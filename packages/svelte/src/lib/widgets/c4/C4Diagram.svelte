@@ -338,9 +338,11 @@
     manualReported = true;
     onmanualcamera?.();
   }
-  // The zoom buttons move the camera programmatically, so catch the press.
-  function onCanvasClick(event: MouseEvent) {
-    if ((event.target as Element | null)?.closest?.('.svelte-flow__controls')) onmanualcamera?.();
+  // The zoom buttons and the minimap (pannable, zoomable) move the camera
+  // programmatically, so their gestures never reach onMove: catch them here.
+  function onCanvasGesture(event: Event) {
+    const t = event.target as Element | null;
+    if (t?.closest?.('.svelte-flow__controls, .svelte-flow__minimap')) onmanualcamera?.();
   }
 
   const NEXT_LEVEL: Record<C4Diagram['level'], string> = {
@@ -385,7 +387,12 @@
   <!-- Flow canvas -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="c4-canvas" onclickcapture={onCanvasClick} onkeydown={onCanvasKeydown}>
+  <div
+    class="c4-canvas"
+    onpointerdowncapture={onCanvasGesture}
+    onwheelcapture={onCanvasGesture}
+    onkeydown={onCanvasKeydown}
+  >
     {#if !layoutReady}
       <!-- Loading state -->
       <div class="c4-loading" aria-live="polite">
