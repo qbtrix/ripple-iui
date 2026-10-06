@@ -1,7 +1,36 @@
-// C4 Model diagram widget types — data model for all 4 C4 levels
-// Modified: 2026-04-07 — Extended with kb_article, tags fields; added SvelteFlow-compatible node data types
+// C4 Model diagram widget types — the data model for all 4 C4 levels, the
+// SvelteFlow node payload, and the optional live-state shapes (status, crew
+// markers) a host passes to show work happening on the map.
+//
+// Every live field is optional: a diagram without `kind`, `drillable`,
+// `status` or `markers` renders exactly as it did before they existed.
 
-export interface C4Person {
+/** The C4 abstraction an element is. When absent, the shape is inferred from
+ *  which fields are present (see getNodeType) — the legacy behaviour. */
+export type C4Kind = 'person' | 'system' | 'container' | 'component' | 'code';
+
+/** Live state of an element. `changing` is the only one that moves (a calm
+ *  pulse); the rest are static treatments. */
+export type C4Status = 'changing' | 'changed' | 'landed' | 'drift' | 'failed';
+
+/** A small dot on a node: who (or what) is there right now. `color` is any CSS
+ *  colour, including a `var(--…)` token. */
+export interface C4Marker {
+  id: string;
+  label: string;
+  color: string;
+}
+
+/** Fields every element may carry on top of its own shape. */
+interface C4ElementBase {
+  /** Explicit C4 kind; overrides shape inference. */
+  kind?: C4Kind;
+  /** Show the drill affordance and route clicks to `ondrilldown`, even when
+   *  the children are not part of this diagram. */
+  drillable?: boolean;
+}
+
+export interface C4Person extends C4ElementBase {
   id: string;
   name: string;
   description?: string;
@@ -9,32 +38,36 @@ export interface C4Person {
   tags?: string[];
 }
 
-export interface C4System {
+export interface C4System extends C4ElementBase {
   id: string;
   name: string;
   description?: string;
   technology?: string;
   external?: boolean;
+  /** Nested inside this element's boundary. With `kind`, any lower level can
+   *  nest here (a container's components, a component's code). */
   containers?: C4Container[];
   tags?: string[];
 }
 
-export interface C4Container {
+export interface C4Container extends C4ElementBase {
   id: string;
   name: string;
   description?: string;
   technology?: string;
+  external?: boolean;
   type?: 'webapp' | 'api' | 'database' | 'queue' | 'filesystem' | 'mobile' | 'desktop';
   components?: C4Component[];
   kb_article?: string;
   tags?: string[];
 }
 
-export interface C4Component {
+export interface C4Component extends C4ElementBase {
   id: string;
   name: string;
   description?: string;
   technology?: string;
+  external?: boolean;
   type?: 'service' | 'controller' | 'repository' | 'model' | 'middleware';
   kb_article?: string;
   tags?: string[];
@@ -88,6 +121,8 @@ export interface C4NodeData {
   kb_article?: string;
   /** Tags for filtering */
   tags?: string[];
+  /** Explicit C4 kind, when the element set one */
+  kind?: C4Kind;
   /** Original C4 element for click handlers */
   element: C4Element;
   /** Callback when element is clicked */

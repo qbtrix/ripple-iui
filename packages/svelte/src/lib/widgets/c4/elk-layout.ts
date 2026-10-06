@@ -1,6 +1,7 @@
-// elk-layout.ts — ELK.js-based auto-layout for C4 diagrams
-// Created: 2026-04-07 — Replaces grid-based layout.ts with professional ELK layered layout
-// Modified: 2026-04-10 — Move ELK instantiation from module-level singleton to per-call to fix race condition.
+// elk-layout.ts — ELK.js layered auto-layout for C4 diagrams, and the mapping
+// from a C4 element to its SvelteFlow node type. An element with a non-empty
+// `containers` array becomes a nested parent box (a boundary) whatever its
+// `kind`. ELK is instantiated per call: a shared instance raced between layouts.
 
 import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
 // From types.ts, NOT the barrel: `index.ts` also exports a COMPONENT named
@@ -35,8 +36,10 @@ export interface LayoutPosition {
 
 /** Determine ELK node dimensions for a given C4 element */
 function getNodeDimensions(el: C4Element): { width: number; height: number } {
-  // Person: has no technology, type, containers, or components
-  const isPerson = !('technology' in el) && !('type' in el) && !('containers' in el) && !('components' in el);
+  // Person: an explicit kind, or no technology, type, containers, or components
+  const isPerson = el.kind
+    ? el.kind === 'person'
+    : !('technology' in el) && !('type' in el) && !('containers' in el) && !('components' in el);
   if (isPerson) return DIMENSIONS.person;
 
   const subtype = 'type' in el ? (el as { type?: string }).type : undefined;
@@ -217,8 +220,18 @@ export function isGroupNode(el: C4Element): boolean {
 
 /**
  * Get the SvelteFlow node type string for a C4 element.
+ * An explicit `kind` wins; without one the shape is inferred from the fields
+ * present, exactly as before `kind` existed.
  */
 export function getNodeType(el: C4Element): string {
+  if (el.kind) {
+    if (el.kind === 'person') return 'person';
+    if (isGroupNode(el)) return 'group';
+    const sub = 'type' in el ? (el as { type?: string }).type : undefined;
+    if (sub === 'database' || sub === 'queue') return sub;
+    // `code` (a file, a class) draws as a component node labelled "Code".
+    return el.kind === 'code' ? 'component' : el.kind;
+  }
   const isPerson = !('technology' in el) && !('type' in el) && !('containers' in el) && !('components' in el);
   if (isPerson) return 'person';
 
