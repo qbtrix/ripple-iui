@@ -10,6 +10,9 @@
 // boundary's border and carries a port badge there ("→ Ripple · 2"). A relationship that crosses
 // the scope boundary but is drawn further out becomes a chip on the scope boundary instead, so the
 // view you are inside never loses its outside connections.
+//
+// Element ids must be unique across the whole tree: indexTree throws on a repeat, which the
+// diagram's layout turns into its error state.
 
 import type { C4Code, C4Element, C4Marker, C4Relationship } from './types.js';
 import { codeBlockGutter } from '../display/gutter.js';
@@ -36,12 +39,14 @@ export interface C4Tree {
   order: string[];
 }
 
+/** Throws on an id used twice: a child reusing an ancestor's id would be its own parent. */
 export function indexTree(elements: readonly C4Element[]): C4Tree {
   const byId = new Map<string, C4Element>();
   const parent = new Map<string, string | null>();
   const order: string[] = [];
   const walk = (els: readonly C4Element[], p: string | null) => {
     for (const el of els) {
+      if (byId.has(el.id)) throw new Error(`C4 element id "${el.id}" is used more than once`);
       byId.set(el.id, el);
       parent.set(el.id, p);
       order.push(el.id);
@@ -52,11 +57,13 @@ export function indexTree(elements: readonly C4Element[]): C4Tree {
   return { byId, parent, order };
 }
 
-/** Ids from the top level down to `id`, inclusive; empty for an unknown id. */
+/** Ids from the top level down to `id`, inclusive; empty for an unknown id or a parent cycle. */
 export function pathTo(tree: C4Tree, id: string): string[] {
   const path: string[] = [];
+  const seen = new Set<string>();
   for (let cur: string | null | undefined = id; cur; cur = tree.parent.get(cur)) {
-    if (!tree.byId.has(cur)) return [];
+    if (!tree.byId.has(cur) || seen.has(cur)) return [];
+    seen.add(cur);
     path.unshift(cur);
   }
   return path;
@@ -253,9 +260,15 @@ export interface CodeView {
   lineCount: number;
 }
 
-/** What a panel shows for one side. `after` composes the replacement into the surrounding lines. */
+/**
+ * What a panel shows for one side. `after` composes the replacement into the surrounding lines.
+ * `changed` is clamped to the excerpt's lines; a range wholly outside it counts as absent.
+ */
 export function codeView(code: C4Code, side: CodeSide): CodeView {
-  const { startLine, before, after, changed } = code;
+  const { startLine, before, after } = code;
+  const lo = code.changed && Math.max(code.changed[0], startLine);
+  const hi = code.changed && Math.min(code.changed[1], startLine + before.length - 1);
+  const changed: [number, number] | undefined = lo !== undefined && hi !== undefined && lo <= hi ? [lo, hi] : undefined;
   const view = (lines: string[], highlight?: [number, number], tone: CodeView['tone'] = 'accent'): CodeView => ({
     text: lines.join('\n'),
     startLine,

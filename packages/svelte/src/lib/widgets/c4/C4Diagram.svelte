@@ -47,6 +47,7 @@
   import C4LiveLayer from './C4LiveLayer.svelte';
   import C4Edge from './C4Edge.svelte';
   import { C4CodeNode } from './nodes/index.js';
+  import { untrack } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
   import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode, type LayoutPosition } from './elk-layout.js';
   import {
@@ -368,10 +369,11 @@
     if (!hasLayout) layoutReady = false;
     layoutError = null;
 
-    // Handlers read the props when called, so the layout never tracks their identity.
+    // Handlers read the props when called, so the layout never tracks their identity. Without a
+    // host ondrilldown a drillable card clicks instead, as in the non-semantic path.
     const handlers = {
       onclick: (id: string) => onclick?.(id),
-      ondrilldown: (id: string, level: string) => ondrilldown?.(id, level),
+      ondrilldown: untrack(() => ondrilldown) ? (id: string, level: string) => ondrilldown?.(id, level) : undefined,
     };
     const job =
       ek === null

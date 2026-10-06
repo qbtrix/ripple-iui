@@ -1,10 +1,11 @@
 // CodeBlock.excerpt.test.ts — the excerpt and panel props: `startLine` numbers rows from a real
-// file line (the gutter fits the numbers; from line 1 it stays 20px), `highlight` tints a line range
+// file line (the gutter fits its widest number; from line 1 it stays 20px), `highlight` tints a line range
 // in `highlightTone`, `title` names the file in the header and `compact` tightens the block.
 // Without them the block must render exactly as before: ToolCall depends on it.
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import CodeBlock from './CodeBlock.svelte';
+import { codeBlockGutter } from './gutter.js';
 
 const rows = (root: ParentNode) => Array.from(root.querySelectorAll<HTMLElement>('code')).map((c) => c.parentElement!);
 const numbers = (root: ParentNode) => rows(root).map((r) => r.querySelector('.select-none')?.textContent);
@@ -40,6 +41,12 @@ describe('CodeBlock excerpt props', () => {
     expect(numbers(container)).toEqual(Array.from({ length: 13 }, (_, i) => String(185 + i)));
     expect(rows(container)[0].getAttribute('style')).toContain('grid-template-columns: 21px minmax(0, 1fr)');
     expect(container.querySelector('.w-px')!.getAttribute('style')).toContain('left: 21px');
+  });
+
+  it('fits the gutter to the wider of the first and last numbers', () => {
+    // -100..99: the first label is the widest, four characters.
+    expect(codeBlockGutter(-100, 200)).toBeGreaterThan(20);
+    expect(codeBlockGutter(-100, 200)).toBe(codeBlockGutter(1000, 1));
   });
 
   it('tints exactly the highlighted range in its tone', () => {

@@ -62,7 +62,6 @@
     title, compact = false
   }: Props = $props();
 
-
   const source = $derived(code ?? text ?? '');
   // One trailing newline is an artifact of the fence, not an empty last line.
   // An empty block gets no rows at all rather than a numbered blank one.

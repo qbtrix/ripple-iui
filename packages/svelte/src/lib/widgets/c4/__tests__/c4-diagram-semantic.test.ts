@@ -2,7 +2,8 @@
 // the expansion state reaches the DOM: boundaries nest their children in place, the scope ghosts
 // its outside, a code element opens as a panel with true line numbers and its change tinted, the
 // Before/After switch works, the scope lists far connections as chips, markers roll up, `planned`
-// and the scope ghost stay independent, and keyboard activation does what a click does.
+// and the scope ghost stay independent, keyboard activation does what a click does (a click when
+// the host has no ondrilldown), and a repeated id shows the error state rather than hanging.
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor, fireEvent } from '@testing-library/svelte';
@@ -148,5 +149,32 @@ describe('C4Diagram semantic zoom', { timeout: 30000 }, () => {
       'f.index': [['click', 'f.index']],
       'rp.core': [['click', 'rp.core']],
     });
+  });
+
+  it('falls back to onclick on a drillable card when the host has no ondrilldown', async () => {
+    const onclick = vi.fn();
+    const { container } = render(C4Diagram, { diagram, expanded: [], onclick });
+    await waitFor(() => expect(wrapper(container, 'pe')).not.toBeNull());
+    const w = wrapper(container, 'pe')!;
+    await fireEvent.click(w.querySelector('.c4-node')!);
+    await fireEvent.keyDown(w, { key: 'Enter' });
+    await fireEvent.keyDown(w, { key: ' ' });
+    expect(onclick.mock.calls).toEqual([['pe'], ['pe'], ['pe']]);
+  });
+
+  it('shows the error state for an id used twice instead of hanging', async () => {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const dup: C4DiagramData = {
+      level: 'context',
+      title: '',
+      elements: [
+        { id: 'api', name: 'API', kind: 'system', children: [{ id: 'api', name: 'API', kind: 'container' }] },
+        { id: 'web', name: 'Web', kind: 'system' },
+      ],
+      relationships: [{ from: 'web', to: 'api' }],
+    };
+    const { findByRole } = render(C4Diagram, { diagram: dup, expanded: [] });
+    expect((await findByRole('alert')).textContent).toContain('Diagram layout failed');
+    quiet.mockRestore();
   });
 });

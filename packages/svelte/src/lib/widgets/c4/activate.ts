@@ -12,7 +12,7 @@ import type { C4NodeData } from './types.js';
 type Level = C4NodeData['diagramLevel'];
 
 /** The level a drillable node of this type drills to; undefined for types that never drill. */
-export function drillLevel(type: string | undefined, level: Level): Level | undefined {
+function drillLevel(type: string | undefined, level: Level): Level | undefined {
   if (type === 'person' || type === 'system') {
     return level === 'context' ? 'container' : level === 'container' ? 'component' : 'code';
   }

@@ -1,7 +1,8 @@
-// c4-semantic.test.ts — semantic zoom's pure core: what an `expanded` set draws (cards, boundaries,
-// code panels), how relationships lift onto drawn siblings with counts, port badges and scope
-// chips, which nodes are ghosted context, where markers roll up, what a code panel shows, and
-// that an edge keeps its relationships' async/event dash in the semantic graph.
+// c4-semantic.test.ts — semantic zoom's pure core: the tree index refuses a repeated id, what an
+// `expanded` set draws (cards, boundaries, code panels), how relationships lift onto drawn siblings
+// with counts, port badges and scope chips, which nodes are ghosted context, where markers roll up,
+// what a code panel shows (its change clamped to the excerpt), and that an edge keeps its
+// relationships' async/event dash in the semantic graph.
 
 import { describe, it, expect } from 'vitest';
 import type { C4Element, C4Relationship, C4Code } from '$lib/widgets/c4/types.js';
@@ -15,6 +16,7 @@ import {
   indexTree,
   liftMarkers,
   liftRelationships,
+  pathTo,
   representative,
 } from '../semantic.js';
 
@@ -72,6 +74,23 @@ const relationships: C4Relationship[] = [
 
 const tree = indexTree(elements);
 const DRILL = new Set(['pe', 'pe.spa', 'craft']);
+
+describe('indexTree', () => {
+  it('refuses an id used twice, naming it, so a node can never be its own parent', () => {
+    const dup: C4Element[] = [{ id: 'api', name: 'API', kind: 'system', children: [{ id: 'api', name: 'API', kind: 'container' }] }];
+    expect(() => indexTree(dup)).toThrow(/"api"/);
+  });
+
+  it('stops pathTo on a parent cycle instead of looping', () => {
+    const el = (id: string): C4Element => ({ id, name: id, kind: 'container' });
+    const cyclic = {
+      byId: new Map([['a', el('a')], ['b', el('b')]]),
+      parent: new Map<string, string | null>([['a', 'b'], ['b', 'a']]),
+      order: ['a', 'b'],
+    };
+    expect(pathTo(cyclic, 'a')).toEqual([]);
+  });
+});
 
 describe('computeVisibility', () => {
   it('draws only the top level when nothing is expanded', () => {
@@ -159,6 +178,33 @@ describe('code panels', () => {
     const fresh: C4Code = { startLine: 1, before: [], after: ['a', 'b', 'c'] };
     expect(codeView(fresh, 'after')).toMatchObject({ highlight: [1, 3], tone: 'added' });
     expect(codeView({ startLine: 10, before: ['x'] }, 'after')).toMatchObject({ highlight: undefined, tone: 'accent', lineCount: 1 });
+  });
+
+  // An excerpt of lines 10-14 replacing part of it with one line.
+  const excerpt = (changed: [number, number]): C4Code => ({
+    startLine: 10,
+    before: ['l10', 'l11', 'l12', 'l13', 'l14'],
+    changed,
+    after: ['X'],
+  });
+
+  it('clamps a change that starts before the excerpt to its first line', () => {
+    const after = codeView(excerpt([8, 11]), 'after');
+    expect(after.text.split('\n')).toEqual(['X', 'l12', 'l13', 'l14']);
+    expect(after.highlight).toEqual([10, 10]);
+    expect(codeView(excerpt([8, 11]), 'before').highlight).toEqual([10, 11]);
+  });
+
+  it('clamps a change that runs past the excerpt to its last line', () => {
+    const after = codeView(excerpt([13, 16]), 'after');
+    expect(after.text.split('\n')).toEqual(['l10', 'l11', 'l12', 'X']);
+    expect(after.highlight).toEqual([13, 13]);
+    expect(codeView(excerpt([13, 16]), 'before').highlight).toEqual([13, 14]);
+  });
+
+  it('ignores a change wholly outside the excerpt', () => {
+    expect(codeView(excerpt([20, 22]), 'before')).toMatchObject({ text: 'l10\nl11\nl12\nl13\nl14', highlight: undefined });
+    expect(codeView(excerpt([1, 9]), 'before').highlight).toBeUndefined();
   });
 
   it('sizes the panel for the longer side once long lines wrap', () => {
