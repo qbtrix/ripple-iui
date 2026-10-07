@@ -177,6 +177,30 @@ export const rippleEase = cubicBezier(0.23, 1, 0.32, 1);
 
 export type Rect = { x: number; y: number; width: number; height: number };
 
+/**
+ * Nodes whose box changed size between two layouts, marked to grow from the old size: their card
+ * and status ring animate (C4Diagram's c4-size / c4-ring keyframes; `turn` alternates the name so
+ * every move restarts them) while the SvelteFlow wrapper takes the new size at once. Sizing the
+ * wrapper itself would make SvelteFlow re-measure it, and re-lay every edge, on every frame.
+ */
+export function markResized(
+  nodes: Node[],
+  prev: ReadonlyMap<string, Rect>,
+  next: ReadonlyMap<string, Rect>,
+  turn: 'a' | 'b'
+): Node[] {
+  return nodes.map((n) => {
+    const a = prev.get(n.id);
+    const b = next.get(n.id);
+    if (!a || !b || (a.width === b.width && a.height === b.height)) return n;
+    return {
+      ...n,
+      style: `${n.style ? `${n.style};` : ''}--c4-from-w: ${a.width}px; --c4-from-h: ${a.height}px;`,
+      domAttributes: { ...n.domAttributes, 'data-c4-resized': turn },
+    };
+  });
+}
+
 export function unionRect(rects: Iterable<Rect>): Rect | null {
   let out: Rect | null = null;
   for (const r of rects) {

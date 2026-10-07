@@ -56,6 +56,7 @@
   import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode, type LayoutPosition } from './elk-layout.js';
   import {
     decorateNodes,
+    markResized,
     nodeSetKey,
     statusesPresent,
     unionRect,
@@ -338,6 +339,8 @@
   /** True while a layout is computing: the camera holds until it lands, so it moves once. */
   let laying = $state(false);
   const MOVE_MS = 560;
+  /** Alternates the resize animation's name, so each move restarts it (markResized). */
+  let resizeTurn: 'a' | 'b' = 'a';
   let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
   // Keyed on strings: a host deriving `expanded` per frame must not re-run ELK per frame.
@@ -393,8 +396,14 @@
     job
       .then(({ nodes, edges, semantic }) => {
         if (cancelled) return;
-        if (semantic) beginMove(flowNodes, nodes, semanticInfo?.rects);
-        else leaving = [];
+        if (semantic) {
+          const prevRects = semanticInfo?.rects;
+          if (prevRects && flowNodes.length > 0 && !prefersReducedMotion.current) {
+            resizeTurn = resizeTurn === 'a' ? 'b' : 'a';
+            nodes = markResized(nodes, prevRects, semantic.rects, resizeTurn);
+          }
+          beginMove(flowNodes, nodes, prevRects);
+        } else leaving = [];
         flowNodes = nodes;
         flowEdges = edges;
         semanticInfo = semantic;
@@ -1000,10 +1009,44 @@
   .c4-semantic :global(.svelte-flow__node) {
     transition:
       transform 560ms var(--ripple-ease-out),
-      width 560ms var(--ripple-ease-out),
-      height 560ms var(--ripple-ease-out),
       opacity 280ms var(--ripple-ease-out);
     animation: c4-node-in 360ms var(--ripple-ease-out) 140ms backwards;
+  }
+
+  /* A node whose box changed size (markResized): the wrapper takes the new size
+     at once (resizing it per frame would re-measure it and re-lay every edge
+     per frame) while its card and status ring grow from the old size. Two
+     names, alternated per layout, so every move restarts the animation. */
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='a'] > :not(.c4-handle)) {
+    animation: c4-size-a 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='b'] > :not(.c4-handle)) {
+    animation: c4-size-b 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='a'])::after {
+    animation: c4-ring-a 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='b'])::after {
+    animation: c4-ring-b 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='a'][data-c4-status='changing'])::after {
+    animation: c4-ring-a 560ms var(--ripple-ease-out), c4-breathe 2.4s ease-in-out infinite;
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='b'][data-c4-status='changing'])::after {
+    animation: c4-ring-b 560ms var(--ripple-ease-out), c4-breathe 2.4s ease-in-out infinite;
+  }
+
+  @keyframes c4-size-a {
+    from { width: var(--c4-from-w); height: var(--c4-from-h); }
+  }
+  @keyframes c4-size-b {
+    from { width: var(--c4-from-w); height: var(--c4-from-h); }
+  }
+  @keyframes c4-ring-a {
+    from { width: calc(var(--c4-from-w) + 2px); height: calc(var(--c4-from-h) + 2px); }
+  }
+  @keyframes c4-ring-b {
+    from { width: calc(var(--c4-from-w) + 2px); height: calc(var(--c4-from-h) + 2px); }
   }
 
   @keyframes c4-node-in {
@@ -1077,7 +1120,11 @@
   .c4-canvas :global(.svelte-flow__node[data-c4-status])::after {
     content: '';
     position: absolute;
-    inset: -1px;
+    /* inset: -1px, as a size the resize animation can grow from (c4-ring). */
+    top: -1px;
+    left: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
     border-radius: var(--c4-r);
     border: 1.5px solid var(--c4-tone);
     pointer-events: none;
