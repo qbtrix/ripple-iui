@@ -15,7 +15,7 @@
  *   state variants that only resolve inside ripple's own build; and the overlay
  *   a11y basics (Dialog.Content is a modal dialog, data-testid reaches the DOM
  *   through Content wrappers, caller widths and overlayClass replace the
- *   defaults). Focus trap and Escape are bits-ui's own behaviour and are not
+ *   defaults, Sheet.Content's `size` replaces its sm cap). Focus trap and Escape are bits-ui's own behaviour and are not
  *   tested here. The ResizeObserver shim lives in src/test-setup.ts.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
