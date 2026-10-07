@@ -331,6 +331,8 @@
   let leaving = $state.raw<Node[]>([]);
   /** True while nodes glide between layouts: edges and markers sit it out. */
   let moving = $state(false);
+  /** True while a layout is computing: the camera holds until it lands, so it moves once. */
+  let laying = $state(false);
   const MOVE_MS = 560;
   let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -368,6 +370,7 @@
     let cancelled = false;
     if (!hasLayout) layoutReady = false;
     layoutError = null;
+    laying = true;
 
     // Handlers read the props when called, so the layout never tracks their identity. Without a
     // host ondrilldown a drillable card clicks instead, as in the non-semantic path.
@@ -393,12 +396,14 @@
         semanticInfo = semantic;
         layoutReady = true;
         hasLayout = true;
+        laying = false;
       })
       .catch((err) => {
         if (cancelled) return;
         console.error('[C4Diagram] Layout failed:', err);
         layoutError = 'Diagram layout failed. Please check your data.';
         layoutReady = true; // Show error state
+        laying = false;
       });
 
     return () => { cancelled = true; };
@@ -418,7 +423,11 @@
   // Following, it frames the focus (its drawn ancestor if hidden) and refits when
   // that box changes; manually, it frames the open code panel or the scope and
   // refits only when what is drawn, the scope or the open panel changes.
+  // While a layout computes it holds the last frame: a new focus or scope read
+  // against the old layout would aim at a stale box, then move again on landing.
+  let lastFrame: { key: string; rect: LayoutPosition | null; follow: boolean } | undefined;
   const frame = $derived.by(() => {
+    if (laying && lastFrame) return lastFrame;
     if (!semanticInfo) return undefined;
     const { tree, vis, rects } = semanticInfo;
     const panels = [...vis.panels];
@@ -433,7 +442,7 @@
     rect ??= unionRect(rects.values());
     const r = rect ? [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(',') : '';
     const key = follow ? `F|${target}|${r}` : `M|${nodeIds}|${scopeId ?? ''}|${panels.join(',')}`;
-    return { key, rect, follow: !!follow };
+    return (lastFrame = { key, rect, follow: !!follow });
   });
 
   // A user gesture carries its DOM event; programmatic moves (fitView, the

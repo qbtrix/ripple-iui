@@ -163,6 +163,15 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t:
   };
 }
 
+/**
+ * The --c4-zoom a card can see. Every reader clamps it into [0.5, 1] (names) or [0.6, 1]
+ * (technology, edge labels), so outside [0.5, 1] it changes nothing on screen; two decimals keep a
+ * camera ease from rewriting it, and restyling the whole map, on every frame.
+ */
+export function zoomVar(zoom: number): string {
+  return String(Math.round(Math.min(1, Math.max(0.5, zoom)) * 100) / 100);
+}
+
 /** The camera's curve: the same as --ripple-ease-out, so camera and layout move as one. */
 export const rippleEase = cubicBezier(0.23, 1, 0.32, 1);
 
