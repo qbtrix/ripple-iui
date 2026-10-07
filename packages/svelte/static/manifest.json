@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-07T14:06:45.263Z",
+  "generatedAt": "2026-10-07T16:54:48.883Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -15765,6 +15765,11 @@
           "type": "boolean",
           "required": false,
           "description": "Deny first asks for a reason and Confirm stays disabled until one is typed; ⌘↩ confirms, Return is a newline. Default false."
+        },
+        "denyReasonHint": {
+          "type": "string",
+          "required": false,
+          "description": "The line shown while a required reason is missing. Default: \"A reason is needed to <deny label>.\""
         }
       },
       "example": {
