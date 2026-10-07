@@ -3,7 +3,8 @@
   @description The human-in-the-loop approval / review card ("the human mans the gate"):
     renders a PROPOSED agent action and lets a human approve, deny or edit it.
     • Header — title, optional one-line summary, and a risk badge (low | medium | high)
-      in TEXT + colour, never colour alone; a pending high-risk card rings in error.
+      in TEXT + colour, never colour alone, drawn only when `risk` is given (no default);
+      a pending high-risk card rings in error.
     • Body (data-slot="approval-gate-body", drawn only when something is in it) — `body`
       (a markdown string, alias `markdown`, or a Snippet a Svelte host fills with rich
       content such as task rows; the snippet renders where the markdown would), then a
@@ -69,7 +70,7 @@
     title?: string;
     /** Optional one-line summary under the title. */
     summary?: string;
-    /** Risk level — drives the badge color + tone. Conveyed by TEXT too. */
+    /** Risk level — drives the badge color + tone, conveyed by TEXT too. Omitted: no badge. */
     risk?: Risk;
     /**
      * The decision state. When bound (`bind: "{state.x}"`) NodeRenderer feeds the
@@ -125,7 +126,7 @@
     style,
     title = 'Proposed action',
     summary,
-    risk = 'medium',
+    risk,
     decision = 'pending',
     actionId,
     diff,
@@ -173,7 +174,7 @@
       cls: 'bg-ripple-error/10 text-ripple-error-text ring-ripple-error/20',
     },
   };
-  const riskMeta = $derived(RISK[risk] ?? RISK.medium);
+  const riskMeta = $derived(risk ? (RISK[risk] ?? RISK.medium) : undefined);
 
   const DECISION_STAMP: Record<Exclude<Decision, 'pending'>, { label: string; cls: string }> = {
     approved: {
@@ -268,7 +269,7 @@
   )}
   style={styleString}
 >
-  <!-- Header — title, summary, risk badge -->
+  <!-- Header — title, summary, optional risk badge -->
   <div class="flex items-start gap-3 border-b border-ripple-border px-4 py-3">
     <span class="mt-0.5 shrink-0 text-ripple-muted-foreground" aria-hidden="true">
       <ShieldIcon size={16} />
@@ -279,14 +280,16 @@
         <div class="mt-0.5 text-[12.5px] leading-snug text-ripple-muted-foreground">{summary}</div>
       {/if}
     </div>
-    <span
-      class={cn(
-        'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1',
-        riskMeta.cls
-      )}
-    >
-      {riskMeta.label}
-    </span>
+    {#if riskMeta}
+      <span
+        class={cn(
+          'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1',
+          riskMeta.cls
+        )}
+      >
+        {riskMeta.label}
+      </span>
+    {/if}
   </div>
 
   <!-- Body — composed from the supplied parts (markdown / diff / tool calls) -->
