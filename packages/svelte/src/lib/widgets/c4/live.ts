@@ -9,7 +9,7 @@
 // objects it was given, so a diagram without the live props renders exactly as
 // it did before they existed.
 
-import type { Node } from '@xyflow/svelte';
+import type { Node, Position } from '@xyflow/svelte';
 import type { C4Relationship, C4Status } from './types.js';
 
 /** Legend order: what needs attention first; `planned` (not built yet) last. */
@@ -178,13 +178,23 @@ export const rippleEase = cubicBezier(0.23, 1, 0.32, 1);
 export type Rect = { x: number; y: number; width: number; height: number };
 
 /**
- * A node's `measured` size, known up front: its wrapper is sized to the ELK box. SvelteFlow drops
- * the handle bounds of a node handed over without `measured`, which leaves every edge unplaceable
- * until the nodes are measured again, so each new nodes array would unmount and remount every edge.
- * Rounded as SvelteFlow measures (offsetWidth/offsetHeight), so the first measure finds no change.
+ * What SvelteFlow would otherwise measure, given up front: a node's size (its wrapper is sized to
+ * the ELK box; rounded as offsetWidth rounds, so the first measure finds no change) and the three
+ * handles every C4 node renders (target top and left, source bottom; 6px plus a 1px border, centred
+ * on the edge). Without `measured`, SvelteFlow drops a node's handle bounds on every new nodes array,
+ * leaving every edge unplaceable, so each layout remounted every edge; without `handles`, a new
+ * node's first measure is one more whole-map pass.
  */
-export function measuredSize(box: { width: number; height: number }): { width: number; height: number } {
-  return { width: Math.round(box.width), height: Math.round(box.height) };
+export function presized(box: { width: number; height: number }): Pick<Node, 'measured' | 'handles'> {
+  const w = Math.round(box.width);
+  const h = Math.round(box.height);
+  const s = 8;
+  const at = (type: 'source' | 'target', position: string, x: number, y: number) =>
+    ({ type, position: position as Position, x: x - s / 2, y: y - s / 2, width: s, height: s });
+  return {
+    measured: { width: w, height: h },
+    handles: [at('target', 'top', w / 2, 0), at('target', 'left', 0, h / 2), at('source', 'bottom', w / 2, h)],
+  };
 }
 
 /**

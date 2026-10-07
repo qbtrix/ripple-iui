@@ -4,13 +4,12 @@
 // box for the camera. C4Diagram calls it whenever the diagram, the expanded set or the scope changes.
 //
 // Invariants: nodes come parents-first (SvelteFlow requires it); a child's position is relative to
-// its parent; every node carries its ELK width/height so routes meet card edges, and that size as
-// `measured` too (measuredSize: without it SvelteFlow forgets the node's handles and remounts every
-// edge on each new nodes array).
+// its parent; every node carries its ELK width/height so routes meet card edges, and its measured
+// size and handles too (presized: SvelteFlow then never has to measure a node before its edges draw).
 
 import type { Edge, Node } from '@xyflow/svelte';
 import { BOUNDARY_TOP, computeSemanticLayout, getNodeDimensions, getNodeType, type LayoutPosition } from './elk-layout.js';
-import { edgeLook, measuredSize, sharedStyle } from './live.js';
+import { edgeLook, presized, sharedStyle } from './live.js';
 import {
   childrenOf,
   codePanelSize,
@@ -118,7 +117,7 @@ export async function buildSemanticFlow(
       selectable: true,
       width: pos.width,
       height: pos.height,
-      measured: measuredSize(pos),
+      ...presized(pos),
       ...(isBoundary ? { style: `width: ${pos.width}px; height: ${pos.height}px;` } : {}),
       ...(parentPos ? { parentId } : {}),
       ...(ghosts.has(id) ? { domAttributes: { 'data-c4-ghost': '' } } : {}),
