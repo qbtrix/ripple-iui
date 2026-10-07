@@ -453,9 +453,11 @@
   // refits only when what is drawn, the scope or the open panel changes.
   // While a layout computes it holds the last frame: a new focus or scope read
   // against the old layout would aim at a stale box, then move again on landing.
+  // Follow passes through: a drill that turns follow off lets go now, so the
+  // landing moves the camera to what the drill opened.
   let lastFrame: { key: string; rect: LayoutPosition | null; follow: boolean } | undefined;
   const frame = $derived.by(() => {
-    if (laying && lastFrame) return lastFrame;
+    if (laying && lastFrame) return lastFrame.follow === !!follow ? lastFrame : { ...lastFrame, follow: !!follow };
     if (!semanticInfo) return (lastFrame = undefined);
     const { tree, vis, rects } = semanticInfo;
     const panels = [...vis.panels];
