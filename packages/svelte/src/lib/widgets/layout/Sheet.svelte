@@ -1,5 +1,11 @@
+<!-- widgets/layout/Sheet.svelte — the `sheet` spec widget: a controlled slide-in panel over
+     ui/sheet. `open` (or `value`, which Ripple's `bind` writes) drives it; closing fires
+     `onchange(false)`. `side` picks the edge and `size` caps a left/right sheet's width
+     (Sheet.Content's max-w scale, default "sm"). An optional title/description header sits
+     above the padded children. -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { SheetSize } from '$lib/components/ui/sheet/sheet-content.svelte';
   import { cn } from '$lib/utils.js';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
 
@@ -13,6 +19,8 @@
     value?: boolean;
     /** Side the sheet slides in from. */
     side?: 'top' | 'right' | 'bottom' | 'left';
+    /** Max width of a left/right sheet from `sm` up: "sm" (default) … "4xl". */
+    size?: SheetSize;
     title?: string;
     description?: string;
     children?: Snippet;
@@ -20,7 +28,7 @@
   }
 
   let {
-    id, class: className, style, open, value, side = 'right',
+    id, class: className, style, open, value, side = 'right', size,
     title, description, children, onchange
   }: Props = $props();
 
@@ -39,6 +47,7 @@
   <Sheet.Content
     {id}
     {side}
+    {size}
     class={cn(className)}
     style={styleString}
   >
