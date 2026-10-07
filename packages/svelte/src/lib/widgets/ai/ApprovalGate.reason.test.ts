@@ -13,7 +13,7 @@ const setup = (extra: Record<string, unknown> = {}) => {
     props: { title: 'Plan', actionId: 'act_1', denyLabel: 'Reject', ondeny, ...extra },
   });
   const decision = () => r.container.querySelector('.ripple-approval-gate')!.getAttribute('data-decision');
-  const confirm = () => r.getByText('Confirm reject').closest('button') as HTMLButtonElement;
+  const confirm = () => r.getByText('Confirm reject').closest('button')!;
   return { ...r, ondeny, decision, confirm };
 };
 
