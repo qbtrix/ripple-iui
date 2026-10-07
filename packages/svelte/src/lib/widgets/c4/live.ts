@@ -178,6 +178,16 @@ export const rippleEase = cubicBezier(0.23, 1, 0.32, 1);
 export type Rect = { x: number; y: number; width: number; height: number };
 
 /**
+ * A node's `measured` size, known up front: its wrapper is sized to the ELK box. SvelteFlow drops
+ * the handle bounds of a node handed over without `measured`, which leaves every edge unplaceable
+ * until the nodes are measured again, so each new nodes array would unmount and remount every edge.
+ * Rounded as SvelteFlow measures (offsetWidth/offsetHeight), so the first measure finds no change.
+ */
+export function measuredSize(box: { width: number; height: number }): { width: number; height: number } {
+  return { width: Math.round(box.width), height: Math.round(box.height) };
+}
+
+/**
  * Nodes whose box changed size between two layouts, marked to grow from the old size: their card
  * and status ring animate (C4Diagram's c4-size / c4-ring keyframes; `turn` alternates the name so
  * every move restarts them) while the SvelteFlow wrapper takes the new size at once. Sizing the

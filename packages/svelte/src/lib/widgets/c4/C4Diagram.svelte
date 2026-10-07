@@ -57,6 +57,7 @@
   import {
     decorateNodes,
     markResized,
+    measuredSize,
     nodeSetKey,
     statusesPresent,
     unionRect,
@@ -292,6 +293,7 @@
         // Every node takes its ELK box, so ELK's edge routes meet the card edges.
         width: pos.width,
         height: pos.height,
+        measured: measuredSize(pos),
         // Group nodes need explicit dimensions for SvelteFlow to render the bounding box
         ...(isGroup ? { style: `width: ${pos.width}px; height: ${pos.height}px;` } : {}),
         ...(parentId ? { parentId } : {}),
