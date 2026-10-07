@@ -43,6 +43,16 @@ describe('ApprovalGate requireDenyReason', () => {
     expect(decision()).toBe('denied');
   });
 
+  it('shows the host\'s hint instead of the default when denyReasonHint is set', async () => {
+    const { getByText, queryByText } = setup({
+      requireDenyReason: true,
+      denyReasonHint: 'Say why, so the planner learns.',
+    });
+    await fireEvent.click(getByText('Reject'));
+    expect(getByText('Say why, so the planner learns.')).toBeTruthy();
+    expect(queryByText('A reason is needed to reject.')).toBeNull();
+  });
+
   it('⌘↩ with a blank required reason does nothing', async () => {
     const { getByText, getByLabelText, ondeny, decision } = setup({ requireDenyReason: true });
     await fireEvent.click(getByText('Reject'));

@@ -24,6 +24,7 @@ export const approvalGateEntry: WidgetManifestEntry = {
     disabled: { type: 'boolean', required: false, description: 'Disable the controls (e.g. while the host persists the decision).' },
     askDenyReason: { type: 'boolean', required: false, description: 'Deny first asks for an optional reason, passed to the host as ondeny({ actionId, reason }). Default false.' },
     requireDenyReason: { type: 'boolean', required: false, description: 'Deny first asks for a reason and Confirm stays disabled until one is typed; ⌘↩ confirms, Return is a newline. Default false.' },
+    denyReasonHint: { type: 'string', required: false, description: 'The line shown while a required reason is missing. Default: "A reason is needed to <deny label>."' },
   },
   example: {
     type: 'approval-gate',

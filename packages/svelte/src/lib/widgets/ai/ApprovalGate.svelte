@@ -21,8 +21,8 @@
     `askDenyReason` (default false) makes Deny open a labelled field with Confirm /
     Cancel first; ondeny then carries `reason` only when one was typed, so the payload
     keeps its old shape. `requireDenyReason` (default false) opens the same field but
-    keeps Confirm disabled, with a visible "A reason is needed" line, until a non-blank
-    reason is typed. In the field Return is a newline and never submits, ⌘↩ / Ctrl+↩
+    keeps Confirm disabled, with a visible "A reason is needed" line (denyReasonHint
+    replaces its wording), until a non-blank reason is typed. In the field Return is a newline and never submits, ⌘↩ / Ctrl+↩
     confirms, Escape backs out. The reason is not shown in the stamp.
     Tokens only: surface/border with a ring, status text on the readable
     text-ripple-*-text tokens (raw status tones are fills and fail 4.5:1 as text).
@@ -114,6 +114,8 @@
      * disabled until a non-blank reason is typed. Default false.
      */
     requireDenyReason?: boolean;
+    /** The line shown while a required reason is missing. Defaults to "A reason is needed to <deny label>." */
+    denyReasonHint?: string;
     /**
      * Fired when the node is bound — carries the NEW decision string so
      * NodeRenderer persists it (default bind contract for `approval-gate` is
@@ -150,6 +152,7 @@
     disabled = false,
     askDenyReason = false,
     requireDenyReason = false,
+    denyReasonHint,
     ondecision,
     onapprove,
     ondeny,
@@ -383,7 +386,7 @@
         ></textarea>
         {#if reasonMissing}
           <p id={reasonHintId} class="text-[12px] leading-snug text-ripple-muted-foreground">
-            A reason is needed to {denyLabel.toLowerCase()}.
+            {denyReasonHint ?? `A reason is needed to ${denyLabel.toLowerCase()}.`}
           </p>
         {/if}
         <div class="flex items-center gap-2">
