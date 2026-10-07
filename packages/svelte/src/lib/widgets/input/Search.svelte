@@ -49,6 +49,8 @@
      *  search box, no dropdown, no "No results" panel. */
     mode?: 'suggest' | 'filter';
     'aria-label'?: string;
+    /** The input's form field name, for a search that submits a plain GET form. */
+    name?: string;
     autocomplete?: HTMLInputAttributes['autocomplete'];
     spellcheck?: boolean;
   }
@@ -68,6 +70,7 @@
     onselect,
     mode = 'suggest',
     'aria-label': ariaLabel,
+    name,
     autocomplete,
     spellcheck
   }: Props = $props();
@@ -165,6 +168,7 @@
       aria-controls={suggest ? listboxId : undefined}
       aria-autocomplete={suggest ? 'list' : undefined}
       aria-label={ariaLabel}
+      {name}
       {autocomplete}
       {spellcheck}
       {placeholder}
