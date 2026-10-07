@@ -457,7 +457,7 @@
   let lastFrame: { key: string; rect: LayoutPosition | null; follow: boolean } | undefined;
   const frame = $derived.by(() => {
     if (laying && lastFrame) return lastFrame;
-    if (!semanticInfo) return undefined;
+    if (!semanticInfo) return (lastFrame = undefined);
     const { tree, vis, rects } = semanticInfo;
     const panels = [...vis.panels];
     const target =

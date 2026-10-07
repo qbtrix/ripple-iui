@@ -14,7 +14,7 @@ import ELK from 'elkjs/lib/elk.bundled.js';
 
 if ('WorkerGlobalScope' in globalThis) {
   try {
-    new ELK();
+    void new ELK();
   } catch {
     // expected: see the header
   }

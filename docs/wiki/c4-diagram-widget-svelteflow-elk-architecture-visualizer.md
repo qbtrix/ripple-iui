@@ -68,7 +68,7 @@ SvelteFlow stays mounted across diagram swaps. Only the first layout shows the l
 
 ## Live layer
 
-`status` sets `data-c4-status` on the node wrapper and one CSS ring covers every node shape:
+`status` sets `data-c4-status` on the node wrapper (written straight to the DOM, so a status change never re-renders the graph) and one CSS ring covers every node shape:
 
 | Status | Treatment |
 |--------|-----------|
@@ -83,11 +83,23 @@ SvelteFlow stays mounted across diagram swaps. Only the first layout shows the l
 
 ## Legibility at any zoom
 
-`C4LiveLayer` writes the zoom into `--c4-zoom`; names and edge labels counter-scale below 1x. Below 0.9x (`data-c4-far`) cards keep only name and technology. Fits never zoom past 1x.
+`C4LiveLayer` writes the zoom into `--c4-zoom`; names and edge labels counter-scale below 1x. Below 0.9x (`data-c4-far`) cards keep only name and technology. Fits never zoom past 1x. The variable is inherited by every node, so it is written only when the value the cards read changes (clamped to 0.5–1, two decimals), and not while a camera move the layer started is flying; the final zoom lands with the move.
 
 ## Semantic zoom
 
 Passing `expanded` (even `[]`) switches to one canvas for the whole tree. An expanded element opens in place as a boundary around its children; an expanded code element with a `code` excerpt opens as a code panel (`C4CodeNode`) with the file's own line numbers, the change tinted and a Before/After switch. `scopeId` ghosts what lies outside it. Relationships lift onto the drawn siblings with counts, and an edge keeps its dash when every relationship behind it shares a style; where an edge meets an expanded boundary it carries a port badge, and crossings drawn further out become chips on the scope boundary. Markers on hidden elements roll up to their drawn ancestor. Between layouts nodes glide and resize on the ripple ease, leaving nodes fade, and the camera eases to ELK's final box; all instant under reduced motion. The pure logic lives in `semantic.ts` and `semantic-flow.ts`.
+
+## Redrawing a live map
+
+A live host (a run streaming files in) re-lays the map often, so the widget keeps each change to one layout and one render:
+
+- ELK runs in a module worker (`elk-worker.js`, one per page). Where no worker can start (SSR, jsdom) or it dies, layouts run on the main thread; an ELK error from the worker rejects as before. A host bundling with Vite gets the worker from `new Worker(new URL('./elk-worker.js', import.meta.url))`; `elk-layout.ts` also imports the worker module so a dev server serving a linked (`file:`) copy of the package lets the worker URL load.
+- In semantic zoom the camera holds while a layout computes and moves once when it lands.
+- Every node is handed to SvelteFlow with its size and handles (`presized`), which the ELK box already fixes. Without them SvelteFlow forgets a node's handles on every new nodes array and remounts every edge, label and port badge.
+- A node whose box changes size takes the new size at once; its card and status ring grow from the old size (`markResized`). Animating the wrapper itself made SvelteFlow re-measure it and re-lay every edge on each frame.
+- Nodes leaving the map fade where they were and stay, hidden from assistive tech and the minimap, until the next layout replaces them, so a move costs one render, not two.
+
+On the Belt's 200-component harness this holds the map at 57 fps with a 16.8 ms p95 frame while files stream in (dev build). The remaining cost per layout is SvelteFlow re-measuring each node whose type changed (a card opening into a boundary or code panel), one forced layout each.
 
 ## Known gaps
 
