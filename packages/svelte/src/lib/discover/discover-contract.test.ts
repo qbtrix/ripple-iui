@@ -14,8 +14,18 @@ import pkg from '../../../package.json' with { type: 'json' };
 /** Every runtime name on the surface, sorted. */
 const EXPECTED = [
 	'CARD_PALETTE',
+	'DISCOVER_VIEWS',
 	'DetailMedia',
+	'DiscoverChips',
+	'DiscoverEmpty',
+	'DiscoverFilters',
+	'DiscoverGrid',
+	'DiscoverHeader',
+	'DiscoverPublish',
 	'DiscoverRow',
+	'DiscoverSearch',
+	'DiscoverSection',
+	'DiscoverSkeleton',
 	'DiscoverTile',
 	'ItemArt',
 	'initialFor',
@@ -29,7 +39,21 @@ const EXPECTED = [
 	'usedLabel',
 ];
 
-const COMPONENTS = ['DetailMedia', 'DiscoverRow', 'DiscoverTile', 'ItemArt'];
+const COMPONENTS = [
+	'DetailMedia',
+	'DiscoverChips',
+	'DiscoverEmpty',
+	'DiscoverFilters',
+	'DiscoverGrid',
+	'DiscoverHeader',
+	'DiscoverPublish',
+	'DiscoverRow',
+	'DiscoverSearch',
+	'DiscoverSection',
+	'DiscoverSkeleton',
+	'DiscoverTile',
+	'ItemArt',
+];
 const HELPERS = ['initialFor', 'isStudioKind', 'itemHref', 'mediaFor', 'primaryFor', 'remixLabel', 'tintFor', 'usageLabel', 'usedLabel'];
 
 const surface = discover as unknown as Record<string, unknown>;
@@ -51,6 +75,10 @@ describe('the ./discover surface', () => {
 		const palette = surface.CARD_PALETTE as readonly string[];
 		expect(palette.length).toBeGreaterThan(0);
 		for (const tint of palette) expect(tint).toMatch(/^var\(--ripple-/);
+	});
+
+	it('DISCOVER_VIEWS lists the three views in toggle order', () => {
+		expect(surface.DISCOVER_VIEWS).toEqual(['grid', 'shelves', 'list']);
 	});
 
 	it('is reachable as a subpath, not just as a file', () => {
