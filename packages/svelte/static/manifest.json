@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-06T08:07:25.702Z",
+  "generatedAt": "2026-10-07T08:34:37.218Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -12918,6 +12918,11 @@
           "required": false,
           "description": "Slide direction. Default \"right\"."
         },
+        "size": {
+          "type": "\"sm\" | \"md\" | \"lg\" | \"xl\" | \"2xl\" | \"3xl\" | \"4xl\"",
+          "required": false,
+          "description": "Max width of a left/right sheet on wider screens. Default \"sm\"; \"2xl\"-\"4xl\" fit a review or a diff."
+        },
         "title": {
           "type": "string",
           "required": false,
@@ -13537,12 +13542,12 @@
     {
       "type": "steps",
       "category": "display",
-      "description": "Numbered process steps — vertical (default) or horizontal — with optional descriptions.",
+      "description": "Numbered process steps — vertical (default) or horizontal — with optional descriptions and a per-step status (done, current, upcoming, failed).",
       "props": {
         "steps": {
-          "type": "Array<{ title: string; description?: string; number?: number | string }>",
+          "type": "Array<{ title: string; description?: string; number?: number | string; status?: 'done' | 'current' | 'upcoming' | 'failed' }>",
           "required": true,
-          "description": "Step items."
+          "description": "Step items. `status` marks progress: done and failed pips show a check or cross, the current step is announced as current. Omit it for a plain numbered list."
         },
         "orientation": {
           "type": "\"vertical\" | \"horizontal\"",
@@ -13557,15 +13562,18 @@
           "steps": [
             {
               "title": "Install dependencies",
-              "description": "Run `npm install`."
+              "description": "Run `npm install`.",
+              "status": "done"
             },
             {
               "title": "Configure settings",
-              "description": "Update `config.json`."
+              "description": "Update `config.json`.",
+              "status": "current"
             },
             {
               "title": "Deploy",
-              "description": "Push to production."
+              "description": "Push to production.",
+              "status": "upcoming"
             }
           ]
         }
