@@ -6,6 +6,9 @@
 // Invariants: nodes come parents-first (SvelteFlow requires it); a child's position is relative to
 // its parent; every node carries its ELK width/height so routes meet card edges, and its measured
 // size and handles too (presized: SvelteFlow then never has to measure a node before its edges draw).
+// Every node has the one SvelteFlow type VIEW_NODE (C4ViewNode) with its view in data.view and the
+// class that view's own type would give the wrapper: an element changes view as the map opens and
+// closes, and a changed type makes SvelteFlow re-measure the node and re-adopt the whole map.
 
 import type { Edge, Node } from '@xyflow/svelte';
 import { BOUNDARY_TOP, computeSemanticLayout, getNodeDimensions, getNodeType, type LayoutPosition } from './elk-layout.js';
@@ -23,6 +26,9 @@ import {
   type Visibility,
 } from './semantic.js';
 import type { C4Diagram, C4Element, C4NodeData } from './types.js';
+
+/** The SvelteFlow node type of every semantic node (C4Diagram registers C4ViewNode under it). */
+export const VIEW_NODE = 'c4';
 
 export interface SemanticFlow {
   nodes: Node[];
@@ -91,6 +97,7 @@ export async function buildSemanticFlow(
     const isBoundary = vis.boundaries.has(id);
     const isPanel = vis.panels.has(id);
     const card = asCard(el);
+    const view = isBoundary ? 'group' : isPanel ? 'code' : getNodeType(card);
     const data: C4NodeData = {
       name: el.name,
       description: el.description,
@@ -107,10 +114,12 @@ export async function buildSemanticFlow(
       ondrilldown: handlers.ondrilldown ? (e, level) => handlers.ondrilldown?.(e.id, level) : undefined,
       ...(id === scopeId && chips.length > 0 ? { ports: chips.map((c) => ({ text: c.text, items: named(c.items) })) } : {}),
       ...(isPanel ? { code: el.code } : {}),
+      view,
     };
     nodes.push({
       id,
-      type: isBoundary ? 'group' : isPanel ? 'code' : getNodeType(card),
+      type: VIEW_NODE,
+      class: `svelte-flow__node-${view}`,
       position: { x: pos.x - (parentPos?.x ?? 0), y: pos.y - (parentPos?.y ?? 0) },
       data: data as unknown as Record<string, unknown>,
       draggable: false,

@@ -27,7 +27,9 @@
   element with an excerpt opens as a code panel), `scopeId` ghosts what lies
   outside it, edges lift onto drawn siblings with port badges and counts, and
   markers on hidden elements roll up to their drawn ancestor (semantic.ts,
-  semantic-flow.ts). Between layouts nodes glide and resize with the ripple
+  semantic-flow.ts). Every semantic node is one SvelteFlow type (C4ViewNode
+  draws data.view), so a node that opens or closes swaps its component without
+  SvelteFlow re-measuring the map. Between layouts nodes glide and resize with the ripple
   ease, leaving nodes fade where they were (and stay, hidden, until the next
   layout replaces them: removing them alone is another whole-map pass), edges
   and markers sit out the move,
@@ -39,18 +41,10 @@
   import type { Node, Edge, NodeTypes, EdgeTypes } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
-  import {
-    C4PersonNode,
-    C4SystemNode,
-    C4ContainerNode,
-    C4DatabaseNode,
-    C4QueueNode,
-    C4ComponentNode,
-    C4GroupNode,
-  } from './nodes/index.js';
+  import { C4_VIEWS } from './nodes/index.js';
+  import C4ViewNode from './nodes/C4ViewNode.svelte';
   import C4LiveLayer from './C4LiveLayer.svelte';
   import C4Edge from './C4Edge.svelte';
-  import { C4CodeNode } from './nodes/index.js';
   import { untrack } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
   import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode, type LayoutPosition } from './elk-layout.js';
@@ -66,7 +60,7 @@
     edgeLook,
   } from './live.js';
   import { liftMarkers, representative, type C4Tree, type Visibility } from './semantic.js';
-  import { buildSemanticFlow } from './semantic-flow.js';
+  import { buildSemanticFlow, VIEW_NODE } from './semantic-flow.js';
   import { activateNode } from './activate.js';
   // From types.ts, NOT the barrel, and aliased: this component is itself named
   // C4Diagram, and svelte-package emits `declare const C4Diagram` plus
@@ -119,17 +113,10 @@
     scopeId,
   }: Props = $props();
 
-  // Register all C4 node types for SvelteFlow
-  const nodeTypes: NodeTypes = {
-    person: C4PersonNode as any,
-    system: C4SystemNode as any,
-    container: C4ContainerNode as any,
-    database: C4DatabaseNode as any,
-    queue: C4QueueNode as any,
-    component: C4ComponentNode as any,
-    group: C4GroupNode as any,
-    code: C4CodeNode as any,
-  };
+  // Every C4 view as a SvelteFlow node type (the legacy diagram), plus semantic zoom's one type.
+  const nodeTypes = { ...C4_VIEWS, [VIEW_NODE]: C4ViewNode } as unknown as NodeTypes;
+  /** How a node is drawn: its view under semantic zoom, else its type. */
+  const viewOf = (n: Node) => (n.data as unknown as C4NodeData).view ?? n.type;
 
   const edgeTypes: EdgeTypes = { c4: C4Edge as any };
 
@@ -360,7 +347,7 @@
       const r = prevRects?.get(n.id);
       if (nextIds.has(n.id) || !r) return [];
       // Absolute and unparented: its parent may be gone or shrinking.
-      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: 'c4-leaving', selectable: false, focusable: false, zIndex: 1000, domAttributes: { 'aria-hidden': 'true' } }];
+      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: `${n.class ?? ''} c4-leaving`, selectable: false, focusable: false, zIndex: 1000, domAttributes: { 'aria-hidden': 'true' } }];
     });
     moving = true;
     settleTimer = setTimeout(() => {
@@ -428,6 +415,11 @@
   const shownNodes = $derived(
     decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { selectedId })
   );
+  // SvelteFlow writes its nodes back (a re-measure, a fitView, a click selection). Into an unbound
+  // prop that write is kept as a deep $state proxy, so every node reads back as a new object and
+  // SvelteFlow rebuilds every node and edge. Bound, the write lands here raw, so only the nodes it
+  // changed are new. The next layout or decoration replaces it (a writable derived).
+  let boundNodes = $derived(shownNodes);
   // Live status as a data attribute on each node wrapper, written to the DOM: a status change
   // must not hand SvelteFlow a new nodes array (it re-lays every edge). Re-run when nodes mount.
   let canvas = $state<HTMLElement>();
@@ -504,7 +496,7 @@
     const node = id ? flowNodes.find((n) => n.id === id) : undefined;
     if (!node) return;
     event.preventDefault();
-    activateNode(node.type, node.data as unknown as C4NodeData);
+    activateNode(viewOf(node), node.data as unknown as C4NodeData);
   }
 </script>
 
@@ -553,7 +545,7 @@
       </div>
     {:else}
       <SvelteFlow
-        nodes={shownNodes}
+        bind:nodes={() => boundNodes, (written) => (boundNodes = written)}
         edges={flowEdges}
         {nodeTypes}
         {edgeTypes}
@@ -586,7 +578,7 @@
           position="bottom-left"
           width={160}
           height={110}
-          nodeColor={(node) => (node.class === 'c4-leaving' ? 'transparent' : node.type === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
+          nodeColor={(node) => (node.class?.includes('c4-leaving') ? 'transparent' : viewOf(node) === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
           nodeBorderRadius={4}
         />
       </SvelteFlow>

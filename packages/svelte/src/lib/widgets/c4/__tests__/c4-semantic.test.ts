@@ -1,13 +1,14 @@
 // c4-semantic.test.ts — semantic zoom's pure core: the tree index refuses a repeated id, what an
 // `expanded` set draws (cards, boundaries, code panels), how relationships lift onto drawn siblings
 // with counts, port badges and scope chips, which nodes are ghosted context, where markers roll up,
-// what a code panel shows (its change clamped to the excerpt), and that an edge keeps its
-// relationships' async/event dash in the semantic graph.
+// what a code panel shows (its change clamped to the excerpt), that an edge keeps its
+// relationships' async/event dash in the semantic graph, and that a node keeps one SvelteFlow type
+// whichever view (card, boundary, code panel) it is drawn in.
 
 import { describe, it, expect } from 'vitest';
 import type { C4Element, C4Relationship, C4Code } from '$lib/widgets/c4/types.js';
 import { computeSemanticLayout } from '../elk-layout.js';
-import { buildSemanticFlow } from '../semantic-flow.js';
+import { buildSemanticFlow, VIEW_NODE } from '../semantic-flow.js';
 import {
   codePanelSize,
   codeView,
@@ -275,3 +276,21 @@ describe('semantic edges keep relationship style', () => {
   });
 });
 
+
+describe('semantic nodes keep one SvelteFlow type', () => {
+  // A changed type makes SvelteFlow re-measure the node and re-adopt the whole map; the view rides
+  // in data.view and in the class that view's own type would give the wrapper.
+  it('draws cards, boundaries and code panels under one type, the view in data and class', async () => {
+    const diagram = { level: 'context' as const, title: '', elements, relationships };
+    const views = async (expanded: string[]) => {
+      const { nodes } = await buildSemanticFlow(diagram, new Set(expanded), undefined, {});
+      expect(new Set(nodes.map((n) => n.type))).toEqual(new Set([VIEW_NODE]));
+      for (const n of nodes) expect(n.class).toBe(`svelte-flow__node-${(n.data as { view: string }).view}`);
+      return Object.fromEntries(nodes.map((n) => [n.id, (n.data as { view: string }).view]));
+    };
+    const closed = await views([]);
+    const open = await views(['pe', 'pe.spa', 'craft', 'f.inspector']);
+    expect([closed.captain, closed.pe]).toEqual(['person', 'system']);
+    expect([open.pe, open['pe.spa'], open.craft, open['f.inspector'], open['f.session']]).toEqual(['group', 'group', 'group', 'code', 'component']);
+  });
+});
