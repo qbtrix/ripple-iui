@@ -70,6 +70,14 @@ it through `class` (the app passes its `feature-surface` glass). The shelves
 view bleeds into a `px-6` page gutter (`-mx-6 px-6`), so put sections in a
 `px-6` column, as the app does.
 
+## Built-in copy
+
+`DiscoverPublish` and `DiscoverEmpty` ship default copy that names the product
+"Paw OS", never a bare "Paw" (the brand rule: PocketPaw is the maker, the
+products are Paw OS, Paw Sites and Paw Studio). Pass your own through
+`DiscoverPublish`'s `title`, `body` and `cta`, or `DiscoverEmpty`'s `title`
+and `description`. The empty state's call to action is the `actions` snippet.
+
 ## Type scale
 
 The components use paw-enterprise's Apple-style type utilities
@@ -100,8 +108,8 @@ with identical declarations, so nothing changes. Hosts must scan ripple's
 | `DiscoverSection` | component | A titled shelf: heading (`discover-h-{id}`), blurb, a "see all" link or button, then its children in a `DiscoverGrid`. Props: `id`, `title`, `blurb?`, `more?`, `moreHref?`, `onmore?`, `view?`, `children`, `class?`. |
 | `DiscoverGrid` | component | The items container by view: auto-fill grid, snapping shelf, or a bordered `role="list"`. Props: `view?`, `label?`, `children`, `class?`. |
 | `DiscoverSkeleton` | component | The loading state, one `role="status"`: tile skeletons, or row skeletons for the list view. Props: `view?`, `count?` (8), `label?`, `class?`. |
-| `DiscoverEmpty` | component | `Nothing here yet`, `Nothing matches that yet.` or the load error. Props: `state?` (`'empty'`, `'filtered'`, `'error'`), `actions?`, `class?`. |
-| `DiscoverPublish` | component | The publish band. Props: `href?` or `onpublish?`, `class?`. |
+| `DiscoverEmpty` | component | `Nothing here yet`, `Nothing matches that yet.` or the load error. Props: `state?` (`'empty'`, `'filtered'`, `'error'`), `title?` and `description?` (replace the state's copy), `actions?`, `class?`. |
+| `DiscoverPublish` | component | The publish band. Props: `title?`, `body?`, `cta?` (the button label), `href?` or `onpublish?`, `class?`. |
 | `DISCOVER_VIEWS` | constant | `['grid', 'shelves', 'list']`, the toggle order. |
 | `itemHref(kind, idOrSlug)` | helper | The public route for an item by kind: `/free-tools/`, `/play/`, `/templates/`, else `/discover/`. |
 | `primaryFor(item)` | helper | The primary action: `Use` or `Play` with an http(s) `href`, `Claim` or `Use this recipe` needing an account, or `null`. |

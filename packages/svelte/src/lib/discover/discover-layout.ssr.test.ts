@@ -200,8 +200,36 @@ describe('DiscoverHeader and DiscoverPublish', () => {
   it('DiscoverPublish is a link with href and shows no button without an action', () => {
     expect(render(DiscoverPublish, { props: { href: '/signup' } }).body).toMatch(/<a [^>]*href="\/signup"[^>]*>Publish your work<\/a>/);
     const bare = render(DiscoverPublish, { props: {} }).body;
-    expect(bare).toContain('Made something with Paw?');
+    expect(bare).toContain('Made something with Paw OS?');
     expect(bare).not.toContain('Publish your work');
+  });
+
+  it('DiscoverPublish takes its title, body and button label as props', () => {
+    const { body } = render(DiscoverPublish, { props: { title: 'Built a tool?', body: 'Share it.', cta: 'Share', href: '/app' } });
+    expect(body).toContain('>Built a tool?</h2>');
+    expect(body).toContain('>Share it.</p>');
+    expect(body).toMatch(/<a [^>]*href="\/app"[^>]*>Share<\/a>/);
+  });
+});
+
+describe('built-in copy', () => {
+  // Brand rule: a product is "Paw OS" (or Paw Sites, Paw Studio), never a bare "Paw".
+  const BARE_PAW = /\bPaw\b(?!\s+(OS|Sites|Studio)\b)/;
+
+  it.each(['empty', 'filtered', 'error'] as const)('DiscoverEmpty %s defaults never say a bare Paw', (state) => {
+    expect(render(DiscoverEmpty, { props: { state } }).body).not.toMatch(BARE_PAW);
+  });
+
+  it('DiscoverPublish defaults never say a bare Paw', () => {
+    expect(render(DiscoverPublish, { props: { onpublish: () => {} } }).body).not.toMatch(BARE_PAW);
+  });
+
+  it('DiscoverEmpty takes a title and description over the state copy', () => {
+    const { body } = render(DiscoverEmpty, { props: { state: 'filtered', title: 'No luck.', description: 'Try again.' } });
+    expect(body).toContain('No luck.');
+    expect(body).toContain('Try again.');
+    expect(body).not.toContain('Nothing matches that yet.');
+    expect(body).toContain('data-testid="discover-empty"');
   });
 });
 
