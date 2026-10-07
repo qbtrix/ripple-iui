@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-07T08:34:37.218Z",
+  "generatedAt": "2026-10-07T14:06:45.263Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -15699,7 +15699,7 @@
     {
       "type": "approval-gate",
       "category": "ai",
-      "description": "Human-in-the-loop approval card: shows a proposed agent action with a risk badge, an optional diff and tool-call list, and Approve/Deny/Edit controls that resolve and persist the decision.",
+      "description": "Human-in-the-loop approval card: a proposed agent action with an optional risk badge, diff and tool-call list, and Approve/Deny/Edit controls that resolve and persist the decision.",
       "props": {
         "title": {
           "type": "string",
@@ -15714,7 +15714,7 @@
         "risk": {
           "type": "string",
           "required": false,
-          "description": "Risk level: 'low' | 'medium' | 'high'. Drives the badge + tone."
+          "description": "Risk level: 'low' | 'medium' | 'high'. Drives the badge + tone; omitted, no badge."
         },
         "decision": {
           "type": "string",
@@ -15760,6 +15760,11 @@
           "type": "boolean",
           "required": false,
           "description": "Deny first asks for an optional reason, passed to the host as ondeny({ actionId, reason }). Default false."
+        },
+        "requireDenyReason": {
+          "type": "boolean",
+          "required": false,
+          "description": "Deny first asks for a reason and Confirm stays disabled until one is typed; ⌘↩ confirms, Return is a newline. Default false."
         }
       },
       "example": {
