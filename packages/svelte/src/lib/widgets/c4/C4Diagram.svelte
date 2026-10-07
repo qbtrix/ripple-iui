@@ -6,7 +6,9 @@
   Live layer (all optional; absent, the widget behaves as it always did):
   `status` paints a node's state through a `data-c4-status` attribute on its
   SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves;
-  `planned` draws a blueprint: dashed outline, no fill, content dimmed),
+  `planned` draws a blueprint: dashed outline, no fill, content dimmed;
+  written straight to the wrappers, since a new nodes array makes SvelteFlow
+  re-lay every edge),
   `markers` pins dots to nodes, `selectedId` controls selection, and
   `focusId` + `follow` keep the camera on one node. A user pan or zoom (the
   zoom buttons and the minimap included) calls `onmanualcamera`, so a host can
@@ -26,7 +28,9 @@
   outside it, edges lift onto drawn siblings with port badges and counts, and
   markers on hidden elements roll up to their drawn ancestor (semantic.ts,
   semantic-flow.ts). Between layouts nodes glide and resize with the ripple
-  ease, leaving nodes fade where they were, edges and markers sit out the move,
+  ease, leaving nodes fade where they were (and stay, hidden, until the next
+  layout replaces them: removing them alone is another whole-map pass), edges
+  and markers sit out the move,
   and the camera eases to the new frame; all instant under reduced motion.
   Without `expanded` none of this runs and the widget renders as before.
 -->
@@ -351,12 +355,11 @@
       const r = prevRects?.get(n.id);
       if (nextIds.has(n.id) || !r) return [];
       // Absolute and unparented: its parent may be gone or shrinking.
-      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: 'c4-leaving', selectable: false, focusable: false, zIndex: 1000, domAttributes: undefined }];
+      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: 'c4-leaving', selectable: false, focusable: false, zIndex: 1000, domAttributes: { 'aria-hidden': 'true' } }];
     });
     moving = true;
     settleTimer = setTimeout(() => {
       moving = false;
-      leaving = [];
     }, MOVE_MS + 60);
   }
 
@@ -391,6 +394,7 @@
       .then(({ nodes, edges, semantic }) => {
         if (cancelled) return;
         if (semantic) beginMove(flowNodes, nodes, semanticInfo?.rects);
+        else leaving = [];
         flowNodes = nodes;
         flowEdges = edges;
         semanticInfo = semantic;
@@ -411,8 +415,22 @@
 
   // ---- Live layer ----
   const shownNodes = $derived(
-    decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { status, selectedId })
+    decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { selectedId })
   );
+  // Live status as a data attribute on each node wrapper, written to the DOM: a status change
+  // must not hand SvelteFlow a new nodes array (it re-lays every edge). Re-run when nodes mount.
+  let canvas = $state<HTMLElement>();
+  $effect(() => {
+    const st = status ?? {};
+    void shownNodes;
+    if (!canvas) return;
+    for (const el of canvas.querySelectorAll<HTMLElement>('.svelte-flow__node')) {
+      const s = el.dataset.id ? st[el.dataset.id] : undefined;
+      if (s) {
+        if (el.dataset.c4Status !== s) el.dataset.c4Status = s;
+      } else if (el.dataset.c4Status) delete el.dataset.c4Status;
+    }
+  });
   const nodeIds = $derived(nodeSetKey(flowNodes));
   const legendStatuses = $derived(statusesPresent(status, nodeIds.split('\n')));
   const shownMarkers = $derived(
@@ -501,6 +519,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
+    bind:this={canvas}
     class={semanticInfo ? 'c4-canvas c4-semantic' : 'c4-canvas'}
     data-c4-moving={moving ? '' : undefined}
     onpointerdowncapture={onCanvasGesture}
@@ -556,7 +575,7 @@
           position="bottom-left"
           width={160}
           height={110}
-          nodeColor={(node) => (node.type === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
+          nodeColor={(node) => (node.class === 'c4-leaving' ? 'transparent' : node.type === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
           nodeBorderRadius={4}
         />
       </SvelteFlow>
