@@ -38,7 +38,7 @@
   const showImage = $derived(src !== null && failedSrc !== src);
   const imgAlt = $derived(mediaKind === 'video' ? `Video poster for ${title}` : mediaKind === 'audio' ? `Song cover for ${title}` : `Preview of ${title}`);
 
-  const frameClass = 'aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted';
+  const frameClass = 'aspect-video w-full overflow-hidden rounded-[10px] border border-border bg-muted';
   // Two washes mixed off the tint, anchored top-left so it reads as artwork.
   const blankWash =
     'background-image: radial-gradient(118% 118% at 18% 0%, color-mix(in srgb, var(--art-tint) 30%, transparent), transparent 62%), linear-gradient(158deg, color-mix(in srgb, var(--art-tint) 14%, transparent), transparent 70%)';

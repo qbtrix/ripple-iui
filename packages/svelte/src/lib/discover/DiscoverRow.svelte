@@ -3,7 +3,8 @@
      Built for scanning many items at once. With `href`, the art and the title are
      links; the art link is decorative. `target` and `rel` pass through to
      both, for consumers whose item pages are off-site. Renders fully on the
-     server. -->
+     server. Type scale as in the app's own list rows: text-body title,
+     text-footnote line, text-caption-1 usage. -->
 <script lang="ts">
   import GitFork from '@lucide/svelte/icons/git-fork';
   import Chip from '../widgets/display/Chip.svelte';
@@ -53,15 +54,15 @@
   <div class="flex min-w-0 flex-1 flex-col">
     <span class="flex min-w-0 items-center gap-2">
       {#if href}
-        <a {href} {target} {rel} class="truncate text-sm font-semibold text-foreground hover:underline">{item.title}</a>
+        <a {href} {target} {rel} class="truncate text-body font-semibold text-foreground hover:underline">{item.title}</a>
       {:else}
-        <span class="truncate text-sm font-semibold text-foreground">{item.title}</span>
+        <span class="truncate text-body font-semibold text-foreground">{item.title}</span>
       {/if}
       {#if item.featured}<Chip size="sm" variant="warning" label="Staff pick" />{/if}
     </span>
-    <span class="truncate text-xs text-muted-foreground">{item.desc}</span>
+    <span class="truncate text-footnote text-muted-foreground">{item.desc}</span>
   </div>
-  <div class="hidden w-40 shrink-0 text-xs text-muted-foreground md:flex">
+  <div class="hidden w-40 shrink-0 text-caption-1 text-muted-foreground md:flex">
     <span class="inline-flex items-center gap-1 tabular-nums"><GitFork class="size-3" aria-hidden="true" />{usageLabel(item)}</span>
   </div>
   <ItemActions {item} {onremix} {onreport} {onopen} {busy} />
