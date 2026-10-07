@@ -1,62 +1,34 @@
 <!--
   @file widgets/ai/ApprovalGate.svelte
-  @description NEW (AI-native tier, 2026-06-24). The human-in-the-loop approval /
-    diff-review organism — the product's core thesis ("the human mans the gate").
-    Renders a PROPOSED agent action and lets a human approve / deny / edit it.
-    Composition (all body parts are optional + driven by props, so a spec author
-    composes what the review shows):
-      • Header  — title (the proposed action), an optional one-line summary, and a
-                  RISK badge (low | medium | high) conveyed by TEXT + color, never
-                  color alone; high carries a destructive tone.
-      • Body    — any of: a Diff (REUSES display/Diff for before/after), one or more
-                  ToolCall cards (REUSES ai/ToolCall for the proposed calls), and/or
-                  plain summary markdown (REUSES display/Markdown).
-      • Decision — Approve (primary), Deny (destructive-outline), optional Edit.
-    On a decision the card (1) resolves LOCALLY: pending → approved | denied (controls
-    dim, a status stamp announces the outcome), and (2) fires the matching callback
-    (onapprove / ondeny / onedit) carrying the actionId so the host can wire it to
-    emit / call_binding (Instinct records the decision). When the node is `bind`-bound,
-    it ALSO fires `ondecision(next)` with the new decision string, so NodeRenderer
-    persists it through stateManager.set → onStateChange (the Kanban/Table pattern) and
-    a refresh remembers the outcome. Unbound usage stays purely local + callback-driven.
-  @a11y Real <button>s with explicit labels; risk + resolved state are conveyed by
-    text (not color); the resolved stamp is announced via aria-live; the controls are
-    keyboard-operable. The resolve transition honors prefers-reduced-motion.
-  Modified: 2026-06-28 — forward node id (data-ripple-node) for visual-editor selection.
-  Modified: 2026-09-14 — re-skinned on beautiful-ui. The card fades up on mount and
-    the resolved stamp pops in; the decision controls become the source's footer
-    pills (a filled accent Continue, a quiet outlined Deny, a ghost Edit); the
-    frame moves onto ripple surface/border tokens with a ring instead of a border,
-    and every "destructive" tone becomes ripple-error so red matches the
-    success/warning tones in a ripple-rethemed host. Props, events, the bind
-    contract and the a11y live region are untouched.
-  Modified: 2026-09-16 — number the proposed tool calls. Each ToolCall now gets
-    its index as an `--i` custom property through the `style` prop it already
-    had, which is what ToolCall's own entry animation reads to stagger a list
-    80ms apart instead of landing the whole run at once. No prop added anywhere.
+  @description The human-in-the-loop approval / review card ("the human mans the gate"):
+    renders a PROPOSED agent action and lets a human approve, deny or edit it.
+    • Header — title, optional one-line summary, and a risk badge (low | medium | high)
+      in TEXT + colour, never colour alone; a pending high-risk card rings in error.
+    • Body (data-slot="approval-gate-body", drawn only when something is in it) — `body`
+      (a markdown string, alias `markdown`, or a Snippet a Svelte host fills with rich
+      content such as task rows; the snippet renders where the markdown would), then a
+      Diff (display/Diff) for `diff`/`changes`, then ToolCall cards for `toolCalls`, each
+      given its index as `--i` so their entry animation staggers.
+    • Footer — Approve (filled accent), Deny (outlined error), and Edit only when
+      `onedit` is supplied. Labels are props; `confirmDenyLabel` defaults to
+      `Confirm ${denyLabel.toLowerCase()}`.
+    A decision resolves LOCALLY (pending → approved | denied; the footer becomes a stamp,
+    "Approved by Ada" with `decidedBy`) and fires onapprove / ondeny / onedit with the
+    actionId. When the node is `bind`-bound it also fires `ondecision(next)` with the
+    decision string, which NodeRenderer persists (the Kanban/Table pattern); the
+    `decision` prop reconciles the local state on refresh.
+    `askDenyReason` (default false) makes Deny open a labelled field with Confirm /
+    Cancel first; Escape backs out. ondeny then carries `reason` only when one was typed,
+    so the payload keeps its old shape. The reason is not shown in the stamp.
+    Tokens only: surface/border with a ring, status text on the readable
+    text-ripple-*-text tokens (raw status tones are fills and fail 4.5:1 as text).
+  @a11y Real <button>s with labels; risk and outcome are text; the outcome is announced
+    through an aria-live region; the fade-up and the stamp pop-in stop under
+    prefers-reduced-motion. `id` is forwarded as data-ripple-node for the visual editor.
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ApprovalCard.tsx
-  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
-  text tokens (text-ripple-{error,success,warning,info}-text; red text that
-  read text-destructive now reads text-ripple-error-text, the same hue since
-  --ripple-error aliases --destructive). The raw tones are fill colours and
-  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
-  Modified: 2026-09-25 (chat new-look slice 1) — optional reason on deny, opt-in
-    through `askDenyReason` (default false, so every existing caller still
-    denies in one click). When on, Deny swaps the footer for a labelled
-    textarea with Confirm deny / Cancel; the card stays pending until
-    confirmed. Confirm fires `ondeny({ actionId, reason })` with the trimmed
-    reason, and leaves the `reason` key out when it is empty so the payload
-    keeps its old shape. `ondecision(next)` is untouched: it is the bind
-    contract NodeRenderer persists, and it carries the decision string only.
-    Escape in the field backs out. The reason is not shown in the resolved
-    stamp; a host that wants it there owns it.
-  Modified: 2026-09-25 (fix/taskrows-approvalgate-labels) — the confirm button
-    in the deny-reason flow was hard-coded "Confirm deny", so a host with
-    denyLabel="Reject" still read "Confirm deny". New optional
-    `confirmDenyLabel`; its default is `Confirm ${denyLabel.toLowerCase()}`,
-    so the default output is still "Confirm deny".
 -->
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import Diff from '$lib/widgets/display/Diff.svelte';
   import ToolCall from './ToolCall.svelte';
@@ -112,8 +84,8 @@
     changes?: DiffPayload;
     /** Proposed tool calls — each rendered with the ToolCall widget. */
     toolCalls?: ProposedCall[];
-    /** Plain markdown body shown above/below the structured parts. */
-    body?: string;
+    /** Body above the structured parts: a markdown string, or a Snippet for rich content. */
+    body?: string | Snippet;
     /** Alias for `body`. */
     markdown?: string;
     /** Approve button label. */
@@ -228,8 +200,9 @@
   );
   const calls = $derived(Array.isArray(toolCalls) ? toolCalls : []);
   const hasCalls = $derived(calls.length > 0);
-  const bodyText = $derived(body ?? markdown ?? '');
-  const hasBody = $derived(bodyText.length > 0);
+  const bodySnippet = $derived(typeof body === 'function' ? body : undefined);
+  const bodyText = $derived((typeof body === 'string' ? body : undefined) ?? markdown ?? '');
+  const hasBody = $derived(!!bodySnippet || bodyText.length > 0);
 
   const showEdit = $derived(typeof onedit === 'function');
 
@@ -318,8 +291,11 @@
 
   <!-- Body — composed from the supplied parts (markdown / diff / tool calls) -->
   {#if hasBody || hasDiff || hasCalls}
-    <div class="px-4 py-3 space-y-3">
-      {#if hasBody}
+    <div class="px-4 py-3 space-y-3" data-slot="approval-gate-body">
+      {#if bodySnippet}
+        {@render bodySnippet()}
+      {/if}
+      {#if bodyText}
         <Markdown content={bodyText} />
       {/if}
 
