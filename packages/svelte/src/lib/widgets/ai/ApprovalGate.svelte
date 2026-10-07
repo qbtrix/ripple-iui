@@ -19,8 +19,11 @@
     decision string, which NodeRenderer persists (the Kanban/Table pattern); the
     `decision` prop reconciles the local state on refresh.
     `askDenyReason` (default false) makes Deny open a labelled field with Confirm /
-    Cancel first; Escape backs out. ondeny then carries `reason` only when one was typed,
-    so the payload keeps its old shape. The reason is not shown in the stamp.
+    Cancel first; ondeny then carries `reason` only when one was typed, so the payload
+    keeps its old shape. `requireDenyReason` (default false) opens the same field but
+    keeps Confirm disabled, with a visible "A reason is needed" line, until a non-blank
+    reason is typed. In the field Return is a newline and never submits, ⌘↩ / Ctrl+↩
+    confirms, Escape backs out. The reason is not shown in the stamp.
     Tokens only: surface/border with a ring, status text on the readable
     text-ripple-*-text tokens (raw status tones are fills and fail 4.5:1 as text).
   @a11y Real <button>s with labels; risk and outcome are text; the outcome is announced
@@ -107,6 +110,11 @@
      */
     askDenyReason?: boolean;
     /**
+     * Require a reason before denying. Deny opens the reason field and Confirm stays
+     * disabled until a non-blank reason is typed. Default false.
+     */
+    requireDenyReason?: boolean;
+    /**
      * Fired when the node is bound — carries the NEW decision string so
      * NodeRenderer persists it (default bind contract for `approval-gate` is
      * `{ prop: 'decision', event: 'ondecision' }`).
@@ -141,6 +149,7 @@
     decidedBy,
     disabled = false,
     askDenyReason = false,
+    requireDenyReason = false,
     ondecision,
     onapprove,
     ondeny,
@@ -231,17 +240,29 @@
   $effect(() => {
     if (askingReason) reasonField?.focus();
   });
+  const reasonMissing = $derived(requireDenyReason && !reasonText.trim());
+  const reasonHintId = $props.id();
 
   function deny() {
     if (disabled || resolved) return;
-    if (askDenyReason) askingReason = true;
+    if (askDenyReason || requireDenyReason) askingReason = true;
     else decide('denied');
   }
 
-  function confirmDeny(e: SubmitEvent) {
-    e.preventDefault();
+  function confirmDeny(e?: SubmitEvent) {
+    e?.preventDefault();
+    if (reasonMissing) return;
     decide('denied', reasonText.trim() || undefined);
     if (localDecision === 'denied') askingReason = false;
+  }
+
+  // Return stays a newline (a textarea never submits on it); ⌘↩ / Ctrl+↩ confirms.
+  function reasonKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') backOut();
+    else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.isComposing) {
+      e.preventDefault();
+      confirmDeny();
+    }
   }
 
   function backOut() {
@@ -352,16 +373,23 @@
         <textarea
           bind:this={reasonField}
           bind:value={reasonText}
-          aria-label="Reason for denying (optional)"
-          placeholder="Why not? (optional)"
+          aria-label={requireDenyReason ? 'Reason for denying (required)' : 'Reason for denying (optional)'}
+          aria-required={requireDenyReason}
+          aria-describedby={reasonMissing ? reasonHintId : undefined}
+          placeholder={requireDenyReason ? 'Why not?' : 'Why not? (optional)'}
           rows="2"
-          onkeydown={(e) => e.key === 'Escape' && backOut()}
+          onkeydown={reasonKeydown}
           class="w-full resize-none rounded-ripple bg-ripple-surface px-2.5 py-1.5 text-[12.5px] ring-1 ring-ripple-border placeholder:text-ripple-muted-foreground focus:outline-none focus-visible:ring-ripple-error/40"
         ></textarea>
+        {#if reasonMissing}
+          <p id={reasonHintId} class="text-[12px] leading-snug text-ripple-muted-foreground">
+            A reason is needed to {denyLabel.toLowerCase()}.
+          </p>
+        {/if}
         <div class="flex items-center gap-2">
           <button
             type="submit"
-            {disabled}
+            disabled={disabled || reasonMissing}
             class={cn(
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium ring-1',
               'text-ripple-error-text ring-ripple-error/40 transition-colors duration-150 hover:bg-ripple-error/10',

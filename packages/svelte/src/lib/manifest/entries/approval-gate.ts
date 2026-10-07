@@ -23,6 +23,7 @@ export const approvalGateEntry: WidgetManifestEntry = {
     decidedBy: { type: 'string', required: false, description: 'Who decided — shown in the resolved stamp ("Approved by Ada").' },
     disabled: { type: 'boolean', required: false, description: 'Disable the controls (e.g. while the host persists the decision).' },
     askDenyReason: { type: 'boolean', required: false, description: 'Deny first asks for an optional reason, passed to the host as ondeny({ actionId, reason }). Default false.' },
+    requireDenyReason: { type: 'boolean', required: false, description: 'Deny first asks for a reason and Confirm stays disabled until one is typed; ⌘↩ confirms, Return is a newline. Default false.' },
   },
   example: {
     type: 'approval-gate',
