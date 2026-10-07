@@ -115,3 +115,51 @@
   --radius-ripple: var(--ripple-radius);
   --ease-ripple-out: var(--ripple-ease-out);
 }
+
+/* Apple-HIG type scale, shared with paw-enterprise so one class name means one
+   size in the app and on the public site. Names, values and the @utility
+   declarations are a verbatim copy of paw-enterprise's src/styles/global.css;
+   keep them identical. paw-enterprise imports this file before its own copy,
+   so its declarations still come last and win, and identical values make the
+   order moot. The custom properties sit on :where(:root) (zero specificity)
+   so any host :root value wins. Kept out of @theme on purpose: a --text-*
+   token there would also mint a second, functional text-* utility. */
+:where(:root) {
+  --text-title-1: 26px;
+  --text-title-2: 22px;
+  --text-title-3: 17px;
+  --text-headline: 13px;
+  --text-body: 13px;
+  --text-callout: 12px;
+  --text-subheadline: 11px;
+  --text-footnote: 10px;
+  --text-caption-1: 10px;
+  --text-caption-2: 10px;
+
+  --lh-title-1: 32px;
+  --lh-title-2: 28px;
+  --lh-title-3: 22px;
+  --lh-headline: 16px;
+  --lh-body: 16px;
+  --lh-callout: 15px;
+  --lh-subheadline: 14px;
+  --lh-footnote: 13px;
+  --lh-caption: 13px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+}
+
+@utility text-title-1     { font-size: var(--text-title-1); line-height: var(--lh-title-1); font-weight: var(--weight-regular); }
+@utility text-title-2     { font-size: var(--text-title-2); line-height: var(--lh-title-2); font-weight: var(--weight-regular); }
+@utility text-title-3     { font-size: var(--text-title-3); line-height: var(--lh-title-3); font-weight: var(--weight-regular); }
+@utility text-headline    { font-size: var(--text-headline); line-height: var(--lh-headline); font-weight: var(--weight-semibold); }
+@utility text-body        { font-size: var(--text-body); line-height: var(--lh-body); font-weight: var(--weight-regular); }
+@utility text-body-emph   { font-size: var(--text-body); line-height: var(--lh-body); font-weight: var(--weight-medium); }
+@utility text-callout     { font-size: var(--text-callout); line-height: var(--lh-callout); font-weight: var(--weight-regular); }
+@utility text-subheadline { font-size: var(--text-subheadline); line-height: var(--lh-subheadline); font-weight: var(--weight-regular); }
+@utility text-footnote    { font-size: var(--text-footnote); line-height: var(--lh-footnote); font-weight: var(--weight-regular); }
+@utility text-caption-1   { font-size: var(--text-caption-1); line-height: var(--lh-caption); font-weight: var(--weight-regular); }
+@utility text-caption-2   { font-size: var(--text-caption-2); line-height: var(--lh-caption); font-weight: var(--weight-medium); }

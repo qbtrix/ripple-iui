@@ -1,11 +1,11 @@
 // @file widgets/input/Search.test.ts
-// @description NEW 2026-09-27 (canon gaps 2). Behaviour tests for Search's
-//   default suggest mode (unchanged: a combobox whose listbox opens while you
-//   type, "No results" included) and the new `mode="filter"`: a plain search
+// @description Behaviour tests for Search's default suggest mode (a combobox
+//   whose listbox opens while you type, "No results" included, result icons
+//   from the lazily loaded Lucide barrel) and `mode="filter"`: a plain search
 //   box that never opens a listbox, plus the aria-label, autocomplete and
-//   spellcheck passthroughs. Written red first.
+//   spellcheck passthroughs.
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@testing-library/svelte';
+import { render, cleanup, fireEvent, waitFor } from '@testing-library/svelte';
 import Search from './Search.svelte';
 
 afterEach(cleanup);
@@ -62,4 +62,11 @@ describe('Search', () => {
     expect(input.hasAttribute('autocomplete')).toBe(false);
     expect(input.hasAttribute('spellcheck')).toBe(false);
   });
+
+  // The barrel is ~1,600 Svelte modules, so its first import under vitest takes seconds.
+  it('suggest mode draws a result icon named by slug once the icon set loads', async () => {
+    const { container } = render(Search, { value: 'in', results: [{ id: 1, label: 'Inbox', icon: 'inbox' }] });
+    await fireEvent.focus(container.querySelector('input')!);
+    await waitFor(() => expect(container.querySelector('[role="option"] svg')).not.toBeNull(), { timeout: 25000 });
+  }, 30000);
 });
