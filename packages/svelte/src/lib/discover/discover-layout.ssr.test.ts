@@ -21,10 +21,10 @@ import DiscoverTile from './DiscoverTile.svelte';
 import type { DiscoverItem } from './types.js';
 
 /** Server render with Svelte's hydration comments stripped, so the markup reads as served. */
-const render: typeof ssr = (component, options) => {
-  const out = ssr(component, options);
+const render = ((...args: unknown[]) => {
+  const out = (ssr as (...a: unknown[]) => ReturnType<typeof ssr>)(...args);
   return { ...out, body: out.body.replace(/<!--.*?-->/g, '') };
-};
+}) as typeof ssr;
 const snip = (html: string) => createRawSnippet(() => ({ render: () => html }));
 const tiles = snip('<article data-testid="child">tile</article>');
 
