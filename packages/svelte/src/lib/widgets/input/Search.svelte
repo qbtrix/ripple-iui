@@ -1,20 +1,17 @@
-<!-- Updated 2026-09-27 (canon gaps 2): `mode="filter"` makes it a plain search
-     box (role=searchbox) that never opens the results listbox, so a list page
-     can filter in place without a "No results" popover; arrows and Enter are
-     left to the browser there, so a wrapping form still submits. `aria-label`,
-     `autocomplete` and `spellcheck` pass through to the <input> in both modes.
-     The default `mode="suggest"` is unchanged. -->
-<!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
 <!-- src/lib/widgets/input/Search.svelte
-     Updated: 2026-06-09 — a11y: the role="combobox" input now wires
-     aria-controls to the results listbox (which gets a stable id) so it
-     satisfies a11y_role_has_required_aria_props (aria-expanded was already set). -->
+     A search box. `mode="suggest"` (default) is a combobox: its results listbox
+     (stable id, wired through aria-controls) opens on focus with grouped
+     results, arrow keys and Enter. `mode="filter"` is a plain role=searchbox
+     that never opens the listbox, so a list page filters in place and a
+     wrapping form still submits. `aria-label`, `name`, `autocomplete` and
+     `spellcheck` pass through to the <input>. Result icons are Lucide slugs,
+     resolved from a lazily loaded barrel (see getIcon). -->
 <script lang="ts">
+  import type { Component } from 'svelte';
   import type { HTMLInputAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
   import SearchIcon from '@lucide/svelte/icons/search';
   import XIcon from '@lucide/svelte/icons/x';
-  import * as icons from '@lucide/svelte';
 
   type Result = {
     id: string | number;
@@ -49,6 +46,8 @@
      *  search box, no dropdown, no "No results" panel. */
     mode?: 'suggest' | 'filter';
     'aria-label'?: string;
+    /** The input's form field name, for a search that submits a plain GET form. */
+    name?: string;
     autocomplete?: HTMLInputAttributes['autocomplete'];
     spellcheck?: boolean;
   }
@@ -68,6 +67,7 @@
     onselect,
     mode = 'suggest',
     'aria-label': ariaLabel,
+    name,
     autocomplete,
     spellcheck
   }: Props = $props();
@@ -105,13 +105,22 @@
     highlight = 0;
   });
 
+  // Result icons are Lucide slugs, so they need the whole Lucide barrel (~800 KB
+  // that no bundler can tree shake). It loads only once a result names an icon;
+  // the listbox opens on focus, so server markup never shows a result icon.
+  let iconSet = $state<Record<string, Component<any, any, any>> | null>(null);
+  $effect(() => {
+    if (iconSet || !suggest || !results.some((r) => r.icon)) return;
+    import('@lucide/svelte').then((m) => (iconSet = m as unknown as Record<string, Component<any, any, any>>));
+  });
+
   function getIcon(name?: string) {
-    if (!name) return null;
+    if (!name || !iconSet) return null;
     const camel = name
       .split('-')
       .map((p) => (p[0]?.toUpperCase() ?? '') + p.slice(1))
       .join('');
-    return ((icons as unknown) as Record<string, import('svelte').Component<any, any, any>>)[camel] ?? null;
+    return iconSet[camel] ?? null;
   }
 
   function pick(r: Result) {
@@ -165,6 +174,7 @@
       aria-controls={suggest ? listboxId : undefined}
       aria-autocomplete={suggest ? 'list' : undefined}
       aria-label={ariaLabel}
+      {name}
       {autocomplete}
       {spellcheck}
       {placeholder}
