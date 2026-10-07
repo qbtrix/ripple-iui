@@ -1,19 +1,20 @@
 <!-- discover/DiscoverFilters.svelte — the Discover page's sticky type bar: the
-     kind tabs on the left, the Grid / Shelves / List toggle on the right. With
-     callbacks both are ripple's Segmented (radio buttons). When the kind options
-     carry `href`, or `viewHref` is given, that group renders as links in
-     Segmented's own pill markup (aria-current on the selected one), so a
-     server-rendered page filters with JS off. Segmented itself takes no href:
-     it is a spec widget, and its options can be model-authored. The view toggle
-     shows only with `onview` or `viewHref`. The bar paints bg-background; the
-     app adds its glass class through `class`. -->
+     kind tabs on the left, the Grid / Shelves / List toggle on the right. Both
+     groups draw ripple Segmented's size="sm" pill track. With callbacks the
+     segments are radio buttons; when the kind options carry `href`, or
+     `viewHref` is given, that group renders as links (aria-current on the
+     selected one), so a server-rendered page filters with JS off. The track is
+     drawn here rather than through Segmented because Segmented looks option
+     icons up by name in the whole Lucide barrel (~800 KB a consumer cannot tree
+     shake); the view icons here are imported one by one. The view toggle shows
+     only with `onview` or `viewHref`. The bar paints bg-background; the app adds
+     its glass class through `class`. -->
 <script lang="ts">
   import type { Component } from 'svelte';
   import GalleryHorizontal from '@lucide/svelte/icons/gallery-horizontal';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
   import List from '@lucide/svelte/icons/list';
   import { cn } from '$lib/utils.js';
-  import Segmented from '../widgets/input/Segmented.svelte';
   import { DISCOVER_VIEWS, type DiscoverOption, type DiscoverView } from './layout.js';
 
   let {
@@ -35,30 +36,30 @@
     class?: string;
   } = $props();
 
-  const VIEW_META: Record<DiscoverView, { label: string; icon: string; Icon: Component }> = {
-    grid: { label: 'Grid', icon: 'layout-grid', Icon: LayoutGrid },
-    shelves: { label: 'Shelves', icon: 'gallery-horizontal', Icon: GalleryHorizontal },
-    list: { label: 'List', icon: 'list', Icon: List },
+  const VIEW_META: Record<DiscoverView, { label: string; Icon: Component }> = {
+    grid: { label: 'Grid', Icon: LayoutGrid },
+    shelves: { label: 'Shelves', Icon: GalleryHorizontal },
+    list: { label: 'List', Icon: List },
   };
-  // Segmented looks icons up by name; the link pills take the component.
-  const viewOptions = DISCOVER_VIEWS.map((v) => ({ value: v, label: VIEW_META[v].label, icon: VIEW_META[v].icon }));
 
   const kindLinks = $derived(kinds.some((k) => k.href));
-  const viewLinks = $derived(
-    viewHref ? DISCOVER_VIEWS.map((v) => ({ value: v, label: VIEW_META[v].label, href: viewHref(v), Icon: VIEW_META[v].Icon })) : [],
+  const viewOptions = $derived(
+    DISCOVER_VIEWS.map((v) => ({ value: v, label: VIEW_META[v].label, href: viewHref?.(v), Icon: VIEW_META[v].Icon })),
   );
 
-  function pickView(v: unknown) {
+  function pickView(v: string) {
     const next = DISCOVER_VIEWS.find((x) => x === v);
     if (next) onview?.(next);
   }
 </script>
 
-<!-- Segmented's size="sm" track, thumb and segment classes, with <a> segments. -->
-{#snippet pills(options: readonly (DiscoverOption & { Icon?: Component })[], selected: string)}
+<!-- Segmented's size="sm" track, thumb and segment classes. With `onpick` the
+     segments are radios (Segmented's own semantics); without it they are links. -->
+{#snippet pills(options: readonly (DiscoverOption & { Icon?: Component })[], selected: string, onpick?: (value: string) => void)}
   {@const index = options.findIndex((o) => o.value === selected)}
   <div class="flex flex-col gap-1.5">
     <div
+      role={onpick ? 'radiogroup' : undefined}
       class="relative inline-grid h-7 w-fit max-w-full overflow-x-auto rounded-full bg-ripple-border/60 p-0.5 text-[12px] select-none [scrollbar-width:none]"
       style="grid-template-columns: repeat({Math.max(1, options.length)}, 1fr);"
     >
@@ -71,17 +72,21 @@
       {/if}
       {#each options as o (o.value)}
         {@const on = o.value === selected}
-        <a
-          href={o.href}
-          aria-current={on ? 'true' : undefined}
-          class={cn(
-            'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full px-2.5 font-medium whitespace-nowrap transition-colors duration-150 ease-ripple-out',
-            on ? 'text-ripple-surface-foreground' : 'text-ripple-muted-foreground hover:text-ripple-surface-foreground',
-          )}
-        >
-          {#if o.Icon}<o.Icon size={14} />{/if}
-          {o.label}
-        </a>
+        {@const segment = cn(
+          'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full px-2.5 font-medium whitespace-nowrap transition-colors duration-150 ease-ripple-out',
+          on ? 'text-ripple-surface-foreground' : 'text-ripple-muted-foreground hover:text-ripple-surface-foreground',
+        )}
+        {#if onpick}
+          <button type="button" role="radio" aria-checked={on} class={segment} onclick={() => onpick(o.value)}>
+            {#if o.Icon}<o.Icon size={14} />{/if}
+            {o.label}
+          </button>
+        {:else}
+          <a href={o.href} aria-current={on ? 'true' : undefined} class={segment}>
+            {#if o.Icon}<o.Icon size={14} />{/if}
+            {o.label}
+          </a>
+        {/if}
       {/each}
     </div>
   </div>
@@ -90,19 +95,11 @@
 <div class={cn('sticky top-0 z-10 mt-6 border-b border-border bg-background', className)}>
   <div class="mx-auto flex w-full max-w-[1280px] items-center gap-3 overflow-x-auto px-6 py-2.5">
     <div role="group" aria-label="Filter by type">
-      {#if kindLinks}
-        {@render pills(kinds, kind)}
-      {:else}
-        <Segmented size="sm" options={kinds.map((k) => ({ value: k.value, label: k.label }))} value={kind} onchange={(v) => onkind?.(String(v))} />
-      {/if}
+      {@render pills(kinds, kind, kindLinks ? undefined : (v) => onkind?.(v))}
     </div>
     {#if viewHref || onview}
       <div class="ml-auto shrink-0" role="group" aria-label="View">
-        {#if viewHref}
-          {@render pills(viewLinks, view)}
-        {:else}
-          <Segmented size="sm" options={viewOptions} value={view} onchange={pickView} />
-        {/if}
+        {@render pills(viewOptions, view, viewHref ? undefined : pickView)}
       </div>
     {/if}
   </div>

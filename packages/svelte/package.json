@@ -24,6 +24,11 @@
     "url": "https://github.com/qbtrix/ripple-iui/issues"
   },
   "type": "module",
+  "sideEffects": [
+    "**/*.css",
+    "./dist/editor/core/inline-editor-source.js",
+    "./dist/editor/core/inline-editor-tiptap.js"
+  ],
   "publishConfig": {
     "access": "public"
   },

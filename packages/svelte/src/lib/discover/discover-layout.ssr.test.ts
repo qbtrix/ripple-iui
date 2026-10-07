@@ -65,11 +65,11 @@ describe('DiscoverFilters', () => {
     expect(body).toContain('<svg');
   });
 
-  it('with callbacks renders the Segmented radios the app uses', () => {
+  it('with callbacks renders radio buttons in the Segmented track, view icons included', () => {
     const { body } = render(DiscoverFilters, { props: { kinds: KINDS, kind: 'all', onkind: () => {}, view: 'grid', onview: () => {} } });
     expect(body).toContain('role="radiogroup"');
-    expect(body).toMatch(/role="radio"[^>]*aria-checked="true"/);
-    expect(body).toContain(' Shelves ');
+    expect(body).toMatch(/<button type="button" role="radio"[^>]*aria-checked="true"/);
+    expect(body).toMatch(/<\/svg>(<!--[^>]*-->)* Shelves<\/button>/);
     expect(body).not.toContain('<a ');
   });
 
