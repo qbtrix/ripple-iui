@@ -1,7 +1,7 @@
 ---
 {
   "title": "C4 Node Components Barrel — Exports All SvelteFlow Custom Node Types",
-  "summary": "widgets/c4/nodes/index.ts re-exports the eight SvelteFlow node components the C4 widget registers: person, system, container, database, queue, component, group (boundary) and code (the semantic-zoom code panel).",
+  "summary": "widgets/c4/nodes/index.ts exports the eight C4 node components (person, system, container, database, queue, component, group for a boundary, code for the semantic-zoom code panel) and C4_VIEWS, the same components by view name.",
   "concepts": [
     "barrel exports",
     "SvelteFlow",
@@ -31,24 +31,18 @@
 
 ## Overview
 
-`lib/widgets/c4/nodes/index.ts` gathers the node components so `C4Diagram` registers them from one import.
+`lib/widgets/c4/nodes/index.ts` gathers the node components and maps each to its view name in `C4_VIEWS`. `C4Diagram` registers `C4_VIEWS` as SvelteFlow node types for the legacy diagram, plus `C4ViewNode` under `c4` for semantic zoom.
 
 ## Exports
 
 ```typescript
-export { default as C4PersonNode }    from './C4PersonNode.svelte';
-export { default as C4SystemNode }    from './C4SystemNode.svelte';
-export { default as C4ContainerNode } from './C4ContainerNode.svelte';
-export { default as C4DatabaseNode }  from './C4DatabaseNode.svelte';
-export { default as C4QueueNode }     from './C4QueueNode.svelte';
-export { default as C4ComponentNode } from './C4ComponentNode.svelte';
-export { default as C4GroupNode }     from './C4GroupNode.svelte';
-export { default as C4CodeNode }      from './C4CodeNode.svelte';
+export { C4PersonNode, C4SystemNode, C4ContainerNode, C4DatabaseNode, C4QueueNode, C4ComponentNode, C4GroupNode, C4CodeNode };
+export const C4_VIEWS = { person, system, container, database, queue, component, group, code }; // the components above
 ```
 
 ## How they are used
 
-`C4Diagram` maps SvelteFlow node types to them: `person`, `system`, `container`, `database`, `queue`, `component`, `group` and `code`. `getNodeType` picks the type for each element; `code` is only produced by semantic zoom, for an expanded code element with an excerpt.
+In the legacy diagram each element's SvelteFlow type is its view (`getNodeType` picks it). In semantic zoom every node has the type `c4` and its view in `data.view`: `C4ViewNode` (not exported from the barrel) draws that view's component, so an element that opens from a card into a boundary (`group`) or code panel (`code`) swaps its component without SvelteFlow re-measuring the map. The wrapper keeps the class the view's own type would give it (`svelte-flow__node-group`, ...), so per-view styles still apply. `code` is only produced by semantic zoom, for an expanded code element with an excerpt.
 
 ## Shared rules
 

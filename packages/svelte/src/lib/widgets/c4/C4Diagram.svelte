@@ -325,8 +325,8 @@
   let leaving = $state.raw<Node[]>([]);
   /** True while nodes glide between layouts: edges and markers sit it out. */
   let moving = $state(false);
-  /** True while a layout is computing: the camera holds until it lands, so it moves once. */
-  let laying = $state(false);
+  /** The layout inputs (diagram, expanded, scope) of the last layout that landed or failed. */
+  let landedInputs = $state.raw<readonly unknown[] | null>(null);
   const MOVE_MS = 560;
   /** Alternates the resize animation's name, so each move restarts it (markResized). */
   let resizeTurn: 'a' | 'b' = 'a';
@@ -334,6 +334,13 @@
 
   // Keyed on strings: a host deriving `expanded` per frame must not re-run ELK per frame.
   const expandedKey = $derived(expanded === undefined ? null : expanded.join('\n'));
+  /** True while a layout is computing: the camera holds until it lands, so it moves once. Derived
+   *  from the props, so the camera sees it in the same flush that changed them, whichever effect
+   *  runs first (set by the layout effect, a camera effect could still aim at the old layout). */
+  const laying = $derived.by(() => {
+    const inputs = [diagram, expandedKey, expandedKey === null ? undefined : scopeId];
+    return !landedInputs || inputs.some((v, i) => v !== landedInputs![i]);
+  });
 
   function beginMove(prev: Node[], next: Node[], prevRects: Map<string, LayoutPosition> | undefined) {
     clearTimeout(settleTimer);
@@ -365,7 +372,7 @@
     let cancelled = false;
     if (!hasLayout) layoutReady = false;
     layoutError = null;
-    laying = true;
+    const inputs = [currentDiagram, ek, scope];
 
     // Handlers read the props when called, so the layout never tracks their identity. Without a
     // host ondrilldown a drillable card clicks instead, as in the non-semantic path.
@@ -398,14 +405,14 @@
         semanticInfo = semantic;
         layoutReady = true;
         hasLayout = true;
-        laying = false;
+        landedInputs = inputs;
       })
       .catch((err) => {
         if (cancelled) return;
         console.error('[C4Diagram] Layout failed:', err);
         layoutError = 'Diagram layout failed. Please check your data.';
         layoutReady = true; // Show error state
-        laying = false;
+        landedInputs = inputs;
       });
 
     return () => { cancelled = true; };
