@@ -157,6 +157,8 @@ export interface C4NodeData {
   ports?: C4PortView[];
   /** Semantic zoom: the excerpt an expanded code element's panel shows. */
   code?: C4Code;
+  /** Semantic zoom: how the element is drawn (a card's node type, `group` or `code`). */
+  view?: string;
   /** Original C4 element for click handlers */
   element: C4Element;
   /** Callback when element is clicked */

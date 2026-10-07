@@ -1,7 +1,13 @@
 // elk-layout.ts — ELK.js layered auto-layout for C4 diagrams, and the mapping
 // from a C4 element to its SvelteFlow node type. An element with a non-empty
 // `containers` array becomes a nested parent box (a boundary) whatever its
-// `kind`. ELK is instantiated per call: a shared instance raced between layouts.
+// `kind`.
+//
+// Every layout goes through runElk: in a browser it runs in one shared module
+// worker (elk-worker.js), so a 200-element layout no longer blocks frames;
+// where no worker can start (SSR, jsdom) or the worker dies, it runs on the
+// main thread, with a fresh ELK per call (a shared instance raced between
+// layouts).
 //
 // computeElkGraph also returns ELK's orthogonal edge routes (absolute points,
 // keyed by the relationship's index in `diagram.relationships`) and a box for
@@ -17,6 +23,9 @@ import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.j
 // same mistake.
 import type { C4Diagram, C4Element, C4System, C4Container, C4Relationship } from './types.js';
 import { childrenOf, type C4Tree, type LiftedEdge, type Visibility } from './semantic.js';
+// No-op on a page. It puts the worker module in a dev server's module graph, which is what lets
+// Vite serve the worker URL when this package is a linked (file:) copy outside the host's root.
+import './elk-worker.js';
 
 
 // Default node dimensions by element shape
@@ -58,6 +67,73 @@ export function edgeLabelText(r: C4Relationship): string {
 
 /** ELK needs a label's size up front; this matches the 11px/500 pill C4Diagram draws. */
 const labelSize = (text: string) => ({ width: Math.ceil(text.length * 6.3) + 16, height: 20 });
+
+/** What runElk needs of a Worker; tests pass a fake. */
+export type ElkWorkerLike = Pick<Worker, 'postMessage' | 'addEventListener'>;
+
+let makeWorker: () => ElkWorkerLike | null = () =>
+  typeof Worker === 'undefined'
+    ? null
+    : new Worker(new URL('./elk-worker.js', import.meta.url), { type: 'module' });
+/** undefined: not started yet; null: none (no Worker here, or it died). */
+let worker: ElkWorkerLike | null | undefined;
+const pending = new Map<number, { resolve: (g: ElkNode) => void; reject: (e: unknown) => void }>();
+let seq = 0;
+const WORKER_LOST = Symbol('elk worker lost');
+const ELK_ALGORITHMS = ['layered', 'stress', 'mrtree', 'radial', 'force', 'disco', 'sporeOverlap', 'sporeCompaction', 'rectpacking'];
+
+/** Swap how the layout worker is made (null: main thread only) and drop the running one. For tests. */
+export function setElkWorkerFactory(factory: () => ElkWorkerLike | null): void {
+  makeWorker = factory;
+  worker = undefined;
+}
+
+function startWorker(): ElkWorkerLike | null {
+  if (worker !== undefined) return worker;
+  try {
+    worker = makeWorker();
+  } catch {
+    worker = null;
+  }
+  const w = worker;
+  // The same algorithms elkjs registers when it builds a worker itself; replied to, never awaited.
+  w?.postMessage({ id: 0, cmd: 'register', algorithms: ELK_ALGORITHMS });
+  w?.addEventListener('message', (e) => {
+    const { id, data, error } = ((e as MessageEvent).data ?? {}) as { id?: number; data?: ElkNode; error?: unknown };
+    const p = id === undefined ? undefined : pending.get(id);
+    if (!p || id === undefined) return;
+    pending.delete(id);
+    if (error !== undefined) p.reject(error);
+    else p.resolve(data as ElkNode);
+  });
+  // A worker that fails to load or throws is done for: what it held, and every later layout,
+  // runs on the main thread.
+  // ponytail: any error retires the worker for the page; restart it if one bad graph ever matters.
+  w?.addEventListener('error', () => {
+    if (worker === w) worker = null;
+    const lost = [...pending.values()];
+    pending.clear();
+    for (const p of lost) p.reject(WORKER_LOST);
+  });
+  return w;
+}
+
+/** Lay out an ELK graph: in the worker when there is one, else on the main thread. */
+export async function runElk(graph: ElkNode): Promise<ElkNode> {
+  const w = startWorker();
+  if (w) {
+    try {
+      return await new Promise<ElkNode>((resolve, reject) => {
+        const id = ++seq;
+        pending.set(id, { resolve, reject });
+        w.postMessage({ id, cmd: 'layout', graph, layoutOptions: {}, options: {} });
+      });
+    } catch (err) {
+      if (err !== WORKER_LOST) throw err;
+    }
+  }
+  return new ELK().layout(graph);
+}
 
 /** Determine ELK node dimensions for a given C4 element */
 export function getNodeDimensions(el: C4Element): { width: number; height: number } {
@@ -103,7 +179,6 @@ export async function computeElkGraph(
     layerSpacing = 56,
   } = options;
 
-  const elk = new ELK();
   const positions = new Map<string, LayoutPosition>();
   const routes = new Map<number, EdgeRoute>();
 
@@ -194,7 +269,7 @@ export async function computeElkGraph(
   };
 
   try {
-    const read = readLayout(await elk.layout(graph));
+    const read = readLayout(await runElk(graph));
     for (const [id, box] of read.positions) positions.set(id, box);
     for (const [id, e] of read.edges) {
       const index = Number(id.slice('edge-'.length));
@@ -356,7 +431,7 @@ export async function computeSemanticLayout(
     edges: elkEdges,
   };
 
-  const read = readLayout(await new ELK().layout(graph));
+  const read = readLayout(await runElk(graph));
   const routes = new Map<string, SemanticRoute>();
   for (const [key, e] of read.edges) {
     const route: SemanticRoute = { points: e.points };

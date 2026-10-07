@@ -9,7 +9,7 @@
 // objects it was given, so a diagram without the live props renders exactly as
 // it did before they existed.
 
-import type { Node } from '@xyflow/svelte';
+import type { Node, Position } from '@xyflow/svelte';
 import type { C4Relationship, C4Status } from './types.js';
 
 /** Legend order: what needs attention first; `planned` (not built yet) last. */
@@ -163,10 +163,63 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t:
   };
 }
 
+/**
+ * The --c4-zoom a card can see. Every reader clamps it into [0.5, 1] (names) or [0.6, 1]
+ * (technology, edge labels), so outside [0.5, 1] it changes nothing on screen; two decimals keep a
+ * camera ease from rewriting it, and restyling the whole map, on every frame.
+ */
+export function zoomVar(zoom: number): string {
+  return String(Math.round(Math.min(1, Math.max(0.5, zoom)) * 100) / 100);
+}
+
 /** The camera's curve: the same as --ripple-ease-out, so camera and layout move as one. */
 export const rippleEase = cubicBezier(0.23, 1, 0.32, 1);
 
 export type Rect = { x: number; y: number; width: number; height: number };
+
+/**
+ * What SvelteFlow would otherwise measure, given up front: a node's size (its wrapper is sized to
+ * the ELK box; rounded as offsetWidth rounds, so the first measure finds no change) and the three
+ * handles every C4 node renders (target top and left, source bottom; 6px plus a 1px border, centred
+ * on the edge). Without `measured`, SvelteFlow drops a node's handle bounds on every new nodes array,
+ * leaving every edge unplaceable, so each layout remounted every edge; without `handles`, a new
+ * node's first measure is one more whole-map pass.
+ */
+export function presized(box: { width: number; height: number }): Pick<Node, 'measured' | 'handles'> {
+  const w = Math.round(box.width);
+  const h = Math.round(box.height);
+  const s = 8;
+  const at = (type: 'source' | 'target', position: string, x: number, y: number) =>
+    ({ type, position: position as Position, x: x - s / 2, y: y - s / 2, width: s, height: s });
+  return {
+    measured: { width: w, height: h },
+    handles: [at('target', 'top', w / 2, 0), at('target', 'left', 0, h / 2), at('source', 'bottom', w / 2, h)],
+  };
+}
+
+/**
+ * Nodes whose box changed size between two layouts, marked to grow from the old size: their card
+ * and status ring animate (C4Diagram's c4-size / c4-ring keyframes; `turn` alternates the name so
+ * every move restarts them) while the SvelteFlow wrapper takes the new size at once. Sizing the
+ * wrapper itself would make SvelteFlow re-measure it, and re-lay every edge, on every frame.
+ */
+export function markResized(
+  nodes: Node[],
+  prev: ReadonlyMap<string, Rect>,
+  next: ReadonlyMap<string, Rect>,
+  turn: 'a' | 'b'
+): Node[] {
+  return nodes.map((n) => {
+    const a = prev.get(n.id);
+    const b = next.get(n.id);
+    if (!a || !b || (a.width === b.width && a.height === b.height)) return n;
+    return {
+      ...n,
+      style: `${n.style ? `${n.style};` : ''}--c4-from-w: ${a.width}px; --c4-from-h: ${a.height}px;`,
+      domAttributes: { ...n.domAttributes, 'data-c4-resized': turn },
+    };
+  });
+}
 
 export function unionRect(rects: Iterable<Rect>): Rect | null {
   let out: Rect | null = null;

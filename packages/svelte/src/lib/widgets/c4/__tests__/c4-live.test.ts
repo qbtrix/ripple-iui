@@ -1,12 +1,24 @@
 // c4-live.test.ts — the live layer of the C4 widget: explicit `kind`, the node
 // decoration behind `status`/`selectedId`, the legend's status list, the
-// camera plan behind `focusId`/`follow`, and ELK's edge routes with the
-// rounded path drawn through them. Pure functions, no DOM.
+// camera plan behind `focusId`/`follow`, ELK's edge routes with the rounded
+// path drawn through them, and what keeps a live map cheap to redraw (the
+// zoom variable's value, the size handed to SvelteFlow up front, the resize
+// marks). Pure functions, no DOM.
 
 import { describe, it, expect } from 'vitest';
 import type { Node } from '@xyflow/svelte';
 import { getNodeType, computeElkLayout, computeElkGraph } from '../elk-layout.js';
-import { decorateNodes, statusesPresent, nodeSetKey, planCamera, roundedPath, STATUS_LABELS } from '../live.js';
+import {
+  decorateNodes,
+  markResized,
+  nodeSetKey,
+  planCamera,
+  presized,
+  roundedPath,
+  statusesPresent,
+  zoomVar,
+  STATUS_LABELS,
+} from '../live.js';
 import type { C4Diagram, C4System, C4Component } from '$lib/widgets/c4/types.js';
 
 const node = (id: string, extra: Partial<Node> = {}): Node => ({
@@ -194,5 +206,44 @@ describe('roundedPath', () => {
 
   it('shrinks the radius on a short jog', () => {
     expect(roundedPath([{ x: 0, y: 0 }, { x: 0, y: 6 }, { x: 30, y: 6 }], 8)).toBe('M 0 0 L 0 3 Q 0 6 3 6 L 30 6');
+  });
+});
+
+describe('zoomVar', () => {
+  it('clamps to the range the cards read and rounds to two decimals', () => {
+    expect(zoomVar(0.15)).toBe('0.5');
+    expect(zoomVar(1.3)).toBe('1');
+    expect(zoomVar(0.734)).toBe('0.73');
+    expect(zoomVar(0.7341)).toBe(zoomVar(0.7339));
+  });
+});
+
+describe('presized', () => {
+  it('gives the rounded size and the three handles every C4 node draws', () => {
+    const { measured, handles } = presized({ width: 200.4, height: 109.6 });
+    expect(measured).toEqual({ width: 200, height: 110 });
+    expect(handles?.map(({ type, position, x, y }) => ({ type, position, x, y }))).toEqual([
+      { type: 'target', position: 'top', x: 96, y: -4 },
+      { type: 'target', position: 'left', x: -4, y: 51 },
+      { type: 'source', position: 'bottom', x: 96, y: 106 },
+    ]);
+  });
+});
+
+const box = (width: number, height: number) => ({ x: 0, y: 0, width, height });
+
+describe('markResized', () => {
+  it('leaves a node whose size held, or that is new, as the same object', () => {
+    const nodes = [node('a'), node('b')];
+    const out = markResized(nodes, new Map([['a', box(200, 110)]]), new Map([['a', box(200, 110)], ['b', box(10, 10)]]), 'a');
+    expect(out[0]).toBe(nodes[0]);
+    expect(out[1]).toBe(nodes[1]);
+  });
+
+  it('marks a resized node to grow from its old size, keeping its own style and attributes', () => {
+    const n = node('g', { style: 'width: 400px; height: 300px', domAttributes: { 'data-c4-ghost': '' } });
+    const [out] = markResized([n], new Map([['g', box(200, 110)]]), new Map([['g', box(400, 300)]]), 'b');
+    expect(out.style).toBe('width: 400px; height: 300px;--c4-from-w: 200px; --c4-from-h: 110px;');
+    expect(out.domAttributes).toEqual({ 'data-c4-ghost': '', 'data-c4-resized': 'b' });
   });
 });

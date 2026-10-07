@@ -75,7 +75,7 @@ With `kind`, the shape follows it (`code` draws as a component card labelled Cod
 
 ## C4NodeData
 
-The payload on each SvelteFlow node's `data`: display fields (`name`, `description`, `technology`, `external`, `subtype`, `kind`, `kb_article`, `tags`), `drillable`, `diagramLevel`, the original `element`, the `onclick` / `ondrilldown` callbacks, and in semantic zoom `ports` (scope chips) and `code` (the panel excerpt). `LayoutNode` is an internal `{ id, x, y, width, height }` box.
+The payload on each SvelteFlow node's `data`: display fields (`name`, `description`, `technology`, `external`, `subtype`, `kind`, `kb_article`, `tags`), `drillable`, `diagramLevel`, the original `element`, the `onclick` / `ondrilldown` callbacks, and in semantic zoom `ports` (scope chips) and `code` (the panel excerpt). `LayoutNode` is an internal `{ id, x, y, width, height }` box. Under semantic zoom the payload also carries `view`, how the element is drawn (a card's node type, `group` for an open boundary, `code` for a code panel). Every semantic node has the SvelteFlow type `c4`, and `C4ViewNode` draws this view.
 
 ## Known gaps
 

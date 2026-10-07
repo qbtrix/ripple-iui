@@ -6,7 +6,9 @@
   Live layer (all optional; absent, the widget behaves as it always did):
   `status` paints a node's state through a `data-c4-status` attribute on its
   SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves;
-  `planned` draws a blueprint: dashed outline, no fill, content dimmed),
+  `planned` draws a blueprint: dashed outline, no fill, content dimmed;
+  written straight to the wrappers, since a new nodes array makes SvelteFlow
+  re-lay every edge),
   `markers` pins dots to nodes, `selectedId` controls selection, and
   `focusId` + `follow` keep the camera on one node. A user pan or zoom (the
   zoom buttons and the minimap included) calls `onmanualcamera`, so a host can
@@ -25,8 +27,12 @@
   element with an excerpt opens as a code panel), `scopeId` ghosts what lies
   outside it, edges lift onto drawn siblings with port badges and counts, and
   markers on hidden elements roll up to their drawn ancestor (semantic.ts,
-  semantic-flow.ts). Between layouts nodes glide and resize with the ripple
-  ease, leaving nodes fade where they were, edges and markers sit out the move,
+  semantic-flow.ts). Every semantic node is one SvelteFlow type (C4ViewNode
+  draws data.view), so a node that opens or closes swaps its component without
+  SvelteFlow re-measuring the map. Between layouts nodes glide and resize with the ripple
+  ease, leaving nodes fade where they were (and stay, hidden, until the next
+  layout replaces them: removing them alone is another whole-map pass), edges
+  and markers sit out the move,
   and the camera eases to the new frame; all instant under reduced motion.
   Without `expanded` none of this runs and the widget renders as before.
 -->
@@ -35,23 +41,17 @@
   import type { Node, Edge, NodeTypes, EdgeTypes } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
-  import {
-    C4PersonNode,
-    C4SystemNode,
-    C4ContainerNode,
-    C4DatabaseNode,
-    C4QueueNode,
-    C4ComponentNode,
-    C4GroupNode,
-  } from './nodes/index.js';
+  import { C4_VIEWS } from './nodes/index.js';
+  import C4ViewNode from './nodes/C4ViewNode.svelte';
   import C4LiveLayer from './C4LiveLayer.svelte';
   import C4Edge from './C4Edge.svelte';
-  import { C4CodeNode } from './nodes/index.js';
   import { untrack } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
   import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode, type LayoutPosition } from './elk-layout.js';
   import {
     decorateNodes,
+    markResized,
+    presized,
     nodeSetKey,
     statusesPresent,
     unionRect,
@@ -60,7 +60,7 @@
     edgeLook,
   } from './live.js';
   import { liftMarkers, representative, type C4Tree, type Visibility } from './semantic.js';
-  import { buildSemanticFlow } from './semantic-flow.js';
+  import { buildSemanticFlow, VIEW_NODE } from './semantic-flow.js';
   import { activateNode } from './activate.js';
   // From types.ts, NOT the barrel, and aliased: this component is itself named
   // C4Diagram, and svelte-package emits `declare const C4Diagram` plus
@@ -113,17 +113,10 @@
     scopeId,
   }: Props = $props();
 
-  // Register all C4 node types for SvelteFlow
-  const nodeTypes: NodeTypes = {
-    person: C4PersonNode as any,
-    system: C4SystemNode as any,
-    container: C4ContainerNode as any,
-    database: C4DatabaseNode as any,
-    queue: C4QueueNode as any,
-    component: C4ComponentNode as any,
-    group: C4GroupNode as any,
-    code: C4CodeNode as any,
-  };
+  // Every C4 view as a SvelteFlow node type (the legacy diagram), plus semantic zoom's one type.
+  const nodeTypes = { ...C4_VIEWS, [VIEW_NODE]: C4ViewNode } as unknown as NodeTypes;
+  /** How a node is drawn: its view under semantic zoom, else its type. */
+  const viewOf = (n: Node) => (n.data as unknown as C4NodeData).view ?? n.type;
 
   const edgeTypes: EdgeTypes = { c4: C4Edge as any };
 
@@ -287,6 +280,7 @@
         // Every node takes its ELK box, so ELK's edge routes meet the card edges.
         width: pos.width,
         height: pos.height,
+        ...presized(pos),
         // Group nodes need explicit dimensions for SvelteFlow to render the bounding box
         ...(isGroup ? { style: `width: ${pos.width}px; height: ${pos.height}px;` } : {}),
         ...(parentId ? { parentId } : {}),
@@ -331,11 +325,22 @@
   let leaving = $state.raw<Node[]>([]);
   /** True while nodes glide between layouts: edges and markers sit it out. */
   let moving = $state(false);
+  /** The layout inputs (diagram, expanded, scope) of the last layout that landed or failed. */
+  let landedInputs = $state.raw<readonly unknown[] | null>(null);
   const MOVE_MS = 560;
+  /** Alternates the resize animation's name, so each move restarts it (markResized). */
+  let resizeTurn: 'a' | 'b' = 'a';
   let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
   // Keyed on strings: a host deriving `expanded` per frame must not re-run ELK per frame.
   const expandedKey = $derived(expanded === undefined ? null : expanded.join('\n'));
+  /** True while a layout is computing: the camera holds until it lands, so it moves once. Derived
+   *  from the props, so the camera sees it in the same flush that changed them, whichever effect
+   *  runs first (set by the layout effect, a camera effect could still aim at the old layout). */
+  const laying = $derived.by(() => {
+    const inputs = [diagram, expandedKey, expandedKey === null ? undefined : scopeId];
+    return !landedInputs || inputs.some((v, i) => v !== landedInputs![i]);
+  });
 
   function beginMove(prev: Node[], next: Node[], prevRects: Map<string, LayoutPosition> | undefined) {
     clearTimeout(settleTimer);
@@ -349,12 +354,11 @@
       const r = prevRects?.get(n.id);
       if (nextIds.has(n.id) || !r) return [];
       // Absolute and unparented: its parent may be gone or shrinking.
-      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: 'c4-leaving', selectable: false, focusable: false, zIndex: 1000, domAttributes: undefined }];
+      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: `${n.class ?? ''} c4-leaving`, selectable: false, focusable: false, zIndex: 1000, domAttributes: { 'aria-hidden': 'true' } }];
     });
     moving = true;
     settleTimer = setTimeout(() => {
       moving = false;
-      leaving = [];
     }, MOVE_MS + 60);
   }
 
@@ -368,6 +372,7 @@
     let cancelled = false;
     if (!hasLayout) layoutReady = false;
     layoutError = null;
+    const inputs = [currentDiagram, ek, scope];
 
     // Handlers read the props when called, so the layout never tracks their identity. Without a
     // host ondrilldown a drillable card clicks instead, as in the non-semantic path.
@@ -387,18 +392,27 @@
     job
       .then(({ nodes, edges, semantic }) => {
         if (cancelled) return;
-        if (semantic) beginMove(flowNodes, nodes, semanticInfo?.rects);
+        if (semantic) {
+          const prevRects = semanticInfo?.rects;
+          if (prevRects && flowNodes.length > 0 && !prefersReducedMotion.current) {
+            resizeTurn = resizeTurn === 'a' ? 'b' : 'a';
+            nodes = markResized(nodes, prevRects, semantic.rects, resizeTurn);
+          }
+          beginMove(flowNodes, nodes, prevRects);
+        } else leaving = [];
         flowNodes = nodes;
         flowEdges = edges;
         semanticInfo = semantic;
         layoutReady = true;
         hasLayout = true;
+        landedInputs = inputs;
       })
       .catch((err) => {
         if (cancelled) return;
         console.error('[C4Diagram] Layout failed:', err);
         layoutError = 'Diagram layout failed. Please check your data.';
         layoutReady = true; // Show error state
+        landedInputs = inputs;
       });
 
     return () => { cancelled = true; };
@@ -406,8 +420,27 @@
 
   // ---- Live layer ----
   const shownNodes = $derived(
-    decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { status, selectedId })
+    decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { selectedId })
   );
+  // SvelteFlow writes its nodes back (a re-measure, a fitView, a click selection). Into an unbound
+  // prop that write is kept as a deep $state proxy, so every node reads back as a new object and
+  // SvelteFlow rebuilds every node and edge. Bound, the write lands here raw, so only the nodes it
+  // changed are new. The next layout or decoration replaces it (a writable derived).
+  let boundNodes = $derived(shownNodes);
+  // Live status as a data attribute on each node wrapper, written to the DOM: a status change
+  // must not hand SvelteFlow a new nodes array (it re-lays every edge). Re-run when nodes mount.
+  let canvas = $state<HTMLElement>();
+  $effect(() => {
+    const st = status ?? {};
+    void shownNodes;
+    if (!canvas) return;
+    for (const el of canvas.querySelectorAll<HTMLElement>('.svelte-flow__node')) {
+      const s = el.dataset.id ? st[el.dataset.id] : undefined;
+      if (s) {
+        if (el.dataset.c4Status !== s) el.dataset.c4Status = s;
+      } else if (el.dataset.c4Status) delete el.dataset.c4Status;
+    }
+  });
   const nodeIds = $derived(nodeSetKey(flowNodes));
   const legendStatuses = $derived(statusesPresent(status, nodeIds.split('\n')));
   const shownMarkers = $derived(
@@ -418,8 +451,14 @@
   // Following, it frames the focus (its drawn ancestor if hidden) and refits when
   // that box changes; manually, it frames the open code panel or the scope and
   // refits only when what is drawn, the scope or the open panel changes.
+  // While a layout computes it holds the last frame: a new focus or scope read
+  // against the old layout would aim at a stale box, then move again on landing.
+  // Follow passes through: a drill that turns follow off lets go now, so the
+  // landing moves the camera to what the drill opened.
+  let lastFrame: { key: string; rect: LayoutPosition | null; follow: boolean } | undefined;
   const frame = $derived.by(() => {
-    if (!semanticInfo) return undefined;
+    if (laying && lastFrame) return lastFrame.follow === !!follow ? lastFrame : { ...lastFrame, follow: !!follow };
+    if (!semanticInfo) return (lastFrame = undefined);
     const { tree, vis, rects } = semanticInfo;
     const panels = [...vis.panels];
     const target =
@@ -433,7 +472,7 @@
     rect ??= unionRect(rects.values());
     const r = rect ? [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(',') : '';
     const key = follow ? `F|${target}|${r}` : `M|${nodeIds}|${scopeId ?? ''}|${panels.join(',')}`;
-    return { key, rect, follow: !!follow };
+    return (lastFrame = { key, rect, follow: !!follow });
   });
 
   // A user gesture carries its DOM event; programmatic moves (fitView, the
@@ -466,7 +505,7 @@
     const node = id ? flowNodes.find((n) => n.id === id) : undefined;
     if (!node) return;
     event.preventDefault();
-    activateNode(node.type, node.data as unknown as C4NodeData);
+    activateNode(viewOf(node), node.data as unknown as C4NodeData);
   }
 </script>
 
@@ -492,6 +531,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
+    bind:this={canvas}
     class={semanticInfo ? 'c4-canvas c4-semantic' : 'c4-canvas'}
     data-c4-moving={moving ? '' : undefined}
     onpointerdowncapture={onCanvasGesture}
@@ -514,7 +554,7 @@
       </div>
     {:else}
       <SvelteFlow
-        nodes={shownNodes}
+        bind:nodes={() => boundNodes, (written) => (boundNodes = written)}
         edges={flowEdges}
         {nodeTypes}
         {edgeTypes}
@@ -547,7 +587,7 @@
           position="bottom-left"
           width={160}
           height={110}
-          nodeColor={(node) => (node.type === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
+          nodeColor={(node) => (node.class?.includes('c4-leaving') ? 'transparent' : viewOf(node) === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
           nodeBorderRadius={4}
         />
       </SvelteFlow>
@@ -972,10 +1012,44 @@
   .c4-semantic :global(.svelte-flow__node) {
     transition:
       transform 560ms var(--ripple-ease-out),
-      width 560ms var(--ripple-ease-out),
-      height 560ms var(--ripple-ease-out),
       opacity 280ms var(--ripple-ease-out);
     animation: c4-node-in 360ms var(--ripple-ease-out) 140ms backwards;
+  }
+
+  /* A node whose box changed size (markResized): the wrapper takes the new size
+     at once (resizing it per frame would re-measure it and re-lay every edge
+     per frame) while its card and status ring grow from the old size. Two
+     names, alternated per layout, so every move restarts the animation. */
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='a'] > :not(.c4-handle)) {
+    animation: c4-size-a 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='b'] > :not(.c4-handle)) {
+    animation: c4-size-b 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='a'])::after {
+    animation: c4-ring-a 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='b'])::after {
+    animation: c4-ring-b 560ms var(--ripple-ease-out);
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='a'][data-c4-status='changing'])::after {
+    animation: c4-ring-a 560ms var(--ripple-ease-out), c4-breathe 2.4s ease-in-out infinite;
+  }
+  .c4-semantic :global(.svelte-flow__node[data-c4-resized='b'][data-c4-status='changing'])::after {
+    animation: c4-ring-b 560ms var(--ripple-ease-out), c4-breathe 2.4s ease-in-out infinite;
+  }
+
+  @keyframes c4-size-a {
+    from { width: var(--c4-from-w); height: var(--c4-from-h); }
+  }
+  @keyframes c4-size-b {
+    from { width: var(--c4-from-w); height: var(--c4-from-h); }
+  }
+  @keyframes c4-ring-a {
+    from { width: calc(var(--c4-from-w) + 2px); height: calc(var(--c4-from-h) + 2px); }
+  }
+  @keyframes c4-ring-b {
+    from { width: calc(var(--c4-from-w) + 2px); height: calc(var(--c4-from-h) + 2px); }
   }
 
   @keyframes c4-node-in {
@@ -1049,7 +1123,11 @@
   .c4-canvas :global(.svelte-flow__node[data-c4-status])::after {
     content: '';
     position: absolute;
-    inset: -1px;
+    /* inset: -1px, as a size the resize animation can grow from (c4-ring). */
+    top: -1px;
+    left: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
     border-radius: var(--c4-r);
     border: 1.5px solid var(--c4-tone);
     pointer-events: none;

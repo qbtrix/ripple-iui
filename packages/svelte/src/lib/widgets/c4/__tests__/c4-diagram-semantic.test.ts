@@ -3,7 +3,9 @@
 // its outside, a code element opens as a panel with true line numbers and its change tinted, the
 // Before/After switch works, the scope lists far connections as chips, markers roll up, `planned`
 // and the scope ghost stay independent, keyboard activation does what a click does (a click when
-// the host has no ondrilldown), and a repeated id shows the error state rather than hanging.
+// the host has no ondrilldown), an element that opens swaps its view inside one node wrapper, a click
+// selects when selection is uncontrolled (SvelteFlow's write comes back through the nodes binding),
+// and a repeated id shows the error state rather than hanging.
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor, fireEvent } from '@testing-library/svelte';
@@ -160,6 +162,28 @@ describe('C4Diagram semantic zoom', { timeout: 30000 }, () => {
     await fireEvent.keyDown(w, { key: 'Enter' });
     await fireEvent.keyDown(w, { key: ' ' });
     expect(onclick.mock.calls).toEqual([['pe'], ['pe'], ['pe']]);
+  });
+
+  it('opens an element inside the same node wrapper, swapping its view', async () => {
+    const { container, rerender } = render(C4Diagram, { diagram, expanded: [] });
+    await waitFor(() => expect(wrapper(container, 'rp')).not.toBeNull());
+    const before = wrapper(container, 'rp')!;
+    expect([...before.classList]).toEqual(expect.arrayContaining(['svelte-flow__node-c4', 'svelte-flow__node-system']));
+    await rerender({ diagram, expanded: ['rp'] });
+    await waitFor(() => expect(wrapper(container, 'rp.svelte')).not.toBeNull());
+    expect(wrapper(container, 'rp')).toBe(before);
+    expect([...before.classList]).toEqual(expect.arrayContaining(['svelte-flow__node-c4', 'svelte-flow__node-group']));
+    expect(before.classList.contains('svelte-flow__node-system')).toBe(false);
+  });
+
+  it('selects a clicked node when selection is uncontrolled', async () => {
+    const { container } = render(C4Diagram, { diagram, expanded: [] });
+    await waitFor(() => expect(wrapper(container, 'rp')).not.toBeNull());
+    await fireEvent.click(wrapper(container, 'rp')!);
+    await waitFor(() => expect(wrapper(container, 'rp')?.classList.contains('selected')).toBe(true));
+    await fireEvent.click(wrapper(container, 'pe')!);
+    await waitFor(() => expect(wrapper(container, 'pe')?.classList.contains('selected')).toBe(true));
+    expect(wrapper(container, 'rp')?.classList.contains('selected')).toBe(false);
   });
 
   it('shows the error state for an id used twice instead of hanging', async () => {

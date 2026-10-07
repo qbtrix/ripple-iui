@@ -6,7 +6,9 @@
   a dot stays the same size at every zoom.
 
   It also mirrors the zoom into --c4-zoom / data-c4-far on the flow root, which
-  the node cards use to stay legible when zoomed out.
+  the node cards use to stay legible when zoomed out. Each write restyles the
+  whole map, so it writes only a change the cards can see, and holds still
+  while a camera move it started is flying.
 
   The refit on a new node set is also what keeps the legacy drill-down fitted:
   C4Diagram keeps SvelteFlow mounted across diagram swaps, so its `fitView`
@@ -29,7 +31,7 @@
     useViewportInitialized,
   } from '@xyflow/svelte';
   import { prefersReducedMotion } from 'svelte/motion';
-  import { planCamera, rippleEase, type CameraState, type Rect } from './live.js';
+  import { planCamera, rippleEase, zoomVar, type CameraState, type Rect } from './live.js';
   import type { C4Marker } from './types.js';
 
   interface Props {
@@ -56,12 +58,29 @@
   const MOVE_MS = 560;
 
   // DOM sync: the node cards read the zoom from CSS, so names counter-scale
-  // and stay legible when the map is zoomed out.
+  // and stay legible when the map is zoomed out. --c4-zoom is inherited by
+  // every node, so each write restyles the whole map: write it only when the
+  // value the cards can see changes (zoomVar clamps to their range), and not
+  // while a camera move this layer started is flying (xyflow eases zoom out and
+  // back in, crossing many values); the move's final zoom is written on landing.
+  let written = '';
+  let flying = $state(false);
+  let flyTimer: ReturnType<typeof setTimeout> | undefined;
+  function fly(duration: number) {
+    clearTimeout(flyTimer);
+    flying = duration > 0;
+    // A timer, not the move's promise: xyflow never settles a move a newer one interrupts.
+    if (flying) flyTimer = setTimeout(() => (flying = false), duration + 40);
+  }
+  $effect(() => () => clearTimeout(flyTimer));
   $effect(() => {
     const el = store.domNode;
     const zoom = store.viewport.zoom;
-    if (!el) return;
-    el.style.setProperty('--c4-zoom', String(zoom));
+    if (!el || flying) return;
+    const next = `${zoomVar(zoom)}|${zoom < FAR_ZOOM}`;
+    if (next === written) return;
+    written = next;
+    el.style.setProperty('--c4-zoom', zoomVar(zoom));
     el.toggleAttribute('data-c4-far', zoom < FAR_ZOOM);
   });
   // The last camera input, kept outside reactivity: it is only compared.
@@ -79,6 +98,7 @@
     prev = next;
     if (!move) return;
     const duration = move.animate && !prefersReducedMotion.current ? 650 : 0;
+    fly(duration);
     void flow.fitView(
       move.nodeId
         ? { nodes: [{ id: move.nodeId }], padding: 0.35, maxZoom: 1, duration }
@@ -97,10 +117,9 @@
     prevFrame = { key, follow: following };
     if (!rect || (!first && (letGo || same))) return;
     const vp = getViewportForBounds(rect, store.width, store.height, 0.15, 1, 0.08);
-    void flow.setViewport(vp, {
-      duration: first || prefersReducedMotion.current ? 0 : MOVE_MS,
-      ease: rippleEase,
-    });
+    const duration = first || prefersReducedMotion.current ? 0 : MOVE_MS;
+    fly(duration);
+    void flow.setViewport(vp, { duration, ease: rippleEase });
   });
 
   const onMap = $derived.by(() => {
