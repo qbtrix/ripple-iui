@@ -22,6 +22,7 @@
   role="listbox" (horizontal) of options with roving tabindex. Tokens only.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import * as ContextMenu from '$lib/components/ui/context-menu/index.js';
@@ -180,7 +181,7 @@
       {#if thumbnail}
         {@render thumbnail(p, i)}
       {:else if p.thumb}
-        <img src={p.thumb} alt="" loading="lazy" decoding="async" draggable="false" class="size-full object-contain" />
+        <img src={safeUrl(p.thumb, { kind: 'resource' })} alt="" loading="lazy" decoding="async" draggable="false" class="size-full object-contain" />
       {/if}
     </span>
     <span class={cn('text-[11px] tabular-nums leading-none', selected ? 'font-semibold text-ripple-accent' : 'text-ripple-muted-foreground')}>{i + 1}</span>

@@ -6,6 +6,7 @@
      server. Type scale as in the app's own list rows: text-body title,
      text-footnote line, text-caption-1 usage. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import GitFork from '@lucide/svelte/icons/git-fork';
   import Chip from '../widgets/display/Chip.svelte';
   import { cn } from '$lib/utils.js';
@@ -46,7 +47,7 @@
       <ItemArt imageUrl={item.imageUrl} title={item.title} mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
     {/snippet}
     {#if href}
-      <a {href} {target} {rel} tabindex="-1" class="block">{@render art()}</a>
+      <a href={safeUrl(href)} {target} {rel} tabindex="-1" class="block">{@render art()}</a>
     {:else}
       {@render art()}
     {/if}
@@ -54,7 +55,7 @@
   <div class="flex min-w-0 flex-1 flex-col">
     <span class="flex min-w-0 items-center gap-2">
       {#if href}
-        <a {href} {target} {rel} class="truncate text-body font-semibold text-foreground hover:underline">{item.title}</a>
+        <a href={safeUrl(href)} {target} {rel} class="truncate text-body font-semibold text-foreground hover:underline">{item.title}</a>
       {:else}
         <span class="truncate text-body font-semibold text-foreground">{item.title}</span>
       {/if}

@@ -4,6 +4,7 @@
      The src and poster sit in the markup so the server HTML is complete, and
      only http(s) urls reach either. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import ItemArt from './ItemArt.svelte';
   import { initialFor, tintFor } from './art.js';
@@ -19,8 +20,8 @@
   <!-- svelte-ignore a11y_media_has_caption -->
   <video
     class={cn('aspect-video w-full rounded-xl bg-muted', className)}
-    src={media.url}
-    poster={httpUrl(item.imageUrl) ?? undefined}
+    src={safeUrl(media.url, { kind: 'resource' })}
+    poster={safeUrl(httpUrl(item.imageUrl) ?? undefined, { kind: 'resource' })}
     controls
     preload="none"
     aria-label={`Video: ${item.title}`}
@@ -29,8 +30,8 @@
 {:else if media?.kind === 'audio'}
   <div class={cn('flex flex-col gap-3', className)}>
     <ItemArt imageUrl={item.imageUrl} title={item.title} mediaKind="audio" tint={tintFor(item.id)} initial={initialFor(item.title)} />
-    <audio class="w-full" src={media.url} controls preload="none" aria-label={`Song: ${item.title}`} data-testid="discover-detail-audio"></audio>
+    <audio class="w-full" src={safeUrl(media.url, { kind: 'resource' })} controls preload="none" aria-label={`Song: ${item.title}`} data-testid="discover-detail-audio"></audio>
   </div>
 {:else if media}
-  <img class={cn('max-h-[70vh] w-full rounded-xl bg-muted object-contain', className)} src={media.url} alt={item.title} data-testid="discover-detail-image" />
+  <img class={cn('max-h-[70vh] w-full rounded-xl bg-muted object-contain', className)} src={safeUrl(media.url, { kind: 'resource' })} alt={item.title} data-testid="discover-detail-image" />
 {/if}

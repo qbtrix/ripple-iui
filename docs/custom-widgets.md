@@ -56,6 +56,18 @@ A Ripple widget is any Svelte 5 component. Props from the spec are spread onto t
 2. **Accept `class` and `style`** — NodeRenderer resolves and passes these
 3. **Accept `onclick` / `onchange`** — NodeRenderer wraps event handlers into callbacks. A widget-specific event `on_<name>` arrives as the lowercase prop `on<name>` with underscores dropped (`on_open_change` -> `onopenchange`), never camelCase
 4. **Props are resolved** — expression bindings like `{state.count}` are already resolved to values by the time they reach your widget
+5. **Guard every URL you render** — a spec is model output, and an expression can build `javascript:` at render time (`"{'java'+'script:alert(1)'}"`). Pass any prop that lands in `href`, `src`, `poster`, a form `action`, or `window.open` through `safeUrl` from `@ripple-ui/core`, on the resolved value, at the sink:
+
+   ```svelte
+   <script lang="ts">
+     import { safeUrl } from '@ripple-ui/core';
+     let { href, image }: { href?: string; image?: string } = $props();
+   </script>
+   <a href={safeUrl(href)}>…</a>            <!-- unsafe becomes '#' -->
+   <img src={safeUrl(image, { kind: 'resource' })} alt="" />  <!-- unsafe drops the attribute -->
+   ```
+
+   A style string you build from props goes through `safeStyle`. The `style` prop NodeRenderer hands you is already filtered. Built-in widgets are held to this by `src/lib/security/url-sinks.test.ts`, which fails on any unguarded URL attribute in a `.svelte` file.
 
 ## Accessing Ripple Context
 

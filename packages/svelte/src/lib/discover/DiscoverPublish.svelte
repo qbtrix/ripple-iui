@@ -4,6 +4,7 @@
      The button is a link with `href` (a signed-out public page sends people to
      the app) or calls `onpublish`; with neither, the band shows no button. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { Button } from '../components/ui/button/index.js';
   import { cn } from '$lib/utils.js';
 
@@ -34,7 +35,7 @@
     <p class="max-w-prose text-body text-muted-foreground">{body}</p>
   </div>
   {#if href}
-    <Button {href}>{cta}</Button>
+    <Button href={safeUrl(href)}>{cta}</Button>
   {:else if onpublish}
     <Button onclick={onpublish}>{cta}</Button>
   {/if}

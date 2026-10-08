@@ -7,6 +7,7 @@
   for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import { getContext } from 'svelte';
@@ -91,7 +92,7 @@
     <div class="rsbar-dots">
       {#each validSources.slice(0, 4) as src, i}
         <img
-          src={src.favicon ?? faviconUrl(src.name)}
+          src={safeUrl(src.favicon ?? faviconUrl(src.name), { kind: 'resource' })}
           alt=""
           class="rsbar-favicon"
           style="z-index:{4 - i}; margin-left:{i > 0 ? '-4px' : '0'}"

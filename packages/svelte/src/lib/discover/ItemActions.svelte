@@ -7,6 +7,7 @@
      Item-page links (the href prop on the tile and row) carry whatever rel
      the consumer passes. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import Flag from '@lucide/svelte/icons/flag';
   import GitFork from '@lucide/svelte/icons/git-fork';
   import Maximize2 from '@lucide/svelte/icons/maximize-2';
@@ -35,7 +36,7 @@
 
 <div class="flex shrink-0 items-center gap-0.5">
   {#if primary?.href}
-    <Button size="sm" class="rounded-full px-4" href={primary.href} target="_blank" rel="nofollow ugc noopener noreferrer" aria-label={`${primary.label} ${item.title} (opens in a new tab)`}>{primary.label}</Button>
+    <Button size="sm" class="rounded-full px-4" href={safeUrl(primary.href)} target="_blank" rel="nofollow ugc noopener noreferrer" aria-label={`${primary.label} ${item.title} (opens in a new tab)`}>{primary.label}</Button>
   {:else if primary && onremix}
     <Button size="sm" class="rounded-full px-4" disabled={busy} onclick={() => onremix(item)}>{primary.label}</Button>
   {/if}

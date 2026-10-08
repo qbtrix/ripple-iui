@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/layout/Breadcrumb.svelte -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
   import SlashIcon from '@lucide/svelte/icons/slash';
@@ -56,7 +57,7 @@
           </span>
         {:else if item.href}
           <a
-            href={item.href}
+            href={safeUrl(item.href)}
             class="inline-flex items-center gap-1 hover:text-foreground transition-colors"
             onclick={() => onnavigate?.({ index: i, item })}
           >

@@ -7,6 +7,7 @@
   `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -34,10 +35,10 @@
   {#if brand}<span class="text-lg font-semibold tracking-tight">{brand}</span>{/if}
   <div class="flex items-center gap-6">
     {#each links as link}
-      <a href={link.href} class="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
+      <a href={safeUrl(link.href)} class="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
     {/each}
     {#if cta}
-      <a href={ctaHref} class="text-sm font-medium rounded-md bg-primary text-primary-foreground px-4 py-2 hover:opacity-90 transition-opacity">{cta}</a>
+      <a href={safeUrl(ctaHref)} class="text-sm font-medium rounded-md bg-primary text-primary-foreground px-4 py-2 hover:opacity-90 transition-opacity">{cta}</a>
     {/if}
     {#if hasChildren || children}{@render children?.()}{/if}
   </div>

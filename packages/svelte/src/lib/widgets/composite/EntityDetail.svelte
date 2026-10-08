@@ -9,6 +9,7 @@
   `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
+  import { safeStyle, safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -163,9 +164,9 @@
   <header class="rentity-hero">
     <div class="rentity-hero-main">
       {#if avatar}
-        <img src={avatar} alt={title} class="rentity-avatar" />
+        <img src={safeUrl(avatar, { kind: 'resource' })} alt={title} class="rentity-avatar" />
       {:else if icon}
-        <div class="rentity-icon" style={iconColor ? `background:${iconColor};` : undefined}>
+        <div class="rentity-icon" style={safeStyle(iconColor ? `background:${iconColor};` : undefined)}>
           <Icon name={icon} size={28} color="white" />
         </div>
       {/if}

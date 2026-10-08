@@ -7,6 +7,7 @@
      the name). `target` and `rel` pass through to both, for consumers whose
      item pages are off-site. Renders fully on the server. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import GitFork from '@lucide/svelte/icons/git-fork';
   import Chip from '../widgets/display/Chip.svelte';
   import { cn } from '$lib/utils.js';
@@ -49,7 +50,7 @@
       <ItemArt imageUrl={item.imageUrl} title={item.title} mediaKind={item.mediaKind} tint={tintFor(item.id)} initial={initialFor(item.title)} />
     {/snippet}
     {#if href}
-      <a {href} {target} {rel} tabindex="-1" aria-hidden="true" class="block">{@render art()}</a>
+      <a href={safeUrl(href)} {target} {rel} tabindex="-1" aria-hidden="true" class="block">{@render art()}</a>
     {:else}
       {@render art()}
     {/if}
@@ -60,7 +61,7 @@
   <div class="flex items-start gap-3">
     <div class="flex min-w-0 flex-1 flex-col">
       <h3 class="m-0 truncate text-headline text-foreground">
-        {#if href}<a {href} {target} {rel} class="hover:underline">{item.title}</a>{:else}{item.title}{/if}
+        {#if href}<a href={safeUrl(href)} {target} {rel} class="hover:underline">{item.title}</a>{:else}{item.title}{/if}
       </h3>
       {#if item.desc}
         <p class="m-0 truncate text-footnote text-muted-foreground">{item.desc}</p>

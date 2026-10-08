@@ -32,6 +32,7 @@
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ContextCards.tsx
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Chip from '$lib/widgets/display/Chip.svelte';
   import SourceChip from './SourceChip.svelte';
@@ -131,7 +132,7 @@
           <SourceChip
             size="md"
             label={chunk.source}
-            href={chunk.href}
+            href={safeUrl(chunk.href)}
             mark={chunk.badge ?? extension(chunk.source)}
             color={chunk.color}
           />

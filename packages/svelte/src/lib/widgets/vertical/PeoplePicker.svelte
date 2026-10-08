@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/vertical/PeoplePicker.svelte -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { Popover as P } from 'bits-ui';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -141,7 +142,7 @@
             {#if p}
               <span class="inline-flex items-center gap-1.5 rounded-full bg-muted pl-0.5 pr-1.5 py-0.5 text-xs">
                 {#if p.avatar}
-                  <img src={p.avatar} alt="" class="h-5 w-5 rounded-full object-cover" />
+                  <img src={safeUrl(p.avatar, { kind: 'resource' })} alt="" class="h-5 w-5 rounded-full object-cover" />
                 {:else}
                   <span class="h-5 w-5 rounded-full bg-primary/20 text-primary text-[9px] font-bold grid place-items-center">
                     {initials(p.name)}
@@ -200,7 +201,7 @@
                   )}
                 >
                   {#if p.avatar}
-                    <img src={p.avatar} alt="" class="h-7 w-7 rounded-full object-cover shrink-0" />
+                    <img src={safeUrl(p.avatar, { kind: 'resource' })} alt="" class="h-7 w-7 rounded-full object-cover shrink-0" />
                   {:else}
                     <span class="h-7 w-7 rounded-full bg-primary/15 text-primary text-[10px] font-bold grid place-items-center shrink-0">
                       {initials(p.name)}

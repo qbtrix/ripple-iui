@@ -46,6 +46,7 @@
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/RecommendationCard.tsx
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Chip from '$lib/widgets/display/Chip.svelte';
   import CheckIcon from '@lucide/svelte/icons/check';
@@ -204,7 +205,7 @@
 {/snippet}
 
 {#snippet segment(s: RecommendationSegment)}
-  {#if s.entity}<Chip class="mx-0.5 gap-1 rounded-full py-px pr-1.5 pl-[3px] align-middle text-ripple-surface-foreground ring-1 ring-ripple-border"><span aria-hidden="true" class={cn('flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ripple-accent text-[9px] font-semibold leading-none text-ripple-accent-foreground', s.color && 'text-white')} style:background-color={s.color}>{#if s.image}<img src={s.image} alt="" class="size-full object-cover" />{:else}{s.entity.slice(0, 1)}{/if}</span>{s.entity}</Chip>{:else if s.value}{@const t = VALUE_TONE[s.tone ?? 'neutral'] ?? VALUE_TONE.neutral}<Chip variant={t.variant} label={s.value} class={cn('mx-0.5 rounded-full px-1.5 py-[3px] align-middle ring-1', t.cls)} />{:else}{s.text ?? ''}{/if}
+  {#if s.entity}<Chip class="mx-0.5 gap-1 rounded-full py-px pr-1.5 pl-[3px] align-middle text-ripple-surface-foreground ring-1 ring-ripple-border"><span aria-hidden="true" class={cn('flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ripple-accent text-[9px] font-semibold leading-none text-ripple-accent-foreground', s.color && 'text-white')} style:background-color={s.color}>{#if s.image}<img src={safeUrl(s.image, { kind: 'resource' })} alt="" class="size-full object-cover" />{:else}{s.entity.slice(0, 1)}{/if}</span>{s.entity}</Chip>{:else if s.value}{@const t = VALUE_TONE[s.tone ?? 'neutral'] ?? VALUE_TONE.neutral}<Chip variant={t.variant} label={s.value} class={cn('mx-0.5 rounded-full px-1.5 py-[3px] align-middle ring-1', t.cls)} />{:else}{s.text ?? ''}{/if}
 {/snippet}
 
 <div

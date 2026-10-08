@@ -68,6 +68,7 @@
     would need to follow an item when the list is reordered.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import StreamText from './StreamText.svelte';
@@ -243,7 +244,7 @@
 
 {#snippet avatar(source: AnswerSource, sizeClass: string, radius: string)}
   {#if source.image}
-    <img src={source.image} alt="" class={cn('shrink-0 object-cover', sizeClass, radius)} />
+    <img src={safeUrl(source.image, { kind: 'resource' })} alt="" class={cn('shrink-0 object-cover', sizeClass, radius)} />
   {:else}
     <span
       aria-hidden="true"
@@ -274,7 +275,7 @@
           <SourceChip
             class="ripple-answer-chip mr-1"
             label={source.domain}
-            href={source.href}
+            href={safeUrl(source.href)}
             image={source.image}
             mark={source.name.slice(0, 1)}
           />
@@ -336,7 +337,7 @@
         {#each sources as source, i (i)}
           <svelte:element
             this={source.href ? 'a' : 'span'}
-            href={source.href}
+            href={safeUrl(source.href)}
             target={source.href ? '_blank' : undefined}
             rel={source.href ? 'noreferrer' : undefined}
             class="flex items-center gap-2 rounded-md px-1.5 py-1 text-[12px] text-ripple-muted-foreground transition-colors duration-150 hover:bg-ripple-accent/10 hover:text-ripple-accent"

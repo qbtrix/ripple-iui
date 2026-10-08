@@ -7,6 +7,7 @@
   for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { faviconUrl } from './favicon.js';
 
@@ -35,7 +36,9 @@
   const iconSrc = $derived(favicon ?? faviconUrl(source));
   let iconError = $state(false);
 
-  const handler = $derived(onclick ?? (url ? () => window.open(url, '_blank') : undefined));
+  // A blocked url comes back as '#'; open nothing rather than a blank tab.
+  const safeLink = $derived(safeUrl(url) === '#' ? undefined : safeUrl(url));
+  const handler = $derived(onclick ?? (safeLink ? () => window.open(safeLink, '_blank') : undefined));
   function handleKey(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -50,7 +53,7 @@
 <div {id} data-ripple-node={id} class={cn('rsrc-card', className)} {...interactive}>
   <div class="rsrc-card-head">
     {#if !iconError}
-      <img src={iconSrc} alt="" class="rsrc-card-favicon" onerror={() => iconError = true} />
+      <img src={safeUrl(iconSrc, { kind: 'resource' })} alt="" class="rsrc-card-favicon" onerror={() => iconError = true} />
     {:else}
       <span class="rsrc-card-dot" style="background:{color}"></span>
     {/if}

@@ -37,6 +37,7 @@
   inline-widget motion case shows up.
 -->
 <script lang="ts">
+	import { safeStyle } from '@ripple-ui/core';
 	import { getContext } from 'svelte';
 	import {
 		resolveValue,
@@ -463,8 +464,12 @@
 		{@const widgetProps = {
 			id: node.id,
 			...(resolvedClass !== undefined && { class: resolvedClass }),
-			...(node.style !== undefined && { style: node.style }),
 			...resolvedProps,
+			// Widgets join this record into a style attribute; drop any url()/
+			// image-set() target that fails safeUrl, after expressions resolve.
+			...((node.style !== undefined || resolvedProps.style !== undefined) && {
+				style: safeStyle(resolvedProps.style ?? node.style)
+			}),
 			...(resolvedName !== undefined && { name: resolvedName }),
 			...(boundValue !== undefined && { [bindContract.prop]: boundValue }),
 			...(onclick !== undefined && { onclick }),

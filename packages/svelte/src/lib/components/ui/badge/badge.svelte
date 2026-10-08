@@ -33,6 +33,7 @@
 </script>
 
 <script lang="ts">
+	import { safeUrl } from '@ripple-ui/core';
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 	import { cn, type WithElementRef } from "$lib/utils.js";
 
@@ -52,7 +53,7 @@
 	this={href ? "a" : "span"}
 	bind:this={ref}
 	data-slot="badge"
-	{href}
+	href={safeUrl(href)}
 	class={cn(badgeVariants({ variant }), className)}
 	{...restProps}
 >

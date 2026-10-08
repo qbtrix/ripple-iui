@@ -5,6 +5,7 @@
      with `onmore`; with neither it is not drawn. Ids follow the app:
      discover-h-{id} on the heading, discover-section-{id} as the test id. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { Button } from '../components/ui/button/index.js';
   import { cn } from '$lib/utils.js';
@@ -43,7 +44,7 @@
       {#if blurb}<p class="text-subheadline text-muted-foreground">{blurb}</p>{/if}
     </div>
     {#if more && moreHref}
-      <Button variant="link" size="sm" href={moreHref}>{more} →</Button>
+      <Button variant="link" size="sm" href={safeUrl(moreHref)}>{more} →</Button>
     {:else if more && onmore}
       <Button variant="link" size="sm" onclick={onmore}>{more} →</Button>
     {/if}

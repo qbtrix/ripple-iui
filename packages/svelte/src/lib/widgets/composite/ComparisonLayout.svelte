@@ -11,6 +11,7 @@
   `viewMode` $state — intentional uncontrolled default seed from `defaultView` prop. Recipe 7.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
@@ -209,7 +210,7 @@
           <div class="relative flex w-20 shrink-0 items-center justify-center bg-gradient-to-br from-muted/40 via-muted/20 to-transparent p-2.5 xs:w-24 xs:p-3 sm:w-36 sm:p-5 md:w-44 lg:w-52">
             {#if item.image}
               <img
-                src={item.image}
+                src={safeUrl(item.image, { kind: 'resource' })}
                 alt={item.title ?? item.name ?? ''}
                 class="h-16 w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] xs:h-20 sm:h-24 md:h-28"
               />
@@ -379,7 +380,7 @@
               <div class="flex items-center gap-2.5 border-b border-border/70 bg-muted/30 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
                 {#if item.image}
                   <img
-                    src={item.image}
+                    src={safeUrl(item.image, { kind: 'resource' })}
                     alt={item.title ?? item.name ?? ''}
                     class="h-8 w-8 shrink-0 rounded-lg object-contain sm:h-10 sm:w-10"
                   />
@@ -429,7 +430,7 @@
                             style="background-color: {item[feature.key]}"
                           ></span>
                         {:else if feature.type === 'image' && item[feature.key]}
-                          <img src={item[feature.key] as string} alt={feature.label} class="inline-block h-6 w-auto object-contain" />
+                          <img src={safeUrl(item[feature.key] as string, { kind: 'resource' })} alt={feature.label} class="inline-block h-6 w-auto object-contain" />
                         {:else}
                           {item[feature.key] ?? '—'}
                         {/if}
@@ -459,7 +460,7 @@
                 <div class="flex flex-col items-center justify-center gap-1 border-l border-border/70 p-2 text-center sm:p-3">
                   {#if item.image}
                     <img
-                      src={item.image}
+                      src={safeUrl(item.image, { kind: 'resource' })}
                       alt={item.title ?? item.name ?? ''}
                       class="hidden h-6 w-6 rounded object-contain sm:block sm:h-8 sm:w-8"
                     />
@@ -496,7 +497,7 @@
                           <span class="text-muted-foreground/30">—</span>
                         {/if}
                       {:else if feature.type === 'image' && item[feature.key]}
-                        <img src={item[feature.key] as string} alt={feature.label} class="h-6 w-auto object-contain sm:h-8" />
+                        <img src={safeUrl(item[feature.key] as string, { kind: 'resource' })} alt={feature.label} class="h-6 w-auto object-contain sm:h-8" />
                       {:else if feature.type === 'color'}
                         <div
                           class="h-4 w-4 rounded-full border border-border shadow-sm sm:h-5 sm:w-5"

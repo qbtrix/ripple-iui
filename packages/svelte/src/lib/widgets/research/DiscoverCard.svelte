@@ -7,6 +7,7 @@
   for editor selection (SP-0 id-forwarding codemod).
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -31,7 +32,9 @@
     url, class: className, onclick
   }: Props = $props();
 
-  const handler = $derived(onclick ?? (url ? () => window.open(url, '_blank') : undefined));
+  // A blocked url comes back as '#'; open nothing rather than a blank tab.
+  const safeLink = $derived(safeUrl(url) === '#' ? undefined : safeUrl(url));
+  const handler = $derived(onclick ?? (safeLink ? () => window.open(safeLink, '_blank') : undefined));
   function handleKey(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -46,7 +49,7 @@
 <div {id} data-ripple-node={id} class={cn('rdisc', className)} {...interactive}>
   {#if image}
     <div class="rdisc-img-wrap">
-      <img src={image} alt={title} class="rdisc-img" />
+      <img src={safeUrl(image, { kind: 'resource' })} alt={title} class="rdisc-img" />
     </div>
   {/if}
   <div class="rdisc-body">

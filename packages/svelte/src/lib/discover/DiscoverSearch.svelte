@@ -4,6 +4,7 @@
      filters), so a server-rendered page searches with JS off. Without it, the
      consumer gets each keystroke through `oninput` and does its own debounce. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Search from '../widgets/input/Search.svelte';
 
@@ -44,7 +45,7 @@
 {/snippet}
 
 {#if action}
-  <form method="get" {action} role="search">
+  <form method="get" action={safeUrl(action)} role="search">
     {#each kept as [key, val] (key)}<input type="hidden" name={key} value={val} />{/each}
     {@render box()}
   </form>

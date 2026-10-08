@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
   import CalendarIcon from '@lucide/svelte/icons/calendar';
@@ -45,7 +46,7 @@
   {#if author}
     <div class="flex items-center gap-2">
       {#if avatar}
-        <img src={avatar} alt={author} class="size-8 rounded-full object-cover" />
+        <img src={safeUrl(avatar, { kind: 'resource' })} alt={author} class="size-8 rounded-full object-cover" />
       {:else}
         <div class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">
           {authorInitials(author)}

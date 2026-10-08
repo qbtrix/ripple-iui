@@ -1,5 +1,6 @@
 <!-- Updated 2026-07-08: typed getIcon's Lucide lookup as a Svelte Component (was unknown → narrowed to {} at the render slot, failing svelte-check). -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import * as icons from '@lucide/svelte';
@@ -100,7 +101,7 @@
           {@const active = isActive(item)}
           {#if item.href}
             <a
-              href={item.href}
+              href={safeUrl(item.href)}
               class={cn(
                 'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
                 active

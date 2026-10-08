@@ -18,6 +18,7 @@
   no scroll observer (keeps it SSR-safe and dependency-free).
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import EmptyState from '$lib/widgets/display/EmptyState.svelte';
   import type { LayoutInput } from '../layout-adapter.js';
 
@@ -92,7 +93,7 @@
     <header class="article-layout__header">
       {#if coverImage}
         <div class="article-layout__cover">
-          <img src={coverImage} alt={articleTitle} />
+          <img src={safeUrl(coverImage, { kind: 'resource' })} alt={articleTitle} />
         </div>
       {/if}
 
@@ -142,14 +143,14 @@
                 <div class="article-layout__step-body">
                   <p class="article-layout__step-text">{section.content}</p>
                   {#if section.imageUrl}
-                    <img src={section.imageUrl} alt="Step illustration" class="article-layout__step-img" />
+                    <img src={safeUrl(section.imageUrl, { kind: 'resource' })} alt="Step illustration" class="article-layout__step-img" />
                   {/if}
                 </div>
               </div>
 
             {:else if section.type === 'image'}
               <figure class="article-layout__figure">
-                <img src={section.imageUrl} alt={section.content ?? ''} />
+                <img src={safeUrl(section.imageUrl, { kind: 'resource' })} alt={section.content ?? ''} />
                 {#if section.content}
                   <figcaption>{section.content}</figcaption>
                 {/if}
@@ -158,7 +159,7 @@
             {:else if section.type === 'video'}
               <div class="article-layout__video">
                 <!-- svelte-ignore a11y_media_has_caption -->
-                <video src={section.videoUrl} controls></video>
+                <video src={safeUrl(section.videoUrl, { kind: 'resource' })} controls></video>
               </div>
 
             {:else if section.type === 'tip'}

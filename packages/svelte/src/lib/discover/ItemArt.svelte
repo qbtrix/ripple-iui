@@ -7,6 +7,7 @@
      The labels are derived here from the title, so the placeholder never
      claims a poster that is not there. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import Music from '@lucide/svelte/icons/music';
   import Play from '@lucide/svelte/icons/play';
   import { cn } from '$lib/utils.js';
@@ -67,7 +68,7 @@
   </div>
 {:else if showImage}
   <div class={cn(frameClass, 'relative', className)}>
-    <img class="block h-full w-full object-cover object-top" {src} alt={imgAlt} loading="lazy" decoding="async" onerror={() => (failedSrc = src)} />
+    <img class="block h-full w-full object-cover object-top" src={safeUrl(src, { kind: 'resource' })} alt={imgAlt} loading="lazy" decoding="async" onerror={() => (failedSrc = src)} />
     {@render badge()}
   </div>
 {:else}

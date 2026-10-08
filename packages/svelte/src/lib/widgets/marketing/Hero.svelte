@@ -26,6 +26,7 @@
   @created 2026-06-09 — ITEM 4: bespoke marketing Hero.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   interface Props {
     id?: string;
@@ -112,13 +113,13 @@
         <div class={cn('mt-2 flex flex-wrap gap-3', centered && 'justify-center')}>
           {#if cta}
             <a
-              href={ctaHref}
+              href={safeUrl(ctaHref)}
               class="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
             >{cta}</a>
           {/if}
           {#if secondaryCta}
             <a
-              href={secondaryCtaHref}
+              href={safeUrl(secondaryCtaHref)}
               class="inline-flex items-center rounded-md border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >{secondaryCta}</a>
           {/if}

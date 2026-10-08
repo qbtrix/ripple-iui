@@ -26,6 +26,7 @@
   Activation is native: Enter on a button or link, Space on a button.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
@@ -109,7 +110,7 @@
       this={href ? 'a' : 'button'}
       data-list-row-host
       type={href ? undefined : 'button'}
-      {href}
+      href={safeUrl(href)}
       {onclick}
       aria-current={active ? (href ? 'page' : 'true') : undefined}
       class={cn(

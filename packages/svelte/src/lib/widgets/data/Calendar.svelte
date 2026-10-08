@@ -3,6 +3,7 @@
      on viewDate (one-time seed from `value` prop, reassigned in shift()); event-chip <span>
      given role="button" + tabindex + onkeydown so click-to-select is keyboard accessible. -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
@@ -220,7 +221,7 @@
               role="button"
               tabindex="0"
               class="truncate text-[10px] rounded px-1 py-0.5 cursor-pointer"
-              style={`background:${ev.color ?? '#3b82f6'}20; color:${ev.color ?? '#3b82f6'};`}
+              style={safeStyle(`background:${ev.color ?? '#3b82f6'}20; color:${ev.color ?? '#3b82f6'};`)}
               onclick={(e) => { e.stopPropagation(); selectEvent(ev); }}
               onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {

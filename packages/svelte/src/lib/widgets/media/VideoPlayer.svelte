@@ -9,6 +9,7 @@
     native browser APIs, so behaviour needs a real-browser check (not jsdom).
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { onMount, untrack } from 'svelte';
   import { cn } from '$lib/utils.js';
   import {
@@ -137,8 +138,8 @@
   <!-- Video element -->
   <video
     bind:this={video}
-    {src}
-    {poster}
+    src={safeUrl(src, { kind: 'resource' })}
+    poster={safeUrl(poster, { kind: 'resource' })}
     {autoplay}
     {loop}
     muted={isMuted}

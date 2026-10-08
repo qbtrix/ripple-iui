@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   interface Props {
     id?: string;
     class?: string;
@@ -32,4 +33,4 @@
   });
 </script>
 
-<img {id} {src} {alt} class="block max-w-full {className ?? ''}" style={combinedStyle} />
+<img {id} src={safeUrl(src, { kind: 'resource' })} {alt} class="block max-w-full {className ?? ''}" style={combinedStyle} />

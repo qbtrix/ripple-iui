@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/display/Mention.svelte -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import * as HC from '$lib/components/ui/hover-card/index.js';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -59,7 +60,7 @@
   {#if href}
     <a
       {id}
-      {href}
+      href={safeUrl(href)}
       class={cn(
         'inline-flex items-center gap-0.5 rounded-md bg-primary/10 text-primary font-medium px-1.5 py-0 text-[0.95em] hover:bg-primary/15 transition-colors',
         className
@@ -88,7 +89,7 @@
           <a
             {...triggerProps}
             {id}
-            {href}
+            href={safeUrl(href)}
             class={cn(
               'inline-flex items-center gap-0.5 rounded-md bg-primary/10 text-primary font-medium px-1.5 py-0 text-[0.95em] hover:bg-primary/15 transition-colors',
               className
@@ -115,7 +116,7 @@
     <HC.Content class="w-64 p-3">
       <div class="flex items-start gap-3">
         {#if avatar}
-          <img src={avatar} alt={displayName ?? name} class="h-10 w-10 rounded-full object-cover shrink-0" />
+          <img src={safeUrl(avatar, { kind: 'resource' })} alt={displayName ?? name} class="h-10 w-10 rounded-full object-cover shrink-0" />
         {:else}
           <span class="grid place-items-center h-10 w-10 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">
             {initials(displayName ?? name)}

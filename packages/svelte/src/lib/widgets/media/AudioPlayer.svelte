@@ -14,6 +14,7 @@
     uses). A still ring with one open side still reads as loading.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import {
     Music,
@@ -112,7 +113,7 @@
   <div class="flex items-center gap-4 p-4">
     {#if cover}
       <div class="w-16 h-16 rounded-xl overflow-hidden bg-muted shrink-0">
-        <img src={cover} alt={title} class="w-full h-full object-cover" />
+        <img src={safeUrl(cover, { kind: 'resource' })} alt={title} class="w-full h-full object-cover" />
       </div>
     {:else}
       <div class="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -212,7 +213,7 @@
   <!-- Native audio element -->
   <audio
     bind:this={audio}
-    {src}
+    src={safeUrl(src, { kind: 'resource' })}
     {autoplay}
     onloadedmetadata={() => {
       duration = audio.duration;

@@ -12,6 +12,7 @@
 </script>
 
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
   import Self from './OrgChart.svelte';
@@ -77,7 +78,7 @@
         )}
       >
         {#if root.avatar}
-          <img src={root.avatar} alt="" class="h-9 w-9 rounded-full object-cover" />
+          <img src={safeUrl(root.avatar, { kind: 'resource' })} alt="" class="h-9 w-9 rounded-full object-cover" />
         {:else}
           <span class="h-9 w-9 rounded-full bg-primary/15 text-primary text-xs font-bold grid place-items-center">
             {initials(root.name)}
