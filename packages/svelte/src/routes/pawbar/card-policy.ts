@@ -16,6 +16,8 @@
 //      reads is walked by the same rules; a plain http URL kept under a non-URL
 //      state key and pulled in by expression is not caught. Resolve and recheck
 //      at render time if that ever matters.
+//   4. A card is `{ui, state?}` (plus the `version` the client adds): any other
+//      top-level key (`data` sources that fetch on mount, `theme`, ...) refuses it.
 // `partial` is for specs still streaming: an action name that is a prefix of an
 // allowed one ("se" on the way to "set") is not refused yet.
 
@@ -25,6 +27,7 @@ const URL_KEYS = new Set(['src', 'href', 'url', 'image', 'avatar', 'favicon', 'p
 const SCRIPT_URL = /^(javascript|vbscript):/i;
 const DATA_URL = /^data:[\w.+-]*\/?[\w.+-]*(;[\w.+=-]+)*,/i;
 const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+const CARD_KEYS = ['version', 'ui', 'state'];
 const MAX_NODES = 50_000;
 
 /** What a browser would read as the URL: leading controls/spaces dropped, tabs and newlines removed anywhere. */
@@ -48,6 +51,11 @@ function actionAllowed(name: string, partial: boolean): boolean {
 }
 
 export function refuseCard(card: unknown, { partial = false } = {}): string | null {
+	if (card && typeof card === 'object' && !Array.isArray(card)) {
+		for (const key of Object.keys(card)) {
+			if (!CARD_KEYS.some((k) => k === key || (partial && k.startsWith(key)))) return `key:${key}`;
+		}
+	}
 	const stack: unknown[] = [card];
 	for (let seen = 0; stack.length; seen++) {
 		if (seen > MAX_NODES) return 'too_large';
