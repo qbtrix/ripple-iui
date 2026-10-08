@@ -137,7 +137,7 @@ function declarations(css: string): string[] {
  * stays whole).
  */
 export function safeStyle(style: string): string;
-export function safeStyle(style: Record<string, unknown>): Record<string, unknown>;
+export function safeStyle<V>(style: Record<string, V>): Record<string, V>;
 export function safeStyle<T>(style: T): T;
 export function safeStyle(style: unknown): unknown {
 	if (typeof style === 'string') {

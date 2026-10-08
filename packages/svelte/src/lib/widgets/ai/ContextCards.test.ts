@@ -69,7 +69,7 @@ describe('ContextCards — a chunk', () => {
     const link = within(withHref as HTMLElement).getByRole('link', { name: /Dairy Onboarding SOP\.pdf/ });
     expect(link.getAttribute('href')).toBe('https://example.com/sop.pdf');
     expect(link.getAttribute('target')).toBe('_blank');
-    expect(link.getAttribute('rel')).toBe('noreferrer');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     expect(within(withoutHref as HTMLElement).queryByRole('link')).toBeNull();
     expect(withoutHref.textContent).toContain('Sales Velocity Export.csv');
   });
