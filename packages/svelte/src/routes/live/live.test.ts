@@ -96,13 +96,9 @@ describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, sce
 		expect(await clickEachSpecButton(spec, container, onStateChange, onEvent)).toEqual([]);
 	});
 
-	// BLOCKED: NodeRenderer seeds on_click once, at mount
-	// (src/lib/components/NodeRenderer.svelte: `const onclick =
-	// createEventHandler(node.on_click)`). A streamed button mounts as soon as
-	// its type and props parse, before its on_click arrives, so the handler is
-	// undefined forever. Binds are $derived and unaffected (c1). Flip to
-	// `test` once NodeRenderer reads handlers at call time.
-	test.fails('(c3) after streaming, spec buttons fire on_click (engine gap, see comment)', async () => {
+	// The checkout-style case: a button whose on_click streams in after the
+	// button mounted must still fire once the stream is done.
+	test('(c3) after streaming, spec buttons fire on_click', async () => {
 		const { store, container, onStateChange, onEvent } = await mountStreamed(fixture);
 		const dead = await clickEachSpecButton(store.current, container, onStateChange, onEvent);
 		expect(dead).toEqual([]);
