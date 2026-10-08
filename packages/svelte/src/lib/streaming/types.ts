@@ -38,7 +38,9 @@ export interface StreamSpecOptions {
   /**
    * Minimum ms between parse attempts. Defaults to 50 — tied to human perception
    * of staleness rather than the browser's frame rate. Lower values produce more
-   * intermediate renders; higher values feel laggier.
+   * intermediate renders; higher values feel laggier. Text that arrives inside
+   * the window is parsed once when the window closes, so `current` catches up
+   * even while the stream pauses.
    */
   throttleMs?: number;
 

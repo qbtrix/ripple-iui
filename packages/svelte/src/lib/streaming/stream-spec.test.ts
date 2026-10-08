@@ -38,8 +38,9 @@ function openStream(): { stream: ReadableStream<string>; push: ReadableStreamDef
   return { stream, push };
 }
 
-function uiType(spec: StreamSpec | null): unknown {
-  return (spec as { ui?: { type?: unknown } } | null)?.ui?.type;
+function uiType(spec: unknown): unknown {
+  const ui = spec && typeof spec === 'object' && 'ui' in spec ? spec.ui : undefined;
+  return ui && typeof ui === 'object' && 'type' in ui ? ui.type : undefined;
 }
 
 function shredString(s: string, chunkSize: number): string[] {

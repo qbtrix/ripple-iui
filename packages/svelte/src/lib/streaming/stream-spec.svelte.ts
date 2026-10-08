@@ -1,6 +1,10 @@
 // stream-spec.svelte.ts — Core streamSpec() helper.
 // Uses Svelte 5 $state for reactivity so consumers see automatic updates
 // via `$derived(store.current)` or bare access inside components.
+// Partial parses are throttled on both edges: a chunk that lands inside the
+// window gets one parse when the window closes, so a pausing stream never
+// leaves `current` behind the text already received. The single pending
+// timer is cleared on every exit (done, cancel/abort/overflow, error).
 // Created: 2026-04-16
 
 import { StreamParseError, type StreamSpec, type StreamSpecOptions, type StreamSpecStore } from '$lib/streaming/index.js';
@@ -25,15 +29,26 @@ export function streamSpec(
 
   let buffer = '';
   let lastParseAt = 0;
+  let trailingTimer: ReturnType<typeof setTimeout> | null = null;
   let cancelled = false;
   let abortListenerCleanup: (() => void) | null = null;
   const decoder = new TextDecoder('utf-8', { fatal: false });
 
+  const clearTrailing = () => {
+    if (trailingTimer !== null) clearTimeout(trailingTimer);
+    trailingTimer = null;
+  };
+
+  const finish = () => {
+    clearTrailing();
+    state.done = true;
+    abortListenerCleanup?.();
+  };
+
   const cancel = () => {
     if (cancelled) return;
     cancelled = true;
-    state.done = true;
-    abortListenerCleanup?.();
+    finish();
   };
 
   if (options.signal) {
@@ -46,10 +61,9 @@ export function streamSpec(
     abortListenerCleanup = () => options.signal?.removeEventListener('abort', listener);
   }
 
-  const tryEmit = (force = false): void => {
-    const now = nowMs();
-    if (!force && now - lastParseAt < throttleMs) return;
-    lastParseAt = now;
+  const parseNow = (): void => {
+    clearTrailing();
+    lastParseAt = nowMs();
 
     const result = parsePartialSpec(buffer, allow);
     if (result.value == null || typeof result.value !== 'object') return;
@@ -59,6 +73,13 @@ export function streamSpec(
       state.current = spec;
       options.onUpdate?.(spec);
     }
+  };
+
+  // Leading edge parses now; inside the window, one trailing parse at its end.
+  const tryEmit = (): void => {
+    const wait = throttleMs - (nowMs() - lastParseAt);
+    if (wait <= 0) parseNow();
+    else if (trailingTimer === null) trailingTimer = setTimeout(parseNow, wait);
   };
 
   const consume = async (): Promise<void> => {
@@ -91,13 +112,12 @@ export function streamSpec(
       const tail = decoder.decode();
       if (tail) buffer += tail;
 
-      tryEmit(true);
+      parseNow();
 
       if (state.current === null && buffer.trim().length > 0) {
         state.error = new StreamParseError('incomplete', null, 'Stream ended before any valid parse');
       }
-      state.done = true;
-      abortListenerCleanup?.();
+      finish();
     } catch (err) {
       if (cancelled) return;
       state.error = new StreamParseError(
@@ -105,8 +125,7 @@ export function streamSpec(
         state.current,
         err instanceof Error ? err.message : String(err),
       );
-      state.done = true;
-      abortListenerCleanup?.();
+      finish();
     }
   };
 
