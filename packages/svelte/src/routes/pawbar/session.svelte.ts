@@ -1,4 +1,4 @@
-// routes/pawbar/chat.svelte.ts — The landing chat: one visitor, one conversation.
+// routes/pawbar/session.svelte.ts — The landing chat: one visitor, one conversation.
 // A ChatSession sends a message through a Transport (the Paw Bar HTTP API, or
 // the recorded fallback when the site has no endpoint configured) and folds
 // the returned frames into turns. A turn is an ordered list of parts, text and
@@ -21,6 +21,8 @@ export const CUSTOMER_REF_KEY = 'ripple.pawbar.customer_ref';
 const REF_PATTERN = /^[A-Za-z0-9_-]{8,128}$/;
 
 let memoryRef: string | null = null;
+
+const str = (v: unknown, fallback = ''): string => (typeof v === 'string' || typeof v === 'number' ? String(v) : fallback);
 
 /** A stable anonymous id for rate limiting. localStorage when allowed, memory otherwise. */
 export function customerRef(storage: () => Storage | undefined = () => globalThis.localStorage): string {
@@ -83,7 +85,7 @@ export function pawbarTransport(cfg: PawbarConfig): { send: Transport; conversat
 		if (!res.ok || !res.body) {
 			let detail = '';
 			try {
-				detail = String(((await res.json()) as { detail?: unknown }).detail ?? '');
+				detail = str(((await res.json()) as { detail?: unknown }).detail);
 			} catch {
 				/* not JSON */
 			}
@@ -237,16 +239,16 @@ export class ChatSession {
 	hostEvent(card: Card, event: RippleEvent): undefined {
 		if (card.status !== 'final') return undefined;
 		const e = event as RippleEvent & { action?: string; message?: unknown; event?: unknown; target?: unknown };
-		const kind = String(e.action ?? e.type);
-		const detail = e.message ?? e.event ?? e.target ?? event.url ?? '';
-		card.sent = detail ? `${kind}: ${String(detail)}` : kind;
+		const kind = str(e.action, str(e.type, 'event'));
+		const detail = str(e.message) || str(e.event) || str(e.target) || str(event.url);
+		card.sent = detail ? `${kind}: ${detail}` : kind;
 		return undefined;
 	}
 
 	/** Applies one frame; returns true when the turn is over. */
 	#apply(turn: Turn, st: TurnState, { event, data }: SSEFrame): boolean {
 		const d = (data ?? {}) as Record<string, unknown>;
-		const id = String(d.card_id ?? '');
+		const id = str(d.card_id);
 		switch (event) {
 			case 'chunk':
 				if (typeof d.content === 'string') {
@@ -272,7 +274,7 @@ export class ChatSession {
 				st.cards.delete(id);
 				return false;
 			case 'card.rejected':
-				st.cards.get(id)?.reject(String(d.reason ?? 'rejected'));
+				st.cards.get(id)?.reject(str(d.reason, 'rejected'));
 				st.cards.delete(id);
 				return false;
 			case 'unavailable':

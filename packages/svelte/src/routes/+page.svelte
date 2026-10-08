@@ -24,7 +24,7 @@
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
-	import { BYOK_URL, ChatSession, pawbarTransport } from './pawbar/chat.svelte.js';
+	import { BYOK_URL, ChatSession, pawbarTransport } from './pawbar/session.svelte.js';
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { scenarios } from './live/scenarios.js';
 

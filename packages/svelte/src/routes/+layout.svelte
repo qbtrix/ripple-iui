@@ -208,4 +208,12 @@
 			margin-left: 2px;
 		}
 	}
+	@media (max-width: 420px) {
+		.gh {
+			display: none;
+		}
+		.link {
+			padding: 6px 5px;
+		}
+	}
 </style>
