@@ -1,47 +1,39 @@
 <!-- src/lib/widgets/display/Diff.svelte
      origin: slev12397/beautiful-ui@ff0f74d components/primitives/CodeBlock.tsx
 
-     2026-09-17 — re-skinned into the Diff variant of the source's CodeBlock (the
-     skin-diff lane). CodeBlock took the Code half in #127 and left this one out
-     on purpose: it needed three new props there, and this widget already existed.
-     So the source's diff look lands here, and the two read as one component in
-     two modes. Frame, header and body geometry match display/CodeBlock.svelte
-     exactly: ring and ripple radius, a 36px header with the code glyph and a
-     mono label, a 20px gutter with a 1px rule, 12.5px mono on 1.65, lines that
-     wrap.
+     A text diff in CodeBlock's frame, so the two read as one component in two
+     modes: ring and ripple radius, a 36px header (code glyph, mono `title`, the
+     `+N −N` stat), a 20px gutter with a 1px rule, 12.5px mono on 1.65, lines
+     that wrap. `diff` is imported lazily; the row model lives in diff-rows.ts.
 
-     What came across: one gutter column (a removed line keeps its old number,
-     everything else shows its new one); the 3px bar down the left of a changed
-     line, solid for an addition and hatched for a removal; a 10% row tint; the
-     word-level tint on the words a rewritten line actually changed; and the
-     `+N -N` stat in the header. The row model lives in diff-rows.ts.
+     Lines mode shows one gutter column (a removed line keeps its old number,
+     everything else shows its new one), numbered from `oldStart` / `newStart`
+     (1 by default) so an excerpt shows its real file lines. A changed line gets
+     a 3px bar down its left (solid for an addition, hatched for a removal), a
+     10% row tint, and a word tint on the words a rewrite actually changed.
+     `split` pairs a removed run beside the added run that replaced it, one grid
+     row per line so the two sides stay level when a line wraps. `words` and
+     `chars` modes render inline with the same word tint.
 
-     Props, and the lazy `import('diff')`, are unchanged. `words`/`chars` modes
-     keep their inline rendering in the source's word-tint style, and `split`
-     pairs a removed run beside the added run that replaced it, one grid row per
-     line so the two sides stay level when a line wraps (the old two-table
-     version drifted apart).
+     For legibility:
+     - A `+`/`−` sign column, so add and remove never rest on colour alone.
+     - Text on a changed line is the foreground colour (muted text on a 10% tint
+       measures 4.16:1 on a white card).
+     - Gutter numbers, signs and the header stat mix the status colour 50/50
+       with the foreground, which darkens them in light themes and lightens them
+       in dark ones without a `dark:` variant.
+     - No syntax colouring: there is no `language` prop, and CodeBlock's rule is
+       that a block nobody labelled as code stays uncoloured.
+     - The gutter is 20px up to two-digit line numbers and ~7px a digit past
+       that (21px at three digits), from display/gutter.ts.
 
-     Deviations, all for legibility:
-     - A `+`/`−` sign column. The hatch is the source's only non-colour cue and
-       at 3px it is not enough for someone who cannot tell red from green.
-     - Text on a changed line is the foreground colour, not the source's muted
-       grey: muted text on a 10% tint measures 4.16:1 on ripple's own white card.
-     - Gutter numbers, signs and the header stat are the status colour mixed 50/50
-       with the foreground. The raw tokens measure 2.3:1 (green) and 3.6:1 (red)
-       on white; mixing toward the foreground darkens them in light themes and
-       lightens them in dark ones without a `dark:` variant. Measured figures are
-       in the skin-diff status file.
-     - No syntax colouring. This widget has no `language` prop, and CodeBlock's
-       rule is that a block nobody labelled as code stays uncoloured.
-     - The gutter widens past 20px once line numbers reach four digits.
-
-     Dropped for glass: `shadow-card`, and the source's `max-w-105`. -->
+     No shadow and no max width: a ripple widget sizes to its host's layout. -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
   import FileIcon from '@lucide/svelte/icons/code-xml';
   import { diffRows, splitRows, type DiffPart, type DiffRow } from './diff-rows.js';
+  import { gutterWidth } from './gutter.js';
 
   type Mode = 'lines' | 'words' | 'chars';
 
@@ -60,6 +52,10 @@
     /** Show line numbers (lines mode only). */
     showLineNumbers?: boolean;
     title?: string;
+    /** File line number of the first `before` line (lines mode). */
+    oldStart?: number;
+    /** File line number of the first `after` line (lines mode). */
+    newStart?: number;
   }
 
   let {
@@ -71,7 +67,9 @@
     mode = 'lines',
     layout = 'unified',
     showLineNumbers = true,
-    title
+    title,
+    oldStart = 1,
+    newStart = 1
   }: Props = $props();
 
   const styleString = $derived(
@@ -89,13 +87,15 @@
     const b = asText(after);
     if (mode === 'words') parts = mod.diffWords(a, b);
     else if (mode === 'chars') parts = mod.diffChars(a, b);
-    else rows = diffRows(mod.diffLines(a, b), mod.diffWordsWithSpace);
+    else rows = diffRows(mod.diffLines(a, b), mod.diffWordsWithSpace, oldStart, newStart);
   }
 
   $effect(() => {
     void before;
     void after;
     void mode;
+    void oldStart;
+    void newStart;
     compute();
   });
 
@@ -104,11 +104,7 @@
   const added = $derived(rows.filter((r) => r.kind === 'added').length);
   const removed = $derived(rows.filter((r) => r.kind === 'removed').length);
 
-  // 20px holds three digits at 11px mono; past that, ~7px a digit.
-  const gutter = $derived.by(() => {
-    const last = rows.reduce((n, r) => Math.max(n, r.oldNo ?? 0, r.newNo ?? 0), 0);
-    return Math.max(20, String(last).length * 7);
-  });
+  const gutter = $derived(gutterWidth(rows.reduce((n, r) => Math.max(n, r.oldNo ?? 0, r.newNo ?? 0), 0)));
   const columns = $derived(`${showLineNumbers ? `${gutter}px ` : ''}16px minmax(0,1fr)`);
 </script>
 

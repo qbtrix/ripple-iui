@@ -1,17 +1,38 @@
 <!--
-  C4Diagram.svelte — SvelteFlow + ELK.js based C4 Model diagram widget.
-  Modified: 2026-04-07 — Complete rewrite from SVG-based to SvelteFlow/ELK for
-  professional-grade layout, interactive pan/zoom, minimap, and group node nesting.
-  Supports all 4 C4 levels (Context, Container, Component, Code) with drill-down.
-  Modified: 2026-04-10 — Add cancellation to $effect layout call to prevent stale results from race conditions.
-  Modified: 2026-09-17 (fix/port-gaps) — the layout spinner stops under
-  prefers-reduced-motion, from a scoped @media block (the pattern ReasoningTrace
-  and TaskRows use). Still, it is a ring with one coloured segment next to
-  "Computing layout", which still reads as loading.
+  C4Diagram.svelte — SvelteFlow + ELK.js C4 model diagram: all four levels
+  (Context, Container, Component, Code), pan/zoom, minimap, nested boundaries
+  and drill-down through `ondrilldown`.
+
+  Live layer (all optional; absent, the widget behaves as it always did):
+  `status` paints a node's state through a `data-c4-status` attribute on its
+  SvelteFlow wrapper (ring colours are ripple tokens; only `changing` moves;
+  `planned` draws a blueprint: dashed outline, no fill, content dimmed),
+  `markers` pins dots to nodes, `selectedId` controls selection, and
+  `focusId` + `follow` keep the camera on one node. A user pan or zoom (the
+  zoom buttons and the minimap included) calls `onmanualcamera`, so a host can
+  drop follow mode. Enter or Space on a focused node runs exactly what a click
+  on it runs (activate.ts), for every node type.
+
+  Edges follow ELK's orthogonal routes (C4Edge) and every card fills its ELK
+  box, so routes meet card edges and labels sit in the space ELK reserved.
+
+  SvelteFlow stays mounted across diagram swaps: only the first layout shows
+  the loading state, and C4LiveLayer refits when the node set changes. The
+  layout spinner stops under prefers-reduced-motion.
+
+  Semantic zoom (pass `expanded`): one canvas for the whole tree. An expanded
+  element opens in place as a boundary around its children (an expanded code
+  element with an excerpt opens as a code panel), `scopeId` ghosts what lies
+  outside it, edges lift onto drawn siblings with port badges and counts, and
+  markers on hidden elements roll up to their drawn ancestor (semantic.ts,
+  semantic-flow.ts). Between layouts nodes glide and resize with the ripple
+  ease, leaving nodes fade where they were, edges and markers sit out the move,
+  and the camera eases to the new frame; all instant under reduced motion.
+  Without `expanded` none of this runs and the widget renders as before.
 -->
 <script lang="ts">
-  import { SvelteFlow, Background, Controls, MiniMap, Position } from '@xyflow/svelte';
-  import type { Node, Edge, NodeTypes } from '@xyflow/svelte';
+  import { SvelteFlow, Background, Controls, MiniMap } from '@xyflow/svelte';
+  import type { Node, Edge, NodeTypes, EdgeTypes } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
   import {
@@ -23,18 +44,58 @@
     C4ComponentNode,
     C4GroupNode,
   } from './nodes/index.js';
-  import { computeElkLayout, getNodeType, isGroupNode } from './elk-layout.js';
-  // From types.ts, NOT the barrel. `index.ts` exports THIS component as
-  // `C4Diagram`, so importing the name from the barrel resolved `diagram` to
-  // the component's own props type — a self-referential collision that made
-  // every field access below an error.
-  import type { C4Diagram, C4Element, C4System, C4Container, C4Component, C4NodeData } from './types.js';
+  import C4LiveLayer from './C4LiveLayer.svelte';
+  import C4Edge from './C4Edge.svelte';
+  import { C4CodeNode } from './nodes/index.js';
+  import { untrack } from 'svelte';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import { computeElkGraph, edgeLabelText, getNodeType, isGroupNode, type LayoutPosition } from './elk-layout.js';
+  import {
+    decorateNodes,
+    nodeSetKey,
+    statusesPresent,
+    unionRect,
+    STATUS_LABELS,
+    EDGE_STROKE,
+    edgeLook,
+  } from './live.js';
+  import { liftMarkers, representative, type C4Tree, type Visibility } from './semantic.js';
+  import { buildSemanticFlow } from './semantic-flow.js';
+  import { activateNode } from './activate.js';
+  // From types.ts, NOT the barrel, and aliased: this component is itself named
+  // C4Diagram, and svelte-package emits `declare const C4Diagram` plus
+  // `type C4Diagram` in the .d.ts. An unaliased type import of the same name
+  // collided with both, so consumers saw the component as type-only.
+  import type {
+    C4Diagram as C4DiagramData,
+    C4Element,
+    C4System,
+    C4Container,
+    C4NodeData,
+    C4Status,
+    C4Marker,
+  } from './types.js';
 
   interface Props {
-    diagram: C4Diagram;
+    diagram: C4DiagramData;
     class?: string;
     onclick?: (elementId: string) => void;
     ondrilldown?: (elementId: string, level: string) => void;
+    /** Live state per element id. */
+    status?: Record<string, C4Status>;
+    /** Dots per element id (who is working there). */
+    markers?: Record<string, C4Marker[]>;
+    /** The element the camera frames while `follow` is true. */
+    focusId?: string;
+    follow?: boolean;
+    /** Controlled selection; leave undefined to let clicks select. */
+    selectedId?: string;
+    /** A user pan, zoom or zoom-button press moved the camera. */
+    onmanualcamera?: () => void;
+    /** Semantic zoom: ids drawn open on one canvas. Passing it (even []) turns the mode on. */
+    expanded?: string[];
+    /** Semantic zoom: the element being looked inside; everything outside it is ghosted. */
+    scopeId?: string;
   }
 
   let {
@@ -42,6 +103,14 @@
     class: className = '',
     onclick,
     ondrilldown,
+    status,
+    markers,
+    focusId,
+    follow,
+    selectedId,
+    onmanualcamera,
+    expanded,
+    scopeId,
   }: Props = $props();
 
   // Register all C4 node types for SvelteFlow
@@ -53,7 +122,10 @@
     queue: C4QueueNode as any,
     component: C4ComponentNode as any,
     group: C4GroupNode as any,
+    code: C4CodeNode as any,
   };
+
+  const edgeTypes: EdgeTypes = { c4: C4Edge as any };
 
   // Level badge labels
   const levelLabels: Record<string, string> = {
@@ -63,20 +135,23 @@
     code: 'Code',
   };
 
-  // C4 color palette for the minimap node coloring
-  const NODE_TYPE_COLORS: Record<string, string> = {
-    person: '#0A84FF',
-    system: '#2563EB',
-    container: '#1D4ED8',
-    database: '#7C3AED',
-    queue: '#F59E0B',
-    component: '#3B82F6',
-    group: 'rgba(37,99,235,0.3)',
-  };
+  // Ripple tokens, so the canvas follows the host theme. Edges and the minimap
+  // take colours as strings, which is why these are constants, not CSS.
+  const MINIMAP_NODE = 'color-mix(in oklab, var(--ripple-muted-foreground) 45%, transparent)';
+  const MINIMAP_GROUP = 'color-mix(in oklab, var(--ripple-muted-foreground) 10%, transparent)';
+
+  const SHAPE_LEGEND = [
+    { shape: 'person', label: 'Person' },
+    { shape: 'system', label: 'System' },
+    { shape: 'container', label: 'Container' },
+    { shape: 'database', label: 'Database' },
+    { shape: 'queue', label: 'Queue' },
+    { shape: 'external', label: 'External' },
+  ];
 
   // ---- ELK layout state ----
-  let flowNodes = $state<Node[]>([]);
-  let flowEdges = $state<Edge[]>([]);
+  let flowNodes = $state.raw<Node[]>([]);
+  let flowEdges = $state.raw<Edge[]>([]);
   let layoutReady = $state(false);
   let layoutError = $state<string | null>(null);
 
@@ -90,6 +165,7 @@
   }
 
   function hasDrillDown(el: C4Element): boolean {
+    if (el.drillable !== undefined) return el.drillable;
     return (
       ('containers' in el && Array.isArray((el as C4System).containers) && ((el as C4System).containers?.length ?? 0) > 0) ||
       ('components' in el && Array.isArray((el as C4Container).components) && ((el as C4Container).components?.length ?? 0) > 0)
@@ -105,7 +181,7 @@
    * Build the full flat list of C4 elements to layout, including nested
    * containers/components that live inside parent system nodes.
    */
-  function collectAllElements(diagram: C4Diagram): C4Element[] {
+  function collectAllElements(diagram: C4DiagramData): C4Element[] {
     const all: C4Element[] = [];
     for (const el of diagram.elements) {
       all.push(el);
@@ -133,8 +209,8 @@
   /**
    * Convert the C4 diagram to SvelteFlow Node[] using ELK-computed positions.
    */
-  async function buildFlowGraph(diagram: C4Diagram): Promise<{ nodes: Node[]; edges: Edge[] }> {
-    const positions = await computeElkLayout(diagram);
+  async function buildFlowGraph(diagram: C4DiagramData): Promise<{ nodes: Node[]; edges: Edge[] }> {
+    const { positions, routes } = await computeElkGraph(diagram);
 
     // Gather all elements (top-level and nested children for group nodes)
     const allElements = collectAllElements(diagram);
@@ -180,6 +256,7 @@
         drillable: hasDrillDown(el),
         kb_article: 'kb_article' in el ? (el as { kb_article?: string }).kb_article : undefined,
         tags: 'tags' in el ? (el as { tags?: string[] }).tags : undefined,
+        kind: el.kind,
         element: el,
         diagramLevel: diagram.level,
         onclick: onclick ? (element: C4Element) => onclick(element.id) : undefined,
@@ -207,6 +284,9 @@
         data: nodeData as unknown as Record<string, unknown>,
         draggable: false,
         selectable: true,
+        // Every node takes its ELK box, so ELK's edge routes meet the card edges.
+        width: pos.width,
+        height: pos.height,
         // Group nodes need explicit dimensions for SvelteFlow to render the bounding box
         ...(isGroup ? { style: `width: ${pos.width}px; height: ${pos.height}px;` } : {}),
         ...(parentId ? { parentId } : {}),
@@ -217,52 +297,102 @@
       nodes.push(node);
     }
 
-    // Build edges from relationships
+    // Build edges from relationships. An edge ELK routed draws its route (C4Edge);
+    // without one (ELK fell back to a grid) it stays a smoothstep.
     const allElementIds = new Set(allElements.map((e) => e.id));
-    const edges: Edge[] = diagram.relationships
-      .filter((r) => allElementIds.has(r.from) && allElementIds.has(r.to))
-      .map((r, i) => {
-        const isAsync = r.style === 'async';
-        const isEvent = r.style === 'event';
+    const edges: Edge[] = [];
+    diagram.relationships.forEach((r, i) => {
+      if (!allElementIds.has(r.from) || !allElementIds.has(r.to)) return;
+      const look = edgeLook(r.style);
 
-        const edgeStyle = isEvent
-          ? 'stroke: rgba(245,158,11,0.55); stroke-width: 1.5px; stroke-dasharray: 4 4;'
-          : isAsync
-            ? 'stroke: rgba(255,255,255,0.2); stroke-width: 1.5px; stroke-dasharray: 8 4;'
-            : 'stroke: rgba(255,255,255,0.2); stroke-width: 1.5px;';
-
-        const labelParts: string[] = [];
-        if (r.label) labelParts.push(r.label);
-        if (r.technology) labelParts.push(`[${r.technology}]`);
-
-        return {
-          id: `edge-${i}-${r.from}-${r.to}`,
-          source: r.from,
-          target: r.to,
-          type: 'smoothstep',
-          label: labelParts.join(' ') || undefined,
-          animated: isAsync,
-          style: edgeStyle,
-          labelStyle: 'fill: rgba(255,255,255,0.55); font-size: 9px; font-weight: 500;',
-        } satisfies Edge;
+      const route = routes.get(i);
+      edges.push({
+        id: `edge-${i}-${r.from}-${r.to}`,
+        source: r.from,
+        target: r.to,
+        type: route ? 'c4' : 'smoothstep',
+        label: edgeLabelText(r) || undefined,
+        animated: look.animated,
+        style: look.style,
+        ...(route ? { data: { points: route.points, labelBox: route.label } } : {}),
       });
+    });
 
     return { nodes, edges };
   }
 
-  // Run ELK layout whenever the diagram input changes
+  // True once a layout has landed. Plain (not $state): only the effect reads it.
+  let hasLayout = false;
+
+  // ---- Semantic zoom state ----
+  /** The last semantic layout: what is drawn, and every element's absolute box. */
+  let semanticInfo = $state.raw<{ tree: C4Tree; vis: Visibility; rects: Map<string, LayoutPosition> } | null>(null);
+  /** Nodes that just left the map, fading where they were until the move settles. */
+  let leaving = $state.raw<Node[]>([]);
+  /** True while nodes glide between layouts: edges and markers sit it out. */
+  let moving = $state(false);
+  const MOVE_MS = 560;
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // Keyed on strings: a host deriving `expanded` per frame must not re-run ELK per frame.
+  const expandedKey = $derived(expanded === undefined ? null : expanded.join('\n'));
+
+  function beginMove(prev: Node[], next: Node[], prevRects: Map<string, LayoutPosition> | undefined) {
+    clearTimeout(settleTimer);
+    if (prev.length === 0 || prefersReducedMotion.current) {
+      leaving = [];
+      moving = false;
+      return;
+    }
+    const nextIds = new Set(next.map((n) => n.id));
+    leaving = prev.flatMap((n) => {
+      const r = prevRects?.get(n.id);
+      if (nextIds.has(n.id) || !r) return [];
+      // Absolute and unparented: its parent may be gone or shrinking.
+      return [{ ...n, parentId: undefined, position: { x: r.x, y: r.y }, class: 'c4-leaving', selectable: false, focusable: false, zIndex: 1000, domAttributes: undefined }];
+    });
+    moving = true;
+    settleTimer = setTimeout(() => {
+      moving = false;
+      leaving = [];
+    }, MOVE_MS + 60);
+  }
+
+  // Run ELK layout whenever the diagram (or, in semantic zoom, the expanded set
+  // or scope) changes. After the first layout the previous graph stays on
+  // screen until the next one is ready.
   $effect(() => {
     const currentDiagram = diagram;
+    const ek = expandedKey;
+    const scope = ek === null ? undefined : scopeId;
     let cancelled = false;
-    layoutReady = false;
+    if (!hasLayout) layoutReady = false;
     layoutError = null;
 
-    buildFlowGraph(currentDiagram)
-      .then(({ nodes, edges }) => {
+    // Handlers read the props when called, so the layout never tracks their identity. Without a
+    // host ondrilldown a drillable card clicks instead, as in the non-semantic path.
+    const handlers = {
+      onclick: (id: string) => onclick?.(id),
+      ondrilldown: untrack(() => ondrilldown) ? (id: string, level: string) => ondrilldown?.(id, level) : undefined,
+    };
+    const job =
+      ek === null
+        ? buildFlowGraph(currentDiagram).then((g) => ({ ...g, semantic: null }))
+        : buildSemanticFlow(currentDiagram, new Set(ek ? ek.split('\n') : []), scope, handlers).then((f) => ({
+            nodes: f.nodes,
+            edges: f.edges,
+            semantic: { tree: f.tree, vis: f.vis, rects: f.rects },
+          }));
+
+    job
+      .then(({ nodes, edges, semantic }) => {
         if (cancelled) return;
+        if (semantic) beginMove(flowNodes, nodes, semanticInfo?.rects);
         flowNodes = nodes;
         flowEdges = edges;
+        semanticInfo = semantic;
         layoutReady = true;
+        hasLayout = true;
       })
       .catch((err) => {
         if (cancelled) return;
@@ -273,22 +403,101 @@
 
     return () => { cancelled = true; };
   });
+
+  // ---- Live layer ----
+  const shownNodes = $derived(
+    decorateNodes(leaving.length ? [...flowNodes, ...leaving] : flowNodes, { status, selectedId })
+  );
+  const nodeIds = $derived(nodeSetKey(flowNodes));
+  const legendStatuses = $derived(statusesPresent(status, nodeIds.split('\n')));
+  const shownMarkers = $derived(
+    semanticInfo && markers ? liftMarkers(semanticInfo.tree, semanticInfo.vis, markers) : markers
+  );
+
+  // Semantic camera: what to frame and the signature that decides when to move.
+  // Following, it frames the focus (its drawn ancestor if hidden) and refits when
+  // that box changes; manually, it frames the open code panel or the scope and
+  // refits only when what is drawn, the scope or the open panel changes.
+  const frame = $derived.by(() => {
+    if (!semanticInfo) return undefined;
+    const { tree, vis, rects } = semanticInfo;
+    const panels = [...vis.panels];
+    const target =
+      follow && focusId
+        ? representative(tree, vis, focusId)
+        : (panels.at(-1) ?? (scopeId && rects.has(scopeId) ? scopeId : undefined));
+    let rect = target ? (rects.get(target) ?? null) : null;
+    // A code panel keeps its boundary's label row in view, so the nesting reads.
+    const box = target && vis.panels.has(target) ? rects.get(tree.parent.get(target) ?? '') : undefined;
+    if (rect && box) rect = unionRect([rect, { x: rect.x, y: box.y, width: rect.width, height: 1 }]);
+    rect ??= unionRect(rects.values());
+    const r = rect ? [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(',') : '';
+    const key = follow ? `F|${target}|${r}` : `M|${nodeIds}|${scopeId ?? ''}|${panels.join(',')}`;
+    return { key, rect, follow: !!follow };
+  });
+
+  // A user gesture carries its DOM event; programmatic moves (fitView, the
+  // follow camera) pass null. Report once per gesture.
+  let manualReported = false;
+  function onMoveStart() {
+    manualReported = false;
+  }
+  function onMove(event: MouseEvent | TouchEvent | null) {
+    if (!event || manualReported) return;
+    manualReported = true;
+    onmanualcamera?.();
+  }
+  // The zoom buttons and the minimap (pannable, zoomable) move the camera
+  // programmatically, so their gestures never reach onMove: catch them here.
+  function onCanvasGesture(event: Event) {
+    const t = event.target as Element | null;
+    if (t?.closest?.('.svelte-flow__controls, .svelte-flow__minimap')) onmanualcamera?.();
+  }
+
+  // Keyboard twin of a node click: SvelteFlow makes node wrappers focusable,
+  // and Enter or Space on one runs the same activateNode its click runs.
+  // Only on the wrapper itself: a control inside a node (a link, a panel's
+  // Before/After switch, a port badge) keeps its own keys.
+  function onCanvasKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const t = event.target as Element | null;
+    if (!t?.classList?.contains('svelte-flow__node')) return;
+    const id = t.getAttribute('data-id');
+    const node = id ? flowNodes.find((n) => n.id === id) : undefined;
+    if (!node) return;
+    event.preventDefault();
+    activateNode(node.type, node.data as unknown as C4NodeData);
+  }
 </script>
 
-<div class="c4-diagram {className}" role="figure" aria-label={diagram.title}>
-  <!-- Header -->
-  <div class="c4-header">
-    <div class="c4-title-row">
-      <h3 class="c4-title">{diagram.title}</h3>
-      <span class="c4-level-badge">{levelLabels[diagram.level] ?? diagram.level}</span>
+<div
+  class="c4-diagram {className}"
+  role="figure"
+  aria-label={diagram.title || (levelLabels[diagram.level] ?? diagram.level)}
+>
+  <!-- Header: a host that draws its own chrome passes an empty title. -->
+  {#if diagram.title}
+    <div class="c4-header">
+      <div class="c4-title-row">
+        <h3 class="c4-title">{diagram.title}</h3>
+        <span class="c4-level-badge">{levelLabels[diagram.level] ?? diagram.level}</span>
+      </div>
+      {#if diagram.description}
+        <p class="c4-description">{diagram.description}</p>
+      {/if}
     </div>
-    {#if diagram.description}
-      <p class="c4-description">{diagram.description}</p>
-    {/if}
-  </div>
+  {/if}
 
   <!-- Flow canvas -->
-  <div class="c4-canvas">
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class={semanticInfo ? 'c4-canvas c4-semantic' : 'c4-canvas'}
+    data-c4-moving={moving ? '' : undefined}
+    onpointerdowncapture={onCanvasGesture}
+    onwheelcapture={onCanvasGesture}
+    onkeydown={onCanvasKeydown}
+  >
     {#if !layoutReady}
       <!-- Loading state -->
       <div class="c4-loading" aria-live="polite">
@@ -305,9 +514,10 @@
       </div>
     {:else}
       <SvelteFlow
-        nodes={flowNodes}
+        nodes={shownNodes}
         edges={flowEdges}
         {nodeTypes}
+        {edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.25 }}
         colorMode="dark"
@@ -317,12 +527,15 @@
         zoomOnDoubleClick
         nodesDraggable={false}
         nodesConnectable={false}
-        elementsSelectable
+        elementsSelectable={selectedId === undefined}
         minZoom={0.15}
         maxZoom={4}
-        defaultMarkerColor="rgba(255,255,255,0.25)"
+        defaultMarkerColor={EDGE_STROKE}
         proOptions={{ hideAttribution: true }}
+        onmovestart={onMoveStart}
+        onmove={onMove}
       >
+        <C4LiveLayer ids={nodeIds} {focusId} {follow} markers={shownMarkers} {frame} />
         <Background
           gap={24}
         />
@@ -332,43 +545,35 @@
         />
         <MiniMap
           position="bottom-left"
-          maskColor="rgba(0,0,0,0.6)"
-          bgColor="rgba(255,255,255,0.02)"
-          nodeColor={(node) => {
-            return NODE_TYPE_COLORS[(node.type as string) ?? 'system'] ?? '#3B82F6';
-          }}
+          width={160}
+          height={110}
+          nodeColor={(node) => (node.type === 'group' ? MINIMAP_GROUP : MINIMAP_NODE)}
+          nodeBorderRadius={4}
         />
       </SvelteFlow>
     {/if}
   </div>
 
-  <!-- Legend -->
-  {#if layoutReady && !layoutError}
+  <!-- Legend: the live statuses on the map when `status` is given, else the C4 shapes. -->
+  {#if layoutReady && !layoutError && status}
+    {#if legendStatuses.length > 0}
+      <div class="c4-legend" role="list" aria-label="Status legend">
+        {#each legendStatuses as st (st)}
+          <div class="c4-legend-item" role="listitem">
+            <span class="c4-status-swatch" data-c4-swatch={st}></span>
+            <span>{STATUS_LABELS[st]}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  {:else if layoutReady && !layoutError}
     <div class="c4-legend" role="list" aria-label="Diagram legend">
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #0A84FF; border-radius: 50%;"></span>
-        <span>Person</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #2563EB;"></span>
-        <span>System</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #1D4ED8;"></span>
-        <span>Container</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #7C3AED;"></span>
-        <span>Database</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: #F59E0B;"></span>
-        <span>Queue</span>
-      </div>
-      <div class="c4-legend-item" role="listitem">
-        <span class="c4-legend-swatch" style="background: rgba(107,114,128,0.5); border: 1px dashed rgba(107,114,128,0.7);"></span>
-        <span>External</span>
-      </div>
+      {#each SHAPE_LEGEND as item (item.shape)}
+        <div class="c4-legend-item" role="listitem">
+          <span class="c4-legend-swatch" data-c4-shape={item.shape}></span>
+          <span>{item.label}</span>
+        </div>
+      {/each}
     </div>
   {/if}
 </div>
@@ -379,7 +584,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ripple-surface-foreground);
   }
 
   /* ---- Header ---- */
@@ -399,35 +604,78 @@
     margin: 0;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.005em;
+    color: var(--ripple-surface-foreground);
   }
 
   .c4-level-badge {
     font-size: 10px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(37, 99, 235, 0.5);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ripple-accent);
+    background: color-mix(in oklab, var(--ripple-accent) 12%, transparent);
     padding: 2px 8px;
     border-radius: 9999px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
   }
 
   .c4-description {
     margin: 0;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--ripple-muted-foreground);
   }
 
-  /* ---- Canvas ---- */
+  /* ---- Canvas ----
+     480px in an auto-height parent (the legacy size); fills a parent that
+     gives the diagram a height. SvelteFlow's theme variables are mapped to
+     ripple tokens here, so the canvas follows the host's light/dark theme. */
   .c4-canvas {
     width: 100%;
-    height: 480px;
+    flex: 1 1 480px;
+    min-height: 0;
     border-radius: 12px;
     overflow: hidden;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(10, 15, 30, 0.6);
+    border: 1px solid var(--ripple-border);
+    background: var(--ripple-surface);
+    /* An opaque ground for things that sit ON the map (node cards, edge
+       labels, controls). The host's surfaces may be translucent glass, which
+       lets edges and the grid read through; this inverts the ink's lightness
+       instead (dark ink -> near-white ground, light ink -> near-black), and
+       cards layer the host's card tint over it. */
+    --c4-ground: oklch(from var(--ripple-surface-foreground) calc(1.13 - l * 0.96) calc(c * 0.5) h);
+    --c4-card: linear-gradient(var(--ripple-surface) 0 0), var(--c4-ground);
+    --xy-background-pattern-color: var(--ripple-border);
+    --xy-edge-stroke: color-mix(in oklab, var(--ripple-muted-foreground) 55%, transparent);
+    --xy-edge-label-background-color: var(--ripple-surface);
+    --xy-edge-label-color: var(--ripple-muted-foreground);
+    --xy-controls-button-background-color: var(--ripple-surface);
+    --xy-controls-button-background-color-hover: var(--ripple-muted);
+    --xy-controls-button-color: var(--ripple-muted-foreground);
+    --xy-controls-button-color-hover: var(--ripple-surface-foreground);
+    --xy-controls-button-border-color: var(--ripple-border);
+    --xy-controls-box-shadow: none;
+    --xy-minimap-background-color: var(--ripple-surface);
+    --xy-minimap-mask-background-color: color-mix(in oklab, var(--ripple-surface-foreground) 7%, transparent);
+    --xy-minimap-mask-stroke-color: var(--ripple-border);
+    /* Everything else xyflow colours, so the fixed palette behind colorMode never shows. */
+    --xy-background-color: transparent;
+    --xy-attribution-background-color: transparent;
+    --xy-connectionline-stroke: var(--ripple-muted-foreground);
+    --xy-edge-stroke-selected: var(--ripple-accent);
+    --xy-node-color: var(--ripple-surface-foreground);
+    --xy-node-background-color: transparent;
+    --xy-node-border: none;
+    --xy-node-group-background-color: transparent;
+    --xy-node-boxshadow-hover: none;
+    --xy-node-boxshadow-selected: none;
+    --xy-handle-background-color: var(--ripple-muted-foreground);
+    --xy-handle-border-color: var(--ripple-surface);
+    --xy-selection-background-color: color-mix(in oklab, var(--ripple-accent) 8%, transparent);
+    --xy-selection-border: 1px dotted color-mix(in oklab, var(--ripple-accent) 60%, transparent);
+    --xy-minimap-node-background-color: color-mix(in oklab, var(--ripple-muted-foreground) 45%, transparent);
+    --xy-minimap-node-stroke-color: transparent;
+    --xy-resize-background-color: var(--ripple-accent);
   }
 
   /* ---- Loading / Error states ---- */
@@ -440,18 +688,18 @@
     justify-content: center;
     gap: 10px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--ripple-muted-foreground);
   }
 
   .c4-error {
-    color: rgba(239, 68, 68, 0.75);
+    color: var(--ripple-error-text);
   }
 
   .c4-spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-top-color: rgba(59, 130, 246, 0.7);
+    border: 2px solid var(--ripple-border);
+    border-top-color: var(--ripple-accent);
     border-radius: 50%;
     animation: c4-spin 0.7s linear infinite;
     flex-shrink: 0;
@@ -461,40 +709,54 @@
     to { transform: rotate(360deg); }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .c4-spinner {
-      animation: none;
-    }
-  }
-
   /* ---- Legend ---- */
   .c4-legend {
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
-    padding: 2px 0;
+    padding: 2px 4px;
   }
 
   .c4-legend-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.4);
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ripple-muted-foreground);
   }
 
   .c4-legend-swatch {
     width: 10px;
     height: 10px;
-    border-radius: 2px;
+    border-radius: 3px;
     flex-shrink: 0;
+    border: 1px solid color-mix(in oklab, var(--ripple-surface-foreground) 30%, transparent);
+    background: var(--ripple-surface);
+  }
+  .c4-legend-swatch[data-c4-shape='person'] {
+    border-radius: 50%;
+    border-color: transparent;
+    background: color-mix(in oklab, var(--ripple-accent) 40%, transparent);
+  }
+  .c4-legend-swatch[data-c4-shape='container'] {
+    border-radius: 2px;
+  }
+  .c4-legend-swatch[data-c4-shape='database'] {
+    border-radius: 50% / 30%;
+    border-color: color-mix(in oklab, var(--ripple-info) 55%, transparent);
+    background: color-mix(in oklab, var(--ripple-info) 20%, transparent);
+  }
+  .c4-legend-swatch[data-c4-shape='queue'] {
+    border-color: transparent;
+    background: color-mix(in oklab, var(--ripple-warning) 35%, transparent);
+  }
+  .c4-legend-swatch[data-c4-shape='external'] {
+    border-style: dashed;
+    background: transparent;
   }
 
-  /* ---- SvelteFlow dark theme overrides ---- */
-  .c4-canvas :global(.svelte-flow) {
-    background: transparent !important;
-  }
-
+  /* ---- SvelteFlow overrides ---- */
+  .c4-canvas :global(.svelte-flow),
   .c4-canvas :global(.svelte-flow__background) {
     background: transparent !important;
   }
@@ -504,15 +766,24 @@
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
+    border-radius: var(--c4-r);
   }
 
-  .c4-canvas :global(.svelte-flow__node.selected) {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.55) !important;
-    border-radius: 10px !important;
+  /* Selection (and keyboard focus): an accent ring set off from the node, so
+     a status ring stays readable inside it. */
+  .c4-canvas :global(.svelte-flow__node:focus) {
+    outline: none;
+  }
+  .c4-canvas :global(.svelte-flow__node.selected),
+  .c4-canvas :global(.svelte-flow__node:focus-visible) {
+    outline: 2px solid var(--ripple-accent);
+    outline-offset: 3px;
   }
 
-  .c4-canvas :global(.svelte-flow__edge-path) {
-    stroke: rgba(255, 255, 255, 0.2);
+  /* Handles only anchor edges here (nothing is connectable), so hide them. */
+  .c4-canvas :global(.c4-handle) {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .c4-canvas :global(.svelte-flow__edge.animated .svelte-flow__edge-path) {
@@ -521,52 +792,26 @@
   }
 
   .c4-canvas :global(.svelte-flow__edge.selected .svelte-flow__edge-path) {
-    stroke: rgba(59, 130, 246, 0.7);
+    stroke: var(--ripple-accent) !important;
     stroke-width: 2px;
   }
 
-  .c4-canvas :global(.svelte-flow__edge-text) {
-    fill: rgba(255, 255, 255, 0.6);
-    font-size: 9px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  .c4-canvas :global(.svelte-flow__edge-label) {
+    font-size: calc(11px / clamp(0.6, var(--c4-zoom, 1), 1));
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--ripple-border);
+    background: var(--c4-card);
   }
 
-  .c4-canvas :global(.svelte-flow__edge-textbg) {
-    fill: rgba(10, 15, 30, 0.85);
-  }
-
-  .c4-canvas :global(.svelte-flow__controls) {
-    background: rgba(20, 25, 40, 0.88) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__controls-button) {
-    background: transparent !important;
-    border: none !important;
-    color: rgba(255, 255, 255, 0.6) !important;
-    fill: rgba(255, 255, 255, 0.6) !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__controls-button:hover) {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    fill: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__controls-button svg) {
-    fill: inherit !important;
-  }
-
+  .c4-canvas :global(.svelte-flow__controls),
   .c4-canvas :global(.svelte-flow__minimap) {
-    background: rgba(15, 20, 35, 0.85) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    border-radius: 8px !important;
-  }
-
-  .c4-canvas :global(.svelte-flow__minimap-mask) {
-    fill: rgba(0, 0, 0, 0.55) !important;
+    border: 1px solid var(--ripple-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--c4-card);
   }
 
   /* Group node bounding box sizing — SvelteFlow requires explicit width/height on parent nodes */
@@ -578,5 +823,316 @@
 
   @keyframes c4-dash {
     to { stroke-dashoffset: -12; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-spinner {
+      animation: none;
+    }
+    .c4-canvas :global(.svelte-flow__edge.animated .svelte-flow__edge-path) {
+      animation: none;
+    }
+  }
+
+  /* ---- The shared node card ----
+     Every node component renders these classes; the rules live here once.
+     Names counter-scale with the zoom (C4LiveLayer writes --c4-zoom on the
+     flow root) so they stay legible when the map is zoomed out, and the
+     secondary lines drop away once it is far out (data-c4-far). */
+  .c4-canvas :global(.c4-node) {
+    position: relative;
+    box-sizing: border-box;
+    /* Fill the ELK box SvelteFlow sizes the wrapper to: routes end on this edge. */
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: safe center;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--ripple-border);
+    background: var(--c4-card);
+    color: var(--ripple-surface-foreground);
+    text-align: center;
+    cursor: pointer;
+    transition:
+      border-color 150ms var(--ripple-ease-out),
+      transform 150ms var(--ripple-ease-out);
+  }
+
+  .c4-canvas :global(.c4-node > *) {
+    flex-shrink: 0;
+  }
+
+  /* Per-type card overrides live here, after the shared rule they refine. */
+  .c4-canvas :global(.c4-person-node) {
+    border-radius: 12px;
+    gap: 6px;
+  }
+  .c4-canvas :global(.c4-component-node) {
+    border-radius: 8px;
+  }
+  .c4-canvas :global(.c4-component-node.is-code) {
+    padding-inline: 10px;
+  }
+  /* A file name is one long token: the host's mono face (font-mono on the
+     element) at a size that fits the box. */
+  .c4-canvas :global(.c4-component-node.is-code .c4-node-name) {
+    font-size: calc(12px / clamp(0.5, var(--c4-zoom, 1), 1));
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .c4-canvas :global(.c4-node:hover) {
+    border-color: color-mix(in oklab, var(--ripple-surface-foreground) 24%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .c4-canvas :global(.c4-node.is-external) {
+    border-style: dashed;
+    border-color: color-mix(in oklab, var(--ripple-surface-foreground) 20%, transparent);
+  }
+
+  .c4-canvas :global(.c4-node.is-external .c4-node-name) {
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.c4-node-kind) {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.c4-node-name) {
+    font-size: calc(13px / clamp(0.5, var(--c4-zoom, 1), 1));
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .c4-canvas :global(.c4-node-desc) {
+    font-size: 11px;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--ripple-muted-foreground);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .c4-canvas :global(.c4-node-tech) {
+    font-size: calc(11px / clamp(0.6, var(--c4-zoom, 1), 1));
+    line-height: 1.3;
+    color: var(--ripple-muted-foreground);
+    background: var(--ripple-muted);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .c4-canvas :global(.c4-node-docs) {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: var(--ripple-accent);
+    text-decoration: none;
+  }
+
+  .c4-canvas :global(.c4-node-docs:hover) {
+    text-decoration: underline;
+  }
+
+  .c4-canvas :global(.c4-node-drill) {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: var(--ripple-muted-foreground);
+  }
+
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-kind),
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-desc),
+  .c4-canvas :global(.svelte-flow[data-c4-far] .c4-node-docs) {
+    display: none;
+  }
+
+  /* ---- Semantic zoom ----
+     Nodes glide and resize to their new layout on the ripple curve (the camera
+     eases on the same curve in C4LiveLayer), fade in where they first appear,
+     and fade out where they were when they leave. Edges and marker dots are
+     drawn for the final layout, so they sit the move out. Ghosts are context. */
+  .c4-semantic :global(.svelte-flow__node) {
+    transition:
+      transform 560ms var(--ripple-ease-out),
+      width 560ms var(--ripple-ease-out),
+      height 560ms var(--ripple-ease-out),
+      opacity 280ms var(--ripple-ease-out);
+    animation: c4-node-in 360ms var(--ripple-ease-out) 140ms backwards;
+  }
+
+  @keyframes c4-node-in {
+    from { opacity: 0; }
+  }
+
+  .c4-semantic :global(.svelte-flow__node[data-c4-ghost]) {
+    opacity: 0.38;
+  }
+
+  .c4-semantic :global(.svelte-flow__node.c4-leaving) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .c4-semantic :global(.svelte-flow__edges),
+  .c4-semantic :global(.svelte-flow__edge-labels),
+  .c4-semantic :global(.svelte-flow__node-toolbar) {
+    transition: opacity 240ms var(--ripple-ease-out);
+  }
+
+  .c4-semantic[data-c4-moving] :global(.svelte-flow__edges),
+  .c4-semantic[data-c4-moving] :global(.svelte-flow__edge-labels),
+  .c4-semantic[data-c4-moving] :global(.svelte-flow__node-toolbar) {
+    opacity: 0;
+    transition-duration: 120ms;
+  }
+
+  .c4-semantic :global(.svelte-flow__edge.c4-ghost) {
+    opacity: 0.35;
+  }
+
+  .c4-canvas :global(.svelte-flow__edge-label.c4-ghost-label) {
+    opacity: 0.45;
+  }
+
+  /* A port badge is its own pill; its EdgeLabel wrapper draws nothing. */
+  .c4-canvas :global(.svelte-flow__edge-label.c4-badge-label) {
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-semantic :global(.svelte-flow__node) {
+      transition: none;
+      animation: none;
+    }
+    .c4-semantic :global(.svelte-flow__edges),
+    .c4-semantic :global(.svelte-flow__edge-labels),
+    .c4-semantic :global(.svelte-flow__node-toolbar) {
+      transition: none;
+    }
+  }
+
+  /* ---- Live status: data-c4-status on the SvelteFlow node wrapper ----
+     One ring drawn over the node's own edge, so every node shape gets the same
+     treatment without each node component knowing about status. Tones are
+     ripple tokens; `changing` is the only one that moves. */
+  .c4-canvas :global(.svelte-flow__node) {
+    --c4-r: 10px;
+  }
+  .c4-canvas :global(.svelte-flow__node-person),
+  .c4-canvas :global(.svelte-flow__node-group) {
+    --c4-r: 12px;
+  }
+  .c4-canvas :global(.svelte-flow__node-component) {
+    --c4-r: 8px;
+  }
+
+  .c4-canvas :global(.svelte-flow__node[data-c4-status])::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--c4-r);
+    border: 1.5px solid var(--c4-tone);
+    pointer-events: none;
+    transition: border-color 180ms var(--ripple-ease-out), box-shadow 180ms var(--ripple-ease-out);
+  }
+
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='changing']),
+  .c4-status-swatch[data-c4-swatch='changing'] {
+    --c4-tone: var(--ripple-accent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='changed']),
+  .c4-status-swatch[data-c4-swatch='changed'] {
+    --c4-tone: color-mix(in oklab, var(--ripple-accent) 55%, transparent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='landed']),
+  .c4-status-swatch[data-c4-swatch='landed'] {
+    --c4-tone: var(--ripple-success);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='failed']),
+  .c4-status-swatch[data-c4-swatch='failed'] {
+    --c4-tone: var(--ripple-error);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='drift']),
+  .c4-status-swatch[data-c4-swatch='drift'] {
+    --c4-tone: var(--ripple-warning);
+  }
+
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='drift'])::after {
+    border-style: dashed;
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='failed'])::after {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--ripple-error) 16%, transparent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='changing'])::after {
+    animation: c4-breathe 2.4s ease-in-out infinite;
+  }
+
+  @keyframes c4-breathe {
+    0%, 100% { box-shadow: 0 0 0 2px color-mix(in oklab, var(--ripple-accent) 10%, transparent); }
+    50% { box-shadow: 0 0 0 7px color-mix(in oklab, var(--ripple-accent) 22%, transparent); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c4-canvas :global(.svelte-flow__node[data-c4-status='changing'])::after {
+      animation: none;
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--ripple-accent) 18%, transparent);
+    }
+  }
+
+  .c4-status-swatch {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    border: 1.5px solid var(--c4-tone);
+    background: color-mix(in oklab, var(--c4-tone) 18%, transparent);
+  }
+  .c4-status-swatch[data-c4-swatch='drift'] {
+    border-style: dashed;
+  }
+
+  /* Planned: a node that does not exist in code yet, drawn as a blueprint. A
+     dashed muted outline over a card with no fill or border of its own, its
+     content dimmed. Distinct from the scope ghost (the whole node faded, its
+     outline unchanged) and from drift (a dashed warning ring on a full card).
+     The dim is on the content, not the wrapper, so it composes with the ghost's
+     wrapper opacity instead of fighting it; the handles stay hidden. */
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned']),
+  .c4-status-swatch[data-c4-swatch='planned'] {
+    --c4-tone: color-mix(in oklab, var(--ripple-muted-foreground) 75%, transparent);
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned'])::after {
+    border-style: dashed;
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned'] > :not(.c4-handle)) {
+    opacity: 0.6;
+  }
+  .c4-canvas :global(.svelte-flow__node[data-c4-status='planned'] .c4-node) {
+    background: transparent;
+    border-color: transparent;
+  }
+  .c4-status-swatch[data-c4-swatch='planned'] {
+    border-style: dashed;
+    background: transparent;
   }
 </style>

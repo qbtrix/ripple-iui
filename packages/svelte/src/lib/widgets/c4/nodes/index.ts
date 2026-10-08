@@ -8,3 +8,4 @@ export { default as C4DatabaseNode } from './C4DatabaseNode.svelte';
 export { default as C4QueueNode } from './C4QueueNode.svelte';
 export { default as C4ComponentNode } from './C4ComponentNode.svelte';
 export { default as C4GroupNode } from './C4GroupNode.svelte';
+export { default as C4CodeNode } from './C4CodeNode.svelte';

@@ -1,19 +1,14 @@
 ---
 {
   "title": "C4 Node Components Barrel — Exports All SvelteFlow Custom Node Types",
-  "summary": "The barrel file for the C4 node component directory, re-exporting all seven custom SvelteFlow node types under a single import path. This keeps `C4Diagram.svelte`'s node type registration clean and allows individual node components to be imported independently by consumers.",
+  "summary": "widgets/c4/nodes/index.ts re-exports the eight SvelteFlow node components the C4 widget registers: person, system, container, database, queue, component, group (boundary) and code (the semantic-zoom code panel).",
   "concepts": [
-    "barrel export",
-    "C4PersonNode",
-    "C4SystemNode",
-    "C4ContainerNode",
-    "C4DatabaseNode",
-    "C4QueueNode",
-    "C4ComponentNode",
-    "C4GroupNode",
-    "node types",
+    "barrel exports",
     "SvelteFlow",
-    "module index"
+    "custom nodes",
+    "nodeTypes",
+    "C4CodeNode",
+    "C4GroupNode"
   ],
   "categories": [
     "module",
@@ -24,8 +19,8 @@
     "39312d103168469c"
   ],
   "backlinks": null,
-  "word_count": 329,
-  "compiled_at": "2026-04-23T18:36:05Z",
+  "word_count": 243,
+  "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
   "audience": "human",
@@ -36,7 +31,7 @@
 
 ## Overview
 
-`lib/widgets/c4/nodes/index.ts` collects all seven SvelteFlow custom node components into a single named export surface. It was created alongside the 2026-04-07 SvelteFlow + ELK rewrite when the node directory was established.
+`lib/widgets/c4/nodes/index.ts` gathers the node components so `C4Diagram` registers them from one import.
 
 ## Exports
 
@@ -48,43 +43,15 @@ export { default as C4DatabaseNode }  from './C4DatabaseNode.svelte';
 export { default as C4QueueNode }     from './C4QueueNode.svelte';
 export { default as C4ComponentNode } from './C4ComponentNode.svelte';
 export { default as C4GroupNode }     from './C4GroupNode.svelte';
+export { default as C4CodeNode }      from './C4CodeNode.svelte';
 ```
 
-Each Svelte component's default export is named explicitly on re-export — this is required because Svelte components export as `default` internally, and downstream consumers need named imports to use them in `nodeTypes` maps and destructuring.
+## How they are used
 
-## Why It Exists
+`C4Diagram` maps SvelteFlow node types to them: `person`, `system`, `container`, `database`, `queue`, `component`, `group` and `code`. `getNodeType` picks the type for each element; `code` is only produced by semantic zoom, for an expanded code element with an excerpt.
 
-Without this barrel, `C4Diagram.svelte` would import from seven separate paths:
+## Shared rules
 
-```typescript
-import C4PersonNode from './nodes/C4PersonNode.svelte';
-import C4SystemNode from './nodes/C4SystemNode.svelte';
-// ... five more
-```
+The card-shaped nodes (person, system, container, component) render the classes `c4-node`, `c4-node-kind`, `c4-node-name`, `c4-node-tech`, `c4-node-desc`, `c4-node-docs` and `c4-node-drill`. Their rules live once in `C4Diagram.svelte`, on ripple tokens: the card fills its ELK box, names counter-scale with zoom, and secondary lines drop away when zoomed far out. Every node renders four hidden handles, which only anchor edges. Every node's click goes through `activateNode` (`activate.ts`), which `C4Diagram` also calls on Enter or Space, so keyboard and pointer behave the same for each type. Status rings and the `planned` blueprint treatment are drawn on the SvelteFlow wrapper, so no node component knows about status.
 
-With the barrel, the import collapses to one line:
-
-```typescript
-import {
-  C4PersonNode, C4SystemNode, C4ContainerNode,
-  C4DatabaseNode, C4QueueNode, C4ComponentNode, C4GroupNode
-} from './nodes/index.js';
-```
-
-This pattern also means adding a new node type (e.g., `C4MobileNode`) requires only: (1) creating the `.svelte` file, (2) adding one export line here, and (3) registering it in `C4Diagram.svelte`'s `nodeTypes` object. No refactoring of import statements across the codebase.
-
-## Node Type Coverage
-
-| Node | C4 Element | Visual Shape |
-|------|------------|-------------|
-| `C4PersonNode` | Person | Circle avatar |
-| `C4SystemNode` | System (flat) | Rounded rectangle |
-| `C4ContainerNode` | Container (general) | Blue-700 card |
-| `C4DatabaseNode` | Container (database) | Purple cylinder |
-| `C4QueueNode` | Container (queue) | Amber parallelogram |
-| `C4ComponentNode` | Component | Blue-500 compact card |
-| `C4GroupNode` | System (with containers) | Dashed boundary box |
-
-## Known Gaps
-
-No known gaps. The file is intentionally minimal. If a `C4FileSystemNode` or `C4MobileNode` is added in the future, it should be registered here before being added to `elk-layout.ts` and `C4Diagram.svelte`.
+The barrel is internal to the C4 widget; it is not part of `@ripple-ui/svelte/widgets`.

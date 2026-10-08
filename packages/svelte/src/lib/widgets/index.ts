@@ -43,6 +43,25 @@ import { StreamText, ToolCall, ReasoningTrace, ApprovalGate } from './ai/index.j
 /** Map of widget type name → Svelte component. Internal registry format. */
 export type WidgetMap = Record<string, Component<any>>;
 
+// The C4 widget's data types, for hosts that import C4Diagram directly.
+export type {
+  C4DiagramData,
+  C4Element,
+  C4Person,
+  C4System,
+  C4Container,
+  C4Component,
+  C4Relationship,
+  C4Kind,
+  C4Status,
+  C4Marker,
+  C4Code,
+  C4PortView,
+} from './c4/index.js';
+// Tree helpers C4Diagram uses, for hosts that index or walk the same element tree.
+export { childrenOf, indexTree, pathTo, codeView } from './c4/index.js';
+export type { C4Tree, CodeSide, CodeView } from './c4/index.js';
+
 const defaultRegistry: WidgetMap = {
   container: Container,
   flex: Flex,

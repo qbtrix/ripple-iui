@@ -1,22 +1,16 @@
 ---
 {
   "title": "ELK-Based Auto-Layout Engine for C4 Diagrams",
-  "summary": "Converts a `C4Diagram` data structure into ELK graph nodes and edges, runs the ELK layered layout algorithm, and returns a flat `Map\u003cid, LayoutPosition\u003e` of computed positions. Replaced an earlier grid-based layout to provide professional, collision-free hierarchical placement.",
+  "summary": "elk-layout.ts lays out C4 diagrams with ELK's layered algorithm: positions for every element (boundaries as compounds), orthogonal edge routes with reserved label boxes, the semantic-zoom layout with port badges, and the element-to-node-type mapping.",
   "concepts": [
-    "ELK",
-    "elkjs",
-    "auto-layout",
-    "computeElkLayout",
-    "isGroupNode",
+    "ELK.js",
+    "layered layout",
+    "orthogonal routing",
+    "edge labels",
+    "compound nodes",
+    "semantic layout",
     "getNodeType",
-    "LayoutPosition",
-    "ElkLayoutOptions",
-    "race condition",
-    "per-call instantiation",
-    "layered algorithm",
-    "C4Diagram",
-    "group node",
-    "node dimensions"
+    "isGroupNode"
   ],
   "categories": [
     "layout",
@@ -27,8 +21,8 @@
     "d43b1d815f8f7305"
   ],
   "backlinks": null,
-  "word_count": 464,
-  "compiled_at": "2026-04-23T18:36:05Z",
+  "word_count": 347,
+  "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
   "audience": "human",
@@ -39,68 +33,24 @@
 
 ## Overview
 
-`elk-layout.ts` is the layout engine for the C4 widget. It translates the C4 data model into an ELK graph, invokes the ELK layered algorithm asynchronously, and returns a position map consumed by `C4Diagram.svelte` to place SvelteFlow nodes.
+`elk-layout.ts` turns the C4 data model into an ELK graph, runs the layered algorithm, and hands `C4Diagram` positions and edge routes. ELK is instantiated per call; a shared instance raced between layouts.
 
 ## Exported API
 
-### `computeElkLayout(diagram, options?)`
+- `computeElkLayout(diagram, options?)` returns `Map<id, LayoutPosition>` (absolute `x, y, width, height`).
+- `computeElkGraph(diagram, options?)` returns the positions plus `routes: Map<relationshipIndex, EdgeRoute>`, where an `EdgeRoute` is the absolute bend points and the box ELK reserved for the label. Routes are empty if ELK fails, and the widget falls back to smoothstep edges.
+- `computeSemanticLayout(tree, vis, edges, sizeOf, ...)` lays out semantic zoom: every drawn element nested to any depth, a boundary as an ELK compound sized around its children (never smaller than its label row, `BOUNDARY_TOP` = 48), port badges as ELK end labels beside the line where it meets a boundary.
+- `edgeLabelText(r)` is the label text: the relationship's label, then `[technology]`.
+- `getNodeDimensions`, `getNodeType`, `isGroupNode` map an element to its box size and SvelteFlow node type.
 
-The main async function. Takes a `C4Diagram` and optional `ElkLayoutOptions`, returns `Promise<Map<string, LayoutPosition>>`.
+`ElkLayoutOptions` takes `direction` (default `DOWN`), `nodeSpacing` (60) and `layerSpacing` (56; each labelled edge adds a label row between layers, so a tighter gap keeps labelled diagrams at a readable zoom).
 
-```typescript
-interface ElkLayoutOptions {
-  direction?: 'DOWN' | 'RIGHT' | 'UP' | 'LEFT'; // default: 'DOWN'
-  nodeSpacing?: number;
-  layerSpacing?: number;
-}
+## Sizes and types
 
-interface LayoutPosition {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-```
+Default boxes: person 160 x 140, database 180 x 130, queue 200 x 110, boundary at least 280 x 200, everything else 200 x 110. An expanded code panel is sized by `codePanelSize` in `semantic.ts` from its line count and wrap.
 
-### `isGroupNode(el)`
+`getNodeType` honours an explicit `kind` first (`code` draws as a component; `type: 'database' | 'queue'` still picks those shapes; a non-empty `containers` is a `group`). Without `kind` it infers from the fields present: no `technology`, `type`, `containers` or `components` means a person; a non-empty `containers` means a group; `type` database or queue picks that shape; `containers` means system, `components` container; anything else system.
 
-Returns `true` if a C4 element is a system with containers. Group nodes become ELK parent nodes so their containers render as nested children.
+## Coordinates
 
-### `getNodeType(el)`
-
-Maps a C4 element to a SvelteFlow node type string (`'person'`, `'group'`, `'system'`, `'database'`, `'queue'`, `'component'`). Classification is done via structural duck-typing — checking which fields are present rather than a discriminant property, because `C4Element` is a union type without a shared `kind` field.
-
-## Node Dimensions
-
-Default dimensions are hardcoded by shape type:
-
-```typescript
-const DIMENSIONS = {
-  person:   { width: 160, height: 140 },
-  database: { width: 180, height: 130 },
-  queue:    { width: 200, height: 110 },
-  group:    { width: 280, height: 200 },
-  default:  { width: 200, height: 110 },
-};
-```
-
-These dimensions are passed to ELK so it can compute spacing correctly. If dimensions were omitted, ELK would stack nodes without accounting for their visual footprint.
-
-## ELK Instance Per Call
-
-A key architectural decision made on 2026-04-10: ELK is instantiated fresh on each `computeElkLayout` call rather than as a module-level singleton. The original singleton caused a race condition — if two diagrams triggered layout concurrently (e.g., during component mount + prop change), both calls shared one ELK instance and the second call could corrupt the first's graph state. Per-call instantiation is slightly less efficient but eliminates the race entirely.
-
-## Layout Strategy
-
-- Systems with containers become **ELK parent nodes** whose containers are ELK children. This produces proper nested bounding boxes in the output.
-- Relationships in the `C4Diagram` map to ELK edges, influencing how ELK routes the layered graph.
-- ELK's layered algorithm places nodes in ranks, minimizing edge crossings. Direction defaults to `DOWN` (top-to-bottom flow), matching conventional architecture diagram conventions.
-
-## Output
-
-The function returns a flat `Map<id, LayoutPosition>` rather than a tree. This simplifies consumption: `C4Diagram.svelte` iterates all C4 elements and does a single map lookup per element, regardless of nesting depth.
-
-## Known Gaps
-
-- Group node dimensions (`280 × 200`) are static and may be too small for systems with many containers. A future improvement could compute group size from child count.
-- The `direction` option is exposed but there is no UI to change it — only programmatic callers can set it.
+ELK reports a nested node relative to its parent and an edge's points relative to its container (the lowest common ancestor of its ends). This module offsets both back to absolute coordinates; `C4Diagram` and `semantic-flow.ts` convert child positions back to parent-relative for SvelteFlow.

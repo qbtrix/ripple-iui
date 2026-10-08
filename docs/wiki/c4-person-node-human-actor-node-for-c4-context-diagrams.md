@@ -1,19 +1,14 @@
 ---
 {
   "title": "C4 Person Node — Human Actor Node for C4 Context Diagrams",
-  "summary": "A SvelteFlow custom node that renders a C4 Person element with a circular avatar icon and name/description labels. Distinguishes internal users (blue) from external actors (gray) and supports optional drill-down navigation.",
+  "summary": "C4PersonNode draws a C4 Person: the shared card under an accent-tinted avatar disc, muted with an External tag when the person is external, with a drill affordance when drillable.",
   "concepts": [
-    "C4PersonNode",
-    "human actor",
-    "external user",
-    "internal user",
-    "SvelteFlow custom node",
-    "person-head",
+    "C4 Person",
+    "SvelteFlow node",
+    "avatar",
+    "external actor",
     "drill-down",
-    "C4NodeData",
-    "Handle",
-    "blue vs gray",
-    "context diagram"
+    "ripple tokens"
   ],
   "categories": [
     "widget",
@@ -24,8 +19,8 @@
     "3d89f6ca92d8b34f"
   ],
   "backlinks": null,
-  "word_count": 391,
-  "compiled_at": "2026-04-23T18:36:05Z",
+  "word_count": 166,
+  "compiled_at": "2026-10-06T08:10:24Z",
   "compiled_with": "agent",
   "version": 1,
   "audience": "human",
@@ -36,54 +31,17 @@
 
 ## Overview
 
-`C4PersonNode.svelte` renders human actors in C4 Context-level diagrams — users, operators, customers, or external parties. It is registered as the `'person'` node type and appears at the outermost ring of any C4 diagram where human interactions are modeled.
+`C4PersonNode.svelte` is the SvelteFlow node for a human actor. An element becomes a person when `kind: 'person'` is set, or, without `kind`, when it has none of `technology`, `type`, `containers` or `components`. Its ELK box is 160 x 140.
 
-## Internal vs External Styling
+## What it renders
 
-The node uses reactive color derivations to apply distinct palettes:
+- An avatar disc (34px) with a person glyph, tinted with `--ripple-accent`; muted when the person is external.
+- The name, and the description cut at 45 characters.
+- An `External` tag for an external person.
+- A drill arrow in the corner when `drillable`.
 
-```typescript
-const isExternal = $derived(data.external ?? false);
-const bgColor = $derived(isExternal ? 'rgba(107,114,128,0.15)' : 'rgba(10,132,255,0.15)');
-const borderColor = $derived(isExternal ? ...);
-const headColor = $derived(isExternal ? '#6B7280' : '#0A84FF');
-const textColor = $derived(isExternal ? ...);
-```
+The card uses the shared `c4-node` rules from `C4Diagram` (12px radius for persons), so it follows the host theme and stays legible when zoomed out.
 
-Internal users get blue styling (matching system and container nodes). External actors get gray, visually indicating they are outside the system boundary. An "External" badge renders in the bottom of the card for external actors.
+## Interaction
 
-All colors are applied via inline `style` bindings rather than CSS classes because each color has an opacity-tuned value that cannot be expressed with static class names.
-
-## Visual Anatomy
-
-The node is laid out vertically:
-
-1. **Person head** (`person-head`): A circular `<div>` with a person SVG icon (filled circle + path). Sized at 40×40px.
-2. **Name** (`person-name`): 12px semibold, centered, word-break enabled for long names.
-3. **Description** (`person-desc`): 9px, truncated at 45 characters.
-4. **External badge**: shown only when `isExternal` is true.
-5. **Drill indicator**: a small arrow shown when `hasDrilldown` is true.
-
-## Connection Handles
-
-All four handle positions (Top, Left, Bottom, Right) are registered. In Context-level diagrams, a person node typically appears at the left or top of the diagram with outgoing edges to systems, but ELK may choose any edge direction — all four attachment points prevent layout constraint violations.
-
-## Hover Behavior
-
-```css
-.c4-person-node:hover {
-  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.4);
-  transform: translateY(-1px);
-}
-```
-
-Hover applies a blue ring glow and a 1px upward lift, consistent with the interactive affordance pattern used across all C4 node types.
-
-## Drill-Down
-
-If `hasDrilldown` is true, a click fires `data.ondrilldown`. Person nodes can in principle drill down (e.g., to show all systems a user interacts with), though this is less common than system→container→component drill-down.
-
-## Known Gaps
-
-- No KB link support — persons are pure actors with no documentation link in the current data model.
-- The description truncation at 45 characters is hardcoded. Person descriptions are often short role labels, but long job titles could still overflow.
+A click on a drillable person calls `ondrilldown` with the next level (context to container, container to component, otherwise code); otherwise it calls `onclick`. Enter or Space on the focused node does the same. Live status rings, including the dashed `planned` outline, are drawn on the wrapper by `C4Diagram`.
