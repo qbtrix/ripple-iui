@@ -88,6 +88,7 @@
   ],
   "scripts": {
     "dev": "vite dev",
+    "dev:mock": "bun scripts/mock-pawbar.ts",
     "build": "bun run lint:anim && svelte-package && bun --conditions source scripts/build-manifest.ts",
     "build:manifest": "bun --conditions source scripts/build-manifest.ts",
     "lint": "oxlint && bun run lint:anim",
