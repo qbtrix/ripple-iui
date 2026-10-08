@@ -15,6 +15,7 @@ import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 import { validateCatalog } from '$lib/widgets/validate-catalog-bound.js';
 import { replay } from './replay.js';
 import { scenarios, type ScenarioFixture } from './scenarios.js';
+import OrderReceipt from './OrderReceipt.svelte';
 
 // Streamed mounts recompute on later ticks; under a full parallel suite that can
 // take longer than vi.waitFor's 1 s default, so every wait here gets 5 s.
@@ -418,5 +419,88 @@ describe('explainer gearing', () => {
 		await waitFor(() => expect(text(container)).toContain('This is where all the power enters'));
 		await fireEvent.click(button(container, 'Climb 34/32'));
 		await waitFor(() => expect(text(container)).toMatch(/Metres per pedal turn\s*2\.231/));
+	});
+});
+
+// The order demo: real store ids reach the host's checkout event intact, the
+// totals follow the quantities, and the return-from-checkout panel renders.
+// Placeholders and labels come from the recorded fixture.
+describe('order-burger', () => {
+	const scenario = scenarios.find((s) => s.id === 'order-burger')!;
+	const money = (s: string) => Number(s.replace(/[$,]/g, ''));
+	const type = async (container: HTMLElement, placeholder: string, value: string) => {
+		const el = container.querySelector<HTMLInputElement>(`input[placeholder="${placeholder}"]`)!;
+		el.value = value;
+		await fireEvent.input(el);
+		await fireEvent.change(el);
+	};
+
+	test('is first in the registry and needs the store', () => {
+		expect(scenarios[0].id).toBe('order-burger');
+		expect(scenario.needsStore).toBe(true);
+	});
+
+	test('after streaming, Checkout emits the api event with the cart and customer', async () => {
+		const { container, onEvent } = await mountStreamed(scenario.fixture);
+		const checkoutBtn = () => [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Checkout')!;
+		await fireEvent.click(checkoutBtn()); // no customer yet: validate stops it
+		await tick();
+		expect(onEvent.mock.calls.some(([e]) => e.type === 'api')).toBe(false);
+
+		await type(container, 'Your name', 'Sam');
+		await type(container, 'you@example.com', 'sam@example.com');
+		await type(container, 'Phone number', '555 0100');
+		await fireEvent.click(checkoutBtn());
+		await vi.waitFor(() => expect(onEvent.mock.calls.some(([e]) => e.type === 'api')).toBe(true));
+		const event = onEvent.mock.calls.map(([e]) => e).find((e) => e.type === 'api');
+		expect(event).toMatchObject({ type: 'api', url: '/api/checkout', method: 'POST' });
+		expect(Array.isArray(event.body.items)).toBe(true);
+		expect(event.body.items.filter((l: { qty: number }) => l.qty > 0).map((l: { id: string; qty: number }) => [l.id, l.qty])).toEqual([
+			['burger-1', 2],
+			['drink-1', 1]
+		]);
+		expect(event.body.customer).toMatchObject({ name: 'Sam', email: 'sam@example.com', phone: '555 0100' });
+		expect(event.body.orderType).toBe('pickup');
+	});
+
+	test('after streaming, the order total follows a quantity change', async () => {
+		const { container } = await mountStreamed(scenario.fixture);
+		const total = () => money(/Order total\s*(\$[\d,]+\.\d\d)/.exec(container.textContent ?? '')![1]);
+		expect(total()).toBeCloseTo(27.97, 2);
+		const qty = container.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]')[1]; // Bacon Deluxe
+		qty.value = '2';
+		await fireEvent.input(qty);
+		await fireEvent.change(qty);
+		await fireEvent.blur(qty);
+		await vi.waitFor(() => expect(total()).toBeCloseTo(27.97 + 2 * 14.99, 2));
+	});
+});
+
+describe('OrderReceipt', () => {
+	const store = 'http://store.test/test-store';
+	const summary = { lines: [{ name: 'Classic Cheeseburger', qty: 2, price: 11.99 }], orderType: 'pickup' as const };
+
+	test('mock return says no order was recorded and links the orders board', async () => {
+		const fetch = vi.fn();
+		const { container } = render(OrderReceipt, { props: { storeUrl: store, order: 'mock_1', mock: true, summary, fetch } });
+		expect(container.textContent).toMatch(/Checkout complete \(test mode\)/);
+		expect(container.textContent).toMatch(/no order was recorded/);
+		expect(container.textContent).toMatch(/2 × Classic Cheeseburger/);
+		expect(container.querySelector('a')!.getAttribute('href')).toBe(`${store}/orders`);
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	test('paid return shows the store status once the order is listed', async () => {
+		const fetch = vi.fn(async () => Response.json({ orders: [{ id: 'cs_test_9', status: 'confirmed', total: 23.98 }] }));
+		const { container } = render(OrderReceipt, { props: { storeUrl: store, order: 'cs_test_9', summary, fetch } });
+		expect(container.textContent).toMatch(/Payment confirmed/);
+		await vi.waitFor(() => expect(container.textContent).toMatch(/Store status: confirmed/));
+		expect(fetch).toHaveBeenCalledWith(`${store}/api/orders?limit=20`);
+	});
+
+	test('cancelled return is a gentle note', () => {
+		const { container } = render(OrderReceipt, { props: { storeUrl: store, cancelled: true } });
+		expect(container.textContent).toMatch(/Checkout cancelled/);
+		expect(container.textContent).toMatch(/Nothing was charged/);
 	});
 });

@@ -5,8 +5,11 @@
     so the UI builds itself as the JSON arrives and ends as a working tool.
     Prerendered: the resting state (first scenario's full JSON + finished UI)
     is in the markup; onMount replays on top of it. `?s=<id>` preselects.
-    No model is called at runtime. `onHostEvent` is the host's event handler;
-    store actions plug in there.
+    No model is called at runtime. `onHostEvent` is the host's event handler:
+    the order demo's checkout `api` event goes to checkout.ts, which posts to
+    the test store (PUBLIC_STORE_URL, build-time host config) and redirects to
+    its checkout; the store sends visitors back to `?order=<session>` or
+    `?cancelled=1`, which OrderReceipt renders.
 
   Creative Direction Declaration
     Archetype: Technology. Richness: Premium minimal.
@@ -23,6 +26,10 @@
 	import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 	import { replay } from './replay.js';
 	import { scenarios, type Scenario } from './scenarios.js';
+	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, type OrderSummary } from './checkout.js';
+	import OrderReceipt from './OrderReceipt.svelte';
+
+	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
 
 	const fullText = (s: Scenario) => s.fixture.chunks.map((c) => c.text).join('');
 
@@ -52,6 +59,7 @@
 		active = s;
 		typed = '';
 		events = [];
+		checkoutNote = null;
 		run++;
 		store = streamSpec(tap(replay(s.fixture, { speed, signal: controller.signal })), {
 			signal: controller.signal,
@@ -71,7 +79,9 @@
 
 	// Host side of the generated UI. Every action the spec fires that Ripple
 	// does not handle itself (toast, emit, navigate, api, ...) lands here.
-	// Store calls (needsStore scenarios) get their own branch when they exist.
+	// The order demo's Checkout `api` event goes to the store via checkout.ts.
+	let checkoutNote = $state<{ busy: boolean; text: string } | null>(null);
+	let receipt = $state<{ order: string | null; mock: boolean; cancelled: boolean; summary: OrderSummary | null } | null>(null);
 	let events = $state<{ id: number; text: string }[]>([]);
 	let toast = $state<{ id: number; message: string; variant: string } | null>(null);
 	let eventId = 0;
@@ -83,10 +93,38 @@
 			toast = t;
 			setTimeout(() => toast?.id === t.id && (toast = null), 2600);
 		}
-		const detail = kind === 'toast' ? String(e.message ?? '') : (e.target ?? '');
+		const detail = kind === 'toast' ? String(e.message ?? '') : (e.target ?? event.url ?? '');
 		events = [{ id: ++eventId, text: detail ? `${kind}: ${detail}` : kind }, ...events].slice(0, 4);
 		console.info('[live] host event', event);
+		if (isCheckoutEvent(event)) return placeOrder(event.body);
 		return undefined;
+	}
+
+	async function placeOrder(body: unknown) {
+		checkoutNote = { busy: true, text: 'Opening the store checkout...' };
+		const result = await checkout(body, {
+			storeUrl: STORE_URL,
+			navigate: (url) => location.assign(url),
+			remember: (summary) => {
+				try {
+					sessionStorage.setItem(ORDER_SUMMARY_KEY, JSON.stringify(summary));
+				} catch {
+					/* private mode: the receipt just skips the item list */
+				}
+			}
+		});
+		checkoutNote = result.ok ? { busy: true, text: 'Redirecting to checkout...' } : { busy: false, text: result.error?.message ?? 'Checkout failed.' };
+		return result;
+	}
+
+	function dismissReceipt() {
+		receipt = null;
+		try {
+			sessionStorage.removeItem(ORDER_SUMMARY_KEY);
+		} catch {
+			/* ignore */
+		}
+		replaceState(`?s=${active.id}`, {});
 	}
 
 	// Follow the stream while it is arriving.
@@ -96,7 +134,17 @@
 	});
 
 	onMount(() => {
-		const wanted = new URLSearchParams(location.search).get('s');
+		const q = new URLSearchParams(location.search);
+		const wanted = q.get('s');
+		if (q.has('order') || q.has('cancelled')) {
+			let summary: OrderSummary | null = null;
+			try {
+				summary = JSON.parse(sessionStorage.getItem(ORDER_SUMMARY_KEY) ?? 'null');
+			} catch {
+				/* no saved cart */
+			}
+			receipt = { order: q.get('order'), mock: q.get('mock') === 'true', cancelled: q.has('cancelled'), summary };
+		}
 		const s = scenarios.find((x) => x.id === wanted) ?? scenarios[0];
 		if (window.matchMedia('(max-width: 720px)').matches) jsonOpen = false;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -124,6 +172,10 @@
 			follow.
 		</p>
 	</header>
+
+	{#if receipt}
+		<OrderReceipt storeUrl={STORE_URL} {...receipt} ondismiss={dismissReceipt} />
+	{/if}
 
 	<ul class="picker" aria-label="Scenarios">
 		{#each scenarios as s (s.id)}
@@ -173,6 +225,11 @@
 						<div class="toast" data-variant={toast.variant} role="status">{toast.message}</div>
 					{/if}
 				</div>
+				{#if checkoutNote && active.needsStore}
+					<p class="checkout-note" role={checkoutNote.busy ? 'status' : 'alert'} data-busy={checkoutNote.busy}>
+						{checkoutNote.text}
+					</p>
+				{/if}
 				{#if events.length}
 					<ol class="events" aria-label="Host events">
 						{#each events as ev (ev.id)}<li>{ev.text}</li>{/each}
@@ -402,6 +459,19 @@
 		background: var(--foreground);
 		color: var(--background);
 		font-size: 14px;
+	}
+	.checkout-note {
+		margin: 0;
+		max-width: 560px;
+		padding: 10px 14px;
+		border-radius: 10px;
+		font-size: 14px;
+		line-height: 1.45;
+		background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+	}
+	.checkout-note[data-busy='false'] {
+		background: color-mix(in srgb, hsl(0 72% 51%) 10%, var(--panel));
+		color: color-mix(in srgb, hsl(0 72% 40%) 80%, var(--foreground));
 	}
 	.events {
 		list-style: none;

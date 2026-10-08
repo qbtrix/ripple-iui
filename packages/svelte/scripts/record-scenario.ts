@@ -1,7 +1,13 @@
 // scripts/record-scenario.ts — Record a real model stream as a /live replay fixture.
 //
 //   bun scripts/record-scenario.ts --id bill-splitter --title "Split the bill" \
-//     --prompt "Dinner for 4 came to ..." [--model sonnet]
+//     --prompt "Dinner for 4 came to ..." [--model sonnet] [--store <base-url>]
+//
+// --store (store-backed scenarios such as order-burger) fetches the test
+// store's real menu from <base-url>/api/menu and appends a STORE section to
+// the system prompt: the menu's ids and prices plus the checkout contract the
+// /live host understands (routes/live/checkout.ts). Other scenarios are
+// recorded with the base prompt unchanged.
 //
 // Runs the local Claude Code CLI headless (`claude -p --output-format
 // stream-json --include-partial-messages`) from an empty temp dir with no
@@ -32,7 +38,8 @@ const { values: args } = parseArgs({
 		id: { type: 'string' },
 		title: { type: 'string' },
 		prompt: { type: 'string' },
-		model: { type: 'string', default: 'sonnet' }
+		model: { type: 'string', default: 'sonnet' },
+		store: { type: 'string' }
 	}
 });
 if (!args.id || !args.title || !args.prompt || !/^[a-z0-9-]+$/.test(args.id)) {
@@ -80,7 +87,29 @@ LAYOUT
 - The tool must also work in a card about 300px wide (phones). Use grid "columns" of 2 at most. A number-input needs about 140px, so give number inputs and sliders a full-width row or a 2-column grid. A flex row with more than two children sets "wrap": true.
 
 MANIFEST (spec envelope, action grammar, widgets)
-${JSON.stringify(reference)}`;
+${JSON.stringify(reference)}${args.store ? await storeSection(args.store) : ''}`;
+
+// The order demo's contract with the /live host. Keep in step with
+// src/routes/live/checkout.ts (the host validates and strips prices).
+async function storeSection(base: string): Promise<string> {
+	const res = await fetch(`${base.replace(/\/$/, '')}/api/menu`);
+	if (!res.ok) throw new Error(`GET ${base}/api/menu answered ${res.status}`);
+	const { products } = (await res.json()) as { products: { id: string; name: string; price: string; category: string; available: boolean }[] };
+	const menu = products.filter((p) => p.available).map((p) => ({ id: p.id, name: p.name, price: Number(p.price), category: p.category }));
+	return `
+
+STORE ORDER CONTEXT (this request orders from a real test store; follow exactly)
+- The store's menu, with real ids and prices. Use ids, names and prices verbatim; never invent an item:
+${JSON.stringify(menu)}
+- Offer every Burgers item plus two Appetizers as sides and two or three Drinks. Keep them in state as "menu": an array of {"id","name","price","category","qty","line"} where price is a number, qty is how many the user wants (seed from the request, else 0) and line = price * qty.
+- Each menu row: name, price, and a number-input (min 0, max 20) bound to "menu.{index}.qty". Its "on_change" is a list of three set actions, in order: {"action":"set","target":"menu.{index}.line","value":"{state.menu[index].price * state.menu[index].qty}"}, then "total" to "{state.menu.sum('line')}", then "count" to "{state.menu.sum('qty')}". Seed "total" and "count" in state to match the seeded quantities.
+- Order type: a segmented control bound to "orderType" with options valued exactly "pickup" and "delivery"; its on_change sets "fee" to "{state.orderType == 'delivery' ? 3.99 : 0}". Delivery costs 3.99.
+- Customer: state "customer": {"name":"","email":"","phone":"","address":""}; text inputs bound to customer.name, customer.email, customer.phone, and customer.address shown only when orderType is delivery.
+- Cart summary: rows for items with qty above 0 (each over menu with show), then stat widgets with "format":"currency" for the subtotal {state.total}, and the order total {state.total + state.fee}.
+- The Checkout button's on_click is a "flow": validate steps (state.count > 0, customer name, email, phone, each with a short message), then exactly this api step (the host performs the request; body values must stay top-level "{expr}" strings):
+  {"action":"api","url":"/api/checkout","method":"POST","body":{"items":"{state.menu}","customer":"{state.customer}","orderType":"{state.orderType}"},"on_error":[{"action":"toast","message":"{state._flow_error.message}","variant":"error"}]}
+- Put the menu rows first so the first input on screen is a quantity. This layout may run to 45 nodes.`;
+}
 
 const cwd = mkdtempSync(join(tmpdir(), 'ripple-record-'));
 const cmd = [
