@@ -281,24 +281,21 @@ describe('tokyo-trip numbers', () => {
 });
 
 describe('sales-dashboard numbers', () => {
-	// 12 orders: Americas 5 for $720.35, Europe 4 for $593.90, Asia 3 for $286.65.
-	test('after streaming, picking a region narrows the table and its totals', async () => {
-		// jsdom has no scrollIntoView; bits-ui calls it on the highlighted option.
-		Element.prototype.scrollIntoView ??= () => {};
+	// 12 orders, $2,070: Jul 505, Aug 775, Sep 790. North is 3 orders, $610,
+	// and its first order (#1, July) is $120.
+	test('after streaming, the region filter and order edits move every total', async () => {
 		const { container } = await mountStreamed(scenario('sales-dashboard'));
-		expect(moneyAfter(container, 'Revenue')).toBeCloseTo(1600.9, 2);
-		expect(text(container)).toContain('Dana');
-		await fireEvent.keyDown(container.querySelector('[data-slot="select-trigger"]')!, { key: 'Enter' });
-		const europe = await vi.waitFor(() => {
-			const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent?.trim() === 'Europe');
-			return o ?? Promise.reject(new Error('no Europe option'));
-		});
-		await fireEvent.pointerUp(europe);
-		await fireEvent.click(europe);
-		await vi.waitFor(() => expect(text(container)).toContain('Totals: Europe'));
-		expect(text(container)).not.toContain('Dana');
-		expect(text(container)).toContain('Lukas');
-		expect(moneyAfter(container, 'Totals: EuropeRevenue')).toBeCloseTo(593.9, 2);
+		expect(moneyAfter(container, 'Revenue')).toBe(2070);
+		expect(text(container)).toMatch(/Best month\s*Sep/);
+		expect(moneyAfter(container, 'Avg order')).toBe(172.5);
+		await fireEvent.click(button(container, 'North'));
+		await vi.waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(610));
+		expect(text(container)).toMatch(/North orders\s*3/);
+		expect(text(container)).not.toContain('· South');
+		await typeInto(decimalInputs(container)[0], 200);
+		await vi.waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(690));
+		expect(moneyAfter(container, 'Revenue')).toBe(2150);
+		expect(text(container)).toContain('Jul$585');
 	});
 });
 
