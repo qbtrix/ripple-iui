@@ -16,11 +16,16 @@ import { validateCatalog } from '$lib/widgets/validate-catalog-bound.js';
 import { replay } from './replay.js';
 import { scenarios, type ScenarioFixture } from './scenarios.js';
 
+// Streamed mounts recompute on later ticks; under a full parallel suite that can
+// take longer than vi.waitFor's 1 s default, so every wait here gets 5 s.
+const waitFor = <T>(fn: () => T | Promise<T>, opts: { timeout?: number; interval?: number } = {}) =>
+	vi.waitFor(fn, { timeout: 5000, ...opts });
+
 const join = (f: ScenarioFixture) => f.chunks.map((c) => c.text).join('');
 
 async function streamToDone(fixture: ScenarioFixture): Promise<StreamSpecStore> {
 	const store = streamSpec(replay(fixture, { speed: Infinity }), { throttleMs: 0 });
-	await vi.waitFor(() => expect(store.done).toBe(true), { timeout: 5000 });
+	await waitFor(() => expect(store.done).toBe(true), { timeout: 5000 });
 	return store;
 }
 
@@ -120,7 +125,7 @@ async function mountStreamed(fixture: ScenarioFixture) {
 	const onStateChange = vi.fn();
 	const onEvent = vi.fn();
 	const { container } = render(Ripple, { props: { streaming: store, onStateChange, onEvent } });
-	await vi.waitFor(() => expect(store.done).toBe(true), { timeout: 5000 });
+	await waitFor(() => expect(store.done).toBe(true), { timeout: 5000 });
 	await tick();
 	return { store, container, onStateChange, onEvent };
 }
@@ -201,12 +206,12 @@ describe('bill-splitter numbers', () => {
 		expect(new Set(start).size).toBeGreaterThan(1); // drinkers pay more
 		const add = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add person')!;
 		await fireEvent.click(add);
-		await vi.waitFor(() => check(5));
+		await waitFor(() => check(5));
 		const remove = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Remove')!;
 		await fireEvent.click(remove);
-		await vi.waitFor(() => check(4));
+		await waitFor(() => check(4));
 		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
-		await vi.waitFor(() => check(4));
+		await waitFor(() => check(4));
 	}
 
 	test('mounted whole, shares add up to the grand total through add, remove and drinks', async () => {
@@ -248,9 +253,10 @@ async function nudgeSlider(container: HTMLElement, nth: number, key: 'ArrowRight
 /** Open a bits-ui select with the keyboard and pick an option by its text. */
 async function pickOption(trigger: Element, label: string) {
 	// jsdom has no scrollIntoView; bits-ui calls it on the highlighted option.
-	Element.prototype.scrollIntoView ??= () => {};
+	const proto = Element.prototype as { scrollIntoView?: () => void };
+	proto.scrollIntoView ??= () => {};
 	await fireEvent.keyDown(trigger, { key: 'Enter' });
-	const option = await vi.waitFor(() => {
+	const option = await waitFor(() => {
 		const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent?.trim() === label);
 		return o ?? Promise.reject(new Error(`no option ${label}`));
 	});
@@ -268,7 +274,7 @@ describe('savings-calculator numbers', () => {
 		const { container } = await mountStreamed(scenario('savings-calculator'));
 		expect(Math.abs(moneyAfter(container, 'Balance after 10 years') - 46584.68)).toBeLessThan(1);
 		await typeInto(container.querySelector<HTMLInputElement>('input[inputmode="decimal"]')!, 400);
-		await vi.waitFor(() => expect(moneyAfter(container, 'Balance after 10 years')).toBeCloseTo(62112.91, 1));
+		await waitFor(() => expect(moneyAfter(container, 'Balance after 10 years')).toBeCloseTo(62112.91, 1));
 		expect(moneyAfter(container, 'You deposit')).toBe(48000);
 	});
 
@@ -276,7 +282,7 @@ describe('savings-calculator numbers', () => {
 	test('after streaming, the years slider moves the balance and adds a year bar', async () => {
 		const { container } = await mountStreamed(scenario('savings-calculator'));
 		await nudgeSlider(container, 1, 'ArrowRight');
-		await vi.waitFor(() => expect(moneyAfter(container, 'Balance after 11 years')).toBeCloseTo(52651.7, 1));
+		await waitFor(() => expect(moneyAfter(container, 'Balance after 11 years')).toBeCloseTo(52651.7, 1));
 		expect(text(container)).toContain('Y11');
 		expect(moneyAfter(container, 'You deposit')).toBe(39600);
 	});
@@ -295,17 +301,17 @@ describe('tokyo-trip numbers', () => {
 		expect(text(container)).toContain('0 of 18 stops done');
 		expect(moneyAfter(container, 'Estimated total for all stops')).toBe(250);
 		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
-		await vi.waitFor(() => expect(text(container)).toContain('1 of 18 stops done'));
+		await waitFor(() => expect(text(container)).toContain('1 of 18 stops done'));
 		await typeInto(decimalInputs(container)[1], 25); // first stop's spend
-		await vi.waitFor(() => expect(moneyAfter(container, 'Spent so far')).toBe(25));
+		await waitFor(() => expect(moneyAfter(container, 'Spent so far')).toBe(25));
 		expect(moneyAfter(container, 'Budget left')).toBe(575);
 		await fireEvent.click(button(container, 'Remove'));
-		await vi.waitFor(() => expect(text(container)).toContain('0 of 17 stops done'));
+		await waitFor(() => expect(text(container)).toContain('0 of 17 stops done'));
 		expect(moneyAfter(container, 'Spent so far')).toBe(0);
 		expect(moneyAfter(container, 'Estimated total for all stops')).toBe(225);
 		await typeInto(container.querySelector<HTMLInputElement>('input[type="text"]:not([inputmode])')!, 'Bookshop browse');
 		await fireEvent.click(button(container, 'Add stop'));
-		await vi.waitFor(() => expect(text(container)).toContain('0 of 18 stops done'));
+		await waitFor(() => expect(text(container)).toContain('0 of 18 stops done'));
 		expect(text(container)).toContain('Bookshop browse');
 	});
 });
@@ -321,7 +327,7 @@ describe('sales-dashboard numbers', () => {
 		const table = () => container.querySelector('table')?.textContent ?? '';
 		expect(table()).toContain('South');
 		await fireEvent.click(button(container, 'North'));
-		await vi.waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(570));
+		await waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(570));
 		expect(text(container)).toMatch(/North orders\s*3/);
 		expect(moneyAfter(container, 'North avg order')).toBe(190);
 		expect(table()).not.toContain('South');
@@ -335,7 +341,7 @@ describe('flashcards scoring', () => {
 	const review = (c: HTMLElement) => Number(/Needs review\s*(\d+)/.exec(text(c))![1]);
 	async function mark(c: HTMLElement, label: 'Got It' | 'Needs Review') {
 		await fireEvent.click(c.querySelector('.flashcard')!);
-		await fireEvent.click(await vi.waitFor(() => button(c, label) ?? Promise.reject(new Error(`no ${label}`))));
+		await fireEvent.click(await waitFor(() => button(c, label) ?? Promise.reject(new Error(`no ${label}`))));
 		await tick();
 	}
 
@@ -345,15 +351,15 @@ describe('flashcards scoring', () => {
 		const { container } = await mountStreamed(scenario('flashcards'));
 		expect(text(container)).toContain('Card 1 of 8');
 		await mark(container, 'Got It');
-		await vi.waitFor(() => expect(knew(container)).toBe(1));
+		await waitFor(() => expect(knew(container)).toBe(1));
 		expect(text(container)).toContain('Card 2 of 8');
 		expect(text(container)).toContain('Gracias');
 		await mark(container, 'Needs Review');
-		await vi.waitFor(() => expect(review(container)).toBe(1));
+		await waitFor(() => expect(review(container)).toBe(1));
 		for (let i = 3; i <= 8; i++) await mark(container, 'Got It');
-		await vi.waitFor(() => expect(text(container)).toContain('You knew 7 of 8 cards. 1 to review.'));
+		await waitFor(() => expect(text(container)).toContain('You knew 7 of 8 cards. 1 to review.'));
 		await fireEvent.click(button(container, 'Study again'));
-		await vi.waitFor(() => expect(text(container)).toContain('Card 1 of 8'));
+		await waitFor(() => expect(text(container)).toContain('Card 1 of 8'));
 		expect(knew(container)).toBe(0);
 		expect(review(container)).toBe(0);
 	});
@@ -366,13 +372,13 @@ describe('hiit-workout steps', () => {
 		const { container } = await mountStreamed(scenario('hiit-workout'));
 		expect(text(container)).toContain('Exercise 1 of 20');
 		await fireEvent.click(button(container, 'Next exercise'));
-		await vi.waitFor(() => expect(text(container)).toContain('Exercise 2 of 20'));
+		await waitFor(() => expect(text(container)).toContain('Exercise 2 of 20'));
 		expect(container.querySelector('h2')?.textContent).toBe('Bodyweight squats');
 		for (let i = 0; i < 25; i++) await fireEvent.click(button(container, 'Next exercise'));
-		await vi.waitFor(() => expect(text(container)).toContain('Exercise 20 of 20'));
+		await waitFor(() => expect(text(container)).toContain('Exercise 20 of 20'));
 		expect(button(container, 'Next exercise').disabled).toBe(true);
 		await nudgeSlider(container, 0, 'ArrowRight');
-		await vi.waitFor(() => expect(text(container)).toContain('Exercise 1 of 18'));
+		await waitFor(() => expect(text(container)).toContain('Exercise 1 of 18'));
 	});
 });
 
@@ -383,7 +389,7 @@ describe('meal-plan shopping list', () => {
 		const { container } = await mountStreamed(scenario('meal-plan'));
 		expect(text(container)).toMatch(/Chicken breast\s*600 g/);
 		await typeInto(decimalInputs(container)[0], 3);
-		await vi.waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*900 g/));
+		await waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*900 g/));
 		expect(text(container)).toMatch(/Tomatoes\s*1350 g/);
 		expect(text(container)).toContain('Shopping list for 3 people');
 	});
@@ -393,7 +399,7 @@ describe('meal-plan shopping list', () => {
 	test('after streaming, swapping a day\'s dinner re-totals the shopping list', async () => {
 		const { container } = await mountStreamed(scenario('meal-plan'));
 		await pickOption(container.querySelector('[data-slot="select-trigger"]')!, 'Beef Chili');
-		await vi.waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*300 g/));
+		await waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*300 g/));
 		expect(text(container)).toMatch(/Lean beef mince\s*520 g/);
 	});
 });
@@ -406,8 +412,8 @@ describe('explainer gearing', () => {
 		expect(text(container)).toMatch(/Gear ratio\s*2\.941/);
 		expect(text(container)).toMatch(/Metres per pedal turn\s*6\.176/);
 		await fireEvent.click(button(container, '1 Pedals + crank'));
-		await vi.waitFor(() => expect(text(container)).toContain('This is where all the power enters'));
+		await waitFor(() => expect(text(container)).toContain('This is where all the power enters'));
 		await fireEvent.click(button(container, 'Climb 34/32'));
-		await vi.waitFor(() => expect(text(container)).toMatch(/Metres per pedal turn\s*2\.231/));
+		await waitFor(() => expect(text(container)).toMatch(/Metres per pedal turn\s*2\.231/));
 	});
 });
