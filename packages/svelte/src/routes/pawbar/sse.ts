@@ -3,7 +3,9 @@
 // line, CRLF is tolerated, comment lines and lines without a colon are skipped,
 // multi-line `data:` is joined, and a frame whose data is not JSON is dropped
 // (a malformed frame must not end the turn). An unterminated last frame is
-// discarded, as the SSE spec says. `segments` splits the LEGACY reply format,
+// discarded, as the SSE spec says. A frame over 1 MB throws (the turn ends with
+// an error notice), and each chunk is scanned from where the last scan stopped.
+// `segments` splits the LEGACY reply format,
 // where a card arrives as a ```pawbar-card fence inside the text, and holds back
 // a half-arrived fence marker so it never flashes as text. Both are pure and
 // fetch-free so tests feed them strings.
@@ -13,17 +15,27 @@ export interface SSEFrame {
 	data: unknown;
 }
 
-const FRAME_END = /\r?\n\r?\n/;
+const FRAME_END = /\r?\n\r?\n/g;
+export const MAX_FRAME_BYTES = 1_000_000;
 
 export async function* parseSSE(source: AsyncIterable<string>): AsyncGenerator<SSEFrame> {
 	let buf = '';
+	let from = 0;
 	for await (const text of source) {
 		buf += text;
-		for (let m = FRAME_END.exec(buf); m; m = FRAME_END.exec(buf)) {
+		for (;;) {
+			FRAME_END.lastIndex = from;
+			const m = FRAME_END.exec(buf);
+			if (!m) {
+				from = Math.max(0, buf.length - 3); // a separator is at most 4 chars
+				break;
+			}
 			const frame = parseFrame(buf.slice(0, m.index));
 			buf = buf.slice(m.index + m[0].length);
+			from = 0;
 			if (frame) yield frame;
 		}
+		if (buf.length > MAX_FRAME_BYTES) throw new Error('SSE frame over 1 MB');
 	}
 }
 

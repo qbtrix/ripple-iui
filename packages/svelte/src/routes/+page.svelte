@@ -93,7 +93,7 @@
     const res = await fetch('/api/ui', { method: 'POST', body: prompt });
     store = streamSpec(res.body);
   }
-</scr` + `ipt>
+\u003C/script>
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
 
@@ -549,6 +549,12 @@
 	@media (max-width: 860px) {
 		.code {
 			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	@media (max-width: 420px) {
+		.chat-frame {
+			padding: 8px;
+			border-radius: 14px;
 		}
 	}
 </style>

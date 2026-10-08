@@ -13,6 +13,8 @@ import { FENCE_OPEN, type SSEFrame } from './sse.js';
 
 export type RecordedMode = 'normal' | 'reject' | 'truncate' | 'legacy';
 
+const chunk = (content: string): SSEFrame => ({ event: 'chunk', data: { content, type: 'text' } });
+
 const STOP = new Set(['the', 'and', 'for', 'with', 'me', 'my', 'show', 'let', 'can', 'how', 'that', 'what', 'make', 'give']);
 const words = (s: string) =>
 	new Set(
@@ -66,7 +68,6 @@ export async function* recordedEvents(
 	{ mode = 'normal', speed = 1, signal, intro }: RecordedOptions = {}
 ): AsyncGenerator<SSEFrame> {
 	const cardId = `card_${scenario.id}`;
-	const chunk = (content: string): SSEFrame => ({ event: 'chunk', data: { content, type: 'text' } });
 	const pieces = cardChunks(scenario.fixture);
 	const stream = (upTo = pieces.length) => replay({ ...scenario.fixture, chunks: pieces.slice(0, upTo) }, { speed, signal });
 
@@ -85,7 +86,7 @@ export async function* recordedEvents(
 		for await (const text of stream(cutoff)) yield { event: 'card.delta', data: { card_id: cardId, text } };
 		if (signal?.aborted) return;
 		if (mode === 'normal') {
-			const card = JSON.parse(pieces.map((p) => p.text).join('')) as Record<string, unknown>;
+			const card: unknown = JSON.parse(pieces.map((p) => p.text).join(''));
 			yield { event: 'card.final', data: { card_id: cardId, card } };
 			yield chunk('The card is live now. Change something and see.');
 		} else {

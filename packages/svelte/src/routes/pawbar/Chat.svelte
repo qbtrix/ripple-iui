@@ -235,6 +235,8 @@
 		border-radius: var(--radius-paw);
 		background: color-mix(in oklch, var(--background) 82%, transparent);
 		min-width: 0;
+		/* A card can be wider than a phone: it scrolls inside itself, never clips. */
+		overflow-x: auto;
 		transition: border-color 0.4s;
 	}
 	.card[data-status='streaming'] {
@@ -364,6 +366,15 @@
 	.notice a:focus-visible {
 		outline: 2px solid var(--primary);
 		outline-offset: 2px;
+	}
+	@media (max-width: 420px) {
+		.card {
+			padding: 8px;
+		}
+		/* Room for the sticky composer, so the end of a card can scroll above it. */
+		.log {
+			padding-bottom: 72px;
+		}
 	}
 	@keyframes rise {
 		from {
