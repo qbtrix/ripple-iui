@@ -5,7 +5,7 @@
 // allowlist must match the vendored manifest.
 
 import { describe, expect, test } from 'vitest';
-import { refuseCard } from './card-policy.js';
+import { decodeEntities, refuseCard } from './card-policy.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
@@ -53,7 +53,7 @@ describe('actions', () => {
 });
 
 describe('widgets', () => {
-	test.each(['embed', 'ripple-frame', 'richtext', 'iframe', 'frame', 'nested-spec', 'md', 'Embed', 'not-a-widget'])(
+	test.each(['embed', 'ripple-frame', 'richtext', 'rich-text', 'map', 'company-header', 'iframe', 'frame', 'nested-spec', 'md', 'Embed', 'not-a-widget'])(
 		'refuses the %s widget node',
 		(type) => {
 			expect(refuseCard({ ui: { type: 'flex', children: [{ type, props: {} }] } })).toBe(`widget:${type}`);
@@ -70,8 +70,15 @@ describe('widgets', () => {
 		expect(refuseCard({ ui: { type: 'ifr' } }, { partial: true })).toBe('widget:ifr');
 	});
 
-	test('the allowlist is the vendored manifest minus embed, ripple-frame and richtext', () => {
-		const blocked = new Set(['embed', 'ripple-frame', 'richtext']);
+	test('rich-text, map and company-header are refused at the root and as nested widgets', () => {
+		expect(refuseCard({ ui: { type: 'rich-text', props: { value: '<p>hi</p>' } } })).toBe('widget:rich-text');
+		expect(refuseCard({ ui: { type: 'tabs', props: { items: [{ label: 'a', content: { type: 'map' } }] } } })).toBe('widget:map');
+		expect(refuseCard({ ui: { type: 'company-header', props: { name: 'Acme' } } }, { partial: true })).toBe('widget:company-header');
+		expect(refuseCard({ ui: { type: 'ma' } }, { partial: true })).toBeNull();
+	});
+
+	test('the allowlist is the vendored manifest minus the blocked widgets', () => {
+		const blocked = new Set(['embed', 'ripple-frame', 'richtext', 'rich-text', 'map', 'company-header']);
 		const expected = manifest.widgets.map((w) => w.type).filter((t) => !blocked.has(t));
 		expect([...CHAT_WIDGET_TYPES].toSorted()).toEqual(expected.toSorted());
 	});
@@ -145,6 +152,46 @@ describe('markup and markdown', () => {
 		'go to www.evil.example'
 	])('refuses %s', (value) => {
 		expect(refuseCard({ ui: { type: 'markdown', props: { content: value } } })).toBe('markup');
+	});
+
+	test.each([
+		'<details open><summary>x</summary></details>',
+		'<DETAILS open>',
+		'<math><mi>x</mi></math>',
+		'<svg onload=alert(1)>',
+		'<Style>body{}</style>',
+		'<meta http-equiv="refresh">',
+		'<base href="/">',
+		'<object data=x>',
+		'<embed src=x>',
+		'<link rel=stylesheet>',
+		'<form action=x>',
+		'<div onclick=alert(1)>hi</div>',
+		'<span onmouseover = "x">',
+		'<b/onpointerenter=x>',
+		'<x title="a" ONFOCUS=go autofocus>',
+		'&lt;svg onload=1&gt;',
+		'&#60;details&#62;',
+		'&#x3C;img src=x>',
+		'&#X3c;p onclick=x&gt;',
+		'&ltdetails&gt;'
+	])('refuses the tag %s, decoded and in any case', (value) => {
+		expect(refuseCard(text(value))).toBe('markup');
+		expect(refuseCard({ ui: { type: 'text' }, state: { note: value } })).toBe('markup');
+	});
+
+	test.each(['a < b and c > d', 'the button on the left', 'x<5 onions = 3', '**bold** and `code`', 'Fish &amp; chips', 'tom &lt; 3', '<b>on sale</b>'])(
+		'allows the plain text %s',
+		(value) => {
+			expect(refuseCard(text(value))).toBeNull();
+		}
+	);
+
+	test('entities decode once, so double-encoded text stays text; URL keys decode too', () => {
+		expect(decodeEntities('&amp;lt;svg&amp;gt;')).toBe('&lt;svg&gt;');
+		expect(decodeEntities('&#106;&#x61;va &amp; &bogus; &#0;')).toBe('java & &bogus; &#0;');
+		expect(refuseCard(prop('href', '&#106;avascript:alert(1)', 'cta'))).toBe('unsafe_url');
+		expect(refuseCard(prop('src', 'https://img.example/a.png?w=1&amp;h=2'))).toBeNull();
 	});
 
 	test('markdown in state is checked too; relative and hash links are fine', () => {

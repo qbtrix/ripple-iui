@@ -90,7 +90,7 @@
 <style>
 	:global(html) {
 		scroll-behavior: smooth;
-		scroll-padding-top: 72px;
+		scroll-padding-top: calc(var(--site-topbar) + 16px);
 	}
 	.shell {
 		min-height: 100vh;
@@ -99,6 +99,8 @@
 		overflow-x: clip;
 	}
 	.topbar {
+		box-sizing: border-box;
+		min-height: var(--site-topbar);
 		position: sticky;
 		top: 0;
 		z-index: 50;

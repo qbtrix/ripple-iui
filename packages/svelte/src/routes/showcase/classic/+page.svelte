@@ -24,10 +24,10 @@
           props: { gap: '10px' },
           style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
           children: [
-            { type: 'source-card', props: { source: 'marketline', title: "Varan's neighbours seek fuel supplies from Varan...", color: '#22c55e' } },
-            { type: 'source-card', props: { source: 'energy.ledger', title: 'Varani fuel shipment to arrive in Coralis on Saturday...', color: '#ef4444' } },
-            { type: 'source-card', props: { source: 'northpost', title: 'Varan seeks security assurances for urgent fuel...', color: '#3b82f6' } },
-            { type: 'source-card', props: { source: 'worldwire', title: 'Varan, Europe feel fuel crunch as Gulf gas supplie...', color: '#f97316' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'marketline', title: "Varan's neighbours seek fuel supplies from Varan...", color: '#22c55e' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'energy.ledger', title: 'Varani fuel shipment to arrive in Coralis on Saturday...', color: '#ef4444' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'northpost', title: 'Varan seeks security assurances for urgent fuel...', color: '#3b82f6' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'worldwire', title: 'Varan, Europe feel fuel crunch as Gulf gas supplie...', color: '#f97316' } },
           ]
         },
         { type: 'image', props: {
@@ -42,16 +42,16 @@
         {
           type: 'flex', props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'northpost', color: '#3b82f6', number: 1 } },
-            { type: 'citation', props: { source: 'forumline', color: '#ff4500', number: 2 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'northpost', color: '#3b82f6', number: 1 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'forumline', color: '#ff4500', number: 2 } },
           ]
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'northpost', color: '#3b82f6' },
-            { name: 'marketline', color: '#22c55e' },
-            { name: 'worldwire', color: '#f97316' },
-            { name: 'energy.ledger', color: '#ef4444' },
+            { favicon: '/icons/source.svg', name: 'northpost', color: '#3b82f6' },
+            { favicon: '/icons/source.svg', name: 'marketline', color: '#22c55e' },
+            { favicon: '/icons/source.svg', name: 'worldwire', color: '#f97316' },
+            { favicon: '/icons/source.svg', name: 'energy.ledger', color: '#ef4444' },
           ],
         }},
         { type: 'heading', props: { text: 'Discover more', level: 4 } },
@@ -156,9 +156,9 @@
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'MX Exchange', color: '#0080ff' },
-            { name: 'marketline', color: '#22c55e' },
-            { name: 'MX', color: '#ef4444' },
+            { favicon: '/icons/source.svg', name: 'MX Exchange', color: '#0080ff' },
+            { favicon: '/icons/source.svg', name: 'marketline', color: '#22c55e' },
+            { favicon: '/icons/source.svg', name: 'MX', color: '#ef4444' },
           ]
         }},
         { type: 'follow-up', props: { placeholder: 'Ask about any stock or index...' } }
@@ -246,8 +246,8 @@
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'OpenWeather', color: '#f59e0b' },
-            { name: 'IMD', color: '#0080ff' },
+            { favicon: '/icons/source.svg', name: 'OpenWeather', color: '#f59e0b' },
+            { favicon: '/icons/source.svg', name: 'IMD', color: '#0080ff' },
           ]
         }},
       ]
@@ -359,16 +359,16 @@
         {
           type: 'flex', props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'specsheet', color: '#ef4444', number: 1 } },
-            { type: 'citation', props: { source: 'techbench', color: '#3b82f6', number: 2 } },
-            { type: 'citation', props: { source: 'gadgetline', color: '#8b5cf6', number: 3 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'specsheet', color: '#ef4444', number: 1 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'techbench', color: '#3b82f6', number: 2 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'gadgetline', color: '#8b5cf6', number: 3 } },
           ]
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'specsheet', color: '#ef4444' },
-            { name: 'techbench', color: '#3b82f6' },
-            { name: 'gadgetline', color: '#8b5cf6' },
+            { favicon: '/icons/source.svg', name: 'specsheet', color: '#ef4444' },
+            { favicon: '/icons/source.svg', name: 'techbench', color: '#3b82f6' },
+            { favicon: '/icons/source.svg', name: 'gadgetline', color: '#8b5cf6' },
           ]
         }},
         { type: 'follow-up', props: { placeholder: 'Ask about cameras, performance...' } }
@@ -419,8 +419,8 @@
         {
           type: 'flex', props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'MDN', color: '#000', number: 1 } },
-            { type: 'citation', props: { source: 'javascript.info', color: '#f59e0b', number: 2 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'MDN', color: '#000', number: 1 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'javascript.info', color: '#f59e0b', number: 2 } },
           ]
         },
         { type: 'follow-up', props: { placeholder: 'Ask about throttle, requestAnimationFrame...' } }
@@ -493,9 +493,9 @@
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'travel-notes.example', color: '#ef4444' },
-            { name: 'roamnotes', color: '#0080ff' },
-            { name: 'staybook', color: '#22c55e' },
+            { favicon: '/icons/source.svg', name: 'travel-notes.example', color: '#ef4444' },
+            { favicon: '/icons/source.svg', name: 'roamnotes', color: '#0080ff' },
+            { favicon: '/icons/source.svg', name: 'staybook', color: '#22c55e' },
           ]
         }},
         { type: 'follow-up', props: { placeholder: 'Ask about accommodation, transport...' } }
@@ -514,7 +514,7 @@
       ui: { type: 'company-header', props: {
         name: 'Meridian Industries', ticker: 'MERIDIAN', exchange: 'MX',
         description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
-        domain: 'meridian.example', tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
+        tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
         price: '\u20B92,920.45', change: '+40.05', changePercent: '+1.39%', marketCap: '\u20B919.76L Cr',
       }}
     }},
@@ -754,8 +754,8 @@
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '12px' }, children: [
         { type: 'sources-bar', props: { sources: [
-          { name: 'marketline' }, { name: 'MX Exchange' }, { name: 'tickerwire' },
-          { name: 'wirefeed' }, { name: 'metro24' }, { name: 'energy.ledger' },
+          { favicon: '/icons/source.svg', name: 'marketline' }, { favicon: '/icons/source.svg', name: 'MX Exchange' }, { favicon: '/icons/source.svg', name: 'tickerwire' },
+          { favicon: '/icons/source.svg', name: 'wirefeed' }, { favicon: '/icons/source.svg', name: 'metro24' }, { favicon: '/icons/source.svg', name: 'energy.ledger' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about financials, segments, Volt, risks, management...' } },
       ]}
@@ -775,7 +775,6 @@
           ticker: 'MERIDIAN',
           exchange: 'MX',
           description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
-          domain: 'meridian.example',
           tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
           price: '\u20B92,920.45',
           change: '+40.05',
@@ -1057,12 +1056,12 @@
         // ── Sources ──
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'marketline' },
-            { name: 'MX Exchange' },
-            { name: 'tickerwire' },
-            { name: 'wirefeed' },
-            { name: 'metro24' },
-            { name: 'energy.ledger' },
+            { favicon: '/icons/source.svg', name: 'marketline' },
+            { favicon: '/icons/source.svg', name: 'MX Exchange' },
+            { favicon: '/icons/source.svg', name: 'tickerwire' },
+            { favicon: '/icons/source.svg', name: 'wirefeed' },
+            { favicon: '/icons/source.svg', name: 'metro24' },
+            { favicon: '/icons/source.svg', name: 'energy.ledger' },
           ]
         }},
 
@@ -1237,9 +1236,9 @@
         { type: 'heading', props: { text: 'Volt Mobile adds 8.3M subscribers in February, ARPU rises to \u20B9203.5', level: 3 } },
         { type: 'text', props: { text: 'Volt Platforms reported 8.3 million net subscriber additions in February 2026, pushing its total subscriber base past 490 million. Average Revenue Per User (ARPU) rose to \u20B9203.5, up 15.1% year-on-year, driven by the July 2025 tariff hike and growing adoption of 5G-bundled plans.', size: 'sm' } },
         { type: 'flex', props: { gap: '10px' }, style: { 'overflow-x': 'auto', 'padding-bottom': '4px' }, children: [
-          { type: 'source-card', props: { source: 'marketline', title: 'Volt adds 8.3M subs in Feb, ARPU crosses \u20B9200 for first time', color: '#22c55e' } },
-          { type: 'source-card', props: { source: 'energy.ledger', title: 'Telecom subscriber data Feb 2026: Volt leads, Kestrel steady', color: '#ef4444' } },
-          { type: 'source-card', props: { source: 'metro24', title: 'Volt 5G adoption crosses 200M users milestone', color: '#3b82f6' } },
+          { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'marketline', title: 'Volt adds 8.3M subs in Feb, ARPU crosses \u20B9200 for first time', color: '#22c55e' } },
+          { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'energy.ledger', title: 'Telecom subscriber data Feb 2026: Volt leads, Kestrel steady', color: '#ef4444' } },
+          { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'metro24', title: 'Volt 5G adoption crosses 200M users milestone', color: '#3b82f6' } },
         ]},
         { type: 'heading', props: { text: 'ARPU Trend', level: 4 } },
         { type: 'chart', props: { type: 'line', height: 160, colors: ['#22c55e'], data: [
@@ -1250,8 +1249,8 @@
         ]}},
         { type: 'text', props: { text: 'Analysts view the ARPU expansion as sustainable. The July 2025 tariff hike added \u20B915–20 to blended ARPU, and 5G-bundled plans carry a further \u20B910–15 premium over 4G equivalents.', size: 'sm' } },
         { type: 'flex', props: { gap: '6px', wrap: 'wrap' }, children: [
-          { type: 'citation', props: { source: 'marketline', number: 1 } },
-          { type: 'citation', props: { source: 'metro24', number: 2 } },
+          { type: 'citation', props: { favicon: '/icons/source.svg', source: 'marketline', number: 1 } },
+          { type: 'citation', props: { favicon: '/icons/source.svg', source: 'metro24', number: 2 } },
         ]},
         { type: 'callout', props: { variant: 'success', title: 'Bullish Signal', text: 'Volt\'s ARPU has grown for 7 consecutive quarters — the longest streak since its 2016 launch. At \u20B9203.5, it is now within 5% of management\'s FY26 target of \u20B9210.' } },
         { type: 'heading', props: { text: 'Subscriber Market Share', level: 4 } },
@@ -1262,7 +1261,7 @@
           { label: 'Statelink', value: 8.5 },
         ]}},
         { type: 'sources-bar', props: { sources: [
-          { name: 'marketline' }, { name: 'metro24' }, { name: 'energy.ledger' }, { name: 'TRB' },
+          { favicon: '/icons/source.svg', name: 'marketline' }, { favicon: '/icons/source.svg', name: 'metro24' }, { favicon: '/icons/source.svg', name: 'energy.ledger' }, { favicon: '/icons/source.svg', name: 'TRB' },
         ]}},
         { type: 'heading', props: { text: 'Discover more', level: 4 } },
         { type: 'flex', props: { gap: '12px' }, style: { 'overflow-x': 'auto', 'padding-bottom': '4px' }, children: [
@@ -1302,12 +1301,12 @@
           { seg: 'Others', rev: '\u20B94,200 Cr', ebitda: '\u20B9850 Cr', margin: '20.2%', yoy: '-2.4%' },
         ]}},
         { type: 'flex', props: { gap: '6px', wrap: 'wrap' }, children: [
-          { type: 'citation', props: { source: 'marketline', number: 1 } },
-          { type: 'citation', props: { source: 'tickerwire', number: 2 } },
-          { type: 'citation', props: { source: 'MX Exchange', number: 3 } },
+          { type: 'citation', props: { favicon: '/icons/source.svg', source: 'marketline', number: 1 } },
+          { type: 'citation', props: { favicon: '/icons/source.svg', source: 'tickerwire', number: 2 } },
+          { type: 'citation', props: { favicon: '/icons/source.svg', source: 'MX Exchange', number: 3 } },
         ]},
         { type: 'sources-bar', props: { sources: [
-          { name: 'marketline' }, { name: 'tickerwire' }, { name: 'MX Exchange' }, { name: 'wirefeed' },
+          { favicon: '/icons/source.svg', name: 'marketline' }, { favicon: '/icons/source.svg', name: 'tickerwire' }, { favicon: '/icons/source.svg', name: 'MX Exchange' }, { favicon: '/icons/source.svg', name: 'wirefeed' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about segment margins, guidance, next quarter...' } },
       ]}
@@ -1345,7 +1344,7 @@
           { name: 'GIC Singapore', stake: '1.42%', change: '+0.22%' },
         ]}},
         { type: 'sources-bar', props: { sources: [
-          { name: 'MX Exchange' }, { name: 'marketline' }, { name: 'stocktrend' },
+          { favicon: '/icons/source.svg', name: 'MX Exchange' }, { favicon: '/icons/source.svg', name: 'marketline' }, { favicon: '/icons/source.svg', name: 'stocktrend' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about promoter pledge, FII trends, specific funds...' } },
       ]}
@@ -1361,7 +1360,7 @@
         { type: 'callout', props: { variant: 'warning', title: 'Capex Intensity (Medium)', text: 'New energy vertical requires \u20B975,000 Cr capex through FY28. Funding via internal accruals + debt. Debt/Equity ratio could rise from 0.38 to 0.55 if retail and digital FCF underperforms.' } },
         { type: 'callout', props: { variant: 'info', title: 'Regulatory Exposure (Low-Medium)', text: 'Multi-sector exposure means regulatory changes in telecom, retail FDI, refining, or renewables could individually impact business units. No single regulatory event poses existential risk.' } },
         { type: 'sources-bar', props: { sources: [
-          { name: 'tickerwire' }, { name: 'wirefeed' }, { name: 'marketline' },
+          { favicon: '/icons/source.svg', name: 'tickerwire' }, { favicon: '/icons/source.svg', name: 'wirefeed' }, { favicon: '/icons/source.svg', name: 'marketline' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about specific risk factors, mitigation...' } },
       ]}
@@ -1382,7 +1381,7 @@
           { date: 'Oct 2024', title: 'Volt tariff hike', detail: 'Across-the-board 12–25% tariff increase. ARPU expected to reach \u20B9200+ by Q4 FY25.', type: 'info' },
         ]}},
         { type: 'sources-bar', props: { sources: [
-          { name: 'marketline' }, { name: 'tickerwire' }, { name: 'wirefeed' }, { name: 'metro24' },
+          { favicon: '/icons/source.svg', name: 'marketline' }, { favicon: '/icons/source.svg', name: 'tickerwire' }, { favicon: '/icons/source.svg', name: 'wirefeed' }, { favicon: '/icons/source.svg', name: 'metro24' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about specific deals, upcoming events...' } },
       ]}

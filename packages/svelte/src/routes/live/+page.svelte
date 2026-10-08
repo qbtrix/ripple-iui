@@ -11,13 +11,10 @@
     its checkout; the store sends visitors back to `?order=<session>` or
     `?cancelled=1`, which OrderReceipt renders.
 
-  Creative Direction Declaration
-    Archetype: Technology. Richness: Premium minimal.
-    Design read: the landing's Clean-Tech system (shadcn tokens, one cool blue
-      accent, system UI and mono stacks), carried onto a viewer page.
-    Trap avoided: a chat-app clone. The prompt is one bubble; the stage is the
-      raw stream beside the UI it becomes.
-    Dials: variance 5, motion 4, density 4.
+  Look: the site's Paw OS skin (site.css tokens and fonts) under the shared
+    top bar and footer from +layout.svelte; this page adds no chrome of its own.
+    Its local tokens are prefixed (--live-accent, --live-radius) so the widgets
+    in the render frame keep their own --accent and --radius.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -251,37 +248,28 @@
 		</div>
 	</section>
 
-	<footer class="foot">
-		<a href="/">Ripple home</a>
-		<a href="https://github.com/qbtrix/ripple-iui">github.com/qbtrix/ripple-iui</a>
-	</footer>
 </main>
 
 <style>
-	/* Tokens mirror routes/+page.svelte so /live reads as the same site. */
+	/* Paw OS tokens from site.css, so /live reads as the same site. Local names
+	   are prefixed: --accent and --radius belong to the widgets in the frame. */
 	.live {
-		--accent: hsl(216 74% 50%);
-		--accent-ink: hsl(0 0% 100%);
-		--ground: hsl(220 20% 98.4%);
+		--live-accent: var(--primary);
+		--live-accent-ink: var(--primary-foreground);
+		--ground: var(--site-ground);
 		--panel: var(--card);
-		--ink-soft: color-mix(in srgb, var(--foreground) 62%, var(--ground));
-		--line: var(--border);
-		--mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-		--radius: 12px;
-		font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+		--ink-soft: var(--site-soft);
+		--line: var(--site-line);
+		--mono: var(--font-mono);
+		--live-radius: var(--radius-paw);
+		font-family: var(--font-sans);
 		background: var(--ground);
-		color: var(--foreground);
-		padding: 0 24px;
+		color: var(--site-ink);
+		padding: 0 clamp(16px, 4vw, 32px);
 		overflow-x: clip;
 	}
-	:global(.dark) .live {
-		--accent: hsl(214 80% 62%);
-		--accent-ink: hsl(222 30% 8%);
-		--ground: hsl(222 14% 6%);
-		--panel: hsl(222 12% 9%);
-	}
 	.live > * {
-		max-width: 1160px;
+		max-width: 1120px;
 		margin-inline: auto;
 	}
 	code,
@@ -290,14 +278,19 @@
 	}
 
 	.head {
-		padding: 64px 0 32px;
+		padding: clamp(40px, 7vw, 72px) 0 32px;
 	}
 	h1 {
 		margin: 0;
-		font-size: clamp(2rem, 3.6vw, 3.1rem);
-		line-height: 1.06;
-		letter-spacing: -0.03em;
-		font-weight: 600;
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 4.2vw, 3.3rem);
+		line-height: 1.04;
+		letter-spacing: -0.035em;
+		font-weight: 700;
+		text-wrap: balance;
+	}
+	h1 span {
+		font-weight: 500;
 	}
 	h1 span {
 		color: var(--ink-soft);
@@ -327,7 +320,7 @@
 		color: inherit;
 		padding: 14px 16px;
 		border: 1px solid var(--line);
-		border-radius: var(--radius);
+		border-radius: var(--live-radius);
 		background: var(--panel);
 		cursor: pointer;
 		transition: border-color 0.15s;
@@ -336,7 +329,7 @@
 		border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
 	}
 	.scenario[aria-pressed='true'] {
-		border-color: var(--accent);
+		border-color: var(--live-accent);
 	}
 	.scenario-cat {
 		font-family: var(--mono);
@@ -378,7 +371,7 @@
 		max-width: 60ch;
 		padding: 10px 14px;
 		border-radius: 14px 14px 14px 4px;
-		background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+		background: color-mix(in srgb, var(--live-accent) 9%, var(--panel));
 		line-height: 1.5;
 		font-size: 15px;
 	}
@@ -398,7 +391,7 @@
 	.status {
 		font-family: var(--mono);
 		font-size: 11px;
-		color: var(--accent);
+		color: var(--primary-ink);
 		font-variant-numeric: tabular-nums;
 	}
 	.speed {
@@ -424,11 +417,11 @@
 	.replay {
 		padding: 6px 12px;
 		border-radius: 8px;
-		background: var(--accent);
-		color: var(--accent-ink);
+		background: var(--live-accent);
+		color: var(--live-accent-ink);
 	}
 	.replay:hover {
-		background: color-mix(in srgb, var(--accent) 88%, var(--foreground));
+		background: color-mix(in srgb, var(--live-accent) 88%, var(--foreground));
 	}
 
 	.panes {
@@ -474,7 +467,7 @@
 		border-radius: 10px;
 		font-size: 14px;
 		line-height: 1.45;
-		background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+		background: color-mix(in srgb, var(--live-accent) 9%, var(--panel));
 	}
 	.checkout-note[data-busy='false'] {
 		background: color-mix(in srgb, hsl(0 72% 51%) 10%, var(--panel));
@@ -523,25 +516,8 @@
 		word-break: break-all;
 	}
 
-	.foot {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 8px;
-		margin-top: 64px;
-		padding: 24px 0 32px;
-		border-top: 1px solid var(--line);
-		font-size: 13px;
-		color: var(--ink-soft);
-	}
-	.foot a {
-		color: inherit;
-	}
 
 	@media (max-width: 720px) {
-		.live {
-			padding: 0 16px;
-		}
 		.head {
 			padding: 40px 0 24px;
 		}

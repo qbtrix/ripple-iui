@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
+import { BYOK_URL, ChatHttpError, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
@@ -124,6 +124,13 @@ describe('customerRef', () => {
 	});
 });
 
+const recorded: Transport = (m, signal) => recordedEvents(pickScenario(m), { speed: Infinity, signal });
+const failing = (err: unknown): Transport =>
+	async function* () {
+		yield* [];
+		throw err;
+	};
+
 describe('ChatSession', () => {
 	test('native card events interleave with text, stream progressively, then go final', async () => {
 		let release!: () => void;
@@ -181,6 +188,33 @@ describe('ChatSession', () => {
 		const server = new ChatSession((_m, signal) => recordedEvents(bill, { mode: 'truncate', speed: Infinity, signal }));
 		await server.send('x');
 		expect(cardOf(server)?.reason).toBe('truncated');
+	});
+
+	test('an unavailable live answer offers the recorded one and plays it in the same turn', async () => {
+		const busy = new ChatSession(failing(new ChatHttpError(429, '')), recorded);
+		await busy.send('split the bill between four of us');
+		const turn = lastTurn(busy);
+		expect(turn.notice).toMatchObject({ kind: 'busy', replay: true });
+		await busy.replayRecorded(turn.id);
+		expect(busy.turns).toHaveLength(2);
+		expect(lastTurn(busy).notice).toBeNull();
+		expect(lastTurn(busy).parts.some((p) => p.kind === 'card' && p.card.status === 'final')).toBe(true);
+		await busy.replayRecorded(turn.id);
+		expect(busy.turns).toHaveLength(2);
+
+		const limit = new ChatSession(frames({ event: 'unavailable', data: { type: 'unavailable', reason: 'limit' } }), recorded);
+		await limit.send('x');
+		expect(lastTurn(limit).notice).toMatchObject({ kind: 'limit', replay: true });
+		const offline = new ChatSession(failing(new TypeError('fetch failed')), recorded);
+		await offline.send('x');
+		expect(lastTurn(offline).notice).toMatchObject({ kind: 'error', replay: true });
+
+		const rejected = new ChatSession(failing(new ChatHttpError(400, 'message_rejected')), recorded);
+		await rejected.send('x');
+		expect(lastTurn(rejected).notice?.replay).toBeUndefined();
+		const noFallback = new ChatSession(failing(new ChatHttpError(429, '')));
+		await noFallback.send('x');
+		expect(lastTurn(noFallback).notice?.replay).toBeUndefined();
 	});
 
 	test('unavailable, error and interrupted end the turn with a calm notice', async () => {
