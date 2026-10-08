@@ -36,17 +36,20 @@
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
 
+	// The order demo needs the test store's checkout (an `api` action), which the
+	// chat's card policy refuses; it stays on /live and in the runs list below.
+	const chatScenarios = scenarios.filter((s) => !s.needsStore);
 	const session = new ChatSession(
 		LIVE
 			? pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send
 			: (message, signal) =>
-					recordedEvents(pickScenario(message), {
+					recordedEvents(pickScenario(message, chatScenarios), {
 						speed: 1.5,
 						signal,
 						intro: 'The live model is not connected on this build, so here is a recorded answer that fits.'
 					})
 	);
-	const suggestions = scenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
+	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {

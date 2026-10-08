@@ -8,12 +8,16 @@
 // streamSpec store; `card.final` swaps in the validated spec; `card.rejected`
 // (or a turn that ends first: "truncated") drops it for a short note. The
 // legacy ```pawbar-card fence in chunk text is re-split on every chunk and
-// fed through the same Card. Host events from a card are inert until final;
-// local state actions never reach the host, so they work while streaming.
+// fed through the same Card. Every partial spec and the final card pass
+// card-policy.ts first; a refused card is dropped like a rejected one. Host
+// events are inert until final, and even then only recorded for display: the
+// landing has no store, so no host event makes a network call or navigates.
+// Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
 
 import type { RippleEvent } from '$lib/index.js';
 import { streamSpec, type StreamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
+import { refuseCard } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
 export const BYOK_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
@@ -115,7 +119,14 @@ export class Card {
 		const source = new ReadableStream<string>({ start: (c) => void (this.#push = c) });
 		// throttleMs 0: streamSpec's throttle has no trailing parse, so a pause in
 		// the stream would leave the card behind the text it has already received.
-		this.store = streamSpec(source, { throttleMs: 0 });
+		// Every partial spec passes the card policy before <Ripple> renders it.
+		this.store = streamSpec(source, {
+			throttleMs: 0,
+			onUpdate: (spec) => {
+				const why = refuseCard(spec, { partial: true });
+				if (why) this.reject(why);
+			}
+		});
 	}
 
 	/** Appends raw card JSON text. */
@@ -140,6 +151,8 @@ export class Card {
 		if (!this.#open) return;
 		const c = card as { ui?: unknown; state?: unknown } | null;
 		if (!c || typeof c !== 'object' || !c.ui || typeof c.ui !== 'object') return this.reject('invalid');
+		const why = refuseCard(c);
+		if (why) return this.reject(why);
 		this.spec = { version: '1.0', ...(c as object) } as StreamSpec;
 		this.status = 'final';
 		this.#close();
