@@ -1,12 +1,11 @@
 ---
 {
   "title": "Partial JSON Parser — Truncated Enum Guard for Progressive Streaming",
-  "summary": "This module wraps the `partial-json` library to add a critical safety layer: enum-typed fields (`type`, `intent`, `version`, `action`, `variant`) are stripped from parsed output unless their string value is provably closed in the raw buffer. Without this guard, progressive renders would briefly flash \"Unknown widget type\" errors as LLM output streams in character-by-character.",
+  "summary": "This module wraps the `partial-json` library to add a critical safety layer: enum-typed fields (`type`, `intent`, `version`, `action`, `variant`) are held back while the buffer ends inside their string value. Without this guard, progressive renders would briefly flash \"Unknown widget type\" errors as LLM output streams in character-by-character.",
   "concepts": [
     "parsePartialSpec",
     "ParseResult",
-    "stripTruncatedEnums",
-    "isStringClosed",
+    "openEnumKeyAt",
     "ENUM_KEYS",
     "DEFAULT_ALLOW",
     "partial-json",
@@ -39,7 +38,7 @@
 
 `lib/streaming/json-parse.ts` exists to solve a specific problem unique to streaming LLM output: `partial-json` correctly parses incomplete JSON by tolerating missing closing brackets and quotes — but that means a widget spec arriving as `{"type": "fl` would be parsed as `{ type: "fl" }`. The renderer would then look up `"fl"` in the widget registry, fail, and display an error.
 
-The fix: for a defined set of enum-like keys, only pass the value through if the string is demonstrably closed in the raw buffer.
+The fix: for a defined set of enum-like keys, hold the value back while the buffer ends inside it.
 
 ## ENUM_KEYS
 
@@ -59,32 +58,18 @@ export function parsePartialSpec(buffer: string, allow: number = DEFAULT_ALLOW):
 
 `DEFAULT_ALLOW` is `Allow.OBJ | Allow.ARR | Allow.STR` — objects, arrays, and strings are allowed to be incomplete; numbers, booleans, and `null` must be complete. This allows rich progressive rendering while still producing structurally useful partial documents.
 
-The function: trims, calls `partial-json`'s `parse`, and if the result is a non-null object, passes it through `stripTruncatedEnums`. Hard parse failures (thrown by `partial-json`) return `{ value: null }` — null is always safe to render as "loading".
+The function trims, asks `openEnumKeyAt` whether the buffer ends inside an enum-key value, and if it does, parses the buffer cut just before that key (partial-json drops the dangling `,` cleanly). Otherwise it parses the whole buffer. Hard parse failures return `{ value: null }`, and `streamSpec` skips that emission.
 
-## stripTruncatedEnums
-
-A recursive tree walk that removes any enum-key string value that `isStringClosed` reports as not yet terminated. Arrays are walked element-by-element; the function correctly recurses into nested child nodes.
-
-## isStringClosed — The Subtle Part
+## openEnumKeyAt: decide by position, not by value
 
 ```typescript
-function isStringClosed(value: string, buffer: string): boolean
+function openEnumKeyAt(json: string): number
 ```
 
-A naive `buffer.includes('"flex"')` check has a false-positive case:
+Only the string the buffer ends inside can be truncated; every other string in the tree is complete. So the check scans quote state from the start of the buffer, honouring backslash escapes (`\"` stays inside the string, `\\"` closes it), and remembers the last two strings it saw. If the buffer ends inside a string, the string before it is a key followed by `:`, and that key is in `ENUM_KEYS`, it returns the key's opening-quote index. Otherwise -1.
 
-```
-{"type":"flex","children":[{"type":"flex
-```
-
-The parent's `type` is closed but the child's is not. `includes('"flex"')` returns `true` for both, so the child's truncated value would incorrectly survive the filter.
-
-The fix: after finding the quoted pattern, the algorithm checks the character immediately following the closing quote. A valid closed string in a JSON document must be followed by `,`, `}`, `]`, or whitespace (or be at EOF). A character that continues the string — such as the still-being-typed content — does not satisfy this. The search continues to the next occurrence until a clean terminator is found or the buffer is exhausted.
-
-## escapeForJsonString
-
-Before scanning the buffer for `"value"`, the value itself is JSON-escaped (backslashes, quotes, newlines, tabs) so that the pattern match works on the literal bytes that appear in the raw JSON buffer, not the unescaped string value.
+Matching by value instead (is this text closed anywhere in the buffer?) gives the wrong answer when the same text is closed elsewhere: an empty `"type":"` reads as closed once any `""` appeared earlier, and a child's half-typed `"type":"flex` reads as closed after a parent's `"type":"flex"`. Both are pinned in `stream-spec.test.ts`.
 
 ## Known Gaps
 
-- The `isStringClosed` scan runs in O(n) over the full buffer for each enum-key value found in the parsed tree. For very large specs with many enum keys, this could become noticeable — but real UI specs are small relative to prose LLM output, so this is an accepted trade-off.
+- A new enum-like prop on a custom widget is not protected until its key joins `ENUM_KEYS`.

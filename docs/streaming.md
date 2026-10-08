@@ -47,7 +47,7 @@ wrapper that yields chunks.
 |---|---|---|
 | `throttleMs` | `50` | Minimum ms between parse attempts. Tied to perception, not frame rate. |
 | `maxBufferBytes` | `2_000_000` | Safety cap. Stream is cancelled with an `overflow` error if the buffer grows past this. |
-| `allow` | `OBJ \| ARR \| STR` | `partial-json` flags. Defaults also run a post-filter that strips truncated enum-like values (`type`, `intent`, `version`, `action`, `variant`). |
+| `allow` | `OBJ \| ARR \| STR` | `partial-json` flags. Whatever the flags, a value for an enum-like key (`type`, `intent`, `version`, `action`, `variant`) stays out of the tree while the buffer ends inside it. |
 | `signal` | — | AbortSignal for caller-driven cancellation. |
 | `onUpdate` | — | Called once per new emission with the new spec. |
 
@@ -151,7 +151,7 @@ const store = streamSpec(source, {
   props while a user is typing, keystrokes are not preserved across the
   re-render. Streaming is intended for display-first renders and initial
   loads, not mid-interaction patching.
-- **Truncated enum keys.** The post-filter drops truncated values for a
+- **Truncated enum keys.** The parser holds back truncated values for a
   fixed set of enum-like keys. A new enum-like prop on a custom widget
   won't be protected until added to that list.
 - **Node streams.** Only web streams and async iterables. Node callers

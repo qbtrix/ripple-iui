@@ -1,6 +1,10 @@
 // json-parse.ts — Thin wrapper over partial-json that drops truncated values
 // for enum-like keys so progressive renders never surface "Unknown widget type"
 // or invalid intent names. Text content streams progressively (Allow.STR stays on).
+//
+// Only the string the buffer ends inside can be truncated, so the check is by
+// position, not by value: a matching closed value elsewhere in the buffer (an
+// earlier `""`, a parent `"type":"flex"`) says nothing about the trailing one.
 // Created: 2026-04-16
 
 import { parse, Allow } from 'partial-json';
@@ -16,92 +20,63 @@ const ENUM_KEYS: ReadonlySet<string> = new Set([
 export const DEFAULT_ALLOW = Allow.OBJ | Allow.ARR | Allow.STR;
 
 export interface ParseResult {
-  /** Parsed value with truncated enum values stripped. null on hard parse failure. */
+  /** Parsed value with a truncated enum value dropped. null on hard parse failure. */
   value: unknown;
 }
 
 /**
- * Parses a partial JSON buffer and scrubs truncated enum-key values.
+ * Parses a partial JSON buffer, dropping a truncated enum-key value.
  *
- * The core idea: partial-json will happily return `{ type: "fl" }` when
- * the buffer still reads `{"type": "fl`. That would cause NodeRenderer
- * to paint a red "Unknown widget type" error. We detect whether the
- * string value is closed (has its terminating quote) by scanning the raw
- * buffer. If not closed, we drop the field from the output tree.
+ * partial-json happily returns `{ type: "fl" }` for `{"type": "fl`, which
+ * would make NodeRenderer paint a red "Unknown widget type" card. When the
+ * buffer ends inside the value of an enum key, we parse the buffer cut just
+ * before that key instead, so the field is absent until its closing quote
+ * arrives.
  */
 export function parsePartialSpec(buffer: string, allow: number = DEFAULT_ALLOW): ParseResult {
   const trimmed = buffer.trim();
   if (trimmed.length === 0) return { value: null };
 
   try {
-    const value = parse(trimmed, allow);
-    if (value == null || typeof value !== 'object') return { value };
-    return { value: stripTruncatedEnums(value, buffer) };
+    const cut = openEnumKeyAt(trimmed);
+    return { value: parse(cut < 0 ? trimmed : trimmed.slice(0, cut), allow) };
   } catch {
     return { value: null };
   }
 }
 
-function stripTruncatedEnums(value: unknown, buffer: string): unknown {
-  if (value === null || typeof value !== 'object') return value;
-  if (Array.isArray(value)) {
-    return value.map((v) => stripTruncatedEnums(v, buffer));
-  }
-
-  const result: Record<string, unknown> = {};
-  for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
-    if (ENUM_KEYS.has(key) && typeof v === 'string') {
-      if (!isStringClosed(v, buffer)) continue;
-    }
-    result[key] = stripTruncatedEnums(v, buffer);
-  }
-  return result;
-}
-
 /**
- * A string value is "closed" if the buffer contains the escaped value
- * wrapped in matching quotes AND followed by a valid JSON structural
- * character (comma, close-brace, close-bracket, whitespace, or EOF).
- *
- * The structural-char check matters when a parent carries the same
- * string value that's still being typed out in a nested child. Example
- * buffer:
- *   `{"type":"flex","children":[{"type":"flex`
- *
- * A naive `includes('"flex"')` returns true (the parent closed it), so
- * the still-open child `type` would be kept instead of stripped. Verifying
- * the closing quote is followed by a JSON separator fixes the false
- * positive.
+ * If `json` ends inside the string value of an enum key, the index of that
+ * key's opening quote; otherwise -1. Quote state is scanned from the start,
+ * honouring backslash escapes.
  */
-function isStringClosed(value: string, buffer: string): boolean {
-  const escaped = escapeForJsonString(value);
-  const pattern = `"${escaped}"`;
-  let from = 0;
-  while (true) {
-    const idx = buffer.indexOf(pattern, from);
-    if (idx === -1) return false;
-    const after = buffer[idx + pattern.length];
-    if (
-      after === undefined ||
-      after === ',' ||
-      after === '}' ||
-      after === ']' ||
-      after === ' ' ||
-      after === '\n' ||
-      after === '\r' ||
-      after === '\t'
-    ) {
-      return true;
-    }
-    from = idx + 1;
-  }
-}
+function openEnumKeyAt(json: string): number {
+  let inString = false;
+  let escaped = false;
+  let openAt = -1; // opening quote of the latest string
+  let closeAt = -1; // closing quote of the latest closed string
+  let prevOpenAt = -1; // opening quote of the string before the latest
+  let prevCloseAt = -1;
 
-function escapeForJsonString(value: string): string {
-  return value
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t');
+  for (let i = 0; i < json.length; i++) {
+    const c = json[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (c === '\\') escaped = true;
+      else if (c === '"') {
+        inString = false;
+        closeAt = i;
+      }
+    } else if (c === '"') {
+      inString = true;
+      prevOpenAt = openAt;
+      prevCloseAt = closeAt;
+      openAt = i;
+    }
+  }
+
+  // Still open, and the previous string is its key: `"key"` `:` `"...`
+  if (!inString || prevOpenAt < 0) return -1;
+  if (!/^\s*:\s*$/.test(json.slice(prevCloseAt + 1, openAt))) return -1;
+  return ENUM_KEYS.has(JSON.parse(json.slice(prevOpenAt, prevCloseAt + 1))) ? prevOpenAt : -1;
 }

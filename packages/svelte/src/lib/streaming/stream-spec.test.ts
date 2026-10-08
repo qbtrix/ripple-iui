@@ -181,6 +181,35 @@ describe('streamSpec — truncated enum-key safety', () => {
     expect(ui?.type).toBe('text');
     expect(typeof ui?.props?.text === 'string' || ui?.props?.text === undefined).toBe(true);
   });
+
+  // A finished `""` earlier in the buffer used to make a just-opened `"type":"`
+  // look closed, so the renderer painted a "isn't in the catalog" card per row.
+  it('drops a just-opened empty type even when the buffer already holds ""', () => {
+    const { value } = parsePartialSpec('{"state":{"name":""},"ui":{"type":"card","children":[{"type":"');
+    const child = (value as { ui: { children: Record<string, unknown>[] } }).ui.children[0];
+    expect(child).not.toHaveProperty('type');
+  });
+
+  it('drops a just-opened child type that repeats its closed parent type', () => {
+    const { value } = parsePartialSpec('{"ui":{"type":"flex","children":[{"type":"flex');
+    const ui = (value as { ui: { type: string; children: Record<string, unknown>[] } }).ui;
+    expect(ui.type).toBe('flex');
+    expect(ui.children[0]).not.toHaveProperty('type');
+  });
+
+  it('honours backslash escapes when deciding the last string is closed', () => {
+    // One `\"` flips naive quote parity; `\\"` is an escaped backslash then a real close.
+    const closed = parsePartialSpec('{"text":"a \\"b","path":"C:\\\\","type":"card"');
+    expect((closed.value as Record<string, unknown>).type).toBe('card');
+    // A trailing `\"` or lone `\` leaves the value open.
+    expect(parsePartialSpec('{"type":"car\\"').value).not.toHaveProperty('type');
+    expect(parsePartialSpec('{"type":"car\\').value).not.toHaveProperty('type');
+  });
+
+  it('keeps closed empty strings at the very end of the buffer', () => {
+    expect(parsePartialSpec('{"a":""}').value).toEqual({ a: '' });
+    expect(parsePartialSpec('{"ui":{"type":""').value).toEqual({ ui: { type: '' } });
+  });
 });
 
 describe('streamSpec — ReadableStream compatibility', () => {
