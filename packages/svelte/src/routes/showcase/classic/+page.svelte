@@ -359,16 +359,16 @@
         {
           type: 'flex', props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'gsmarena', color: '#ef4444', number: 1 } },
-            { type: 'citation', props: { source: 'tomsguide', color: '#3b82f6', number: 2 } },
-            { type: 'citation', props: { source: 'verge', color: '#8b5cf6', number: 3 } },
+            { type: 'citation', props: { source: 'specsheet', color: '#ef4444', number: 1 } },
+            { type: 'citation', props: { source: 'techbench', color: '#3b82f6', number: 2 } },
+            { type: 'citation', props: { source: 'gadgetline', color: '#8b5cf6', number: 3 } },
           ]
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'gsmarena', color: '#ef4444' },
-            { name: 'tomsguide', color: '#3b82f6' },
-            { name: 'verge', color: '#8b5cf6' },
+            { name: 'specsheet', color: '#ef4444' },
+            { name: 'techbench', color: '#3b82f6' },
+            { name: 'gadgetline', color: '#8b5cf6' },
           ]
         }},
         { type: 'follow-up', props: { placeholder: 'Ask about cameras, performance...' } }
@@ -493,9 +493,9 @@
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'japan-guide.com', color: '#ef4444' },
-            { name: 'lonelyplanet', color: '#0080ff' },
-            { name: 'tripadvisor', color: '#22c55e' },
+            { name: 'travel-notes.example', color: '#ef4444' },
+            { name: 'roamnotes', color: '#0080ff' },
+            { name: 'staybook', color: '#22c55e' },
           ]
         }},
         { type: 'follow-up', props: { placeholder: 'Ask about accommodation, transport...' } }
@@ -514,7 +514,7 @@
       ui: { type: 'company-header', props: {
         name: 'Meridian Industries', ticker: 'MERIDIAN', exchange: 'MX',
         description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
-        domain: 'ril.com', tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
+        domain: 'meridian.example', tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
         price: '\u20B92,920.45', change: '+40.05', changePercent: '+1.39%', marketCap: '\u20B919.76L Cr',
       }}
     }},
@@ -775,7 +775,7 @@
           ticker: 'MERIDIAN',
           exchange: 'MX',
           description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
-          domain: 'ril.com',
+          domain: 'meridian.example',
           tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
           price: '\u20B92,920.45',
           change: '+40.05',
