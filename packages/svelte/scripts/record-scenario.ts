@@ -70,6 +70,8 @@ EXPRESSIONS (verified against the engine; follow exactly)
 - Use a ternary only as the whole expression (to pick a label or value), never inside arithmetic.
 - For money, compute the raw number and show it with the "stat" widget using "format": "currency" (it formats to 2 decimals), e.g. {"type":"stat","props":{"label":"Each pays","value":"{state.total * (1 + state.tipPercent / 100) / state.people.length}","format":"currency"}}.
 - Division by zero yields 0. Keep numeric state as numbers, not strings.
+- There is no exponent operator (no ** or ^) and no Math functions. Write compound growth as repeated multiplication starting from a state path, e.g. three years at a yearly rate: state.start * (1 + state.rate / 100) * (1 + state.rate / 100) * (1 + state.rate / 100).
+- Chart "data" items resolve expressions too, so a chart can follow state: {"label":"Year 5","value":"{state.deposit * 12 * 5}"}.
 
 MANIFEST (spec envelope, action grammar, widgets)
 ${JSON.stringify(reference)}`;

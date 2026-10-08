@@ -4,6 +4,7 @@
 // so the shapes below are a contract: add fields, never rename or remove.
 
 import billSplitter from './fixtures/bill-splitter.json';
+import savingsCalculator from './fixtures/savings-calculator.json';
 
 export interface ScenarioFixture {
 	id: string;
@@ -26,5 +27,6 @@ export interface Scenario {
 }
 
 export const scenarios: Scenario[] = [
-	{ id: 'bill-splitter', title: 'Split the bill', category: 'Everyday', fixture: billSplitter }
+	{ id: 'bill-splitter', title: 'Split the bill', category: 'Everyday', fixture: billSplitter },
+	{ id: 'savings-calculator', title: 'Watch savings grow', category: 'Money', fixture: savingsCalculator }
 ];

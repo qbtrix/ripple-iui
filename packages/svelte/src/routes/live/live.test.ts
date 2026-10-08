@@ -2,8 +2,10 @@
 // (a) the recorded fixture replays to `done` with no error and a final spec,
 // (b) that spec only uses widgets the renderer knows,
 // (c) the UI <Ripple> builds FROM THE STREAM is interactive once it finishes:
-//     a bound input changes state and the derived text, and a button click
-//     changes state. Render-only output fails (c).
+//     a bound text/number input changes state and the derived text, and every
+//     button click changes state. Each check runs when the spec has that kind
+//     of control; a spec with neither fails, so render-only output fails (c).
+// Per-scenario blocks below check that the numbers are right, not just moving.
 
 import { fireEvent, render } from '@testing-library/svelte';
 import { tick } from 'svelte';
@@ -47,6 +49,13 @@ describe('replay()', () => {
 
 describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, scenario) => {
 	const { fixture } = scenario;
+	const finalSpec = JSON.parse(join(fixture));
+	const hasInput = specHas(finalSpec, (n) => ['input', 'number-input'].includes(n.type ?? ''));
+	const hasButton = buttonLabels(finalSpec).size > 0;
+
+	test('(c) the final spec has an input or a button to interact with', () => {
+		expect(hasInput || hasButton).toBe(true);
+	});
 
 	test('fixture matches the contract', () => {
 		expect(fixture.id).toBe(scenario.id);
@@ -70,7 +79,7 @@ describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, sce
 		expect(validateCatalog(store.current as never)).toEqual([]);
 	});
 
-	test('(c1) after streaming, a bound input updates state and the derived text', async () => {
+	test.runIf(hasInput)('(c1) after streaming, a bound input updates state and the derived text', async () => {
 		const { store, container, onStateChange } = await mountStreamed(fixture);
 		expect(container.querySelector('[data-ripple-streaming="done"]')).not.toBeNull();
 		const input = container.querySelector<HTMLInputElement>('input[type="number"], input[type="text"]');
@@ -87,7 +96,7 @@ describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, sce
 		expect(container.textContent).not.toBe(before);
 	});
 
-	test('(c2) the final spec\'s buttons work when mounted whole', async () => {
+	test.runIf(hasButton)('(c2) the final spec\'s buttons work when mounted whole', async () => {
 		const spec = JSON.parse(join(fixture));
 		const onStateChange = vi.fn();
 		const onEvent = vi.fn();
@@ -98,7 +107,7 @@ describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, sce
 
 	// The checkout-style case: a button whose on_click streams in after the
 	// button mounted must still fire once the stream is done.
-	test('(c3) after streaming, spec buttons fire on_click', async () => {
+	test.runIf(hasButton)('(c3) after streaming, spec buttons fire on_click', async () => {
 		const { store, container, onStateChange, onEvent } = await mountStreamed(fixture);
 		const dead = await clickEachSpecButton(store.current, container, onStateChange, onEvent);
 		expect(dead).toEqual([]);
@@ -115,6 +124,28 @@ async function mountStreamed(fixture: ScenarioFixture) {
 	return { store, container, onStateChange, onEvent };
 }
 
+type SpecNode = { type?: string; on_click?: unknown; props?: Record<string, unknown>; children?: unknown[] };
+
+function specHas(spec: unknown, match: (n: SpecNode) => boolean): boolean {
+	const walk = (n: unknown): boolean => {
+		if (!n || typeof n !== 'object') return false;
+		const node = n as SpecNode;
+		return match(node) || (node.children ?? []).some(walk);
+	};
+	return walk((spec as { ui?: unknown }).ui);
+}
+
+/** Static labels of every spec button that has an on_click. */
+function buttonLabels(spec: unknown): Set<string> {
+	const labels = new Set<string>();
+	specHas(spec, (n) => {
+		const label = n.props?.label;
+		if (n.type === 'button' && n.on_click && typeof label === 'string' && !label.includes('{')) labels.add(label);
+		return false;
+	});
+	return labels;
+}
+
 /** Click the first DOM button for every static spec button label that has an
  *  on_click; return the labels whose click changed no state and fired no event. */
 async function clickEachSpecButton(
@@ -123,15 +154,7 @@ async function clickEachSpecButton(
 	onStateChange: ReturnType<typeof vi.fn>,
 	onEvent: ReturnType<typeof vi.fn>
 ): Promise<string[]> {
-	const labels = new Set<string>();
-	const walk = (n: unknown): void => {
-		if (!n || typeof n !== 'object') return;
-		const node = n as { type?: string; on_click?: unknown; props?: { label?: unknown }; children?: unknown[] };
-		const label = node.props?.label;
-		if (node.type === 'button' && node.on_click && typeof label === 'string' && !label.includes('{')) labels.add(label);
-		node.children?.forEach(walk);
-	};
-	walk((spec as { ui?: unknown }).ui);
+	const labels = buttonLabels(spec);
 	expect(labels.size, 'spec has no clickable buttons').toBeGreaterThan(0);
 	const dead: string[] = [];
 	for (const label of labels) {
@@ -180,13 +203,39 @@ describe('bill-splitter numbers', () => {
 		await addsUp(container);
 	});
 
-	// KNOWN ENGINE GAP (streaming only): after a streamed render, toggling a
-	// row's checkbox (bind "people.{index}.drinks") updates the list count but
-	// the row's own share keeps reading the old flag, through both
-	// {item.drinks} and {state.people[index].drinks}. A whole-spec mount
-	// recomputes correctly (test above). Flip to `test` once fixed.
+	// A streamed render must recompute a row's share when its bound checkbox
+	// ("people.{index}.drinks") flips, same as a whole-spec mount.
 	test('after streaming, shares still add up through add, remove and drinks', async () => {
 		const { container } = await mountStreamed(scenario.fixture);
 		await addsUp(container);
+	});
+});
+
+// Per-scenario number checks. Labels come from the recorded fixtures; a
+// re-recording may rename them. Expected values are worked out by hand.
+const money = (s: string) => Number(s.replace(/[$,]/g, ''));
+const moneyAfter = (container: HTMLElement, label: string) => {
+	const m = new RegExp(label + '\\s*(\\$[\\d,]+\\.\\d\\d)').exec(container.textContent ?? '');
+	expect(m, `no money after "${label}"`).not.toBeNull();
+	return money(m![1]);
+};
+async function typeInto(input: HTMLInputElement, value: string | number) {
+	input.value = String(value);
+	await fireEvent.input(input);
+	await fireEvent.change(input);
+	await fireEvent.blur(input);
+	await tick();
+}
+const scenario = (id: string) => scenarios.find((s) => s.id === id)!.fixture;
+
+describe('savings-calculator numbers', () => {
+	// $300/month at 5% for 10 years, deposits added at each year end:
+	// 3600 * (1.05^10 - 1) / 0.05 = 45,280.41. At $400/month it is 60,373.88.
+	test('after streaming, the final balance follows the monthly deposit', async () => {
+		const { container } = await mountStreamed(scenario('savings-calculator'));
+		expect(moneyAfter(container, 'Final balance')).toBeCloseTo(45280.4, 0);
+		await typeInto(container.querySelector<HTMLInputElement>('input[inputmode="decimal"]')!, 400);
+		await vi.waitFor(() => expect(moneyAfter(container, 'Final balance')).toBeCloseTo(60373.88, 0));
+		expect(moneyAfter(container, 'You deposited')).toBe(48000);
 	});
 });
