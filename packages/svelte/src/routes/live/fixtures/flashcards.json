@@ -1,781 +1,661 @@
 {
  "id": "flashcards",
  "title": "Spanish flashcards",
- "prompt": "Make me a short deck of beginner Spanish flashcards. Let me flip each card, move to the next one, and keep score of how many I got right.",
+ "prompt": "Make me a short deck of beginner Spanish flip cards. Let me flip each one, mark whether I knew it, and keep score of how many I got right.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T08:42:52.745Z",
+ "recordedAt": "2026-10-08T09:37:49.211Z",
  "chunks": [
   {
    "t": 0,
    "text": "{"
   },
   {
-   "t": 81,
+   "t": 29,
    "text": "\"version"
   },
   {
-   "t": 81,
-   "text": "\":\"1.0\",\"state\":"
+   "t": 61,
+   "text": "\":\"1."
   },
   {
-   "t": 96,
-   "text": "{\"cards\":[{\""
+   "t": 94,
+   "text": "0\",\"state\":{\"cards"
   },
   {
-   "t": 129,
-   "text": "es\":\"Hola\",\"en"
+   "t": 131,
+   "text": "\":[{\"front\":\""
   },
   {
-   "t": 161,
-   "text": "\":\"Hello\"},{"
+   "t": 160,
+   "text": "Hello"
   },
   {
-   "t": 195,
-   "text": "\"es\":\"Gracias"
+   "t": 194,
+   "text": "\",\"back\":\"Hola\",\""
   },
   {
-   "t": 230,
-   "text": "\",\"en\":\"Thank"
+   "t": 228,
+   "text": "category\":\"Gre"
   },
   {
-   "t": 288,
-   "text": " you\"},{\"es\":\""
+   "t": 261,
+   "text": "etings\"},{\"front\":"
   },
   {
-   "t": 294,
-   "text": "Por favor\",\"en\":\""
+   "t": 295,
+   "text": "\"Thank you\",\"back\":"
   },
   {
-   "t": 336,
-   "text": "Please\"},{\"es\":"
+   "t": 329,
+   "text": "\"Gracias\",\"category\":"
   },
   {
-   "t": 369,
-   "text": "\"Agua\",\"en\":\""
+   "t": 364,
+   "text": "\"Greetings\"},{"
   },
   {
-   "t": 402,
-   "text": "Water\"},{\"es\":"
+   "t": 397,
+   "text": "\"front\":\"Please\",\"back"
   },
   {
-   "t": 461,
-   "text": "\"Cas"
+   "t": 430,
+   "text": "\":\"Por favor\",\"category"
   },
   {
-   "t": 469,
-   "text": "a\",\"en\":\"House"
+   "t": 463,
+   "text": "\":\"Gre"
   },
   {
-   "t": 497,
-   "text": "\"},{\"es\":\""
+   "t": 498,
+   "text": "etings\"},{\"front\":"
   },
   {
-   "t": 532,
-   "text": "Gato\",\"en\":\"C"
+   "t": 531,
+   "text": "\"Goodbye\",\"back"
   },
   {
-   "t": 563,
-   "text": "at\"},{\"es\":\""
+   "t": 565,
+   "text": "\":\"Adiós\",\"category"
   },
   {
    "t": 597,
-   "text": "Bu"
+   "text": "\":\"Greetings\"},"
   },
   {
    "t": 631,
-   "text": "enos días\",\"en\":\""
+   "text": "{\"front\":\"Water\",\""
   },
   {
-   "t": 684,
-   "text": "Good morning\"},{\"es"
+   "t": 671,
+   "text": "back\":\"Agua\",\"category"
   },
   {
-   "t": 792,
-   "text": "\":\"Adiós\",\"en"
+   "t": 700,
+   "text": "\":\"Food and"
   },
   {
-   "t": 792,
-   "text": "\":\""
+   "t": 732,
+   "text": " drink\"},{\"front\":"
   },
   {
-   "t": 792,
-   "text": "Goodbye\"}],\""
+   "t": 773,
+   "text": "\"House"
   },
   {
-   "t": 796,
-   "text": "index\":0,\"flipped"
+   "t": 799,
+   "text": "\",\""
   },
   {
-   "t": 830,
-   "text": "\":false,\"correct\":0"
+   "t": 832,
+   "text": "back\":\"Casa\",\"category"
   },
   {
-   "t": 864,
-   "text": ",\"missed\":0},\""
+   "t": 865,
+   "text": "\":\"Ever"
   },
   {
-   "t": 904,
-   "text": "ui\":{\"type\":\""
+   "t": 898,
+   "text": "yday words\"},{\"front"
   },
   {
-   "t": 931,
-   "text": "card\",\"props\":{\"title\":"
+   "t": 932,
+   "text": "\":\"Friend\",\"back\":"
   },
   {
-   "t": 963,
-   "text": "\"Spanish Bas"
+   "t": 965,
+   "text": "\"Amigo /"
   },
   {
-   "t": 997,
-   "text": "ics\",\"description\":\"Fl"
+   "t": 998,
+   "text": " Amiga\",\"category\":\""
   },
   {
-   "t": 1032,
+   "t": 1034,
+   "text": "People\"},{\"front\":\""
+  },
+  {
+   "t": 1065,
+   "text": "Where"
+  },
+  {
+   "t": 1100,
+   "text": " is the b"
+  },
+  {
+   "t": 1133,
+   "text": "athroom?\",\"back\":\""
+  },
+  {
+   "t": 1166,
+   "text": "¿Dónde está el"
+  },
+  {
+   "t": 1199,
+   "text": " baño?\",\"category\":\""
+  },
+  {
+   "t": 1237,
+   "text": "Travel\"}],\"current\":"
+  },
+  {
+   "t": 1267,
+   "text": "0,\"correct\":0,"
+  },
+  {
+   "t": 1309,
+   "text": "\"missed\":0,\"done"
+  },
+  {
+   "t": 1336,
+   "text": "\":false},\"ui\":{"
+  },
+  {
+   "t": 1368,
+   "text": "\"type\":\"card\",\"props\":"
+  },
+  {
+   "t": 1414,
+   "text": "{\"title\":\"Span"
+  },
+  {
+   "t": 1440,
+   "text": "ish Flip Cards\",\""
+  },
+  {
+   "t": 1477,
+   "text": "description\":\"Fl"
+  },
+  {
+   "t": 1504,
    "text": "ip the card, then"
   },
   {
-   "t": 1066,
-   "text": " score"
+   "t": 1535,
+   "text": " mark wh"
   },
   {
-   "t": 1099,
-   "text": " y"
+   "t": 1569,
+   "text": "ether you knew it.\"},\""
   },
   {
-   "t": 1183,
-   "text": "ourself\"},\"children\":["
-  },
-  {
-   "t": 1184,
-   "text": "{\"type\":\"flex\",\""
-  },
-  {
-   "t": 1198,
-   "text": "props\":{\"direction\":\""
-  },
-  {
-   "t": 1296,
-   "text": "column\",\"gap\":\"12px"
-  },
-  {
-   "t": 1297,
-   "text": "\"},\"children\":[{\""
-  },
-  {
-   "t": 1297,
-   "text": "type\":\"progress\",\"props\":"
-  },
-  {
-   "t": 1356,
-   "text": "{\"value\":\""
-  },
-  {
-   "t": 1365,
-   "text": "{state.index}\",\"max\":"
-  },
-  {
-   "t": 1408,
-   "text": "\"{state.cards.length"
-  },
-  {
-   "t": 1452,
-   "text": "}\"}},{\"type\":"
-  },
-  {
-   "t": 1463,
-   "text": "\"if\",\"condition\":\"{"
-  },
-  {
-   "t": 1496,
-   "text": "state.index < state.cards"
-  },
-  {
-   "t": 1536,
-   "text": ".length}\",\"children\":[{"
-  },
-  {
-   "t": 1564,
-   "text": "\"type\":\"flex\",\"props"
-  },
-  {
-   "t": 1598,
-   "text": "\":{\"direction\":\"column"
-  },
-  {
-   "t": 1631,
-   "text": "\",\"gap\":\"12px\""
-  },
-  {
-   "t": 1663,
-   "text": "},\"children\":[{\"type"
-  },
-  {
-   "t": 1696,
-   "text": "\":\"text\",\"props"
-  },
-  {
-   "t": 1731,
-   "text": "\":{\"text\":\"Card"
-  },
-  {
-   "t": 1764,
-   "text": " {state.index + 1}"
-  },
-  {
-   "t": 1799,
-   "text": " of {state.cards.length"
-  },
-  {
-   "t": 1831,
-   "text": "}\",\"size\":\"sm\""
-  },
-  {
-   "t": 1864,
-   "text": "}},{\"type\":\"each"
-  },
-  {
-   "t": 1902,
-   "text": "\",\"items"
-  },
-  {
-   "t": 1933,
-   "text": "\":\"{state.cards}"
-  },
-  {
-   "t": 1965,
-   "text": "\",\"children\":[{\"type\":"
-  },
-  {
-   "t": 2061,
-   "text": "\"if\",\"condition\":\"{"
-  },
-  {
-   "t": 2062,
-   "text": "index == state.index}\",\"children"
-  },
-  {
-   "t": 2072,
-   "text": "\":[{\"type\":\"card"
-  },
-  {
-   "t": 2123,
-   "text": "\",\"props\":{\"variant\":"
-  },
-  {
-   "t": 2133,
-   "text": "\"out"
-  },
-  {
-   "t": 2193,
-   "text": "lined\""
-  },
-  {
-   "t": 2199,
-   "text": "},\"children\":[{\"type"
-  },
-  {
-   "t": 2230,
-   "text": "\":\"flex\",\"props\":{"
-  },
-  {
-   "t": 2273,
-   "text": "\"direction\":\"column\",\"g"
-  },
-  {
-   "t": 2299,
-   "text": "ap\":\"6"
-  },
-  {
-   "t": 2330,
-   "text": "px\",\"align\":\"center\"},"
-  },
-  {
-   "t": 2365,
-   "text": "\"children\":[{\"type\":"
-  },
-  {
-   "t": 2401,
-   "text": "\"text\",\"props\":{\"text"
-  },
-  {
-   "t": 2443,
-   "text": "\":\"{state.flipped"
-  },
-  {
-   "t": 2465,
-   "text": " ? "
-  },
-  {
-   "t": 2500,
-   "text": "'English' : 'Sp"
-  },
-  {
-   "t": 2532,
-   "text": "anish'}\",\"size\":\""
-  },
-  {
-   "t": 2564,
-   "text": "xs\""
-  },
-  {
-   "t": 2632,
-   "text": "}"
-  },
-  {
-   "t": 2632,
-   "text": "},{\"type\":\"text\",\""
-  },
-  {
-   "t": 2666,
-   "text": "props\":{\"text\":\"{"
-  },
-  {
-   "t": 2698,
-   "text": "state.flipped ? item"
-  },
-  {
-   "t": 2733,
-   "text": ".en : item.es}\",\""
-  },
-  {
-   "t": 2764,
-   "text": "size\":\"3xl\",\"we"
-  },
-  {
-   "t": 2799,
-   "text": "ight\":\"bold\"}}"
-  },
-  {
-   "t": 2833,
-   "text": "]}]}]}"
-  },
-  {
-   "t": 2864,
-   "text": "]},{\"type\":\"if"
-  },
-  {
-   "t": 2908,
-   "text": "\",\"condition\":\"{!state"
-  },
-  {
-   "t": 2932,
-   "text": ".flipped}\",\"children\":"
-  },
-  {
-   "t": 2965,
-   "text": "[{\"type\":\"button\",\""
-  },
-  {
-   "t": 3001,
-   "text": "props\":{\"label\":\""
-  },
-  {
-   "t": 3035,
-   "text": "Flip card\",\""
-  },
-  {
-   "t": 3065,
-   "text": "variant\":\"secondary\""
-  },
-  {
-   "t": 3100,
-   "text": "},\"on_click\":{\""
-  },
-  {
-   "t": 3131,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 3165,
-   "text": "flipped\",\"value\":true"
-  },
-  {
-   "t": 3198,
-   "text": "}}]},{\"type\":"
-  },
-  {
-   "t": 3234,
-   "text": "\"if\",\"condition\":\"{"
-  },
-  {
-   "t": 3266,
-   "text": "state.flipped}\",\"children"
-  },
-  {
-   "t": 3299,
-   "text": "\":[{\"type\":\"gr"
-  },
-  {
-   "t": 3333,
-   "text": "id\",\"props\":{\"columns"
-  },
-  {
-   "t": 3365,
-   "text": "\":2,\"gap\":\""
-  },
-  {
-   "t": 3401,
-   "text": "8px\"},\"children\":["
-  },
-  {
-   "t": 3433,
-   "text": "{\"type\":\"button\",\"props"
-  },
-  {
-   "t": 3473,
-   "text": "\":{\"label\":\"Got"
-  },
-  {
-   "t": 3499,
-   "text": " it\",\"variant\":\"default"
-  },
-  {
-   "t": 3532,
-   "text": "\"},\"on_click\":{"
-  },
-  {
-   "t": 3568,
-   "text": "\"action\":\"flow\",\"ste"
-  },
-  {
-   "t": 3600,
-   "text": "ps\":[{\"action\":\""
-  },
-  {
-   "t": 3634,
-   "text": "set\",\"target\":\"correct\",\""
-  },
-  {
-   "t": 3667,
-   "text": "value\":\"{state.correct"
-  },
-  {
-   "t": 3699,
-   "text": " + 1}\"},{\""
-  },
-  {
-   "t": 3733,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 3766,
-   "text": "index\",\"value\":\"{state."
-  },
-  {
-   "t": 3798,
-   "text": "index + 1}\"},{"
-  },
-  {
-   "t": 3834,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 3872,
-   "text": "\"flipped\",\"value\":false"
-  },
-  {
-   "t": 3904,
-   "text": "}]}},{\"type\":"
-  },
-  {
-   "t": 3936,
-   "text": "\"button\",\"props\":{\"label"
-  },
-  {
-   "t": 3966,
-   "text": "\":\"Miss"
-  },
-  {
-   "t": 3999,
-   "text": "ed it"
-  },
-  {
-   "t": 4032,
-   "text": "\",\"variant\":\"outline\""
-  },
-  {
-   "t": 4067,
-   "text": "},\"on_click\":{\""
-  },
-  {
-   "t": 4099,
-   "text": "action\":\"flow\",\"steps"
-  },
-  {
-   "t": 4132,
-   "text": "\":[{\"action\":\"set"
-  },
-  {
-   "t": 4170,
-   "text": "\",\"target\":\"missed\",\"value"
-  },
-  {
-   "t": 4200,
-   "text": "\":\"{state.missed +"
-  },
-  {
-   "t": 4234,
-   "text": " 1}\"},{\"action"
-  },
-  {
-   "t": 4266,
-   "text": "\":\"set\",\"target\":\"index"
-  },
-  {
-   "t": 4307,
-   "text": "\",\"value\":\"{state.index"
-  },
-  {
-   "t": 4334,
-   "text": " + 1}\"},{\""
-  },
-  {
-   "t": 4373,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 4399,
-   "text": "flipped\",\"value\":false}"
-  },
-  {
-   "t": 4440,
-   "text": "]}}]}]}]"
-  },
-  {
-   "t": 4474,
-   "text": "}"
-  },
-  {
-   "t": 4518,
-   "text": "]"
-  },
-  {
-   "t": 4534,
-   "text": "},{\"type\":\"if\",\""
-  },
-  {
-   "t": 4566,
-   "text": "condition\":\"{state.index"
-  },
-  {
-   "t": 4611,
-   "text": " >= state.cards.length"
-  },
-  {
-   "t": 4632,
-   "text": "}\",\"children\":[{\"type"
-  },
-  {
-   "t": 4666,
-   "text": "\":\"flex\",\"props\":{"
-  },
-  {
-   "t": 4705,
-   "text": "\"direction\":\"column\",\"g"
-  },
-  {
-   "t": 4734,
-   "text": "ap\":\"10"
-  },
-  {
-   "t": 4766,
-   "text": "px\"},\"children\":[{"
-  },
-  {
-   "t": 4799,
-   "text": "\"type\":\"heading\",\"props"
-  },
-  {
-   "t": 4833,
-   "text": "\":{\"text\":\"De"
-  },
-  {
-   "t": 4866,
-   "text": "ck compl"
-  },
-  {
-   "t": 4899,
-   "text": "ete!"
-  },
-  {
-   "t": 4933,
-   "text": "\",\"level\":3}},{\""
-  },
-  {
-   "t": 4966,
-   "text": "type\":\"stat\",\"props\":"
-  },
-  {
-   "t": 5003,
-   "text": "{\"label"
-  },
-  {
-   "t": 5037,
-   "text": "\":\"Score"
-  },
-  {
-   "t": 5070,
-   "text": " ("
-  },
-  {
-   "t": 5102,
-   "text": "%)\",\"value\":\"{state"
-  },
-  {
-   "t": 5132,
-   "text": ".correct / state.cards"
-  },
-  {
-   "t": 5166,
-   "text": ".length * 100}\",\"format"
-  },
-  {
-   "t": 5199,
-   "text": "\":\"number\""
-  },
-  {
-   "t": 5233,
-   "text": "}},{\"type\":\"button"
-  },
-  {
-   "t": 5267,
-   "text": "\",\"props\":{\"label\":\""
-  },
-  {
-   "t": 5301,
-   "text": "Rest"
-  },
-  {
-   "t": 5336,
-   "text": "art de"
-  },
-  {
-   "t": 5367,
-   "text": "ck\""
-  },
-  {
-   "t": 5399,
-   "text": "},\"on_click\":{\""
-  },
-  {
-   "t": 5438,
-   "text": "action\":\"flow\",\"steps"
-  },
-  {
-   "t": 5465,
-   "text": "\":[{\"action\":\"set"
-  },
-  {
-   "t": 5499,
-   "text": "\",\"target\":\"index\",\"value\":"
-  },
-  {
-   "t": 5534,
-   "text": "0},{\"action\":\"set"
-  },
-  {
-   "t": 5569,
-   "text": "\",\"target\":\"flipped\",\""
-  },
-  {
-   "t": 5600,
-   "text": "value\":false},{\"action\":"
-  },
-  {
-   "t": 5632,
-   "text": "\"set\",\"target\":\"correct"
-  },
-  {
-   "t": 5673,
-   "text": "\",\"value\":0},{\"action"
-  },
-  {
-   "t": 5703,
-   "text": "\":\"set\",\"target\":\"miss"
-  },
-  {
-   "t": 5731,
-   "text": "ed\",\"value\":0},"
-  },
-  {
-   "t": 5766,
-   "text": "{\"action\":\"toast\",\""
-  },
-  {
-   "t": 5804,
-   "text": "message\":\"Deck re"
-  },
-  {
-   "t": 5832,
-   "text": "set\",\"variant\":\"info\""
-  },
-  {
-   "t": 5866,
-   "text": "}]}}]}]},"
-  },
-  {
-   "t": 5902,
-   "text": "{\"type\":\"separator\",\""
-  },
-  {
-   "t": 5933,
-   "text": "props\":{}},{\"type"
-  },
-  {
-   "t": 5967,
-   "text": "\":\"grid\",\"props\":{"
-  },
-  {
-   "t": 6020,
-   "text": "\"columns\":2,\"g"
-  },
-  {
-   "t": 6033,
-   "text": "ap\":\"8px\"},\""
-  },
-  {
-   "t": 6066,
+   "t": 1602,
    "text": "children\":[{\"type\":\""
   },
   {
-   "t": 6099,
-   "text": "metric\",\"props\":{\"label"
+   "t": 1636,
+   "text": "flex\",\"props\":{\"dire"
   },
   {
-   "t": 6133,
-   "text": "\":\"Correct\",\"value\":"
+   "t": 1670,
+   "text": "ction\":\"column\",\"gap\":"
   },
   {
-   "t": 6169,
-   "text": "\"{state.correct}\",\""
+   "t": 1703,
+   "text": "\"12px\"},\"children\":"
   },
   {
-   "t": 6206,
-   "text": "variant\":\"compact\"}"
+   "t": 1736,
+   "text": "[{\"type\":\"grid"
   },
   {
-   "t": 6233,
-   "text": "},{\"type\":\"metric"
+   "t": 1772,
+   "text": "\",\"props\":{\"columns\":"
   },
   {
-   "t": 6267,
-   "text": "\",\"props\":{\"label\":\""
+   "t": 1804,
+   "text": "2,\"gap\":\"8"
   },
   {
-   "t": 6299,
-   "text": "Missed\",\"value\":\"{"
+   "t": 1840,
+   "text": "px\"},\"children\":[{"
   },
   {
-   "t": 6332,
-   "text": "state.missed}\",\"variant"
+   "t": 1871,
+   "text": "\"type\":\"stat\",\"props"
   },
   {
-   "t": 6368,
-   "text": "\":\"compact\"}}]"
+   "t": 1904,
+   "text": "\":{\"label\":\"Kn"
   },
   {
-   "t": 6401,
-   "text": "}]}]}}"
+   "t": 1938,
+   "text": "ew it"
+  },
+  {
+   "t": 1970,
+   "text": "\",\"value\":\"{state.corre"
+  },
+  {
+   "t": 2004,
+   "text": "ct}\",\"format"
+  },
+  {
+   "t": 2037,
+   "text": "\":\"number\",\"size\":\"s"
+  },
+  {
+   "t": 2071,
+   "text": "m\"}},{\"type\":"
+  },
+  {
+   "t": 2108,
+   "text": "\"stat\",\"props\":{\""
+  },
+  {
+   "t": 2140,
+   "text": "label\":\"Needs review\",\""
+  },
+  {
+   "t": 2193,
+   "text": "value\":\"{state.missed"
+  },
+  {
+   "t": 2210,
+   "text": "}\",\"format\":\"number\",\"size"
+  },
+  {
+   "t": 2241,
+   "text": "\":\"sm\"}}]"
+  },
+  {
+   "t": 2271,
+   "text": "},{\"type\":\"progress"
+  },
+  {
+   "t": 2307,
+   "text": "\",\"props\":{\"value\":\""
+  },
+  {
+   "t": 2339,
+   "text": "{state.current}\",\"max\":"
+  },
+  {
+   "t": 2371,
+   "text": "\"{state.cards.length"
+  },
+  {
+   "t": 2405,
+   "text": "}\",\"variant\":\"thin"
+  },
+  {
+   "t": 2440,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 2472,
+   "text": "if\",\"condition\":\"{!"
+  },
+  {
+   "t": 2506,
+   "text": "state.done}\",\"children\":["
+  },
+  {
+   "t": 2539,
+   "text": "{\"type\":\"text"
+  },
+  {
+   "t": 2574,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 2609,
+   "text": "Card {state.current + "
+  },
+  {
+   "t": 2640,
+   "text": "1} of {state.cards"
+  },
+  {
+   "t": 2677,
+   "text": ".length}\",\"size\":\"s"
+  },
+  {
+   "t": 2717,
+   "text": "m\""
+  },
+  {
+   "t": 2740,
+   "text": "}}]},{\"type\":"
+  },
+  {
+   "t": 2773,
+   "text": "\"if"
+  },
+  {
+   "t": 2810,
+   "text": "\",\"condition\":\"{!state"
+  },
+  {
+   "t": 2843,
+   "text": ".done}\",\"children\":[{"
+  },
+  {
+   "t": 2873,
+   "text": "\"type\":\"each\",\"items"
+  },
+  {
+   "t": 2908,
+   "text": "\":\"{state.cards}"
+  },
+  {
+   "t": 2942,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 2977,
+   "text": "\"if\",\"condition\":\"{"
+  },
+  {
+   "t": 3008,
+   "text": "index == state.current}\",\"children"
+  },
+  {
+   "t": 3041,
+   "text": "\":[{\"type\":\"fl"
+  },
+  {
+   "t": 3075,
+   "text": "ashcard\",\"props\":{\""
+  },
+  {
+   "t": 3109,
+   "text": "front\":\"{item.front}"
+  },
+  {
+   "t": 3142,
+   "text": "\",\"back\":\"{item.back"
+  },
+  {
+   "t": 3176,
+   "text": "}\",\"category\":\"{item."
+  },
+  {
+   "t": 3209,
+   "text": "category}\",\"index\":\"{index"
+  },
+  {
+   "t": 3242,
+   "text": " + 1} of {state."
+  },
+  {
+   "t": 3275,
+   "text": "cards.length}\"},\""
+  },
+  {
+   "t": 3309,
+   "text": "on_correct\":[{\""
+  },
+  {
+   "t": 3343,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 3376,
+   "text": "correct\",\"value\":\"{state"
+  },
+  {
+   "t": 3409,
+   "text": ".correct + 1}\""
+  },
+  {
+   "t": 3442,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 3476,
+   "text": "target\":\"current\",\"value\":\""
+  },
+  {
+   "t": 3509,
+   "text": "{state.current + 1}"
+  },
+  {
+   "t": 3545,
+   "text": "\"},{\"action\":\"bran"
+  },
+  {
+   "t": 3576,
+   "text": "ch\",\"if\":\"state"
+  },
+  {
+   "t": 3610,
+   "text": ".current >= state.cards"
+  },
+  {
+   "t": 3643,
+   "text": ".length\",\"then\":[{\""
+  },
+  {
+   "t": 3677,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 3711,
+   "text": "done\",\"value\":true}]}"
+  },
+  {
+   "t": 3744,
+   "text": "],"
+  },
+  {
+   "t": 3790,
+   "text": "\"on_incorrect\":"
+  },
+  {
+   "t": 3814,
+   "text": "[{\"action\":\"set\",\""
+  },
+  {
+   "t": 3889,
+   "text": "target\":\"missed\",\"value\":"
+  },
+  {
+   "t": 3889,
+   "text": "\"{state.missed + "
+  },
+  {
+   "t": 3930,
+   "text": "1}\"},{\"action\":"
+  },
+  {
+   "t": 3963,
+   "text": "\"set\",\"target\":\"current\",\""
+  },
+  {
+   "t": 3977,
+   "text": "value\":\"{state.current +"
+  },
+  {
+   "t": 4010,
+   "text": " 1}\"},{\"action"
+  },
+  {
+   "t": 4049,
+   "text": "\":\"branch\",\"if\":\""
+  },
+  {
+   "t": 4084,
+   "text": "state.current >= state.c"
+  },
+  {
+   "t": 4112,
+   "text": "ards.length\",\"then\":[{"
+  },
+  {
+   "t": 4147,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 4178,
+   "text": "\"done\",\"value\":true}]"
+  },
+  {
+   "t": 4219,
+   "text": "}]}]}]}]"
+  },
+  {
+   "t": 4246,
+   "text": "},{\"type\":\"if\",\""
+  },
+  {
+   "t": 4277,
+   "text": "condition\":\"{state.done"
+  },
+  {
+   "t": 4312,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 4347,
+   "text": "\":\"flex\",\"props\":{"
+  },
+  {
+   "t": 4379,
+   "text": "\"direction\":\"column\",\"g"
+  },
+  {
+   "t": 4413,
+   "text": "ap\":\"10"
+  },
+  {
+   "t": 4445,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 4478,
+   "text": "\"type\":\"al"
+  },
+  {
+   "t": 4512,
+   "text": "ert\",\"props\":{\"title\":"
+  },
+  {
+   "t": 4550,
+   "text": "\"Deck complete\",\"description"
+  },
+  {
+   "t": 4579,
+   "text": "\":\"You kn"
+  },
+  {
+   "t": 4618,
+   "text": "ew {"
+  },
+  {
+   "t": 4651,
+   "text": "state.correct} of {state"
+  },
+  {
+   "t": 4683,
+   "text": ".cards.length} cards"
+  },
+  {
+   "t": 4714,
+   "text": "."
+  },
+  {
+   "t": 4744,
+   "text": " {state.missed} to"
+  },
+  {
+   "t": 4778,
+   "text": " review.\",\"variant\":\"success"
+  },
+  {
+   "t": 4811,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 4846,
+   "text": "button\",\"props\":{\"label\":"
+  },
+  {
+   "t": 4879,
+   "text": "\"Study"
+  },
+  {
+   "t": 4914,
+   "text": " again\",\"variant\":\"default"
+  },
+  {
+   "t": 4945,
+   "text": "\"},\"on_click\":["
+  },
+  {
+   "t": 4982,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 5013,
+   "text": "\":\"current"
+  },
+  {
+   "t": 5047,
+   "text": "\",\"value\":0},{\"action"
+  },
+  {
+   "t": 5080,
+   "text": "\":\"set\",\"target\":\"corre"
+  },
+  {
+   "t": 5113,
+   "text": "ct\",\"value\":0},{\""
+  },
+  {
+   "t": 5149,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 5181,
+   "text": "missed\",\"value\":0},{"
+  },
+  {
+   "t": 5214,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 5247,
+   "text": "\"done\",\"value\":false},{"
+  },
+  {
+   "t": 5279,
+   "text": "\"action\":\"toast\",\"message"
+  },
+  {
+   "t": 5313,
+   "text": "\":\"Deck re"
+  },
+  {
+   "t": 5346,
+   "text": "set\",\"variant\":\"info\""
+  },
+  {
+   "t": 5380,
+   "text": "}]}]}]}]"
+  },
+  {
+   "t": 5434,
+   "text": "}]}}"
   }
  ]
 }
