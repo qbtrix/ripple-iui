@@ -19,8 +19,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { replaceState } from '$app/navigation';
-	import type { RippleEvent } from '@ripple-ui/core';
-	import { Ripple } from '$lib/index.js';
+	import { Ripple, type RippleEvent } from '$lib/index.js';
 	import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 	import { replay } from './replay.js';
 	import { scenarios, type Scenario } from './scenarios.js';
