@@ -6,7 +6,8 @@
     genesis shadcn `ToggleGroup` (absent from this repo's shadcn set) is
     replaced with inline preset pills styled with Tailwind semantic tokens.
   @created 2026-05-31 — composite consumer widgets migration. Timer state is
-    local (counts down on an interval); `onComplete` fires when it reaches zero.
+    local (counts down on an interval); `oncomplete` fires when it reaches zero (the
+    lowercase name NodeRenderer passes for a spec's `on_complete`).
 -->
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
@@ -25,7 +26,7 @@
     /** Preset durations in minutes shown as quick-pick pills. */
     presets?: number[];
     /** Fires when the countdown reaches zero. */
-    onComplete?: () => void;
+    oncomplete?: () => void;
   }
 
   let {
@@ -34,7 +35,7 @@
     duration = 25,
     label = 'Focus Timer',
     presets = [5, 15, 25, 45],
-    onComplete
+    oncomplete
   }: Props = $props();
 
   // Local source of truth — seeded once from the `duration` prop, then mutated
@@ -61,7 +62,7 @@
         timeRemaining--;
       } else {
         pause();
-        onComplete?.();
+        oncomplete?.();
       }
     }, 1000);
   }
