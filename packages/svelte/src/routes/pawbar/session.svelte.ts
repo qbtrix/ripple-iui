@@ -126,9 +126,9 @@ export class Card {
 
 	constructor() {
 		const source = new ReadableStream<string>({ start: (c) => void (this.#push = c) });
-		// throttleMs 0: streamSpec's throttle has no trailing parse, so a pause in
-		// the stream would leave the card behind the text it has already received.
-		// Every partial spec passes the card policy before <Ripple> renders it.
+		// throttleMs 0: every delta is parsed, so every partial spec passes the
+		// card policy before <Ripple> renders it, with no throttle window between
+		// a delta arriving and the card showing it.
 		this.store = streamSpec(source, {
 			throttleMs: 0,
 			onUpdate: (spec) => {

@@ -6,7 +6,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
-import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
+import { cardChunks, findScenario, pickScenario, recordedEvents } from './recorded.js';
 import { BYOK_URL, ChatHttpError, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 
@@ -105,6 +105,9 @@ describe('recorded scenarios', () => {
 		expect(pickScenario('plan my trip to Tokyo').id).toBe('tokyo-trip');
 		expect(pickScenario('spanish flashcards please').id).toBe('flashcards');
 		expect(pickScenario('hello there').id).toBe('bill-splitter');
+		// findScenario says when the default was a fallback, so the intro can be honest.
+		expect(findScenario('hello there')).toBeNull();
+		expect(findScenario('plan my trip to Tokyo')?.id).toBe('tokyo-trip');
 	});
 });
 

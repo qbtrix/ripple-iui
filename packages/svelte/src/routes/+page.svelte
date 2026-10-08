@@ -25,7 +25,7 @@
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
 	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
-	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
+	import { findScenario, pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { scenarios } from './live/scenarios.js';
 
 	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
@@ -40,18 +40,19 @@
 	// The order demo needs the test store's checkout (an `api` action), which the
 	// chat's card policy refuses; it stays on /live and in the runs list below.
 	const chatScenarios = scenarios.filter((s) => !s.needsStore);
-	const recorded =
-		(intro: string): Transport =>
-		(message, signal) =>
-			recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro });
+	// The intro says what is replaying: a matching recording, or (when no
+	// recording overlaps the request) the bill splitter, said plainly.
+	const intro = (message: string) =>
+		findScenario(message, chatScenarios)
+			? 'Replaying a recorded answer that matches.'
+			: 'No recording matches that yet, so here is the bill splitter.';
+	const recorded: Transport = (message, signal) =>
+		recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro: intro(message) });
 	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
-	// is unavailable. Offline build: the recordings answer directly.
+	// is unavailable. Default build: the recordings answer directly.
 	const session = LIVE
-		? new ChatSession(
-				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
-				recorded('Here is a recorded answer that fits, on its original timing.')
-			)
-		: new ChatSession(recorded('The live model is not connected on this build, so here is a recorded answer that fits.'));
+		? new ChatSession(pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send, recorded)
+		: new ChatSession(recorded);
 	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
@@ -133,11 +134,15 @@
 			<Chat
 				{session}
 				{suggestions}
-				note={LIVE ? '' : 'The live model is off in this build. Each request replays the closest recorded answer.'}
+				note={LIVE ? '' : 'This demo replays recorded model answers. Each request plays the closest match.'}
 			/>
 		</div>
 		<p class="byok">
-			The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
+			{#if LIVE}
+				The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
+			{:else}
+				Want answers to your own requests? <a href={BYOK_URL}>Build your own in PocketPaw</a>
+			{/if}
 		</p>
 	</section>
 

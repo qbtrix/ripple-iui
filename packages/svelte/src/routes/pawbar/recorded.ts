@@ -2,8 +2,8 @@
 // One source for two consumers: scripts/mock-pawbar.ts serialises these frames
 // as SSE, and the landing's offline fallback (no endpoint configured) feeds
 // them straight to the chat store, so both exercise the same client path.
-// `pickScenario` is a plain keyword-overlap match, defaulting to the bill
-// splitter. `cardChunks` re-cuts a fixture (a whole `{version,state,ui}` spec)
+// `findScenario` is a plain keyword-overlap match (null when nothing overlaps);
+// `pickScenario` defaults that to the bill splitter. `cardChunks` re-cuts a fixture (a whole `{version,state,ui}` spec)
 // into the card wire shape `{state,ui}` on the fixture's own chunk boundaries
 // and timing. `mode` drives the mock's failure paths.
 
@@ -24,9 +24,10 @@ const words = (s: string) =>
 			.filter((w) => w.length > 2 && !STOP.has(w))
 	);
 
-export function pickScenario(message: string, pool: Scenario[] = scenarios): Scenario {
+/** The recorded scenario that best matches the message, or null when no word overlaps. */
+export function findScenario(message: string, pool: Scenario[] = scenarios): Scenario | null {
 	const asked = words(message);
-	let best = pool.find((s) => s.id === 'bill-splitter') ?? pool[0];
+	let best: Scenario | null = null;
 	let bestScore = 0;
 	for (const s of pool) {
 		if (s.fixture.prompt === message.trim()) return s;
@@ -35,6 +36,11 @@ export function pickScenario(message: string, pool: Scenario[] = scenarios): Sce
 		if (score > bestScore) [best, bestScore] = [s, score];
 	}
 	return best;
+}
+
+/** findScenario, falling back to the bill splitter when nothing matched. */
+export function pickScenario(message: string, pool: Scenario[] = scenarios): Scenario {
+	return findScenario(message, pool) ?? pool.find((s) => s.id === 'bill-splitter') ?? pool[0];
 }
 
 /** The fixture's chunks with the leading `"version":"1.0",` cut out, keeping each chunk's `t`. */
