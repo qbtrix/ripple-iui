@@ -3753,8 +3753,8 @@
       children: [
         { type: 'source-card', props: { source: 'wirefeed', title: 'Global markets rally as trade deal nears completion', color: '#0080ff' } },
         { type: 'source-card', props: { source: 'tickerwire', title: 'Central banks signal rate cuts amid cooling inflation', color: '#6366f1' } },
-        { type: 'source-card', props: { source: 'ft.com', title: 'European energy prices stabilize after winter surge', color: '#f59e0b' } },
-        { type: 'source-card', props: { source: 'techcrunch', title: 'AI startup raises $200M in Series C funding round', color: '#22c55e' } },
+        { type: 'source-card', props: { source: 'ledgerpost', title: 'European energy prices stabilize after winter surge', color: '#f59e0b' } },
+        { type: 'source-card', props: { source: 'startupwire', title: 'AI startup raises $200M in Series C funding round', color: '#22c55e' } },
       ]
     }
   };
@@ -3768,7 +3768,7 @@
         { type: 'text', props: { text: 'Inline citations:', size: 'sm' } },
         { type: 'citation', props: { source: 'wirefeed', color: '#0080ff', number: 1 } },
         { type: 'citation', props: { source: 'tickerwire', color: '#6366f1', number: 2 } },
-        { type: 'citation', props: { source: 'nytimes', color: '#000000' } },
+        { type: 'citation', props: { source: 'citydesk', color: '#000000' } },
         { type: 'citation', props: { source: 'videohub', color: '#ff0000', number: 4 } },
       ]
     }
@@ -3782,8 +3782,8 @@
         sources: [
           { name: 'wirefeed', color: '#0080ff' },
           { name: 'tickerwire', color: '#6366f1' },
-          { name: 'ft.com', color: '#f59e0b' },
-          { name: 'nytimes', color: '#000000' },
+          { name: 'ledgerpost', color: '#f59e0b' },
+          { name: 'citydesk', color: '#000000' },
           { name: 'bbc', color: '#bb1919' },
         ],
         label: 'sources'
@@ -4962,8 +4962,8 @@
           props: { gap: '10px' },
           style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
           children: [
-            { type: 'source-card', props: { source: 'wired', title: 'EU AI Act enforcement begins with first penalties', color: '#000' } },
-            { type: 'source-card', props: { source: 'techcrunch', title: 'US senators introduce bipartisan AI safety bill', color: '#22c55e' } },
+            { type: 'source-card', props: { source: 'circuitpost', title: 'EU AI Act enforcement begins with first penalties', color: '#000' } },
+            { type: 'source-card', props: { source: 'startupwire', title: 'US senators introduce bipartisan AI safety bill', color: '#22c55e' } },
             { type: 'source-card', props: { source: 'wirefeed', title: 'Regulators publish draft AI governance rules', color: '#0080ff' } },
           ]
         },
@@ -4976,14 +4976,14 @@
           type: 'flex',
           props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'wired', color: '#000', number: 1 } },
-            { type: 'citation', props: { source: 'techcrunch', color: '#22c55e', number: 2 } },
+            { type: 'citation', props: { source: 'circuitpost', color: '#000', number: 1 } },
+            { type: 'citation', props: { source: 'startupwire', color: '#22c55e', number: 2 } },
           ]
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'wired', color: '#000' },
-            { name: 'techcrunch', color: '#22c55e' },
+            { name: 'circuitpost', color: '#000' },
+            { name: 'startupwire', color: '#22c55e' },
             { name: 'wirefeed', color: '#0080ff' },
           ],
           label: 'sources'
