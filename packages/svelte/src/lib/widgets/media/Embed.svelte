@@ -90,6 +90,7 @@
 </script>
 
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   interface Props {
     id?: string;
     class?: string;
@@ -158,7 +159,7 @@
       s.push('height:360px');
     }
     if (style) s.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));
-    return s.join(';');
+    return safeStyle(s.join(';'));
   });
 </script>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -14,7 +15,7 @@
   let { slotId, itemId, class: className, span = 1, children }: Props = $props();
 
   const spanStyle = $derived(
-    span === 'auto' ? '' : `grid-column: span ${span}`
+    span === 'auto' ? '' : safeStyle(`grid-column: span ${span}`)
   );
 </script>
 

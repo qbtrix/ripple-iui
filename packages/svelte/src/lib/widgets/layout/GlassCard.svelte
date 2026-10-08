@@ -6,6 +6,7 @@
      card is a plain element with no handler and a keyboard-operable role="button"
      (Enter/Space) when one is passed. Replaces the dead svelte-ignore. -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -48,7 +49,7 @@
     }
     // Merge user style
     if (style) Object.assign(base, style);
-    return Object.entries(base).map(([k, v]) => `${k}:${v}`).join(';');
+    return safeStyle(Object.entries(base).map(([k, v]) => `${k}:${v}`).join(';'));
   });
 
   function handleKey(e: KeyboardEvent) {

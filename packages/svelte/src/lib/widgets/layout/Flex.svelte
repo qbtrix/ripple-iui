@@ -5,6 +5,7 @@
   (Enter/Space) when one is passed. Replaces the dead svelte-ignore.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -63,7 +64,7 @@
 		];
 		if (gapValue) s.push(`gap:${gapValue}`);
 		if (style) s.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));
-		return s.join(';');
+		return safeStyle(s.join(';'));
 	});
 
 	function handleKey(e: KeyboardEvent) {

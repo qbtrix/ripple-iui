@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { safeUrl } from '@ripple-ui/core';
+  import { safeUrl, safeStyle } from '@ripple-ui/core';
   interface Props {
     id?: string;
     class?: string;
@@ -29,7 +29,7 @@
     if (width) s.push(`width:${typeof width === 'number' ? `${width}px` : width}`);
     if (height) s.push(`height:${typeof height === 'number' ? `${height}px` : height}`);
     if (style) s.push(...Object.entries(style).map(([k, v]) => `${k}:${v}`));
-    return s.join(';');
+    return safeStyle(s.join(';'));
   });
 </script>
 
