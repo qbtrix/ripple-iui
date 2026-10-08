@@ -12,6 +12,7 @@
     "SheetPortal composition",
     "SheetOverlay",
     "showCloseButton",
+    "size prop",
     "bits-ui child snippet"
   ],
   "categories": [
@@ -36,7 +37,7 @@
 
 ## Overview
 
-`SheetContent` is the primary visual component in the Sheet system. It renders the floating panel itself — the container that slides in from the top, right, bottom, or left edge of the screen. It internally composes `SheetPortal`, `SheetOverlay`, and an optional close button, so callers only need to pass content children and a side prop.
+`SheetContent` is the primary visual component in the Sheet system. It renders the floating panel itself — the container that slides in from the top, right, bottom, or left edge of the screen. It internally composes `SheetPortal`, `SheetOverlay`, and an optional close button, so callers only need to pass content children, a side and, for a wide left or right sheet, a size.
 
 ## Side Variants
 
@@ -106,13 +107,29 @@ The `portalProps` prop allows callers to configure the `SheetPortal` without nee
 
 This is a forward-compatibility escape hatch — most callers never need it, but it prevents blocking edge cases where the default portal mount target (`<body>`) is not appropriate.
 
-## `bg-clip-padding`
+## Fill and Edge
 
-The `bg-clip-padding` class constrains the panel's background to its padding box, preventing border colors from bleeding into the background area. This is a subtle defensive style: without it, the panel's border and background can produce visual artifacts on certain border-radius + border-color combinations.
+The panel fills with `bg-ripple-popover` (the host's layer-over-content token) and draws its edge with `ring-1 ring-ripple-border` alone. There are no per-side borders: a border plus the ring doubled the leading edge.
 
-## `sm:max-w-sm` Cap
+## `size` — the Width Cap
 
-On screens wider than `sm` (640px), left and right sheets are capped at `max-w-sm` (384px). The `w-3/4` rule applies at all sizes, but `max-w-sm` prevents the sheet from becoming too wide on large desktops where three-quarters of the screen would be excessive.
+On screens wider than `sm` (640px), left and right sheets take `w-3/4` capped by `size`, which follows Tailwind's max-w scale:
+
+| `size` | Cap |
+|---|---|
+| `sm` (default) | 24rem |
+| `md` | 28rem |
+| `lg` | 32rem |
+| `xl` | 36rem |
+| `2xl` | 42rem |
+| `3xl` | 48rem |
+| `4xl` | 56rem |
+
+```svelte
+<Sheet.Content side="right" size="3xl">…</Sheet.Content>
+```
+
+Each cap is a full literal class string in the component's `SIZE` map, so a consumer's Tailwind scan emits it. The element also carries `data-size`. A caller `class` with its own `data-[side=right]:sm:max-w-*` still replaces the cap, because `cn` runs twMerge. Top and bottom sheets are full width and ignore `size`. The `sheet` spec widget forwards the same prop.
 
 ## Screen Reader Close Label
 
@@ -120,10 +137,10 @@ On screens wider than `sm` (640px), left and right sheets are capped at `max-w-s
 
 ## Known Gaps
 
-- `w-3/4` is hardcoded. There is no prop to customize sheet width beyond `className`. A `width` prop would improve flexibility for wide-content sheets.
+- `w-3/4` below the cap is fixed; `size` sets the cap, not the fraction.
 - The `h-auto` for top/bottom sheets means the panel height is determined by content. Very tall content could overflow the viewport without a max-height constraint.
 - No gesture/swipe-to-dismiss support — this is a known gap for mobile use cases.
 
 ## Summary
 
-`SheetContent` packages the most complex part of the Sheet system into a clean API: a `side` prop, an optional `showCloseButton`, passthrough `portalProps`, and a children slot. The CSS-only animation approach via `data-[side]` + `data-open/closed` keeps the component performant and dependency-free.
+`SheetContent` packages the most complex part of the Sheet system into a clean API: a `side` prop, a `size` cap, an optional `showCloseButton`, passthrough `portalProps`, and a children slot. The CSS-only animation approach via `data-[side]` + `data-open/closed` keeps the component performant and dependency-free.

@@ -9,7 +9,9 @@
 
      The highlighter is a small regex pass (keywords, calls, strings, numbers)
      rendered as spans from the template, never raw HTML, so a code string cannot
-     inject markup. A quoted string followed by a colon is coloured as a name, so
+     inject markup. A number colours only when it stands alone: digits joined to a
+     word by `-` or `.` (a path's user-1, a version tail) stay part of that word.
+     A quoted string followed by a colon is coloured as a name, so
      JSON keys and values differ. A block with no `language` stays uncoloured:
      ToolCall passes an empty language for a plain-string result, and prose is
      not code. Strings, numbers and keywords use prefixed global rules that mix
@@ -105,8 +107,11 @@
     'try', 'catch', 'null', 'true', 'false', 'undefined'
   ]);
 
+  // A number stands alone: not touching a word char, nor joined to one by `-` or `.`
+  // (prakash-1, v0.4.18, 2026-10-07 are words). ponytail: unspaced subtraction (`i-1`)
+  // reads as a word too; a per-language rule is the upgrade if that matters.
   const TOKEN =
-    /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`[^`]*`|\b\d+(?:\.\d+)?\b|\b(?:import|from|export|default|async|function|const|let|var|await|return|if|else|for|while|new|throw|try|catch|null|true|false|undefined)\b|[A-Za-z_$][\w$]*(?=\s*\())/g;
+    /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`[^`]*`|(?<![\w$]|[\w$][-.])\d+(?:\.\d+)*(?![\w$]|[-.][\w$])|\b(?:import|from|export|default|async|function|const|let|var|await|return|if|else|for|while|new|throw|try|catch|null|true|false|undefined)\b|[A-Za-z_$][\w$]*(?=\s*\())/g;
 
   const NAME = 'text-ripple-surface-foreground font-medium';
 

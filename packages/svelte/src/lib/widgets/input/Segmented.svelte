@@ -10,6 +10,11 @@
      its container (max-w-full) and scrolls sideways when the options do not fit,
      so a long option list can never spill over the rows below it. Segments stay
      equal width, so the thumb maths (100% / columns) holds while scrolled.
+     Keyboard (single mode): one tab stop, the selected option or else the first
+     enabled one (roving tabindex). Arrows move focus AND select like native
+     radios: Left/Up previous, Right/Down next, wrapping at the ends; Home/End
+     jump; disabled options are skipped. Multiple mode is a group of checkboxes,
+     each its own tab stop, toggled with Space/Enter.
      origin: slev12397/beautiful-ui@ff0f74d components/atoms/SegmentedControl.tsx -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -73,6 +78,35 @@
     }
   }
 
+  let track = $state<HTMLDivElement | null>(null);
+  const off = (o: unknown) => !!(o as { disabled?: boolean }).disabled;
+  const ARROW: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+
+  // Radio mode's one tab stop: the selected option, else the first enabled one.
+  const tabStop = $derived.by(() => {
+    const i = normalized.findIndex((o) => o.value === value && !off(o));
+    return i >= 0 ? i : normalized.findIndex((o) => !off(o));
+  });
+
+  function onkeydown(e: KeyboardEvent, from: number) {
+    if (multiple || disabled) return;
+    const n = normalized.length;
+    const step = ARROW[e.key];
+    let to = -1;
+    if (step) {
+      for (let k = 1; k < n && to < 0; k++) {
+        const i = (((from + step * k) % n) + n) % n;
+        if (!off(normalized[i])) to = i;
+      }
+    } else if (e.key === 'Home') to = normalized.findIndex((o) => !off(o));
+    else if (e.key === 'End') to = normalized.findLastIndex((o) => !off(o));
+    else return;
+    e.preventDefault();
+    if (to < 0) return;
+    pick(normalized[to].value);
+    track?.querySelectorAll<HTMLElement>('[role="radio"]')[to]?.focus();
+  }
+
   function getIcon(name?: string) {
     if (!name) return null;
     const camel = name
@@ -99,6 +133,7 @@
   {/if}
 
   <div
+    bind:this={track}
     {id}
     role={multiple ? 'group' : 'radiogroup'}
     class={cn(
@@ -118,7 +153,7 @@
       ></span>
     {/if}
 
-    {#each normalized as opt (opt.value)}
+    {#each normalized as opt, i (opt.value)}
       {@const selected = isSelected(opt.value)}
       {@const Icon = getIcon((opt as any).icon)}
       <button
@@ -126,7 +161,9 @@
         role={multiple ? 'checkbox' : 'radio'}
         aria-checked={selected}
         disabled={disabled || (opt as any).disabled}
+        tabindex={multiple ? undefined : i === tabStop ? 0 : -1}
         onclick={() => pick(opt.value)}
+        onkeydown={(e) => onkeydown(e, i)}
         class={cn(
           'relative z-10 inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-medium transition-colors duration-150 ease-ripple-out',
           padClass,

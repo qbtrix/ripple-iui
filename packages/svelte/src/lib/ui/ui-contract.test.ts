@@ -15,7 +15,7 @@
  *   state variants that only resolve inside ripple's own build; and the overlay
  *   a11y basics (Dialog.Content is a modal dialog, data-testid reaches the DOM
  *   through Content wrappers, caller widths and overlayClass replace the
- *   defaults). Focus trap and Escape are bits-ui's own behaviour and are not
+ *   defaults, Sheet.Content's `size` replaces its sm cap). Focus trap and Escape are bits-ui's own behaviour and are not
  *   tested here. The ResizeObserver shim lives in src/test-setup.ts.
  */
 import { render, cleanup, screen } from '@testing-library/svelte';
@@ -23,6 +23,7 @@ import { createRawSnippet } from 'svelte';
 import { afterEach, expect, test } from 'vitest';
 import * as ui from './index.js';
 import OverlayFixture from './ui-contract-overlay.test.svelte';
+import SheetWidget from '$lib/widgets/layout/Sheet.svelte';
 
 afterEach(cleanup);
 
@@ -312,6 +313,28 @@ test('a caller width on Dialog.Content replaces the default instead of stacking 
   render(OverlayFixture, { props: { kind: 'dialog', testid: 'dlg-w', contentClass: 'sm:max-w-[400px]' } });
   const cls = screen.getByRole('dialog').className;
   expect(cls).toContain('sm:max-w-[400px]');
+  expect(cls).not.toMatch(/max-w-sm\b/);
+});
+
+test('Sheet.Content keeps the sm cap by default and `size` replaces it', () => {
+  render(OverlayFixture, { props: { kind: 'sheet', testid: 'sheet-default' } });
+  const base = document.body.querySelector('[data-testid="sheet-default"]')!.className;
+  expect(base).toContain('data-[side=right]:sm:max-w-sm');
+  expect(base).toContain('data-[side=left]:sm:max-w-sm');
+  cleanup();
+
+  render(OverlayFixture, { props: { kind: 'sheet', testid: 'sheet-wide', size: '3xl' } });
+  const wide = document.body.querySelector('[data-testid="sheet-wide"]')!;
+  expect(wide.className).toContain('data-[side=right]:sm:max-w-3xl');
+  expect(wide.className).toContain('data-[side=left]:sm:max-w-3xl');
+  expect(wide.className).not.toMatch(/max-w-sm\b/);
+  expect(wide.getAttribute('data-size')).toBe('3xl');
+});
+
+test('the sheet widget forwards `size` to Sheet.Content', () => {
+  render(SheetWidget, { props: { open: true, size: 'xl', id: 'sheet-widget' } });
+  const cls = document.body.querySelector('[data-slot="sheet-content"]')!.className;
+  expect(cls).toContain('data-[side=right]:sm:max-w-xl');
   expect(cls).not.toMatch(/max-w-sm\b/);
 });
 

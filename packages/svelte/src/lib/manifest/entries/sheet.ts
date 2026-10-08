@@ -7,6 +7,7 @@ export const sheetEntry: WidgetManifestEntry = {
   props: {
     value: { type: 'boolean', required: false, description: 'Open state. Use with bind.' },
     side: { type: '"top" | "right" | "bottom" | "left"', required: false, description: 'Slide direction. Default "right".' },
+    size: { type: '"sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"', required: false, description: 'Max width of a left/right sheet on wider screens. Default "sm"; "2xl"-"4xl" fit a review or a diff.' },
     title: { type: 'string', required: false, description: 'Sheet header title.' },
     description: { type: 'string', required: false, description: 'Sheet header description.' },
   },
