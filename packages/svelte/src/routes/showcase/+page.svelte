@@ -627,8 +627,8 @@
         secondaryLabel: 'Learn more',
         items: [
           {
-            id: 'datadog',
-            title: 'Datadog',
+            id: 'beacon',
+            title: 'Beacon',
             subtitle: 'Pro tier',
             price: '$15 / host / mo',
             ingestion: '15-day retention',
@@ -636,12 +636,12 @@
             rum: true,
             sso: true,
             rating: 4,
-            actions: [{ action: 'toast', message: 'Selected Datadog', variant: 'success' }],
-            learn_more: [{ action: 'navigate', url: 'https://docs.datadoghq.com/' }]
+            actions: [{ action: 'toast', message: 'Selected Beacon', variant: 'success' }],
+            learn_more: [{ action: 'navigate', url: 'https://example.com/docs' }]
           },
           {
-            id: 'newrelic',
-            title: 'New Relic',
+            id: 'tracewell',
+            title: 'Tracewell',
             subtitle: 'Standard',
             price: '$0.30 / GB',
             ingestion: '8-day retention',
@@ -649,11 +649,11 @@
             rum: true,
             sso: false,
             rating: 4,
-            actions: [{ action: 'toast', message: 'Selected New Relic', variant: 'success' }]
+            actions: [{ action: 'toast', message: 'Selected Tracewell', variant: 'success' }]
           },
           {
-            id: 'grafana',
-            title: 'Grafana Cloud',
+            id: 'gridline',
+            title: 'Gridline Cloud',
             subtitle: 'Pro',
             price: '$8 / user / mo',
             ingestion: '13-month retention',
@@ -661,7 +661,7 @@
             rum: false,
             sso: true,
             rating: 5,
-            actions: [{ action: 'toast', message: 'Selected Grafana Cloud', variant: 'success' }]
+            actions: [{ action: 'toast', message: 'Selected Gridline Cloud', variant: 'success' }]
           }
         ],
         features: [
@@ -1738,7 +1738,7 @@
           '## Heading 2',
           '',
           'A short paragraph with **bold**, *italic*, ~~strikethrough~~, and `inline code`.',
-          'Visit [Anthropic](https://anthropic.com) for more.',
+          'Visit [example.com](https://example.com) for more.',
           '',
           '- list item one',
           '- list item two',
@@ -2645,10 +2645,10 @@
         {
           type: 'link-preview',
           props: {
-            url: 'https://anthropic.com/claude',
-            title: 'Claude — Anthropic',
-            description: "Claude is a family of foundational AI models for any use case.",
-            domain: 'anthropic.com',
+            url: 'https://example.com/atlas',
+            title: 'Atlas: trip planning for groups',
+            description: "Plan a trip with friends: shared lists, a day-by-day plan and a running budget.",
+            domain: 'example.com',
             layout: 'horizontal'
           }
         }
@@ -3560,7 +3560,7 @@
         },
         {
           type: 'card',
-          props: { title: 'AAPL — Candlestick (5D)' },
+          props: { title: 'NOVA — Candlestick (5D)' },
           children: [{
             type: 'chart',
             props: {
@@ -3582,7 +3582,7 @@
           children: [
             {
               type: 'card',
-              props: { title: 'NIFTY 50 — Area', class: 'h-full' },
+              props: { title: 'MX 50 — Area', class: 'h-full' },
               children: [{
                 type: 'chart',
                 props: {
@@ -3643,7 +3643,7 @@
                     type: 'flex',
                     props: { justify: 'between', align: 'center' },
                     children: [
-                      { type: 'text', props: { text: 'AAPL', size: 'sm', weight: 'semibold' } },
+                      { type: 'text', props: { text: 'NOVA', size: 'sm', weight: 'semibold' } },
                       { type: 'badge', props: { text: '+3.8%', variant: 'secondary' } }
                     ]
                   },
@@ -3662,7 +3662,7 @@
                     type: 'flex',
                     props: { justify: 'between', align: 'center' },
                     children: [
-                      { type: 'text', props: { text: 'TSLA', size: 'sm', weight: 'semibold' } },
+                      { type: 'text', props: { text: 'KSTR', size: 'sm', weight: 'semibold' } },
                       { type: 'badge', props: { text: '-5.4%', variant: 'destructive' } }
                     ]
                   },
@@ -3681,7 +3681,7 @@
                     type: 'flex',
                     props: { justify: 'between', align: 'center' },
                     children: [
-                      { type: 'text', props: { text: 'NVDA', size: 'sm', weight: 'semibold' } },
+                      { type: 'text', props: { text: 'HALO', size: 'sm', weight: 'semibold' } },
                       { type: 'badge', props: { text: '+6.3%', variant: 'secondary' } }
                     ]
                   },
@@ -3751,8 +3751,8 @@
       props: { gap: '10px' },
       style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
       children: [
-        { type: 'source-card', props: { source: 'reuters', title: 'Global markets rally as trade deal nears completion', color: '#0080ff' } },
-        { type: 'source-card', props: { source: 'bloomberg', title: 'Central banks signal rate cuts amid cooling inflation', color: '#6366f1' } },
+        { type: 'source-card', props: { source: 'wirefeed', title: 'Global markets rally as trade deal nears completion', color: '#0080ff' } },
+        { type: 'source-card', props: { source: 'tickerwire', title: 'Central banks signal rate cuts amid cooling inflation', color: '#6366f1' } },
         { type: 'source-card', props: { source: 'ft.com', title: 'European energy prices stabilize after winter surge', color: '#f59e0b' } },
         { type: 'source-card', props: { source: 'techcrunch', title: 'AI startup raises $200M in Series C funding round', color: '#22c55e' } },
       ]
@@ -3766,10 +3766,10 @@
       props: { gap: '6px', wrap: 'wrap', align: 'center' },
       children: [
         { type: 'text', props: { text: 'Inline citations:', size: 'sm' } },
-        { type: 'citation', props: { source: 'reuters', color: '#0080ff', number: 1 } },
-        { type: 'citation', props: { source: 'bloomberg', color: '#6366f1', number: 2 } },
+        { type: 'citation', props: { source: 'wirefeed', color: '#0080ff', number: 1 } },
+        { type: 'citation', props: { source: 'tickerwire', color: '#6366f1', number: 2 } },
         { type: 'citation', props: { source: 'nytimes', color: '#000000' } },
-        { type: 'citation', props: { source: 'youtube', color: '#ff0000', number: 4 } },
+        { type: 'citation', props: { source: 'videohub', color: '#ff0000', number: 4 } },
       ]
     }
   };
@@ -3780,8 +3780,8 @@
       type: 'sources-bar',
       props: {
         sources: [
-          { name: 'reuters', color: '#0080ff' },
-          { name: 'bloomberg', color: '#6366f1' },
+          { name: 'wirefeed', color: '#0080ff' },
+          { name: 'tickerwire', color: '#6366f1' },
           { name: 'ft.com', color: '#f59e0b' },
           { name: 'nytimes', color: '#000000' },
           { name: 'bbc', color: '#bb1919' },
@@ -4964,7 +4964,7 @@
           children: [
             { type: 'source-card', props: { source: 'wired', title: 'EU AI Act enforcement begins with first penalties', color: '#000' } },
             { type: 'source-card', props: { source: 'techcrunch', title: 'US senators introduce bipartisan AI safety bill', color: '#22c55e' } },
-            { type: 'source-card', props: { source: 'reuters', title: 'China updates AI governance rules for 2026', color: '#0080ff' } },
+            { type: 'source-card', props: { source: 'wirefeed', title: 'Regulators publish draft AI governance rules', color: '#0080ff' } },
           ]
         },
         { type: 'heading', props: { text: 'Key Developments', level: 3 } },
@@ -4984,7 +4984,7 @@
           sources: [
             { name: 'wired', color: '#000' },
             { name: 'techcrunch', color: '#22c55e' },
-            { name: 'reuters', color: '#0080ff' },
+            { name: 'wirefeed', color: '#0080ff' },
           ],
           label: 'sources'
         }},
