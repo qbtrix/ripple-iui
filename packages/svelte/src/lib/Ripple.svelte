@@ -1,59 +1,25 @@
 <!--
-  Ripple.svelte — Main entry point for Ripple UI rendering.
-  Updated: 2026-06-28 (SP-4 slides) — added `slides` to DESIGNED_INTENTS so a
-  `{intent:'slides'}` spec routes through IntentRenderer to the new SlidesLayout
-  (presentation deck). Additive: every other intent's routing is byte-identical.
-  Updated: 2026-06-27 (SP-0 editor spike) — added an opt-in `ensureIds` prop.
-  When true, a WeakSet-guarded $effect runs `ensureNodeIds` once per distinct
-  `ui` root, filling stable `n_xxxxxxxx` ids on any node that lacks one so the
-  visual-editor overlay can address rendered nodes. Default OFF — plain renders
-  are byte-identical and the caller's spec is never mutated. Finding: neither
-  Ripple nor `normalizeSpec` assigned node ids before this; ids existed only if
-  the backend/author supplied them.
-  Updated: 2026-06-09 — silenced two state_referenced_locally compiler warnings.
-  Both are intentional one-time init reads, NOT reactivity bugs: `mergedInitialState`
-  seeds the StateManager once (a separate $effect at the spec-state sync block keeps
-  later spec.state changes in sync), and `onEvent` is read once when passed to
-  setContext (which itself captures once at init). svelte-ignore on the line directly
-  above each statement, per the verified recipe.
-  Updated: 2026-06-07 — intent→layout slice: the non-flow render path now routes
-  through IntentRenderer, which dispatches on `spec.intent` to a DESIGNED layout
-  (form→FormLayout, confirm→SummaryLayout, dashboard→DashboardRenderer) and falls
-  back to NodeRenderer for `custom` and any unmapped intent. Behaviour is
-  identical for `custom`/dashboard and any spec not explicitly mapped (still
-  NodeRenderer / DashboardRenderer). The flow context (from a hosting FlowRunner)
-  is threaded into IntentRenderer so a confirm STEP can summarize earlier answers.
-  Updated: 2026-05-31 — Chain Flow auto-detection on EVERY surface (RFC 13,
-  completes PR #49). The base renderer now detects a chain spec via `isFlowSpec`
-  and hosts it in a `FlowRunner` (so a multi-step flow advances client-side in a
-  Pocket / dashboard / any non-chat surface, not just paw-enterprise's chat
-  frame). `unwrapFlowRoot` hands FlowRunner the actual chain root, unwrapping the
-  `{version, ui:<root>}` envelope that `start_flow` emits. Added a `flowHosted`
-  prop (default false) as the RECURSION GUARD: FlowRunner mounts an inner
-  `<Ripple flowHosted={true}>` per step, and since a non-terminal step still
-  carries its onward chain fields, that flag stops the inner Ripple from
-  re-detecting the step as a flow and nesting a second FlowRunner. A terminal
-  step's completion is forwarded to this component's `onComplete` prop. The
-  non-flow path is untouched — byte-identical output for plain specs.
-  Updated: 2026-05-30 (PR #45 animate runtime) — bind:this on the ripple-root and
-  pass a lazy `() => rootEl` resolver into the EventDispatcher so the `animate`
-  action can locate its target node (by widget id) inside THIS instance's subtree
-  and run the built-in pulse, correctly scoped (never reaching a sibling render).
-  Updated: 2026-05-30 — apply spec.theme to the ripple-root via
-  themeToStyleString (RFC 12 white-label — Ripple previously parsed theme but
-  never applied it). The host `style` prop and the theme vars are merged on the
-  root div.
-  Previous (2026-05-22): Opt-in catalog gate: when `checkCatalog` is true,
-  Ripple runs `validateCatalog` on the spec before mount and warns about any
-  out-of-catalog node types. Non-breaking — it never blocks rendering;
-  NodeRenderer still shows its loud red box per unknown node (Increment 5).
-  Previous (2026-04-21): Flow actions wiring — instantiate a per-instance
-  WidgetRegistry, expose via 'ui-widget-registry' context, thread to the
-  EventDispatcher, and auto-mount the ConfirmDialog overlay so any confirm
-  action surfaces without extra spec.
-  Previous (2026-04-16): Added streaming + skeleton props. When a StreamSpecStore
-  is passed via `streaming`, Ripple renders a Skeleton until the first valid
-  parse arrives, then switches to the live spec.
+  Ripple.svelte: the main entry point. Takes a spec (or a `streaming` store from
+  streamSpec()), normalizes it, and renders it with its own StateManager,
+  EventDispatcher, widget registry, toast bus and ConfirmDialog.
+
+  - Routing: a chain spec (isFlowSpec) is hosted in a FlowRunner unless
+    `flowHosted` is set (FlowRunner's per-step inner Ripple sets it, so a step is
+    never re-detected as a flow). Otherwise designed intents (form, confirm,
+    slides, ...) go to IntentRenderer, dashboards to DashboardRenderer, and
+    `custom` / unmapped intents to NodeRenderer.
+  - Streaming: a Skeleton shows until the first valid parse; a stream error with
+    no parse renders only the error line.
+  - State: seeded once from spec.state + the `state` prop. Later spec.state
+    changes sync key by key against a private copy of what the spec last said.
+    Live state and that copy never share objects with the spec (a streamed spec
+    is the stream store's $state proxy), or a user write would read as a spec
+    change and be reverted.
+  - spec.theme and the `brand` pack become CSS vars on the root; `animate`
+    finds its target inside this root only.
+  - Opt-ins: `checkCatalog` warns on out-of-catalog node types (never blocks);
+    `ensureIds` fills missing node ids once per `ui` root without mutating the
+    caller's spec.
 -->
 <script lang="ts">
   import { setContext, getContext } from 'svelte';
@@ -299,12 +265,16 @@
   });
 
   // External writes to `spec.state` (pocket SSE mutations, hot-reloaded
-  // specs) need to flow into the live stateManager too — it deep-clones
-  // `spec.state` at construction and otherwise runs disconnected. Track
-  // the last-synced snapshot and push only deltas, so a user typing into
-  // a `{state.draft}`-bound input doesn't get clobbered on every
+  // specs, streamed chunks) need to flow into the live stateManager too.
+  // Track the last-synced snapshot and push only deltas, so a user typing
+  // into a `{state.draft}`-bound input doesn't get clobbered on every
   // re-render: their write touches stateManager but never spec.state, so
   // the diff stays empty for that key.
+  // Both the live write and the tracker take a $state.snapshot copy. A
+  // streamed spec is the stream store's $state proxy; installing it as-is
+  // made live state, the tracker and the spec one object, so a user write
+  // changed the tracker too, the next (pristine) parse looked like a spec
+  // change, and the write was reverted.
   // Plain `let` (not `$state`) — this is a snapshot tracker we both read
   // and write inside the same effect; making it reactive would create a
   // self-dependency that re-runs the effect on every sync.
@@ -321,9 +291,9 @@
       if (overrideKeys && overrideKeys.has(key)) continue;
       if (!shallowDifferent(value, lastSyncedSpecState[key])) continue;
       if (shallowDifferent(value, stateManager.get(key))) {
-        stateManager.set(key, value);
+        stateManager.set(key, $state.snapshot(value));
       }
-      lastSyncedSpecState[key] = value;
+      lastSyncedSpecState[key] = $state.snapshot(value);
     }
   });
 

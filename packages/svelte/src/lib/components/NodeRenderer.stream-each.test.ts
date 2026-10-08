@@ -78,7 +78,7 @@ describe.each([
 		await userEvent.click(screen.getAllByRole('checkbox')[0]);
 		await vi.waitFor(() => expect(rowText(0)).toBe('row 0: true'));
 		expect(rowText(1)).toBe('row 1: false');
-		const streamed = store.current as { state: { items: { done: boolean }[] } };
+		const streamed = store.current as unknown as { state: { items: { done: boolean }[] } };
 		expect(streamed.state.items[0].done).toBe(false);
 	});
 });
