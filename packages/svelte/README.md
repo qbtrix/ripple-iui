@@ -111,6 +111,39 @@ bun add @ripple-ui/svelte
 
 Requires **Svelte 5** (`^5.0.0`).
 
+## Styling
+
+Widgets are styled with Tailwind CSS v4 classes, so your app needs Tailwind v4
+(for example `@tailwindcss/vite`), and Tailwind has to scan this package's
+`dist`. It skips `node_modules` on its own, so add an `@source` line. The path
+is relative to the CSS file it sits in.
+
+If your app has no design tokens of its own, import `styles.css`. It brings in
+Tailwind itself, default shadcn-style colour tokens (light, plus a `.dark`
+class), and Ripple's theme, so don't also `@import "tailwindcss"`:
+
+```css
+/* src/app.css */
+@import "@ripple-ui/svelte/styles.css";
+@source "../node_modules/@ripple-ui/svelte/dist";
+```
+
+If you already define shadcn tokens (`--background`, `--primary`, `--card`, ...)
+and map them with `@theme inline`, as a shadcn-svelte app does, keep your sheet
+and add only the theme. `theme.css` adds the `--ripple-*` tokens and their
+utilities (`bg-ripple-surface`, `rounded-ripple`, ...), which default to your
+shadcn tokens:
+
+```css
+@import "tailwindcss";
+@import "@ripple-ui/svelte/theme.css";
+@source "../node_modules/@ripple-ui/svelte/dist";
+```
+
+To restyle Ripple without touching your own tokens, override `--ripple-*`
+properties, scoped if you like:
+`.my-panel .ripple-root { --ripple-surface: transparent; }`.
+
 ## Quick Start
 
 ```svelte
