@@ -11,6 +11,9 @@ import adapter from '@sveltejs/adapter-static';
 const config = {
 	kit: {
 		adapter: adapter({ fallback: '404.html' }),
+		// Absolute asset paths: the 404.html shell is served at arbitrary depths
+		// (/showcase/x/y), where relative ./_app paths would resolve wrongly.
+		paths: { relative: false },
 		prerender: {
 			handleHttpError: 'warn',
 			handleMissingId: 'warn'
