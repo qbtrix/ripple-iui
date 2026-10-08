@@ -47,7 +47,7 @@
   ];
 </script>
 
-<main class="min-h-screen bg-background p-8 text-foreground">
+<main class="p-4 text-foreground sm:p-8">
   <h1 class="mb-1 text-xl font-semibold">Call parts</h1>
   <p class="mb-6 text-sm text-muted-foreground">
     ControlButton, ControlBar, ParticipantTile, FloatingDock, IncomingCallCard, BottomSheet and Slider from <code>./ui</code>.

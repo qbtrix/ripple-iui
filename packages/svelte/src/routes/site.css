@@ -61,6 +61,7 @@
 	--glow: oklch(0.533 0.26 262.6 / 0.16);
 	--glow-warm: oklch(0.55 0.2 18 / 0.08);
 	--radius-paw: 12px;
+	--site-topbar: 53px;
 	color-scheme: light;
 }
 
