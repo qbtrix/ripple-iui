@@ -5,8 +5,9 @@
     ocean-flow genesis composite widget into Ripple conventions: shadcn `Card`
     + `Button` and lucide named icons replace the genesis `IconWidget`.
   @created 2026-05-31 — composite consumer widgets migration. Flip state is
-    local; `onFlip` / `onCorrect` / `onIncorrect` callbacks let a host drive a
-    deck. The 3D-flip transform lives in a scoped <style> block (unchanged).
+    local; `onflip` / `oncorrect` / `onincorrect` callbacks let a host drive a
+    deck; they are lowercase because NodeRenderer passes `on_correct` as
+    `oncorrect`. The 3D-flip transform lives in a scoped <style> block (unchanged).
 -->
 <script lang="ts">
   import { cn } from '$lib/utils.js';
@@ -26,11 +27,11 @@
     /** Position label, e.g. "3 of 10". */
     index?: string;
     /** Fires with the new flip state when the card is flipped. */
-    onFlip?: (isFlipped: boolean) => void;
+    onflip?: (isFlipped: boolean) => void;
     /** Fires when the user marks the card correct. */
-    onCorrect?: () => void;
+    oncorrect?: () => void;
     /** Fires when the user marks the card for review. */
-    onIncorrect?: () => void;
+    onincorrect?: () => void;
   }
 
   let {
@@ -40,25 +41,25 @@
     back,
     category,
     index,
-    onFlip,
-    onCorrect,
-    onIncorrect
+    onflip,
+    oncorrect,
+    onincorrect
   }: Props = $props();
 
   let isFlipped = $state(false);
 
   function flip() {
     isFlipped = !isFlipped;
-    onFlip?.(isFlipped);
+    onflip?.(isFlipped);
   }
 
   function handleCorrect() {
-    onCorrect?.();
+    oncorrect?.();
     isFlipped = false;
   }
 
   function handleIncorrect() {
-    onIncorrect?.();
+    onincorrect?.();
     isFlipped = false;
   }
 </script>

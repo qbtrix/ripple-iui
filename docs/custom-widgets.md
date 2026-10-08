@@ -54,7 +54,7 @@ A Ripple widget is any Svelte 5 component. Props from the spec are spread onto t
 
 1. **Accept `children` as a Snippet** — NodeRenderer passes children via Svelte 5 snippets
 2. **Accept `class` and `style`** — NodeRenderer resolves and passes these
-3. **Accept `onclick` / `onchange`** — NodeRenderer wraps event handlers into callbacks
+3. **Accept `onclick` / `onchange`** — NodeRenderer wraps event handlers into callbacks. A widget-specific event `on_<name>` arrives as the lowercase prop `on<name>` with underscores dropped (`on_open_change` -> `onopenchange`), never camelCase
 4. **Props are resolved** — expression bindings like `{state.count}` are already resolved to values by the time they reach your widget
 
 ## Accessing Ripple Context

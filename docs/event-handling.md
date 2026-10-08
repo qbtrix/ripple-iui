@@ -30,6 +30,14 @@ Nodes can define handlers for these events:
 | `on_focus` | Widget gains focus |
 | `on_blur` | Widget loses focus |
 
+Any other `on_*` key is a widget-specific event (`on_complete` on a timer,
+`on_correct` on a flashcard, `on_select` on a calendar). The manifest lists each
+widget's events. NodeRenderer passes them to the widget as a lowercase prop with
+the underscores dropped: `on_correct` becomes `oncorrect`, `on_open_change`
+becomes `onopenchange`. A widget that reads `onCorrect` never sees the handler;
+`NodeRenderer.events.test.ts` fails if a manifest-documented event has no
+matching prop.
+
 ## Actions
 
 ### `set` — Update State

@@ -7,8 +7,9 @@
     established pattern in Button.svelte / Stat.svelte), and Tailwind shadcn
     semantic tokens are used throughout.
   @created 2026-05-31 — composite consumer widgets migration. Canvas state is
-    purely local; the widget surfaces an `onSave` callback returning a PNG data
-    URL rather than a two-way bind (raster bytes don't belong in spec state).
+    purely local; the widget surfaces an `onsave` callback (a spec's
+    `on_save`) returning a PNG data URL rather than a two-way bind (raster
+    bytes don't belong in spec state).
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -24,7 +25,7 @@
     /** Data URL of an image to pre-load onto the canvas. */
     initialImage?: string;
     /** Fires with a PNG data URL when the user exports. */
-    onSave?: (dataUrl: string) => void;
+    onsave?: (dataUrl: string) => void;
   }
 
   let {
@@ -34,7 +35,7 @@
     height = 300,
     backgroundColor = '#ffffff',
     initialImage,
-    onSave
+    onsave
   }: Props = $props();
 
   let canvas: HTMLCanvasElement;
@@ -126,7 +127,7 @@
 
   function downloadImage() {
     const dataUrl = canvas.toDataURL('image/png');
-    onSave?.(dataUrl);
+    onsave?.(dataUrl);
     const link = document.createElement('a');
     link.download = 'drawing.png';
     link.href = dataUrl;
