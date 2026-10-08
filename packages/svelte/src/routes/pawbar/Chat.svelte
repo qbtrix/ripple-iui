@@ -174,7 +174,7 @@
 	}
 	.turn {
 		scroll-margin-top: 84px;
-		animation: rise 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+		animation: rise var(--dur-mount) var(--ease-out-quart);
 	}
 	.turn[data-role='user'] {
 		display: flex;
@@ -229,8 +229,7 @@
 		height: 7px;
 		border-radius: 50%;
 		background: var(--primary);
-		box-shadow: 0 0 0 0 var(--glow);
-		animation: pulse 1.4s ease-out infinite;
+		animation: pulse 1.4s ease-in-out infinite;
 	}
 	.card {
 		position: relative;
@@ -270,7 +269,7 @@
 		color: var(--site-ink);
 	}
 	.notice[data-kind='limit'] {
-		background: color-mix(in oklch, var(--paw-crimson) 14%, transparent);
+		background: var(--site-pressed);
 	}
 	.notice a {
 		color: var(--primary-ink);
@@ -282,7 +281,7 @@
 		margin-top: 10px;
 		padding: 7px 13px;
 		border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
-		border-radius: 999px;
+		border-radius: var(--radius-chip);
 		background: color-mix(in oklch, var(--primary) 12%, transparent);
 		color: var(--site-ink);
 		font: inherit;
@@ -295,7 +294,9 @@
 		background: color-mix(in oklch, var(--primary) 22%, transparent);
 	}
 	.replay:disabled {
-		opacity: 0.5;
+		border-color: var(--site-line);
+		background: var(--site-pressed);
+		color: var(--site-soft);
 		cursor: default;
 	}
 	.composer {
@@ -306,12 +307,9 @@
 		align-items: flex-end;
 		gap: 10px;
 		padding: 10px 10px 10px 16px;
-		border: 1px solid var(--glass-line);
-		border-radius: var(--radius-paw);
-		background: var(--glass);
-		backdrop-filter: blur(12px) saturate(1.4);
-		-webkit-backdrop-filter: blur(12px) saturate(1.4);
-		box-shadow: 0 18px 50px -24px rgb(0 0 0 / 0.5);
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
+		background: var(--site-ground);
 		transition: border-color 0.2s;
 	}
 	.composer:focus-within {
@@ -338,19 +336,21 @@
 		height: 38px;
 		padding: 0 18px;
 		border: 0;
-		border-radius: 9px;
+		border-radius: var(--radius-control);
 		background: var(--primary);
-		color: var(--primary-foreground);
+		color: var(--site-on-primary);
 		font: inherit;
 		font-weight: 600;
 		font-size: 14px;
 		cursor: pointer;
 		transition:
-			opacity 0.15s,
+			background 0.15s,
 			transform 0.15s;
 	}
+	/* Disabled reads as muted ink on a muted ground, not a faded blue. */
 	.send:disabled {
-		opacity: 0.45;
+		background: var(--site-pressed);
+		color: var(--site-soft);
 		cursor: default;
 	}
 	.send:not(:disabled):active {
@@ -371,8 +371,8 @@
 	.chip {
 		padding: 7px 13px;
 		border: 1px solid var(--site-line);
-		border-radius: 999px;
-		background: color-mix(in oklch, var(--site-ground) 60%, transparent);
+		border-radius: var(--radius-chip);
+		background: transparent;
 		color: var(--site-ink);
 		font: inherit;
 		font-size: 13.5px;
@@ -386,14 +386,14 @@
 		background: color-mix(in oklch, var(--primary) 10%, transparent);
 	}
 	.chip:disabled {
-		opacity: 0.5;
+		color: var(--site-soft);
 		cursor: default;
 	}
 	.send:focus-visible,
 	.chip:focus-visible,
 	.replay:focus-visible,
 	.notice a:focus-visible {
-		outline: 2px solid var(--primary);
+		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
 	@media (max-width: 420px) {
@@ -412,11 +412,8 @@
 		}
 	}
 	@keyframes pulse {
-		70% {
-			box-shadow: 0 0 0 7px transparent;
-		}
-		100% {
-			box-shadow: 0 0 0 0 transparent;
+		50% {
+			opacity: 0.35;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {

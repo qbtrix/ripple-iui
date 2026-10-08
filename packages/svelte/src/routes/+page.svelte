@@ -12,10 +12,10 @@
 
   Creative Direction Declaration
     Scene: a developer at night, comparing generative UI tools with a terminal
-      open beside the browser. Dark default, Paw OS frosted glass on a deep
-      blue-black ground lit by one electric-blue glow (the Paw OS wallpaper).
-    Strategy: restrained neutrals + Paw blue as the single voice, crimson only
-      on the one "keep going" action. Type: Bricolage display, Inter body,
+      open beside the browser. The theme follows the OS; a flat blue-black or
+      near-white ground, 1px lines for depth, no glow and no glass below the bar.
+    Strategy: restrained neutrals + Paw blue as the single voice, and only on
+      what is interactive or live. Type: Bricolage display, Inter body,
       JetBrains Mono for code (identity, copied from Paw OS).
     Trap avoided: a feature-grid SaaS page. The first screen is the product
       working, not a description of it.
@@ -210,7 +210,7 @@
 		<h2 id="closer-title">Keep asking in Paw OS</h2>
 		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
 		<div class="closer-actions">
-			<a class="btn crimson" href={BYOK_URL}>Bring your own key</a>
+			<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
 			<a class="btn ghost" href={GITHUB_URL}>Read the source</a>
 		</div>
 	</section>
@@ -221,18 +221,11 @@
 		position: relative;
 		isolation: isolate;
 		padding: 0 clamp(16px, 4vw, 32px);
+		font-size: 17px;
+		line-height: 1.6;
 	}
-	/* The Paw OS wallpaper: one electric-blue light behind the chat, a faint warm edge. */
-	.landing::before {
-		content: '';
-		position: absolute;
-		inset: -80px 0 auto;
-		height: 980px;
-		z-index: -1;
-		pointer-events: none;
-		background:
-			radial-gradient(60% 46% at 50% 18%, var(--glow), transparent 70%),
-			radial-gradient(34% 30% at 88% 52%, var(--glow-warm), transparent 72%);
+	:global(.dark) .landing {
+		line-height: 1.65;
 	}
 	.landing > section {
 		max-width: 1120px;
@@ -245,10 +238,13 @@
 		text-wrap: balance;
 		margin: 0;
 	}
+	h1,
 	h2 {
-		font-size: clamp(1.7rem, 3vw, 2.4rem);
 		font-weight: 650;
-		letter-spacing: -0.025em;
+		letter-spacing: -0.03em;
+	}
+	h2 {
+		font-size: clamp(1.6rem, 2.6vw, 2.1rem);
 		line-height: 1.1;
 	}
 	code,
@@ -272,32 +268,23 @@
 		padding: clamp(48px, 9vw, 104px) 0 72px;
 	}
 	h1 {
-		font-size: clamp(2.3rem, 5.4vw, 4.1rem);
-		font-weight: 700;
-		line-height: 1.02;
-		letter-spacing: -0.035em;
+		font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+		line-height: 1.04;
 	}
 	h1 span {
 		display: block;
 		margin-top: 0.12em;
-		font-weight: 500;
-		color: var(--site-soft);
 	}
 	.lede {
 		margin: 22px 0 32px;
 		max-width: 62ch;
-		font-size: 17px;
-		line-height: 1.65;
 		color: var(--site-soft);
 		text-wrap: pretty;
 	}
 	.chat-frame {
 		padding: clamp(14px, 2.4vw, 22px);
-		border: 1px solid var(--glass-line);
-		border-radius: 16px;
-		background: color-mix(in oklch, var(--glass) 55%, transparent);
-		backdrop-filter: blur(12px) saturate(1.4);
-		-webkit-backdrop-filter: blur(12px) saturate(1.4);
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
 	}
 	.byok {
 		margin: 14px 2px 0;
@@ -342,10 +329,10 @@
 		width: 26px;
 		height: 26px;
 		flex: none;
-		border-radius: 8px;
-		background: var(--primary);
-		color: var(--primary-foreground);
-		font-family: var(--font-mono);
+		border-radius: var(--radius-control);
+		background: var(--site-pressed);
+		color: var(--site-ink);
+		font-family: var(--font-sans);
 		font-size: 13px;
 		font-weight: 600;
 	}
@@ -359,12 +346,12 @@
 		margin: 0;
 		padding: 16px 18px;
 		overflow-x: auto;
-		border: 1px solid var(--site-line);
-		border-radius: var(--radius-paw);
-		background: color-mix(in oklch, var(--site-ink) 4%, var(--site-ground));
-		font-size: 12.5px;
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-card);
+		background: var(--code-bg);
+		font-size: 14px;
 		line-height: 1.6;
-		color: var(--site-ink);
+		color: var(--code-ink);
 	}
 	.facts {
 		margin: 4px 0 0;
@@ -407,9 +394,9 @@
 		justify-content: space-between;
 		gap: 12px;
 		padding: 8px 8px 8px 16px;
-		border: 1px solid var(--site-line);
-		border-radius: 10px;
-		background: color-mix(in oklch, var(--site-ink) 4%, var(--site-ground));
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-control);
+		background: var(--code-bg);
 		font-size: 14px;
 	}
 	.install code {
@@ -424,7 +411,7 @@
 		flex: none;
 		padding: 6px 12px;
 		border: 1px solid var(--site-line);
-		border-radius: 7px;
+		border-radius: var(--radius-control);
 		background: transparent;
 		color: var(--site-ink);
 		font: inherit;
@@ -480,8 +467,7 @@
 		outline-offset: -2px;
 	}
 	.run-cat {
-		font-family: var(--font-mono);
-		font-size: 11.5px;
+		font-size: 13px;
 		color: var(--site-soft);
 	}
 	.run-title {
@@ -519,7 +505,7 @@
 		align-items: center;
 		height: 44px;
 		padding: 0 20px;
-		border-radius: 10px;
+		border-radius: var(--radius-control);
 		font-weight: 600;
 		font-size: 15px;
 		text-decoration: none;
@@ -527,12 +513,12 @@
 			background 0.15s,
 			border-color 0.15s;
 	}
-	.btn.crimson {
-		background: var(--paw-crimson);
-		color: oklch(1 0 0);
+	.btn.primary {
+		background: var(--primary);
+		color: var(--site-on-primary);
 	}
-	.btn.crimson:hover {
-		background: var(--paw-crimson-hover);
+	.btn.primary:hover {
+		background: color-mix(in oklch, var(--primary) 88%, black);
 	}
 	.btn.ghost {
 		border: 1px solid var(--site-line);
@@ -544,7 +530,7 @@
 	.btn:focus-visible,
 	.install button:focus-visible,
 	.byok a:focus-visible {
-		outline: 2px solid var(--primary);
+		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
 
@@ -556,7 +542,6 @@
 	@media (max-width: 420px) {
 		.chat-frame {
 			padding: 8px;
-			border-radius: 14px;
 		}
 	}
 </style>
