@@ -185,7 +185,7 @@ describe('bill-splitter numbers', () => {
 	// the row's own share keeps reading the old flag, through both
 	// {item.drinks} and {state.people[index].drinks}. A whole-spec mount
 	// recomputes correctly (test above). Flip to `test` once fixed.
-	test.fails('after streaming, shares still add up through add, remove and drinks', async () => {
+	test('after streaming, shares still add up through add, remove and drinks', async () => {
 		const { container } = await mountStreamed(scenario.fixture);
 		await addsUp(container);
 	});
