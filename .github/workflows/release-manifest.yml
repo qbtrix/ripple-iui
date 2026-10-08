@@ -98,7 +98,7 @@ jobs:
             echo "@ripple-ui/core@$V is already on npm, skipping"
             exit 0
           fi
-          bun publish "release/ripple-ui-core-$V.tgz" --access public
+          bun publish "./release/ripple-ui-core-$V.tgz" --access public
 
       - name: Publish @ripple-ui/svelte
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
@@ -113,7 +113,7 @@ jobs:
             echo "@ripple-ui/svelte@$V is already on npm, skipping"
             exit 0
           fi
-          bun publish "release/ripple-ui-svelte-$V.tgz" --access public
+          bun publish "./release/ripple-ui-svelte-$V.tgz" --access public
 
       - name: Stage release assets
         run: |
