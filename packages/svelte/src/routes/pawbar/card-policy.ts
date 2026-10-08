@@ -11,12 +11,17 @@
 //   3. Widget nodes (the ui root, every `children` element, and any object whose
 //      `type` the renderer would resolve, aliases included) must use a type from
 //      CHAT_WIDGET_TYPES: the manifest's canonical names minus embed,
-//      ripple-frame and richtext. An alias (iframe, frame, ...) is refused.
+//      ripple-frame, richtext, rich-text, map and company-header. An alias
+//      (iframe, frame, ...) is refused.
 //   4. URL-ish keys (href, src, imageUrl, iconSrc, target, ...): no `{` at all, so
 //      an expression can never assemble a URL; otherwise https or relative.
 //   5. Every other string: no javascript:/vbscript:/data: URL, no CSS url(), no
-//      markup or markdown image/link (`![`, `<img`, `<a`, `](https:`), and no
-//      bare http(s) or www. link. Markdown widgets render any string they get.
+//      markup or markdown image/link (`![`, `<img`, `<a`, `<svg`, `<details`,
+//      `](https:`, any tag with an on*= handler), and no bare http(s) or www.
+//      link. Markdown widgets render any string they get.
+// Rules 4 and 5 read strings after one pass of HTML character-reference
+// decoding (`&lt;`, `&#60;`, `&#x3c;`), the form a markdown or HTML sink sees.
+// This walks the card only; /live's recorded replays never pass through it.
 // `partial` is for specs still streaming: a name that is a prefix of an allowed
 // action, widget type or card key is not refused yet.
 
@@ -30,7 +35,12 @@ const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 const SCRIPT_URL = /^(javascript|vbscript):/i;
 const DATA_URL = /^data:[\w.+-]*\/?[\w.+-]*(;[\w.+=-]+)*,/i;
 const STYLE_URL = /url\s*\(/i;
-const MARKUP = /!\[|<\s*\/?\s*(img|a|iframe|frame|script|object|embed|svg|link|meta|style|form|base|video|audio|source)\b/i;
+const MARKUP =
+	/!\[|<\s*\/?\s*(img|a|iframe|frame|script|object|embed|svg|math|details|link|meta|style|form|base|video|audio|source)\b/i;
+/** A tag carrying an event-handler attribute. Bounded so a long run of `<x` stays linear. */
+const EVENT_ATTR = /<[a-z][^<>]{0,1000}?[\s/"']on[a-z]+\s*=/i;
+const ENTITY = /&(#x[0-9a-f]+|#\d+|lt|gt|amp|quot|apos|colon|sol|tab|newline);?/gi;
+const NAMED: Record<string, string> = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'", colon: ':', sol: '/', tab: '\t', newline: '\n' };
 const MD_LINK = /\]\(\s*<?\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i;
 const BARE_LINK = /(https?:\/\/|\bwww\.)/i;
 const MAX_NODES = 50_000;
@@ -41,11 +51,22 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 // eslint-disable-next-line no-control-regex
 const asUrl = (v: string) => v.replace(/^[\u0000- ]+/, '').replace(/[\t\n\r]/g, '').replaceAll('\\', '/');
 
+/** One pass of character-reference decoding, as an HTML parser does before it reads tags. */
+export function decodeEntities(v: string): string {
+	return v.replace(ENTITY, (m, ref: string) => {
+		const r = ref.toLowerCase();
+		if (!r.startsWith('#')) return NAMED[r] ?? m;
+		const n = r[1] === 'x' ? parseInt(r.slice(2), 16) : parseInt(r.slice(1), 10);
+		return n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : m;
+	});
+}
+
 const allowed = (list: readonly string[], name: string, partial: boolean) =>
 	list.some((a) => a === name || (partial && a.startsWith(name)));
 
-function urlRefusal(value: string): string | null {
-	if (value.includes('{')) return 'expression_url';
+function urlRefusal(raw: string): string | null {
+	if (raw.includes('{')) return 'expression_url';
+	const value = decodeEntities(raw);
 	if (STYLE_URL.test(value)) return 'style_url';
 	const u = asUrl(value);
 	if (u.startsWith('//')) return 'unsafe_url';
@@ -53,11 +74,12 @@ function urlRefusal(value: string): string | null {
 	return null;
 }
 
-function textRefusal(value: string): string | null {
+function textRefusal(raw: string): string | null {
+	const value = decodeEntities(raw);
 	const u = asUrl(value);
 	if (SCRIPT_URL.test(u) || DATA_URL.test(u)) return 'unsafe_url';
 	if (STYLE_URL.test(value)) return 'style_url';
-	if (MARKUP.test(value) || MD_LINK.test(value) || BARE_LINK.test(value)) return 'markup';
+	if (MARKUP.test(value) || EVENT_ATTR.test(value) || MD_LINK.test(value) || BARE_LINK.test(value)) return 'markup';
 	return null;
 }
 
