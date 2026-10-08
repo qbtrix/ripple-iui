@@ -15,7 +15,10 @@ import { loadEnv } from 'vite';
 // attributes and transitions inject <style>. connect-src lists the Paw Bar API
 // and /live's test store, read at build time like vite.config.ts does; dev adds
 // localhost for the mock and Vite's HMR socket. img-src allows the two image
-// hosts the showcase uses. frame-ancestors cannot be set from a meta tag.
+// hosts the showcase uses (its news feed's favicon service stays blocked).
+// 'unsafe-hashes' plus one hash admits exactly the `this.__e=event` attribute
+// Svelte's SSR puts on <img> so hydration can replay a load event.
+// frame-ancestors cannot be set from a meta tag.
 const dev = process.env.NODE_ENV !== 'production';
 const env = loadEnv(dev ? 'development' : 'production', process.cwd(), 'PUBLIC_');
 const originOf = (url) => {
@@ -47,7 +50,7 @@ const config = {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self'],
+				'script-src': ['self', 'unsafe-hashes', 'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:', 'https://images.unsplash.com', 'https://i.pravatar.cc'],
 				'font-src': ['self'],
