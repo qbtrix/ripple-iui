@@ -8,6 +8,7 @@
   manufacturing job status, build pipeline, repair status.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -261,7 +262,7 @@
       <div class="rorder-tracking">
         <span class="rorder-tracking-label">Tracking</span>
         {#if tracking.url}
-          <a href={tracking.url} target="_blank" rel="noopener" class="rorder-tracking-num">
+          <a href={safeUrl(tracking.url)} target="_blank" rel="noopener" class="rorder-tracking-num">
             {tracking.carrier} · {tracking.number}
             <Icon name="external-link" size={12} />
           </a>

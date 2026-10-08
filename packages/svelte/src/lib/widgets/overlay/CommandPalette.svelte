@@ -24,6 +24,7 @@
   Tokens only, no colour literals.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -329,7 +330,7 @@
                 )}
               >
                 {#if item.thumb}
-                  <img src={item.thumb} alt="" loading="lazy" decoding="async" class="size-9 shrink-0 rounded-md bg-ripple-muted object-cover ring-1 ring-ripple-border" />
+                  <img src={safeUrl(item.thumb, { kind: 'resource' })} alt="" loading="lazy" decoding="async" class="size-9 shrink-0 rounded-md bg-ripple-muted object-cover ring-1 ring-ripple-border" />
                 {:else if Icon}
                   <span class="flex size-9 shrink-0 items-center justify-center rounded-md bg-ripple-muted/60 text-ripple-muted-foreground">
                     <Icon size={16} aria-hidden="true" />

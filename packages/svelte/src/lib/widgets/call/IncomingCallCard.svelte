@@ -10,6 +10,7 @@
   One look: the shared glass card. Forwards all div attributes. Tokens only.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
@@ -46,7 +47,7 @@
       {#if avatar}
         {@render avatar()}
       {:else}
-        <Avatar alt={name ?? title} {src} class="size-11" />
+        <Avatar alt={name ?? title} src={safeUrl(src, { kind: 'resource' })} class="size-11" />
       {/if}
       {#if halo}
         <span

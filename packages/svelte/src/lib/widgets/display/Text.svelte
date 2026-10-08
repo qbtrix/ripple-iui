@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -78,7 +79,7 @@
   const linkClass = 'text-primary underline underline-offset-2 hover:text-primary/80 break-words';
 </script>
 
-{#snippet body()}{#each segments as seg}{#if seg.url}{@const url = seg.url}<a href={url} target="_blank" rel="noopener noreferrer" class={linkClass} onclick={(e) => handleLinkClick(e, url)}>{seg.text}</a>{:else}{seg.text}{/if}{/each}{/snippet}
+{#snippet body()}{#each segments as seg}{#if seg.url}{@const url = seg.url}<a href={safeUrl(url)} target="_blank" rel="noopener noreferrer" class={linkClass} onclick={(e) => handleLinkClick(e, url)}>{seg.text}</a>{:else}{seg.text}{/if}{/each}{/snippet}
 
 {#if inline}
   <span {id} class={cn('m-0', sizeClasses[size], weightClasses[weight], className)} style={styleString}>{@render body()}</span>

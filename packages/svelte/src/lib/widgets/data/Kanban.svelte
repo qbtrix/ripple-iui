@@ -3,6 +3,7 @@
      aria-label) and draggable card <div> given role="listitem" so the drag/drop
      handlers satisfy a11y_no_static_element_interactions. -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
@@ -145,7 +146,7 @@
           <span
             aria-hidden="true"
             class={cn('h-2 w-2 rounded-full', col.accentClass ?? 'bg-muted-foreground/40')}
-            style={col.color ? `background:${col.color}` : undefined}
+            style={safeStyle(col.color ? `background:${col.color}` : undefined)}
           ></span>
           <span class="text-sm font-semibold">{col.title}</span>
         </div>

@@ -11,6 +11,7 @@
   via callbacks the host owns; no fetch, no service.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import Image from '$lib/widgets/display/Image.svelte';
   import Heading from '$lib/widgets/display/Heading.svelte';
   import Text from '$lib/widgets/display/Text.svelte';
@@ -66,7 +67,7 @@
   <div class="overflow-hidden rounded-ripple border border-ripple-border/70 bg-ripple-surface text-ripple-surface-foreground">
     {#if hasImage}
       <div class="relative aspect-[16/9] w-full overflow-hidden bg-ripple-muted">
-        <Image src={image} alt={title} fit="cover" rounded="none" class="h-full w-full" />
+        <Image src={safeUrl(image, { kind: 'resource' })} alt={title} fit="cover" rounded="none" class="h-full w-full" />
         <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         {#if badge}
           <div class="absolute left-4 top-4">

@@ -17,6 +17,7 @@
   the name stays as a title tooltip. Forwards all div attributes. Tokens only.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import MicOff from '@lucide/svelte/icons/mic-off';
@@ -70,7 +71,7 @@
       {#if avatar}
         {@render avatar()}
       {:else}
-        <Avatar alt={name} {src} class="ripple-tile-avatar size-full" />
+        <Avatar alt={name} src={safeUrl(src, { kind: 'resource' })} class="ripple-tile-avatar size-full" />
       {/if}
     </div>
   {/if}

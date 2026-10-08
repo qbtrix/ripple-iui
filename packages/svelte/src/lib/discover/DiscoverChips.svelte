@@ -6,6 +6,7 @@
      (aria-pressed) that calls `onchange` with its value; the consumer decides
      what a second press means. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { Button } from '../components/ui/button/index.js';
   import { cn } from '$lib/utils.js';
   import type { DiscoverOption } from './layout.js';
@@ -29,7 +30,7 @@
   {#each options as o (o.value)}
     {@const on = value === o.value}
     {#if o.href}
-      <Button size="sm" variant={on ? 'secondary' : 'outline'} href={o.href} aria-current={on ? 'true' : undefined}>{o.label}</Button>
+      <Button size="sm" variant={on ? 'secondary' : 'outline'} href={safeUrl(o.href)} aria-current={on ? 'true' : undefined}>{o.label}</Button>
     {:else}
       <Button size="sm" variant={on ? 'secondary' : 'outline'} aria-pressed={on} onclick={() => onchange?.(o.value)}>{o.label}</Button>
     {/if}

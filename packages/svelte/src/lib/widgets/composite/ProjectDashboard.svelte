@@ -5,6 +5,7 @@
   bars → team load list → milestones + recent updates feed.
 -->
 <script lang="ts">
+  import { safeStyle, safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
@@ -138,7 +139,7 @@
           {#if title}<h1 class="rproj-title">{title}</h1>{/if}
           {#if status}
             {@const sm = STATUS_META[status]}
-            <span class="rproj-status" style={`color:${sm.color}; background:${sm.bg}; border:1px solid color-mix(in oklab, ${sm.color} 35%, transparent);`}>
+            <span class="rproj-status" style={safeStyle(`color:${sm.color}; background:${sm.bg}; border:1px solid color-mix(in oklab, ${sm.color} 35%, transparent);`)}>
               <Icon name={sm.icon} size={11} />
               {sm.label}
             </span>
@@ -162,7 +163,7 @@
         {#if lead}
           <div class="rproj-lead">
             {#if lead.avatar}
-              <img src={lead.avatar} alt={lead.name} class="rproj-lead-avatar" />
+              <img src={safeUrl(lead.avatar, { kind: 'resource' })} alt={lead.name} class="rproj-lead-avatar" />
             {:else}
               <span class="rproj-lead-initials">{initials(lead.name)}</span>
             {/if}
@@ -261,7 +262,7 @@
               {@const overloaded = load > 100 || m.status === 'overloaded'}
               <li class="rproj-team-item">
                 {#if m.avatar}
-                  <img src={m.avatar} alt={m.name} class="rproj-team-avatar" />
+                  <img src={safeUrl(m.avatar, { kind: 'resource' })} alt={m.name} class="rproj-team-avatar" />
                 {:else}
                   <span class="rproj-team-initials">{initials(m.name)}</span>
                 {/if}

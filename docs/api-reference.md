@@ -80,6 +80,19 @@ import {
 | `evaluateCondition` | `(expr: string, ctx: ResolverContext) => boolean` | Evaluate as boolean |
 | `hasExpressions` | `(value: unknown) => boolean` | Check if value contains `{...}` |
 
+### URL safety
+
+```typescript
+import { safeUrl, safeStyle } from '@ripple-ui/core';
+```
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `safeUrl` | `(value: unknown, opts?: { kind?: 'link' \| 'resource' }) => string \| undefined` | Allowlist a URL for a sink. `link` (default): relative paths, `http(s)`, `mailto`, `tel`; anything else returns `'#'`. `resource`: relative paths (not `//host`), `http(s)`, `data:image/(png\|gif\|jpeg\|webp)`; anything else returns `undefined`. Empty or non-string input returns `undefined`. Detection decodes entities and %-escapes once and ignores whitespace/control characters, so `java&#x61;script:` and `java\tscript:` are caught. |
+| `safeStyle` | `(style: string \| Record<string, unknown>) => same type` | Drop declarations whose `url()` / `image-set()` target fails `safeUrl(…, { kind: 'resource' })`, plus `expression(`, `-moz-binding`, and property names that are not plain CSS identifiers. |
+
+Every built-in widget and the `navigate` action's `url` already go through these. Call them yourself in a custom widget, or in a renderer for the headless tree, which carries resolved values unfiltered.
+
 ### Normalizer
 
 ```typescript

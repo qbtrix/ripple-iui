@@ -20,6 +20,7 @@
   still reads as in progress.
 -->
 <script lang="ts">
+  import { safeStyle, safeUrl } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -287,7 +288,7 @@
                       {#if it.owner}
                         <span class="rcheck-owner" title={it.owner.name}>
                           {#if it.owner.avatar}
-                            <img src={it.owner.avatar} alt={it.owner.name} />
+                            <img src={safeUrl(it.owner.avatar, { kind: 'resource' })} alt={it.owner.name} />
                           {:else}
                             <span class="rcheck-owner-initials">{initials(it.owner.name)}</span>
                           {/if}
@@ -307,7 +308,7 @@
                 </div>
                 <span
                   class="rcheck-state-pill"
-                  style={`color:${meta.color}; background:${meta.bg};`}
+                  style={safeStyle(`color:${meta.color}; background:${meta.bg};`)}
                 >
                   {meta.label}
                 </span>

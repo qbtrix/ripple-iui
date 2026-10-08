@@ -14,6 +14,7 @@
       reads as an intentional placeholder in light/dark.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -59,7 +60,7 @@
   )}
   style={styleString}
 >
-  <Avatar.Image {src} {alt} />
+  <Avatar.Image src={safeUrl(src, { kind: 'resource' })} {alt} />
   <Avatar.Fallback class="bg-muted text-muted-foreground font-medium tracking-tight">
     {#if initials}
       {initials}

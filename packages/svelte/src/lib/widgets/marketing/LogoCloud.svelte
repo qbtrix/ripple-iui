@@ -5,6 +5,7 @@
   @created 2026-05-30 — RFC 12 marketing widget pack.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   interface Logo { src: string; alt: string; href?: string; }
   interface Props {
@@ -20,9 +21,9 @@
   <div class="flex flex-wrap items-center justify-center gap-8 md:gap-12">
     {#each logos as logo}
       {#if logo.href}
-        <a href={logo.href}><img src={logo.src} alt={logo.alt} class="h-7 md:h-8 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition" /></a>
+        <a href={safeUrl(logo.href)}><img src={safeUrl(logo.src, { kind: 'resource' })} alt={logo.alt} class="h-7 md:h-8 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition" /></a>
       {:else}
-        <img src={logo.src} alt={logo.alt} class="h-7 md:h-8 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition" />
+        <img src={safeUrl(logo.src, { kind: 'resource' })} alt={logo.alt} class="h-7 md:h-8 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition" />
       {/if}
     {/each}
   </div>

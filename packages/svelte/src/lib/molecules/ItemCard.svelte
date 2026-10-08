@@ -13,6 +13,7 @@
   UI out; the only event is an optional `onclick`. No data fetching, no services.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Image from '$lib/widgets/display/Image.svelte';
   import Icon from '$lib/widgets/display/Icon.svelte';
@@ -120,7 +121,7 @@
   {#if hasImage}
     <div class="relative aspect-[4/3] w-full overflow-hidden bg-ripple-muted">
       <Image
-        src={image}
+        src={safeUrl(image, { kind: 'resource' })}
         alt={title}
         fit="cover"
         rounded="none"

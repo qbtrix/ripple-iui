@@ -6,8 +6,6 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { tick, type Component } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
 import Ripple from '$lib/Ripple.svelte';
 import Cta from '$lib/widgets/marketing/Cta.svelte';
 import Hero from '$lib/widgets/marketing/Hero.svelte';
@@ -130,20 +128,13 @@ describe('window.open sinks', () => {
 });
 
 // ---- static audit -------------------------------------------------------
-const LIB = resolve(__dirname, '..');
+// Vite's raw glob, not node:fs: the tsconfig carries no node types.
+const SOURCES = import.meta.glob('../**/*.svelte', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const GUARDED = /^(safeUrl|safeHref|safeKbUrl)\(/;
-// Sinks whose value is not spec-controlled, or is guarded by a stricter check.
+// Sinks guarded by a stricter local check.
 const EXEMPT: Record<string, string[]> = {
 	'widgets/media/Embed.svelte': ['safeUrl'] // https-only isSafeEmbedUrl
 };
-
-function svelteFiles(dir: string): string[] {
-	return readdirSync(dir).flatMap((n) => {
-		const p = join(dir, n);
-		if (statSync(p).isDirectory()) return svelteFiles(p);
-		return p.endsWith('.svelte') ? [p] : [];
-	});
-}
 
 function braced(src: string, open: number): string {
 	let depth = 0;
@@ -156,14 +147,15 @@ function braced(src: string, open: number): string {
 
 describe('static URL-sink audit', () => {
 	it('every href/src/srcset/action/formaction/poster attribute and window.open goes through safeUrl', () => {
+		expect(Object.keys(SOURCES).length).toBeGreaterThan(100);
 		const misses: string[] = [];
-		for (const file of svelteFiles(LIB)) {
-			const rel = relative(LIB, file);
+		for (const [path, raw] of Object.entries(SOURCES)) {
+			const rel = path.replace(/^\.\.\//, '');
 			// drop <style> blocks and comments; they carry no runtime attributes
-			const src = readFileSync(file, 'utf8')
+			const src = raw
 				.replace(/<style[\s\S]*?<\/style>/g, '')
 				.replace(/<!--[\s\S]*?-->/g, '');
-			const attr = /[\s{](href|src|srcset|action|formaction|poster|xlink:href)=\{/g;
+			const attr = /[\s{](href|src|srcset|action|formaction|poster|xlink:href|environment-image)=\{/g;
 			for (let m; (m = attr.exec(src)); ) {
 				const expr = braced(src, m.index + m[0].length - 1);
 				if (!GUARDED.test(expr) && !(EXEMPT[rel] ?? []).includes(expr)) misses.push(`${rel}: ${m[1]}={${expr}}`);

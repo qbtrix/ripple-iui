@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/display/LinkPreview.svelte -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import LinkIcon from '@lucide/svelte/icons/link';
   import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
@@ -55,7 +56,7 @@
 
 <a
   {id}
-  href={url}
+  href={safeUrl(url)}
   {target}
   {rel}
   class={cn(
@@ -72,13 +73,13 @@
           layout === 'horizontal' ? 'w-32 h-full min-h-[88px]' : 'w-full h-40'
         )}
       >
-        <img src={image} alt="" class="w-full h-full object-cover" loading="lazy" />
+        <img src={safeUrl(image, { kind: 'resource' })} alt="" class="w-full h-full object-cover" loading="lazy" />
       </div>
     {/if}
     <div class="flex-1 min-w-0 p-3">
       <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {#if favicon}
-          <img src={favicon} alt="" class="h-3.5 w-3.5 rounded-sm" loading="lazy" />
+          <img src={safeUrl(favicon, { kind: 'resource' })} alt="" class="h-3.5 w-3.5 rounded-sm" loading="lazy" />
         {:else}
           <LinkIcon size={11} />
         {/if}

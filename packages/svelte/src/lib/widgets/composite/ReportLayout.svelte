@@ -10,6 +10,7 @@
   `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -117,7 +118,7 @@
   <header class="rreport-header">
     <div class="rreport-brand">
       {#if logo}
-        <img src={logo} alt={brand ?? 'Logo'} class="rreport-logo" />
+        <img src={safeUrl(logo, { kind: 'resource' })} alt={brand ?? 'Logo'} class="rreport-logo" />
       {/if}
       {#if brand}
         <span class="rreport-brand-name">{brand}</span>

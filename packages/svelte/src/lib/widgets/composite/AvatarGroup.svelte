@@ -7,6 +7,7 @@
 -->
 
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -57,7 +58,7 @@
   {#each visible as user, i (i)}
     <Avatar.Root size={rootSize}>
       {#if user.src}
-        <Avatar.Image src={user.src} alt={user.alt ?? ''} />
+        <Avatar.Image src={safeUrl(user.src, { kind: 'resource' })} alt={user.alt ?? ''} />
       {/if}
       <Avatar.Fallback>{initials(user)}</Avatar.Fallback>
     </Avatar.Root>

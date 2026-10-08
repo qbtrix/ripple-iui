@@ -90,6 +90,7 @@ Emitted to the parent app via `onEvent`. Expressions in `url`, `body`, and `head
 ```
 
 Emitted to the parent app via `onEvent`.
+The resolved `url` goes through `safeUrl` first, so a `javascript:`, `vbscript:` or `data:` URL (including one an expression builds, such as `"{state.a}:alert(1)"`) reaches the host as `'#'`.
 
 ### `toast` — Show Notification
 

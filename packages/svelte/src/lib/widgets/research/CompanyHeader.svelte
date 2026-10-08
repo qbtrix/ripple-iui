@@ -1,5 +1,6 @@
 <!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -55,7 +56,7 @@
   <div class="rch-top">
     <div class="rch-identity">
       {#if logoSrc && !logoError}
-        <img src={logoSrc} alt={name} class="rch-logo" onerror={() => logoError = true} />
+        <img src={safeUrl(logoSrc, { kind: 'resource' })} alt={name} class="rch-logo" onerror={() => logoError = true} />
       {:else}
         <div class="rch-logo-fallback">{asText(name).charAt(0)}</div>
       {/if}

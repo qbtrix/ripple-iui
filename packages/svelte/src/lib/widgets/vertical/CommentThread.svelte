@@ -13,6 +13,7 @@
 </script>
 
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
   import Self from './CommentThread.svelte';
@@ -70,7 +71,7 @@
     >
       <div class="shrink-0">
         {#if c.avatar}
-          <img src={c.avatar} alt={c.author} class="h-8 w-8 rounded-full object-cover" />
+          <img src={safeUrl(c.avatar, { kind: 'resource' })} alt={c.author} class="h-8 w-8 rounded-full object-cover" />
         {:else}
           <div class="h-8 w-8 rounded-full bg-muted text-xs font-semibold grid place-items-center text-muted-foreground">
             {initials(c.author)}

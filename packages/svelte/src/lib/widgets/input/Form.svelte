@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/input/Form.svelte -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -175,7 +176,7 @@
   {id}
   class={cn('flex flex-col gap-3', className)}
   style={styleString}
-  action={native ? action : undefined}
+  action={safeUrl(native ? action : undefined)}
   method={native ? method : undefined}
   onsubmit={handleSubmit}
   novalidate

@@ -5,6 +5,7 @@
   deploys list. Color-coded service cells let the eye catch outages instantly.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import Sparkline from '$lib/widgets/data/Sparkline.svelte';
@@ -169,7 +170,7 @@
     {/if}
   </header>
 
-  <div class="rops-banner" style={`background:${meta.bg}; border-color:color-mix(in oklab, ${meta.color} 30%, transparent);`}>
+  <div class="rops-banner" style={safeStyle(`background:${meta.bg}; border-color:color-mix(in oklab, ${meta.color} 30%, transparent);`)}>
     <span class="rops-banner-icon" style={`color:${meta.color};`}>
       <Icon name={meta.icon} size={20} />
     </span>

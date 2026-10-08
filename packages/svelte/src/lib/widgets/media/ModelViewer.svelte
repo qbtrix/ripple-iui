@@ -13,6 +13,7 @@
       pulled in when a spec actually uses a `model-viewer` node.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   interface Props {
     id?: string;
     class?: string;
@@ -89,13 +90,13 @@
     {id}
     class={className}
     style={styleString}
-    {src}
-    {poster}
+    src={safeUrl(src, { kind: 'resource' })}
+    poster={safeUrl(poster, { kind: 'resource' })}
     {alt}
     camera-controls={cameraControls ? '' : undefined}
     auto-rotate={autoRotate ? '' : undefined}
     ar={ar ? '' : undefined}
-    environment-image={environmentImage}
+    environment-image={safeUrl(environmentImage, { kind: 'resource' })}
     exposure={exposure != null ? String(exposure) : undefined}
     shadow-intensity={shadowIntensity != null ? String(shadowIntensity) : undefined}
   ></model-viewer>

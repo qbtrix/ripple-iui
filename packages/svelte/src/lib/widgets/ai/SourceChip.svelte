@@ -34,6 +34,7 @@
   origin: slev12397/beautiful-ui@ff0f74d components/primitives/ContextCards.tsx
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { tv } from 'tailwind-variants';
   import { cn } from '$lib/utils.js';
   import ArrowUpRightIcon from '@lucide/svelte/icons/arrow-up-right';
@@ -89,13 +90,13 @@
 
 <svelte:element
   this={href ? 'a' : 'span'}
-  {href}
+  href={safeUrl(href)}
   target={href ? '_blank' : undefined}
   rel={href ? 'noreferrer' : undefined}
   class={cn(chip({ size }), className)}
 >
   {#if image}
-    <img src={image} alt="" class={markClass({ size, filled: false })} />
+    <img src={safeUrl(image, { kind: 'resource' })} alt="" class={markClass({ size, filled: false })} />
   {:else}
     <span
       aria-hidden="true"

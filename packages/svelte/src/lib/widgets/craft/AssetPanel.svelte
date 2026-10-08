@@ -21,6 +21,7 @@
   Reuses Search (mode="filter"), EmptyState and Icon. Tokens only.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import Search from '../input/Search.svelte';
@@ -281,7 +282,7 @@
                   {#if tile}
                     {@render tile(it, current)}
                   {:else if it.thumb}
-                    <img src={it.thumb} alt="" loading="lazy" decoding="async" draggable="false" class="size-full object-contain" />
+                    <img src={safeUrl(it.thumb, { kind: 'resource' })} alt="" loading="lazy" decoding="async" draggable="false" class="size-full object-contain" />
                   {:else}
                     <span class="line-clamp-2 px-2 text-center text-[15px] font-semibold text-ripple-surface-foreground">{it.preview ?? it.label}</span>
                   {/if}

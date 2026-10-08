@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import QuoteIcon from '@lucide/svelte/icons/quote';
 
@@ -42,7 +43,7 @@
   {#if author || role}
     <figcaption class="flex items-center gap-3">
       {#if avatar}
-        <img src={avatar} alt={author ?? ''} class="size-9 rounded-full object-cover" />
+        <img src={safeUrl(avatar, { kind: 'resource' })} alt={author ?? ''} class="size-9 rounded-full object-cover" />
       {/if}
       <div class="flex flex-col">
         {#if author}<span class="text-sm font-semibold">{author}</span>{/if}

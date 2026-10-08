@@ -6,6 +6,7 @@
   notes, and footer. Print-friendly.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -142,7 +143,7 @@
   <header class="rinv-header">
     <div class="rinv-brand">
       {#if from.logo}
-        <img src={from.logo} alt={from.name} class="rinv-logo" />
+        <img src={safeUrl(from.logo, { kind: 'resource' })} alt={from.name} class="rinv-logo" />
       {/if}
       <div>
         <div class="rinv-brand-name">{from.name}</div>

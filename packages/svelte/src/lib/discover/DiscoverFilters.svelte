@@ -10,6 +10,7 @@
      only with `onview` or `viewHref`. The bar paints bg-background; the app adds
      its glass class through `class`. -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import type { Component } from 'svelte';
   import GalleryHorizontal from '@lucide/svelte/icons/gallery-horizontal';
   import LayoutGrid from '@lucide/svelte/icons/layout-grid';
@@ -82,7 +83,7 @@
             {o.label}
           </button>
         {:else}
-          <a href={o.href} aria-current={on ? 'true' : undefined} class={segment}>
+          <a href={safeUrl(o.href)} aria-current={on ? 'true' : undefined} class={segment}>
             {#if o.Icon}<o.Icon size={14} />{/if}
             {o.label}
           </a>

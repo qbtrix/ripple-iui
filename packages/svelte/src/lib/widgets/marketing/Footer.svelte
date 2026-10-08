@@ -4,6 +4,7 @@
   @created 2026-05-30 — RFC 12 marketing widget pack.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   interface FooterLink { label: string; href: string; }
   interface FooterColumn { title: string; links: FooterLink[]; }
@@ -22,7 +23,7 @@
         <div class="flex flex-col gap-2">
           <span class="text-sm font-semibold">{col.title}</span>
           {#each col.links as link}
-            <a href={link.href} class="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
+            <a href={safeUrl(link.href)} class="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
           {/each}
         </div>
       {/each}

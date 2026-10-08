@@ -195,6 +195,10 @@ These run in milliseconds with no jsdom, and they assert on what the spec
 
 ## Writing a renderer for another framework
 
+Resolved props are not URL-filtered: an expression can build `javascript:` at
+resolve time. Pass any prop you put in an `href`, `src`, `action` or
+`window.open` through `safeUrl` from `@ripple-ui/core`, as the Svelte renderer
+does.
 A renderer is a function from `ResolvedNode` to your framework's output.
 Everything you need is on the node:
 

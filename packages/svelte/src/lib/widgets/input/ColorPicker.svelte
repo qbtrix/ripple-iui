@@ -30,6 +30,7 @@
      The square and strips need literal gradient stops (white, black, hsl());
      those are the only colour keywords here, everything else is tokens. -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { Popover as P } from 'bits-ui';
   import { cn } from '$lib/utils.js';
   import Pipette from '@lucide/svelte/icons/pipette';
@@ -336,11 +337,11 @@
           aria-valuenow={Math.round(hsv.s * 100)}
           onkeydown={(e) => keyStep(e, (dx, dy) => (hsv = { ...hsv, s: clamp01(hsv.s + dx / 100), v: clamp01(hsv.v + dy / 100) }), () => commitHex())}
           class="relative h-36 w-full cursor-crosshair touch-none rounded-lg outline-none ring-1 ring-inset ring-ripple-surface-foreground/10 focus-visible:ring-2 focus-visible:ring-ripple-ring"
-          style={`background: linear-gradient(to top, black, transparent), linear-gradient(to right, white, transparent), hsl(${hsv.h} 100% 50%);`}
+          style={safeStyle(`background: linear-gradient(to top, black, transparent), linear-gradient(to right, white, transparent), hsl(${hsv.h} 100% 50%);`)}
         >
           <span
             class="pointer-events-none absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-md ring-2 ring-white"
-            style={`left:${hsv.s * 100}%; top:${(1 - hsv.v) * 100}%; background:${current};`}
+            style={safeStyle(`left:${hsv.s * 100}%; top:${(1 - hsv.v) * 100}%; background:${current};`)}
           ></span>
         </div>
 
@@ -369,7 +370,7 @@
               class="relative h-2.5 cursor-pointer touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ripple-ring"
               style="background: linear-gradient(to right, hsl(0 100% 50%), hsl(60 100% 50%), hsl(120 100% 50%), hsl(180 100% 50%), hsl(240 100% 50%), hsl(300 100% 50%), hsl(360 100% 50%));"
             >
-              <span class="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-md ring-2 ring-white" style={`left:${(hsv.h / 360) * 100}%; background:hsl(${hsv.h} 100% 50%);`}></span>
+              <span class="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-md ring-2 ring-white" style={safeStyle(`left:${(hsv.h / 360) * 100}%; background:hsl(${hsv.h} 100% 50%);`)}></span>
             </div>
             {#if onopacity}
               <div
@@ -383,7 +384,7 @@
                 onkeydown={(e) => keyStep(e, (dx) => (alpha = Math.min(100, Math.max(0, alpha + dx))), () => onopacity?.(alpha))}
                 class="craft-checker relative h-2.5 cursor-pointer touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ripple-ring"
               >
-                <span class="absolute inset-0 rounded-full" style={`background: linear-gradient(to right, transparent, ${current});`}></span>
+                <span class="absolute inset-0 rounded-full" style={safeStyle(`background: linear-gradient(to right, transparent, ${current});`)}></span>
                 <span class="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ripple-popover shadow-md ring-2 ring-white" style={`left:${alpha}%;`}></span>
               </div>
             {/if}
@@ -391,7 +392,7 @@
           <span
             class="craft-checker relative size-7 shrink-0 overflow-hidden rounded-md ring-1 ring-inset ring-ripple-surface-foreground/15"
             aria-hidden="true"
-          ><span class="absolute inset-0" style={`background:${current}; opacity:${alpha / 100};`}></span></span>
+          ><span class="absolute inset-0" style={safeStyle(`background:${current}; opacity:${alpha / 100};`)}></span></span>
         </div>
 
         {#if modes.length > 1}
@@ -475,7 +476,7 @@
                 data-spot={s.spot || undefined}
                 onclick={() => pickSwatch(s)}
                 class={cn(tile, on && 'ring-2 ring-ripple-accent')}
-                style={`background:${s.color}`}
+                style={safeStyle(`background:${s.color}`)}
               >
                 {#if s.spot}
                   <span class="absolute -bottom-px -right-px size-[7px] rounded-tl-[3px] bg-ripple-popover" aria-hidden="true">
@@ -489,7 +490,7 @@
             <span class="mt-1 text-[11px] font-medium text-ripple-muted-foreground">Recent</span>
             <div class="flex flex-wrap gap-1.5" role="group" aria-label="Recent colours">
               {#each recent as c (c)}
-                <button type="button" title={c} aria-label={`Recent ${c}`} onclick={() => pickSwatch({ name: c, color: c })} class={tile} style={`background:${c}`}></button>
+                <button type="button" title={c} aria-label={`Recent ${c}`} onclick={() => pickSwatch({ name: c, color: c })} class={tile} style={safeStyle(`background:${c}`)}></button>
               {/each}
             </div>
           {/if}

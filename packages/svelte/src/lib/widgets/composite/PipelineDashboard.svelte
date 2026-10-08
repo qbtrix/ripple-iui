@@ -5,6 +5,7 @@
   conversion stats → deals table → live activity ticker.
 -->
 <script lang="ts">
+  import { safeUrl } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import Funnel from '$lib/widgets/data/Funnel.svelte';
@@ -159,7 +160,7 @@
               <li class={cn('rpipe-leader-item', pos === 1 && 'rpipe-leader-1', pos === 2 && 'rpipe-leader-2', pos === 3 && 'rpipe-leader-3')}>
                 <span class="rpipe-leader-pos">{pos}</span>
                 {#if item.avatar}
-                  <img src={item.avatar} alt={item.name} class="rpipe-leader-avatar" />
+                  <img src={safeUrl(item.avatar, { kind: 'resource' })} alt={item.name} class="rpipe-leader-avatar" />
                 {:else}
                   <span class="rpipe-leader-initials">{initials(item.name)}</span>
                 {/if}
