@@ -1,10 +1,13 @@
 <!--
   @file routes/+layout.svelte
-  @description Site chrome in the Paw OS look: a frosted sticky top bar (Paw
-    mark + "Ripple" wordmark, Live / Showcase / Playground / GitHub, theme
-    toggle) and the footer line. Tokens and fonts come from ./site.css. Dark
-    is the default: app.html puts `dark` on <html> before paint (and drops it
-    when the visitor chose light), so this only reads and flips that class and
+  @description The site chrome every route shares. A 56px sticky top bar (Paw
+    mark + "Ripple", Docs / Live / Playground / Showcase, a search slot, the
+    GitHub icon, the theme toggle) and a one-row footer. Below 640px the nav
+    links move into a disclosure menu; the logo, GitHub icon and theme toggle
+    stay in the bar. The bar is the only glass on the site, with a solid
+    fallback under prefers-reduced-transparency. Tokens and fonts come from
+    ./site.css. Theme: static/theme-init.js sets `dark` on <html> before paint
+    (the stored choice, else the OS); this reads and flips that class and
     remembers the choice. Labs and dev routes stay reachable by URL, unlinked.
     The top bar never says "Paw OS": the first mention on a page must read
     "Paw OS by PocketPaw", which the page or the footer carries.
@@ -18,13 +21,16 @@
 	let { children } = $props();
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
+	const NPM_URL = 'https://www.npmjs.com/package/@ripple-ui/svelte';
 	const nav = [
+		{ href: '/docs', label: 'Docs' },
 		{ href: '/live', label: 'Live' },
-		{ href: '/showcase', label: 'Showcase' },
-		{ href: '/playground', label: 'Playground' }
+		{ href: '/playground', label: 'Playground' },
+		{ href: '/showcase', label: 'Showcase' }
 	];
 
 	let dark = $state(true);
+	let menuOpen = $state(false);
 	onMount(() => {
 		dark = document.documentElement.classList.contains('dark');
 	});
@@ -40,50 +46,77 @@
 	}
 </script>
 
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (menuOpen = false)} />
+
 <svelte:head>
 	<link rel="icon" href="/paw-logo/favicon.svg" type="image/svg+xml" />
 	<title>Ripple</title>
 </svelte:head>
 
+{#snippet links()}
+	{#each nav as item (item.href)}
+		<a
+			href={item.href}
+			class="link"
+			aria-current={page.url.pathname.startsWith(item.href) ? 'page' : undefined}
+			onclick={() => (menuOpen = false)}>{item.label}</a
+		>
+	{/each}
+{/snippet}
+
 <div class="shell">
 	<header class="topbar">
-		<a href="/" class="brand" aria-label="Ripple home">
-			<span class="mark" aria-hidden="true"></span>
-			<span class="wordmark">Ripple</span>
-		</a>
-		<nav class="links" aria-label="Site">
-			{#each nav as item (item.href)}
-				<a href={item.href} class="link" aria-current={page.url.pathname.startsWith(item.href) ? 'page' : undefined}>
-					{item.label}
-				</a>
-			{/each}
-			<a href={GITHUB_URL} class="link gh" aria-label="GitHub">
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
-					><path
-						d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"
-					/></svg
-				>
-				<span class="gh-label">GitHub</span>
+		<div class="bar">
+			<a href="/" class="brand" aria-label="Ripple home">
+				<span class="mark" aria-hidden="true"></span>
+				<span class="wordmark">Ripple</span>
 			</a>
-			<button class="theme" type="button" onclick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}>
-				{#if dark}
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
-						><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg
+			<nav class="links" aria-label="Site">{@render links()}</nav>
+			<div class="tools">
+				<!-- Search slot: the ⌘K button lands here with the docs search. -->
+				<a href={GITHUB_URL} class="icon" aria-label="GitHub">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
+						><path
+							d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"
+						/></svg
 					>
-				{:else}
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
-						><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg
-					>
-				{/if}
-			</button>
-		</nav>
+				</a>
+				<button class="icon" type="button" onclick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}>
+					{#if dark}
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
+							><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg
+						>
+					{:else}
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
+							><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg
+						>
+					{/if}
+				</button>
+				<button
+					class="icon menu-btn"
+					type="button"
+					aria-label="Menu"
+					aria-expanded={menuOpen}
+					aria-controls="site-menu"
+					onclick={() => (menuOpen = !menuOpen)}
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+						{#if menuOpen}<path d="M6 6l12 12M18 6 6 18" />{:else}<path d="M4 7h16M4 12h16M4 17h16" />{/if}
+					</svg>
+				</button>
+			</div>
+		</div>
+		<nav id="site-menu" class="menu" aria-label="Site menu" hidden={!menuOpen}>{@render links()}</nav>
 	</header>
 
 	{@render children()}
 
 	<footer class="foot">
-		<p>Ripple is open source (MIT). Paw OS by PocketPaw.</p>
-		<a href={GITHUB_URL}>github.com/qbtrix/ripple-iui</a>
+		<p>
+			<span>MIT</span><span aria-hidden="true">·</span><a href={NPM_URL}>npm</a><span aria-hidden="true">·</span><a
+				href={GITHUB_URL}>GitHub</a
+			><span aria-hidden="true">·</span><span>Paw OS by PocketPaw</span>
+		</p>
 	</footer>
 </div>
 
@@ -92,6 +125,11 @@
 		scroll-behavior: smooth;
 		scroll-padding-top: calc(var(--site-topbar) + 16px);
 	}
+	@media (prefers-reduced-motion: reduce) {
+		:global(html) {
+			scroll-behavior: auto;
+		}
+	}
 	.shell {
 		min-height: 100vh;
 		display: flex;
@@ -99,20 +137,33 @@
 		overflow-x: clip;
 	}
 	.topbar {
-		box-sizing: border-box;
-		min-height: var(--site-topbar);
 		position: sticky;
 		top: 0;
-		z-index: 50;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		padding: 10px clamp(16px, 4vw, 32px);
+		z-index: var(--z-sticky);
 		background: var(--glass);
 		backdrop-filter: blur(12px) saturate(1.4);
 		-webkit-backdrop-filter: blur(12px) saturate(1.4);
-		border-bottom: 1px solid var(--glass-line);
+		border-bottom: 1px solid var(--site-line);
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.topbar {
+			background: var(--site-ground);
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+		}
+	}
+	.bar,
+	.foot p {
+		box-sizing: border-box;
+		max-width: var(--site-max);
+		margin-inline: auto;
+		padding-inline: var(--site-gutter);
+	}
+	.bar {
+		height: var(--site-topbar);
+		display: flex;
+		align-items: center;
+		gap: 16px;
 	}
 	.brand {
 		display: flex;
@@ -120,6 +171,7 @@
 		gap: 9px;
 		color: var(--site-ink);
 		text-decoration: none;
+		border-radius: var(--radius-control);
 	}
 	.mark {
 		width: 22px;
@@ -139,13 +191,18 @@
 		align-items: center;
 		gap: 2px;
 	}
+	.tools {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-left: auto;
+	}
 	.link {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
 		padding: 6px 11px;
-		border-radius: 8px;
-		font-size: 13.5px;
+		border-radius: var(--radius-control);
+		font-size: 14px;
 		font-weight: 500;
 		color: var(--site-soft);
 		text-decoration: none;
@@ -153,69 +210,88 @@
 			color 0.15s,
 			background 0.15s;
 	}
-	.link:hover,
+	.link:hover {
+		color: var(--site-ink);
+		background: var(--site-hover);
+	}
 	.link[aria-current='page'] {
 		color: var(--site-ink);
-		background: color-mix(in oklch, var(--site-ink) 8%, transparent);
+		background: var(--site-pressed);
 	}
-	.theme {
+	.icon {
 		display: grid;
 		place-items: center;
-		width: 32px;
-		height: 32px;
-		margin-left: 6px;
-		border: 1px solid var(--glass-line);
-		border-radius: 8px;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius-control);
 		background: transparent;
 		color: var(--site-soft);
 		cursor: pointer;
+		transition:
+			color 0.15s,
+			background 0.15s;
 	}
-	.theme:hover {
+	.icon:hover {
 		color: var(--site-ink);
+		background: var(--site-hover);
+	}
+	.icon:active {
+		background: var(--site-pressed);
+	}
+	.menu-btn,
+	.menu {
+		display: none;
 	}
 	.link:focus-visible,
-	.theme:focus-visible,
-	.brand:focus-visible {
-		outline: 2px solid var(--primary);
+	.icon:focus-visible,
+	.brand:focus-visible,
+	.foot a:focus-visible {
+		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
 	.foot {
 		margin-top: auto;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 8px 24px;
-		padding: 28px clamp(16px, 4vw, 32px) 36px;
+		padding: 24px 0 32px;
 		border-top: 1px solid var(--site-line);
-		font-size: 13.5px;
+		font-size: 14px;
 		color: var(--site-soft);
 	}
 	.foot p {
 		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 10px;
 	}
 	.foot a {
 		color: inherit;
-		font-family: var(--font-mono);
-		font-size: 12.5px;
+		text-underline-offset: 3px;
+		border-radius: 4px;
 	}
-	@media (max-width: 560px) {
-		.gh-label {
+	.foot a:hover {
+		color: var(--site-ink);
+	}
+	@media (max-width: 639.98px) {
+		.bar {
+			padding-inline: 16px;
+		}
+		.links {
 			display: none;
 		}
-		.link {
-			padding: 6px 7px;
-			font-size: 13px;
+		.menu-btn {
+			display: grid;
 		}
-		.theme {
-			margin-left: 2px;
+		.menu:not([hidden]) {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+			padding: 8px 12px 12px;
+			border-top: 1px solid var(--site-line);
 		}
-	}
-	@media (max-width: 420px) {
-		.gh {
-			display: none;
-		}
-		.link {
-			padding: 6px 5px;
+		.menu .link {
+			padding: 10px 12px;
+			font-size: 15px;
 		}
 	}
 </style>
