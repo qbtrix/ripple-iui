@@ -76,30 +76,64 @@ const CSS_PROP = /^-{0,2}[a-z][a-z0-9-]*$/i;
 const CSS_SCRIPT = /expression\(|-moz-binding|behavior:|javascript:|vbscript:|@import/;
 // Functions that fetch a resource. `image(` also matches `-webkit-image(`;
 // `image-set(` and `cross-fade(` match their `-webkit-` forms.
-const CSS_RESOURCE = /url\(|image-set\(|image\(|cross-fade\(|element\(|src\(/;
+const CSS_RESOURCE = /(url|image-set|image|cross-fade|element|src)\(/g;
+const PAIRS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
 
-function cssProbe(v: string): string {
-	return v
-		.replace(/\\([0-9a-f]{1,6})\s?/gi, (_, h: string) => cp(parseInt(h, 16)))
-		.replace(/\\(.)/g, '$1')
-		.replace(/\/\*[\s\S]*?\*\//g, '')
-		.toLowerCase();
+/**
+ * A value that cannot change how the declarations around it parse: no `\`
+ * escape, no comment, balanced brackets, closed quotes, no newline inside a
+ * string. Widgets join a style record with ';', so a value that opened a
+ * string or block could swallow or reveal the next one. Linear by design.
+ */
+function selfContained(v: string): boolean {
+	if (v.includes('\\') || v.includes('/*')) return false;
+	const stack: string[] = [];
+	let quote = '';
+	for (const c of v) {
+		if (quote) {
+			if (c === quote) quote = '';
+			else if (c === '\n' || c === '\r' || c === '\f') return false;
+		} else if (c === '"' || c === "'") quote = c;
+		else if (c === '(' || c === '[' || c === '{') stack.push(c);
+		else if (c in PAIRS && stack.pop() !== PAIRS[c]) return false;
+	}
+	return !quote && stack.length === 0;
+}
+
+/** Index of the `)` closing the `(` at `open` (quote-aware). */
+function closeParen(v: string, open: number): number {
+	let depth = 0;
+	let quote = '';
+	for (let i = open; i < v.length; i++) {
+		const c = v[i];
+		if (quote) quote = c === quote ? '' : quote;
+		else if (c === '"' || c === "'") quote = c;
+		else if (c === '(') depth++;
+		else if (c === ')' && --depth === 0) return i;
+	}
+	return v.length;
 }
 
 function safeDeclaration(prop: string, value: unknown): boolean {
 	if (!CSS_PROP.test(prop.trim())) return false;
-	const v = cssProbe(String(value));
+	const v = String(value).toLowerCase();
+	if (!selfContained(v)) return false;
 	const flat = v.replace(/\s+/g, '');
 	if (CSS_SCRIPT.test(flat)) return false;
+	const fns = [...v.matchAll(CSS_RESOURCE)];
+	if (fns.length === 0) return true;
 	// A var() inside a resource function hides its target in another
 	// declaration (`--a:"//evil"` + `image-set(var(--a) 1x)`): refuse outright.
-	if (CSS_RESOURCE.test(flat) && flat.includes('var(')) return false;
-	// Every quoted string is checked, in every declaration, custom properties
-	// included: any of them can reach a resource function through var().
-	const targets = [
-		...[...v.matchAll(/url\(\s*(['"]?)([^'")]*)/g)].map((m) => m[2]),
-		...[...v.matchAll(/(['"])(.*?)\1/g)].map((m) => m[2])
-	];
+	if (flat.includes('var(')) return false;
+	// Only a resource function's arguments are URLs: its quoted strings, and
+	// the bare target of url()/src(). A quoted `Error: x` elsewhere is text.
+	const targets: string[] = [];
+	for (const m of fns) {
+		const open = m.index + m[0].length - 1;
+		const arg = v.slice(open + 1, closeParen(v, open));
+		if ((m[1] === 'url' || m[1] === 'src') && !/^\s*['"]/.test(arg)) targets.push(arg);
+		for (const q of arg.matchAll(/(['"])([\s\S]*?)\1/g)) targets.push(q[2]);
+	}
 	return targets.every((t) => t.trim() === '' || safeUrl(t, { kind: 'resource' }) !== undefined);
 }
 
@@ -128,10 +162,11 @@ function declarations(css: string): string[] {
 /**
  * Drop style declarations that could load or run something unsafe: a
  * resource function (url(), image-set(), image(), cross-fade(), element())
- * whose target fails `safeUrl(…, { kind: 'resource' })` or comes through
- * var(), any quoted string that fails the same check, `expression(`,
- * `-moz-binding`, `@import`, or a property name that is not a plain CSS
- * identifier (a key like `color:red;background` would inject a declaration).
+ * whose url or quoted argument fails `safeUrl(…, { kind: 'resource' })` or
+ * comes through var(), `expression(`, `-moz-binding`, `@import`, a value that
+ * is not self-contained (an escape, a comment, an unclosed quote or bracket),
+ * or a property name that is not a plain CSS identifier (a key like
+ * `color:red;background` would inject a declaration).
  * Accepts the record form widgets join themselves, or a declaration string,
  * which is split the way a CSS parser splits it (so `url(data:…;base64,…)`
  * stays whole).

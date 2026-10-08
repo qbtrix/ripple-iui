@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
+  import { sanitizeHtml } from '$lib/utils/sanitize-html.js';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -100,7 +101,7 @@
     if (tiles === 'custom') {
       return {
         url: tileUrl ?? TILE_PRESETS['carto-voyager'].url,
-        attribution: tileAttribution ?? TILE_PRESETS['carto-voyager'].attribution,
+        attribution: sanitizeHtml(tileAttribution ?? TILE_PRESETS['carto-voyager'].attribution),
         maxZoom: 20
       };
     }

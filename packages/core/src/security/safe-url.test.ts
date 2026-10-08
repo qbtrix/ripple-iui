@@ -88,7 +88,10 @@ describe('safeStyle', () => {
 	});
 	it('passes undefined through', () => expect(safeStyle(undefined)).toBeUndefined());
 	it('refuses var() inside a resource function (custom-property bypass)', () => {
-		expect(safeStyle({ '--a': '"//evil.example/x.png"', 'background-image': 'image-set(var(--a) 1x)' })).toEqual({});
+		// the custom property alone is text; the resource function that reads it is refused
+		expect(safeStyle({ '--a': '"//evil.example/x.png"', 'background-image': 'image-set(var(--a) 1x)' })).toEqual({
+			'--a': '"//evil.example/x.png"'
+		});
 		expect(safeStyle({ color: 'red', background: 'url(var(--a))' })).toEqual({ color: 'red' });
 		for (const fn of ['image(var(--a))', 'cross-fade(var(--a), red)', 'element(var(--a))', '-webkit-image-set(var(--a) 1x)'])
 			expect(safeStyle({ 'background-image': fn })).toEqual({});

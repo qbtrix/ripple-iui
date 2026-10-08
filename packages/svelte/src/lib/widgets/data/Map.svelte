@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
+  import { sanitizeHtml } from '$lib/utils/sanitize-html.js';
   import { onMount, getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import type { EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
@@ -219,7 +220,7 @@
     if (tiles === 'custom') {
       return {
         url: tileUrl ?? TILE_PRESETS['carto-voyager'].url,
-        attribution: tileAttribution ?? TILE_PRESETS['carto-voyager'].attribution,
+        attribution: sanitizeHtml(tileAttribution ?? TILE_PRESETS['carto-voyager'].attribution),
         maxZoom: maxZoom ?? 20
       };
     }
@@ -312,7 +313,7 @@
     markerLayer.clearLayers();
     for (const m of markers) {
       const lm = LRef.marker([m.lat, m.lng], { icon: makeDivIcon(LRef, { color: m.color, icon: m.icon, label: m.label }) });
-      if (m.popup) lm.bindPopup(m.popup);
+      if (m.popup) lm.bindPopup(escapeHtml(String(m.popup)));
       lm.on('click', () => {
         const dispatched = dispatch(m.actions, m);
         if (!dispatched) onmarkerclick?.(m.id);
@@ -333,7 +334,7 @@
       if (p.dashed || p.animate) opts.dashArray = '8, 8';
       if (p.animate) opts.className = 'rmap-path-animated';
       const line = LRef.polyline(p.points, opts);
-      if (p.label) line.bindTooltip(p.label, { sticky: true });
+      if (p.label) line.bindTooltip(escapeHtml(String(p.label)), { sticky: true });
       pathLayer.addLayer(line);
     }
   }
@@ -348,7 +349,7 @@
         fillColor: g.fillColor ?? g.color ?? 'oklch(0.55 0.18 250)',
         fillOpacity: g.fillOpacity ?? 0.15
       });
-      if (g.label) poly.bindTooltip(g.label, { sticky: true });
+      if (g.label) poly.bindTooltip(escapeHtml(String(g.label)), { sticky: true });
       polygonLayer.addLayer(poly);
     }
   }
