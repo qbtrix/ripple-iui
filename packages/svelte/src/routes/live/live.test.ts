@@ -146,3 +146,47 @@ async function clickEachSpecButton(
 	}
 	return dead;
 }
+
+// The bill splitter's numbers must add up, not just change. Labels ("Pays",
+// "Grand total") come from the recorded fixture: re-recording may rename them.
+describe('bill-splitter numbers', () => {
+	const scenario = scenarios.find((s) => s.id === 'bill-splitter')!;
+	const money = (s: string) => Number(s.replace(/[$,]/g, ''));
+
+	async function addsUp(container: HTMLElement) {
+		const check = (rows: number) => {
+			const text = container.textContent ?? '';
+			const shares = [...text.matchAll(/Pays\s*(\$[\d,]+\.\d\d)/g)].map((m) => money(m[1]));
+			const grand = money(/Grand total\s*(\$[\d,]+\.\d\d)/.exec(text)![1]);
+			expect(shares.length).toBe(rows);
+			expect(Math.abs(shares.reduce((a, b) => a + b, 0) - grand)).toBeLessThan(0.05);
+			return shares;
+		};
+		const start = check(4);
+		expect(new Set(start).size).toBeGreaterThan(1); // drinkers pay more
+		const add = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add person')!;
+		await fireEvent.click(add);
+		await vi.waitFor(() => check(5));
+		const remove = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Remove')!;
+		await fireEvent.click(remove);
+		await vi.waitFor(() => check(4));
+		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
+		await vi.waitFor(() => check(4));
+	}
+
+	test('mounted whole, shares add up to the grand total through add, remove and drinks', async () => {
+		const { container } = render(Ripple, { props: { spec: JSON.parse(join(scenario.fixture)) } });
+		await tick();
+		await addsUp(container);
+	});
+
+	// KNOWN ENGINE GAP (streaming only): after a streamed render, toggling a
+	// row's checkbox (bind "people.{index}.drinks") updates the list count but
+	// the row's own share keeps reading the old flag, through both
+	// {item.drinks} and {state.people[index].drinks}. A whole-spec mount
+	// recomputes correctly (test above). Flip to `test` once fixed.
+	test.fails('after streaming, shares still add up through add, remove and drinks', async () => {
+		const { container } = await mountStreamed(scenario.fixture);
+		await addsUp(container);
+	});
+});
