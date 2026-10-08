@@ -1,5 +1,7 @@
 // routes/pawbar/widget-types.ts — Widget types a chat card may use: the vendored
-// static/manifest.json types minus embed, ripple-frame and richtext. Canonical
+// static/manifest.json types minus embed, ripple-frame and richtext (they render
+// frames or raw HTML), rich-text (a Tiptap editor its value seeds as HTML), and
+// map and company-header (they fetch third-party tiles and logos the CSP blocks). Canonical
 // names only, no registry aliases (iframe, frame, nested-spec, label, ...), the
 // same list the backend validates against. card-policy.test.ts fails if this
 // drifts from the manifest; regenerate it from there.
@@ -11,7 +13,7 @@ export const CHAT_WIDGET_TYPES: ReadonlySet<string> = new Set([
 	'breadcrumb', 'bulk-action-bar', 'button', 'c4', 'calendar', 'callout',
 	'card', 'chart', 'checkbox', 'checkbox-group', 'checklist-layout', 'chip',
 	'citation', 'coachmark', 'code', 'code-block', 'code-editor', 'collapsible',
-	'color-picker', 'combobox', 'command-palette', 'comment-thread', 'company-header', 'comparison-layout',
+	'color-picker', 'combobox', 'command-palette', 'comment-thread', 'comparison-layout',
 	'comparison-table', 'confirm-dialog', 'container', 'context-menu', 'copy', 'cta',
 	'dashboard', 'dashboard-slot', 'data-grid', 'date-picker', 'definition-list', 'diff',
 	'discover-card', 'drawing-canvas', 'dropdown-menu', 'each', 'empty-state', 'entity-detail',
@@ -21,13 +23,13 @@ export const CHAT_WIDGET_TYPES: ReadonlySet<string> = new Set([
 	'grid', 'heading', 'heatmap', 'hero', 'highlight', 'hover-card',
 	'icon', 'if', 'image', 'input', 'invoice-layout', 'invoice-lines',
 	'kanban', 'kbd', 'kv-table', 'led-clock', 'link-preview', 'loading',
-	'location-picker', 'logo-cloud', 'map', 'markdown', 'marketing-hero', 'marquee',
+	'location-picker', 'logo-cloud', 'markdown', 'marketing-hero', 'marquee',
 	'master-detail', 'mention', 'metric', 'modal', 'model-viewer', 'multi-select',
 	'navbar', 'news-card', 'newsletter', 'notification-center', 'number-input', 'ops-dashboard',
 	'order-status', 'org-chart', 'otp-input', 'page-header', 'parallax', 'people-picker',
 	'permission-matrix', 'pipeline-dashboard', 'popover', 'pricing-table', 'progress', 'progress-ring',
 	'project-dashboard', 'pros-cons', 'qr', 'quote', 'radio-group', 'range-bar',
-	'rating', 'reasoning-trace', 'report-layout', 'reveal', 'rich-text', 'sankey',
+	'rating', 'reasoning-trace', 'report-layout', 'reveal', 'sankey',
 	'saved-views', 'search', 'section', 'segmented', 'seismograph', 'select',
 	'separator', 'settings-list', 'sheet', 'shimmer', 'sidebar', 'skeleton',
 	'slider', 'soul-status', 'source-card', 'sources-bar', 'sparkline', 'split',
