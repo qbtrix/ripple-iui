@@ -1,0 +1,2 @@
+# adapter-static output for the public site (bun run build:site)
+/build

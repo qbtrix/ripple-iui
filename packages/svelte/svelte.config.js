@@ -1,12 +1,20 @@
-import adapter from '@sveltejs/adapter-auto';
+// svelte.config.js: one config for two builds. `bun run build` packages the
+// library with svelte-package (the adapter is not involved). `bun run
+// build:site` runs vite build, and adapter-static writes the public site
+// (landing, playground, showcase) to build/ for the Workers static-assets
+// deploy in wrangler.jsonc. Routes are prerendered where they can be; a page
+// that fails to prerender is warned about and served by the 404.html SPA shell,
+// which boots the client router on that URL.
+import adapter from '@sveltejs/adapter-static';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
+		adapter: adapter({ fallback: '404.html' }),
+		prerender: {
+			handleHttpError: 'warn',
+			handleMissingId: 'warn'
+		}
 	},
 	vitePlugin: {
 		dynamicCompileOptions: ({ filename }) =>
