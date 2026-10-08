@@ -1,0 +1,701 @@
+{
+ "id": "hiit-workout",
+ "title": "20-minute HIIT",
+ "prompt": "Give me a 20-minute HIIT workout I can do at home. Walk me through it one exercise at a time, show how far along I am, and let me set how long each work interval is.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-08T08:43:08.057Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 13,
+   "text": "\"version"
+  },
+  {
+   "t": 48,
+   "text": "\":\"1.0\",\"state\":"
+  },
+  {
+   "t": 81,
+   "text": "{\"workSec\":40,"
+  },
+  {
+   "t": 116,
+   "text": "\"restSec\":20,\""
+  },
+  {
+   "t": 149,
+   "text": "totalSec\":1200,"
+  },
+  {
+   "t": 184,
+   "text": "\"slots\":20,\"step"
+  },
+  {
+   "t": 225,
+   "text": "\":0,\"cur\":0"
+  },
+  {
+   "t": 246,
+   "text": ",\"moves\":[\"J"
+  },
+  {
+   "t": 280,
+   "text": "umping jacks\",\"Squ"
+  },
+  {
+   "t": 313,
+   "text": "at jumps\",\"Mount"
+  },
+  {
+   "t": 346,
+   "text": "ain climbers\",\"High knees"
+  },
+  {
+   "t": 379,
+   "text": "\",\"Push-ups\",\""
+  },
+  {
+   "t": 413,
+   "text": "Burpees\",\"Reverse"
+  },
+  {
+   "t": 448,
+   "text": " lunges\",\"Plank sh"
+  },
+  {
+   "t": 483,
+   "text": "oulder taps\"]},"
+  },
+  {
+   "t": 513,
+   "text": "\"ui\":{\"type\":"
+  },
+  {
+   "t": 555,
+   "text": "\"card\",\"props\":{\"title"
+  },
+  {
+   "t": 581,
+   "text": "\":\"20-"
+  },
+  {
+   "t": 622,
+   "text": "Minute"
+  },
+  {
+   "t": 646,
+   "text": " Home HIIT\",\"description\":"
+  },
+  {
+   "t": 680,
+   "text": "\"No equ"
+  },
+  {
+   "t": 715,
+   "text": "ipment. T"
+  },
+  {
+   "t": 747,
+   "text": "ap Next after"
+  },
+  {
+   "t": 782,
+   "text": " each work"
+  },
+  {
+   "t": 814,
+   "text": " and rest.\"},\"children\":"
+  },
+  {
+   "t": 848,
+   "text": "[{\"type\":\"flex"
+  },
+  {
+   "t": 882,
+   "text": "\",\"props\":{\"direction\":"
+  },
+  {
+   "t": 918,
+   "text": "\"column\",\"gap\":\"12"
+  },
+  {
+   "t": 948,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 980,
+   "text": "\"type\":\"segmented\",\""
+  },
+  {
+   "t": 1013,
+   "text": "b"
+  },
+  {
+   "t": 1047,
+   "text": "ind\":\"{"
+  },
+  {
+   "t": 1087,
+   "text": "state.workSec}\",\"props"
+  },
+  {
+   "t": 1115,
+   "text": "\":{\"label\":\"Work"
+  },
+  {
+   "t": 1151,
+   "text": " interval (seconds)\",\""
+  },
+  {
+   "t": 1181,
+   "text": "options\":[{"
+  },
+  {
+   "t": 1216,
+   "text": "\"value\":20,\"label\":"
+  },
+  {
+   "t": 1248,
+   "text": "\"20\"},{\"value\":"
+  },
+  {
+   "t": 1283,
+   "text": "30,\"label\":\"30\""
+  },
+  {
+   "t": 1316,
+   "text": "},{\"value\":40,\""
+  },
+  {
+   "t": 1347,
+   "text": "label\":\"40\"},{\""
+  },
+  {
+   "t": 1382,
+   "text": "value\":55,\"label\":\""
+  },
+  {
+   "t": 1415,
+   "text": "55\"},{\"value\":60"
+  },
+  {
+   "t": 1451,
+   "text": ",\"label\":\"60\"}"
+  },
+  {
+   "t": 1483,
+   "text": "]"
+  },
+  {
+   "t": 1514,
+   "text": "},\"on_change\":{\""
+  },
+  {
+   "t": 1547,
+   "text": "action\":\"flow\",\"steps"
+  },
+  {
+   "t": 1581,
+   "text": "\":[{\"action\":\"set"
+  },
+  {
+   "t": 1614,
+   "text": "\",\"target\":\"sl"
+  },
+  {
+   "t": 1648,
+   "text": "ots\",\"value\":\"{state."
+  },
+  {
+   "t": 1681,
+   "text": "totalSec / (state."
+  },
+  {
+   "t": 1714,
+   "text": "workSec + state.restS"
+  },
+  {
+   "t": 1749,
+   "text": "ec)}\"},{\"action"
+  },
+  {
+   "t": 1783,
+   "text": "\":\"set\",\"target\":\"step"
+  },
+  {
+   "t": 1817,
+   "text": "\",\"value\":0},{\"action"
+  },
+  {
+   "t": 1849,
+   "text": "\":\"set\",\"target\":\"c"
+  },
+  {
+   "t": 1880,
+   "text": "ur\",\"value\":0}]}"
+  },
+  {
+   "t": 1913,
+   "text": "},{\"type\":\"text\",\""
+  },
+  {
+   "t": 1949,
+   "text": "props\":{\"text\":\"{"
+  },
+  {
+   "t": 2349,
+   "text": "state.workSec}"
+  },
+  {
+   "t": 2349,
+   "text": "s work +"
+  },
+  {
+   "t": 2349,
+   "text": " {state.restSec}s"
+  },
+  {
+   "t": 2349,
+   "text": " rest = {state.slots"
+  },
+  {
+   "t": 2349,
+   "text": "} intervals in"
+  },
+  {
+   "t": 2350,
+   "text": " 20 minutes\",\"size"
+  },
+  {
+   "t": 2350,
+   "text": "\":\"sm\""
+  },
+  {
+   "t": 2350,
+   "text": "}},{\"type\":\"prog"
+  },
+  {
+   "t": 2350,
+   "text": "ress\",\"props\":{\"value\":"
+  },
+  {
+   "t": 2350,
+   "text": "\"{state.step}\",\"max"
+  },
+  {
+   "t": 2351,
+   "text": "\":\"{state.slots}"
+  },
+  {
+   "t": 2351,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 2351,
+   "text": "grid\",\"props"
+  },
+  {
+   "t": 2351,
+   "text": "\":{\"columns\":2,"
+  },
+  {
+   "t": 2351,
+   "text": "\"gap\":\"8"
+  },
+  {
+   "t": 2351,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 2352,
+   "text": "\"type\":\"stat\",\"props"
+  },
+  {
+   "t": 2352,
+   "text": "\":{\"label\":\"Inter"
+  },
+  {
+   "t": 2352,
+   "text": "val\",\"value\":\"{state."
+  },
+  {
+   "t": 2352,
+   "text": "step + 1}\",\"size\":"
+  },
+  {
+   "t": 2352,
+   "text": "\"sm\"}},{\""
+  },
+  {
+   "t": 2352,
+   "text": "type\":\"stat\",\"props\":"
+  },
+  {
+   "t": 2352,
+   "text": "{\"label\":\"Minut"
+  },
+  {
+   "t": 2353,
+   "text": "es done\",\"value\":\"{state"
+  },
+  {
+   "t": 2378,
+   "text": ".step * (state.workS"
+  },
+  {
+   "t": 2408,
+   "text": "ec + state.restSec)"
+  },
+  {
+   "t": 2441,
+   "text": " / 60}\",\"format"
+  },
+  {
+   "t": 2476,
+   "text": "\":\"number\",\"size\":\"s"
+  },
+  {
+   "t": 2510,
+   "text": "m\"}}]},{\""
+  },
+  {
+   "t": 2542,
+   "text": "type\":\"if\",\"condition\":"
+  },
+  {
+   "t": 2577,
+   "text": "\"{state.step < state."
+  },
+  {
+   "t": 2610,
+   "text": "slots}\",\"children\":[{"
+  },
+  {
+   "t": 2642,
+   "text": "\"type\":\"card\",\"props\":"
+  },
+  {
+   "t": 2675,
+   "text": "{\"variant\":\"mu"
+  },
+  {
+   "t": 2708,
+   "text": "ted\",\"title\":\"Now\""
+  },
+  {
+   "t": 2743,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 2775,
+   "text": "\":\"each\",\"items"
+  },
+  {
+   "t": 2815,
+   "text": "\":\"{state.moves}"
+  },
+  {
+   "t": 2842,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 2875,
+   "text": "\"if\",\"condition\":\"{"
+  },
+  {
+   "t": 2908,
+   "text": "index == state.cur}\",\""
+  },
+  {
+   "t": 2941,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 2975,
+   "text": "heading\",\"props\":{\"text"
+  },
+  {
+   "t": 3010,
+   "text": "\":\"{item}\",\"level\":"
+  },
+  {
+   "t": 3040,
+   "text": "2}}]}]},{"
+  },
+  {
+   "t": 3076,
+   "text": "\"type\":\"text\",\"props\":"
+  },
+  {
+   "t": 3108,
+   "text": "{\"text\":\"Go h"
+  },
+  {
+   "t": 3157,
+   "text": "ard for {state.workSec"
+  },
+  {
+   "t": 3174,
+   "text": "}s, then rest {state"
+  },
+  {
+   "t": 3209,
+   "text": ".restSec}s.\",\""
+  },
+  {
+   "t": 3241,
+   "text": "size\":\"sm\"}}"
+  },
+  {
+   "t": 3279,
+   "text": "]}]},{\"type\":"
+  },
+  {
+   "t": 3308,
+   "text": "\"if\",\"condition\":\"{"
+  },
+  {
+   "t": 3342,
+   "text": "state.step >= state.sl"
+  },
+  {
+   "t": 3374,
+   "text": "ots}\",\"children\":[{\""
+  },
+  {
+   "t": 3411,
+   "text": "type\":\"alert\",\"props\":"
+  },
+  {
+   "t": 3444,
+   "text": "{\"title\":\"Work"
+  },
+  {
+   "t": 3484,
+   "text": "out complete\",\"description\":\""
+  },
+  {
+   "t": 3509,
+   "text": "Great job! C"
+  },
+  {
+   "t": 3555,
+   "text": "ool down and drink some"
+  },
+  {
+   "t": 3575,
+   "text": " water.\",\"variant\":\"success"
+  },
+  {
+   "t": 3612,
+   "text": "\"}}]},{\"type"
+  },
+  {
+   "t": 3643,
+   "text": "\":\"flex\",\"props\":{"
+  },
+  {
+   "t": 3675,
+   "text": "\"g"
+  },
+  {
+   "t": 3712,
+   "text": "ap\":\"8px\",\"wr"
+  },
+  {
+   "t": 3743,
+   "text": "ap\":true},\"children\":["
+  },
+  {
+   "t": 3776,
+   "text": "{\"type\":\"button\",\"props"
+  },
+  {
+   "t": 3814,
+   "text": "\":{\"label\":\"Next"
+  },
+  {
+   "t": 3843,
+   "text": "\",\"dis"
+  },
+  {
+   "t": 3876,
+   "text": "abled\":\"{state.step"
+  },
+  {
+   "t": 3913,
+   "text": " >= state.slots}\""
+  },
+  {
+   "t": 3944,
+   "text": "},\"on_click\":{\""
+  },
+  {
+   "t": 3979,
+   "text": "action\":\"flow\",\"steps"
+  },
+  {
+   "t": 4009,
+   "text": "\":[{\"action\":\"set"
+  },
+  {
+   "t": 4042,
+   "text": "\",\"target\":\"step\",\"value\":"
+  },
+  {
+   "t": 4074,
+   "text": "\"{state.step + 1"
+  },
+  {
+   "t": 4109,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 4141,
+   "text": "set\",\"target\":\"cur\",\""
+  },
+  {
+   "t": 4175,
+   "text": "value\":\"{state.step %"
+  },
+  {
+   "t": 4209,
+   "text": " state.moves.length}\""
+  },
+  {
+   "t": 4244,
+   "text": "}]}},{\"type\":"
+  },
+  {
+   "t": 4276,
+   "text": "\"button\",\"props\":{\"label"
+  },
+  {
+   "t": 4309,
+   "text": "\":\"Restart\",\"variant"
+  },
+  {
+   "t": 4347,
+   "text": "\":\"outline\"},\"on"
+  },
+  {
+   "t": 4376,
+   "text": "_click\":{\"action\":\""
+  },
+  {
+   "t": 4410,
+   "text": "flow\",\"steps\":[{"
+  },
+  {
+   "t": 4443,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 4477,
+   "text": "\"step\",\"value\":0},{"
+  },
+  {
+   "t": 4509,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 4554,
+   "text": "\"cur\",\"value\":0},"
+  },
+  {
+   "t": 4665,
+   "text": "{\"action\":\"toast\",\""
+  },
+  {
+   "t": 4665,
+   "text": "message\":\"Back"
+  },
+  {
+   "t": 4665,
+   "text": " to the"
+  },
+  {
+   "t": 4804,
+   "text": " start\",\"variant\":\"info"
+  },
+  {
+   "t": 4804,
+   "text": "\"}]}}]},{"
+  },
+  {
+   "t": 4804,
+   "text": "\"type\":\"separator\",\""
+  },
+  {
+   "t": 4804,
+   "text": "props\":{}},{\"type"
+  },
+  {
+   "t": 4840,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 4842,
+   "text": "text\":\""
+  },
+  {
+   "t": 4877,
+   "text": "Circuit (repeats):"
+  },
+  {
+   "t": 4909,
+   "text": "\",\"size"
+  },
+  {
+   "t": 4941,
+   "text": "\":\"sm\",\"weight\":"
+  },
+  {
+   "t": 4975,
+   "text": "\"semibold\"}},{"
+  },
+  {
+   "t": 5008,
+   "text": "\"type\":\"each\",\"items\":"
+  },
+  {
+   "t": 5042,
+   "text": "\"{state.moves}\",\""
+  },
+  {
+   "t": 5076,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 5109,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 5143,
+   "text": "\"{index =="
+  },
+  {
+   "t": 5175,
+   "text": " state.cur ? '"
+  },
+  {
+   "t": 5210,
+   "text": "▶ ' : '"
+  },
+  {
+   "t": 5242,
+   "text": "• '}{item}\",\"size"
+  },
+  {
+   "t": 5276,
+   "text": "\":\"sm\"}}]"
+  },
+  {
+   "t": 5336,
+   "text": "}]}]}}"
+  }
+ ]
+}

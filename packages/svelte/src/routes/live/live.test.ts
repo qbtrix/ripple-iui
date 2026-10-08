@@ -52,9 +52,10 @@ describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, sce
 	const finalSpec = JSON.parse(join(fixture));
 	const hasInput = specHas(finalSpec, (n) => ['input', 'number-input'].includes(n.type ?? ''));
 	const hasButton = buttonLabels(finalSpec).size > 0;
+	const controls = ['input', 'number-input', 'slider', 'select', 'segmented', 'checkbox', 'switch', 'button'];
 
-	test('(c) the final spec has an input or a button to interact with', () => {
-		expect(hasInput || hasButton).toBe(true);
+	test('(c) the final spec has a bound control or a button to interact with', () => {
+		expect(specHas(finalSpec, (n) => controls.includes(n.type ?? '') && (n.type === 'button' || 'bind' in n))).toBe(true);
 	});
 
 	test('fixture matches the contract', () => {
@@ -124,7 +125,7 @@ async function mountStreamed(fixture: ScenarioFixture) {
 	return { store, container, onStateChange, onEvent };
 }
 
-type SpecNode = { type?: string; on_click?: unknown; props?: Record<string, unknown>; children?: unknown[] };
+type SpecNode = { type?: string; bind?: string; on_click?: unknown; props?: Record<string, unknown>; children?: unknown[] };
 
 function specHas(spec: unknown, match: (n: SpecNode) => boolean): boolean {
 	const walk = (n: unknown): boolean => {
@@ -135,19 +136,28 @@ function specHas(spec: unknown, match: (n: SpecNode) => boolean): boolean {
 	return walk((spec as { ui?: unknown }).ui);
 }
 
-/** Static labels of every spec button that has an on_click. */
-function buttonLabels(spec: unknown): Set<string> {
-	const labels = new Set<string>();
-	specHas(spec, (n) => {
-		const label = n.props?.label;
-		if (n.type === 'button' && n.on_click && typeof label === 'string' && !label.includes('{')) labels.add(label);
-		return false;
-	});
+/** Static labels of every spec button that has an on_click, mapped to whether
+ *  the button may be absent at rest: it sits under an `if`, a `show`, or a tab
+ *  pane other than the first. A label that also appears unconditionally must render. */
+function buttonLabels(spec: unknown): Map<string, boolean> {
+	const labels = new Map<string, boolean>();
+	const walk = (n: unknown, hidden: boolean): void => {
+		if (!n || typeof n !== 'object') return;
+		const node = n as SpecNode & { show?: unknown };
+		const h = hidden || node.type === 'if' || node.show !== undefined;
+		const label = node.props?.label;
+		if (node.type === 'button' && node.on_click && typeof label === 'string' && !label.includes('{')) {
+			labels.set(label, (labels.get(label) ?? true) && h);
+		}
+		node.children?.forEach((c, i) => walk(c, h || (node.type === 'tabs' && i > 0)));
+	};
+	walk((spec as { ui?: unknown }).ui, false);
 	return labels;
 }
 
 /** Click the first DOM button for every static spec button label that has an
- *  on_click; return the labels whose click changed no state and fired no event. */
+ *  on_click; return the labels whose click changed no state and fired no event,
+ *  or that are missing from the DOM without being conditional. */
 async function clickEachSpecButton(
 	spec: unknown,
 	container: HTMLElement,
@@ -157,8 +167,9 @@ async function clickEachSpecButton(
 	const labels = buttonLabels(spec);
 	expect(labels.size, 'spec has no clickable buttons').toBeGreaterThan(0);
 	const dead: string[] = [];
-	for (const label of labels) {
+	for (const [label, conditional] of labels) {
 		const b = [...container.querySelectorAll('button')].find((x) => x.textContent?.trim() === label);
+		if (!b && conditional) continue;
 		const s = onStateChange.mock.calls.length;
 		const e = onEvent.mock.calls.length;
 		if (b) {
@@ -229,13 +240,116 @@ async function typeInto(input: HTMLInputElement, value: string | number) {
 const scenario = (id: string) => scenarios.find((s) => s.id === id)!.fixture;
 
 describe('savings-calculator numbers', () => {
-	// $300/month at 5% for 10 years, deposits added at each year end:
-	// 3600 * (1.05^10 - 1) / 0.05 = 45,280.41. At $400/month it is 60,373.88.
-	test('after streaming, the final balance follows the monthly deposit', async () => {
+	// $300/month at 5% a year, compounded monthly with month-end deposits, for
+	// 10 years: 300 * ((1 + 0.05/12)^120 - 1) / (0.05/12) = 46,584.68. The
+	// model's seeded schedule rounds to 46,585.60; the first edit recomputes it
+	// exactly. At $400/month it is 62,112.91.
+	test('after streaming, the balance follows the monthly deposit', async () => {
 		const { container } = await mountStreamed(scenario('savings-calculator'));
-		expect(moneyAfter(container, 'Final balance')).toBeCloseTo(45280.4, 0);
+		expect(Math.abs(moneyAfter(container, 'Balance after 10 years') - 46584.68)).toBeLessThan(1);
 		await typeInto(container.querySelector<HTMLInputElement>('input[inputmode="decimal"]')!, 400);
-		await vi.waitFor(() => expect(moneyAfter(container, 'Final balance')).toBeCloseTo(60373.88, 0));
-		expect(moneyAfter(container, 'You deposited')).toBe(48000);
+		await vi.waitFor(() => expect(moneyAfter(container, 'Balance after 10 years')).toBeCloseTo(62112.91, 1));
+		expect(moneyAfter(container, 'You deposit')).toBe(48000);
+	});
+});
+
+const text = (container: HTMLElement) => container.textContent ?? '';
+const button = (container: HTMLElement, label: string) =>
+	[...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === label)!;
+const decimalInputs = (container: HTMLElement) => [...container.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]')];
+
+describe('tokyo-trip numbers', () => {
+	const yenAfter = (container: HTMLElement, label: string) =>
+		Number(new RegExp(label + '\\s*¥([\\d,]+)').exec(text(container))![1].replace(/,/g, ''));
+
+	// Day 1's first stop is the ¥3,250 Narita Express; the budget is ¥60,000.
+	test('after streaming, ticks, costs and new stops all update the totals', async () => {
+		const { container } = await mountStreamed(scenario('tokyo-trip'));
+		expect(text(container)).toContain('0 of 20 stops done. Planned cost ¥38500');
+		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
+		await vi.waitFor(() => expect(yenAfter(container, 'Spent')).toBe(3250));
+		expect(yenAfter(container, 'Budget left')).toBe(56750);
+		expect(text(container)).toContain('1 of 20 stops done');
+		await typeInto(decimalInputs(container)[1], 4000); // that stop's cost
+		await vi.waitFor(() => expect(yenAfter(container, 'Spent')).toBe(4000));
+		expect(text(container)).toContain('Planned cost ¥39250');
+		await typeInto(container.querySelector<HTMLInputElement>('input[type="text"]:not([inputmode])')!, 'Ramen in Ikebukuro');
+		await fireEvent.click(button(container, 'Add to this day'));
+		await vi.waitFor(() => expect(text(container)).toContain('1 of 21 stops done'));
+		expect(text(container)).toContain('Ramen in Ikebukuro');
+	});
+});
+
+describe('sales-dashboard numbers', () => {
+	// 12 orders: Americas 5 for $720.35, Europe 4 for $593.90, Asia 3 for $286.65.
+	test('after streaming, picking a region narrows the table and its totals', async () => {
+		// jsdom has no scrollIntoView; bits-ui calls it on the highlighted option.
+		Element.prototype.scrollIntoView ??= () => {};
+		const { container } = await mountStreamed(scenario('sales-dashboard'));
+		expect(moneyAfter(container, 'Revenue')).toBeCloseTo(1600.9, 2);
+		expect(text(container)).toContain('Dana');
+		await fireEvent.keyDown(container.querySelector('[data-slot="select-trigger"]')!, { key: 'Enter' });
+		const europe = await vi.waitFor(() => {
+			const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent?.trim() === 'Europe');
+			return o ?? Promise.reject(new Error('no Europe option'));
+		});
+		await fireEvent.pointerUp(europe);
+		await fireEvent.click(europe);
+		await vi.waitFor(() => expect(text(container)).toContain('Totals: Europe'));
+		expect(text(container)).not.toContain('Dana');
+		expect(text(container)).toContain('Lukas');
+		expect(moneyAfter(container, 'Totals: EuropeRevenue')).toBeCloseTo(593.9, 2);
+	});
+});
+
+describe('flashcards scoring', () => {
+	test('after streaming, flip then "Got it" scores the card and moves to the next one', async () => {
+		const { container } = await mountStreamed(scenario('flashcards'));
+		expect(text(container)).toContain('Hola');
+		await fireEvent.click(button(container, 'Flip card'));
+		await vi.waitFor(() => expect(text(container)).toContain('Hello'));
+		await fireEvent.click(button(container, 'Got it'));
+		await vi.waitFor(() => expect(text(container)).toContain('Gracias'));
+		expect(text(container)).toMatch(/1\s*Correct\s*0\s*Missed/);
+		expect(text(container)).toContain('Card 2 of');
+	});
+});
+
+describe('hiit-workout steps', () => {
+	// 20 minutes of 40 s work + 20 s rest is 20 intervals; 30 s work makes 24.
+	test('after streaming, Next advances the circuit and the interval length re-plans it', async () => {
+		const { container } = await mountStreamed(scenario('hiit-workout'));
+		expect(text(container)).toContain('= 20 intervals');
+		await fireEvent.click(button(container, 'Next'));
+		await vi.waitFor(() => expect(container.querySelector('h2')?.textContent).toBe('Squat jumps'));
+		await fireEvent.click(button(container, '30'));
+		await vi.waitFor(() => expect(text(container)).toContain('30s work + 20s rest = 24 intervals'));
+	});
+});
+
+describe('meal-plan shopping list', () => {
+	// Chicken Stir-Fry is on Mon and Sun at 150 g of chicken per person;
+	// tomatoes come to 900 g for 2 people across the week.
+	test('after streaming, the shopping list scales with the number of people', async () => {
+		const { container } = await mountStreamed(scenario('meal-plan'));
+		expect(text(container)).toMatch(/Chicken breast\s*600 g/);
+		await typeInto(decimalInputs(container)[0], 3);
+		await vi.waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*900 g/));
+		expect(text(container)).toMatch(/Tomatoes\s*1350 g/);
+		expect(text(container)).toContain('Shopping list for 3 people');
+	});
+});
+
+describe('explainer gearing', () => {
+	// 50/17 on a 2100 mm wheel: ratio 2.941, 6.176 m per pedal turn.
+	// 34/32: ratio 1.0625, 2.231 m.
+	test('after streaming, parts show their notes and the presets change the gearing', async () => {
+		const { container } = await mountStreamed(scenario('explainer'));
+		expect(text(container)).toMatch(/Gear ratio\s*2\.941/);
+		expect(text(container)).toMatch(/Metres per pedal turn\s*6\.176/);
+		await fireEvent.click(button(container, '1 Pedals + crank'));
+		await vi.waitFor(() => expect(text(container)).toContain('This is where all the power enters'));
+		await fireEvent.click(button(container, 'Climb 34/32'));
+		await vi.waitFor(() => expect(text(container)).toMatch(/Metres per pedal turn\s*2\.231/));
 	});
 });

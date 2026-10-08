@@ -1,0 +1,1897 @@
+{
+ "id": "meal-plan",
+ "title": "High-protein week",
+ "prompt": "Create a high-protein meal plan for the week. Let me swap meals in and out, set how many people I'm cooking for, and keep a shopping list that updates with the plan.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-08T08:52:00.697Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 0,
+   "text": "\"version"
+  },
+  {
+   "t": 0,
+   "text": "\":\"1."
+  },
+  {
+   "t": 1,
+   "text": "0\",\"state\":{\"people\":"
+  },
+  {
+   "t": 1,
+   "text": "2,\"goal\":120,"
+  },
+  {
+   "t": 1,
+   "text": "\"options\":[\"Chicken"
+  },
+  {
+   "t": 1,
+   "text": " Stir-Fry\",\""
+  },
+  {
+   "t": 1,
+   "text": "Salmon & Quin"
+  },
+  {
+   "t": 1,
+   "text": "oa\",\"Beef Ch"
+  },
+  {
+   "t": 1,
+   "text": "ili\",\"Tofu Sc"
+  },
+  {
+   "t": 30,
+   "text": "ramble Bowl\",\""
+  },
+  {
+   "t": 61,
+   "text": "Egg & Veg Fr"
+  },
+  {
+   "t": 97,
+   "text": "ittata\",\"Turkey"
+  },
+  {
+   "t": 128,
+   "text": " Meatballs\",\"Eating"
+  },
+  {
+   "t": 163,
+   "text": " out\"],\"meals\":["
+  },
+  {
+   "t": 211,
+   "text": "{\"name\":\"Chic"
+  },
+  {
+   "t": 231,
+   "text": "ken Stir-Fry"
+  },
+  {
+   "t": 280,
+   "text": "\",\"protein\":42,\"u"
+  },
+  {
+   "t": 294,
+   "text": "ses\":2},{\"name\":"
+  },
+  {
+   "t": 328,
+   "text": "\"Salmon & Qu"
+  },
+  {
+   "t": 361,
+   "text": "inoa\",\"protein\":38"
+  },
+  {
+   "t": 396,
+   "text": ",\"uses\":1},{"
+  },
+  {
+   "t": 428,
+   "text": "\"name\":\"Beef"
+  },
+  {
+   "t": 463,
+   "text": " Chili\",\"protein\":40,"
+  },
+  {
+   "t": 531,
+   "text": "\"uses\":1},{\""
+  },
+  {
+   "t": 531,
+   "text": "name\":\"Tofu"
+  },
+  {
+   "t": 620,
+   "text": " Scramble Bowl\",\""
+  },
+  {
+   "t": 621,
+   "text": "protein\":30,\"uses"
+  },
+  {
+   "t": 659,
+   "text": "\":1},{\"name\":\""
+  },
+  {
+   "t": 669,
+   "text": "Egg & Veg"
+  },
+  {
+   "t": 697,
+   "text": " Frittata\",\"protein\":32"
+  },
+  {
+   "t": 733,
+   "text": ",\"uses\":1},{"
+  },
+  {
+   "t": 770,
+   "text": "\"name\":\"Turkey"
+  },
+  {
+   "t": 795,
+   "text": " Meatballs\",\"protein"
+  },
+  {
+   "t": 833,
+   "text": "\":41,\"uses\":1"
+  },
+  {
+   "t": 888,
+   "text": "}],\"plan\":[{"
+  },
+  {
+   "t": 912,
+   "text": "\"day\":\"Mon\",\""
+  },
+  {
+   "t": 959,
+   "text": "meal\":\"Chicken"
+  },
+  {
+   "t": 981,
+   "text": " Stir-Fry\""
+  },
+  {
+   "t": 996,
+   "text": "},{\"day\":\"T"
+  },
+  {
+   "t": 1031,
+   "text": "ue\",\"meal\":\"Sal"
+  },
+  {
+   "t": 1063,
+   "text": "mon & Quinoa"
+  },
+  {
+   "t": 1095,
+   "text": "\"},{\"day\":\""
+  },
+  {
+   "t": 1131,
+   "text": "Wed\",\"meal\":\""
+  },
+  {
+   "t": 1162,
+   "text": "Beef Chili\"},{"
+  },
+  {
+   "t": 1199,
+   "text": "\"day\":\"Thu\",\""
+  },
+  {
+   "t": 1229,
+   "text": "meal\":\"Tofu"
+  },
+  {
+   "t": 1264,
+   "text": " Scramble Bowl"
+  },
+  {
+   "t": 1299,
+   "text": "\"},{\"day\":\""
+  },
+  {
+   "t": 1328,
+   "text": "Fri\",\"meal\":\""
+  },
+  {
+   "t": 1363,
+   "text": "Turkey Meatballs"
+  },
+  {
+   "t": 1399,
+   "text": "\"},{\"day\":\""
+  },
+  {
+   "t": 1432,
+   "text": "Sat\",\"meal\":\""
+  },
+  {
+   "t": 1464,
+   "text": "Egg & Veg Fr"
+  },
+  {
+   "t": 1499,
+   "text": "ittata\"},{\"day\":"
+  },
+  {
+   "t": 1530,
+   "text": "\"Sun\",\"meal\":"
+  },
+  {
+   "t": 1565,
+   "text": "\"Chicken Stir"
+  },
+  {
+   "t": 1597,
+   "text": "-Fry\"}],\""
+  },
+  {
+   "t": 1630,
+   "text": "ingredients\":[{\""
+  },
+  {
+   "t": 1662,
+   "text": "name\":\"Chicken bre"
+  },
+  {
+   "t": 1699,
+   "text": "ast\",\"unit\":\"g\",\""
+  },
+  {
+   "t": 1736,
+   "text": "got\":false,\"q0\":"
+  },
+  {
+   "t": 1767,
+   "text": "150,\"q1\":0,"
+  },
+  {
+   "t": 1799,
+   "text": "\"q2\":0,\"q"
+  },
+  {
+   "t": 1830,
+   "text": "3\":0,\"q4\":"
+  },
+  {
+   "t": 1867,
+   "text": "0,\"q5\":0},"
+  },
+  {
+   "t": 1899,
+   "text": "{\"name\":\"Salm"
+  },
+  {
+   "t": 1932,
+   "text": "on fillet\",\"unit\":"
+  },
+  {
+   "t": 1964,
+   "text": "\"g\",\"got\":false,\""
+  },
+  {
+   "t": 1999,
+   "text": "q0\":0,\"q1"
+  },
+  {
+   "t": 2029,
+   "text": "\":150,\"q2\":0"
+  },
+  {
+   "t": 2064,
+   "text": ",\"q3\":0,\""
+  },
+  {
+   "t": 2102,
+   "text": "q4\":0,\"q5"
+  },
+  {
+   "t": 2131,
+   "text": "\":0},{\"name\":\""
+  },
+  {
+   "t": 2174,
+   "text": "Lean beef mince\",\""
+  },
+  {
+   "t": 2196,
+   "text": "unit\":\"g\",\"got\":"
+  },
+  {
+   "t": 2230,
+   "text": "false,\"q0\":0,"
+  },
+  {
+   "t": 2264,
+   "text": "\"q1\":0,\"q"
+  },
+  {
+   "t": 2302,
+   "text": "2\":130,\"q3\":"
+  },
+  {
+   "t": 2333,
+   "text": "0,\"q4\":0,"
+  },
+  {
+   "t": 2364,
+   "text": "\"q5\":0},{\""
+  },
+  {
+   "t": 2397,
+   "text": "name\":\"Turkey m"
+  },
+  {
+   "t": 2430,
+   "text": "ince\",\"unit\":\"g\",\""
+  },
+  {
+   "t": 2462,
+   "text": "got\":false,\"q0\":"
+  },
+  {
+   "t": 2499,
+   "text": "0,\"q1\":0,"
+  },
+  {
+   "t": 2530,
+   "text": "\"q2\":0,\"q"
+  },
+  {
+   "t": 2565,
+   "text": "3\":0,\"q4\":"
+  },
+  {
+   "t": 2604,
+   "text": "0,\"q5\":150},"
+  },
+  {
+   "t": 2633,
+   "text": "{\"name\":\"Firm"
+  },
+  {
+   "t": 2662,
+   "text": " tofu\",\"unit\":\""
+  },
+  {
+   "t": 2698,
+   "text": "g\",\"got\":false,\"q"
+  },
+  {
+   "t": 2733,
+   "text": "0\":0,\"q1\":"
+  },
+  {
+   "t": 2764,
+   "text": "0,\"q2\":0,"
+  },
+  {
+   "t": 2799,
+   "text": "\"q3\":180,\"q"
+  },
+  {
+   "t": 2831,
+   "text": "4\":0,\"q5\":"
+  },
+  {
+   "t": 2864,
+   "text": "0},{\"name\":\""
+  },
+  {
+   "t": 2899,
+   "text": "Eggs\",\"unit\":\""
+  },
+  {
+   "t": 2931,
+   "text": "eggs\",\"got\":false,"
+  },
+  {
+   "t": 2967,
+   "text": "\"q0\":0,\"q"
+  },
+  {
+   "t": 2998,
+   "text": "1\":0,\"q2\":"
+  },
+  {
+   "t": 3033,
+   "text": "0,\"q3\":0,"
+  },
+  {
+   "t": 3065,
+   "text": "\"q4\":4,\"q"
+  },
+  {
+   "t": 3097,
+   "text": "5\":0},{\"name\":"
+  },
+  {
+   "t": 3131,
+   "text": "\"Brown rice\",\"un"
+  },
+  {
+   "t": 3166,
+   "text": "it\":\"g\",\"got\":false"
+  },
+  {
+   "t": 3200,
+   "text": ",\"q0\":60,\""
+  },
+  {
+   "t": 3230,
+   "text": "q1\":0,\"q2"
+  },
+  {
+   "t": 3266,
+   "text": "\":0,\"q3\":60"
+  },
+  {
+   "t": 3300,
+   "text": ",\"q4\":0,\""
+  },
+  {
+   "t": 3331,
+   "text": "q5\":0},{\"name"
+  },
+  {
+   "t": 3365,
+   "text": "\":\"Quinoa\",\""
+  },
+  {
+   "t": 3399,
+   "text": "unit\":\"g\",\"got\":"
+  },
+  {
+   "t": 3431,
+   "text": "false,\"q0\":0,"
+  },
+  {
+   "t": 3488,
+   "text": "\"q1\":60,\"q"
+  },
+  {
+   "t": 3506,
+   "text": "2\":0,\"q3\":"
+  },
+  {
+   "t": 3702,
+   "text": "0,\"q4\":0,"
+  },
+  {
+   "t": 3702,
+   "text": "\"q5\":0},{\""
+  },
+  {
+   "t": 3703,
+   "text": "name\":\"Whole-w"
+  },
+  {
+   "t": 3703,
+   "text": "heat pasta\",\"unit"
+  },
+  {
+   "t": 3704,
+   "text": "\":\"g\",\"got\":false,"
+  },
+  {
+   "t": 3824,
+   "text": "\"q0\":0,\"q"
+  },
+  {
+   "t": 3825,
+   "text": "1\":0,\"q2\":"
+  },
+  {
+   "t": 3825,
+   "text": "0,\"q3\":0,"
+  },
+  {
+   "t": 3825,
+   "text": "\"q4\":0,\"q"
+  },
+  {
+   "t": 3832,
+   "text": "5\":80},{\"name\":"
+  },
+  {
+   "t": 3887,
+   "text": "\"Kidney beans\",\""
+  },
+  {
+   "t": 3899,
+   "text": "unit\":\"g\",\"got\":"
+  },
+  {
+   "t": 3932,
+   "text": "false,\"q0\":0,"
+  },
+  {
+   "t": 3966,
+   "text": "\"q1\":0,\"q"
+  },
+  {
+   "t": 4000,
+   "text": "2\":80,\"q3\":"
+  },
+  {
+   "t": 4031,
+   "text": "0,\"q4\":0,"
+  },
+  {
+   "t": 4069,
+   "text": "\"q5\":0},{\""
+  },
+  {
+   "t": 4098,
+   "text": "name\":\"Broccoli"
+  },
+  {
+   "t": 4133,
+   "text": "\",\"unit\":\"g\",\"got"
+  },
+  {
+   "t": 4165,
+   "text": "\":false,\"q0\":100"
+  },
+  {
+   "t": 4199,
+   "text": ",\"q1\":100,\""
+  },
+  {
+   "t": 4239,
+   "text": "q2\":0,\"q3"
+  },
+  {
+   "t": 4267,
+   "text": "\":0,\"q4\":0"
+  },
+  {
+   "t": 4304,
+   "text": ",\"q5\":0},{"
+  },
+  {
+   "t": 4333,
+   "text": "\"name\":\"Spinach"
+  },
+  {
+   "t": 4374,
+   "text": "\",\"unit\":\"g\",\"got"
+  },
+  {
+   "t": 4411,
+   "text": "\":false,\"q0\":0"
+  },
+  {
+   "t": 4448,
+   "text": ",\"q1\":0,\""
+  },
+  {
+   "t": 4466,
+   "text": "q2\":0,\"q3"
+  },
+  {
+   "t": 4684,
+   "text": "\":60,\"q4\":80"
+  },
+  {
+   "t": 4685,
+   "text": ",\"q5\":0},{"
+  },
+  {
+   "t": 4685,
+   "text": "\"name\":\"Tomat"
+  },
+  {
+   "t": 4685,
+   "text": "oes\",\"unit\":\"g"
+  },
+  {
+   "t": 4686,
+   "text": "\",\"got\":false,\"q0"
+  },
+  {
+   "t": 4686,
+   "text": "\":0,\"q1\":0"
+  },
+  {
+   "t": 4699,
+   "text": ",\"q2\":200,\""
+  },
+  {
+   "t": 4732,
+   "text": "q3\":0,\"q4"
+  },
+  {
+   "t": 4766,
+   "text": "\":100,\"q5\":150"
+  },
+  {
+   "t": 4800,
+   "text": "}]},\"ui\":{"
+  },
+  {
+   "t": 4833,
+   "text": "\"type\":\"card\",\"props\":"
+  },
+  {
+   "t": 4865,
+   "text": "{\"title\":\"High-"
+  },
+  {
+   "t": 4899,
+   "text": "Protein Week\",\""
+  },
+  {
+   "t": 4949,
+   "text": "description\":\"Pick a"
+  },
+  {
+   "t": 4972,
+   "text": " meal for"
+  },
+  {
+   "t": 5002,
+   "text": " each day."
+  },
+  {
+   "t": 5032,
+   "text": " The shopping list foll"
+  },
+  {
+   "t": 5069,
+   "text": "ows.\""
+  },
+  {
+   "t": 5102,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 5137,
+   "text": "\":\"flex\",\"props"
+  },
+  {
+   "t": 5169,
+   "text": "\":{\"direction\":\"column"
+  },
+  {
+   "t": 5200,
+   "text": "\",\"gap\":\"12px\""
+  },
+  {
+   "t": 5234,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 5266,
+   "text": "\":\"number-input\",\"props\":"
+  },
+  {
+   "t": 5300,
+   "text": "{\"label\":\"People coo"
+  },
+  {
+   "t": 5334,
+   "text": "king for"
+  },
+  {
+   "t": 5367,
+   "text": "\",\"min\":1,\"max\":"
+  },
+  {
+   "t": 5400,
+   "text": "12,"
+  },
+  {
+   "t": 5433,
+   "text": "\"step\":1},\"bind"
+  },
+  {
+   "t": 5467,
+   "text": "\":\"{state.people}\""
+  },
+  {
+   "t": 5558,
+   "text": "},{\"type\":\"slider"
+  },
+  {
+   "t": 5574,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 5602,
+   "text": "Prot"
+  },
+  {
+   "t": 5603,
+   "text": "ein goal (g per person per"
+  },
+  {
+   "t": 5635,
+   "text": " day)\",\"min\":60,\""
+  },
+  {
+   "t": 5666,
+   "text": "max\":200,\"step\":5"
+  },
+  {
+   "t": 5702,
+   "text": ",\"showValue\":true},"
+  },
+  {
+   "t": 5734,
+   "text": "\"bind\":\"{state."
+  },
+  {
+   "t": 5766,
+   "text": "goal}\"},{\"type"
+  },
+  {
+   "t": 5801,
+   "text": "\":\"stat\",\"props\":{"
+  },
+  {
+   "t": 5834,
+   "text": "\"label\":\"Prot"
+  },
+  {
+   "t": 5874,
+   "text": "ein per person this"
+  },
+  {
+   "t": 5909,
+   "text": " week ("
+  },
+  {
+   "t": 6008,
+   "text": "g)\",\"value\":\"{state"
+  },
+  {
+   "t": 6029,
+   "text": ".meals[0].uses"
+  },
+  {
+   "t": 6043,
+   "text": " * state.meals[0]."
+  },
+  {
+   "t": 6043,
+   "text": "protein + state.meals["
+  },
+  {
+   "t": 6068,
+   "text": "1].uses * state.me"
+  },
+  {
+   "t": 6112,
+   "text": "als[1].protein + state"
+  },
+  {
+   "t": 6134,
+   "text": ".meals[2].uses"
+  },
+  {
+   "t": 6166,
+   "text": " * state.meals[2]."
+  },
+  {
+   "t": 6208,
+   "text": "protein + state.meals["
+  },
+  {
+   "t": 6239,
+   "text": "3].uses * state.me"
+  },
+  {
+   "t": 6266,
+   "text": "als[3].protein + state"
+  },
+  {
+   "t": 6308,
+   "text": ".meals[4].uses"
+  },
+  {
+   "t": 6334,
+   "text": " * state.meals[4]."
+  },
+  {
+   "t": 6368,
+   "text": "protein + state.meals["
+  },
+  {
+   "t": 6405,
+   "text": "5].uses * state.me"
+  },
+  {
+   "t": 6434,
+   "text": "als[5].protein}\",\""
+  },
+  {
+   "t": 6466,
+   "text": "format\":\"number\""
+  },
+  {
+   "t": 6500,
+   "text": "}"
+  },
+  {
+   "t": 6568,
+   "text": "},{\"type\":\"progress"
+  },
+  {
+   "t": 6568,
+   "text": "\",\"props\":{\"value\":\""
+  },
+  {
+   "t": 6663,
+   "text": "{state.meals[0]."
+  },
+  {
+   "t": 6705,
+   "text": "uses * state.meals["
+  },
+  {
+   "t": 6706,
+   "text": "0].protein + state.me"
+  },
+  {
+   "t": 6707,
+   "text": "als[1].uses * state"
+  },
+  {
+   "t": 6788,
+   "text": ".meals[1].protein"
+  },
+  {
+   "t": 6828,
+   "text": " + state.meals[2]."
+  },
+  {
+   "t": 6830,
+   "text": "uses * state.meals["
+  },
+  {
+   "t": 6841,
+   "text": "2].protein + state.me"
+  },
+  {
+   "t": 6871,
+   "text": "als[3].uses * state"
+  },
+  {
+   "t": 6901,
+   "text": ".meals[3].protein"
+  },
+  {
+   "t": 6934,
+   "text": " + state.meals[4]."
+  },
+  {
+   "t": 6968,
+   "text": "uses * state.meals["
+  },
+  {
+   "t": 7001,
+   "text": "4].protein + state.me"
+  },
+  {
+   "t": 7034,
+   "text": "als[5].uses * state"
+  },
+  {
+   "t": 7087,
+   "text": ".meals[5].protein"
+  },
+  {
+   "t": 7120,
+   "text": "}\",\"max\":\"{state."
+  },
+  {
+   "t": 7141,
+   "text": "goal * state.plan."
+  },
+  {
+   "t": 7171,
+   "text": "length}\""
+  },
+  {
+   "t": 7201,
+   "text": "}},{\"type\":\"text"
+  },
+  {
+   "t": 7236,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 7275,
+   "text": "Dinner cov"
+  },
+  {
+   "t": 7301,
+   "text": "ers part"
+  },
+  {
+   "t": 7342,
+   "text": " of your"
+  },
+  {
+   "t": 7368,
+   "text": " goal. Weekly target"
+  },
+  {
+   "t": 7415,
+   "text": ": {state"
+  },
+  {
+   "t": 7437,
+   "text": ".goal * state.plan"
+  },
+  {
+   "t": 7467,
+   "text": ".length} g."
+  },
+  {
+   "t": 7505,
+   "text": "\",\"size\":\"x"
+  },
+  {
+   "t": 7535,
+   "text": "s\"}},{\"type\":"
+  },
+  {
+   "t": 7568,
+   "text": "\"separator\",\""
+  },
+  {
+   "t": 7610,
+   "text": "props\":{}"
+  },
+  {
+   "t": 7635,
+   "text": "},{\"type\":\"heading"
+  },
+  {
+   "t": 7669,
+   "text": "\",\"props\":{\"text"
+  },
+  {
+   "t": 7702,
+   "text": "\":\"Weekly plan"
+  },
+  {
+   "t": 7739,
+   "text": "\",\"level\":4}},{\""
+  },
+  {
+   "t": 7775,
+   "text": "type\":\"each\",\"items"
+  },
+  {
+   "t": 7802,
+   "text": "\":\"{state.plan}"
+  },
+  {
+   "t": 7836,
+   "text": "\",\"children"
+  },
+  {
+   "t": 7871,
+   "text": "\":[{\"type\":\"fl"
+  },
+  {
+   "t": 7902,
+   "text": "ex\",\"props\":{\"direction"
+  },
+  {
+   "t": 7935,
+   "text": "\":\"column\",\"gap\":\""
+  },
+  {
+   "t": 7974,
+   "text": "4px\"},\"children\":["
+  },
+  {
+   "t": 8026,
+   "text": "{\"type\":\"flex\",\""
+  },
+  {
+   "t": 8058,
+   "text": "props\":{\"dire"
+  },
+  {
+   "t": 8070,
+   "text": "ction\":\"row\",\"justify\":"
+  },
+  {
+   "t": 8108,
+   "text": "\"between\"},\"children\":["
+  },
+  {
+   "t": 8135,
+   "text": "{\"type\":\"text\",\"props"
+  },
+  {
+   "t": 8168,
+   "text": "\":{\"text\":\"{item"
+  },
+  {
+   "t": 8206,
+   "text": ".day}\",\"weight\":\""
+  },
+  {
+   "t": 8235,
+   "text": "semibold\"}},{\""
+  },
+  {
+   "t": 8270,
+   "text": "type\":\"text\",\"props\":{"
+  },
+  {
+   "t": 8302,
+   "text": "\"text\":\"{item.me"
+  },
+  {
+   "t": 8335,
+   "text": "al == state.meals[0"
+  },
+  {
+   "t": 8370,
+   "text": "].name ? state.meals"
+  },
+  {
+   "t": 8404,
+   "text": "[0].protein : item."
+  },
+  {
+   "t": 8435,
+   "text": "meal == state.meals["
+  },
+  {
+   "t": 8470,
+   "text": "1].name ? state.me"
+  },
+  {
+   "t": 8501,
+   "text": "als[1].protein : item"
+  },
+  {
+   "t": 8537,
+   "text": ".meal == state.meals"
+  },
+  {
+   "t": 8573,
+   "text": "[2].name ? state."
+  },
+  {
+   "t": 8605,
+   "text": "meals[2].protein :"
+  },
+  {
+   "t": 8638,
+   "text": " item.meal == state.me"
+  },
+  {
+   "t": 8669,
+   "text": "als[3].name ? state"
+  },
+  {
+   "t": 8705,
+   "text": ".meals[3].protein"
+  },
+  {
+   "t": 8737,
+   "text": " : item.meal == state."
+  },
+  {
+   "t": 8771,
+   "text": "meals[4].name ?"
+  },
+  {
+   "t": 8801,
+   "text": " state.meals[4].prot"
+  },
+  {
+   "t": 8836,
+   "text": "ein : item.meal == state"
+  },
+  {
+   "t": 8868,
+   "text": ".meals[5].name "
+  },
+  {
+   "t": 8904,
+   "text": "? state.meals[5]."
+  },
+  {
+   "t": 8934,
+   "text": "protein : 0}"
+  },
+  {
+   "t": 8970,
+   "text": " g protein\",\""
+  },
+  {
+   "t": 9007,
+   "text": "size\":\"x"
+  },
+  {
+   "t": 9037,
+   "text": "s\"}}]},{\""
+  },
+  {
+   "t": 9074,
+   "text": "type\":\"select\",\"props\":{"
+  },
+  {
+   "t": 9103,
+   "text": "\"options\":\"{state.options"
+  },
+  {
+   "t": 9141,
+   "text": "}\"},\"bind\":\""
+  },
+  {
+   "t": 9171,
+   "text": "plan.{index}.me"
+  },
+  {
+   "t": 9206,
+   "text": "al\",\"on_change\":[{"
+  },
+  {
+   "t": 9236,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 9269,
+   "text": "\"meals.0.uses"
+  },
+  {
+   "t": 9301,
+   "text": "\",\"value\":\"{state.pl"
+  },
+  {
+   "t": 9336,
+   "text": "an.where('meal', "
+  },
+  {
+   "t": 9370,
+   "text": "'Chicken Stir"
+  },
+  {
+   "t": 9403,
+   "text": "-Fry').count()}"
+  },
+  {
+   "t": 9435,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 9790,
+   "text": "\",\"target\":\"meals.1"
+  },
+  {
+   "t": 9790,
+   "text": ".uses\",\"value\":\"{"
+  },
+  {
+   "t": 9791,
+   "text": "state.plan.where('me"
+  },
+  {
+   "t": 9791,
+   "text": "al', 'Salmon"
+  },
+  {
+   "t": 9791,
+   "text": " & Quinoa').count"
+  },
+  {
+   "t": 9792,
+   "text": "()}\"},{\"action\":"
+  },
+  {
+   "t": 9792,
+   "text": "\"set\",\"target\":\"meals"
+  },
+  {
+   "t": 9792,
+   "text": ".2.uses\",\"value\":"
+  },
+  {
+   "t": 9889,
+   "text": "\"{state.plan.where"
+  },
+  {
+   "t": 9889,
+   "text": "('meal', 'Be"
+  },
+  {
+   "t": 9889,
+   "text": "ef Chili').count()}"
+  },
+  {
+   "t": 9890,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 9890,
+   "text": "\",\"target\":\"meals.3"
+  },
+  {
+   "t": 9903,
+   "text": ".uses\",\"value\":\"{"
+  },
+  {
+   "t": 9950,
+   "text": "state.plan.where('me"
+  },
+  {
+   "t": 10071,
+   "text": "al', 'Tofu"
+  },
+  {
+   "t": 10071,
+   "text": " Scramble Bowl"
+  },
+  {
+   "t": 10072,
+   "text": "').count()}\"},{\""
+  },
+  {
+   "t": 10128,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 10128,
+   "text": "meals.4.uses\",\""
+  },
+  {
+   "t": 10220,
+   "text": "value\":\"{state.plan"
+  },
+  {
+   "t": 10220,
+   "text": ".where('meal', '"
+  },
+  {
+   "t": 10227,
+   "text": "Egg & Veg"
+  },
+  {
+   "t": 10285,
+   "text": " Frittata').count()}\""
+  },
+  {
+   "t": 10286,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 10358,
+   "text": "target\":\"meals.5."
+  },
+  {
+   "t": 10360,
+   "text": "uses\",\"value\":\"{state"
+  },
+  {
+   "t": 10371,
+   "text": ".plan.where('meal"
+  },
+  {
+   "t": 10404,
+   "text": "', 'Turkey"
+  },
+  {
+   "t": 10446,
+   "text": " Meatballs').count()}"
+  },
+  {
+   "t": 10470,
+   "text": "\"}]}]}]"
+  },
+  {
+   "t": 10501,
+   "text": "},{\"type\":\"button\",\""
+  },
+  {
+   "t": 10536,
+   "text": "props\":{\"label\":\""
+  },
+  {
+   "t": 10571,
+   "text": "Reset to su"
+  },
+  {
+   "t": 10971,
+   "text": "ggested week\",\"variant\":\""
+  },
+  {
+   "t": 10972,
+   "text": "outline\",\""
+  },
+  {
+   "t": 10972,
+   "text": "size\":\"sm\"},\""
+  },
+  {
+   "t": 10972,
+   "text": "on_click\":[{\"action"
+  },
+  {
+   "t": 10973,
+   "text": "\":\"set\",\"target\":\"pl"
+  },
+  {
+   "t": 10973,
+   "text": "an\",\"value\":[{\"day"
+  },
+  {
+   "t": 10973,
+   "text": "\":\"Mon\",\"meal"
+  },
+  {
+   "t": 10974,
+   "text": "\":\"Chicken St"
+  },
+  {
+   "t": 10974,
+   "text": "ir-Fry\"},{"
+  },
+  {
+   "t": 10974,
+   "text": "\"day\":\"Tue\",\""
+  },
+  {
+   "t": 10975,
+   "text": "meal\":\"Salmon"
+  },
+  {
+   "t": 10975,
+   "text": " & Quinoa\"},"
+  },
+  {
+   "t": 10975,
+   "text": "{\"day\":\"Wed"
+  },
+  {
+   "t": 10988,
+   "text": "\",\"meal\":\"Beef"
+  },
+  {
+   "t": 11023,
+   "text": " Chili\"},{\"day"
+  },
+  {
+   "t": 11075,
+   "text": "\":\"Thu\",\"meal"
+  },
+  {
+   "t": 11089,
+   "text": "\":\"Tofu Sc"
+  },
+  {
+   "t": 11149,
+   "text": "ramble Bowl\"},"
+  },
+  {
+   "t": 11154,
+   "text": "{\"day\":\"Fri"
+  },
+  {
+   "t": 11197,
+   "text": "\",\"meal\":\"Turk"
+  },
+  {
+   "t": 11236,
+   "text": "ey Me"
+  },
+  {
+   "t": 11258,
+   "text": "atballs\"},{\"day"
+  },
+  {
+   "t": 11291,
+   "text": "\":\"Sat\",\"meal"
+  },
+  {
+   "t": 11324,
+   "text": "\":\"Egg & Ve"
+  },
+  {
+   "t": 11360,
+   "text": "g Frittata\"},{"
+  },
+  {
+   "t": 11396,
+   "text": "\"day\":\"Sun\",\""
+  },
+  {
+   "t": 11421,
+   "text": "meal\":\"Chicken"
+  },
+  {
+   "t": 11465,
+   "text": " Stir-Fry\""
+  },
+  {
+   "t": 11488,
+   "text": "}]},{\"action\":\""
+  },
+  {
+   "t": 11521,
+   "text": "set\",\"target\":\"meals."
+  },
+  {
+   "t": 11556,
+   "text": "0.uses\",\"value\":\""
+  },
+  {
+   "t": 11588,
+   "text": "{state.plan.where('"
+  },
+  {
+   "t": 11621,
+   "text": "meal', 'Chic"
+  },
+  {
+   "t": 11657,
+   "text": "ken Stir-Fry"
+  },
+  {
+   "t": 11697,
+   "text": "').count()}\"},{\""
+  },
+  {
+   "t": 11721,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 11755,
+   "text": "meals.1.uses\",\""
+  },
+  {
+   "t": 11788,
+   "text": "value\":\"{state.plan"
+  },
+  {
+   "t": 11822,
+   "text": ".where('meal', '"
+  },
+  {
+   "t": 11853,
+   "text": "Salmon & Quin"
+  },
+  {
+   "t": 11891,
+   "text": "oa').count()}\"},"
+  },
+  {
+   "t": 11922,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 11956,
+   "text": "\":\"meals.2.u"
+  },
+  {
+   "t": 11989,
+   "text": "ses\",\"value\":\"{state."
+  },
+  {
+   "t": 12021,
+   "text": "plan.where('meal',"
+  },
+  {
+   "t": 12055,
+   "text": " 'Beef Chili"
+  },
+  {
+   "t": 12088,
+   "text": "').count()}\"},{\""
+  },
+  {
+   "t": 12123,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 12156,
+   "text": "meals.3.uses\",\""
+  },
+  {
+   "t": 12190,
+   "text": "value\":\"{state.plan"
+  },
+  {
+   "t": 12224,
+   "text": ".where('meal', '"
+  },
+  {
+   "t": 12256,
+   "text": "Tofu Scramble"
+  },
+  {
+   "t": 12289,
+   "text": " Bowl').count()}"
+  },
+  {
+   "t": 12323,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 12356,
+   "text": "\",\"target\":\"meals.4"
+  },
+  {
+   "t": 12391,
+   "text": ".uses\",\"value\":\"{"
+  },
+  {
+   "t": 12425,
+   "text": "state.plan.where('me"
+  },
+  {
+   "t": 12456,
+   "text": "al', 'Egg &"
+  },
+  {
+   "t": 12489,
+   "text": " Veg Frittata')."
+  },
+  {
+   "t": 12524,
+   "text": "count()}\"},{\"action"
+  },
+  {
+   "t": 12558,
+   "text": "\":\"set\",\"target\":\"me"
+  },
+  {
+   "t": 12612,
+   "text": "als.5.uses\",\"value"
+  },
+  {
+   "t": 12695,
+   "text": "\":\"{state.plan."
+  },
+  {
+   "t": 12696,
+   "text": "where('meal', '"
+  },
+  {
+   "t": 12877,
+   "text": "Turkey Meatballs"
+  },
+  {
+   "t": 12879,
+   "text": "').count()}\"},{\""
+  },
+  {
+   "t": 12880,
+   "text": "action\":\"toast\",\"message\":"
+  },
+  {
+   "t": 12881,
+   "text": "\"Week reset\",\""
+  },
+  {
+   "t": 12881,
+   "text": "variant\":\"info"
+  },
+  {
+   "t": 12882,
+   "text": "\"}]},{\"type\":"
+  },
+  {
+   "t": 12889,
+   "text": "\"separator\",\"props\":{}"
+  },
+  {
+   "t": 12925,
+   "text": "},{\"type\":\"heading"
+  },
+  {
+   "t": 12960,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 13007,
+   "text": "Meal men"
+  },
+  {
+   "t": 13034,
+   "text": "u\",\"level\":4}},{"
+  },
+  {
+   "t": 13081,
+   "text": "\"type\":\"each\",\"items\":"
+  },
+  {
+   "t": 13140,
+   "text": "\"{state.meals}\",\""
+  },
+  {
+   "t": 13162,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 13162,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 13193,
+   "text": "\"{item.name}"
+  },
+  {
+   "t": 13222,
+   "text": ": {item.protein} g"
+  },
+  {
+   "t": 13260,
+   "text": " prot"
+  },
+  {
+   "t": 13290,
+   "text": "ein, plan"
+  },
+  {
+   "t": 13324,
+   "text": "ned x"
+  },
+  {
+   "t": 13357,
+   "text": "{item.uses}\",\"size"
+  },
+  {
+   "t": 13390,
+   "text": "\":\"sm\"}}]"
+  },
+  {
+   "t": 13422,
+   "text": "},{\"type\":\"separator"
+  },
+  {
+   "t": 13459,
+   "text": "\",\"props\":{}},{\""
+  },
+  {
+   "t": 13489,
+   "text": "type\":\"heading\",\"props\":"
+  },
+  {
+   "t": 13585,
+   "text": "{\"text\":\"Shop"
+  },
+  {
+   "t": 13586,
+   "text": "ping list for"
+  },
+  {
+   "t": 13646,
+   "text": " {state.people} people\",\"level"
+  },
+  {
+   "t": 13646,
+   "text": "\":4}},{\"type\":"
+  },
+  {
+   "t": 13665,
+   "text": "\"each\",\"items\":\"{state"
+  },
+  {
+   "t": 13691,
+   "text": ".ingredients}\",\"children"
+  },
+  {
+   "t": 13724,
+   "text": "\":[{\"type\":\"if"
+  },
+  {
+   "t": 13756,
+   "text": "\",\"condition\":\"{state."
+  },
+  {
+   "t": 13789,
+   "text": "people * item.q0 *"
+  },
+  {
+   "t": 13822,
+   "text": " state.meals[0].u"
+  },
+  {
+   "t": 13865,
+   "text": "ses + state.people * item."
+  },
+  {
+   "t": 13890,
+   "text": "q1 * state.meals"
+  },
+  {
+   "t": 13922,
+   "text": "[1].uses + state."
+  },
+  {
+   "t": 13957,
+   "text": "people * item.q2 *"
+  },
+  {
+   "t": 13990,
+   "text": " state.meals[2].u"
+  },
+  {
+   "t": 14025,
+   "text": "ses + state.people * item."
+  },
+  {
+   "t": 14055,
+   "text": "q3 * state.meals"
+  },
+  {
+   "t": 14089,
+   "text": "[3].uses + state."
+  },
+  {
+   "t": 14122,
+   "text": "people * item.q4 *"
+  },
+  {
+   "t": 14154,
+   "text": " state.meals[4].u"
+  },
+  {
+   "t": 14191,
+   "text": "ses + state.people * item."
+  },
+  {
+   "t": 14222,
+   "text": "q5 * state.meals"
+  },
+  {
+   "t": 14256,
+   "text": "[5].uses > 0"
+  },
+  {
+   "t": 14294,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 14323,
+   "text": "\":\"flex\",\"props\":{"
+  },
+  {
+   "t": 14356,
+   "text": "\"direction\":\"row\",\"just"
+  },
+  {
+   "t": 14389,
+   "text": "ify\":\"between\",\"align\":\""
+  },
+  {
+   "t": 14422,
+   "text": "center\",\"wrap\":true},"
+  },
+  {
+   "t": 14459,
+   "text": "\"children\":[{\"type\":"
+  },
+  {
+   "t": 14488,
+   "text": "\"checkbox\",\"props\":"
+  },
+  {
+   "t": 14522,
+   "text": "{\"label\":\"{item."
+  },
+  {
+   "t": 14555,
+   "text": "name}\"},\"bind\":"
+  },
+  {
+   "t": 14594,
+   "text": "\"ingredients.{index"
+  },
+  {
+   "t": 14622,
+   "text": "}.got\"},{\"type"
+  },
+  {
+   "t": 14659,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 14690,
+   "text": "text\":\"{state.people *"
+  },
+  {
+   "t": 14723,
+   "text": " item.q0 * state."
+  },
+  {
+   "t": 14756,
+   "text": "meals[0].uses +"
+  },
+  {
+   "t": 14796,
+   "text": " state.people * item.q1"
+  },
+  {
+   "t": 14824,
+   "text": " * state.meals[1"
+  },
+  {
+   "t": 14856,
+   "text": "].uses + state.people *"
+  },
+  {
+   "t": 14890,
+   "text": " item.q2 * state."
+  },
+  {
+   "t": 14924,
+   "text": "meals[2].uses +"
+  },
+  {
+   "t": 15031,
+   "text": " state.people * item.q3"
+  },
+  {
+   "t": 15032,
+   "text": " * state.meals[3"
+  },
+  {
+   "t": 15152,
+   "text": "].uses + state.people *"
+  },
+  {
+   "t": 15152,
+   "text": " item.q4 * state."
+  },
+  {
+   "t": 15153,
+   "text": "meals[4].uses +"
+  },
+  {
+   "t": 15210,
+   "text": " state.people * item.q5"
+  },
+  {
+   "t": 15210,
+   "text": " * state.meals[5"
+  },
+  {
+   "t": 15210,
+   "text": "].uses} {item.un"
+  },
+  {
+   "t": 15293,
+   "text": "it}\",\"we"
+  },
+  {
+   "t": 15293,
+   "text": "ight\":\"semibold\",\""
+  },
+  {
+   "t": 15294,
+   "text": "size\":\"sm\"}}"
+  },
+  {
+   "t": 15329,
+   "text": "]}]}]}]}"
+  },
+  {
+   "t": 15357,
+   "text": "]}}"
+  }
+ ]
+}

@@ -3,7 +3,7 @@
  "title": "Watch savings grow",
  "prompt": "I can save $300 a month. Show me how that grows over 10 years at 5% interest, with a chart, and let me change the deposit, the rate and the number of years.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T08:28:07.636Z",
+ "recordedAt": "2026-10-08T08:44:00.784Z",
  "chunks": [
   {
    "t": 0,
@@ -14,2632 +14,2612 @@
    "text": "\"version"
   },
   {
-   "t": 36,
-   "text": "\":\"1"
+   "t": 58,
+   "text": "\":\"1.0\",\"state\":"
   },
   {
-   "t": 49,
-   "text": ".0\",\"state\":{\"de"
+   "t": 58,
+   "text": "{\"deposit\":300,"
   },
   {
-   "t": 88,
-   "text": "posit\":300,\"rate"
+   "t": 86,
+   "text": "\"rate\":5,\"years"
   },
   {
-   "t": 118,
-   "text": "\":5,\"years\":10,"
+   "t": 116,
+   "text": "\":10,\"m\":1."
   },
   {
-   "t": 149,
-   "text": "\"b1\":3600,\""
+   "t": 150,
+   "text": "0041667,\"g\":1"
   },
   {
-   "t": 186,
-   "text": "b2\":7380,\"b"
+   "t": 220,
+   "text": ".0511619,\"add\":"
   },
   {
-   "t": 217,
-   "text": "3\":11349,\"b4"
+   "t": 220,
+   "text": "3683.66,\"sched"
   },
   {
-   "t": 249,
-   "text": "\":15516.45,\"b"
+   "t": 250,
+   "text": "\":[{\"year\":1,"
   },
   {
-   "t": 286,
-   "text": "5\":19892.2725,"
+   "t": 284,
+   "text": "\"bal\":3683.66"
   },
   {
-   "t": 315,
-   "text": "\"b6\":24486.886"
+   "t": 316,
+   "text": "},{\"year\":2,\""
   },
   {
-   "t": 351,
-   "text": "125,\"b7\":29311"
+   "t": 350,
+   "text": "bal\":7555.78},"
   },
   {
-   "t": 383,
-   "text": ".22043,\"b8\":"
+   "t": 391,
+   "text": "{\"year\":3,\"b"
   },
   {
-   "t": 415,
-   "text": "34376.78145,\"b"
+   "t": 417,
+   "text": "al\":11626.0},{"
   },
   {
-   "t": 449,
-   "text": "9\":39695.62052,"
+   "t": 450,
+   "text": "\"year\":4,\"bal"
   },
   {
-   "t": 482,
-   "text": "\"b10\":45280.40"
+   "t": 484,
+   "text": "\":15904.6},{\""
   },
   {
-   "t": 515,
-   "text": "155,\"b11\":51144"
+   "t": 517,
+   "text": "year\":5,\"bal\":"
   },
   {
-   "t": 552,
-   "text": ".42163,\"b12\":"
+   "t": 551,
+   "text": "20402.0},{\"year"
   },
   {
-   "t": 597,
-   "text": "57301.64271,\"b"
+   "t": 584,
+   "text": "\":6,\"bal\":25"
   },
   {
-   "t": 615,
-   "text": "13\":63766.72485,"
+   "t": 618,
+   "text": "129.6},{\"year\":"
   },
   {
-   "t": 649,
-   "text": "\"b14\":70555.06"
+   "t": 699,
+   "text": "7,\"bal\":30098"
   },
   {
-   "t": 683,
-   "text": "109,\"b15\":77682"
+   "t": 714,
+   "text": ".8},{\"year\":8"
   },
   {
-   "t": 716,
-   "text": ".81414,\"b16\":"
+   "t": 719,
+   "text": ",\"bal\":35323."
   },
   {
-   "t": 751,
-   "text": "85167.95484,\"b"
+   "t": 753,
+   "text": "3},{\"year\":9,"
   },
   {
-   "t": 784,
-   "text": "17\":93026.35258,"
+   "t": 798,
+   "text": "\"bal\":40814.0"
   },
   {
-   "t": 816,
-   "text": "\"b18\":101277.67"
+   "t": 820,
+   "text": "},{\"year\":10,\""
   },
   {
-   "t": 861,
-   "text": "021,\"b19\":109941"
+   "t": 885,
+   "text": "bal\":46585.6},"
   },
   {
-   "t": 883,
-   "text": ".55372,\"b20\":"
+   "t": 891,
+   "text": "{\"year\":11,\"b"
   },
   {
-   "t": 919,
-   "text": "119038.63141,\"final"
+   "t": 921,
+   "text": "al\":46585.6},{"
   },
   {
-   "t": 950,
-   "text": "\":45280.40155},\""
+   "t": 954,
+   "text": "\"year\":12,\"bal"
   },
   {
-   "t": 982,
-   "text": "ui\":{\"type\":\""
+   "t": 993,
+   "text": "\":46585.6},{\""
   },
   {
-   "t": 1016,
-   "text": "card\",\"props\":{\"title\":"
+   "t": 1017,
+   "text": "year\":13,\"bal\":"
   },
   {
-   "t": 1049,
-   "text": "\"Savings growth\",\"description"
+   "t": 1104,
+   "text": "46585.6},{\"year"
   },
   {
-   "t": 1082,
-   "text": "\":\"Monthly de"
+   "t": 1104,
+   "text": "\":14,\"bal\":46"
   },
   {
-   "t": 1116,
-   "text": "posits,"
+   "t": 1145,
+   "text": "585.6},{\"year\":"
   },
   {
-   "t": 1152,
-   "text": " compounded"
+   "t": 1171,
+   "text": "15,\"bal\":46585"
   },
   {
-   "t": 1189,
-   "text": " once"
+   "t": 1184,
+   "text": ".6},{\"year\":16"
   },
   {
-   "t": 1218,
-   "text": " a year (de"
+   "t": 1220,
+   "text": ",\"bal\":46585."
   },
   {
-   "t": 1249,
-   "text": "posits added at year"
+   "t": 1261,
+   "text": "6},{\"year\":17,"
   },
   {
-   "t": 1288,
-   "text": " end)\""
+   "t": 1336,
+   "text": "\"bal\":46585.6"
   },
   {
-   "t": 1315,
+   "t": 1337,
+   "text": "},{\"year\":18,\""
+  },
+  {
+   "t": 1351,
+   "text": "bal\":46585.6},"
+  },
+  {
+   "t": 1401,
+   "text": "{\"year\":19,\"b"
+  },
+  {
+   "t": 1426,
+   "text": "al\":46585.6},{"
+  },
+  {
+   "t": 1452,
+   "text": "\"year\":20,\"bal"
+  },
+  {
+   "t": 1485,
+   "text": "\":46585.6}]},"
+  },
+  {
+   "t": 1517,
+   "text": "\"ui\":{\"type\":"
+  },
+  {
+   "t": 1570,
+   "text": "\"card\",\"props\":{\"title"
+  },
+  {
+   "t": 1587,
+   "text": "\":\"Savings growth\",\""
+  },
+  {
+   "t": 1618,
+   "text": "description\":\"Mon"
+  },
+  {
+   "t": 1651,
+   "text": "thly deposits, compoun"
+  },
+  {
+   "t": 1688,
+   "text": "ded monthly\""
+  },
+  {
+   "t": 1718,
    "text": "},\"children\":[{\"type"
   },
   {
-   "t": 1350,
+   "t": 1751,
    "text": "\":\"flex\",\"props\":{"
   },
   {
-   "t": 1384,
+   "t": 1786,
    "text": "\"direction\":\"column\",\"g"
   },
   {
-   "t": 1417,
-   "text": "ap\":\"16px\"},"
+   "t": 1820,
+   "text": "ap\":\"12px\"},\""
   },
   {
-   "t": 1450,
-   "text": "\"children\":[{\"type\":"
-  },
-  {
-   "t": 1484,
-   "text": "\"grid\",\"props\":{\""
-  },
-  {
-   "t": 1884,
-   "text": "columns\":3"
-  },
-  {
-   "t": 1884,
-   "text": ",\"gap\":\"12px"
-  },
-  {
-   "t": 1884,
-   "text": "\"},\"children\":[{\""
-  },
-  {
-   "t": 1885,
-   "text": "type\":\"number-input\",\"b"
-  },
-  {
-   "t": 1885,
-   "text": "ind\":\"{state.depos"
-  },
-  {
-   "t": 1885,
-   "text": "it}\",\"props\":{\"label"
-  },
-  {
-   "t": 1886,
-   "text": "\":\"Monthly depos"
-  },
-  {
-   "t": 1886,
-   "text": "it ($)\",\"min\":0"
-  },
-  {
-   "t": 1886,
-   "text": ",\"max\":100"
-  },
-  {
-   "t": 1886,
-   "text": "000,\"step\":50},\""
-  },
-  {
-   "t": 1887,
-   "text": "on_change\":{"
-  },
-  {
-   "t": 1887,
-   "text": "\"action\":\"flow\",\"ste"
-  },
-  {
-   "t": 1887,
-   "text": "ps\":[{\"action\":\""
-  },
-  {
-   "t": 1887,
-   "text": "set\",\"target\":\"b1\",\""
-  },
-  {
-   "t": 1887,
-   "text": "value\":\"{state.depos"
-  },
-  {
-   "t": 1887,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 1888,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 1889,
-   "text": "\"b2\",\"value\":\"{"
-  },
-  {
-   "t": 1889,
-   "text": "state.b1 * (1"
-  },
-  {
-   "t": 1889,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 1889,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 1890,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 1890,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 1890,
-   "text": "b3\",\"value\":\"{state"
-  },
-  {
-   "t": 1890,
-   "text": ".b2 * (1 "
-  },
-  {
-   "t": 1890,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 1890,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 1890,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 1892,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 1893,
-   "text": "4\",\"value\":\"{state."
-  },
-  {
-   "t": 1893,
-   "text": "b3 * (1 +"
-  },
-  {
-   "t": 1893,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 1893,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 1893,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 1893,
-   "text": "\"set\",\"target\":\"b5"
-  },
-  {
-   "t": 1893,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 1893,
-   "text": "4 * (1 + state"
-  },
-  {
-   "t": 1893,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 1893,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 1893,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 1893,
-   "text": "set\",\"target\":\"b6\",\""
-  },
-  {
-   "t": 1893,
-   "text": "value\":\"{state.b5"
-  },
-  {
-   "t": 1893,
-   "text": " * (1 + state."
-  },
-  {
-   "t": 1893,
-   "text": "rate / 100) + state"
-  },
-  {
-   "t": 1893,
-   "text": ".deposit * 12}"
-  },
-  {
-   "t": 1893,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 1893,
-   "text": "\",\"target\":\"b7\",\"value"
-  },
-  {
-   "t": 1893,
-   "text": "\":\"{state.b6 "
-  },
-  {
-   "t": 1893,
-   "text": "* (1 + state.r"
-  },
-  {
-   "t": 1893,
-   "text": "ate / 100) + state."
-  },
-  {
-   "t": 1893,
-   "text": "deposit * 12}\""
-  },
-  {
-   "t": 1893,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 1893,
-   "text": "target\":\"b8\",\"value\":"
-  },
-  {
-   "t": 1893,
-   "text": "\"{state.b7 *"
+   "t": 1854,
+   "text": "children\":[{\"type\":\""
   },
   {
    "t": 1894,
-   "text": " (1 + state.rate"
+   "text": "number-input\",\"b"
   },
   {
-   "t": 1894,
-   "text": " / 100) + state.de"
-  },
-  {
-   "t": 1920,
-   "text": "posit * 12}\"},"
+   "t": 1926,
+   "text": "ind\":\"{"
   },
   {
    "t": 1953,
-   "text": "{\"action\":\"set\",\"target"
+   "text": "state.deposit}\",\"props"
   },
   {
-   "t": 1987,
-   "text": "\":\"b9\",\"value\":\""
+   "t": 1986,
+   "text": "\":{\"label\":\"Mon"
   },
   {
-   "t": 2020,
-   "text": "{state.b8 * ("
+   "t": 2019,
+   "text": "thly deposit ($)"
   },
   {
-   "t": 2055,
-   "text": "1 + state.rate /"
+   "t": 2051,
+   "text": "\",\"min\":0,\"step"
   },
   {
-   "t": 2101,
-   "text": " 100) + state.depos"
+   "t": 2089,
+   "text": "\":25"
   },
   {
-   "t": 2124,
-   "text": "it * 12}\"},{"
+   "t": 2120,
+   "text": "},\"on_change\":{\""
   },
   {
-   "t": 2154,
-   "text": "\"action\":\"set\",\"target\":"
+   "t": 2153,
+   "text": "action\":\"flow\",\"steps"
   },
   {
-   "t": 2187,
-   "text": "\"b10\",\"value\":\"{"
+   "t": 2186,
+   "text": "\":[{\"action\":\"set"
   },
   {
-   "t": 2221,
-   "text": "state.b9 * (1"
+   "t": 2234,
+   "text": "\",\"target\":\"m"
   },
   {
-   "t": 2621,
-   "text": " + state.rate / "
+   "t": 2260,
+   "text": "\",\"value\":\"{1 +"
   },
   {
-   "t": 2624,
-   "text": "100) + state.deposit"
+   "t": 2291,
+   "text": " state.rate / 1200"
   },
   {
-   "t": 2625,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 2625,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 2626,
-   "text": "b11\",\"value\":\"{state"
-  },
-  {
-   "t": 2626,
-   "text": ".b10 * (1 "
-  },
-  {
-   "t": 2626,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 2627,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 2627,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 2627,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 2627,
-   "text": "12\",\"value\":\"{state."
-  },
-  {
-   "t": 2628,
-   "text": "b11 * (1 +"
-  },
-  {
-   "t": 2628,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 2659,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 2692,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 2725,
-   "text": "\"set\",\"target\":\"b13"
-  },
-  {
-   "t": 2768,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 2793,
-   "text": "12 * (1 + state"
-  },
-  {
-   "t": 2827,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 2861,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 2897,
+   "t": 2324,
    "text": "}\"},{\"action\":\""
   },
   {
-   "t": 2933,
-   "text": "set\",\"target\":\"b14\",\""
+   "t": 2358,
+   "text": "set\",\"target\":\"g\",\"value"
   },
   {
-   "t": 2966,
-   "text": "value\":\"{state.b13"
+   "t": 2387,
+   "text": "\":\"{state.m * state"
   },
   {
-   "t": 2995,
-   "text": " * (1 + state."
+   "t": 2421,
+   "text": ".m * state.m * state"
   },
   {
-   "t": 3044,
-   "text": "rate / 100) + state"
+   "t": 2452,
+   "text": ".m * state.m * state"
   },
   {
-   "t": 3061,
-   "text": ".deposit * 12}"
+   "t": 2487,
+   "text": ".m * state.m * state"
   },
   {
-   "t": 3094,
-   "text": "\"},{\"action\":\"set"
+   "t": 2519,
+   "text": ".m * state.m * state"
   },
   {
-   "t": 3138,
-   "text": "\",\"target\":\"b15\",\"value"
+   "t": 2553,
+   "text": ".m * state.m * state"
   },
   {
-   "t": 3161,
-   "text": "\":\"{state.b14 "
+   "t": 2584,
+   "text": ".m}\"},{\"action"
   },
   {
-   "t": 3194,
-   "text": "* (1 + state.r"
+   "t": 2620,
+   "text": "\":\"set\",\"target\":\"add"
   },
   {
-   "t": 3233,
-   "text": "ate / 100) + state."
+   "t": 2653,
+   "text": "\",\"value\":\"{state.r"
   },
   {
-   "t": 3261,
-   "text": "deposit * 12}\""
+   "t": 2686,
+   "text": "ate == 0 ? state"
   },
   {
-   "t": 3293,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 3327,
-   "text": "target\":\"b16\",\"value\":"
-  },
-  {
-   "t": 3360,
-   "text": "\"{state.b15 *"
-  },
-  {
-   "t": 3395,
-   "text": " (1 + state.rate"
-  },
-  {
-   "t": 3429,
-   "text": " / 100) + state.de"
-  },
-  {
-   "t": 3460,
-   "text": "posit * 12}\"},"
-  },
-  {
-   "t": 3495,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 3531,
-   "text": "\":\"b17\",\"value\":\""
-  },
-  {
-   "t": 3562,
-   "text": "{state.b16 * ("
-  },
-  {
-   "t": 3594,
-   "text": "1 + state.rate /"
-  },
-  {
-   "t": 3627,
-   "text": " 100) + state.depos"
-  },
-  {
-   "t": 3660,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 3707,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 3801,
-   "text": "\"b18\",\"value\":\"{"
-  },
-  {
-   "t": 3801,
-   "text": "state.b17 * (1"
-  },
-  {
-   "t": 3804,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 3837,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 3870,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 4043,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 4043,
-   "text": "b19\",\"value\":\"{state"
-  },
-  {
-   "t": 4043,
-   "text": ".b18 * (1 "
-  },
-  {
-   "t": 4044,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 4129,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 4129,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 4129,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 4151,
-   "text": "20\",\"value\":\"{state."
-  },
-  {
-   "t": 4159,
-   "text": "b19 * (1 +"
-  },
-  {
-   "t": 4194,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 4227,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 4260,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 4296,
-   "text": "\"set\",\"target\":\"final\",\""
-  },
-  {
-   "t": 4327,
-   "text": "value\":\"{state.years >"
-  },
-  {
-   "t": 4360,
-   "text": "= 20 ? state."
-  },
-  {
-   "t": 4398,
-   "text": "b20 : state.years >"
-  },
-  {
-   "t": 4438,
-   "text": "= 19 ? state."
-  },
-  {
-   "t": 4464,
-   "text": "b19 : state.years >"
-  },
-  {
-   "t": 4516,
-   "text": "= 18 ? state."
-  },
-  {
-   "t": 4530,
-   "text": "b18 : state.years >"
-  },
-  {
-   "t": 4563,
-   "text": "= 17 ? state."
-  },
-  {
-   "t": 4594,
-   "text": "b17 : state.years >"
-  },
-  {
-   "t": 4626,
-   "text": "= 16 ? state."
-  },
-  {
-   "t": 4660,
-   "text": "b16 : state.years >"
-  },
-  {
-   "t": 4694,
-   "text": "= 15 ? state."
-  },
-  {
-   "t": 4732,
-   "text": "b15 : state.years >"
-  },
-  {
-   "t": 4767,
-   "text": "= 14 ? state."
-  },
-  {
-   "t": 4798,
-   "text": "b14 : state.years >"
-  },
-  {
-   "t": 4828,
-   "text": "= 13 ? state."
-  },
-  {
-   "t": 4862,
-   "text": "b13 : state.years >"
-  },
-  {
-   "t": 4895,
-   "text": "= 12 ? state."
-  },
-  {
-   "t": 4930,
-   "text": "b12 : state.years >"
-  },
-  {
-   "t": 4961,
-   "text": "= 11 ? state."
-  },
-  {
-   "t": 4993,
-   "text": "b11 : state.years >"
-  },
-  {
-   "t": 5027,
-   "text": "= 10 ? state."
-  },
-  {
-   "t": 5061,
-   "text": "b10 : state.years >"
-  },
-  {
-   "t": 5093,
-   "text": "= 9 ? state."
-  },
-  {
-   "t": 5127,
-   "text": "b9 : state.years >"
-  },
-  {
-   "t": 5161,
-   "text": "= 8 ? state."
-  },
-  {
-   "t": 5196,
-   "text": "b8 : state.years >"
-  },
-  {
-   "t": 5226,
-   "text": "= 7 ? state."
-  },
-  {
-   "t": 5260,
-   "text": "b7 : state.years >"
-  },
-  {
-   "t": 5295,
-   "text": "= 6 ? state."
-  },
-  {
-   "t": 5326,
-   "text": "b6 : state.years >"
-  },
-  {
-   "t": 5363,
-   "text": "= 5 ? state."
-  },
-  {
-   "t": 5394,
-   "text": "b5 : state.years >"
-  },
-  {
-   "t": 5428,
-   "text": "= 4 ? state."
-  },
-  {
-   "t": 5461,
-   "text": "b4 : state.years >"
-  },
-  {
-   "t": 5493,
-   "text": "= 3 ? state."
-  },
-  {
-   "t": 5526,
-   "text": "b3 : state.years >"
-  },
-  {
-   "t": 5561,
-   "text": "= 2 ? state."
-  },
-  {
-   "t": 5596,
-   "text": "b2 : state.b1"
-  },
-  {
-   "t": 5630,
-   "text": "}\""
-  },
-  {
-   "t": 5660,
-   "text": "}]}},{\"type\":"
-  },
-  {
-   "t": 5693,
-   "text": "\"slider\",\"bind\":\""
-  },
-  {
-   "t": 5726,
-   "text": "{state.rate}\",\"props"
-  },
-  {
-   "t": 5761,
-   "text": "\":{\"label\":\"Inter"
-  },
-  {
-   "t": 5794,
-   "text": "est rate (%"
-  },
-  {
-   "t": 5830,
-   "text": " per year)\",\"min\":0,"
-  },
-  {
-   "t": 5862,
-   "text": "\"max\":15,\"step\":"
-  },
-  {
-   "t": 5893,
-   "text": "0.5,\"showValue"
-  },
-  {
-   "t": 5927,
-   "text": "\":true},\"on_change\":"
-  },
-  {
-   "t": 5961,
-   "text": "{\"action\":\"flow\",\""
-  },
-  {
-   "t": 5994,
-   "text": "steps\":[{\"action\":"
-  },
-  {
-   "t": 6028,
-   "text": "\"set\",\"target\":\"b1"
-  },
-  {
-   "t": 6060,
-   "text": "\",\"value\":\"{state.de"
-  },
-  {
-   "t": 6094,
-   "text": "posit * 12}\"},"
-  },
-  {
-   "t": 6127,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 6160,
-   "text": "\":\"b2\",\"value\":\""
-  },
-  {
-   "t": 6194,
-   "text": "{state.b1 * ("
-  },
-  {
-   "t": 6227,
-   "text": "1 + state.rate /"
-  },
-  {
-   "t": 6261,
-   "text": " 100) + state.depos"
-  },
-  {
-   "t": 6293,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 6327,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 6360,
-   "text": "\"b3\",\"value\":\"{"
-  },
-  {
-   "t": 6394,
-   "text": "state.b2 * (1"
-  },
-  {
-   "t": 6428,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 6461,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 6496,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 6528,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 6561,
-   "text": "b4\",\"value\":\"{state"
-  },
-  {
-   "t": 6593,
-   "text": ".b3 * (1 "
-  },
-  {
-   "t": 6628,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 6665,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 6694,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 6741,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 6796,
-   "text": "5\",\"value\":\"{state."
-  },
-  {
-   "t": 6796,
-   "text": "b4 * (1 +"
-  },
-  {
-   "t": 6835,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 6865,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 6894,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 6928,
-   "text": "\"set\",\"target\":\"b6"
-  },
-  {
-   "t": 6960,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 6994,
-   "text": "5 * (1 + state"
-  },
-  {
-   "t": 7028,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 7061,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 7094,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 7129,
-   "text": "set\",\"target\":\"b7\",\""
-  },
-  {
-   "t": 7161,
-   "text": "value\":\"{state.b6"
-  },
-  {
-   "t": 7194,
-   "text": " * (1 + state."
-  },
-  {
-   "t": 7228,
-   "text": "rate / 100) + state"
-  },
-  {
-   "t": 7261,
-   "text": ".deposit * 12}"
-  },
-  {
-   "t": 7294,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 7329,
-   "text": "\",\"target\":\"b8\",\"value"
-  },
-  {
-   "t": 7363,
-   "text": "\":\"{state.b7 "
-  },
-  {
-   "t": 7394,
-   "text": "* (1 + state.r"
-  },
-  {
-   "t": 7427,
-   "text": "ate / 100) + state."
-  },
-  {
-   "t": 7461,
-   "text": "deposit * 12}\""
-  },
-  {
-   "t": 7493,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 7528,
-   "text": "target\":\"b9\",\"value\":"
-  },
-  {
-   "t": 7561,
-   "text": "\"{state.b8 *"
-  },
-  {
-   "t": 7595,
-   "text": " (1 + state.rate"
-  },
-  {
-   "t": 7626,
-   "text": " / 100) + state.de"
-  },
-  {
-   "t": 7661,
-   "text": "posit * 12}\"},"
-  },
-  {
-   "t": 7694,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 7729,
-   "text": "\":\"b10\",\"value\":\""
-  },
-  {
-   "t": 7761,
-   "text": "{state.b9 * ("
-  },
-  {
-   "t": 7794,
-   "text": "1 + state.rate /"
-  },
-  {
-   "t": 7831,
-   "text": " 100) + state.depos"
-  },
-  {
-   "t": 7862,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 7894,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 7928,
-   "text": "\"b11\",\"value\":\"{"
-  },
-  {
-   "t": 7962,
-   "text": "state.b10 * (1"
-  },
-  {
-   "t": 7994,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 8027,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 8061,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 8096,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 8127,
-   "text": "b12\",\"value\":\"{state"
-  },
-  {
-   "t": 8161,
-   "text": ".b11 * (1 "
-  },
-  {
-   "t": 8194,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 8228,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 8264,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 8295,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 8328,
-   "text": "13\",\"value\":\"{state."
-  },
-  {
-   "t": 8362,
-   "text": "b12 * (1 +"
-  },
-  {
-   "t": 8398,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 8427,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 8461,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 8498,
-   "text": "\"set\",\"target\":\"b14"
-  },
-  {
-   "t": 8532,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 8562,
-   "text": "13 * (1 + state"
-  },
-  {
-   "t": 8601,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 8631,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 8668,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 8696,
-   "text": "set\",\"target\":\"b15\",\""
-  },
-  {
-   "t": 8728,
-   "text": "value\":\"{state.b14"
-  },
-  {
-   "t": 8763,
-   "text": " * (1 + state."
-  },
-  {
-   "t": 8795,
-   "text": "rate / 100) + state"
-  },
-  {
-   "t": 8827,
-   "text": ".deposit * 12}"
-  },
-  {
-   "t": 8862,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 8895,
-   "text": "\",\"target\":\"b16\",\"value"
-  },
-  {
-   "t": 8928,
-   "text": "\":\"{state.b15 "
-  },
-  {
-   "t": 8964,
-   "text": "* (1 + state.r"
-  },
-  {
-   "t": 8995,
-   "text": "ate / 100) + state."
-  },
-  {
-   "t": 9029,
-   "text": "deposit * 12}\""
-  },
-  {
-   "t": 9062,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 9094,
-   "text": "target\":\"b17\",\"value\":"
-  },
-  {
-   "t": 9130,
-   "text": "\"{state.b16 *"
-  },
-  {
-   "t": 9162,
-   "text": " (1 + state.rate"
-  },
-  {
-   "t": 9196,
-   "text": " / 100) + state.de"
-  },
-  {
-   "t": 9231,
-   "text": "posit * 12}\"},"
-  },
-  {
-   "t": 9267,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 9298,
-   "text": "\":\"b18\",\"value\":\""
-  },
-  {
-   "t": 9328,
-   "text": "{state.b17 * ("
-  },
-  {
-   "t": 9361,
-   "text": "1 + state.rate /"
-  },
-  {
-   "t": 9395,
-   "text": " 100) + state.depos"
-  },
-  {
-   "t": 9428,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 9464,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 9499,
-   "text": "\"b19\",\"value\":\"{"
-  },
-  {
-   "t": 9529,
-   "text": "state.b18 * (1"
-  },
-  {
-   "t": 9564,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 9605,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 9628,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 9662,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 9695,
-   "text": "b20\",\"value\":\"{state"
-  },
-  {
-   "t": 9743,
-   "text": ".b19 * (1 "
-  },
-  {
-   "t": 9763,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 9794,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 9831,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 9862,
-   "text": "\":\"set\",\"target\":\"final"
-  },
-  {
-   "t": 9894,
-   "text": "\",\"value\":\"{state.years"
-  },
-  {
-   "t": 9928,
-   "text": " >= 20 ? state"
-  },
-  {
-   "t": 9962,
-   "text": ".b20 : state.years"
-  },
-  {
-   "t": 9995,
-   "text": " >= 19 ? state"
-  },
-  {
-   "t": 10027,
-   "text": ".b19 : state.years"
-  },
-  {
-   "t": 10061,
-   "text": " >= 18 ? state"
-  },
-  {
-   "t": 10095,
-   "text": ".b18 : state.years"
-  },
-  {
-   "t": 10128,
-   "text": " >= 17 ? state"
-  },
-  {
-   "t": 10161,
-   "text": ".b17 : state.years"
-  },
-  {
-   "t": 10195,
-   "text": " >= 16 ? state"
-  },
-  {
-   "t": 10228,
-   "text": ".b16 : state.years"
-  },
-  {
-   "t": 10261,
-   "text": " >= 15 ? state"
-  },
-  {
-   "t": 10294,
-   "text": ".b15 : state.years"
-  },
-  {
-   "t": 10328,
-   "text": " >= 14 ? state"
-  },
-  {
-   "t": 10361,
-   "text": ".b14 : state.years"
-  },
-  {
-   "t": 10394,
-   "text": " >= 13 ? state"
-  },
-  {
-   "t": 10427,
-   "text": ".b13 : state.years"
-  },
-  {
-   "t": 10463,
-   "text": " >= 12 ? state"
-  },
-  {
-   "t": 10494,
-   "text": ".b12 : state.years"
-  },
-  {
-   "t": 10528,
-   "text": " >= 11 ? state"
-  },
-  {
-   "t": 10561,
-   "text": ".b11 : state.years"
-  },
-  {
-   "t": 10594,
-   "text": " >= 10 ? state"
-  },
-  {
-   "t": 10627,
-   "text": ".b10 : state.years"
-  },
-  {
-   "t": 10661,
-   "text": " >= 9 ? state"
-  },
-  {
-   "t": 10694,
-   "text": ".b9 : state.years"
-  },
-  {
-   "t": 10727,
-   "text": " >= 8 ? state"
-  },
-  {
-   "t": 10762,
-   "text": ".b8 : state.years"
-  },
-  {
-   "t": 10796,
-   "text": " >= 7 ? state"
-  },
-  {
-   "t": 10828,
-   "text": ".b7 : state.years"
-  },
-  {
-   "t": 10863,
-   "text": " >= 6 ? state"
-  },
-  {
-   "t": 10895,
-   "text": ".b6 : state.years"
-  },
-  {
-   "t": 10928,
-   "text": " >= 5 ? state"
-  },
-  {
-   "t": 10963,
-   "text": ".b5 : state.years"
-  },
-  {
-   "t": 10995,
-   "text": " >= 4 ? state"
-  },
-  {
-   "t": 11033,
-   "text": ".b4 : state.years"
-  },
-  {
-   "t": 11060,
-   "text": " >= 3 ? state"
-  },
-  {
-   "t": 11094,
-   "text": ".b3 : state.years"
-  },
-  {
-   "t": 11129,
-   "text": " >= 2 ? state"
-  },
-  {
-   "t": 11162,
-   "text": ".b2 : state.b"
-  },
-  {
-   "t": 11195,
-   "text": "1}\"}]}},{"
-  },
-  {
-   "t": 11230,
-   "text": "\"type\":\"slider\",\"b"
-  },
-  {
-   "t": 11261,
-   "text": "ind\":\"{state.years}"
-  },
-  {
-   "t": 11296,
-   "text": "\",\"props\":{\"label\":\""
-  },
-  {
-   "t": 11336,
-   "text": "Years\",\"min\":1,\""
-  },
-  {
-   "t": 11361,
-   "text": "max\":20,\"step\":1"
-  },
-  {
-   "t": 11394,
-   "text": ",\"showValue\":true},"
-  },
-  {
-   "t": 11428,
-   "text": "\"on_change\":{\"action"
-  },
-  {
-   "t": 11461,
-   "text": "\":\"flow\",\"steps\":"
-  },
-  {
-   "t": 11494,
-   "text": "[{\"action\":\"set\",\""
-  },
-  {
-   "t": 11527,
-   "text": "target\":\"b1\",\"value\":"
-  },
-  {
-   "t": 11561,
-   "text": "\"{state.deposit *"
-  },
-  {
-   "t": 11594,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 11628,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 11664,
-   "text": "2\",\"value\":\"{state."
-  },
-  {
-   "t": 11695,
-   "text": "b1 * (1 +"
-  },
-  {
-   "t": 11728,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 11762,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 11795,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 11827,
-   "text": "\"set\",\"target\":\"b3"
-  },
-  {
-   "t": 11862,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 11895,
-   "text": "2 * (1 + state"
-  },
-  {
-   "t": 11928,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 11965,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 11995,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 12028,
-   "text": "set\",\"target\":\"b4\",\""
-  },
-  {
-   "t": 12062,
-   "text": "value\":\"{state.b3"
-  },
-  {
-   "t": 12096,
-   "text": " * (1 + state."
-  },
-  {
-   "t": 12128,
-   "text": "rate / 100) + state"
-  },
-  {
-   "t": 12161,
-   "text": ".deposit * 12}"
-  },
-  {
-   "t": 12195,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 12230,
-   "text": "\",\"target\":\"b5\",\"value"
-  },
-  {
-   "t": 12261,
-   "text": "\":\"{state.b4 "
-  },
-  {
-   "t": 12295,
-   "text": "* (1 + state.r"
-  },
-  {
-   "t": 12328,
-   "text": "ate / 100) + state."
-  },
-  {
-   "t": 12362,
-   "text": "deposit * 12}\""
-  },
-  {
-   "t": 12394,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 12428,
-   "text": "target\":\"b6\",\"value\":"
-  },
-  {
-   "t": 12468,
-   "text": "\"{state.b5 *"
-  },
-  {
-   "t": 12495,
-   "text": " (1 + state.rate"
-  },
-  {
-   "t": 12528,
-   "text": " / 100) + state.de"
-  },
-  {
-   "t": 12561,
-   "text": "posit * 12}\"},"
-  },
-  {
-   "t": 12595,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 12628,
-   "text": "\":\"b7\",\"value\":\""
-  },
-  {
-   "t": 12661,
-   "text": "{state.b6 * ("
-  },
-  {
-   "t": 12694,
-   "text": "1 + state.rate /"
-  },
-  {
-   "t": 12730,
-   "text": " 100) + state.depos"
-  },
-  {
-   "t": 12761,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 12810,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 12931,
-   "text": "\"b8\",\"value\":\"{"
-  },
-  {
-   "t": 12931,
-   "text": "state.b7 * (1"
-  },
-  {
-   "t": 12932,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 13121,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 13121,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 13121,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 13121,
-   "text": "b9\",\"value\":\"{state"
-  },
-  {
-   "t": 13121,
-   "text": ".b8 * (1 "
-  },
-  {
-   "t": 13122,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 13128,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 13161,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 13200,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 13228,
-   "text": "10\",\"value\":\"{state."
-  },
-  {
-   "t": 13262,
-   "text": "b9 * (1 +"
-  },
-  {
-   "t": 13295,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 13328,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 13361,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 13395,
-   "text": "\"set\",\"target\":\"b11"
-  },
-  {
-   "t": 13428,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 13462,
-   "text": "10 * (1 + state"
-  },
-  {
-   "t": 13495,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 13528,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 13561,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 13595,
-   "text": "set\",\"target\":\"b12\",\""
-  },
-  {
-   "t": 13629,
-   "text": "value\":\"{state.b11"
-  },
-  {
-   "t": 13664,
-   "text": " * (1 + state."
-  },
-  {
-   "t": 13695,
-   "text": "rate / 100) + state"
-  },
-  {
-   "t": 13729,
-   "text": ".deposit * 12}"
-  },
-  {
-   "t": 13762,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 13796,
-   "text": "\",\"target\":\"b13\",\"value"
-  },
-  {
-   "t": 13829,
-   "text": "\":\"{state.b12 "
-  },
-  {
-   "t": 13861,
-   "text": "* (1 + state.r"
-  },
-  {
-   "t": 13895,
-   "text": "ate / 100) + state."
-  },
-  {
-   "t": 13928,
-   "text": "deposit * 12}\""
-  },
-  {
-   "t": 13962,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 13995,
-   "text": "target\":\"b14\",\"value\":"
-  },
-  {
-   "t": 14028,
-   "text": "\"{state.b13 *"
-  },
-  {
-   "t": 14062,
-   "text": " (1 + state.rate"
-  },
-  {
-   "t": 14095,
-   "text": " / 100) + state.de"
-  },
-  {
-   "t": 14133,
-   "text": "posit * 12}\"},"
-  },
-  {
-   "t": 14161,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 14195,
-   "text": "\":\"b15\",\"value\":\""
-  },
-  {
-   "t": 14229,
-   "text": "{state.b14 * ("
-  },
-  {
-   "t": 14262,
-   "text": "1 + state.rate /"
-  },
-  {
-   "t": 14296,
-   "text": " 100) + state.depos"
-  },
-  {
-   "t": 14328,
-   "text": "it * 12}\"},{"
-  },
-  {
-   "t": 14362,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 14397,
-   "text": "\"b16\",\"value\":\"{"
-  },
-  {
-   "t": 14430,
-   "text": "state.b15 * (1"
-  },
-  {
-   "t": 14462,
-   "text": " + state.rate / "
-  },
-  {
-   "t": 14494,
-   "text": "100) + state.deposit"
-  },
-  {
-   "t": 14529,
-   "text": " * 12}\"},{\""
-  },
-  {
-   "t": 14562,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 14600,
-   "text": "b17\",\"value\":\"{state"
-  },
-  {
-   "t": 14628,
-   "text": ".b16 * (1 "
-  },
-  {
-   "t": 14661,
-   "text": "+ state.rate / 100"
-  },
-  {
-   "t": 14698,
-   "text": ") + state.deposit *"
-  },
-  {
-   "t": 14728,
-   "text": " 12}\"},{\"action"
-  },
-  {
-   "t": 14762,
-   "text": "\":\"set\",\"target\":\"b"
-  },
-  {
-   "t": 14795,
-   "text": "18\",\"value\":\"{state."
-  },
-  {
-   "t": 14831,
-   "text": "b17 * (1 +"
-  },
-  {
-   "t": 14861,
-   "text": " state.rate / 100)"
-  },
-  {
-   "t": 14895,
-   "text": " + state.deposit * "
-  },
-  {
-   "t": 14931,
-   "text": "12}\"},{\"action\":"
-  },
-  {
-   "t": 14963,
-   "text": "\"set\",\"target\":\"b19"
-  },
-  {
-   "t": 14998,
-   "text": "\",\"value\":\"{state.b"
-  },
-  {
-   "t": 15030,
-   "text": "18 * (1 + state"
-  },
-  {
-   "t": 15063,
-   "text": ".rate / 100) +"
-  },
-  {
-   "t": 15096,
-   "text": " state.deposit * 12"
-  },
-  {
-   "t": 15130,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 15163,
-   "text": "set\",\"target\":\"b20\",\""
-  },
-  {
-   "t": 15199,
-   "text": "value\":\"{state.b19"
-  },
-  {
-   "t": 15230,
-   "text": " * (1 + state."
-  },
-  {
-   "t": 15265,
-   "text": "rate / 100) + state"
-  },
-  {
-   "t": 15296,
-   "text": ".deposit * 12}"
-  },
-  {
-   "t": 15331,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 15365,
-   "text": "\",\"target\":\"final\",\"value\":"
-  },
-  {
-   "t": 15396,
-   "text": "\"{state.years >= "
-  },
-  {
-   "t": 15429,
-   "text": "20 ? state.b20"
-  },
-  {
-   "t": 15464,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 15496,
-   "text": "19 ? state.b19"
-  },
-  {
-   "t": 15531,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 15567,
-   "text": "18 ? state.b18"
-  },
-  {
-   "t": 15599,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 15630,
-   "text": "17 ? state.b17"
-  },
-  {
-   "t": 15662,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 15702,
-   "text": "16 ? state.b16"
-  },
-  {
-   "t": 15730,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16130,
-   "text": "15 ? state.b15"
-  },
-  {
-   "t": 16130,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16130,
-   "text": "14 ? state.b14"
-  },
-  {
-   "t": 16130,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16131,
-   "text": "13 ? state.b13"
-  },
-  {
-   "t": 16131,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16131,
-   "text": "12 ? state.b12"
-  },
-  {
-   "t": 16131,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16132,
-   "text": "11 ? state.b11"
-  },
-  {
-   "t": 16132,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16132,
-   "text": "10 ? state.b10"
-  },
-  {
-   "t": 16132,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16132,
-   "text": "9 ? state.b9"
-  },
-  {
-   "t": 16133,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16161,
-   "text": "8 ? state.b8"
-  },
-  {
-   "t": 16194,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16229,
-   "text": "7 ? state.b7"
-  },
-  {
-   "t": 16262,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16294,
-   "text": "6 ? state.b6"
-  },
-  {
-   "t": 16328,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16361,
-   "text": "5 ? state.b5"
-  },
-  {
-   "t": 16394,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16429,
-   "text": "4 ? state.b4"
-  },
-  {
-   "t": 16460,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16494,
-   "text": "3 ? state.b3"
-  },
-  {
-   "t": 16541,
-   "text": " : state.years >= "
-  },
-  {
-   "t": 16561,
-   "text": "2 ? state.b2"
-  },
-  {
-   "t": 16594,
-   "text": " : state.b1}\""
-  },
-  {
-   "t": 16630,
-   "text": "}]}}]},"
-  },
-  {
-   "t": 16662,
-   "text": "{\"type\":\"grid\",\""
-  },
-  {
-   "t": 16694,
-   "text": "props\":{\"columns\":3"
-  },
-  {
-   "t": 16729,
-   "text": ",\"gap\":\"12px"
-  },
-  {
-   "t": 16761,
-   "text": "\"},\"children\":[{\""
-  },
-  {
-   "t": 16796,
-   "text": "type\":\"stat\",\"props\":"
-  },
-  {
-   "t": 16828,
-   "text": "{\"label\":\"Final bal"
-  },
-  {
-   "t": 16861,
-   "text": "ance\",\"value\":\"{state."
-  },
-  {
-   "t": 16895,
-   "text": "final}\",\"format\":\"currency"
-  },
-  {
-   "t": 16927,
-   "text": "\",\"size\":\"lg\"}"
-  },
-  {
-   "t": 16962,
-   "text": "},{\"type\":\"stat"
-  },
-  {
-   "t": 16993,
-   "text": "\",\"props\":{\"label\":\""
-  },
-  {
-   "t": 17028,
-   "text": "You"
-  },
-  {
-   "t": 17061,
-   "text": " de"
-  },
-  {
-   "t": 17094,
-   "text": "posited\",\"value\":\"{state"
-  },
-  {
-   "t": 17128,
+   "t": 2728,
    "text": ".deposit * 12 "
   },
   {
-   "t": 17160,
-   "text": "* state.years}\",\"format\":"
+   "t": 2754,
+   "text": ": state.deposit * ("
+  },
+  {
+   "t": 2786,
+   "text": "state.g - 1) /"
+  },
+  {
+   "t": 2819,
+   "text": " (state.rate / 1"
+  },
+  {
+   "t": 2854,
+   "text": "200)}\"},{\"action"
+  },
+  {
+   "t": 2886,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 2920,
+   "text": "ched.0.bal\",\"value"
+  },
+  {
+   "t": 2955,
+   "text": "\":\"{state.add}\""
+  },
+  {
+   "t": 3055,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 3055,
+   "text": "target\":\"sched.1."
+  },
+  {
+   "t": 3055,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 3086,
+   "text": ".years < 2 ?"
+  },
+  {
+   "t": 3125,
+   "text": " state.sched[0].b"
+  },
+  {
+   "t": 3158,
+   "text": "al : state.sched[0"
+  },
+  {
+   "t": 3187,
+   "text": "].bal * state.g +"
+  },
+  {
+   "t": 3219,
+   "text": " state.add}\"},{\""
+  },
+  {
+   "t": 3258,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 3287,
+   "text": "sched.2.bal\",\""
+  },
+  {
+   "t": 3321,
+   "text": "value\":\"{state.years "
+  },
+  {
+   "t": 3358,
+   "text": "< 3 ? state.s"
+  },
+  {
+   "t": 3387,
+   "text": "ched[1].bal : state"
+  },
+  {
+   "t": 3420,
+   "text": ".sched[1].bal"
+  },
+  {
+   "t": 3453,
+   "text": " * state.g + state.add"
+  },
+  {
+   "t": 3488,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 3520,
+   "text": "set\",\"target\":\"sched."
+  },
+  {
+   "t": 3555,
+   "text": "3.bal\",\"value\":\""
+  },
+  {
+   "t": 3589,
+   "text": "{state.years < 4 "
+  },
+  {
+   "t": 3625,
+   "text": "? state.sched[2"
+  },
+  {
+   "t": 3656,
+   "text": "].bal : state.sched"
+  },
+  {
+   "t": 3697,
+   "text": "[2].bal * state."
+  },
+  {
+   "t": 3721,
+   "text": "g + state.add}\"},"
+  },
+  {
+   "t": 3758,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 3794,
+   "text": "\":\"sched.4.b"
+  },
+  {
+   "t": 3827,
+   "text": "al\",\"value\":\"{state."
+  },
+  {
+   "t": 3856,
+   "text": "years < 5 ? state"
+  },
+  {
+   "t": 3891,
+   "text": ".sched[3].bal"
+  },
+  {
+   "t": 3923,
+   "text": " : state.sched[3]."
+  },
+  {
+   "t": 3957,
+   "text": "bal * state.g + state"
+  },
+  {
+   "t": 3988,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 4022,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 4058,
+   "text": "ched.5.bal\",\"value"
+  },
+  {
+   "t": 4088,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 4134,
+   "text": "6 ? state.sched"
+  },
+  {
+   "t": 4153,
+   "text": "[4].bal : state."
+  },
+  {
+   "t": 4193,
+   "text": "sched[4].bal *"
+  },
+  {
+   "t": 4220,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 4254,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 4286,
+   "text": "\",\"target\":\"sched.6"
+  },
+  {
+   "t": 4320,
+   "text": ".bal\",\"value\":\"{"
+  },
+  {
+   "t": 4354,
+   "text": "state.years < 7 "
+  },
+  {
+   "t": 4388,
+   "text": "? state.sched[5]."
+  },
+  {
+   "t": 4421,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 4457,
+   "text": "5].bal * state.g"
+  },
+  {
+   "t": 4488,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 4521,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 4558,
+   "text": "\"sched.7.bal"
+  },
+  {
+   "t": 4588,
+   "text": "\",\"value\":\"{state.years"
+  },
+  {
+   "t": 4621,
+   "text": " < 8 ? state."
+  },
+  {
+   "t": 4657,
+   "text": "sched[6].bal :"
+  },
+  {
+   "t": 4688,
+   "text": " state.sched[6].b"
+  },
+  {
+   "t": 4720,
+   "text": "al * state.g + state."
+  },
+  {
+   "t": 4754,
+   "text": "add}\"},{\"action\":"
+  },
+  {
+   "t": 4788,
+   "text": "\"set\",\"target\":\"sched"
+  },
+  {
+   "t": 4821,
+   "text": ".8.bal\",\"value\":"
+  },
+  {
+   "t": 4855,
+   "text": "\"{state.years < 9"
+  },
+  {
+   "t": 4898,
+   "text": " ? state.sched["
+  },
+  {
+   "t": 4921,
+   "text": "7].bal : state.s"
+  },
+  {
+   "t": 4955,
+   "text": "ched[7].bal * state"
+  },
+  {
+   "t": 4987,
+   "text": ".g + state.add}\""
+  },
+  {
+   "t": 5021,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 5056,
+   "text": "target\":\"sched.9."
+  },
+  {
+   "t": 5095,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 5121,
+   "text": ".years < 10 ?"
+  },
+  {
+   "t": 5155,
+   "text": " state.sched[8].b"
+  },
+  {
+   "t": 5188,
+   "text": "al : state.sched[8"
+  },
+  {
+   "t": 5221,
+   "text": "].bal * state.g +"
+  },
+  {
+   "t": 5257,
+   "text": " state.add}\"},{\""
+  },
+  {
+   "t": 5296,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 5322,
+   "text": "sched.10.bal\",\""
+  },
+  {
+   "t": 5355,
+   "text": "value\":\"{state.years "
+  },
+  {
+   "t": 5389,
+   "text": "< 11 ? state.s"
+  },
+  {
+   "t": 5422,
+   "text": "ched[9].bal : state"
+  },
+  {
+   "t": 5455,
+   "text": ".sched[9].bal"
+  },
+  {
+   "t": 5489,
+   "text": " * state.g + state.add"
+  },
+  {
+   "t": 5522,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 5555,
+   "text": "set\",\"target\":\"sched."
+  },
+  {
+   "t": 5595,
+   "text": "11.bal\",\"value\":\""
+  },
+  {
+   "t": 5622,
+   "text": "{state.years < 12 "
+  },
+  {
+   "t": 5657,
+   "text": "? state.sched[10"
+  },
+  {
+   "t": 5690,
+   "text": "].bal : state.sched"
+  },
+  {
+   "t": 5725,
+   "text": "[10].bal * state."
+  },
+  {
+   "t": 5758,
+   "text": "g + state.add}\"},"
+  },
+  {
+   "t": 5818,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 5821,
+   "text": "\":\"sched.12.b"
+  },
+  {
+   "t": 5856,
+   "text": "al\",\"value\":\"{state."
+  },
+  {
+   "t": 5889,
+   "text": "years < 13 ? state"
+  },
+  {
+   "t": 5923,
+   "text": ".sched[11].bal"
+  },
+  {
+   "t": 5969,
+   "text": " : state.sched[11]."
+  },
+  {
+   "t": 5989,
+   "text": "bal * state.g + state"
+  },
+  {
+   "t": 6038,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 6085,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 6090,
+   "text": "ched.13.bal\",\"value"
+  },
+  {
+   "t": 6341,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 6342,
+   "text": "14 ? state.sched"
+  },
+  {
+   "t": 6342,
+   "text": "[12].bal : state."
+  },
+  {
+   "t": 6342,
+   "text": "sched[12].bal *"
+  },
+  {
+   "t": 6342,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 6343,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 6399,
+   "text": "\",\"target\":\"sched.14"
+  },
+  {
+   "t": 6399,
+   "text": ".bal\",\"value\":\"{"
+  },
+  {
+   "t": 6399,
+   "text": "state.years < 15 "
+  },
+  {
+   "t": 6657,
+   "text": "? state.sched[13]."
+  },
+  {
+   "t": 6657,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 6657,
+   "text": "13].bal * state.g"
+  },
+  {
+   "t": 6657,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 6658,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 6658,
+   "text": "\"sched.15.bal"
+  },
+  {
+   "t": 6658,
+   "text": "\",\"value\":\"{state.years"
+  },
+  {
+   "t": 6680,
+   "text": " < 16 ? state."
+  },
+  {
+   "t": 6691,
+   "text": "sched[14].bal :"
+  },
+  {
+   "t": 6722,
+   "text": " state.sched[14].b"
+  },
+  {
+   "t": 6763,
+   "text": "al * state.g + state."
+  },
+  {
+   "t": 6790,
+   "text": "add}\"},{\"action\":"
+  },
+  {
+   "t": 6834,
+   "text": "\"set\",\"target\":\"sched"
+  },
+  {
+   "t": 6856,
+   "text": ".16.bal\",\"value\":"
+  },
+  {
+   "t": 6892,
+   "text": "\"{state.years < 17"
+  },
+  {
+   "t": 6928,
+   "text": " ? state.sched["
+  },
+  {
+   "t": 6957,
+   "text": "15].bal : state.s"
+  },
+  {
+   "t": 6989,
+   "text": "ched[15].bal * state"
+  },
+  {
+   "t": 7024,
+   "text": ".g + state.add}\""
+  },
+  {
+   "t": 7058,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 7089,
+   "text": "target\":\"sched.17."
+  },
+  {
+   "t": 7122,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 7158,
+   "text": ".years < 18 ?"
+  },
+  {
+   "t": 7195,
+   "text": " state.sched[16].b"
+  },
+  {
+   "t": 7223,
+   "text": "al : state.sched[16"
+  },
+  {
+   "t": 7257,
+   "text": "].bal * state.g +"
+  },
+  {
+   "t": 7291,
+   "text": " state.add}\"},{\""
+  },
+  {
+   "t": 7324,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 7356,
+   "text": "sched.18.bal\",\""
+  },
+  {
+   "t": 7390,
+   "text": "value\":\"{state.years "
+  },
+  {
+   "t": 7424,
+   "text": "< 19 ? state.s"
+  },
+  {
+   "t": 7456,
+   "text": "ched[17].bal : state"
+  },
+  {
+   "t": 7490,
+   "text": ".sched[17].bal"
+  },
+  {
+   "t": 7523,
+   "text": " * state.g + state.add"
+  },
+  {
+   "t": 7556,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 7590,
+   "text": "set\",\"target\":\"sched."
+  },
+  {
+   "t": 7624,
+   "text": "19.bal\",\"value\":\""
+  },
+  {
+   "t": 7658,
+   "text": "{state.years < 20 "
+  },
+  {
+   "t": 7690,
+   "text": "? state.sched[18"
+  },
+  {
+   "t": 7724,
+   "text": "].bal : state.sched"
+  },
+  {
+   "t": 7759,
+   "text": "[18].bal * state."
+  },
+  {
+   "t": 7790,
+   "text": "g + state.add}\"}"
+  },
+  {
+   "t": 7823,
+   "text": "]}},"
+  },
+  {
+   "t": 7857,
+   "text": "{\"type\":\"slider\",\""
+  },
+  {
+   "t": 7891,
+   "text": "bind\":\"{state.r"
+  },
+  {
+   "t": 7923,
+   "text": "ate}\",\"props\":{\"label"
+  },
+  {
+   "t": 7958,
+   "text": "\":\"Inter"
+  },
+  {
+   "t": 7997,
+   "text": "est rate (% per year)"
+  },
+  {
+   "t": 8042,
+   "text": "\",\"min\":0,\"max\":"
+  },
+  {
+   "t": 8057,
+   "text": "12,\"step\":0.1"
+  },
+  {
+   "t": 8108,
+   "text": ",\"showValue\":true},"
+  },
+  {
+   "t": 8126,
+   "text": "\"on_change\":{\"action"
+  },
+  {
+   "t": 8159,
+   "text": "\":\"flow\",\"steps\":"
+  },
+  {
+   "t": 8192,
+   "text": "[{\"action\":\"set\",\""
+  },
+  {
+   "t": 8224,
+   "text": "target\":\"m\",\"value\":\""
+  },
+  {
+   "t": 8261,
+   "text": "{1 + state.rate"
+  },
+  {
+   "t": 8291,
+   "text": " / 1200}\"},{"
+  },
+  {
+   "t": 8324,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 8359,
+   "text": "\"g\",\"value\":\"{state"
+  },
+  {
+   "t": 8391,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 8426,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 8470,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 8492,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 8525,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 8557,
+   "text": ".m * state.m}\""
+  },
+  {
+   "t": 8591,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 8636,
+   "text": "target\":\"add\",\"value\":\""
+  },
+  {
+   "t": 8666,
+   "text": "{state.rate == 0"
+  },
+  {
+   "t": 8692,
+   "text": " ? state.deposit"
+  },
+  {
+   "t": 8727,
+   "text": " * 12 : state.de"
+  },
+  {
+   "t": 8760,
+   "text": "posit * (state.g -"
+  },
+  {
+   "t": 8791,
+   "text": " 1) / (state.r"
+  },
+  {
+   "t": 8824,
+   "text": "ate / 1200)}\""
+  },
+  {
+   "t": 8859,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 8892,
+   "text": "target\":\"sched.0."
+  },
+  {
+   "t": 8925,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 8959,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 9008,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 9025,
+   "text": "ched.1.bal\",\"value"
+  },
+  {
+   "t": 9059,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 9091,
+   "text": "2 ? state.sched"
+  },
+  {
+   "t": 9126,
+   "text": "[0].bal : state."
+  },
+  {
+   "t": 9169,
+   "text": "sched[0].bal *"
+  },
+  {
+   "t": 9191,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 9226,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 9260,
+   "text": "\",\"target\":\"sched.2"
+  },
+  {
+   "t": 9293,
+   "text": ".bal\",\"value\":\"{"
+  },
+  {
+   "t": 9387,
+   "text": "state.years < 3 "
+  },
+  {
+   "t": 9387,
+   "text": "? state.sched[1]."
+  },
+  {
+   "t": 9400,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 9438,
+   "text": "1].bal * state.g"
+  },
+  {
+   "t": 9458,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 9492,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 9530,
+   "text": "\"sched.3.bal"
+  },
+  {
+   "t": 9567,
+   "text": "\",\"value\":\"{state.years"
+  },
+  {
+   "t": 9593,
+   "text": " < 4 ? state."
+  },
+  {
+   "t": 9627,
+   "text": "sched[2].bal :"
+  },
+  {
+   "t": 9665,
+   "text": " state.sched[2].b"
+  },
+  {
+   "t": 9692,
+   "text": "al * state.g + state."
+  },
+  {
+   "t": 9725,
+   "text": "add}\"},{\"action\":"
+  },
+  {
+   "t": 9760,
+   "text": "\"set\",\"target\":\"sched"
+  },
+  {
+   "t": 9793,
+   "text": ".4.bal\",\"value\":"
+  },
+  {
+   "t": 9825,
+   "text": "\"{state.years < 5"
+  },
+  {
+   "t": 9859,
+   "text": " ? state.sched["
+  },
+  {
+   "t": 9896,
+   "text": "3].bal : state.s"
+  },
+  {
+   "t": 9924,
+   "text": "ched[3].bal * state"
+  },
+  {
+   "t": 9958,
+   "text": ".g + state.add}\""
+  },
+  {
+   "t": 9992,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 10030,
+   "text": "target\":\"sched.5."
+  },
+  {
+   "t": 10063,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 10092,
+   "text": ".years < 6 ?"
+  },
+  {
+   "t": 10126,
+   "text": " state.sched[4].b"
+  },
+  {
+   "t": 10169,
+   "text": "al : state.sched[4"
+  },
+  {
+   "t": 10193,
+   "text": "].bal * state.g +"
+  },
+  {
+   "t": 10226,
+   "text": " state.add}\"},{\""
+  },
+  {
+   "t": 10258,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 10292,
+   "text": "sched.6.bal\",\""
+  },
+  {
+   "t": 10327,
+   "text": "value\":\"{state.years "
+  },
+  {
+   "t": 10362,
+   "text": "< 7 ? state.s"
+  },
+  {
+   "t": 10395,
+   "text": "ched[5].bal : state"
+  },
+  {
+   "t": 10481,
+   "text": ".sched[5].bal"
+  },
+  {
+   "t": 10481,
+   "text": " * state.g + state.add"
+  },
+  {
+   "t": 10515,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 10551,
+   "text": "set\",\"target\":\"sched."
+  },
+  {
+   "t": 10580,
+   "text": "7.bal\",\"value\":\""
+  },
+  {
+   "t": 10670,
+   "text": "{state.years < 8 "
+  },
+  {
+   "t": 10670,
+   "text": "? state.sched[6"
+  },
+  {
+   "t": 10670,
+   "text": "].bal : state.sched"
+  },
+  {
+   "t": 10693,
+   "text": "[6].bal * state."
+  },
+  {
+   "t": 10729,
+   "text": "g + state.add}\"},"
+  },
+  {
+   "t": 10764,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 10793,
+   "text": "\":\"sched.8.b"
+  },
+  {
+   "t": 10842,
+   "text": "al\",\"value\":\"{state."
+  },
+  {
+   "t": 10863,
+   "text": "years < 9 ? state"
+  },
+  {
+   "t": 10894,
+   "text": ".sched[7].bal"
+  },
+  {
+   "t": 10926,
+   "text": " : state.sched[7]."
+  },
+  {
+   "t": 10961,
+   "text": "bal * state.g + state"
+  },
+  {
+   "t": 10995,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 11026,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 11060,
+   "text": "ched.9.bal\",\"value"
+  },
+  {
+   "t": 11092,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 11126,
+   "text": "10 ? state.sched"
+  },
+  {
+   "t": 11158,
+   "text": "[8].bal : state."
+  },
+  {
+   "t": 11194,
+   "text": "sched[8].bal *"
+  },
+  {
+   "t": 11226,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 11260,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 11292,
+   "text": "\",\"target\":\"sched.10"
+  },
+  {
+   "t": 11327,
+   "text": ".bal\",\"value\":\"{"
+  },
+  {
+   "t": 11360,
+   "text": "state.years < 11 "
+  },
+  {
+   "t": 11404,
+   "text": "? state.sched[9]."
+  },
+  {
+   "t": 11427,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 11463,
+   "text": "9].bal * state.g"
+  },
+  {
+   "t": 11493,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 11526,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 11560,
+   "text": "\"sched.11.bal"
+  },
+  {
+   "t": 11594,
+   "text": "\",\"value\":\"{state.years"
+  },
+  {
+   "t": 11632,
+   "text": " < 12 ? state."
+  },
+  {
+   "t": 11660,
+   "text": "sched[10].bal :"
+  },
+  {
+   "t": 11693,
+   "text": " state.sched[10].b"
+  },
+  {
+   "t": 11727,
+   "text": "al * state.g + state."
+  },
+  {
+   "t": 11761,
+   "text": "add}\"},{\"action\":"
+  },
+  {
+   "t": 11796,
+   "text": "\"set\",\"target\":\"sched"
+  },
+  {
+   "t": 11832,
+   "text": ".12.bal\",\"value\":"
+  },
+  {
+   "t": 11865,
+   "text": "\"{state.years < 13"
+  },
+  {
+   "t": 11949,
+   "text": " ? state.sched["
+  },
+  {
+   "t": 11983,
+   "text": "11].bal : state.s"
+  },
+  {
+   "t": 11983,
+   "text": "ched[11].bal * state"
+  },
+  {
+   "t": 12025,
+   "text": ".g + state.add}\""
+  },
+  {
+   "t": 12396,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 12396,
+   "text": "target\":\"sched.13."
+  },
+  {
+   "t": 12396,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 12396,
+   "text": ".years < 14 ?"
+  },
+  {
+   "t": 12397,
+   "text": " state.sched[12].b"
+  },
+  {
+   "t": 12397,
+   "text": "al : state.sched[12"
+  },
+  {
+   "t": 12397,
+   "text": "].bal * state.g +"
+  },
+  {
+   "t": 12398,
+   "text": " state.add}\"},{\""
+  },
+  {
+   "t": 12398,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 12398,
+   "text": "sched.14.bal\",\""
+  },
+  {
+   "t": 12398,
+   "text": "value\":\"{state.years "
+  },
+  {
+   "t": 12398,
+   "text": "< 15 ? state.s"
+  },
+  {
+   "t": 12427,
+   "text": "ched[13].bal : state"
+  },
+  {
+   "t": 12468,
+   "text": ".sched[13].bal"
+  },
+  {
+   "t": 12495,
+   "text": " * state.g + state.add"
+  },
+  {
+   "t": 12527,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 12560,
+   "text": "set\",\"target\":\"sched."
+  },
+  {
+   "t": 12594,
+   "text": "15.bal\",\"value\":\""
+  },
+  {
+   "t": 12627,
+   "text": "{state.years < 16 "
+  },
+  {
+   "t": 12664,
+   "text": "? state.sched[14"
+  },
+  {
+   "t": 12695,
+   "text": "].bal : state.sched"
+  },
+  {
+   "t": 12727,
+   "text": "[14].bal * state."
+  },
+  {
+   "t": 12845,
+   "text": "g + state.add}\"},"
+  },
+  {
+   "t": 12845,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 12845,
+   "text": "\":\"sched.16.b"
+  },
+  {
+   "t": 12861,
+   "text": "al\",\"value\":\"{state."
+  },
+  {
+   "t": 12894,
+   "text": "years < 17 ? state"
+  },
+  {
+   "t": 12928,
+   "text": ".sched[15].bal"
+  },
+  {
+   "t": 12959,
+   "text": " : state.sched[15]."
+  },
+  {
+   "t": 12994,
+   "text": "bal * state.g + state"
+  },
+  {
+   "t": 13029,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 13060,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 13094,
+   "text": "ched.17.bal\",\"value"
+  },
+  {
+   "t": 13126,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 13164,
+   "text": "18 ? state.sched"
+  },
+  {
+   "t": 13195,
+   "text": "[16].bal : state."
+  },
+  {
+   "t": 13227,
+   "text": "sched[16].bal *"
+  },
+  {
+   "t": 13263,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 13294,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 13333,
+   "text": "\",\"target\":\"sched.18"
+  },
+  {
+   "t": 13366,
+   "text": ".bal\",\"value\":\"{"
+  },
+  {
+   "t": 13395,
+   "text": "state.years < 19 "
+  },
+  {
+   "t": 13431,
+   "text": "? state.sched[17]."
+  },
+  {
+   "t": 13464,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 13494,
+   "text": "17].bal * state.g"
+  },
+  {
+   "t": 13526,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 13562,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 13597,
+   "text": "\"sched.19.bal"
+  },
+  {
+   "t": 13634,
+   "text": "\",\"value\":\"{state.years"
+  },
+  {
+   "t": 13660,
+   "text": " < 20 ? state."
+  },
+  {
+   "t": 13695,
+   "text": "sched[18].bal :"
+  },
+  {
+   "t": 13728,
+   "text": " state.sched[18].b"
+  },
+  {
+   "t": 13761,
+   "text": "al * state.g + state."
+  },
+  {
+   "t": 13794,
+   "text": "add}\"}]}},{"
+  },
+  {
+   "t": 13828,
+   "text": "\"type\":\"slider\",\"b"
+  },
+  {
+   "t": 13871,
+   "text": "ind\":\"{state.years}"
+  },
+  {
+   "t": 13894,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 13927,
+   "text": "Years\",\"min\":1,\""
+  },
+  {
+   "t": 13961,
+   "text": "max\":20,\"step\":1"
+  },
+  {
+   "t": 13997,
+   "text": ",\"showValue\":true},"
+  },
+  {
+   "t": 14029,
+   "text": "\"on_change\":{\"action"
+  },
+  {
+   "t": 14063,
+   "text": "\":\"flow\",\"steps\":"
+  },
+  {
+   "t": 14100,
+   "text": "[{\"action\":\"set\",\""
+  },
+  {
+   "t": 14129,
+   "text": "target\":\"m\",\"value\":\""
+  },
+  {
+   "t": 14173,
+   "text": "{1 + state.rate"
+  },
+  {
+   "t": 14194,
+   "text": " / 1200}\"},{"
+  },
+  {
+   "t": 14233,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 14269,
+   "text": "\"g\",\"value\":\"{state"
+  },
+  {
+   "t": 14295,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 14351,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 14361,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 14396,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 14429,
+   "text": ".m * state.m * state"
+  },
+  {
+   "t": 14464,
+   "text": ".m * state.m}\""
+  },
+  {
+   "t": 14495,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 14528,
+   "text": "target\":\"add\",\"value\":\""
+  },
+  {
+   "t": 14562,
+   "text": "{state.rate == 0"
+  },
+  {
+   "t": 14594,
+   "text": " ? state.deposit"
+  },
+  {
+   "t": 14637,
+   "text": " * 12 : state.de"
+  },
+  {
+   "t": 14661,
+   "text": "posit * (state.g -"
+  },
+  {
+   "t": 14697,
+   "text": " 1) / (state.r"
+  },
+  {
+   "t": 14729,
+   "text": "ate / 1200)}\""
+  },
+  {
+   "t": 14761,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 14794,
+   "text": "target\":\"sched.0."
+  },
+  {
+   "t": 14852,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 14872,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 14895,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 14928,
+   "text": "ched.1.bal\",\"value"
+  },
+  {
+   "t": 14969,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 14994,
+   "text": "2 ? state.sched"
+  },
+  {
+   "t": 15045,
+   "text": "[0].bal : state."
+  },
+  {
+   "t": 15163,
+   "text": "sched[0].bal *"
+  },
+  {
+   "t": 15163,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 15164,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 15249,
+   "text": "\",\"target\":\"sched.2"
+  },
+  {
+   "t": 15249,
+   "text": ".bal\",\"value\":\"{"
+  },
+  {
+   "t": 15250,
+   "text": "state.years < 3 "
+  },
+  {
+   "t": 15327,
+   "text": "? state.sched[1]."
+  },
+  {
+   "t": 15327,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 15356,
+   "text": "1].bal * state.g"
+  },
+  {
+   "t": 15361,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 15397,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 15428,
+   "text": "\"sched.3.bal"
+  },
+  {
+   "t": 15466,
+   "text": "\",\"value\":\"{state.years"
+  },
+  {
+   "t": 15495,
+   "text": " < 4 ? state."
+  },
+  {
+   "t": 15529,
+   "text": "sched[2].bal :"
+  },
+  {
+   "t": 15561,
+   "text": " state.sched[2].b"
+  },
+  {
+   "t": 15594,
+   "text": "al * state.g + state."
+  },
+  {
+   "t": 15630,
+   "text": "add}\"},{\"action\":"
+  },
+  {
+   "t": 15661,
+   "text": "\"set\",\"target\":\"sched"
+  },
+  {
+   "t": 15695,
+   "text": ".4.bal\",\"value\":"
+  },
+  {
+   "t": 15729,
+   "text": "\"{state.years < 5"
+  },
+  {
+   "t": 15762,
+   "text": " ? state.sched["
+  },
+  {
+   "t": 15795,
+   "text": "3].bal : state.s"
+  },
+  {
+   "t": 15856,
+   "text": "ched[3].bal * state"
+  },
+  {
+   "t": 15863,
+   "text": ".g + state.add}\""
+  },
+  {
+   "t": 15895,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 15930,
+   "text": "target\":\"sched.5."
+  },
+  {
+   "t": 15961,
+   "text": "bal\",\"value\":\"{state"
+  },
+  {
+   "t": 15995,
+   "text": ".years < 6 ?"
+  },
+  {
+   "t": 16030,
+   "text": " state.sched[4].b"
+  },
+  {
+   "t": 16066,
+   "text": "al : state.sched[4"
+  },
+  {
+   "t": 16096,
+   "text": "].bal * state.g +"
+  },
+  {
+   "t": 16128,
+   "text": " state.add}\"},{\""
+  },
+  {
+   "t": 16166,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 16195,
+   "text": "sched.6.bal\",\""
+  },
+  {
+   "t": 16228,
+   "text": "value\":\"{state.years "
+  },
+  {
+   "t": 16261,
+   "text": "< 7 ? state.s"
+  },
+  {
+   "t": 16295,
+   "text": "ched[5].bal : state"
+  },
+  {
+   "t": 16328,
+   "text": ".sched[5].bal"
+  },
+  {
+   "t": 16362,
+   "text": " * state.g + state.add"
+  },
+  {
+   "t": 16395,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 16428,
+   "text": "set\",\"target\":\"sched."
+  },
+  {
+   "t": 16464,
+   "text": "7.bal\",\"value\":\""
+  },
+  {
+   "t": 16495,
+   "text": "{state.years < 8 "
+  },
+  {
+   "t": 16530,
+   "text": "? state.sched[6"
+  },
+  {
+   "t": 16633,
+   "text": "].bal : state.sched"
+  },
+  {
+   "t": 16633,
+   "text": "[6].bal * state."
+  },
+  {
+   "t": 16633,
+   "text": "g + state.add}\"},"
+  },
+  {
+   "t": 16662,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 16696,
+   "text": "\":\"sched.8.b"
+  },
+  {
+   "t": 16730,
+   "text": "al\",\"value\":\"{state."
+  },
+  {
+   "t": 16762,
+   "text": "years < 9 ? state"
+  },
+  {
+   "t": 16795,
+   "text": ".sched[7].bal"
+  },
+  {
+   "t": 16830,
+   "text": " : state.sched[7]."
+  },
+  {
+   "t": 16862,
+   "text": "bal * state.g + state"
+  },
+  {
+   "t": 16895,
+   "text": ".add}\"},{\"action"
+  },
+  {
+   "t": 16931,
+   "text": "\":\"set\",\"target\":\"s"
+  },
+  {
+   "t": 16962,
+   "text": "ched.9.bal\",\"value"
+  },
+  {
+   "t": 16995,
+   "text": "\":\"{state.years < "
+  },
+  {
+   "t": 17029,
+   "text": "10 ? state.sched"
+  },
+  {
+   "t": 17067,
+   "text": "[8].bal : state."
+  },
+  {
+   "t": 17119,
+   "text": "sched[8].bal *"
+  },
+  {
+   "t": 17128,
+   "text": " state.g + state.add}"
+  },
+  {
+   "t": 17162,
+   "text": "\"},{\"action\":\"set"
   },
   {
    "t": 17195,
-   "text": "\"currency\"}},{\""
+   "text": "\",\"target\":\"sched.10"
   },
   {
-   "t": 17227,
-   "text": "type\":\"stat\",\"props\":"
+   "t": 17230,
+   "text": ".bal\",\"value\":\"{"
   },
   {
-   "t": 17260,
-   "text": "{\"label\":\"Interest"
+   "t": 17267,
+   "text": "state.years < 11 "
   },
   {
-   "t": 17297,
-   "text": " earned\",\"value\":\"{state"
+   "t": 17295,
+   "text": "? state.sched[9]."
   },
   {
-   "t": 17329,
-   "text": ".final - state.deposit"
+   "t": 17330,
+   "text": "bal : state.sched["
   },
   {
-   "t": 17361,
-   "text": " * 12 * state.years"
+   "t": 17362,
+   "text": "9].bal * state.g"
   },
   {
-   "t": 17394,
-   "text": "}\",\"format\":\"currency\""
+   "t": 17395,
+   "text": " + state.add}\"},{"
   },
   {
-   "t": 17427,
-   "text": "}}]},{\"type\":"
+   "t": 17433,
+   "text": "\"action\":\"set\",\"target\":"
   },
   {
-   "t": 17464,
-   "text": "\"chart\",\"props\":{\""
+   "t": 17463,
+   "text": "\"sched.11.bal"
   },
   {
    "t": 17497,
-   "text": "type\":\"bar\",\"title\":"
+   "text": "\",\"value\":\"{state.years"
   },
   {
-   "t": 17530,
-   "text": "\"Balance at"
+   "t": 17529,
+   "text": " < 12 ? state."
   },
   {
-   "t": 17566,
-   "text": " the end of each year\",\"height\":"
+   "t": 17562,
+   "text": "sched[10].bal :"
   },
   {
    "t": 17595,
-   "text": "260,\"data\":[{\""
+   "text": " state.sched[10].b"
   },
   {
-   "t": 17628,
-   "text": "label\":\"1"
+   "t": 17637,
+   "text": "al * state.g + state."
   },
   {
-   "t": 17661,
-   "text": "\",\"value\":\"{state.years"
+   "t": 17662,
+   "text": "add}\"},{\"action\":"
   },
   {
-   "t": 17714,
-   "text": " >= 1 ? state"
+   "t": 17695,
+   "text": "\"set\",\"target\":\"sched"
   },
   {
-   "t": 17733,
-   "text": ".b1 : 0}"
+   "t": 17734,
+   "text": ".12.bal\",\"value\":"
   },
   {
-   "t": 17768,
-   "text": "\"},{\"label\":\"2"
+   "t": 17762,
+   "text": "\"{state.years < 13"
   },
   {
-   "t": 17795,
-   "text": "\",\"value\":\"{state.years"
+   "t": 17797,
+   "text": " ? state.sched["
   },
   {
-   "t": 17828,
-   "text": " >= 2 ? state"
+   "t": 17829,
+   "text": "11].bal : state.s"
   },
   {
-   "t": 17897,
-   "text": ".b2 : 0}"
+   "t": 17862,
+   "text": "ched[11].bal * state"
   },
   {
-   "t": 17897,
-   "text": "\"},{\"label\":\"3"
+   "t": 17900,
+   "text": ".g + state.add}\""
   },
   {
-   "t": 17927,
-   "text": "\",\"value\":\"{state.years"
+   "t": 17930,
+   "text": "},{\"action\":\"set\",\""
   },
   {
-   "t": 17960,
-   "text": " >= 3 ? state"
+   "t": 17963,
+   "text": "target\":\"sched.13."
   },
   {
-   "t": 17994,
-   "text": ".b3 : 0}"
+   "t": 18002,
+   "text": "bal\",\"value\":\"{state"
   },
   {
-   "t": 18028,
-   "text": "\"},{\"label\":\"4"
+   "t": 18039,
+   "text": ".years < 14 ?"
   },
   {
-   "t": 18064,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18183,
+   "text": " state.sched[12].b"
   },
   {
-   "t": 18094,
-   "text": " >= 4 ? state"
+   "t": 18183,
+   "text": "al : state.sched[12"
   },
   {
-   "t": 18127,
-   "text": ".b4 : 0}"
+   "t": 18183,
+   "text": "].bal * state.g +"
   },
   {
-   "t": 18160,
-   "text": "\"},{\"label\":\"5"
+   "t": 18183,
+   "text": " state.add}\"},{\""
   },
   {
-   "t": 18195,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18251,
+   "text": "action\":\"set\",\"target\":\""
   },
   {
-   "t": 18227,
-   "text": " >= 5 ? state"
+   "t": 18251,
+   "text": "sched.14.bal\",\""
   },
   {
-   "t": 18261,
-   "text": ".b5 : 0}"
+   "t": 18416,
+   "text": "value\":\"{state.years "
   },
   {
-   "t": 18295,
-   "text": "\"},{\"label\":\"6"
+   "t": 18416,
+   "text": "< 15 ? state.s"
   },
   {
-   "t": 18330,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18416,
+   "text": "ched[13].bal : state"
   },
   {
-   "t": 18368,
-   "text": " >= 6 ? state"
+   "t": 18417,
+   "text": ".sched[13].bal"
   },
   {
-   "t": 18396,
-   "text": ".b6 : 0}"
+   "t": 18417,
+   "text": " * state.g + state.add"
   },
   {
-   "t": 18428,
-   "text": "\"},{\"label\":\"7"
+   "t": 18429,
+   "text": "}\"},{\"action\":\""
   },
   {
-   "t": 18462,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18467,
+   "text": "set\",\"target\":\"sched."
   },
   {
-   "t": 18494,
-   "text": " >= 7 ? state"
+   "t": 18507,
+   "text": "15.bal\",\"value\":\""
   },
   {
-   "t": 18528,
-   "text": ".b7 : 0}"
+   "t": 18593,
+   "text": "{state.years < 16 "
   },
   {
-   "t": 18560,
-   "text": "\"},{\"label\":\"8"
+   "t": 18593,
+   "text": "? state.sched[14"
   },
   {
-   "t": 18594,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18612,
+   "text": "].bal : state.sched"
   },
   {
-   "t": 18627,
-   "text": " >= 8 ? state"
+   "t": 18630,
+   "text": "[14].bal * state."
   },
   {
-   "t": 18660,
-   "text": ".b8 : 0}"
+   "t": 18663,
+   "text": "g + state.add}\"},"
   },
   {
-   "t": 18697,
-   "text": "\"},{\"label\":\"9"
+   "t": 18696,
+   "text": "{\"action\":\"set\",\"target"
   },
   {
-   "t": 18731,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18730,
+   "text": "\":\"sched.16.b"
   },
   {
-   "t": 19131,
-   "text": " >= 9 ? state"
+   "t": 18763,
+   "text": "al\",\"value\":\"{state."
   },
   {
-   "t": 19131,
-   "text": ".b9 : 0}"
+   "t": 18797,
+   "text": "years < 17 ? state"
   },
   {
-   "t": 19131,
-   "text": "\"},{\"label\":\"10"
+   "t": 18831,
+   "text": ".sched[15].bal"
   },
   {
-   "t": 19131,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18864,
+   "text": " : state.sched[15]."
   },
   {
-   "t": 19131,
-   "text": " >= 10 ? state"
+   "t": 18898,
+   "text": "bal * state.g + state"
   },
   {
-   "t": 19131,
-   "text": ".b10 : 0}"
+   "t": 18930,
+   "text": ".add}\"},{\"action"
   },
   {
-   "t": 19131,
-   "text": "\"},{\"label\":\"11"
+   "t": 18962,
+   "text": "\":\"set\",\"target\":\"s"
   },
   {
-   "t": 19131,
-   "text": "\",\"value\":\"{state.years"
+   "t": 18996,
+   "text": "ched.17.bal\",\"value"
   },
   {
-   "t": 19132,
-   "text": " >= 11 ? state"
+   "t": 19030,
+   "text": "\":\"{state.years < "
   },
   {
-   "t": 19132,
-   "text": ".b11 : 0}"
+   "t": 19062,
+   "text": "18 ? state.sched"
   },
   {
-   "t": 19132,
-   "text": "\"},{\"label\":\"12"
+   "t": 19097,
+   "text": "[16].bal : state."
   },
   {
-   "t": 19132,
-   "text": "\",\"value\":\"{state.years"
+   "t": 19129,
+   "text": "sched[16].bal *"
   },
   {
-   "t": 19132,
-   "text": " >= 12 ? state"
+   "t": 19178,
+   "text": " state.g + state.add}"
   },
   {
-   "t": 19132,
-   "text": ".b12 : 0}"
+   "t": 19197,
+   "text": "\"},{\"action\":\"set"
   },
   {
-   "t": 19132,
-   "text": "\"},{\"label\":\"13"
-  },
-  {
-   "t": 19164,
-   "text": "\",\"value\":\"{state.years"
-  },
-  {
-   "t": 19185,
-   "text": " >= 13 ? state"
-  },
-  {
-   "t": 19218,
-   "text": ".b13 : 0}"
+   "t": 19231,
+   "text": "\",\"target\":\"sched.18"
   },
   {
    "t": 19271,
-   "text": "\"},{\"label\":\"14"
+   "text": ".bal\",\"value\":\"{"
   },
   {
-   "t": 19288,
+   "t": 19299,
+   "text": "state.years < 19 "
+  },
+  {
+   "t": 19338,
+   "text": "? state.sched[17]."
+  },
+  {
+   "t": 19368,
+   "text": "bal : state.sched["
+  },
+  {
+   "t": 19398,
+   "text": "17].bal * state.g"
+  },
+  {
+   "t": 19447,
+   "text": " + state.add}\"},{"
+  },
+  {
+   "t": 19473,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 19498,
+   "text": "\"sched.19.bal"
+  },
+  {
+   "t": 19532,
    "text": "\",\"value\":\"{state.years"
   },
   {
-   "t": 19318,
-   "text": " >= 14 ? state"
+   "t": 19565,
+   "text": " < 20 ? state."
   },
   {
-   "t": 19354,
-   "text": ".b14 : 0}"
+   "t": 19603,
+   "text": "sched[18].bal :"
   },
   {
-   "t": 19385,
-   "text": "\"},{\"label\":\"15"
+   "t": 19631,
+   "text": " state.sched[18].b"
   },
   {
-   "t": 19423,
-   "text": "\",\"value\":\"{state.years"
+   "t": 19664,
+   "text": "al * state.g + state."
   },
   {
-   "t": 19452,
-   "text": " >= 15 ? state"
+   "t": 19697,
+   "text": "add}\"}]}},{"
   },
   {
-   "t": 19491,
-   "text": ".b15 : 0}"
+   "t": 19731,
+   "text": "\"type\":\"st"
   },
   {
-   "t": 19521,
-   "text": "\"},{\"label\":\"16"
+   "t": 19763,
+   "text": "at\",\"props\":{\"label\":"
   },
   {
-   "t": 19552,
-   "text": "\",\"value\":\"{state.years"
+   "t": 19798,
+   "text": "\"Balance after {state"
   },
   {
-   "t": 19587,
-   "text": " >= 16 ? state"
+   "t": 19872,
+   "text": ".years} years\",\"value\":\""
   },
   {
-   "t": 19620,
-   "text": ".b16 : 0}"
+   "t": 19886,
+   "text": "{state.sched[19]."
   },
   {
-   "t": 19653,
-   "text": "\"},{\"label\":\"17"
+   "t": 19899,
+   "text": "bal}\",\"format\":\"curr"
   },
   {
-   "t": 19703,
-   "text": "\",\"value\":\"{state.years"
+   "t": 19929,
+   "text": "ency\",\"size\":\"lg\""
   },
   {
-   "t": 19721,
-   "text": " >= 17 ? state"
+   "t": 19963,
+   "text": "}},{\"type\":\"gr"
   },
   {
-   "t": 19752,
-   "text": ".b17 : 0}"
+   "t": 19997,
+   "text": "id\",\"props\":{\"columns"
   },
   {
-   "t": 19784,
-   "text": "\"},{\"label\":\"18"
+   "t": 20030,
+   "text": "\":2,\"gap\":\""
   },
   {
-   "t": 19818,
-   "text": "\",\"value\":\"{state.years"
+   "t": 20063,
+   "text": "12px\"},\"children\":["
   },
   {
-   "t": 19851,
-   "text": " >= 18 ? state"
+   "t": 20096,
+   "text": "{\"type\":\"stat\",\""
   },
   {
-   "t": 19891,
-   "text": ".b18 : 0}"
+   "t": 20131,
+   "text": "props\":{\"label\":\"You"
   },
   {
-   "t": 19924,
-   "text": "\"},{\"label\":\"19"
+   "t": 20169,
+   "text": " deposit"
   },
   {
-   "t": 19953,
-   "text": "\",\"value\":\"{state.years"
+   "t": 20196,
+   "text": "\",\"value\":\"{state.de"
   },
   {
-   "t": 19999,
-   "text": " >= 19 ? state"
+   "t": 20231,
+   "text": "posit * 12 * state"
   },
   {
-   "t": 20025,
-   "text": ".b19 : 0}"
+   "t": 20263,
+   "text": ".years}\",\"format\":\"curr"
   },
   {
-   "t": 20051,
-   "text": "\"},{\"label\":\"20"
+   "t": 20298,
+   "text": "ency\",\"size\":\"sm\""
   },
   {
-   "t": 20086,
-   "text": "\",\"value\":\"{state.years"
+   "t": 20330,
+   "text": "}},{\"type\":\"st"
   },
   {
-   "t": 20120,
-   "text": " >= 20 ? state"
+   "t": 20363,
+   "text": "at\",\"props\":{\"label\":"
   },
   {
-   "t": 20154,
-   "text": ".b20 : 0}"
+   "t": 20397,
+   "text": "\"Interest earned\",\"value"
   },
   {
-   "t": 20187,
-   "text": "\"}]}}]}]"
+   "t": 20429,
+   "text": "\":\"{state.sched["
   },
   {
-   "t": 20217,
-   "text": "}}"
+   "t": 20464,
+   "text": "19].bal - state.de"
+  },
+  {
+   "t": 20497,
+   "text": "posit * 12 * state"
+  },
+  {
+   "t": 20530,
+   "text": ".years}\",\"format\":\"curr"
+  },
+  {
+   "t": 20563,
+   "text": "ency\",\"size\":\"sm\""
+  },
+  {
+   "t": 20596,
+   "text": "}}]},{\"type\":"
+  },
+  {
+   "t": 20630,
+   "text": "\"separator\",\""
+  },
+  {
+   "t": 20663,
+   "text": "props\":{}"
+  },
+  {
+   "t": 20696,
+   "text": "},{\"type\":\"text\",\""
+  },
+  {
+   "t": 20730,
+   "text": "props\":{\"text\":\""
+  },
+  {
+   "t": 20763,
+   "text": "Balance by year\",\"weight\":"
+  },
+  {
+   "t": 20851,
+   "text": "\"semibold\",\"size\":\""
+  },
+  {
+   "t": 20852,
+   "text": "sm\"}},{\"type"
+  },
+  {
+   "t": 20885,
+   "text": "\":\"each\",\"items\":\"{"
+  },
+  {
+   "t": 20918,
+   "text": "state.sched}\",\"children\":"
+  },
+  {
+   "t": 20955,
+   "text": "[{\"type\":\"if\",\""
+  },
+  {
+   "t": 21044,
+   "text": "condition\":\"{item.year"
+  },
+  {
+   "t": 21044,
+   "text": " <= state.years}\",\"children"
+  },
+  {
+   "t": 21044,
+   "text": "\":[{\"type\":\"gr"
+  },
+  {
+   "t": 21137,
+   "text": "id\",\"props\":{\"columns"
+  },
+  {
+   "t": 21137,
+   "text": "\":\"34"
+  },
+  {
+   "t": 21152,
+   "text": "px 1fr 56px"
+  },
+  {
+   "t": 21178,
+   "text": "\",\"gap\":\"8"
+  },
+  {
+   "t": 21198,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 21233,
+   "text": "\"type\":\"text\",\"props\":"
+  },
+  {
+   "t": 21263,
+   "text": "{\"text\":\"Y{"
+  },
+  {
+   "t": 21296,
+   "text": "item.year}\",\"size\":\""
+  },
+  {
+   "t": 21333,
+   "text": "xs\"}},{\"type"
+  },
+  {
+   "t": 21363,
+   "text": "\":\"progress\",\"props\":{"
+  },
+  {
+   "t": 21397,
+   "text": "\"value\":\"{item.b"
+  },
+  {
+   "t": 21431,
+   "text": "al}\",\"max\":\"{state"
+  },
+  {
+   "t": 21462,
+   "text": ".sched[19].bal"
+  },
+  {
+   "t": 21582,
+   "text": "}\",\"variant\":\"thick"
+  },
+  {
+   "t": 21582,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 21582,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 21600,
+   "text": "\"{item.bal.to"
+  },
+  {
+   "t": 21631,
+   "text": "Fixed(0)}\",\""
+  },
+  {
+   "t": 21663,
+   "text": "size\":\"xs\"}}"
+  },
+  {
+   "t": 21695,
+   "text": "]}]}]}]}"
+  },
+  {
+   "t": 21788,
+   "text": "]}}"
   }
  ]
 }

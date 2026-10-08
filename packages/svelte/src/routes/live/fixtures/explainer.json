@@ -1,0 +1,1309 @@
+{
+ "id": "explainer",
+ "title": "How bike gears work",
+ "prompt": "Explain how a bicycle's gears work. Show the drivetrain as a diagram where I can pick a part to see what it does, and let me change the chainring and cog teeth to see the gear ratio and how far one pedal turn takes me.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-08T08:53:11.309Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 20,
+   "text": "\"version"
+  },
+  {
+   "t": 53,
+   "text": "\":\"1.0\",\"state\":"
+  },
+  {
+   "t": 93,
+   "text": "{\"part\":\"chainring"
+  },
+  {
+   "t": 121,
+   "text": "\",\"chainring\":50,\""
+  },
+  {
+   "t": 159,
+   "text": "cog\":17,\"whe"
+  },
+  {
+   "t": 190,
+   "text": "el\":2100,\"cad"
+  },
+  {
+   "t": 224,
+   "text": "ence\":80},\""
+  },
+  {
+   "t": 253,
+   "text": "ui\":{\"type\":\"fl"
+  },
+  {
+   "t": 290,
+   "text": "ex\",\"props"
+  },
+  {
+   "t": 320,
+   "text": "\":{\"direction\":\"column"
+  },
+  {
+   "t": 355,
+   "text": "\",\"gap\":\"12px\""
+  },
+  {
+   "t": 389,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 421,
+   "text": "\":\"heading\",\"props\":{"
+  },
+  {
+   "t": 455,
+   "text": "\"text\":\"How"
+  },
+  {
+   "t": 495,
+   "text": " b"
+  },
+  {
+   "t": 524,
+   "text": "ic"
+  },
+  {
+   "t": 556,
+   "text": "ycle gears work\",\"level\":"
+  },
+  {
+   "t": 596,
+   "text": "3}},{\"type\":\""
+  },
+  {
+   "t": 630,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 654,
+   "text": "\""
+  },
+  {
+   "t": 712,
+   "text": "Tap a part of"
+  },
+  {
+   "t": 724,
+   "text": " the drivetrain to see"
+  },
+  {
+   "t": 769,
+   "text": " what it does.\",\"size\":\""
+  },
+  {
+   "t": 787,
+   "text": "sm\"}},{\"type"
+  },
+  {
+   "t": 822,
+   "text": "\":\"grid\",\"props\":{"
+  },
+  {
+   "t": 855,
+   "text": "\"columns\":2,\"g"
+  },
+  {
+   "t": 891,
+   "text": "ap\":\"8px\"},\""
+  },
+  {
+   "t": 924,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 954,
+   "text": "button\",\"props\":{\"label\":"
+  },
+  {
+   "t": 989,
+   "text": "\"1 "
+  },
+  {
+   "t": 1063,
+   "text": "Pedals +"
+  },
+  {
+   "t": 1069,
+   "text": " crank\",\"size"
+  },
+  {
+   "t": 1094,
+   "text": "\":\"sm\",\"variant\":"
+  },
+  {
+   "t": 1122,
+   "text": "\"{state.part == '"
+  },
+  {
+   "t": 1155,
+   "text": "cr"
+  },
+  {
+   "t": 1190,
+   "text": "ank' ? 'default'"
+  },
+  {
+   "t": 1223,
+   "text": " : 'outline'}\""
+  },
+  {
+   "t": 1265,
+   "text": "},\"on_click\":{\""
+  },
+  {
+   "t": 1295,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 1325,
+   "text": "part\",\"value\":\"crank\""
+  },
+  {
+   "t": 1359,
+   "text": "}},{\"type\":\"button"
+  },
+  {
+   "t": 1392,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 1423,
+   "text": "2 Chainring ("
+  },
+  {
+   "t": 1457,
+   "text": "front)\",\"size\":\"sm"
+  },
+  {
+   "t": 1495,
+   "text": "\",\"variant\":\"{state."
+  },
+  {
+   "t": 1524,
+   "text": "part == 'chainring'"
+  },
+  {
+   "t": 1557,
+   "text": " ? 'default' : "
+  },
+  {
+   "t": 1625,
+   "text": "'outline'}\"},\""
+  },
+  {
+   "t": 1625,
+   "text": "on_click\":{\"action\":"
+  },
+  {
+   "t": 1658,
+   "text": "\"set\",\"target\":\"part\",\""
+  },
+  {
+   "t": 1694,
+   "text": "value\":\"chainring\"}"
+  },
+  {
+   "t": 1745,
+   "text": "},{\"type\":\"button\",\""
+  },
+  {
+   "t": 1768,
+   "text": "props\":{\"label\":\"3"
+  },
+  {
+   "t": 1810,
+   "text": " Chain\",\"size\":\""
+  },
+  {
+   "t": 1863,
+   "text": "sm\",\"variant\":\"{"
+  },
+  {
+   "t": 1864,
+   "text": "state.part == 'chain"
+  },
+  {
+   "t": 1895,
+   "text": "' ? 'default' :"
+  },
+  {
+   "t": 1925,
+   "text": " 'outline'}\"},"
+  },
+  {
+   "t": 1960,
+   "text": "\"on_click\":{\"action"
+  },
+  {
+   "t": 1994,
+   "text": "\":\"set\",\"target\":\"part"
+  },
+  {
+   "t": 2025,
+   "text": "\",\"value\":\"chain\"}"
+  },
+  {
+   "t": 2061,
+   "text": "},{\"type\":\"button\",\""
+  },
+  {
+   "t": 2095,
+   "text": "props\":{\"label\":\"4"
+  },
+  {
+   "t": 2127,
+   "text": " Cog (rear)"
+  },
+  {
+   "t": 2164,
+   "text": "\",\"size\":\"sm\",\"vari"
+  },
+  {
+   "t": 2195,
+   "text": "ant\":\"{state.part =="
+  },
+  {
+   "t": 2227,
+   "text": " 'cog' ? "
+  },
+  {
+   "t": 2266,
+   "text": "'default' : 'outline"
+  },
+  {
+   "t": 2295,
+   "text": "'}\"},\"on_click"
+  },
+  {
+   "t": 2345,
+   "text": "\":{\"action\":\"set\",\""
+  },
+  {
+   "t": 2370,
+   "text": "target\":\"part\",\"value\":\""
+  },
+  {
+   "t": 2405,
+   "text": "cog\"}},{\"type"
+  },
+  {
+   "t": 2441,
+   "text": "\":\"button\",\"props\":{\""
+  },
+  {
+   "t": 2464,
+   "text": "label\":\"5 Derail"
+  },
+  {
+   "t": 2497,
+   "text": "leur\",\"size\":\"sm"
+  },
+  {
+   "t": 2527,
+   "text": "\",\"variant\":\"{state."
+  },
+  {
+   "t": 2566,
+   "text": "part == 'derailleur"
+  },
+  {
+   "t": 2601,
+   "text": "' ? 'default' :"
+  },
+  {
+   "t": 2627,
+   "text": " 'outline'}\"},"
+  },
+  {
+   "t": 2662,
+   "text": "\"on_click\":{\"action"
+  },
+  {
+   "t": 2702,
+   "text": "\":\"set\",\"target\":\"part"
+  },
+  {
+   "t": 2729,
+   "text": "\",\"value\":\"derailleur"
+  },
+  {
+   "t": 2762,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 2795,
+   "text": "button\",\"props\":{\"label\":"
+  },
+  {
+   "t": 2829,
+   "text": "\"6 Rear whe"
+  },
+  {
+   "t": 2862,
+   "text": "el\",\"size\":\"sm\",\""
+  },
+  {
+   "t": 2897,
+   "text": "variant\":\"{state.part"
+  },
+  {
+   "t": 2930,
+   "text": " == 'wheel' "
+  },
+  {
+   "t": 2962,
+   "text": "? 'default' : '"
+  },
+  {
+   "t": 2995,
+   "text": "outline'}\"},\"on"
+  },
+  {
+   "t": 3030,
+   "text": "_click\":{\"action\":\""
+  },
+  {
+   "t": 3062,
+   "text": "set\",\"target\":\"part\",\"value"
+  },
+  {
+   "t": 3098,
+   "text": "\":\"wheel\"}}"
+  },
+  {
+   "t": 3135,
+   "text": "]},{\"type\":\"text"
+  },
+  {
+   "t": 3167,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 3196,
+   "text": "Pedals →"
+  },
+  {
+   "t": 3230,
+   "text": " Chainring → Chain →"
+  },
+  {
+   "t": 3262,
+   "text": " Cog → W"
+  },
+  {
+   "t": 3294,
+   "text": "heel\",\"size\":\"xs"
+  },
+  {
+   "t": 3328,
+   "text": "\""
+  },
+  {
+   "t": 3362,
+   "text": "}},{\"type\":\"card"
+  },
+  {
+   "t": 3396,
+   "text": "\",\"props\":{\"variant\":"
+  },
+  {
+   "t": 3430,
+   "text": "\"muted\",\"density\":\"comp"
+  },
+  {
+   "t": 3464,
+   "text": "act\"},\"children\":[{"
+  },
+  {
+   "t": 3496,
+   "text": "\"type\":\"if\",\"condition"
+  },
+  {
+   "t": 3532,
+   "text": "\":\"{state.part == "
+  },
+  {
+   "t": 3563,
+   "text": "'crank'}\",\"children\":"
+  },
+  {
+   "t": 3596,
+   "text": "[{\"type\":\"text\",\""
+  },
+  {
+   "t": 3630,
+   "text": "props\":{\"text\":\""
+  },
+  {
+   "t": 3663,
+   "text": "Pedals +"
+  },
+  {
+   "t": 3697,
+   "text": " crank: your"
+  },
+  {
+   "t": 3730,
+   "text": " legs tur"
+  },
+  {
+   "t": 3763,
+   "text": "n the crank arms,"
+  },
+  {
+   "t": 3795,
+   "text": " which sp"
+  },
+  {
+   "t": 3831,
+   "text": "in the chainring. This"
+  },
+  {
+   "t": 3864,
+   "text": " is where all"
+  },
+  {
+   "t": 3896,
+   "text": " the"
+  },
+  {
+   "t": 3929,
+   "text": " power en"
+  },
+  {
+   "t": 3963,
+   "text": "ters.\",\"size\":\"sm"
+  },
+  {
+   "t": 4008,
+   "text": "\"}}"
+  },
+  {
+   "t": 4086,
+   "text": "]},{\"type\":\"if"
+  },
+  {
+   "t": 4099,
+   "text": "\",\"condition\":\"{state."
+  },
+  {
+   "t": 4397,
+   "text": "part == 'chainring'"
+  },
+  {
+   "t": 4398,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 4398,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 4398,
+   "text": "text\":\"Chainring:"
+  },
+  {
+   "t": 4398,
+   "text": " the big"
+  },
+  {
+   "t": 4399,
+   "text": " to"
+  },
+  {
+   "t": 4399,
+   "text": "othed"
+  },
+  {
+   "t": 4460,
+   "text": " "
+  },
+  {
+   "t": 4460,
+   "text": "ring at the p"
+  },
+  {
+   "t": 4461,
+   "text": "edals. More teeth means"
+  },
+  {
+   "t": 4461,
+   "text": " each"
+  },
+  {
+   "t": 4463,
+   "text": " pedal turn p"
+  },
+  {
+   "t": 4497,
+   "text": "ulls more chain, so"
+  },
+  {
+   "t": 4531,
+   "text": " you go far"
+  },
+  {
+   "t": 4563,
+   "text": "ther but push"
+  },
+  {
+   "t": 4595,
+   "text": " harder.\",\"size\":\"s"
+  },
+  {
+   "t": 4629,
+   "text": "m\"}}]},{\""
+  },
+  {
+   "t": 4661,
+   "text": "type\":\"if\",\"condition\":"
+  },
+  {
+   "t": 4696,
+   "text": "\"{state.part == '"
+  },
+  {
+   "t": 4741,
+   "text": "chain'}\",\"children\":["
+  },
+  {
+   "t": 4779,
+   "text": "{\"type\":\"text\",\"props"
+  },
+  {
+   "t": 4798,
+   "text": "\":{\"text\":\"Ch"
+  },
+  {
+   "t": 4831,
+   "text": "ain: links the ch"
+  },
+  {
+   "t": 4865,
+   "text": "ainring to the c"
+  },
+  {
+   "t": 4898,
+   "text": "og and carries your"
+  },
+  {
+   "t": 4936,
+   "text": " force. Each"
+  },
+  {
+   "t": 4963,
+   "text": " tooth that"
+  },
+  {
+   "t": 4998,
+   "text": " passes mo"
+  },
+  {
+   "t": 5033,
+   "text": "ves the"
+  },
+  {
+   "t": 5064,
+   "text": " chain by one link.\",\"size"
+  },
+  {
+   "t": 5099,
+   "text": "\":\"sm\"}}]"
+  },
+  {
+   "t": 5130,
+   "text": "},{\"type\":\"if\",\""
+  },
+  {
+   "t": 5163,
+   "text": "condition\":\"{state.part"
+  },
+  {
+   "t": 5195,
+   "text": " == 'cog'}\",\""
+  },
+  {
+   "t": 5236,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 5263,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 5301,
+   "text": "\"Cog:"
+  },
+  {
+   "t": 5339,
+   "text": " the to"
+  },
+  {
+   "t": 5368,
+   "text": "othed g"
+  },
+  {
+   "t": 5398,
+   "text": "ear on the r"
+  },
+  {
+   "t": 5436,
+   "text": "ear wheel. Few"
+  },
+  {
+   "t": 5465,
+   "text": "er teeth means the whe"
+  },
+  {
+   "t": 5496,
+   "text": "el spins more"
+  },
+  {
+   "t": 5530,
+   "text": " per chain p"
+  },
+  {
+   "t": 5567,
+   "text": "ull, a harder gear."
+  },
+  {
+   "t": 5596,
+   "text": " More"
+  },
+  {
+   "t": 5632,
+   "text": " teeth is"
+  },
+  {
+   "t": 5664,
+   "text": " easier for"
+  },
+  {
+   "t": 5700,
+   "text": " climbing.\",\"size\":\""
+  },
+  {
+   "t": 5730,
+   "text": "sm\"}}]},{"
+  },
+  {
+   "t": 5765,
+   "text": "\"type\":\"if\",\"condition"
+  },
+  {
+   "t": 5799,
+   "text": "\":\"{state.part == "
+  },
+  {
+   "t": 5835,
+   "text": "'derailleur'}\",\""
+  },
+  {
+   "t": 5864,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 5897,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 5930,
+   "text": "\"Derailleur: p"
+  },
+  {
+   "t": 5964,
+   "text": "ushes the chain s"
+  },
+  {
+   "t": 6001,
+   "text": "ideways onto a different cog"
+  },
+  {
+   "t": 6031,
+   "text": " or chainring, which"
+  },
+  {
+   "t": 6077,
+   "text": " is how"
+  },
+  {
+   "t": 6098,
+   "text": " you sh"
+  },
+  {
+   "t": 6135,
+   "text": "ift g"
+  },
+  {
+   "t": 6168,
+   "text": "ears.\",\"size\":\"sm"
+  },
+  {
+   "t": 6197,
+   "text": "\"}}]},{\"type"
+  },
+  {
+   "t": 6231,
+   "text": "\":\"if\",\"condition\":\""
+  },
+  {
+   "t": 6266,
+   "text": "{state.part == 'w"
+  },
+  {
+   "t": 6301,
+   "text": "heel'}\",\"children\":["
+  },
+  {
+   "t": 6331,
+   "text": "{\"type\":\"text\",\"props"
+  },
+  {
+   "t": 6365,
+   "text": "\":{\"text\":\"R"
+  },
+  {
+   "t": 6397,
+   "text": "ear wheel: tur"
+  },
+  {
+   "t": 6438,
+   "text": "ns with"
+  },
+  {
+   "t": 6466,
+   "text": " the cog."
+  },
+  {
+   "t": 6498,
+   "text": " One wheel turn r"
+  },
+  {
+   "t": 6534,
+   "text": "olls you for"
+  },
+  {
+   "t": 6568,
+   "text": "ward by its circumference."
+  },
+  {
+   "t": 6603,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 6633,
+   "text": "}]}]},{\"type"
+  },
+  {
+   "t": 6664,
+   "text": "\":\"separator\""
+  },
+  {
+   "t": 6706,
+   "text": "},{\"type\":\"grid"
+  },
+  {
+   "t": 6734,
+   "text": "\",\"props\":{\"columns\":"
+  },
+  {
+   "t": 6772,
+   "text": "2,\"gap\":\"8"
+  },
+  {
+   "t": 6798,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 6834,
+   "text": "\"type\":\"number-input\",\""
+  },
+  {
+   "t": 6866,
+   "text": "props\":{\"label\":\""
+  },
+  {
+   "t": 6898,
+   "text": "Chainring teeth\",\"min"
+  },
+  {
+   "t": 6930,
+   "text": "\":20,\"max\":60,"
+  },
+  {
+   "t": 6964,
+   "text": "\"step\":1},\"bind"
+  },
+  {
+   "t": 6999,
+   "text": "\":\"{state.chainring"
+  },
+  {
+   "t": 7035,
+   "text": "}\"},{\"type\":\""
+  },
+  {
+   "t": 7106,
+   "text": "number-input\",\"props\":{\""
+  },
+  {
+   "t": 7107,
+   "text": "label\":\"Cog tee"
+  },
+  {
+   "t": 7133,
+   "text": "th\",\"min\":9,\"max"
+  },
+  {
+   "t": 7167,
+   "text": "\":50,\"step\":1},"
+  },
+  {
+   "t": 7200,
+   "text": "\"bind\":\"{state."
+  },
+  {
+   "t": 7233,
+   "text": "cog}\"}]},{"
+  },
+  {
+   "t": 7267,
+   "text": "\"type\":\"flex\",\"props"
+  },
+  {
+   "t": 7330,
+   "text": "\":{\"wrap\":true"
+  },
+  {
+   "t": 7344,
+   "text": ",\"gap\":\"8px"
+  },
+  {
+   "t": 7366,
+   "text": "\"},\"children\":[{\""
+  },
+  {
+   "t": 7400,
+   "text": "type\":\"button\",\"props\":{"
+  },
+  {
+   "t": 7437,
+   "text": "\"label\":\"Climb "
+  },
+  {
+   "t": 7465,
+   "text": "34/32\",\"size\":\"s"
+  },
+  {
+   "t": 7500,
+   "text": "m\",\"variant\":\"sec"
+  },
+  {
+   "t": 7535,
+   "text": "ondary\"},\"on_click"
+  },
+  {
+   "t": 7567,
+   "text": "\":[{\"action\":\"set"
+  },
+  {
+   "t": 7600,
+   "text": "\",\"target\":\"chainring\",\""
+  },
+  {
+   "t": 7636,
+   "text": "value\":34},{\"action\":"
+  },
+  {
+   "t": 7668,
+   "text": "\"set\",\"target\":\"cog"
+  },
+  {
+   "t": 7702,
+   "text": "\",\"value\":32}]},{"
+  },
+  {
+   "t": 7740,
+   "text": "\"type\":\"button\",\"props\":"
+  },
+  {
+   "t": 7777,
+   "text": "{\"label\":\"Cru"
+  },
+  {
+   "t": 7800,
+   "text": "ise 50/17\",\"size\":"
+  },
+  {
+   "t": 7833,
+   "text": "\"sm\",\"variant\":\""
+  },
+  {
+   "t": 7867,
+   "text": "secondary\"},\"on_"
+  },
+  {
+   "t": 7904,
+   "text": "click\":[{\"action\":\""
+  },
+  {
+   "t": 7934,
+   "text": "set\",\"target\":\"chainring"
+  },
+  {
+   "t": 7968,
+   "text": "\",\"value\":50},{\"action"
+  },
+  {
+   "t": 8006,
+   "text": "\":\"set\",\"target\":\"c"
+  },
+  {
+   "t": 8036,
+   "text": "og\",\"value\":17}]},"
+  },
+  {
+   "t": 8067,
+   "text": "{\"type\":\"button\",\"props"
+  },
+  {
+   "t": 8100,
+   "text": "\":{\"label\":\"S"
+  },
+  {
+   "t": 8135,
+   "text": "print 53/11\",\"size"
+  },
+  {
+   "t": 8168,
+   "text": "\":\"sm\",\"variant\":"
+  },
+  {
+   "t": 8219,
+   "text": "\"secondary\"},\"on"
+  },
+  {
+   "t": 8236,
+   "text": "_click\":[{\"action\":"
+  },
+  {
+   "t": 8271,
+   "text": "\"set\",\"target\":\"chain"
+  },
+  {
+   "t": 8303,
+   "text": "ring\",\"value\":53},{\""
+  },
+  {
+   "t": 8334,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 8367,
+   "text": "cog\",\"value\":11}]"
+  },
+  {
+   "t": 8401,
+   "text": "}]},{\"type\":\""
+  },
+  {
+   "t": 8444,
+   "text": "grid\",\"props\":{\"colum"
+  },
+  {
+   "t": 8469,
+   "text": "ns\":2,\"gap\":"
+  },
+  {
+   "t": 8501,
+   "text": "\"8px\"},\"children\":"
+  },
+  {
+   "t": 8536,
+   "text": "[{\"type\":\"stat"
+  },
+  {
+   "t": 8567,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 8604,
+   "text": "Gear ratio\",\""
+  },
+  {
+   "t": 8636,
+   "text": "value\":\"{state.chain"
+  },
+  {
+   "t": 8670,
+   "text": "ring / state.cog}\",\""
+  },
+  {
+   "t": 8701,
+   "text": "format\":\"number\",\"size\":\""
+  },
+  {
+   "t": 8739,
+   "text": "md\"}"
+  },
+  {
+   "t": 8771,
+   "text": "},{\"type\":\"stat"
+  },
+  {
+   "t": 8806,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 8836,
+   "text": "Met"
+  },
+  {
+   "t": 8868,
+   "text": "res per p"
+  },
+  {
+   "t": 8901,
+   "text": "edal turn\",\""
+  },
+  {
+   "t": 8934,
+   "text": "value\":\"{state.chain"
+  },
+  {
+   "t": 8967,
+   "text": "ring / state.cog * state"
+  },
+  {
+   "t": 9003,
+   "text": ".wheel / 1000"
+  },
+  {
+   "t": 9038,
+   "text": "}\",\"format\":\"number\",\"size"
+  },
+  {
+   "t": 9068,
+   "text": "\":\"md\"}}]},"
+  },
+  {
+   "t": 9106,
+   "text": "{\"type\":\"progress\",\""
+  },
+  {
+   "t": 9139,
+   "text": "props\":{\"value\":\"{"
+  },
+  {
+   "t": 9174,
+   "text": "state.chainring / state."
+  },
+  {
+   "t": 9202,
+   "text": "cog}\",\"max\":6,"
+  },
+  {
+   "t": 9248,
+   "text": "\"variant\":\"thick"
+  },
+  {
+   "t": 9268,
+   "text": "\"}"
+  },
+  {
+   "t": 9301,
+   "text": "},{\"type\":\"text\",\""
+  },
+  {
+   "t": 9340,
+   "text": "props\":{\"text\":\""
+  },
+  {
+   "t": 9376,
+   "text": "Bar: eas"
+  },
+  {
+   "t": 9404,
+   "text": "y"
+  },
+  {
+   "t": 9439,
+   "text": " (left"
+  },
+  {
+   "t": 9494,
+   "text": ") to hard (right)"
+  },
+  {
+   "t": 9506,
+   "text": " gear\",\"size\":\"xs"
+  },
+  {
+   "t": 9535,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 9568,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 9602,
+   "text": "\"Wheel tur"
+  },
+  {
+   "t": 9637,
+   "text": "ns per"
+  },
+  {
+   "t": 9668,
+   "text": " pedal turn = ch"
+  },
+  {
+   "t": 9703,
+   "text": "ainring ÷ cog"
+  },
+  {
+   "t": 9745,
+   "text": "."
+  },
+  {
+   "t": 9780,
+   "text": "\",\"size\":\"s"
+  },
+  {
+   "t": 9803,
+   "text": "m\"}},{\"type\":"
+  },
+  {
+   "t": 9840,
+   "text": "\"separ"
+  },
+  {
+   "t": 9869,
+   "text": "ator\"},{\"type\":\""
+  },
+  {
+   "t": 9902,
+   "text": "slider\",\"props\":{\"label"
+  },
+  {
+   "t": 9934,
+   "text": "\":\"Pedal"
+  },
+  {
+   "t": 9968,
+   "text": "ling spe"
+  },
+  {
+   "t": 10005,
+   "text": "ed (rpm)\",\"min"
+  },
+  {
+   "t": 10049,
+   "text": "\":30"
+  },
+  {
+   "t": 10071,
+   "text": ",\"max\":120"
+  },
+  {
+   "t": 10105,
+   "text": ",\"step\":1,\"show"
+  },
+  {
+   "t": 10135,
+   "text": "Value\":true},\"bind"
+  },
+  {
+   "t": 10169,
+   "text": "\":\"{state.cadence"
+  },
+  {
+   "t": 10202,
+   "text": "}\"},{\"type\":\""
+  },
+  {
+   "t": 10235,
+   "text": "number-input\",\"props\":{\""
+  },
+  {
+   "t": 10267,
+   "text": "label\":\"Wheel circ"
+  },
+  {
+   "t": 10305,
+   "text": "umference (mm)\",\"min"
+  },
+  {
+   "t": 10335,
+   "text": "\":1500,\"max\":2"
+  },
+  {
+   "t": 10370,
+   "text": "300"
+  },
+  {
+   "t": 10403,
+   "text": ",\"step\":10},\"b"
+  },
+  {
+   "t": 10438,
+   "text": "ind\":\"{state.whe"
+  },
+  {
+   "t": 10476,
+   "text": "el}\"},{\"type\":"
+  },
+  {
+   "t": 10501,
+   "text": "\"stat\",\"props\":{\""
+  },
+  {
+   "t": 10536,
+   "text": "label\":\"Speed ("
+  },
+  {
+   "t": 10568,
+   "text": "km/h)\",\"value\":\""
+  },
+  {
+   "t": 10603,
+   "text": "{state.chainring / state"
+  },
+  {
+   "t": 10639,
+   "text": ".cog * state.whe"
+  },
+  {
+   "t": 10669,
+   "text": "el * state.cadence *"
+  },
+  {
+   "t": 10703,
+   "text": " 60 / 1000000"
+  },
+  {
+   "t": 10742,
+   "text": "}\",\"format\":\"number\",\"size"
+  },
+  {
+   "t": 10771,
+   "text": "\":\"lg\"}}]"
+  },
+  {
+   "t": 10824,
+   "text": "}}"
+  }
+ ]
+}
