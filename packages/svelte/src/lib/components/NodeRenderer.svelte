@@ -1,65 +1,30 @@
 <!--
   @file NodeRenderer.svelte
-  @description Recursive node renderer - renders a single UINode and its children.
-  @created 2024-12-XX
-  @changes
-    - Initial creation with recursive rendering logic
-    - Expression resolution for props and bindings
-    - Event handler integration
-    - Control flow support (if, each)
-    - Fixed: Use self-import instead of deprecated svelte:self
-    - Wired on_focus and on_blur handlers through widget props
-    - Warn on unknown slot names (non-blocking, aids spec debugging)
-    - 2026-09-12: pass the default-children snippet as a PROP, and only when
-      `defaultKids` is non-empty. It used to be inline component content, which
-      handed every widget a truthy-but-empty `children`; widgets could not tell
-      a childless spec node from a hand-written caller. `hasChildren` is still
-      sent unchanged.
-    - 2026-05-22: unknown-widget branch fails loud — shows the node id and a
-      clear "not in the catalog" message instead of a bare red box
-      (Increment 5 catalog-as-allowlist).
-    - 2026-05-30: wrap the widget branch in use:withMotion when node.motion is
-      set (RFC 12 motion primitive); motion-free specs unchanged.
-    - 2026-05-30 (PR #45 motion-wrapper box fix): the motion wrapper was
-      `display: contents`, which generates NO box — so the transform/opacity/
-      filter withMotion writes onto it painted nothing (motion ran but never
-      animated). Changed the wrapper to `class="block"` (a real layout box),
-      matching the working reveal/parallax sugar widgets that DO animate.
-    - 2026-06-02: derive a form-field `name` for input widgets — explicit
-      `props.name` wins, else fall back to the resolved `bind` path — so a
-      native <form action> POST carries field values with JS disabled
-      (ripple-iui #54).
-    - 2026-06-09: cleared 10 state_referenced_locally warnings on the `node` prop.
-      Two distinct cases: (1) `nodeHasExpressions` is now $derived so it tracks the
-      current `node` (it feeds the shouldShow/resolvedProps deriveds, which already
-      re-run on node change) — a correctness improvement, not a behavior change for
-      keyed nodes. (2) The event-handler consts (onclick/onsubmit/onfocus/onblur/
-      oninputUser/onchangeUser) keep their deliberate "computed once" design — the
-      handler spec is seeded once at construction (fresh resolver context is fetched
-      per-invocation), so they get svelte-ignore, not derivation. No frozen-snapshot
-      bug found; all event handlers already re-read live state at call time.
-    - 2026-06-07: route organism-ref nodes (`{ organism, props }`) to
-      OrganismRenderer — the 3rd dispatch tier. A node is an organism-ref ONLY
-      when it carries a valid `organism` type string and NO widget `type` key,
-      so normal `{type, props, children}` widget nodes are byte-identical to
-      before. Guarded by isOrganismType so a stray `organism` prop on a widget
-      can never mis-fire.
-    - 2026-06-27 (SP-0 editor spike): stamp `data-ripple-node` (= node.id) and
-      `data-ripple-type` (= node.type) into widgetProps, and add
-      `data-ripple-node` to the motion-wrapper div, so the visual-editor overlay
-      can map a DOM element back to its spec node. Stamp sits LAST in widgetProps
-      so author props can't clobber node identity. CAVEAT: these reach the DOM
-      only for widgets whose root forwards unknown attributes (≈none do today) —
-      empirically the working selector is the DOM `id` already bound by ~82% of
-      widgets; see docs/design/sp0-spike-report.md.
-    - 2026-07-08 (RCR-4): wrap the widget AND organism-ref branches in
-      <svelte:boundary> with an ErrorState fallback keyed to the node id, so a
-      widget that throws during render is isolated to its own node instead of
-      blanking the whole message. The raw error message renders in `detail`
-      (small monospace), not `description` — exception text can leak internals
-      into a consumer-facing card. NOTE: svelte:boundary catches render and
-      $effect errors only; event-handler and post-await async throws are not
-      boundary-caught (pre-existing Svelte semantics, no regression).
+  @description Recursive node renderer: renders one UINode and its children.
+  Its rule-for-rule twin without rendering is packages/core/src/headless/resolve-tree.ts;
+  change both together.
+
+  - Props, `show`, `class` and `bind` resolve through $derived against live state,
+    loop context and the optional Chain Flow context ('ui-flow-context').
+  - Event handlers read the handler spec from the current `node` at call time.
+    Streamed specs mount a node before all its keys parse, so nothing about a
+    handler may be captured at mount. The functions themselves are stable; only
+    their presence (handler set or not) is derived.
+  - Generic `on_*` keys pass through as `on<event>` props (on_open_change ->
+    onopenchange). Input widgets get a form `name`: explicit props.name, else
+    the resolved bind path, so a no-JS <form action> POST carries the field.
+  - Dispatch tiers: control flow (if/each), organism refs (`{ organism, props }`
+    with no `type`, routed to OrganismRenderer), catalog widgets, and a loud
+    "not in the catalog" box for unknown types.
+  - Default children go to the widget as a `children` snippet prop only when
+    there are any; named slots (header/footer/sidebar/topbar/actions) likewise.
+  - node.motion wraps the widget in a block-level div with use:withMotion (it
+    must be a real box, not display:contents, or the transform never paints).
+  - Widget and organism branches sit in <svelte:boundary> with an ErrorState
+    fallback, so one throwing widget can't blank the message. Raw error text
+    goes to `detail`, never `description`.
+  - `data-ripple-node` / `data-ripple-type` are stamped last into widgetProps
+    for the visual editor; they reach the DOM only where a widget forwards them.
 -->
 <!--
   LAYOUT CAVEAT: the motion wrapper is `display: block`. Block is the right
@@ -223,7 +188,7 @@
 	});
 
 	/**
-	 * Create event handler functions that get fresh context on each invocation.
+	 * Wrap a generic `on_*` handler spec; resolver context is fetched per call.
 	 */
 	function createEventHandler(handler: EventHandlerOrArray | undefined) {
 		if (!handler) return undefined;
@@ -234,21 +199,28 @@
 		};
 	}
 
-	// Event handlers are computed once but context is fresh on each call. The
-	// handler spec is read once at construction by design (a new function identity
-	// per node change would churn the widget's event props); fresh resolver context
-	// is fetched at invocation time inside createEventHandler. Intentional one-time
-	// seed, not a stale-snapshot bug.
-	// svelte-ignore state_referenced_locally
-	const onclick = createEventHandler(node.on_click);
-	// svelte-ignore state_referenced_locally
-	const onsubmit = createEventHandler(node.on_submit);
-	// svelte-ignore state_referenced_locally
-	const onfocus = createEventHandler(node.on_focus);
-	// svelte-ignore state_referenced_locally
-	const onblur = createEventHandler(node.on_blur);
-	// svelte-ignore state_referenced_locally
-	const oninputUser = createEventHandler(node.on_input);
+	// The well-known handlers read the handler spec from the CURRENT `node` when
+	// they fire, not at mount: streamSpec() mounts a node as soon as its type and
+	// props parse, so its `on_*` key can arrive later. Each function is created
+	// once (stable identity, no widget prop churn); only its presence is $derived,
+	// because some widgets change role/cursor depending on whether a handler is set.
+	type KnownOnKey = 'on_click' | 'on_change' | 'on_input' | 'on_submit' | 'on_focus' | 'on_blur';
+	const fire = (key: KnownOnKey) => async (eventValue?: unknown) => {
+		const handler = node[key];
+		if (handler) await eventDispatcher.dispatch(handler, getResolverContext(), eventValue);
+	};
+	const fireClick = fire('on_click');
+	const fireSubmit = fire('on_submit');
+	const fireFocus = fire('on_focus');
+	const fireBlur = fire('on_blur');
+	const fireInput = fire('on_input');
+	const fireChange = fire('on_change');
+	const onclick = $derived(node.on_click ? fireClick : undefined);
+	const onsubmit = $derived(node.on_submit ? fireSubmit : undefined);
+	const onfocus = $derived(node.on_focus ? fireFocus : undefined);
+	const onblur = $derived(node.on_blur ? fireBlur : undefined);
+	const oninputUser = $derived(node.on_input ? fireInput : undefined);
+	const onchangeUser = $derived(node.on_change ? fireChange : undefined);
 
 	/**
 	 * Build handlers for any other `on_*` keys on the node (e.g. on_close, on_resize,
@@ -310,18 +282,17 @@
 		return resolveBoundPath() ?? undefined;
 	});
 
-	// svelte-ignore state_referenced_locally
-	const onchangeUser = createEventHandler(node.on_change);
+	// Bind write-back first, then the node's current user handler (if any).
 	const onchange = (eventValue?: unknown) => {
 		const path = resolveBoundPath();
 		if (path) stateManager.set(path, eventValue);
-		return onchangeUser?.(eventValue);
+		return fireChange(eventValue);
 	};
 
 	const oninput = (eventValue?: unknown) => {
 		const path = resolveBoundPath();
 		if (path) stateManager.set(path, eventValue);
-		return oninputUser?.(eventValue);
+		return fireInput(eventValue);
 	};
 
 	/**
