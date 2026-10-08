@@ -5,7 +5,7 @@
     streaming into the real <Ripple> renderer through streamSpec. The page is
     prerendered: the demo's resting state (full spec text + rendered form) is
     in the markup, and onMount only replays the stream on top of it.
-    Keep labs routes unlinked here. /live is a reserved slot built elsewhere.
+    Keep labs routes unlinked here.
 
   Creative Direction Declaration
     Archetype: Technology. Richness: Premium minimal.
@@ -212,7 +212,7 @@
 		<ul class="rows">
 			<li>
 				<a href="/live" class="row">
-					<span class="row-title">Live <em class="soon">Coming soon</em></span>
+					<span class="row-title">Live</span>
 					<span class="row-desc">Watch specs stream in from a model in real time.</span>
 				</a>
 			</li>
@@ -547,16 +547,6 @@
 	}
 	.row:hover .row-title::after {
 		transform: translateX(4px);
-	}
-	.soon {
-		font-style: normal;
-		font-family: var(--mono);
-		font-size: 11px;
-		font-weight: 500;
-		color: var(--accent);
-		border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-		border-radius: 999px;
-		padding: 2px 8px;
 	}
 	.row-desc {
 		color: var(--ink-soft);
