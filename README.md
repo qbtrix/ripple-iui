@@ -1,11 +1,56 @@
+<!-- README.md: Ripple's front page. Pitch, install and a streaming example first; the package split and repo workflow below. -->
+
 # Ripple
 
-A spec engine for AI-generated interfaces, and the renderers that draw it.
+Open-source generative UI for your own app. A model writes a small JSON spec,
+and Ripple renders it as a working interface while the spec is still
+streaming in.
 
-An LLM emits a small JSON document describing what a UI should be. Ripple
-turns it into a live, interactive interface with state, two-way bindings,
-expression evaluation, and event handling. The model writes structure;
-Ripple handles reactivity.
+The finished UI is live. It keeps state, binds inputs both ways, evaluates
+expressions, runs event handlers, and hands side effects (API calls,
+navigation, toasts) back to your app. The model writes structure; Ripple
+handles the reactivity.
+
+[![A recorded model run replayed on /live: the streamed spec on the left, the sales dashboard Ripple rendered from it on the right](docs/assets/live-sales-dashboard.png)](https://ripple.pocketpaw.xyz/live)
+
+Watch nine recorded model runs render at
+[ripple.pocketpaw.xyz/live](https://ripple.pocketpaw.xyz/live), or write a
+spec yourself in the [playground](https://ripple.pocketpaw.xyz/playground).
+
+## Quick start
+
+```bash
+bun add @ripple-ui/svelte
+```
+
+```svelte
+<script>
+  import { Ripple } from '@ripple-ui/svelte';
+  import { streamSpec } from '@ripple-ui/svelte/streaming';
+
+  let store = $state.raw(null);
+
+  async function generate() {
+    const res = await fetch('/api/ui', { method: 'POST' }); // your endpoint, streaming the model's JSON
+    store = streamSpec(res.body);
+  }
+</script>
+
+<button onclick={generate}>Generate</button>
+{#if store}<Ripple streaming={store} onEvent={(e) => console.log(e.type)} />{/if}
+```
+
+Ripple shows a skeleton until the first chunk parses, then grows the UI as
+more tokens arrive. `onEvent` gets every side effect the spec asks your app
+to perform. [`docs/streaming.md`](docs/streaming.md) covers the options and
+error handling.
+
+Widgets use Tailwind CSS v4 classes, so your app needs Tailwind v4 and an
+`@source` line that points at the package. The
+[Styling section](packages/svelte/README.md#styling) of the Svelte README has
+the setup.
+
+## What a spec looks like
 
 ```json
 {
@@ -22,7 +67,7 @@ Ripple handles reactivity.
 }
 ```
 
-That spec is a working two-way-bound form. No glue code.
+That spec is a working form with two-way binding. You write no glue code for it.
 
 ## Packages
 
