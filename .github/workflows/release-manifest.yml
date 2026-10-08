@@ -1,37 +1,25 @@
 # .github/workflows/release-manifest.yml
-# Publishes a GitHub release on a v* tag push or a manual dispatch: the
-# manifest bundle plus a packed tarball of each package. Publishing
-# @ripple-ui/core and @ripple-ui/svelte to npm is opt-in.
-# Updated 2026-09-27 (v0.8.0): npm publishing runs only on a manual dispatch
-# with publish_npm: true. A tag push used to try npm every time, and every
-# such run failed without an NPM_TOKEN; with a token present anywhere (repo
-# or org), a tag would publish to npm whether or not that was intended. The
-# release now also carries ripple-ui-core-<v>.tgz and ripple-ui-svelte-<v>.tgz
-# (svelte's core dependency rewritten to ^<core version>, as for npm), so the
-# GitHub release alone is installable.
-# Updated 2026-09-27: the release also attaches manifest.slim.json, the slim
-# manifest (spec envelope + the slim runtime's actions, no widgets), next to
-# the full manifest.json.
-# Updated 2026-09-27: fixed for the bun workspace layout (packages/core,
-# packages/svelte). `bun publish` ran at the repo root, whose package.json is
-# the private workspace root, so v0.7.0 failed with "attempted to publish a
-# private package". Each package now publishes from its own directory, core
-# first because svelte depends on it. svelte's `@ripple-ui/core: file:../core`
-# is rewritten to `^<core version>` inside the runner just before publish
-# (bun only rewrites `workspace:` ranges); package.json in git keeps file:, which
-# is what the workspace repos that consume ripple from a checkout rely on. A
-# version already on npm is skipped, so a re-dispatch after a partial publish
-# goes on to the release step. Asset paths moved to packages/svelte/dist, and the
-# schema sources in the zip now come from packages/core/src/schema (svelte's
-# schema/ is a re-export barrel). Earlier tag runs also failed with "missing
-# authentication": the NPM_TOKEN repo secret has to be set for any of this to
-# publish.
-# Updated 2026-08-03: the "Resolve tag" step no longer pastes `${{ inputs.tag }}`
-# into its shell script. Expressions are substituted before bash sees the
-# script, so a dispatch input containing shell syntax would have run as code in
-# the step. Both expressions now arrive as environment variables, which bash
-# treats as data. Dispatching already requires write access, so this was never
-# a privilege boundary — it just shouldn't be the shape of the code.
+# Publishes a GitHub release on a v* tag push or a manual dispatch: the widget
+# manifests (manifest.json, manifest.slim.json), the manifest zip, and a packed
+# tarball of @ripple-ui/core and @ripple-ui/svelte, so the release alone is
+# installable. npm publishing runs only on a manual dispatch with
+# publish_npm: true, and needs the NPM_TOKEN repo secret.
+#
+# Invariants:
+# - Pack runs before publish, and the publish steps upload those exact
+#   tarballs, so npm and the release carry the same bytes.
+# - package.json in git stays workspace-shaped. The pack step rewrites it in
+#   the runner only: core loses its `source` export conditions (they point at
+#   src/, which is not shipped; the workspace build resolves core from source
+#   with them), and svelte's `@ripple-ui/core: file:../core` becomes
+#   `^<core version>`. Consumers of a ripple checkout rely on file:.
+# - Core publishes before svelte, which depends on it. A version already on
+#   npm is skipped, so a re-dispatch after a partial publish still reaches the
+#   release step.
+# - The token lives in $HOME/.npmrc only for the publish command; the trap
+#   removes it on any exit, including a cancelled run.
+# - Dispatch inputs reach shell scripts as environment variables, never as
+#   pasted ${{ }} expressions, so shell syntax in an input stays data.
 name: Release manifest
 
 on:
@@ -71,69 +59,61 @@ jobs:
       - name: Build library + manifest
         run: bun run build
 
-      - name: Publish @ripple-ui/core
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
-        working-directory: packages/core
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          # Remove the token file on ANY exit (incl. a publish failure). Without
-          # the trap, `set -e` aborts the step before `rm` runs and leaves the
-          # NPM_TOKEN in $HOME/.npmrc on the runner. INT/TERM are trapped too:
-          # bash skips the EXIT trap on an untrapped fatal signal, and a
-          # cancelled workflow run signals the step mid-publish.
-          trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
-          V=$(node -p "require('./package.json').version")
-          if npm view "@ripple-ui/core@$V" version >/dev/null 2>&1; then
-            echo "@ripple-ui/core@$V is already on npm, skipping"
-            exit 0
-          fi
-          bun publish --access public
-
-      - name: Publish @ripple-ui/svelte
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
-        working-directory: packages/svelte
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
-          V=$(node -p "require('./package.json').version")
-          if npm view "@ripple-ui/svelte@$V" version >/dev/null 2>&1; then
-            echo "@ripple-ui/svelte@$V is already on npm, skipping"
-            exit 0
-          fi
-          # file:../core means nothing to an npm consumer. Point it at the
-          # published core version, in this runner only.
-          CORE_V=$(node -p "require('../core/package.json').version")
-          node -e '
-            const fs = require("fs");
-            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            if (!p.dependencies || !p.dependencies["@ripple-ui/core"]) throw new Error("no @ripple-ui/core dependency");
-            p.dependencies["@ripple-ui/core"] = "^" + process.argv[1];
-            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
-          ' "$CORE_V"
-          grep -n '"@ripple-ui/core"' package.json
-          bun publish --access public
-
       - name: Pack tarballs
         run: |
           set -euo pipefail
           mkdir -p release
-          (cd packages/core && npm pack --pack-destination ../../release)
-          # Same rewrite as the npm publish step (idempotent if it already ran):
-          # file:../core means nothing outside this repo.
-          CORE_V=$(node -p "require('./packages/core/package.json').version")
-          (cd packages/svelte && node -e '
+          # Publish-shape package.json, in this runner only (see the header).
+          node -e '
             const fs = require("fs");
-            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            p.dependencies["@ripple-ui/core"] = "^" + process.argv[1];
-            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
-          ' "$CORE_V" && npm pack --pack-destination ../../release)
+            const read = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
+            const write = (f, p) => fs.writeFileSync(f, JSON.stringify(p, null, 2) + "\n");
+            const core = read("packages/core/package.json");
+            const strip = (e) => {
+              if (e && typeof e === "object") { delete e.source; Object.values(e).forEach(strip); }
+            };
+            strip(core.exports);
+            if (JSON.stringify(core.exports).includes("\"source\"")) throw new Error("source condition left in core exports");
+            write("packages/core/package.json", core);
+            const svelte = read("packages/svelte/package.json");
+            if (!svelte.dependencies || !svelte.dependencies["@ripple-ui/core"]) throw new Error("no @ripple-ui/core dependency");
+            svelte.dependencies["@ripple-ui/core"] = "^" + core.version;
+            write("packages/svelte/package.json", svelte);
+          '
+          grep -n '"@ripple-ui/core"' packages/svelte/package.json
+          (cd packages/core && npm pack --pack-destination ../../release)
+          (cd packages/svelte && npm pack --pack-destination ../../release)
           ls -la release
+
+      - name: Publish @ripple-ui/core
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          V=$(node -p "require('./packages/core/package.json').version")
+          if npm view "@ripple-ui/core@$V" version >/dev/null 2>&1; then
+            echo "@ripple-ui/core@$V is already on npm, skipping"
+            exit 0
+          fi
+          bun publish "release/ripple-ui-core-$V.tgz" --access public
+
+      - name: Publish @ripple-ui/svelte
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$HOME/.npmrc"' EXIT INT TERM
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+          V=$(node -p "require('./packages/svelte/package.json').version")
+          if npm view "@ripple-ui/svelte@$V" version >/dev/null 2>&1; then
+            echo "@ripple-ui/svelte@$V is already on npm, skipping"
+            exit 0
+          fi
+          bun publish "release/ripple-ui-svelte-$V.tgz" --access public
 
       - name: Stage release assets
         run: |
