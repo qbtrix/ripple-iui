@@ -20,6 +20,9 @@ import { scenarios, type ScenarioFixture } from './scenarios.js';
 // take longer than vi.waitFor's 1 s default, so every wait here gets 5 s.
 const waitFor = <T>(fn: () => T | Promise<T>, opts: { timeout?: number; interval?: number } = {}) =>
 	vi.waitFor(fn, { timeout: 5000, ...opts });
+// Each test streams a whole recorded fixture through the parser before it
+// asserts; the biggest (meal-plan) can pass 5 s under a full parallel suite.
+vi.setConfig({ testTimeout: 20_000 });
 
 const join = (f: ScenarioFixture) => f.chunks.map((c) => c.text).join('');
 
