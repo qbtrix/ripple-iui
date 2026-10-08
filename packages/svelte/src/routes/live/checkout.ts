@@ -102,7 +102,10 @@ export async function checkout(body: unknown, deps: CheckoutDeps): Promise<Rippl
 		return fail(`Too many checkouts from here. Try again in ${wait > 0 ? `${Math.ceil(wait / 60)} min` : 'a few minutes'}.`, 429);
 	}
 	if (res.status >= 500) return fail('The store cannot take payments right now. Try again shortly.', res.status);
-	if (!res.ok) return fail(`The store rejected the order: ${String(data?.message ?? res.statusText ?? 'bad request')}`, res.status);
+	if (!res.ok) {
+		const reason = typeof data?.message === 'string' ? data.message : res.statusText || 'bad request';
+		return fail(`The store rejected the order: ${reason}`, res.status);
+	}
 
 	const url = typeof data?.url === 'string' ? data.url : '';
 	if (!isAllowedRedirect(url, deps.pageOrigin)) {
