@@ -3,567 +3,695 @@
  "title": "Split the bill",
  "prompt": "Dinner for 4 came to $186.40. Help me split it with tip, and let me adjust who had drinks.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T07:25:57.027Z",
+ "recordedAt": "2026-10-08T07:47:09.566Z",
  "chunks": [
   {
    "t": 0,
    "text": "{"
   },
   {
-   "t": 20,
+   "t": 51,
    "text": "\"version"
   },
   {
-   "t": 54,
+   "t": 52,
    "text": "\":\"1"
   },
   {
-   "t": 85,
-   "text": ".0\",\"state\":{\"total"
+   "t": 132,
+   "text": ".0\",\"state\":{\"b"
   },
   {
-   "t": 122,
-   "text": "\":186.4"
+   "t": 132,
+   "text": "ill\":186.4"
   },
   {
-   "t": 153,
+   "t": 132,
    "text": ",\"drinksTotal"
   },
   {
-   "t": 186,
-   "text": "\":40,\"tipPerc"
+   "t": 158,
+   "text": "\":48,\"tipPerc"
   },
   {
-   "t": 219,
-   "text": "ent\":18,\"people\":["
+   "t": 191,
+   "text": "ent\":18,\"dr"
   },
   {
-   "t": 251,
-   "text": "{\"name\":\"Alex"
+   "t": 224,
+   "text": "inkers\":3,\"people"
   },
   {
-   "t": 286,
-   "text": "\",\"drinks\":true},{"
+   "t": 258,
+   "text": "\":[{\"name\":\""
   },
   {
-   "t": 323,
-   "text": "\"name\":\"Sam\",\""
+   "t": 292,
+   "text": "Alex\",\"drinks\":true"
   },
   {
-   "t": 355,
-   "text": "drinks\":true},{\""
+   "t": 324,
+   "text": "},{\"name\":\"S"
+  },
+  {
+   "t": 359,
+   "text": "am\",\"drinks\":true},"
   },
   {
    "t": 391,
-   "text": "name\":\"Jo\",\"dr"
+   "text": "{\"name\":\"Jo"
   },
   {
-   "t": 422,
-   "text": "inks\":false},{\"name"
+   "t": 426,
+   "text": "\",\"drinks\":false},{"
   },
   {
-   "t": 454,
-   "text": "\":\"Pat\",\"drin"
+   "t": 465,
+   "text": "\"name\":\"Pat\",\""
   },
   {
-   "t": 488,
-   "text": "ks\":false}]},\""
+   "t": 491,
+   "text": "drinks\":true}]},"
   },
   {
-   "t": 888,
-   "text": "ui\":{\"type\":\"card"
+   "t": 524,
+   "text": "\"ui\":{\"type\":"
   },
   {
-   "t": 889,
-   "text": "\",\"props\":{\"title\":\""
+   "t": 560,
+   "text": "\"card\",\"props\":{\"title"
   },
   {
-   "t": 889,
-   "text": "Dinner split\",\"description\":"
+   "t": 597,
+   "text": "\":\"Dinner split\",\""
   },
   {
-   "t": 889,
-   "text": "\"Food"
+   "t": 625,
+   "text": "description\":\"Food"
   },
   {
-   "t": 890,
-   "text": " is shared ev"
+   "t": 660,
+   "text": " is"
   },
   {
-   "t": 890,
-   "text": "enly."
+   "t": 693,
+   "text": " sh"
   },
   {
-   "t": 890,
-   "text": " Drinks are split only among"
+   "t": 724,
+   "text": "ared ev"
   },
   {
-   "t": 891,
-   "text": " dr"
+   "t": 760,
+   "text": "enly. Drinks go"
   },
   {
-   "t": 891,
-   "text": "inkers.\"},\"children\":"
+   "t": 792,
+   "text": " only to the"
   },
   {
-   "t": 891,
-   "text": "[{\"type\":\"flex"
+   "t": 827,
+   "text": " people"
   },
   {
-   "t": 891,
-   "text": "\",\"props\":{\"direction\":"
+   "t": 858,
+   "text": " who had"
   },
   {
    "t": 892,
-   "text": "\"column\",\"gap\":\"12"
+   "text": " them.\"},\"children\":[{"
   },
   {
-   "t": 1063,
-   "text": "px\"},\"children\":[{"
+   "t": 928,
+   "text": "\"type\":\"flex\",\"props"
   },
   {
-   "t": 1063,
-   "text": "\"type\":\"grid\",\"props"
+   "t": 960,
+   "text": "\":{\"direction\":\"column"
   },
   {
-   "t": 1064,
-   "text": "\":{\"columns\":2,"
+   "t": 994,
+   "text": "\",\"gap\":\"14"
   },
   {
-   "t": 1064,
-   "text": "\"gap\":\"12px\""
+   "t": 1026,
+   "text": "px\"},"
   },
   {
-   "t": 1081,
-   "text": "},\"children\":[{\"type"
+   "t": 1060,
+   "text": "\"children\":[{\"type\":"
   },
   {
-   "t": 1081,
-   "text": "\":\"number-input\",\"b"
+   "t": 1091,
+   "text": "\"grid\",\"props\":{\""
   },
   {
-   "t": 1112,
+   "t": 1127,
+   "text": "columns\":2,\"gap"
+  },
+  {
+   "t": 1159,
+   "text": "\":\"12px\"},\"children"
+  },
+  {
+   "t": 1194,
+   "text": "\":[{\"type\":\"number"
+  },
+  {
+   "t": 1227,
+   "text": "-input\",\"b"
+  },
+  {
+   "t": 1259,
    "text": "ind\":\"{"
   },
   {
-   "t": 1146,
-   "text": "state.total}\",\"props\":{"
+   "t": 1293,
+   "text": "state.bill}\",\"props\":"
   },
   {
-   "t": 1179,
-   "text": "\"label\":\"Bill total"
+   "t": 1326,
+   "text": "{\"label\":\"B"
   },
   {
-   "t": 1267,
-   "text": " ($)\",\"min\":0,"
+   "t": 1365,
+   "text": "ill total ($)\",\"min\":"
   },
   {
-   "t": 1267,
-   "text": "\"step\":0.5"
+   "t": 1393,
+   "text": "0,\"step\":0.5"
   },
   {
-   "t": 1268,
+   "t": 1425,
    "text": "}},{\"type\":\"number"
   },
   {
-   "t": 1300,
+   "t": 1458,
    "text": "-input\",\"bind\":\"{"
   },
   {
-   "t": 1323,
+   "t": 1493,
    "text": "state.drinksTotal"
   },
   {
-   "t": 1358,
+   "t": 1525,
    "text": "}\",\"props\":{\"label\":"
   },
   {
-   "t": 1389,
-   "text": "\"Of"
+   "t": 1571,
+   "text": "\"Drinks part"
   },
   {
-   "t": 1428,
-   "text": " which"
+   "t": 1592,
+   "text": " of bill ($)\",\"min"
   },
   {
-   "t": 1461,
-   "text": " dr"
+   "t": 1627,
+   "text": "\":0,\"step\":0"
   },
   {
-   "t": 1491,
-   "text": "inks ($)\",\"min\":"
-  },
-  {
-   "t": 1526,
-   "text": "0,\"step"
-  },
-  {
-   "t": 1558,
-   "text": "\":0"
-  },
-  {
-   "t": 1595,
+   "t": 1661,
    "text": ".5}}]},{\""
   },
   {
-   "t": 1624,
-   "text": "type\":\"slider\",\"b"
+   "t": 1693,
+   "text": "type\":\"slider\",\"bind"
   },
   {
-   "t": 1660,
-   "text": "ind\":\"{state.tip"
+   "t": 1728,
+   "text": "\":\"{state.tipP"
   },
   {
-   "t": 1691,
-   "text": "Percent}\",\"props\":{"
+   "t": 1763,
+   "text": "ercent}\",\"props\":{\""
   },
   {
-   "t": 1727,
-   "text": "\"label\":\"Tip %"
+   "t": 1804,
+   "text": "label\":\"Tip %\",\""
   },
   {
-   "t": 1761,
-   "text": "\",\"min\":0,\"max\":"
+   "t": 2204,
+   "text": "min\":0,\"max\":40"
   },
   {
-   "t": 1794,
-   "text": "35,\"step\":1,\""
+   "t": 2204,
+   "text": ",\"step\":1,\"show"
   },
   {
-   "t": 1829,
-   "text": "showValue\":true}},{"
+   "t": 2204,
+   "text": "Value\":true}},{\""
   },
   {
-   "t": 1859,
-   "text": "\"type\":\"grid\",\"props"
+   "t": 2204,
+   "text": "type\":\"grid\",\"props\":"
   },
   {
-   "t": 1895,
-   "text": "\":{\"columns\":3,"
+   "t": 2204,
+   "text": "{\"columns\":3,\""
   },
   {
-   "t": 1929,
-   "text": "\"gap\":\"12px\""
+   "t": 2204,
+   "text": "gap\":\"12"
   },
   {
-   "t": 1959,
-   "text": "},\"children\":[{\"type"
+   "t": 2204,
+   "text": "px\"},\"children\":[{"
   },
   {
-   "t": 1993,
-   "text": "\":\"stat\",\"props\":{"
+   "t": 2204,
+   "text": "\"type\":\"stat\",\"props"
   },
   {
-   "t": 2031,
-   "text": "\"label\":\"Tip\",\""
+   "t": 2204,
+   "text": "\":{\"label\":\"T"
   },
   {
-   "t": 2073,
-   "text": "value\":\"{state.total *"
+   "t": 2204,
+   "text": "ip\",\"value\":\"{state."
   },
   {
-   "t": 2094,
+   "t": 2204,
+   "text": "bill * state.tipP"
+  },
+  {
+   "t": 2205,
+   "text": "ercent / 100}\",\"format"
+  },
+  {
+   "t": 2216,
+   "text": "\":\"currency\"}},{"
+  },
+  {
+   "t": 2249,
+   "text": "\"type\":\"stat\",\"props"
+  },
+  {
+   "t": 2359,
+   "text": "\":{\"label\":\"Gr"
+  },
+  {
+   "t": 2359,
+   "text": "and total\",\"value\":\"{state"
+  },
+  {
+   "t": 2359,
+   "text": ".bill * (1 +"
+  },
+  {
+   "t": 2389,
    "text": " state.tipPercent /"
   },
   {
-   "t": 2130,
-   "text": " 100}\",\"format\":\"curr"
+   "t": 2416,
+   "text": " 100)}\",\"format\":\""
   },
   {
-   "t": 2160,
-   "text": "ency\",\"size\":\"sm\""
+   "t": 2453,
+   "text": "currency\"}},{\"type"
   },
   {
-   "t": 2195,
-   "text": "}},{\"type\":\"st"
-  },
-  {
-   "t": 2230,
-   "text": "at\",\"props\":{\"label\":"
-  },
-  {
-   "t": 2261,
-   "text": "\"Grand total\",\"value\":"
-  },
-  {
-   "t": 2293,
-   "text": "\"{state.total * (1"
-  },
-  {
-   "t": 2331,
-   "text": " + state.tipPerc"
-  },
-  {
-   "t": 2360,
-   "text": "ent / 100)}\",\"format"
-  },
-  {
-   "t": 2400,
-   "text": "\":\"currency\",\"size\":\""
-  },
-  {
-   "t": 2454,
-   "text": "sm\"}},{\"type"
-  },
-  {
-   "t": 2462,
+   "t": 2486,
    "text": "\":\"stat\",\"props\":{"
   },
   {
-   "t": 2492,
-   "text": "\"label\":\"Drink"
+   "t": 2518,
+   "text": "\"label\":\"Dr"
   },
   {
-   "t": 2530,
-   "text": "ers\",\"value\":\"{state."
+   "t": 2551,
+   "text": "inkers\",\"value\":\"{"
   },
   {
-   "t": 2561,
-   "text": "people.where('drinks',"
+   "t": 2591,
+   "text": "state.drinkers}\",\""
   },
   {
-   "t": 2595,
-   "text": " true).count()}\",\"format\":"
+   "t": 2625,
+   "text": "format\":\"number\"}}]"
   },
   {
-   "t": 2627,
-   "text": "\"number\",\"size\":\"sm"
+   "t": 2652,
+   "text": "},{\"type\":\"separator"
   },
   {
-   "t": 2661,
-   "text": "\"}}]},{\"type"
+   "t": 2685,
+   "text": "\",\""
   },
   {
-   "t": 2694,
-   "text": "\":\"separator\",\""
-  },
-  {
-   "t": 2732,
+   "t": 2718,
    "text": "props\":{}},{\"type"
   },
   {
-   "t": 2761,
-   "text": "\":\"each"
+   "t": 2751,
+   "text": "\":\"text\",\"props\":{\""
   },
   {
-   "t": 2801,
-   "text": "\",\"items\":\""
+   "t": 2877,
+   "text": "text\":\"Who had dr"
   },
   {
-   "t": 2829,
-   "text": "{state.people}\",\"children\":"
+   "t": 2877,
+   "text": "inks?\",\"weight\":\""
   },
   {
-   "t": 2861,
-   "text": "[{\"type\":\"flex"
+   "t": 2877,
+   "text": "semibold\"}},{\""
   },
   {
-   "t": 2894,
-   "text": "\",\"props\":{\"direction\":"
+   "t": 2909,
+   "text": "type\":\"each\",\"items"
   },
   {
-   "t": 2991,
-   "text": "\"row\",\"gap\":\"12"
+   "t": 2918,
+   "text": "\":\"{state.people}\",\""
   },
   {
-   "t": 2991,
-   "text": "px\",\"align\":\"center\",\"just"
+   "t": 2951,
+   "text": "children\":[{\"type\":\""
   },
   {
-   "t": 3013,
-   "text": "ify\":\"between\"},\"children"
+   "t": 2985,
+   "text": "flex\",\"props\":{\"dire"
   },
   {
-   "t": 3029,
-   "text": "\":[{\"type\":\"input"
+   "t": 3018,
+   "text": "ction\":\"row\",\"gap\":"
   },
   {
-   "t": 3101,
-   "text": "\",\"bind\":\"people"
+   "t": 3053,
+   "text": "\"12px\",\"align\":\"center"
   },
   {
-   "t": 3106,
-   "text": ".{index}.name\",\"props"
+   "t": 3085,
+   "text": "\",\"justify\":\"between"
   },
   {
-   "t": 3129,
-   "text": "\":{\"placeholder\":"
+   "t": 3119,
+   "text": "\"},\"children\":[{\""
   },
   {
-   "t": 3168,
-   "text": "\"Name\",\""
+   "t": 3155,
+   "text": "type\":\"input\",\"bind\":"
   },
   {
-   "t": 3271,
-   "text": "size\":\"sm\"}},"
+   "t": 3186,
+   "text": "\"people.{index}.name"
   },
   {
-   "t": 3272,
+   "t": 3221,
+   "text": "\",\"props\":{\"placehol"
+  },
+  {
+   "t": 3253,
+   "text": "der\":\"Name\"}},"
+  },
+  {
+   "t": 3287,
    "text": "{\"type\":\"checkb"
   },
   {
-   "t": 3284,
-   "text": "ox\",\"bind\":\"people"
+   "t": 3320,
+   "text": "ox\",\"bind\":\"people."
   },
   {
-   "t": 3298,
-   "text": ".{index}.drinks"
+   "t": 3353,
+   "text": "{index}.drinks\",\""
   },
   {
-   "t": 3328,
-   "text": "\",\"props\":{\"label\":\""
+   "t": 3389,
+   "text": "props\":{\"label\":\""
   },
   {
-   "t": 3361,
-   "text": "Dr"
+   "t": 3421,
+   "text": "Drinks\"},\"on_"
   },
   {
-   "t": 3396,
-   "text": "inks\"}},{\"type"
+   "t": 3455,
+   "text": "change\":{\"action\":\"set"
   },
   {
-   "t": 3428,
-   "text": "\":\"stat\",\"props\":{"
+   "t": 3489,
+   "text": "\",\"target\":\"dr"
   },
   {
-   "t": 3828,
-   "text": "\"label\":\"P"
+   "t": 3521,
+   "text": "inkers\",\"value\":\"{"
   },
   {
-   "t": 3828,
-   "text": "ays\",\"value\":\"{(("
+   "t": 3558,
+   "text": "state.people.where('drin"
   },
   {
-   "t": 3828,
-   "text": "state.total - state.drin"
+   "t": 3586,
+   "text": "ks', true).count()}\""
   },
   {
-   "t": 3828,
-   "text": "ksTotal) / state."
+   "t": 3622,
+   "text": "}},{\"type\":\"st"
   },
   {
-   "t": 3828,
-   "text": "people.length + (item.dr"
+   "t": 3657,
+   "text": "at\",\"props\":{\"label\":"
   },
   {
-   "t": 3828,
-   "text": "inks ? state.drin"
+   "t": 3687,
+   "text": "\"Pays\",\"size"
   },
   {
-   "t": 3828,
+   "t": 3719,
+   "text": "\":\"s"
+  },
+  {
+   "t": 3753,
+   "text": "m\",\"format"
+  },
+  {
+   "t": 3788,
+   "text": "\":\"currency\",\"value\":\""
+  },
+  {
+   "t": 3820,
+   "text": "{item.drinks * state"
+  },
+  {
+   "t": 3853,
+   "text": ".drinksTotal /"
+  },
+  {
+   "t": 3887,
+   "text": " state.drinkers * ("
+  },
+  {
+   "t": 3923,
+   "text": "1 + state.tipP"
+  },
+  {
+   "t": 3980,
+   "text": "ercent / 100)"
+  },
+  {
+   "t": 3987,
+   "text": " + state.bill / state."
+  },
+  {
+   "t": 4022,
+   "text": "people.length * (1 +"
+  },
+  {
+   "t": 4053,
+   "text": " state.tipPercent /"
+  },
+  {
+   "t": 4087,
+   "text": " 100) - state.drin"
+  },
+  {
+   "t": 4120,
    "text": "ksTotal / state.people"
   },
   {
-   "t": 3828,
-   "text": ".where('drinks', true"
+   "t": 4154,
+   "text": ".length * (1 + state"
   },
   {
-   "t": 3828,
-   "text": ").count() : 0))"
+   "t": 4187,
+   "text": ".tipPercent / "
   },
   {
-   "t": 3829,
-   "text": " * (1 + state.t"
+   "t": 4221,
+   "text": "100)}\"}},"
   },
   {
-   "t": 3829,
-   "text": "ipPercent / 100)"
-  },
-  {
-   "t": 3829,
-   "text": "}\",\"format\":\"currency\",\""
-  },
-  {
-   "t": 3829,
-   "text": "size\":\"sm\"}},"
-  },
-  {
-   "t": 3829,
+   "t": 4253,
    "text": "{\"type\":\"button\",\"props"
   },
   {
-   "t": 3829,
+   "t": 4292,
    "text": "\":{\"label\":\"Rem"
   },
   {
-   "t": 3839,
+   "t": 4321,
    "text": "ove\",\"variant\":\"gh"
   },
   {
-   "t": 3873,
+   "t": 4355,
    "text": "ost\",\"size\":\"sm\""
   },
   {
-   "t": 3907,
+   "t": 4387,
    "text": "},\"on_click\":{\""
   },
   {
-   "t": 3942,
-   "text": "action\":\"remove\",\"target\":"
+   "t": 4421,
+   "text": "action\":\"flow\",\"steps"
   },
   {
-   "t": 3974,
-   "text": "\"people\",\"value\":\"{item"
+   "t": 4452,
+   "text": "\":[{\"action\":\"rem"
   },
   {
-   "t": 4010,
-   "text": "}\"}}]}]},"
+   "t": 4488,
+   "text": "ove\",\"target\":\"people\",\"value"
   },
   {
-   "t": 4042,
-   "text": "{\"type\":\"button\",\"props"
+   "t": 4520,
+   "text": "\":\"{item}\"},{"
   },
   {
-   "t": 4074,
-   "text": "\":{\"label\":\"Add"
+   "t": 4558,
+   "text": "\"action\":\"set\",\"target\":"
   },
   {
-   "t": 4109,
-   "text": " person\",\"variant\":\"outline"
+   "t": 4587,
+   "text": "\"drinkers\",\"value\":"
   },
   {
-   "t": 4143,
-   "text": "\""
+   "t": 4622,
+   "text": "\"{state.people.where('"
   },
   {
-   "t": 4178,
-   "text": "},\"on_click\":["
+   "t": 4654,
+   "text": "drinks', true).count()"
   },
   {
-   "t": 4208,
-   "text": "{\"action\":\"push\",\"target"
+   "t": 4688,
+   "text": "}\"}]}}]}"
   },
   {
-   "t": 4242,
-   "text": "\":\"people\",\"value\":{\""
+   "t": 4720,
+   "text": "]},{\"type\":\"button"
   },
   {
-   "t": 4278,
-   "text": "name\":\"Guest\",\"dr"
+   "t": 4753,
+   "text": "\",\"props\":{\"label"
   },
   {
-   "t": 4318,
-   "text": "inks\":false}},{\""
+   "t": 4792,
+   "text": "\":\"Add person\",\"variant"
   },
   {
-   "t": 4346,
-   "text": "action\":\"toast\",\"message\":"
+   "t": 4821,
+   "text": "\":\"outline\""
   },
   {
-   "t": 4375,
-   "text": "\"Person"
+   "t": 4853,
+   "text": "},\"on_click\":{\""
   },
   {
-   "t": 4409,
-   "text": " added\",\"variant\":\"success"
+   "t": 4886,
+   "text": "action\":\"flow\",\"steps"
   },
   {
-   "t": 4442,
-   "text": "\"}]}]}]}"
+   "t": 4922,
+   "text": "\":[{\"action\":\"push"
   },
   {
-   "t": 4476,
-   "text": "}"
+   "t": 4954,
+   "text": "\",\"target\":\"people\",\"value\":"
+  },
+  {
+   "t": 4993,
+   "text": "{\"name\":\"Guest"
+  },
+  {
+   "t": 5039,
+   "text": "\",\"drinks\":false}},"
+  },
+  {
+   "t": 5053,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 5087,
+   "text": "\":\"drinkers\",\"value"
+  },
+  {
+   "t": 5121,
+   "text": "\":\"{state.people.where"
+  },
+  {
+   "t": 5156,
+   "text": "('drinks', true).count"
+  },
+  {
+   "t": 5188,
+   "text": "()}\"}]}},"
+  },
+  {
+   "t": 5221,
+   "text": "{\"type\":\"if\",\"cond"
+  },
+  {
+   "t": 5253,
+   "text": "ition\":\"{state.drin"
+  },
+  {
+   "t": 5286,
+   "text": "kers == 0}\",\"children"
+  },
+  {
+   "t": 5320,
+   "text": "\":[{\"type\":\"al"
+  },
+  {
+   "t": 5353,
+   "text": "ert\",\"props\":{\"variant"
+  },
+  {
+   "t": 5389,
+   "text": "\":\"warning\",\"title\":\""
+  },
+  {
+   "t": 5576,
+   "text": "No drinkers sel"
+  },
+  {
+   "t": 5576,
+   "text": "ected\",\"description\":\"Check"
+  },
+  {
+   "t": 5576,
+   "text": " at"
+  },
+  {
+   "t": 5577,
+   "text": " least one person so"
+  },
+  {
+   "t": 5577,
+   "text": " the drinks c"
+  },
+  {
+   "t": 5839,
+   "text": "ost is"
+  },
+  {
+   "t": 5839,
+   "text": " assigned.\"}}]}"
+  },
+  {
+   "t": 5839,
+   "text": "]}]}}"
   }
  ]
 }
