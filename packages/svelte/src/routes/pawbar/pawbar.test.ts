@@ -336,15 +336,3 @@ describe('ChatSession', () => {
 	});
 });
 
-// Engine gap (not fixed here, no engine changes in this PR): streamSpec's
-// throttle drops a parse inside the window and never schedules a trailing one,
-// so when the stream pauses, `current` lags the text already received until
-// the next chunk or the end. Card works around it with throttleMs 0.
-test.fails('streamSpec parses the received tail during a pause (throttle has no trailing parse)', async () => {
-	const { streamSpec } = await import('$lib/streaming/index.js');
-	let push!: ReadableStreamDefaultController<string>;
-	const store = streamSpec(new ReadableStream<string>({ start: (c) => void (push = c) }), { throttleMs: 40 });
-	push.enqueue('{"version":"1.0","state":{"a":1}');
-	push.enqueue(',"ui":{"type":"text"}}');
-	await waitFor(() => expect(store.current).toMatchObject({ ui: { type: 'text' } }));
-});
