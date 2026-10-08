@@ -10,7 +10,8 @@
   Creative Direction Declaration
     Archetype: Technology. Richness: Premium minimal.
     Design read: an open engine for developers, Clean-Tech family on the repo's
-      shadcn tokens, one cool blue accent, Instrument Sans + JetBrains Mono.
+      shadcn tokens, one cool blue accent, the system UI and mono stacks (no third-party
+      requests at runtime).
     Trap avoided: the dark hero + three feature cards + logo strip template.
       The fold shows the product doing its one job instead: JSON arriving on
       the left, a working UI growing on the right.
@@ -122,12 +123,6 @@
 		name="description"
 		content="Ripple is an open, embeddable generative UI engine. Your model writes a small JSON spec; Ripple renders a working interface with state, binds, expressions and events, and streams it in as the model types."
 	/>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link
-		rel="stylesheet"
-		href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-	/>
 </svelte:head>
 
 <main class="landing">
@@ -203,7 +198,13 @@
 				</div>
 			</dl>
 		</div>
-		<pre class="code"><code>{codeSample}</code></pre>
+		<div class="code-block">
+			<pre class="code"><code>{codeSample}</code></pre>
+			<p class="code-note">
+				Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
+				<a href="https://github.com/qbtrix/ripple-iui/tree/main/packages/svelte#styling">Styling setup</a>
+			</p>
+		</div>
 	</section>
 
 	<section class="explore" aria-labelledby="explore-title">
@@ -256,9 +257,9 @@
 		--panel: var(--card);
 		--ink-soft: color-mix(in srgb, var(--foreground) 62%, var(--ground));
 		--line: var(--border);
-		--mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+		--mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 		--radius: 12px;
-		font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+		font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 		background: var(--ground);
 		color: var(--foreground);
 		padding: 0 24px;
@@ -490,6 +491,18 @@
 		font-size: 13px;
 		line-height: 1.65;
 		overflow-x: auto;
+	}
+
+	.code-block {
+		min-width: 0;
+	}
+	.code-note {
+		margin: 12px 0 0;
+		font-size: 13px;
+		color: var(--ink-soft);
+	}
+	.code-note a {
+		color: var(--accent);
 	}
 
 	/* Explore */
