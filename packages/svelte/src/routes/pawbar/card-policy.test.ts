@@ -79,6 +79,13 @@ describe('urls', () => {
 	});
 });
 
+test('a card is {ui, state?}: data sources, theme or any other top-level key refuse it', () => {
+	expect(refuseCard({ version: '1.0', ui: { type: 'text' }, state: {} })).toBeNull();
+	expect(refuseCard({ ui: { type: 'text' }, data: { sources: [{ id: 'x', url: 'https://api.example/x' }] } })).toBe('key:data');
+	expect(refuseCard({ ui: { type: 'text' }, theme: { accent: 'red' } })).toBe('key:theme');
+	expect(refuseCard({ ui: { type: 'text' }, st: {} }, { partial: true })).toBeNull();
+});
+
 test('every recorded chat scenario passes; the store checkout demo does not', () => {
 	for (const s of scenarios) {
 		const spec = JSON.parse(s.fixture.chunks.map((c) => c.text).join(''));

@@ -153,7 +153,7 @@ export class Card {
 		if (!c || typeof c !== 'object' || !c.ui || typeof c.ui !== 'object') return this.reject('invalid');
 		const why = refuseCard(c);
 		if (why) return this.reject(why);
-		this.spec = { version: '1.0', ...(c as object) } as StreamSpec;
+		this.spec = { version: '1.0', ui: c.ui, ...(c.state === undefined ? {} : { state: c.state }) } as StreamSpec;
 		this.status = 'final';
 		this.#close();
 	}
