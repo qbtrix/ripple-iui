@@ -11,7 +11,7 @@
   Creative Direction Declaration
     Archetype: Technology. Richness: Premium minimal.
     Design read: the landing's Clean-Tech system (shadcn tokens, one cool blue
-      accent, Instrument Sans + JetBrains Mono), carried onto a viewer page.
+      accent, system UI and mono stacks), carried onto a viewer page.
     Trap avoided: a chat-app clone. The prompt is one bubble; the stage is the
       raw stream beside the UI it becomes.
     Dials: variance 5, motion 4, density 4.
@@ -113,12 +113,6 @@
 		name="description"
 		content="Replays of real model output streaming into Ripple. The interface builds itself as the JSON arrives, then works: change the inputs and the numbers follow."
 	/>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link
-		rel="stylesheet"
-		href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-	/>
 </svelte:head>
 
 <main class="live">
@@ -208,9 +202,9 @@
 		--panel: var(--card);
 		--ink-soft: color-mix(in srgb, var(--foreground) 62%, var(--ground));
 		--line: var(--border);
-		--mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+		--mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 		--radius: 12px;
-		font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+		font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 		background: var(--ground);
 		color: var(--foreground);
 		padding: 0 24px;
