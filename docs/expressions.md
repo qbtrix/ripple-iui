@@ -67,10 +67,16 @@ Logical operators follow JavaScript short-circuit behavior:
 
 ### Grouping
 
-Parentheses work for grouping:
+Parentheses work for grouping, including several groups side by side:
 ```
 {(state.a || state.b) && state.c}
+{(state.subtotal + state.shipping) * (1 + state.tax_rate / 100)}
 ```
+
+Either side of a comparison or arithmetic operator can be a group or a
+method call: `{state.total / state.items.count()}`,
+`{state.items.where('done', true).count() > 0}`. A call binds tighter than
+any operator, as in JavaScript.
 
 ## Single vs Template Expressions
 
