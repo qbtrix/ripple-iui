@@ -1,8 +1,8 @@
-// routes/live/engine-gaps.test.ts — Widget gaps the /live scenarios hit while recording.
-// Each is a `test.fails` that reproduces the gap with the smallest spec. The
-// recorder's system prompt (scripts/record-scenario.ts, KNOWN WIDGET GAPS)
-// steers the model around them. When a fix lands, its test starts passing,
-// vitest reports it, and it flips to `test` alongside dropping the prompt rule.
+// routes/live/engine-gaps.test.ts — Widget gaps the /live scenario recordings first hit.
+// Each test is the smallest spec that showed the gap, kept as a regression
+// guard now that the fixes have landed: a chart redraws when its state
+// changes, a flashcard's on_correct reaches the spec, and a streamed slider
+// bound before its min/max keeps the bound value.
 
 import { fireEvent, render } from '@testing-library/svelte';
 import { tick } from 'svelte';
@@ -22,11 +22,9 @@ const button = (c: HTMLElement, label: string) =>
 describe('chart', () => {
 	afterEach(() => vi.unstubAllGlobals());
 
-	// Chart.svelte keeps the echarts instance in a plain `let`, so its redraw
-	// $effect reads `chart` as null on the first run, never reads `data`, and
-	// never re-runs. The chart keeps whatever data it had at mount: a streamed
-	// chart can freeze half-drawn, and no chart follows state.
-	test.fails('redraws when the state behind its data changes', async () => {
+	// A chart that drew once must draw again when the state behind its data
+	// changes, or a streamed chart freezes half-drawn and no chart follows state.
+	test('redraws when the state behind its data changes', async () => {
 		vi.stubGlobal(
 			'ResizeObserver',
 			class {
@@ -58,11 +56,9 @@ describe('chart', () => {
 });
 
 describe('flashcard', () => {
-	// NodeRenderer passes a generic `on_correct` through as `oncorrect`, but
-	// Flashcard reads `onCorrect` (Timer's `on_complete` has the same casing
-	// mismatch with `onComplete`). The widget's own buttons work; the spec's
-	// handler never runs.
-	test.fails('on_correct runs when "Got It" is clicked', async () => {
+	// NodeRenderer passes a generic `on_correct` through as `oncorrect`; the
+	// widget must read that name for the spec's handler to run.
+	test('on_correct runs when "Got It" is clicked', async () => {
 		const spec = {
 			state: { score: 0 },
 			ui: {
@@ -87,11 +83,9 @@ describe('flashcard', () => {
 
 describe('slider', () => {
 	// A streamed slider whose `bind` arrives before its `min`/`max` mounts with
-	// the default 0..100 range, clamps the bound value into it and writes that
-	// back to state. The real min/max land a moment later, but the state value
-	// is already lost (the bike-gears recording ended with a 1500 mm wheel
-	// instead of 2100).
-	test.fails('streamed with bind before props, keeps a bound value above 100', async () => {
+	// the default 0..100 range; it must not write a clamped value back to state
+	// (a bike-gears recording once ended with a 1500 mm wheel instead of 2100).
+	test('streamed with bind before props, keeps a bound value above 100', async () => {
 		const chunks = [
 			'{"state":{"w":2100},"ui":{"type":"flex","children":[{"type":"text","props":{"text":"W {state.w}"}},',
 			'{"type":"slider","bind":"{state.w}","props":{"label":"Wheel",',

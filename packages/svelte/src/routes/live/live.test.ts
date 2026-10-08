@@ -157,7 +157,8 @@ function buttonLabels(spec: unknown): Map<string, boolean> {
 
 /** Click the first DOM button for every static spec button label that has an
  *  on_click; return the labels whose click changed no state and fired no event,
- *  or that are missing from the DOM without being conditional. */
+ *  or that are missing from the DOM without being conditional. A button that is
+ *  disabled at rest (Back on the first step) is skipped. */
 async function clickEachSpecButton(
 	spec: unknown,
 	container: HTMLElement,
@@ -169,7 +170,7 @@ async function clickEachSpecButton(
 	const dead: string[] = [];
 	for (const [label, conditional] of labels) {
 		const b = [...container.querySelectorAll('button')].find((x) => x.textContent?.trim() === label);
-		if (!b && conditional) continue;
+		if ((!b && conditional) || b?.disabled) continue;
 		const s = onStateChange.mock.calls.length;
 		const e = onEvent.mock.calls.length;
 		if (b) {
@@ -238,6 +239,25 @@ async function typeInto(input: HTMLInputElement, value: string | number) {
 	await tick();
 }
 const scenario = (id: string) => scenarios.find((s) => s.id === id)!.fixture;
+/** Step the nth slider thumb with the keyboard, as a user would. */
+async function nudgeSlider(container: HTMLElement, nth: number, key: 'ArrowRight' | 'ArrowLeft', times = 1) {
+	const thumb = container.querySelectorAll<HTMLElement>('[role="slider"]')[nth];
+	for (let i = 0; i < times; i++) await fireEvent.keyDown(thumb, { key });
+	await tick();
+}
+/** Open a bits-ui select with the keyboard and pick an option by its text. */
+async function pickOption(trigger: Element, label: string) {
+	// jsdom has no scrollIntoView; bits-ui calls it on the highlighted option.
+	Element.prototype.scrollIntoView ??= () => {};
+	await fireEvent.keyDown(trigger, { key: 'Enter' });
+	const option = await vi.waitFor(() => {
+		const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent?.trim() === label);
+		return o ?? Promise.reject(new Error(`no option ${label}`));
+	});
+	await fireEvent.pointerUp(option);
+	await fireEvent.click(option);
+	await tick();
+}
 
 describe('savings-calculator numbers', () => {
 	// $300/month at 5% a year, compounded monthly with month-end deposits, for
@@ -251,6 +271,15 @@ describe('savings-calculator numbers', () => {
 		await vi.waitFor(() => expect(moneyAfter(container, 'Balance after 10 years')).toBeCloseTo(62112.91, 1));
 		expect(moneyAfter(container, 'You deposit')).toBe(48000);
 	});
+
+	// Years is the second slider. 11 years of $300/month at 5%: 52,651.70.
+	test('after streaming, the years slider moves the balance and adds a year bar', async () => {
+		const { container } = await mountStreamed(scenario('savings-calculator'));
+		await nudgeSlider(container, 1, 'ArrowRight');
+		await vi.waitFor(() => expect(moneyAfter(container, 'Balance after 11 years')).toBeCloseTo(52651.7, 1));
+		expect(text(container)).toContain('Y11');
+		expect(moneyAfter(container, 'You deposit')).toBe(39600);
+	});
 });
 
 const text = (container: HTMLElement) => container.textContent ?? '';
@@ -259,68 +288,91 @@ const button = (container: HTMLElement, label: string) =>
 const decimalInputs = (container: HTMLElement) => [...container.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]')];
 
 describe('tokyo-trip numbers', () => {
-	const yenAfter = (container: HTMLElement, label: string) =>
-		Number(new RegExp(label + '\\s*¥([\\d,]+)').exec(text(container))![1].replace(/,/g, ''));
-
-	// Day 1's first stop is the ¥3,250 Narita Express; the budget is ¥60,000.
-	test('after streaming, ticks, costs and new stops all update the totals', async () => {
+	// 18 stops with $250 of estimates; the budget is $600. The first stop is
+	// the $25-estimate airport train on day 1.
+	test('after streaming, ticks, spending, Remove and Add stop all update the totals', async () => {
 		const { container } = await mountStreamed(scenario('tokyo-trip'));
-		expect(text(container)).toContain('0 of 20 stops done. Planned cost ¥38500');
+		expect(text(container)).toContain('0 of 18 stops done');
+		expect(moneyAfter(container, 'Estimated total for all stops')).toBe(250);
 		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
-		await vi.waitFor(() => expect(yenAfter(container, 'Spent')).toBe(3250));
-		expect(yenAfter(container, 'Budget left')).toBe(56750);
-		expect(text(container)).toContain('1 of 20 stops done');
-		await typeInto(decimalInputs(container)[1], 4000); // that stop's cost
-		await vi.waitFor(() => expect(yenAfter(container, 'Spent')).toBe(4000));
-		expect(text(container)).toContain('Planned cost ¥39250');
-		await typeInto(container.querySelector<HTMLInputElement>('input[type="text"]:not([inputmode])')!, 'Ramen in Ikebukuro');
-		await fireEvent.click(button(container, 'Add to this day'));
-		await vi.waitFor(() => expect(text(container)).toContain('1 of 21 stops done'));
-		expect(text(container)).toContain('Ramen in Ikebukuro');
+		await vi.waitFor(() => expect(text(container)).toContain('1 of 18 stops done'));
+		await typeInto(decimalInputs(container)[1], 25); // first stop's spend
+		await vi.waitFor(() => expect(moneyAfter(container, 'Spent so far')).toBe(25));
+		expect(moneyAfter(container, 'Budget left')).toBe(575);
+		await fireEvent.click(button(container, 'Remove'));
+		await vi.waitFor(() => expect(text(container)).toContain('0 of 17 stops done'));
+		expect(moneyAfter(container, 'Spent so far')).toBe(0);
+		expect(moneyAfter(container, 'Estimated total for all stops')).toBe(225);
+		await typeInto(container.querySelector<HTMLInputElement>('input[type="text"]:not([inputmode])')!, 'Bookshop browse');
+		await fireEvent.click(button(container, 'Add stop'));
+		await vi.waitFor(() => expect(text(container)).toContain('0 of 18 stops done'));
+		expect(text(container)).toContain('Bookshop browse');
 	});
 });
 
 describe('sales-dashboard numbers', () => {
-	// 12 orders, $2,070: Jul 505, Aug 775, Sep 790. North is 3 orders, $610,
-	// and its first order (#1, July) is $120.
-	test('after streaming, the region filter and order edits move every total', async () => {
+	// 12 orders, $1,965: Jul 505, Aug 635, Sep 825. North is orders 1, 5 and 9:
+	// $120 + $150 + $300 = $570. The chart's redraw is checked in the browser
+	// (jsdom has no canvas); here the filter must move the stats and the table.
+	test('after streaming, the region filter narrows the totals and the table', async () => {
 		const { container } = await mountStreamed(scenario('sales-dashboard'));
-		expect(moneyAfter(container, 'Revenue')).toBe(2070);
-		expect(text(container)).toMatch(/Best month\s*Sep/);
-		expect(moneyAfter(container, 'Avg order')).toBe(172.5);
+		expect(moneyAfter(container, 'Quarter revenue')).toBe(1965);
+		expect(moneyAfter(container, 'Avg order')).toBe(163.75);
+		const table = () => container.querySelector('table')?.textContent ?? '';
+		expect(table()).toContain('South');
 		await fireEvent.click(button(container, 'North'));
-		await vi.waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(610));
+		await vi.waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(570));
 		expect(text(container)).toMatch(/North orders\s*3/);
-		expect(text(container)).not.toContain('· South');
-		await typeInto(decimalInputs(container)[0], 200);
-		await vi.waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(690));
-		expect(moneyAfter(container, 'Revenue')).toBe(2150);
-		expect(text(container)).toContain('Jul$585');
+		expect(moneyAfter(container, 'North avg order')).toBe(190);
+		expect(table()).not.toContain('South');
+		expect(table()).toContain('North');
+		expect(moneyAfter(container, 'Quarter revenue')).toBe(1965);
 	});
 });
 
 describe('flashcards scoring', () => {
-	test('after streaming, flip then "Got it" scores the card and moves to the next one', async () => {
+	const knew = (c: HTMLElement) => Number(/Knew it\s*(\d+)/.exec(text(c))![1]);
+	const review = (c: HTMLElement) => Number(/Needs review\s*(\d+)/.exec(text(c))![1]);
+	async function mark(c: HTMLElement, label: 'Got It' | 'Needs Review') {
+		await fireEvent.click(c.querySelector('.flashcard')!);
+		await fireEvent.click(await vi.waitFor(() => button(c, label) ?? Promise.reject(new Error(`no ${label}`))));
+		await tick();
+	}
+
+	// The flashcard widget's own Got It / Needs Review buttons fire the spec's
+	// on_correct / on_incorrect, which keep score and advance the deck.
+	test('after streaming, the card buttons score, advance, finish and restart the deck', async () => {
 		const { container } = await mountStreamed(scenario('flashcards'));
-		expect(text(container)).toContain('Hola');
-		await fireEvent.click(button(container, 'Flip card'));
-		await vi.waitFor(() => expect(text(container)).toContain('Hello'));
-		await fireEvent.click(button(container, 'Got it'));
-		await vi.waitFor(() => expect(text(container)).toContain('Gracias'));
-		expect(text(container)).toMatch(/1\s*Correct\s*0\s*Missed/);
-		expect(text(container)).toContain('Card 2 of');
+		expect(text(container)).toContain('Card 1 of 8');
+		await mark(container, 'Got It');
+		await vi.waitFor(() => expect(knew(container)).toBe(1));
+		expect(text(container)).toContain('Card 2 of 8');
+		expect(text(container)).toContain('Gracias');
+		await mark(container, 'Needs Review');
+		await vi.waitFor(() => expect(review(container)).toBe(1));
+		for (let i = 3; i <= 8; i++) await mark(container, 'Got It');
+		await vi.waitFor(() => expect(text(container)).toContain('You knew 7 of 8 cards. 1 to review.'));
+		await fireEvent.click(button(container, 'Study again'));
+		await vi.waitFor(() => expect(text(container)).toContain('Card 1 of 8'));
+		expect(knew(container)).toBe(0);
+		expect(review(container)).toBe(0);
 	});
 });
 
 describe('hiit-workout steps', () => {
-	// 20 minutes of 40 s work + 20 s rest is 20 intervals; 30 s work makes 24.
-	test('after streaming, Next advances the circuit and the interval length re-plans it', async () => {
+	// 20 minutes of 40 s work + 20 s rest is 20 intervals; 45 s work makes
+	// floor(1200 / 65) = 18.
+	test('after streaming, Next walks the circuit, stops at the last interval, and the work slider re-plans it', async () => {
 		const { container } = await mountStreamed(scenario('hiit-workout'));
-		expect(text(container)).toContain('= 20 intervals');
-		await fireEvent.click(button(container, 'Next'));
-		await vi.waitFor(() => expect(container.querySelector('h2')?.textContent).toBe('Squat jumps'));
-		await fireEvent.click(button(container, '30'));
-		await vi.waitFor(() => expect(text(container)).toContain('30s work + 20s rest = 24 intervals'));
+		expect(text(container)).toContain('Exercise 1 of 20');
+		await fireEvent.click(button(container, 'Next exercise'));
+		await vi.waitFor(() => expect(text(container)).toContain('Exercise 2 of 20'));
+		expect(container.querySelector('h2')?.textContent).toBe('Bodyweight squats');
+		for (let i = 0; i < 25; i++) await fireEvent.click(button(container, 'Next exercise'));
+		await vi.waitFor(() => expect(text(container)).toContain('Exercise 20 of 20'));
+		expect(button(container, 'Next exercise').disabled).toBe(true);
+		await nudgeSlider(container, 0, 'ArrowRight');
+		await vi.waitFor(() => expect(text(container)).toContain('Exercise 1 of 18'));
 	});
 });
 
@@ -334,6 +386,15 @@ describe('meal-plan shopping list', () => {
 		await vi.waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*900 g/));
 		expect(text(container)).toMatch(/Tomatoes\s*1350 g/);
 		expect(text(container)).toContain('Shopping list for 3 people');
+	});
+
+	// Monday's Chicken Stir-Fry swapped for Beef Chili: chicken drops to one
+	// night (300 g for 2), beef mince goes to two nights (520 g).
+	test('after streaming, swapping a day\'s dinner re-totals the shopping list', async () => {
+		const { container } = await mountStreamed(scenario('meal-plan'));
+		await pickOption(container.querySelector('[data-slot="select-trigger"]')!, 'Beef Chili');
+		await vi.waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*300 g/));
+		expect(text(container)).toMatch(/Lean beef mince\s*520 g/);
 	});
 });
 
