@@ -1,0 +1,15 @@
+// wrangler.jsonc: deploys the static Ripple site (bun run build:site -> build/)
+// as a Workers static-assets worker. No script, no routes: it serves on
+// workers.dev until a custom domain is attached in the Cloudflare dashboard.
+// Unknown paths get build/404.html (the SvelteKit SPA shell), which renders
+// client-only routes and the not-found page.
+{
+	"name": "ripple-site",
+	"compatibility_date": "2026-09-01",
+	"workers_dev": true,
+	"assets": {
+		"directory": "./build",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page"
+	}
+}
