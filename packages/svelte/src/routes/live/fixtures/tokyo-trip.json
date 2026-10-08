@@ -1,0 +1,1181 @@
+{
+ "id": "tokyo-trip",
+ "title": "Plan 5 days in Tokyo",
+ "prompt": "Plan a 5-day trip to Tokyo for me. Lay it out day by day so I can tick things off as I go, let me add my own stops, and keep a running total of what I've spent.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-08T08:45:51.197Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 13,
+   "text": "\"version"
+  },
+  {
+   "t": 47,
+   "text": "\":\"1.0\",\"state\":"
+  },
+  {
+   "t": 80,
+   "text": "{\"day\":1,\"bud"
+  },
+  {
+   "t": 115,
+   "text": "get\":60"
+  },
+  {
+   "t": 149,
+   "text": "000,\"spent\":0,"
+  },
+  {
+   "t": 241,
+   "text": "\"planned\":38500,\""
+  },
+  {
+   "t": 241,
+   "text": "doneCount\":0,\""
+  },
+  {
+   "t": 269,
+   "text": "newText\":\"\",\"newCost"
+  },
+  {
+   "t": 304,
+   "text": "\":0,\"stops\":["
+  },
+  {
+   "t": 340,
+   "text": "{\"text"
+  },
+  {
+   "t": 425,
+   "text": "\":\"Narita Express to"
+  },
+  {
+   "t": 425,
+   "text": " Shinjuku\",\"day"
+  },
+  {
+   "t": 425,
+   "text": "\":1,\"cost\":3"
+  },
+  {
+   "t": 447,
+   "text": "250,\"done\":false},{"
+  },
+  {
+   "t": 480,
+   "text": "\"text\":\"Metropol"
+  },
+  {
+   "t": 516,
+   "text": "itan Gov"
+  },
+  {
+   "t": 551,
+   "text": "t Building view\",\"day\":1"
+  },
+  {
+   "t": 586,
+   "text": ",\"cost\":0,\""
+  },
+  {
+   "t": 615,
+   "text": "done\":false},{\"text\":"
+  },
+  {
+   "t": 648,
+   "text": "\"Omoide"
+  },
+  {
+   "t": 682,
+   "text": " Yokocho dinner\",\""
+  },
+  {
+   "t": 713,
+   "text": "day\":1,\"cost\":"
+  },
+  {
+   "t": 749,
+   "text": "3500,\"done\":false},"
+  },
+  {
+   "t": 780,
+   "text": "{\"text\":\"Golden"
+  },
+  {
+   "t": 817,
+   "text": " Gai drinks\",\"day"
+  },
+  {
+   "t": 846,
+   "text": "\":1,\"cost\":2"
+  },
+  {
+   "t": 883,
+   "text": "000,\"done\":false},{"
+  },
+  {
+   "t": 914,
+   "text": "\"text\":\"Senso-"
+  },
+  {
+   "t": 947,
+   "text": "ji temple\",\"day\":2"
+  },
+  {
+   "t": 980,
+   "text": ",\"cost\":0,\""
+  },
+  {
+   "t": 1014,
+   "text": "done\":false},{\"text\":"
+  },
+  {
+   "t": 1047,
+   "text": "\"Nakamise street"
+  },
+  {
+   "t": 1081,
+   "text": " snacks\",\"day\":2,"
+  },
+  {
+   "t": 1115,
+   "text": "\"cost\":1000,\""
+  },
+  {
+   "t": 1148,
+   "text": "done\":false},{\"text\":"
+  },
+  {
+   "t": 1183,
+   "text": "\"Ueno Park and"
+  },
+  {
+   "t": 1216,
+   "text": " museum\",\"day\":2,\""
+  },
+  {
+   "t": 1248,
+   "text": "cost\":1000,\"done"
+  },
+  {
+   "t": 1282,
+   "text": "\":false},{\"text\":\""
+  },
+  {
+   "t": 1316,
+   "text": "Ameyoko market"
+  },
+  {
+   "t": 1348,
+   "text": " lunch\",\"day\":2,"
+  },
+  {
+   "t": 1381,
+   "text": "\"cost\":1500,\""
+  },
+  {
+   "t": 1414,
+   "text": "done\":false},{\"text\":"
+  },
+  {
+   "t": 1448,
+   "text": "\"Meiji Shr"
+  },
+  {
+   "t": 1482,
+   "text": "ine\",\"day\":3,\"c"
+  },
+  {
+   "t": 1513,
+   "text": "ost\":0,\"done\":false"
+  },
+  {
+   "t": 1547,
+   "text": "},{\"text\":\"Tak"
+  },
+  {
+   "t": 1583,
+   "text": "eshita Street crepes"
+  },
+  {
+   "t": 1614,
+   "text": "\",\"day\":3,\"cost"
+  },
+  {
+   "t": 1650,
+   "text": "\":800,\"done\":false},"
+  },
+  {
+   "t": 1685,
+   "text": "{\"text\":\"Shib"
+  },
+  {
+   "t": 1716,
+   "text": "uya Sky\",\"day\":"
+  },
+  {
+   "t": 1750,
+   "text": "3,\"cost\":2200"
+  },
+  {
+   "t": 1783,
+   "text": ",\"done\":false},{\""
+  },
+  {
+   "t": 1816,
+   "text": "text\":\"Ramen near"
+  },
+  {
+   "t": 1848,
+   "text": " Shibuya Cross"
+  },
+  {
+   "t": 1883,
+   "text": "ing\",\"day\":3,\"c"
+  },
+  {
+   "t": 1914,
+   "text": "ost\":1300,\"done\":"
+  },
+  {
+   "t": 1951,
+   "text": "false},{\"text\":\""
+  },
+  {
+   "t": 1983,
+   "text": "Tsukiji outer market"
+  },
+  {
+   "t": 2016,
+   "text": " breakfast\",\"day\":4"
+  },
+  {
+   "t": 2049,
+   "text": ",\"cost\":2500,"
+  },
+  {
+   "t": 2081,
+   "text": "\"done\":false},{\"text"
+  },
+  {
+   "t": 2117,
+   "text": "\":\"teamLab Plan"
+  },
+  {
+   "t": 2149,
+   "text": "ets\",\"day\":4,\"c"
+  },
+  {
+   "t": 2182,
+   "text": "ost\":4200,\"done\":"
+  },
+  {
+   "t": 2219,
+   "text": "false},{\"text\":\""
+  },
+  {
+   "t": 2250,
+   "text": "Odaiba sunset wal"
+  },
+  {
+   "t": 2283,
+   "text": "k\",\"day\":4,\"c"
+  },
+  {
+   "t": 2319,
+   "text": "ost\":0,\"done\":false"
+  },
+  {
+   "t": 2348,
+   "text": "},{\"text\":\""
+  },
+  {
+   "t": 2382,
+   "text": "Ginza sushi dinner"
+  },
+  {
+   "t": 2416,
+   "text": "\",\"day\":4,\"cost"
+  },
+  {
+   "t": 2450,
+   "text": "\":6000,\"done\":false"
+  },
+  {
+   "t": 2494,
+   "text": "},{\"text\":\"Ak"
+  },
+  {
+   "t": 2537,
+   "text": "ihabara arcades\",\"day"
+  },
+  {
+   "t": 2551,
+   "text": "\":5,\"cost\":2"
+  },
+  {
+   "t": 2581,
+   "text": "000,\"done\":false},{"
+  },
+  {
+   "t": 2615,
+   "text": "\"text\":\""
+  },
+  {
+   "t": 2652,
+   "text": "Imperial Palace East"
+  },
+  {
+   "t": 2682,
+   "text": " Gardens\",\"day\":5,"
+  },
+  {
+   "t": 2719,
+   "text": "\"cost\":0,\"done"
+  },
+  {
+   "t": 2749,
+   "text": "\":false},{\"text\":\""
+  },
+  {
+   "t": 2851,
+   "text": "Souvenirs at"
+  },
+  {
+   "t": 2851,
+   "text": " Tokyo Station\",\"day"
+  },
+  {
+   "t": 2851,
+   "text": "\":5,\"cost\":4"
+  },
+  {
+   "t": 3014,
+   "text": "000,\"done\":false},{"
+  },
+  {
+   "t": 3014,
+   "text": "\"text\":\"Train to the"
+  },
+  {
+   "t": 3014,
+   "text": " airport\",\"day\":5,\""
+  },
+  {
+   "t": 3014,
+   "text": "cost\":3250,\"done"
+  },
+  {
+   "t": 3106,
+   "text": "\":false}]},"
+  },
+  {
+   "t": 3106,
+   "text": "\"ui\":{\"type\":"
+  },
+  {
+   "t": 3106,
+   "text": "\"card\",\"props\":{\"title"
+  },
+  {
+   "t": 3115,
+   "text": "\":\"Tokyo in"
+  },
+  {
+   "t": 3150,
+   "text": " 5 days\",\"description\":\""
+  },
+  {
+   "t": 3184,
+   "text": "Tick st"
+  },
+  {
+   "t": 3216,
+   "text": "ops off, add your"
+  },
+  {
+   "t": 3252,
+   "text": " own, track spending"
+  },
+  {
+   "t": 3333,
+   "text": " ("
+  },
+  {
+   "t": 3353,
+   "text": "¥)\"},\"children\":["
+  },
+  {
+   "t": 3399,
+   "text": "{\"type\":\"flex\",\""
+  },
+  {
+   "t": 3455,
+   "text": "props\":{\"direction\":\""
+  },
+  {
+   "t": 3455,
+   "text": "column\",\"gap\":\"12"
+  },
+  {
+   "t": 3497,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 3569,
+   "text": "\"type\":\"grid\",\"props"
+  },
+  {
+   "t": 3569,
+   "text": "\":{\"columns\":2,"
+  },
+  {
+   "t": 3582,
+   "text": "\"gap\":\"8px\""
+  },
+  {
+   "t": 3615,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 3659,
+   "text": "\":\"stat\",\"props\":{"
+  },
+  {
+   "t": 3683,
+   "text": "\"label\":\"Spent\",\""
+  },
+  {
+   "t": 3716,
+   "text": "value\":\"{state.spent"
+  },
+  {
+   "t": 3750,
+   "text": "}\",\"format\":\"currency\",\""
+  },
+  {
+   "t": 3782,
+   "text": "currency\":\"JPY\",\""
+  },
+  {
+   "t": 3817,
+   "text": "size\":\"sm\"}},"
+  },
+  {
+   "t": 3850,
+   "text": "{\"type\":\"stat\",\""
+  },
+  {
+   "t": 3883,
+   "text": "props\":{\"label\":\""
+  },
+  {
+   "t": 3915,
+   "text": "Budget left\",\"value\":\"{"
+  },
+  {
+   "t": 3949,
+   "text": "state.budget - state.sp"
+  },
+  {
+   "t": 3984,
+   "text": "ent}\",\"format\":\"currency"
+  },
+  {
+   "t": 4023,
+   "text": "\",\"currency\":\"JPY"
+  },
+  {
+   "t": 4050,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 4093,
+   "text": "}]},{\"type\":\""
+  },
+  {
+   "t": 4116,
+   "text": "number-input\",\"b"
+  },
+  {
+   "t": 4149,
+   "text": "ind\":\"{state.budget"
+  },
+  {
+   "t": 4183,
+   "text": "}\",\"props\":{\"label\":"
+  },
+  {
+   "t": 4216,
+   "text": "\"Trip budget ("
+  },
+  {
+   "t": 4262,
+   "text": "¥)\",\"min\":0,\""
+  },
+  {
+   "t": 4297,
+   "text": "step\":5"
+  },
+  {
+   "t": 4316,
+   "text": "000}},{\"type\":\""
+  },
+  {
+   "t": 4369,
+   "text": "progress\",\"props\":{\"value"
+  },
+  {
+   "t": 4397,
+   "text": "\":\"{state.spent}"
+  },
+  {
+   "t": 4417,
+   "text": "\",\"max\":\"{state.bud"
+  },
+  {
+   "t": 4448,
+   "text": "get}\"}},{\"type"
+  },
+  {
+   "t": 4482,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 4516,
+   "text": "size"
+  },
+  {
+   "t": 4564,
+   "text": "\":\"sm\",\"text\":\""
+  },
+  {
+   "t": 4586,
+   "text": "{state.doneCount}"
+  },
+  {
+   "t": 4615,
+   "text": " of {state.stops.length"
+  },
+  {
+   "t": 4650,
+   "text": "} stops done. Planned"
+  },
+  {
+   "t": 4686,
+   "text": " c"
+  },
+  {
+   "t": 4716,
+   "text": "ost "
+  },
+  {
+   "t": 4750,
+   "text": "¥{state.planned}"
+  },
+  {
+   "t": 4785,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 4818,
+   "text": "separator\",\"props\":{}"
+  },
+  {
+   "t": 4851,
+   "text": "},{\"type\":\"segm"
+  },
+  {
+   "t": 4884,
+   "text": "ented\",\"bind\":\"{state"
+  },
+  {
+   "t": 4920,
+   "text": ".day}\",\"props\":{\""
+  },
+  {
+   "t": 4949,
+   "text": "options\":[{\"value\":1"
+  },
+  {
+   "t": 4983,
+   "text": ",\"label\":\"D"
+  },
+  {
+   "t": 5016,
+   "text": "1\"},{\"value\":2"
+  },
+  {
+   "t": 5050,
+   "text": ",\"label\":\"D2\""
+  },
+  {
+   "t": 5081,
+   "text": "},{\"value\":3,\""
+  },
+  {
+   "t": 5117,
+   "text": "label\":\"D3\"},{"
+  },
+  {
+   "t": 5152,
+   "text": "\"value\":4,\"label\":"
+  },
+  {
+   "t": 5183,
+   "text": "\"D4\"},{\"value"
+  },
+  {
+   "t": 5217,
+   "text": "\":5,\"label\":\"D"
+  },
+  {
+   "t": 5252,
+   "text": "5\"}]}},{\""
+  },
+  {
+   "t": 5287,
+   "text": "type\":\"heading\",\"props\":"
+  },
+  {
+   "t": 5322,
+   "text": "{\"level\":3,\"text"
+  },
+  {
+   "t": 5349,
+   "text": "\":\"{"
+  },
+  {
+   "t": 5382,
+   "text": "state.day == 1 "
+  },
+  {
+   "t": 5416,
+   "text": "? 'Day 1:"
+  },
+  {
+   "t": 5448,
+   "text": " Arrival and Shin"
+  },
+  {
+   "t": 5482,
+   "text": "juku' : state.day"
+  },
+  {
+   "t": 5516,
+   "text": " == 2 ? '"
+  },
+  {
+   "t": 5550,
+   "text": "Day 2: Asak"
+  },
+  {
+   "t": 5583,
+   "text": "usa and Ueno'"
+  },
+  {
+   "t": 5619,
+   "text": " : state.day == 3 "
+  },
+  {
+   "t": 5652,
+   "text": "? 'Day 3"
+  },
+  {
+   "t": 5687,
+   "text": ": Shibuya and"
+  },
+  {
+   "t": 5724,
+   "text": " Harajuku' : state."
+  },
+  {
+   "t": 5750,
+   "text": "day == 4 ? "
+  },
+  {
+   "t": 5783,
+   "text": "'Day 4: B"
+  },
+  {
+   "t": 5817,
+   "text": "ay and Ginza' :"
+  },
+  {
+   "t": 5947,
+   "text": " 'Day 5:"
+  },
+  {
+   "t": 5947,
+   "text": " Akihabara and depart"
+  },
+  {
+   "t": 5947,
+   "text": "ure'}\"}},{\""
+  },
+  {
+   "t": 6053,
+   "text": "type\":\"each\",\"items\":\""
+  },
+  {
+   "t": 6054,
+   "text": "{state.stops}\",\"children"
+  },
+  {
+   "t": 6054,
+   "text": "\":[{\"type\":\"if"
+  },
+  {
+   "t": 6055,
+   "text": "\",\"condition\":\"{item."
+  },
+  {
+   "t": 6084,
+   "text": "day == state.day}\",\"children"
+  },
+  {
+   "t": 6117,
+   "text": "\":[{\"type\":\"fl"
+  },
+  {
+   "t": 6324,
+   "text": "ex\",\"props\":{\"direction"
+  },
+  {
+   "t": 6324,
+   "text": "\":\"column\",\"gap\":\""
+  },
+  {
+   "t": 6324,
+   "text": "4"
+  },
+  {
+   "t": 6324,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 6383,
+   "text": "\"type\":\"checkbox"
+  },
+  {
+   "t": 6384,
+   "text": "\",\"bind\":\"st"
+  },
+  {
+   "t": 6384,
+   "text": "ops.{index}.done\",\""
+  },
+  {
+   "t": 6392,
+   "text": "props\":{\"label\":\"{"
+  },
+  {
+   "t": 6425,
+   "text": "item.text}\"},\"on"
+  },
+  {
+   "t": 6486,
+   "text": "_change\":[{\"action\":"
+  },
+  {
+   "t": 6549,
+   "text": "\"set\",\"target\":\"spent"
+  },
+  {
+   "t": 6550,
+   "text": "\",\"value\":\"{state.st"
+  },
+  {
+   "t": 6555,
+   "text": "ops.where('done', true)."
+  },
+  {
+   "t": 6584,
+   "text": "sum('cost')}\""
+  },
+  {
+   "t": 6618,
+   "text": "},{\"action\":\"set\",\""
+  },
+  {
+   "t": 6652,
+   "text": "target\":\"doneCount\",\""
+  },
+  {
+   "t": 6686,
+   "text": "value\":\"{state.stops"
+  },
+  {
+   "t": 6734,
+   "text": ".where('done', true).count"
+  },
+  {
+   "t": 6752,
+   "text": "()}\"}]},{\""
+  },
+  {
+   "t": 6783,
+   "text": "type\":\"flex\",\"props\":"
+  },
+  {
+   "t": 6817,
+   "text": "{\"direction\":\"row\",\""
+  },
+  {
+   "t": 6852,
+   "text": "gap\":\"8px\",\"align"
+  },
+  {
+   "t": 6884,
+   "text": "\":\"end"
+  },
+  {
+   "t": 6919,
+   "text": "\",\"wrap\":true},\""
+  },
+  {
+   "t": 6951,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 6983,
+   "text": "number-input\",\"bind\":\""
+  },
+  {
+   "t": 7023,
+   "text": "stops.{index}.c"
+  },
+  {
+   "t": 7051,
+   "text": "ost\",\"props\":{\"label\":"
+  },
+  {
+   "t": 7087,
+   "text": "\"Cost (¥)"
+  },
+  {
+   "t": 7117,
+   "text": "\",\"min\":0,\"step\":"
+  },
+  {
+   "t": 7151,
+   "text": "500},\"on_change\":["
+  },
+  {
+   "t": 7184,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 7216,
+   "text": "\":\"spent\",\"value\":\""
+  },
+  {
+   "t": 7249,
+   "text": "{state.stops.where('"
+  },
+  {
+   "t": 7284,
+   "text": "done', true).sum('c"
+  },
+  {
+   "t": 7317,
+   "text": "ost')}\"},{\"action"
+  },
+  {
+   "t": 7350,
+   "text": "\":\"set\",\"target\":\"plan"
+  },
+  {
+   "t": 7383,
+   "text": "ned\",\"value\":\"{state."
+  },
+  {
+   "t": 7419,
+   "text": "stops.sum('cost"
+  },
+  {
+   "t": 7449,
+   "text": "')}\"}]},{\""
+  },
+  {
+   "t": 7487,
+   "text": "type\":\"button\",\"props\":{"
+  },
+  {
+   "t": 7516,
+   "text": "\"label\":\"Remove\",\""
+  },
+  {
+   "t": 7550,
+   "text": "variant\":\"ghost\",\""
+  },
+  {
+   "t": 7585,
+   "text": "size\":\"sm\"},\""
+  },
+  {
+   "t": 7618,
+   "text": "on_click\":[{\"action"
+  },
+  {
+   "t": 7650,
+   "text": "\":\"remove\",\"target\":\""
+  },
+  {
+   "t": 7683,
+   "text": "stops\",\"value\":\"{item"
+  },
+  {
+   "t": 7722,
+   "text": "}\"},{\"action\":\""
+  },
+  {
+   "t": 7750,
+   "text": "set\",\"target\":\"spent\",\""
+  },
+  {
+   "t": 7787,
+   "text": "value\":\"{state.stops"
+  },
+  {
+   "t": 7825,
+   "text": ".where('done', true).s"
+  },
+  {
+   "t": 7850,
+   "text": "um('cost')}\"},"
+  },
+  {
+   "t": 7884,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 7916,
+   "text": "\":\"planned\",\"value\":\""
+  },
+  {
+   "t": 7950,
+   "text": "{state.stops.sum"
+  },
+  {
+   "t": 7987,
+   "text": "('cost')}\"},{"
+  },
+  {
+   "t": 8019,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 8051,
+   "text": "\"doneCount\",\"value\":"
+  },
+  {
+   "t": 8086,
+   "text": "\"{state.stops.where"
+  },
+  {
+   "t": 8119,
+   "text": "('done', true).count()}"
+  },
+  {
+   "t": 8150,
+   "text": "\"}]}]}]}"
+  },
+  {
+   "t": 8196,
+   "text": "]}]},{\"type\":"
+  },
+  {
+   "t": 8223,
+   "text": "\"separator\",\"props\":{}"
+  },
+  {
+   "t": 8252,
+   "text": "},{\"type\":\"input\",\""
+  },
+  {
+   "t": 8285,
+   "text": "bind\":\"{state.new"
+  },
+  {
+   "t": 8317,
+   "text": "Text}\",\"props\":{\"label"
+  },
+  {
+   "t": 8350,
+   "text": "\":\"Add your own stop"
+  },
+  {
+   "t": 8383,
+   "text": "\",\"placeholder\":\"e"
+  },
+  {
+   "t": 8417,
+   "text": ".g. P"
+  },
+  {
+   "t": 8455,
+   "text": "ok"
+  },
+  {
+   "t": 8483,
+   "text": "emon"
+  },
+  {
+   "t": 8516,
+   "text": " Center\"}},{\"type\":"
+  },
+  {
+   "t": 8549,
+   "text": "\"number-input\",\"bind\":"
+  },
+  {
+   "t": 8583,
+   "text": "\"{state.newCost}"
+  },
+  {
+   "t": 8618,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 8651,
+   "text": "C"
+  },
+  {
+   "t": 8694,
+   "text": "ost (¥)\",\"min\":"
+  },
+  {
+   "t": 8718,
+   "text": "0,\"step\":500}},"
+  },
+  {
+   "t": 8754,
+   "text": "{\"type\":\"button\",\"props"
+  },
+  {
+   "t": 8786,
+   "text": "\":{\"label\":\"Add"
+  },
+  {
+   "t": 8844,
+   "text": " to"
+  },
+  {
+   "t": 8871,
+   "text": " this"
+  },
+  {
+   "t": 8894,
+   "text": " day\"},\"on_click\":"
+  },
+  {
+   "t": 8921,
+   "text": "{\"action\":\"flow\",\""
+  },
+  {
+   "t": 8951,
+   "text": "steps\":[{\"action\":"
+  },
+  {
+   "t": 8985,
+   "text": "\"validate\",\"condition\":\""
+  },
+  {
+   "t": 9018,
+   "text": "state.newText != ''\",\""
+  },
+  {
+   "t": 9050,
+   "text": "message\":\"Type a name"
+  },
+  {
+   "t": 9084,
+   "text": " for the stop first"
+  },
+  {
+   "t": 9117,
+   "text": "\",\"variant\":\"warning\""
+  },
+  {
+   "t": 9150,
+   "text": "},{\"action\":\"push\",\""
+  },
+  {
+   "t": 9184,
+   "text": "target\":\"stops\",\"value\":"
+  },
+  {
+   "t": 9216,
+   "text": "{\"text\":\"{state."
+  },
+  {
+   "t": 9267,
+   "text": "newText}\",\"day\":\"{"
+  },
+  {
+   "t": 9310,
+   "text": "state.day}\",\"cost\":"
+  },
+  {
+   "t": 9317,
+   "text": "\"{state.newCost}"
+  },
+  {
+   "t": 9350,
+   "text": "\",\"done\":false}},{\""
+  },
+  {
+   "t": 9384,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 9423,
+   "text": "planned\",\"value\":\"{state"
+  },
+  {
+   "t": 9453,
+   "text": ".stops.sum('c"
+  },
+  {
+   "t": 9485,
+   "text": "ost')}\"},{\"action"
+  },
+  {
+   "t": 9528,
+   "text": "\":\"set\",\"target\":\"new"
+  },
+  {
+   "t": 9551,
+   "text": "Text\",\"value\":\"\"},{\""
+  },
+  {
+   "t": 9584,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 9617,
+   "text": "newCost\",\"value\":0},"
+  },
+  {
+   "t": 9652,
+   "text": "{\"action\":\"toast\",\""
+  },
+  {
+   "t": 9684,
+   "text": "message\":\"Stop added\",\""
+  },
+  {
+   "t": 9719,
+   "text": "variant\":\"success\"}]"
+  },
+  {
+   "t": 9764,
+   "text": "}}]}]}}"
+  }
+ ]
+}

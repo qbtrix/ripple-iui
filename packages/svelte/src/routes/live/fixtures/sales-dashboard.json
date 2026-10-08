@@ -1,0 +1,1085 @@
+{
+ "id": "sales-dashboard",
+ "title": "Quarterly sales",
+ "prompt": "Show me last quarter's sales for a small online shop: the headline numbers, revenue by month on a chart, and a table of orders I can filter by region, with totals for the region I pick.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-08T08:45:51.700Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 25,
+   "text": "\"version"
+  },
+  {
+   "t": 60,
+   "text": "\":\"1."
+  },
+  {
+   "t": 93,
+   "text": "0\",\"state\":{\"region\":"
+  },
+  {
+   "t": 126,
+   "text": "\"All\",\"totalReven"
+  },
+  {
+   "t": 158,
+   "text": "ue\":1600.9"
+  },
+  {
+   "t": 193,
+   "text": ",\"orders\":["
+  },
+  {
+   "t": 228,
+   "text": "{\"id\":1001,\""
+  },
+  {
+   "t": 260,
+   "text": "date\":\"Jul 04"
+  },
+  {
+   "t": 293,
+   "text": "\",\"customer\":\"Dana"
+  },
+  {
+   "t": 332,
+   "text": "\",\"region\":\"Americas\",\""
+  },
+  {
+   "t": 360,
+   "text": "amount\":84.5"
+  },
+  {
+   "t": 397,
+   "text": "},{\"id\":1002,"
+  },
+  {
+   "t": 426,
+   "text": "\"date\":\"Jul "
+  },
+  {
+   "t": 459,
+   "text": "11\",\"customer\":\"L"
+  },
+  {
+   "t": 494,
+   "text": "ukas\",\"region\":\"Europ"
+  },
+  {
+   "t": 529,
+   "text": "e\",\"amount\":129},"
+  },
+  {
+   "t": 559,
+   "text": "{\"id\":1003,\""
+  },
+  {
+   "t": 595,
+   "text": "date\":\"Jul 19"
+  },
+  {
+   "t": 627,
+   "text": "\",\"customer\":\"Ai"
+  },
+  {
+   "t": 659,
+   "text": "ko\",\"region\":\"Asia"
+  },
+  {
+   "t": 702,
+   "text": "\",\"amount\":56.25},"
+  },
+  {
+   "t": 727,
+   "text": "{\"id\":1004,\""
+  },
+  {
+   "t": 760,
+   "text": "date\":\"Jul 27"
+  },
+  {
+   "t": 795,
+   "text": "\",\"customer\":\"Omar"
+  },
+  {
+   "t": 827,
+   "text": "\",\"region\":\"Europe\",\""
+  },
+  {
+   "t": 860,
+   "text": "amount\":212.4},{"
+  },
+  {
+   "t": 894,
+   "text": "\"id\":1005,\"date"
+  },
+  {
+   "t": 927,
+   "text": "\":\"Aug 02\",\""
+  },
+  {
+   "t": 960,
+   "text": "customer\":\"Priya\",\""
+  },
+  {
+   "t": 994,
+   "text": "region\":\"Asia\",\"am"
+  },
+  {
+   "t": 1027,
+   "text": "ount\":98},{\"id\":"
+  },
+  {
+   "t": 1062,
+   "text": "1006,\"date\":\""
+  },
+  {
+   "t": 1093,
+   "text": "Aug 09\",\"customer\":"
+  },
+  {
+   "t": 1134,
+   "text": "\"Sam\",\"region\":\""
+  },
+  {
+   "t": 1160,
+   "text": "Americas\",\"amount\":175"
+  },
+  {
+   "t": 1194,
+   "text": ".3},{\"id\":1"
+  },
+  {
+   "t": 1228,
+   "text": "007,\"date\":\"A"
+  },
+  {
+   "t": 1260,
+   "text": "ug 16\",\"customer\":\""
+  },
+  {
+   "t": 1359,
+   "text": "Elena\",\"region\":\""
+  },
+  {
+   "t": 1359,
+   "text": "Europe\",\"amount\":64."
+  },
+  {
+   "t": 1359,
+   "text": "9},{\"id\":1008"
+  },
+  {
+   "t": 1522,
+   "text": ",\"date\":\"Aug"
+  },
+  {
+   "t": 1522,
+   "text": " 24\",\"customer\":\""
+  },
+  {
+   "t": 1522,
+   "text": "Jo\",\"region\":\"Americ"
+  },
+  {
+   "t": 1614,
+   "text": "as\",\"amount\":143.8"
+  },
+  {
+   "t": 1614,
+   "text": "},{\"id\":1009,"
+  },
+  {
+   "t": 1614,
+   "text": "\"date\":\"Sep "
+  },
+  {
+   "t": 1614,
+   "text": "03\",\"customer\":\"No"
+  },
+  {
+   "t": 1628,
+   "text": "ah\",\"region\":\"Americas"
+  },
+  {
+   "t": 1660,
+   "text": "\",\"amount\":220},{\""
+  },
+  {
+   "t": 1694,
+   "text": "id\":1010,\"date\":"
+  },
+  {
+   "t": 1727,
+   "text": "\"Sep 12\",\"custom"
+  },
+  {
+   "t": 1780,
+   "text": "er\":\"Sofia\",\""
+  },
+  {
+   "t": 1841,
+   "text": "region\":\"Europe\",\"am"
+  },
+  {
+   "t": 1861,
+   "text": "ount\":187.6},{\""
+  },
+  {
+   "t": 1861,
+   "text": "id\":1011,\"date\":"
+  },
+  {
+   "t": 1907,
+   "text": "\"Sep 20\",\"custom"
+  },
+  {
+   "t": 1963,
+   "text": "er\":\"Ken\",\"region"
+  },
+  {
+   "t": 1965,
+   "text": "\":\"Asia\",\"amount"
+  },
+  {
+   "t": 2005,
+   "text": "\":132.4},{\"id"
+  },
+  {
+   "t": 2077,
+   "text": "\":1012,\"date\":\""
+  },
+  {
+   "t": 2077,
+   "text": "Sep 28\",\"customer"
+  },
+  {
+   "t": 2094,
+   "text": "\":\"Ana\",\"region\":"
+  },
+  {
+   "t": 2127,
+   "text": "\"Americas\",\"amount\":"
+  },
+  {
+   "t": 2162,
+   "text": "96.75}],\"shown"
+  },
+  {
+   "t": 2193,
+   "text": "\":[{\"id"
+  },
+  {
+   "t": 2228,
+   "text": "\":1001,\"date\":\""
+  },
+  {
+   "t": 2262,
+   "text": "Jul 04\",\"customer"
+  },
+  {
+   "t": 2295,
+   "text": "\":\"Dana\",\"region\":"
+  },
+  {
+   "t": 2327,
+   "text": "\"Americas\",\"amount\":"
+  },
+  {
+   "t": 2361,
+   "text": "84.5},{\"id\":"
+  },
+  {
+   "t": 2397,
+   "text": "1002,\"date\":\""
+  },
+  {
+   "t": 2427,
+   "text": "Jul 11\",\"customer\":"
+  },
+  {
+   "t": 2462,
+   "text": "\"Lukas\",\"region\":"
+  },
+  {
+   "t": 2494,
+   "text": "\"Europe\",\"amount\":"
+  },
+  {
+   "t": 2529,
+   "text": "129},{\"id\":1003"
+  },
+  {
+   "t": 2561,
+   "text": ",\"date\":\"Jul"
+  },
+  {
+   "t": 2595,
+   "text": " 19\",\"customer\":\""
+  },
+  {
+   "t": 2627,
+   "text": "Aiko\",\"region\":\""
+  },
+  {
+   "t": 2661,
+   "text": "Asia\",\"amount\":56."
+  },
+  {
+   "t": 2695,
+   "text": "25},{\"id\":1004"
+  },
+  {
+   "t": 2728,
+   "text": ",\"date\":\"Jul"
+  },
+  {
+   "t": 2761,
+   "text": " 27\",\"customer\":\""
+  },
+  {
+   "t": 2796,
+   "text": "Omar\",\"region\":\"Europ"
+  },
+  {
+   "t": 2828,
+   "text": "e\",\"amount\":212.4"
+  },
+  {
+   "t": 2862,
+   "text": "},{\"id\":1005,"
+  },
+  {
+   "t": 2895,
+   "text": "\"date\":\"Aug "
+  },
+  {
+   "t": 2936,
+   "text": "02\",\"customer\":\"Pri"
+  },
+  {
+   "t": 2960,
+   "text": "ya\",\"region\":\"Asia"
+  },
+  {
+   "t": 2993,
+   "text": "\",\"amount\":98},{\""
+  },
+  {
+   "t": 3027,
+   "text": "id\":1006,\"date\":"
+  },
+  {
+   "t": 3072,
+   "text": "\"Aug 09\",\"custom"
+  },
+  {
+   "t": 3094,
+   "text": "er\":\"Sam\",\"region"
+  },
+  {
+   "t": 3129,
+   "text": "\":\"Americas\",\"amount"
+  },
+  {
+   "t": 3162,
+   "text": "\":175.3},{\"id"
+  },
+  {
+   "t": 3194,
+   "text": "\":1007,\"date\":\""
+  },
+  {
+   "t": 3227,
+   "text": "Aug 16\",\"customer"
+  },
+  {
+   "t": 3262,
+   "text": "\":\"Elena\",\"region\":"
+  },
+  {
+   "t": 3295,
+   "text": "\"Europe\",\"amount\":"
+  },
+  {
+   "t": 3329,
+   "text": "64.9},{\"id\":"
+  },
+  {
+   "t": 3360,
+   "text": "1008,\"date\":\""
+  },
+  {
+   "t": 3394,
+   "text": "Aug 24\",\"customer\":"
+  },
+  {
+   "t": 3430,
+   "text": "\"Jo\",\"region\":\""
+  },
+  {
+   "t": 3466,
+   "text": "Americas\",\"amount\":143"
+  },
+  {
+   "t": 3495,
+   "text": ".8},{\"id\":1"
+  },
+  {
+   "t": 3528,
+   "text": "009,\"date\":\"S"
+  },
+  {
+   "t": 3561,
+   "text": "ep 03\",\"customer\":\""
+  },
+  {
+   "t": 3594,
+   "text": "Noah\",\"region\":\""
+  },
+  {
+   "t": 3633,
+   "text": "Americas\",\"amount\":220},"
+  },
+  {
+   "t": 3662,
+   "text": "{\"id\":1010,\""
+  },
+  {
+   "t": 3696,
+   "text": "date\":\"Sep 12"
+  },
+  {
+   "t": 3729,
+   "text": "\",\"customer\":\"Sof"
+  },
+  {
+   "t": 3762,
+   "text": "ia\",\"region\":\"Europe"
+  },
+  {
+   "t": 3798,
+   "text": "\",\"amount\":187.6},"
+  },
+  {
+   "t": 3834,
+   "text": "{\"id\":1011,\""
+  },
+  {
+   "t": 3876,
+   "text": "date\":\"Sep 20"
+  },
+  {
+   "t": 3894,
+   "text": "\",\"customer\":\"Ken"
+  },
+  {
+   "t": 3928,
+   "text": "\",\"region\":\"Asia\",\""
+  },
+  {
+   "t": 3961,
+   "text": "amount\":132.4},{"
+  },
+  {
+   "t": 4013,
+   "text": "\"id\":1012,\"date"
+  },
+  {
+   "t": 4028,
+   "text": "\":\"Sep 28\",\""
+  },
+  {
+   "t": 4062,
+   "text": "customer\":\"Ana\",\""
+  },
+  {
+   "t": 4094,
+   "text": "region\":\"Americas\",\"am"
+  },
+  {
+   "t": 4131,
+   "text": "ount\":96.75}],\""
+  },
+  {
+   "t": 4161,
+   "text": "regions\":[{\"name\":"
+  },
+  {
+   "t": 4195,
+   "text": "\"All\",\"orders\":12,"
+  },
+  {
+   "t": 4229,
+   "text": "\"revenue\":1600."
+  },
+  {
+   "t": 4272,
+   "text": "9},{\"name\":\""
+  },
+  {
+   "t": 4295,
+   "text": "Americas\",\"orders\":5,"
+  },
+  {
+   "t": 4329,
+   "text": "\"revenue\":720.35"
+  },
+  {
+   "t": 4455,
+   "text": "},{\"name\":\"Europ"
+  },
+  {
+   "t": 4455,
+   "text": "e\",\"orders\":4,\""
+  },
+  {
+   "t": 4455,
+   "text": "revenue\":593.9},"
+  },
+  {
+   "t": 4561,
+   "text": "{\"name\":\"Asia"
+  },
+  {
+   "t": 4561,
+   "text": "\",\"orders\":3,\"rev"
+  },
+  {
+   "t": 4562,
+   "text": "enue\":286.65}]"
+  },
+  {
+   "t": 4563,
+   "text": "},\"ui\":{\"type"
+  },
+  {
+   "t": 4595,
+   "text": "\":\"card\",\"props\":{\""
+  },
+  {
+   "t": 4832,
+   "text": "title\":\"Q3 "
+  },
+  {
+   "t": 4832,
+   "text": "Sales\",\"description\":\"July"
+  },
+  {
+   "t": 4832,
+   "text": " to September 2026\"},\""
+  },
+  {
+   "t": 4833,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 4833,
+   "text": "flex\",\"props\":{\"dire"
+  },
+  {
+   "t": 4833,
+   "text": "ction\":\"column\",\"gap\":"
+  },
+  {
+   "t": 4891,
+   "text": "\"16px\"},\"children\":"
+  },
+  {
+   "t": 4892,
+   "text": "[{\"type\":\"grid"
+  },
+  {
+   "t": 4900,
+   "text": "\",\"props\":{\"columns\":"
+  },
+  {
+   "t": 4933,
+   "text": "2,\"gap\":\"12"
+  },
+  {
+   "t": 4994,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 5057,
+   "text": "\"type\":\"stat\",\"props"
+  },
+  {
+   "t": 5058,
+   "text": "\":{\"label\":\"Rev"
+  },
+  {
+   "t": 5063,
+   "text": "enue\",\"value\":\"{state"
+  },
+  {
+   "t": 5098,
+   "text": ".totalRevenue}"
+  },
+  {
+   "t": 5131,
+   "text": "\",\"format\":\"currency\""
+  },
+  {
+   "t": 5162,
+   "text": "}},{\"type\":\"st"
+  },
+  {
+   "t": 5196,
+   "text": "at\",\"props\":{\"label\":"
+  },
+  {
+   "t": 5232,
+   "text": "\"Orders\",\"value\":\""
+  },
+  {
+   "t": 5262,
+   "text": "{state.orders.length}"
+  },
+  {
+   "t": 5296,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 5332,
+   "text": "stat\",\"props\":{\"label"
+  },
+  {
+   "t": 5365,
+   "text": "\":\"Avg order\",\"value"
+  },
+  {
+   "t": 5395,
+   "text": "\":\"{state.totalR"
+  },
+  {
+   "t": 5432,
+   "text": "evenue / state.orders"
+  },
+  {
+   "t": 5464,
+   "text": ".length}\",\"format\":\"curr"
+  },
+  {
+   "t": 5495,
+   "text": "ency\"}},{\"type\":"
+  },
+  {
+   "t": 5534,
+   "text": "\"stat\",\"props\":{\""
+  },
+  {
+   "t": 5561,
+   "text": "label\":\"Best month\",\"value"
+  },
+  {
+   "t": 5595,
+   "text": "\":\"September\"}}]},"
+  },
+  {
+   "t": 5631,
+   "text": "{\"type\":\"chart\",\""
+  },
+  {
+   "t": 5662,
+   "text": "props\":{\"type\":\"b"
+  },
+  {
+   "t": 5698,
+   "text": "ar\",\"title\":\"Reven"
+  },
+  {
+   "t": 5729,
+   "text": "ue by month (all regions)"
+  },
+  {
+   "t": 5774,
+   "text": "\",\"height\":200"
+  },
+  {
+   "t": 5794,
+   "text": ",\"data\":[{\"label"
+  },
+  {
+   "t": 5830,
+   "text": "\":\"Jul\",\"value\":"
+  },
+  {
+   "t": 5866,
+   "text": "482.15},{\"label\":"
+  },
+  {
+   "t": 5897,
+   "text": "\"Aug\",\"value\":482"
+  },
+  {
+   "t": 5930,
+   "text": "},{\"label\":\"S"
+  },
+  {
+   "t": 5962,
+   "text": "ep\",\"value\":636.75}"
+  },
+  {
+   "t": 5995,
+   "text": "]}},{\"type\":\""
+  },
+  {
+   "t": 6028,
+   "text": "separator\",\""
+  },
+  {
+   "t": 6064,
+   "text": "props\":{}"
+  },
+  {
+   "t": 6096,
+   "text": "},{\"type\":\"select\",\""
+  },
+  {
+   "t": 6130,
+   "text": "bind\":\"{state.region"
+  },
+  {
+   "t": 6162,
+   "text": "}\",\"props\":{\"label\":"
+  },
+  {
+   "t": 6195,
+   "text": "\"Region\",\"options\":[\""
+  },
+  {
+   "t": 6231,
+   "text": "All\",\"Americas\",\"Europ"
+  },
+  {
+   "t": 6262,
+   "text": "e\",\"Asia\"]},"
+  },
+  {
+   "t": 6294,
+   "text": "\"on_change\":{\"action"
+  },
+  {
+   "t": 6330,
+   "text": "\":\"branch\",\"if\":\""
+  },
+  {
+   "t": 6363,
+   "text": "state.region == \\\"All\\"
+  },
+  {
+   "t": 6399,
+   "text": "\"\",\"then\":[{\"action"
+  },
+  {
+   "t": 6429,
+   "text": "\":\"set\",\"target\":\"sh"
+  },
+  {
+   "t": 6463,
+   "text": "own\",\"value\":\"{state."
+  },
+  {
+   "t": 6496,
+   "text": "orders}\"}],\"else"
+  },
+  {
+   "t": 6530,
+   "text": "\":[{\"action\":\"set"
+  },
+  {
+   "t": 6562,
+   "text": "\",\"target\":\"shown\",\"value"
+  },
+  {
+   "t": 6596,
+   "text": "\":\"{state.orders."
+  },
+  {
+   "t": 6629,
+   "text": "where('region', state.region)"
+  },
+  {
+   "t": 6662,
+   "text": "}\"}]}},"
+  },
+  {
+   "t": 6704,
+   "text": "{\"type\":\"each\",\"items"
+  },
+  {
+   "t": 6729,
+   "text": "\":\"{state.regions}"
+  },
+  {
+   "t": 6765,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 6797,
+   "text": "\"if\",\"condition\":\"{"
+  },
+  {
+   "t": 6829,
+   "text": "item.name == state.region}"
+  },
+  {
+   "t": 6862,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 6896,
+   "text": "\"flex\",\"props\":{\""
+  },
+  {
+   "t": 6930,
+   "text": "direction\":\"column\",\"gap"
+  },
+  {
+   "t": 6970,
+   "text": "\":\"8"
+  },
+  {
+   "t": 6997,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 7030,
+   "text": "\"type\":\"text"
+  },
+  {
+   "t": 7062,
+   "text": "\",\"props"
+  },
+  {
+   "t": 7099,
+   "text": "\":{\"text\":\"Tot"
+  },
+  {
+   "t": 7130,
+   "text": "als:"
+  },
+  {
+   "t": 7161,
+   "text": " {item.name}\",\"weight"
+  },
+  {
+   "t": 7195,
+   "text": "\":\"semibold\"}},"
+  },
+  {
+   "t": 7228,
+   "text": "{\"type\":\"grid\",\""
+  },
+  {
+   "t": 7263,
+   "text": "props\":{\"columns\":2"
+  },
+  {
+   "t": 7296,
+   "text": ",\"gap\":\"12px"
+  },
+  {
+   "t": 7352,
+   "text": "\"},\"children\":[{\""
+  },
+  {
+   "t": 7379,
+   "text": "type\":\"stat\",\"props\":"
+  },
+  {
+   "t": 7402,
+   "text": "{\"label\":\"Reven"
+  },
+  {
+   "t": 7430,
+   "text": "ue\",\"value\":\"{item."
+  },
+  {
+   "t": 7464,
+   "text": "revenue}\",\"format\":\""
+  },
+  {
+   "t": 7497,
+   "text": "currency\",\"size\":\"sm"
+  },
+  {
+   "t": 7529,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 7564,
+   "text": "stat\",\"props\":{\"label"
+  },
+  {
+   "t": 7596,
+   "text": "\":\"Orders\",\"value\":"
+  },
+  {
+   "t": 7629,
+   "text": "\"{item.orders}\",\""
+  },
+  {
+   "t": 7663,
+   "text": "size\":\"sm\"}},"
+  },
+  {
+   "t": 7696,
+   "text": "{\"type\":\"stat\",\""
+  },
+  {
+   "t": 7774,
+   "text": "props\":{\"label\":\""
+  },
+  {
+   "t": 7774,
+   "text": "Avg order\",\"value\":\"{"
+  },
+  {
+   "t": 7818,
+   "text": "item.revenue / item."
+  },
+  {
+   "t": 7829,
+   "text": "orders}\",\"format\":\"curr"
+  },
+  {
+   "t": 7863,
+   "text": "ency\",\"size\":\"sm\""
+  },
+  {
+   "t": 7896,
+   "text": "}}]},{\"type\":"
+  },
+  {
+   "t": 7931,
+   "text": "\"text\",\"props"
+  },
+  {
+   "t": 7962,
+   "text": "\":{\"text\":\"Share"
+  },
+  {
+   "t": 7995,
+   "text": " of total"
+  },
+  {
+   "t": 8029,
+   "text": " revenue\",\"size\":\"x"
+  },
+  {
+   "t": 8064,
+   "text": "s\"}},{\"type\":"
+  },
+  {
+   "t": 8096,
+   "text": "\"progress\",\"props\":{\""
+  },
+  {
+   "t": 8129,
+   "text": "value\":\"{item.reven"
+  },
+  {
+   "t": 8164,
+   "text": "ue}\",\"max\":\"{state"
+  },
+  {
+   "t": 8195,
+   "text": ".totalRevenue}"
+  },
+  {
+   "t": 8229,
+   "text": "\"}}]}]}"
+  },
+  {
+   "t": 8272,
+   "text": "]},{\"type\":\"table"
+  },
+  {
+   "t": 8296,
+   "text": "\",\"props\":{\"vari"
+  },
+  {
+   "t": 8330,
+   "text": "ant\":\"comp"
+  },
+  {
+   "t": 8363,
+   "text": "act\",\"sortable\":true,"
+  },
+  {
+   "t": 8396,
+   "text": "\"colum"
+  },
+  {
+   "t": 8428,
+   "text": "ns\":[{\"header\":\""
+  },
+  {
+   "t": 8463,
+   "text": "Order\",\"accessorKey"
+  },
+  {
+   "t": 8496,
+   "text": "\":\"id\""
+  },
+  {
+   "t": 8530,
+   "text": "},{\"header\":\"Date"
+  },
+  {
+   "t": 8564,
+   "text": "\",\"accessorKey\":\""
+  },
+  {
+   "t": 8597,
+   "text": "date\"},{\"header\":\""
+  },
+  {
+   "t": 8630,
+   "text": "Customer\",\"accessorK"
+  },
+  {
+   "t": 8662,
+   "text": "ey\":\"customer\"},{"
+  },
+  {
+   "t": 8697,
+   "text": "\"header\":\"Region\",\"acc"
+  },
+  {
+   "t": 8730,
+   "text": "essorKey\":\"region\""
+  },
+  {
+   "t": 8763,
+   "text": "},{\"header\":\"Am"
+  },
+  {
+   "t": 8798,
+   "text": "ount\",\"accessorKey\":"
+  },
+  {
+   "t": 8830,
+   "text": "\"amount\",\"sortable\":"
+  },
+  {
+   "t": 8863,
+   "text": "true}],\"rows\":\""
+  },
+  {
+   "t": 8898,
+   "text": "{state.shown}\"}"
+  },
+  {
+   "t": 8933,
+   "text": "}]}]}}"
+  }
+ ]
+}

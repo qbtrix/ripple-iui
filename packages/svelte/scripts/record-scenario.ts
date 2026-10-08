@@ -65,13 +65,22 @@ EXPRESSIONS (verified against the engine; follow exactly)
 - A prop that is exactly "{expr}" keeps the value's type. "Text {expr} more" builds a string.
 - Supported: state paths (state.a.b, state.list[0].x), arithmetic + - * / % with parentheses, comparisons, ternary a ? b : c, || and ??. Inside "each", the loop item is {item.field} and the index is {index} (or the names given by item_as / index_as).
 - Keep arithmetic flat: at most one level of parentheses, and start every arithmetic expression with a state path, an item field or a number, never with "(". Works: state.total * (1 + state.tipPercent / 100) / state.people.length. Breaks: (a + b) * (1 + c).
-- A method call (.toFixed, .sum, .count, .where(...).count()) must be the ENTIRE expression. Inside arithmetic or a ternary it evaluates wrong. When a calculation needs the count or sum of a list, keep that number in state and refresh it with a set action whose value is the method expression: chain it after the push / remove that changes the list, and put it in the on_change of any input that edits a list item, e.g. "on_change": {"action":"set","target":"drinkers","value":"{state.people.where('drinks', true).count()}"}.
+- A method call (.toFixed, .sum, .count, .where(...).count()) must be the ENTIRE expression. Inside arithmetic or a ternary it evaluates wrong. When a calculation needs the count or sum of a list, keep that number in state and refresh it with a set action whose value is the method expression: chain it after the push / remove that changes the list, and put it in the on_change of any input that edits a list item, e.g. "on_change": {"action":"set","target":"drinkers","value":"{state.people.where('drinks', true).count()}"}. When an edit feeds several kept numbers (a count AND a total), its on_change is a list that refreshes every one of them.
 - For an amount that applies only when a flag is true, multiply by the flag (true counts as 1): item.drinks * state.drinksTotal / state.drinkers.
 - Use a ternary only as the whole expression (to pick a label or value), never inside arithmetic.
 - For money, compute the raw number and show it with the "stat" widget using "format": "currency" (it formats to 2 decimals), e.g. {"type":"stat","props":{"label":"Each pays","value":"{state.total * (1 + state.tipPercent / 100) / state.people.length}","format":"currency"}}.
+- A computed number that can have decimals (any division or rate) is shown with a "stat" (format "number", "currency" or "percent"), never inside a text template, which prints every digit.
 - Division by zero yields 0. Keep numeric state as numbers, not strings.
 - There is no exponent operator (no ** or ^) and no Math functions. Write compound growth as repeated multiplication starting from a state path, e.g. three years at a yearly rate: state.start * (1 + state.rate / 100) * (1 + state.rate / 100) * (1 + state.rate / 100).
-- Chart "data" items resolve expressions too, so a chart can follow state: {"label":"Year 5","value":"{state.deposit * 12 * 5}"}.
+
+
+LAYOUT
+- The tool must also work in a card about 300px wide (phones). Use grid "columns" of 2 at most. A number-input needs about 140px, so give number inputs and sliders a full-width row or a 2-column grid. A flex row with more than two children sets "wrap": true.
+
+KNOWN WIDGET GAPS (work around them)
+- "chart" draws once, with the data it has when it mounts, and does not redraw when state changes. Use it only for fixed numbers written literally in its data. For bars that must follow the inputs, render rows (each, or a few fixed rows) with a "progress" bar whose value and max come from state.
+- Write every node's keys in this order: "type", "props", then "bind" and handlers, then "children". A slider whose "bind" streams in before its "min" and "max" clamps the bound value to 0..100 and loses it.
+- "flashcard" and "timer" show their own buttons, but their events (on_flip, on_correct, on_incorrect, on_complete) never reach the spec. Score, advance and finish with your own button nodes.
 
 MANIFEST (spec envelope, action grammar, widgets)
 ${JSON.stringify(reference)}`;
