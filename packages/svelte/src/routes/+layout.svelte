@@ -1,10 +1,10 @@
 <!--
   @file routes/+layout.svelte
-  @description App shell + topbar nav (Pockets / Labs / Showcase / Playground)
-    with the light/dark toggle. Theme colors read shadcn tokens as var(--token);
-    the tokens already resolve to full hsl(), so they must not be re-wrapped.
-  @changed 2026-06-29: added the Labs nav link; fixed double-wrapped hsl(var())
-    tokens that left the topbar transparent and borderless in dark mode.
+  @description App shell for the Ripple site: sticky topbar (logo to the
+    landing, Showcase, Playground, GitHub) and the light/dark toggle. Labs and
+    the other dev routes stay reachable by URL but are not linked here. Theme
+    colors read shadcn tokens as var(--token); the tokens already resolve to
+    full hsl(), so they must not be re-wrapped.
 -->
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
@@ -33,10 +33,9 @@
 			<span class="logo-text">ripple</span>
 		</a>
 		<div class="topbar-links">
-			<a href="/" class="nav-link">Pockets</a>
-			<a href="/labs" class="nav-link">Labs</a>
 			<a href="/showcase" class="nav-link">Showcase</a>
 			<a href="/playground" class="nav-link">Playground</a>
+			<a href="https://github.com/qbtrix/ripple-iui" class="nav-link">GitHub</a>
 			<button class="theme-btn" onclick={() => dark = !dark} title="Toggle theme">
 				{#if dark}
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -126,6 +125,14 @@
 		cursor: pointer;
 		margin-left: 8px;
 		transition: color 0.15s, border-color 0.15s;
+	}
+	@media (max-width: 480px) {
+		.topbar {
+			padding: 10px 16px;
+		}
+		.nav-link {
+			padding: 5px 8px;
+		}
 	}
 	.theme-btn:hover {
 		color: var(--foreground);

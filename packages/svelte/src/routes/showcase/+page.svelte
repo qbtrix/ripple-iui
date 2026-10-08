@@ -5350,6 +5350,7 @@
   <a href="/showcase/spec">Spec</a>
   <a href="/showcase/button">Button</a>
   <a href="/showcase/exec-dashboard">Exec dashboard</a>
+  <a href="/showcase/classic">Classic pockets</a>
 </nav>
 
 <Ripple spec={showcaseSpec} state={initialOverride} {onStateChange} onEvent={handleEvent} />
