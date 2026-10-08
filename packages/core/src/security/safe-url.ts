@@ -77,6 +77,7 @@ const CSS_SCRIPT = /expression\(|-moz-binding|behavior:|javascript:|vbscript:|@i
 // Functions that fetch a resource. `image(` also matches `-webkit-image(`;
 // `image-set(` and `cross-fade(` match their `-webkit-` forms.
 const CSS_RESOURCE = /(url|image-set|image|cross-fade|element|src)\(/g;
+const MAX_RESOURCE_FNS = 16;
 const PAIRS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
 
 /**
@@ -122,6 +123,8 @@ function safeDeclaration(prop: string, value: unknown): boolean {
 	if (CSS_SCRIPT.test(flat)) return false;
 	const fns = [...v.matchAll(CSS_RESOURCE)];
 	if (fns.length === 0) return true;
+	// Each function rescans its argument; a cap keeps nesting linear.
+	if (fns.length > MAX_RESOURCE_FNS) return false;
 	// A var() inside a resource function hides its target in another
 	// declaration (`--a:"//evil"` + `image-set(var(--a) 1x)`): refuse outright.
 	if (flat.includes('var(')) return false;

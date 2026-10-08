@@ -272,7 +272,7 @@ function auditSvelte(rel: string, raw: string): string[] {
 	}
 	// Leaflet (and similar) APIs that take an HTML string render it as innerHTML.
 	for (const m of script.matchAll(/\.(bindPopup|bindTooltip|setContent|setPopupContent|setTooltipContent)\(\s*/g))
-		if (!/^(escapeHtml\(|sanitizeHtml\(|['"`])/.test(script.slice(m.index! + m[0].length)))
+		if (!/^(escapeHtml\(|sanitizeHtml\(|'[^'\n]*'|"[^"\n]*"|`[^`$]*`)/.test(script.slice(m.index! + m[0].length)))
 			misses.push(`${rel}: .${m[1]}() takes unescaped HTML`);
 	for (const m of script.matchAll(/\battribution:\s*([^,}\n]+)/g))
 		if (!/^(sanitizeHtml\(|['"`]|string\b|[\w$.]+\.attribution\s*$)/.test(m[1].trim()))
