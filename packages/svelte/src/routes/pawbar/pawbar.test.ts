@@ -214,6 +214,58 @@ describe('ChatSession', () => {
 		expect(card.sent).toBe('emit: picked');
 	});
 
+	test('the card policy refuses an unsafe card mid-stream and at final, like card.rejected', async () => {
+		const streamed = new ChatSession(
+			frames(
+				{ event: 'card.start', data: { card_id: 'c' } },
+				{ event: 'card.delta', data: { card_id: 'c', text: '{"ui":{"type":"link","props":{"href":"javascript:alert(1)"}' } },
+				{ event: 'card.delta', data: { card_id: 'c', text: '}}' } }
+			)
+		);
+		await streamed.send('x');
+		await waitFor(() => expect(cardOf(streamed)?.status).toBe('rejected'));
+		expect(cardOf(streamed)?.reason).toMatch(/^unsafe_url/);
+
+		const final = new ChatSession(
+			frames(
+				{ event: 'card.start', data: { card_id: 'c' } },
+				{ event: 'card.final', data: { card_id: 'c', card: { ui: { type: 'button', on_click: { action: 'api', url: '/buy' } } } } }
+			)
+		);
+		await final.send('x');
+		expect(cardOf(final)?.reason).toBe('action:api');
+
+		const legacy = new ChatSession(
+			frames({ event: 'chunk', data: { content: 'Hi\n```pawbar-card\n{"ui":{"type":"embed"}}\n```\nBye' } })
+		);
+		await legacy.send('x');
+		expect(cardOf(legacy)?.reason).toBe('widget:embed');
+
+		const burger = scenarios.find((s) => s.needsStore)!;
+		const store = new ChatSession((_m, signal) => recordedEvents(burger, { speed: Infinity, signal }));
+		await store.send('order a burger');
+		expect(cardOf(store)?.status).toBe('rejected');
+	});
+
+	test('host events from a final card never touch the network or navigate', async () => {
+		const fetchSpy = vi.fn();
+		vi.stubGlobal('fetch', fetchSpy);
+		const href = location.href;
+		const session = new ChatSession(
+			frames(
+				{ event: 'card.start', data: { card_id: 'c' } },
+				{ event: 'card.final', data: { card_id: 'c', card: { ui: { type: 'button' } } } }
+			)
+		);
+		await session.send('x');
+		const card = cardOf(session)!;
+		for (const action of ['emit', 'api', 'navigate', 'toast', 'run_source'])
+			expect(session.hostEvent(card, { type: action, action, url: 'https://evil.example', target: '/away' } as never)).toBeUndefined();
+		expect(fetchSpy).not.toHaveBeenCalled();
+		expect(location.href).toBe(href);
+		vi.unstubAllGlobals();
+	});
+
 	test('pawbarTransport posts the contract body and reads the SSE reply', async () => {
 		const fetch = vi.fn(async () =>
 			new Response(sse([{ event: 'chunk', data: { content: 'Hello', type: 'text' } }, { event: 'stream_end', data: { cancelled: false } }]), {

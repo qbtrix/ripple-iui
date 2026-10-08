@@ -22,11 +22,11 @@ const words = (s: string) =>
 			.filter((w) => w.length > 2 && !STOP.has(w))
 	);
 
-export function pickScenario(message: string): Scenario {
+export function pickScenario(message: string, pool: Scenario[] = scenarios): Scenario {
 	const asked = words(message);
-	let best = scenarios.find((s) => s.id === 'bill-splitter') ?? scenarios[0];
+	let best = pool.find((s) => s.id === 'bill-splitter') ?? pool[0];
 	let bestScore = 0;
-	for (const s of scenarios) {
+	for (const s of pool) {
 		if (s.fixture.prompt === message.trim()) return s;
 		let score = 0;
 		for (const w of words(`${s.title} ${s.fixture.prompt}`)) if (asked.has(w)) score++;
