@@ -38,6 +38,13 @@ describe('Slider does not write back a clamp', () => {
     expect(onchange).toHaveBeenLastCalledWith(2110);
   });
 
+  it('still reports a pointer change', async () => {
+    const onchange = vi.fn();
+    const { getByRole } = render(Slider, { props: { label: 'Wheel', value: 2100, min: 1500, max: 2300, step: 10, onchange } });
+    await fireEvent.pointerDown(getByRole('slider'), { clientX: 0, clientY: 0 });
+    expect(onchange).toHaveBeenCalled();
+  });
+
   it('a bound state value above the default range survives a render', async () => {
     const spec = {
       state: { deposit: 250 },

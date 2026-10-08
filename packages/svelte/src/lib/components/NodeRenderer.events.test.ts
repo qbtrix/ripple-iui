@@ -25,7 +25,7 @@ function declaredProps(type: string): string[] {
 	const file = Object.keys(modules).find((f) => modules[f].default === component);
 	if (!file) throw new Error(`no source file for widget "${type}"`);
 	const block = sources[file].match(/let\s*\{([\s\S]*?)\}\s*(?::[^=]*)?=\s*\$props\(\)/)?.[1] ?? '';
-	return [...block.matchAll(/^\s*([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]);
+	return [...block.matchAll(/(?:^|,)\s*([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]);
 }
 
 const documented = manifestEntries.flatMap((e) =>

@@ -8,8 +8,8 @@
     semantic tokens are used throughout.
   @created 2026-05-31 — composite consumer widgets migration. Canvas state is
     purely local; the widget surfaces an `onsave` callback (a spec's
-    `on_save`) returning a PNG data
-    URL rather than a two-way bind (raster bytes don't belong in spec state).
+    `on_save`) returning a PNG data URL rather than a two-way bind (raster
+    bytes don't belong in spec state).
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
