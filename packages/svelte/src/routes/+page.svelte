@@ -5,8 +5,8 @@
     and its card renders through <Ripple> while it arrives. With the Paw Bar
     config set at build time (PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY,
     defined in vite.config.ts like PUBLIC_STORE_URL) the chat calls the Paw Bar
-    API; without it the same chat replays the recorded answers locally and says
-    so. Below: how it works (spec, engine, UI, with a live card), install and
+    API, but only when PUBLIC_PAWBAR_LIVE=1 (pawbar-env.ts); otherwise the same
+    chat replays the recorded answers locally and says so. Below: how it works (spec, engine, UI, with a live card), install and
     the streaming code sample, the recorded examples linking /live, and the
     bring-your-own-key link. Prerendered; the chat only runs in the browser.
 
@@ -28,10 +28,11 @@
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { scenarios } from './live/scenarios.js';
 
+	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
 	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
 	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
 	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
-	const LIVE = Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
+	const LIVE = import.meta.env.PUBLIC_PAWBAR_LIVE === '1' && Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
