@@ -10,6 +10,7 @@
   ~42 KB library in when the widget actually mounts.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount, getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import type { EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
@@ -177,8 +178,8 @@
     const size = opts.size ?? 32;
     const color = opts.color ?? 'oklch(0.55 0.18 250)';
     const inner = opts.icon
-      ? `<span class="rmap-pin-icon" data-icon="${opts.icon}" style="background:${color};"></span>`
-      : `<span class="rmap-pin-dot" style="background:${color};"></span>`;
+      ? `<span class="rmap-pin-icon" data-icon="${escapeHtml(String(opts.icon))}" style="${escapeHtml(safeStyle(`background:${color};`))}"></span>`
+      : `<span class="rmap-pin-dot" style="${escapeHtml(safeStyle(`background:${color};`))}"></span>`;
     const labelHtml = opts.label
       ? `<span class="rmap-pin-label">${escapeHtml(opts.label)}</span>`
       : '';
@@ -194,7 +195,7 @@
     const color = t.color ?? 'oklch(0.65 0.22 25)';
     const heading = t.heading ?? 0;
     const html = `
-      <div class="rmap-tracker-wrap" style="--rmap-tracker-color:${color}; --rmap-tracker-rot:${heading}deg;">
+      <div class="rmap-tracker-wrap" style="${escapeHtml(safeStyle(`--rmap-tracker-color:${color}; --rmap-tracker-rot:${Number(heading) || 0}deg;`))}">
         <div class="rmap-tracker-pulse"></div>
         <div class="rmap-tracker-arrow"></div>
         ${t.label ? `<span class="rmap-tracker-label">${escapeHtml(t.label)}</span>` : ''}
@@ -412,7 +413,7 @@
 <div
   {id}
   class={cn('rmap', className)}
-  style={`height:${heightStr};${styleString ?? ''}`}
+  style={safeStyle(`height:${heightStr};${styleString ?? ''}`)}
   bind:this={mapEl}
 ></div>
 

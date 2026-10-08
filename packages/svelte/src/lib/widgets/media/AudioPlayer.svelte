@@ -14,7 +14,7 @@
     uses). A still ring with one open side still reads as loading.
 -->
 <script lang="ts">
-  import { safeUrl } from '@ripple-ui/core';
+  import { safeUrl, safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import {
     Music,
@@ -135,7 +135,7 @@
       {#each bars as h, i}
         <div
           class={cn('flex-1 rounded-sm', i < playedBars ? 'bg-primary' : 'bg-muted')}
-          style="height: {h * 100}%"
+          style={safeStyle(`height: ${h * 100}%`)}
         ></div>
       {/each}
     </div>
@@ -153,7 +153,7 @@
       class="w-full h-1 bg-muted rounded-full appearance-none cursor-pointer
         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
         [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
-      style="background: linear-gradient(to right, var(--primary) {progressPercent}%, var(--muted) {progressPercent}%)"
+      style={safeStyle(`background: linear-gradient(to right, var(--primary) ${progressPercent}%, var(--muted) ${progressPercent}%)`)}
     />
     <div class="flex justify-between text-xs text-muted-foreground mt-1">
       <span>{formatTime(currentTime)}</span>

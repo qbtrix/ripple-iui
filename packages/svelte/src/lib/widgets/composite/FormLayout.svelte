@@ -9,6 +9,7 @@
   `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -125,7 +126,7 @@
       {#if progress !== undefined}
         <div class="rform-progress">
           <div class="rform-progress-track">
-            <div class="rform-progress-fill" style={`width:${Math.max(0, Math.min(100, progress))}%`}></div>
+            <div class="rform-progress-fill" style={safeStyle(`width:${Math.max(0, Math.min(100, progress))}%`)}></div>
           </div>
           <span class="rform-progress-label">{Math.round(progress)}%</span>
         </div>

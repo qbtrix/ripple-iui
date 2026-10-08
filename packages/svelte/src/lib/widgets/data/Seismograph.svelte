@@ -9,6 +9,7 @@
   Includes an optional ● REC/LIVE indicator and an evt/min readout.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -245,10 +246,10 @@
           </span>
         {/if}
         {#if showIndicator}
-          <span class="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]" style="color:{color}">
+          <span class="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]" style={safeStyle(`color:${color}`)}>
             <span
               class={cn('inline-block h-1.5 w-1.5 rounded-full', live && 'motion-safe:animate-pulse')}
-              style="background:{color}"
+              style={safeStyle(`background:${color}`)}
             ></span>
             {indicatorLabel}
           </span>
@@ -259,10 +260,10 @@
   <div
     bind:this={wrap}
     class="relative w-full"
-    style="height:{height}px"
+    style={safeStyle(`height:${height}px`)}
     role="img"
     aria-label={label ? `${label} live trace` : 'Live signal trace'}
   >
-    <canvas bind:this={canvas} class="block w-full" style="height:{height}px" aria-hidden="true"></canvas>
+    <canvas bind:this={canvas} class="block w-full" style={safeStyle(`height:${height}px`)} aria-hidden="true"></canvas>
   </div>
 </div>

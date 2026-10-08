@@ -8,6 +8,7 @@
   server. Cells can carry a brightness 0..1 for the nullframe "dithered" look.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   type Row = Array<number>;
@@ -117,19 +118,19 @@
 <div
   {id}
   class={cn('inline-grid', className)}
-  style={[
+  style={safeStyle([
     `grid-template-columns: repeat(${nCols}, ${cell}px)`,
     `grid-template-rows: repeat(${nRows}, ${cell}px)`,
     `gap: ${Math.max(2, Math.round(cell * 0.2))}px`,
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : '',
-  ].filter(Boolean).join(';')}
+  ].filter(Boolean).join(';'))}
   role="img"
   aria-label="Glyph matrix"
 >
   {#each cells as c (c.key)}
     <span
       class={cn('rounded-[2px]', c.lit && pulse && 'glyph-pulse')}
-      style="background:{color}; opacity:{c.opacity}; animation-delay:{c.delay}ms"
+      style={safeStyle(`background:${color}; opacity:${c.opacity}; animation-delay:${c.delay}ms`)}
     ></span>
   {/each}
 </div>

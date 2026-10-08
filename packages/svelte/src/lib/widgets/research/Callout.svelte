@@ -1,5 +1,6 @@
 <!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -30,9 +31,9 @@
   {id}
   data-ripple-node={id}
   class={cn('rcall', className)}
-  style="border-left-color:{c.border}; background:{c.bg}"
+  style={safeStyle(`border-left-color:${c.border}; background:${c.bg}`)}
 >
-  <span class="rcall-icon" style="color:{c.border}">{c.icon}</span>
+  <span class="rcall-icon" style={safeStyle(`color:${c.border}`)}>{c.icon}</span>
   <div class="rcall-body">
     {#if title}
       <span class="rcall-title">{title}</span>

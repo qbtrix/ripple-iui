@@ -1,5 +1,6 @@
 <!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -43,13 +44,13 @@
 
   <div class="rab-bar">
     {#if buyPct > 0}
-      <div class="rab-seg rab-buy" style="width:{buyPct}%"></div>
+      <div class="rab-seg rab-buy" style={safeStyle(`width:${buyPct}%`)}></div>
     {/if}
     {#if holdPct > 0}
-      <div class="rab-seg rab-hold" style="width:{holdPct}%"></div>
+      <div class="rab-seg rab-hold" style={safeStyle(`width:${holdPct}%`)}></div>
     {/if}
     {#if sellPct > 0}
-      <div class="rab-seg rab-sell" style="width:{sellPct}%"></div>
+      <div class="rab-seg rab-sell" style={safeStyle(`width:${sellPct}%`)}></div>
     {/if}
   </div>
 

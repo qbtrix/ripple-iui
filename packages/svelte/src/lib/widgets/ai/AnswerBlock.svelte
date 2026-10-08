@@ -339,7 +339,7 @@
             this={source.href ? 'a' : 'span'}
             href={safeUrl(source.href)}
             target={source.href ? '_blank' : undefined}
-            rel={source.href ? 'noreferrer' : undefined}
+            rel={source.href ? 'noopener noreferrer' : undefined}
             class="flex items-center gap-2 rounded-md px-1.5 py-1 text-[12px] text-ripple-muted-foreground transition-colors duration-150 hover:bg-ripple-accent/10 hover:text-ripple-accent"
           >
             {@render avatar(source, 'size-4', 'rounded-[4px]')}

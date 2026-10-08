@@ -25,6 +25,7 @@
      div so the visual editor can select this widget directly (SP-0 id-forwarding). -->
 
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
     import { getContext } from "svelte";
     import { cn } from "$lib/utils.js";
     import { safeArray } from "$lib/utils/safe-props.js";
@@ -429,7 +430,7 @@
                                     {#if ci === 0 && statusKey && row[statusKey]}
                                         <span
                                             class="mr-1.5 inline-block size-2 rounded-full align-middle"
-                                            style="background:{row[statusKey]}"
+                                            style={safeStyle(`background:${row[statusKey]}`)}
                                         ></span>
                                     {/if}
                                     {#if canEdit && isEditing(srcIndex, editKey)}

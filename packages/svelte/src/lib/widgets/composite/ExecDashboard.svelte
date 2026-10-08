@@ -10,6 +10,7 @@
   at 60% opacity, so a still icon still reads as busy.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -571,7 +572,7 @@
             </div>
             <div class="rdash-kpi-row">
               <div class="rdash-kpi-value-wrap">
-                <span class="rdash-kpi-value" style={k.color ? `color:${k.color};` : undefined}>
+                <span class="rdash-kpi-value" style={safeStyle(k.color ? `color:${k.color};` : undefined)}>
                   {k.value}
                 </span>
                 {#if k.unit}
@@ -602,7 +603,7 @@
               {@const p = clampProgress(k.progress)}
               <div class="rdash-kpi-progress" aria-hidden="true">
                 <div class="rdash-kpi-progress-track">
-                  <div class="rdash-kpi-progress-fill" style="width: {p}%;"></div>
+                  <div class="rdash-kpi-progress-fill" style={safeStyle(`width: ${p}%;`)}></div>
                 </div>
                 <div class="rdash-kpi-progress-meta">
                   <span>{p.toFixed(0)}%</span>
@@ -637,7 +638,7 @@
                 colors={primaryChart.colors}
               />
             {:else}
-              <div class="rdash-section-empty" style="height: {primaryChart.height ?? 260}px;">
+              <div class="rdash-section-empty" style={safeStyle(`height: ${primaryChart.height ?? 260}px;`)}>
                 <Icon name="bar-chart-3" size={20} />
                 <span>No chart data</span>
               </div>
@@ -720,7 +721,7 @@
             {#if c._data.length > 0}
               <Chart data={c._data} type={c.type ?? 'bar'} height={c.height ?? 180} colors={c.colors} />
             {:else}
-              <div class="rdash-section-empty" style="height: {c.height ?? 180}px;">
+              <div class="rdash-section-empty" style={safeStyle(`height: ${c.height ?? 180}px;`)}>
                 <Icon name="bar-chart-3" size={18} />
                 <span>No data</span>
               </div>

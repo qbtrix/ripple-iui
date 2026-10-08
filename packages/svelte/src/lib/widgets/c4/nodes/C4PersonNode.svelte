@@ -3,6 +3,7 @@
   Created: 2026-04-07 — Circle-head + body shape, internal (blue) or external (gray) styling.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
 
@@ -38,16 +39,16 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="c4-person-node"
-  style="
-    background: {bgColor};
-    border-color: {borderColor};
-    border-style: {isExternal ? 'dashed' : 'solid'};
-  "
+  style={safeStyle(`
+    background: ${bgColor};
+    border-color: ${borderColor};
+    border-style: ${isExternal ? 'dashed' : 'solid'};
+  `)}
   onclick={handleClick}
   title={data.description ?? data.name}
 >
   <!-- Person head icon -->
-  <div class="person-head" style="background: {headColor}; color: #fff;">
+  <div class="person-head" style={safeStyle(`background: ${headColor}; color: #fff;`)}>
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <circle cx="12" cy="8" r="4"/>
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
@@ -56,9 +57,9 @@
 
   <!-- Name and label -->
   <div class="person-info">
-    <span class="person-name" style="color: {textColor}">{data.name}</span>
+    <span class="person-name" style={safeStyle(`color: ${textColor}`)}>{data.name}</span>
     {#if data.description}
-      <span class="person-desc" style="color: {isExternal ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.55)'}">
+      <span class="person-desc" style={safeStyle(`color: ${isExternal ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.55)'}`)}>
         {data.description.length > 45 ? data.description.slice(0, 45) + '…' : data.description}
       </span>
     {/if}

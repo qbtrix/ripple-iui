@@ -10,6 +10,7 @@
   The root div forwards the node id (id + data-ripple-node) for editor selection.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils.js';
@@ -498,6 +499,6 @@
 	{#if chartSlot}
 		{@render chartSlot({ data, type })}
 	{:else}
-		<div bind:this={chartEl} style="width:100%;height:{height}px"></div>
+		<div bind:this={chartEl} style={safeStyle(`width:100%;height:${height}px`)}></div>
 	{/if}
 </div>

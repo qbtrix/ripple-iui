@@ -62,6 +62,7 @@
   measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
@@ -404,9 +405,9 @@
         <span
           aria-hidden="true"
           class="ripple-prompt-glide pointer-events-none absolute inset-x-1 rounded-md bg-ripple-accent/10"
-          style={`top:${rowBox?.top ?? 0}px;height:${rowBox?.height ?? 0}px;opacity:${
+          style={safeStyle(`top:${rowBox?.top ?? 0}px;height:${rowBox?.height ?? 0}px;opacity:${
             rowBox && engaged && rows.length > 0 ? 1 : 0
-          }`}
+          }`)}
         ></span>
 
         {#each rows as row, i (row.key)}

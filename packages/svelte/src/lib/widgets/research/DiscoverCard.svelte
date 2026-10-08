@@ -32,9 +32,8 @@
     url, class: className, onclick
   }: Props = $props();
 
-  // A blocked url comes back as '#'; open nothing rather than a blank tab.
-  const safeLink = $derived(safeUrl(url) === '#' ? undefined : safeUrl(url));
-  const handler = $derived(onclick ?? (safeLink ? () => window.open(safeLink, '_blank') : undefined));
+  const safeLink = $derived(safeUrl(url));
+  const handler = $derived(onclick ?? (safeLink ? () => window.open(safeLink, '_blank', 'noopener,noreferrer') : undefined));
   function handleKey(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();

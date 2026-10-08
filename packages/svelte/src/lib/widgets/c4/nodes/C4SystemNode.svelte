@@ -3,6 +3,7 @@
   Created: 2026-04-07 — Rounded rectangle, blue for internal, gray dashed for external systems.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
 
@@ -36,32 +37,32 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="c4-system-node"
-  style="
-    background: {bgColor};
-    border-color: {borderColor};
-    border-style: {isExternal ? 'dashed' : 'solid'};
-  "
+  style={safeStyle(`
+    background: ${bgColor};
+    border-color: ${borderColor};
+    border-style: ${isExternal ? 'dashed' : 'solid'};
+  `)}
   onclick={handleClick}
   title={data.description ?? data.name}
 >
   <!-- Type label strip -->
-  <div class="node-type-label" style="color: {accentColor}">
+  <div class="node-type-label" style={safeStyle(`color: ${accentColor}`)}>
     {isExternal ? 'External System' : 'Software System'}
   </div>
 
   <!-- Name -->
-  <div class="node-name" style="color: {textColor}">{data.name}</div>
+  <div class="node-name" style={safeStyle(`color: ${textColor}`)}>{data.name}</div>
 
   <!-- Description -->
   {#if data.description}
-    <div class="node-desc" style="color: {isExternal ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)'}">
+    <div class="node-desc" style={safeStyle(`color: ${isExternal ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)'}`)}>
       {data.description.length > 60 ? data.description.slice(0, 60) + '…' : data.description}
     </div>
   {/if}
 
   <!-- Technology badge -->
   {#if data.technology}
-    <div class="tech-badge" style="background: rgba(255,255,255,0.07); color: {textColor}; opacity: 0.8;">
+    <div class="tech-badge" style={safeStyle(`background: rgba(255,255,255,0.07); color: ${textColor}; opacity: 0.8;`)}>
       [{data.technology}]
     </div>
   {/if}

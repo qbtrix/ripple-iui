@@ -6,6 +6,7 @@
   one-time reads, suppressed with a directive directly above the $state line.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -72,7 +73,7 @@
   onValueChange={handleValueChange}
   class={cn('w-full', className)}
 >
-  <Tabs.List class="grid w-full" style="grid-template-columns: repeat({tabs.length || 1}, 1fr)">
+  <Tabs.List class="grid w-full" style={safeStyle(`grid-template-columns: repeat(${tabs.length || 1}, 1fr)`)}>
     {#each tabs as tab (tab.value)}
       <Tabs.Trigger value={tab.value}>{tab.label}</Tabs.Trigger>
     {/each}

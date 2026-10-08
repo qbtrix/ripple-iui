@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { onMount } from 'svelte';
 
@@ -50,7 +51,7 @@
       <span class="rterm-title">{title}</span>
     </div>
   {/if}
-  <div bind:this={scrollEl} class="rterm-output" style="max-height:{maxHeight}">
+  <div bind:this={scrollEl} class="rterm-output" style={safeStyle(`max-height:${maxHeight}`)}>
     {#each lines as line}
       <div class="rterm-line rterm-line--{line.type ?? 'stdout'}">
         {#if line.timestamp}<span class="rterm-ts">{line.timestamp}</span>{/if}

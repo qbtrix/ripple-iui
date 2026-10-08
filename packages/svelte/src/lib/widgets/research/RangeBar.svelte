@@ -1,5 +1,6 @@
 <!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -41,15 +42,15 @@
     <div class="rrb-header">
       <span class="rrb-label">{label}</span>
       {#if currentLabel}
-        <span class="rrb-current" style="color:{color}">{currentLabel}</span>
+        <span class="rrb-current" style={safeStyle(`color:${color}`)}>{currentLabel}</span>
       {/if}
     </div>
   {/if}
 
   <div class="rrb-track">
-    <div class="rrb-fill" style="width:{pct}%; background:{color}"></div>
-    <div class="rrb-marker" style="left:{pct}%; border-color:{color}">
-      <div class="rrb-marker-dot" style="background:{color}"></div>
+    <div class="rrb-fill" style={safeStyle(`width:${pct}%; background:${color}`)}></div>
+    <div class="rrb-marker" style={safeStyle(`left:${pct}%; border-color:${color}`)}>
+      <div class="rrb-marker-dot" style={safeStyle(`background:${color}`)}></div>
     </div>
   </div>
 

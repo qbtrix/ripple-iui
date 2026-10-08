@@ -92,7 +92,7 @@
   this={href ? 'a' : 'span'}
   href={safeUrl(href)}
   target={href ? '_blank' : undefined}
-  rel={href ? 'noreferrer' : undefined}
+  rel={href ? 'noopener noreferrer' : undefined}
   class={cn(chip({ size }), className)}
 >
   {#if image}

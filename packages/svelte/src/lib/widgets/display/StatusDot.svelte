@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/display/StatusDot.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   type Variant = 'online' | 'offline' | 'busy' | 'away' | 'custom';
@@ -34,16 +35,16 @@
 </script>
 
 <span {id} class={cn('inline-flex items-center gap-1.5', className)} style={styleString}>
-  <span class="relative inline-flex" style="width:{size}px;height:{size}px">
+  <span class="relative inline-flex" style={safeStyle(`width:${size}px;height:${size}px`)}>
     {#if pulse}
       <span
         class="absolute inset-0 rounded-full opacity-60 animate-ping"
-        style="background-color:{dotColor}"
+        style={safeStyle(`background-color:${dotColor}`)}
       ></span>
     {/if}
     <span
       class="relative inline-block rounded-full"
-      style="width:{size}px;height:{size}px;background-color:{dotColor}"
+      style={safeStyle(`width:${size}px;height:${size}px;background-color:${dotColor}`)}
     ></span>
   </span>
   {#if label}

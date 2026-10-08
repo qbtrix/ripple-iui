@@ -9,7 +9,7 @@
     native browser APIs, so behaviour needs a real-browser check (not jsdom).
 -->
 <script lang="ts">
-  import { safeUrl } from '@ripple-ui/core';
+  import { safeUrl, safeStyle } from '@ripple-ui/core';
   import { onMount, untrack } from 'svelte';
   import { cn } from '$lib/utils.js';
   import {
@@ -199,7 +199,7 @@
           class="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
             [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-          style="background: linear-gradient(to right, white {progressPercent}%, rgba(255,255,255,0.3) {progressPercent}%)"
+          style={safeStyle(`background: linear-gradient(to right, white ${progressPercent}%, rgba(255,255,255,0.3) ${progressPercent}%)`)}
         />
       </div>
 

@@ -5,7 +5,7 @@
   conversion stats → deals table → live activity ticker.
 -->
 <script lang="ts">
-  import { safeUrl } from '@ripple-ui/core';
+  import { safeUrl, safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
   import Funnel from '$lib/widgets/data/Funnel.svelte';
@@ -137,7 +137,7 @@
             </div>
           </div>
           <div class="rpipe-quota-bar">
-            <div class={cn('rpipe-quota-fill', onTrack ? 'rpipe-fill-on' : 'rpipe-fill-off')} style={`width:${quotaPct}%`}></div>
+            <div class={cn('rpipe-quota-fill', onTrack ? 'rpipe-fill-on' : 'rpipe-fill-off')} style={safeStyle(`width:${quotaPct}%`)}></div>
           </div>
           <div class="rpipe-quota-foot">
             <div>

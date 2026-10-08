@@ -12,6 +12,7 @@
      equal width, so the thumb maths (100% / columns) holds while scrolled.
      origin: slev12397/beautiful-ui@ff0f74d components/atoms/SegmentedControl.tsx -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
@@ -108,13 +109,13 @@
       sizeClass,
       disabled && 'opacity-50 cursor-not-allowed'
     )}
-    style="grid-template-columns: repeat({columns}, 1fr);"
+    style={safeStyle(`grid-template-columns: repeat(${columns}, 1fr);`)}
   >
     {#if selectedIndex >= 0}
       <span
         aria-hidden="true"
         class="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-full bg-ripple-surface ring-1 ring-ripple-border transition-transform duration-200 ease-ripple-out motion-reduce:transition-none"
-        style="width: calc((100% - 4px) / {columns}); transform: translateX({selectedIndex * 100}%);"
+        style={safeStyle(`width: calc((100% - 4px) / ${columns}); transform: translateX(${selectedIndex * 100}%);`)}
       ></span>
     {/if}
 

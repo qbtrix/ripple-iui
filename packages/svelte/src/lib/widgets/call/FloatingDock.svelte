@@ -22,6 +22,7 @@
   offsets now follow `gap` (via --ripple-dock-gap) instead of a fixed 12px.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
@@ -103,7 +104,7 @@
   data-corner={corner}
   data-bounds={bounds}
   class={cn('ripple-dock', className)}
-  style="--ripple-dock-gap:{gap}px;{pos ? `left:${pos.x}px;top:${pos.y}px;right:auto;bottom:auto;` : ''}{style ?? ''}"
+  style={safeStyle(`--ripple-dock-gap:${gap}px;${pos ? `left:${pos.x}px;top:${pos.y}px;right:auto;bottom:auto;` : ''}${style ?? ''}`)}
   onpointerdown={down}
   onpointermove={move}
   onpointerup={up}

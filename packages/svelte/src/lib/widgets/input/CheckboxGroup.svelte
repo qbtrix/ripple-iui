@@ -56,7 +56,7 @@
   import { Checkbox as CheckboxPrimitive } from '$lib/components/ui/checkbox/index.js';
   import { cn } from '$lib/utils.js';
   import { canonicalOptions } from '$lib/utils/safe-props.js';
-  import { FF_SPRING_TOKENS, ffTokenToCssTiming } from '@ripple-ui/core';
+  import { FF_SPRING_TOKENS, ffTokenToCssTiming, safeStyle } from '@ripple-ui/core';
   import { movingIndicator, type IndicatorRect } from '$lib/motion/moving-indicator.js';
 
   type Option = { value: string | number; label: string; disabled?: boolean };
@@ -278,7 +278,7 @@
     {#each mergedRuns as run (run.key)}
       <div
         class="absolute rounded-2xl bg-accent pointer-events-none z-0"
-        style="top:{run.top}px; left:{run.left}px; width:{run.width}px; height:{run.height}px; opacity:{hoveringUnchecked ? 0.8 : 1}; transition:{prefersReduced ? 'none' : mergedGlide}; will-change:top,left,width,height;"
+        style={safeStyle(`top:${run.top}px; left:${run.left}px; width:${run.width}px; height:${run.height}px; opacity:${hoveringUnchecked ? 0.8 : 1}; transition:${prefersReduced ? 'none' : mergedGlide}; will-change:top,left,width,height;`)}
         data-checkbox-group-merged
       ></div>
     {/each}
@@ -362,7 +362,7 @@
           <span class="col-start-1 row-start-1 invisible" aria-hidden="true" style="font-variation-settings:'wght' 550;">{opt.label}</span>
           <span
             class="col-start-1 row-start-1"
-            style="font-variation-settings:'wght' {isChecked ? 550 : 400}; color:{isChecked || isActive ? 'var(--foreground)' : 'var(--muted-foreground)'}; transition:color 80ms {HOVER.easing}, font-variation-settings 80ms {HOVER.easing};"
+            style={safeStyle(`font-variation-settings:'wght' ${isChecked ? 550 : 400}; color:${isChecked || isActive ? 'var(--foreground)' : 'var(--muted-foreground)'}; transition:color 80ms ${HOVER.easing}, font-variation-settings 80ms ${HOVER.easing};`)}
           >{opt.label}</span>
         </span>
       </div>

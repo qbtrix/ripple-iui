@@ -16,6 +16,7 @@
   / --ripple-sheet-half. Tokens only.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
@@ -98,7 +99,7 @@
   data-state={stop}
   data-dragging={dragging ? '' : undefined}
   class={cn('ripple-sheet', className)}
-  style="{dragging && dy ? `transform:translateY(${dy}px);` : ''}{style ?? ''}"
+  style={safeStyle(`${dragging && dy ? `transform:translateY(${dy}px);` : ''}${style ?? ''}`)}
   {...rest}
 >
   <div

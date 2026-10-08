@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/input/CodeEditor.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -122,7 +123,7 @@
     {id}
     bind:this={containerEl}
     class="rounded-md border border-input bg-background shadow-xs overflow-hidden focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-[color,box-shadow]"
-    style={`height: ${height}`}
+    style={safeStyle(`height: ${height}`)}
     aria-label={placeholder ?? 'Code editor'}
   ></div>
 </div>

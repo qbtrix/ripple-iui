@@ -2,6 +2,7 @@
      Note: Drag-to-swap (Swapy) removed. Use DashboardRenderer (Muuri) for interactive dashboards.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -23,7 +24,7 @@
 <div
   {id}
   class={cn('rdash', className)}
-  style="display:grid; grid-template-columns:repeat(auto-fill,minmax({columnMin},1fr)); gap:{gap};"
+  style={safeStyle(`display:grid; grid-template-columns:repeat(auto-fill,minmax(${columnMin},1fr)); gap:${gap};`)}
 >
   {@render children?.()}
 </div>

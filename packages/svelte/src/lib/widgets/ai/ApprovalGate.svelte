@@ -57,6 +57,7 @@
     so the default output is still "Confirm deny".
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import Diff from '$lib/widgets/display/Diff.svelte';
   import ToolCall from './ToolCall.svelte';
@@ -337,7 +338,7 @@
         <div class="space-y-2">
           {#each calls as call, i (i)}
             <ToolCall
-              style={{ '--i': String(i) }}
+              style={safeStyle({ '--i': String(i) })}
               name={call.name}
               status={call.status ?? 'pending'}
               args={call.args}

@@ -5,6 +5,7 @@
   `bind` field, plus `onchange` callback for plain-Svelte hosts.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -107,10 +108,13 @@
     return preset;
   }
 
+  // divIcon html is innerHTML: escape what goes inside an attribute.
+  const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
   function makePickIcon(L: any) {
     return L.divIcon({
       className: 'rmap-pick',
-      html: `<div class="rmap-pick-wrap" style="--rmap-pick-color:${color};">
+      html: `<div class="rmap-pick-wrap" style="${escapeHtml(safeStyle(`--rmap-pick-color:${color};`))}">
         <div class="rmap-pick-pulse"></div>
         <div class="rmap-pick-dot"></div>
       </div>`,
@@ -182,7 +186,7 @@
   {#if label}
     <span class="text-sm font-medium leading-none">{label}</span>
   {/if}
-  <div class="rmap" style={`height:${heightStr};`} bind:this={mapEl}></div>
+  <div class="rmap" style={safeStyle(`height:${heightStr};`)} bind:this={mapEl}></div>
   {#if showReadout}
     <div class="text-xs text-muted-foreground tabular-nums">
       {#if value}

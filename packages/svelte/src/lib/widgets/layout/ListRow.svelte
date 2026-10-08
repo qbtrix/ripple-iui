@@ -26,7 +26,7 @@
   Activation is native: Enter on a button or link, Space on a button.
 -->
 <script lang="ts">
-  import { safeUrl } from '@ripple-ui/core';
+  import { safeUrl, safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils.js';
@@ -98,7 +98,7 @@
     muted && !active && 'text-ripple-muted-foreground',
     className
   )}
-  style={indent != null ? `--list-row-indent: ${indent}` : undefined}
+  style={safeStyle(indent != null ? `--list-row-indent: ${indent}` : undefined)}
 >
   {#if renaming && rename}
     <div data-list-row-rename class={cn('flex h-full min-w-0 flex-1 items-center gap-2', padClass)}>

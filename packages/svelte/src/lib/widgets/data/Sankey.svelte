@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/data/Sankey.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -105,5 +106,5 @@
   {id}
   bind:this={chartEl}
   class={cn('w-full text-foreground', className)}
-  style={`height: ${height}px; ${styleString ?? ''}`}
+  style={safeStyle(`height: ${height}px; ${styleString ?? ''}`)}
 ></div>

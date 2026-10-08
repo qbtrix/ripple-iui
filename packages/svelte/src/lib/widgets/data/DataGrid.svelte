@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/data/DataGrid.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import { asText } from '$lib/widgets/text-coerce';
@@ -162,7 +163,7 @@
             {#each columns as col (col.key)}
               <th
                 scope="col"
-                style={col.width ? `width: ${col.width}` : undefined}
+                style={safeStyle(col.width ? `width: ${col.width}` : undefined)}
                 class={cn(
                   'px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground',
                   col.align === 'right' && 'text-right',

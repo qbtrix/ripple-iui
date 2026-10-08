@@ -187,7 +187,7 @@
               </span>
             {/if}
             {#each tags as t}
-              <span class="rentity-tag" style={tagColor(t) ? `--rtag:${tagColor(t)};` : undefined}>
+              <span class="rentity-tag" style={safeStyle(tagColor(t) ? `--rtag:${tagColor(t)};` : undefined)}>
                 {tagText(t)}
               </span>
             {/each}

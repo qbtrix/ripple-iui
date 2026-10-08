@@ -2,6 +2,7 @@
      Modified: 2026-06-09 — a11y: added aria-selected="false" to the role="option"
      row so it has the required ARIA prop (a11y_role_has_required_aria_props). -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
@@ -89,16 +90,16 @@
   bind:this={viewportEl}
   onscroll={onScroll}
   class={cn('relative overflow-auto rounded-md border border-border', className)}
-  style={`height: ${containerHeight}; ${styleString ?? ''}`}
+  style={safeStyle(`height: ${containerHeight}; ${styleString ?? ''}`)}
   role="listbox"
 >
   {#if total === 0}
     <div class="h-full grid place-items-center text-sm text-muted-foreground">{emptyText}</div>
   {:else}
-    <div style="height: {totalHeight}px; position: relative;">
-      <div style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({offsetY}px);">
+    <div style={safeStyle(`height: ${totalHeight}px; position: relative;`)}>
+      <div style={safeStyle(`position: absolute; top: 0; left: 0; right: 0; transform: translateY(${offsetY}px);`)}>
         {#each visible as v (v.index)}
-          <div style="height: {itemHeight}px;" role="option" aria-selected="false" aria-posinset={v.index + 1} aria-setsize={total}>
+          <div style={safeStyle(`height: ${itemHeight}px;`)} role="option" aria-selected="false" aria-posinset={v.index + 1} aria-setsize={total}>
             {#if isSpec(item)}
               <NodeRenderer node={item} loopContext={{ item: v.item, index: v.index }} />
             {:else if children}

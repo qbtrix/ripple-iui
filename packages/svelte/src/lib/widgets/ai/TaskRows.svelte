@@ -64,6 +64,7 @@
     the header content moved into a `header` snippet both paths share.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
   import XIcon from '@lucide/svelte/icons/x';
@@ -272,7 +273,7 @@
     {@const status = row.status ?? 'pending'}
     <div
       data-state={status}
-      style={`--i:${i}`}
+      style={safeStyle(`--i:${i}`)}
       class={cn(
         'ripple-task-row self-stretch overflow-hidden transition-[border-radius,background-color] duration-300 ease-ripple-out hover:bg-ripple-accent/10',
         list
@@ -319,7 +320,7 @@
               <div class="flex flex-col gap-1.5">
                 {#each row.details ?? [] as detail, j (detail.label)}
                   <div
-                    style={`--j:${j}`}
+                    style={safeStyle(`--j:${j}`)}
                     class={cn(
                       'flex items-center justify-between',
                       open && 'ripple-task-detail'

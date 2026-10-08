@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/data/GanttChart.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -95,7 +96,7 @@
     {id}
     bind:this={containerEl}
     class="overflow-auto rounded-md border border-border"
-    style={`height: ${height}`}
+    style={safeStyle(`height: ${height}`)}
   ></div>
 </div>
 

@@ -37,6 +37,7 @@
 </script>
 
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
@@ -264,7 +265,7 @@
           }}
           onblur={(e) => commitRename(node, e.currentTarget.value)}
           class="min-w-0 flex-1 rounded border border-ripple-ring bg-ripple-input px-1.5 py-0.5 text-sm text-ripple-input-foreground outline-none"
-          style={`margin-left: ${_level * 12 + 6}px`}
+          style={safeStyle(`margin-left: ${_level * 12 + 6}px`)}
         />
       {:else}
       <button
@@ -281,7 +282,7 @@
           isSelected && 'bg-primary/10 text-primary font-medium',
           isHidden && 'opacity-50'
         )}
-        style={`padding-left: ${_level * 12 + 6}px`}
+        style={safeStyle(`padding-left: ${_level * 12 + 6}px`)}
       >
         {#if hasKids}
           <span class="opacity-60 shrink-0">
