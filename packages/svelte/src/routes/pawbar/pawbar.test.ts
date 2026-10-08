@@ -6,7 +6,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, ChatSession, customerRef, pawbarTransport, type Card, type Transport } from './chat.svelte.js';
+import { BYOK_URL, ChatSession, customerRef, pawbarTransport, type Card, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
@@ -226,7 +226,7 @@ describe('ChatSession', () => {
 		const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
 		expect(url).toBe('http://localhost:5288/api/v1/paw-bar/chat');
 		expect(init.credentials).toBe('omit');
-		expect(JSON.parse(String(init.body))).toEqual({ widget_id: 'w', signed_key: 'k', customer_ref: 'visitor_123', message: 'hi' });
+		expect(JSON.parse(init.body as string)).toEqual({ widget_id: 'w', signed_key: 'k', customer_ref: 'visitor_123', message: 'hi' });
 		expect(lastTurn(session).parts).toEqual([{ kind: 'text', text: 'Hello' }]);
 	});
 

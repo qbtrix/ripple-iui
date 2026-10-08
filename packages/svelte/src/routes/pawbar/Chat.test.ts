@@ -7,7 +7,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 import Chat from './Chat.svelte';
-import { ChatSession } from './chat.svelte.js';
+import { ChatSession } from './session.svelte.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
 vi.setConfig({ testTimeout: 20_000 });

@@ -11,7 +11,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Ripple } from '$lib/index.js';
-	import type { Card, ChatSession } from './chat.svelte.js';
+	import type { Card, ChatSession } from './session.svelte.js';
 
 	interface Suggestion {
 		id: string;
@@ -120,7 +120,7 @@
 			id="ripple-ask"
 			rows="2"
 			maxlength="2000"
-			placeholder="Describe a tool you need. A tip splitter, a workout timer, a budget..."
+			placeholder="Ask for a tool, like a tip splitter"
 			bind:value={draft}
 			onkeydown={onKey}
 		></textarea>
