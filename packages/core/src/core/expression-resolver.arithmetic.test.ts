@@ -64,3 +64,54 @@ describe('expression-resolver arithmetic', () => {
 		expect(evaluateExpression('state.items.0', ctx({ items: ['a', 'b'] }))).toBe('a');
 	});
 });
+
+describe('expression-resolver grouping and call operands', () => {
+	const list = [{ a: true }, { a: false }, { a: true }, { a: false }];
+	const state = { a: 1, b: 2, c: 3, d: 4, s: 'x', name: 'alice', total: 10, list, on: true };
+
+	// Each case failed before the fix: the resolver peeled `(` ... `)` off any
+	// expression that started and ended with a paren, even when the two did not
+	// match, and it matched a trailing method call before splitting operators,
+	// so the call's receiver swallowed the whole left-hand side.
+	test.each([
+		['(36.6 + 20) * (1 + 18 / 100)', 66.788],
+		['(state.a + state.b) * (state.c + state.d)', 21],
+		['((2 + 3) * (4 - 1)) / 5', 3],
+		['!((1 + 2) * (3 - 3))', true],
+		['(state.a + state.b).toFixed(1)', '3.0'],
+		["('(a)') + ('(b)')", '(a)(b)'],
+		["'(a)' == '(a)'", true],
+		[
+			'state.on ? (state.a + 1) * (state.b + 1) : (state.a - 1) * (state.b - 1)',
+			6
+		],
+		["state.total / state.list.where('a', true).count()", 5],
+		['2 * state.list.count()', 8],
+		["'Hi ' + state.name.toUpperCase()", 'Hi ALICE'],
+		['state.list.count() > 3', true],
+		['(state.a + state.b) > 2', true],
+		["state.s.includes(')')", false],
+		["state.s == 'a || b'", false]
+	])('%s', (expr, expected) => {
+		const got = evaluateExpression(expr, ctx(state));
+		if (typeof expected === 'number') expect(got).toBeCloseTo(expected);
+		else expect(got).toBe(expected);
+	});
+
+	// Already-correct shapes the fix must keep working.
+	test.each([
+		['((1 + 2) * 3)', 9],
+		['(1 + 2) * 3', 9],
+		['2 * (3 + 4)', 14],
+		["state.list.where('a', true).count() / 2", 1],
+		["(state.s + ')')", 'x)'],
+		["!(state.s == 'x')", false]
+	])('%s', (expr, expected) => {
+		expect(evaluateExpression(expr, ctx(state))).toBe(expected);
+	});
+
+	test('string-literal parens and operators do not split', () => {
+		expect(evaluateExpression("state.s.includes(')')", ctx({ s: 'a)' }))).toBe(true);
+		expect(evaluateExpression("state.s == 'a || b'", ctx({ s: 'a || b' }))).toBe(true);
+	});
+});
