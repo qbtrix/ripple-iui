@@ -74,10 +74,14 @@
       "svelte": "./dist/discover/index.js",
       "default": "./dist/discover/index.js"
     },
-    "./theme.css": "./dist/theme.css"
+    "./theme.css": "./dist/theme.css",
+    "./styles.css": "./dist/styles.css",
+    "./manifest.json": "./dist/manifest.json",
+    "./manifest.slim.json": "./dist/manifest.slim.json"
   },
   "files": [
     "NOTICE",
+    "LICENSE",
     "dist",
     "!dist/**/*.test.*",
     "!dist/**/__fixtures__/**"
