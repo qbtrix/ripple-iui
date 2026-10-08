@@ -24,7 +24,7 @@
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
-	import { BYOK_URL, ChatSession, pawbarTransport } from './pawbar/session.svelte.js';
+	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { scenarios } from './live/scenarios.js';
 
@@ -39,16 +39,18 @@
 	// The order demo needs the test store's checkout (an `api` action), which the
 	// chat's card policy refuses; it stays on /live and in the runs list below.
 	const chatScenarios = scenarios.filter((s) => !s.needsStore);
-	const session = new ChatSession(
-		LIVE
-			? pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send
-			: (message, signal) =>
-					recordedEvents(pickScenario(message, chatScenarios), {
-						speed: 1.5,
-						signal,
-						intro: 'The live model is not connected on this build, so here is a recorded answer that fits.'
-					})
-	);
+	const recorded =
+		(intro: string): Transport =>
+		(message, signal) =>
+			recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro });
+	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
+	// is unavailable. Offline build: the recordings answer directly.
+	const session = LIVE
+		? new ChatSession(
+				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
+				recorded('Here is a recorded answer that fits, on its original timing.')
+			)
+		: new ChatSession(recorded('The live model is not connected on this build, so here is a recorded answer that fits.'));
 	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
