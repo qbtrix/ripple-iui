@@ -42,7 +42,8 @@
   );
 
   let containerEl = $state<HTMLDivElement | null>(null);
-  let gantt: any = null;
+  // Reactive so the refresh $effects subscribe once the instance exists.
+  let gantt: any = $state.raw(null);
 
   function clearContainer() {
     if (!containerEl) return;

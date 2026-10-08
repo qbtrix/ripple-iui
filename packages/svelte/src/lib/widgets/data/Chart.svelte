@@ -1,11 +1,13 @@
 <!--
   Chart.svelte — 10 chart types: bar, line, area, pie, donut,
-  candlestick, sparkline, heatmap, gauge, radar.
-  ResizeObserver init, theme-aware colors, themeOverrides deep merge.
-  Modified: 2026-06-09 — chartEl declared with $state() (was plain `let`) so
-  bind:this updates are reactive (fixes non_reactive_update).
-  Modified: 2026-06-27 — forward node id (bind id + data-ripple-node on the root div)
-  for editor selection (SP-0 id-forwarding codemod).
+  candlestick, sparkline, heatmap, gauge, radar, drawn with echarts.
+  The instance is created once, when ResizeObserver first reports a size, and
+  disposed on unmount. Every later prop change (data, type, title, colors,
+  tooltip, themeOverrides) redraws it in place through the $effect below.
+  Invariant: `chart` must stay reactive ($state.raw). As a plain `let`, the
+  effect reads it as null on its first run, subscribes to nothing, and the
+  chart freezes on whatever props it mounted with (e.g. a half-streamed spec).
+  The root div forwards the node id (id + data-ripple-node) for editor selection.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -94,7 +96,8 @@
 	}
 
 	let chartEl: HTMLDivElement | undefined = $state();
-	let chart: any = null;
+	let chart: any = $state.raw(null);
+	let destroyed = false;
 	let echartsMod: any = null;
 
 	function themeColors() {
@@ -451,12 +454,11 @@
 	async function initChart() {
 		if (!chartEl) return;
 		if (!echartsMod) echartsMod = await import('echarts');
-		if (chart) {
-			chart.dispose();
-			chart = null;
-		}
+		// Unmounted while echarts was loading: don't create an orphan instance.
+		if (destroyed || !chartEl) return;
+		chart?.dispose();
+		// The redraw $effect sees the new instance and draws it.
 		chart = echartsMod.init(chartEl, undefined, { renderer: 'canvas' });
-		chart.setOption(buildOption());
 	}
 
 	onMount(() => {
@@ -479,17 +481,16 @@
 		window.addEventListener('resize', onResize);
 
 		return () => {
+			destroyed = true;
 			observer.disconnect();
 			window.removeEventListener('resize', onResize);
 			chart?.dispose();
 		};
 	});
 
-	// Re-render when data or type changes
+	// Draw on init and on every prop change buildOption() reads.
 	$effect(() => {
-		if (chart && data && type) {
-			chart.setOption(buildOption(), true);
-		}
+		if (chart) chart.setOption(buildOption(), true);
 	});
 </script>
 

@@ -44,7 +44,8 @@
   }
 
   let chartEl: HTMLDivElement;
-  let chart: any = null;
+  // Reactive so the redraw $effect subscribes once the instance exists.
+  let chart: any = $state.raw(null);
   let echartsMod: any = null;
 
   function buildOption() {
@@ -84,7 +85,6 @@
     if (!echartsMod) echartsMod = await import('echarts');
     chart?.dispose();
     chart = echartsMod.init(chartEl, undefined, { renderer: 'canvas' });
-    chart.setOption(buildOption());
   }
 
   onMount(() => {
