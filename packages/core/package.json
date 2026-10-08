@@ -61,6 +61,7 @@
   },
   "files": [
     "dist",
+    "LICENSE",
     "!dist/**/*.test.*",
     "!dist/**/__tests__/**",
     "!dist/**/fixtures/**"
