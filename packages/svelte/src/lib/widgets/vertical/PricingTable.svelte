@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/vertical/PricingTable.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
   import XIcon from '@lucide/svelte/icons/x';
@@ -51,7 +52,7 @@
 <div
   {id}
   class={cn('grid gap-4', className)}
-  style={`grid-template-columns: repeat(${Math.max(1, tiers.length)}, minmax(0, 1fr)); ${styleString ?? ''}`}
+  style={safeStyle(`grid-template-columns: repeat(${Math.max(1, tiers.length)}, minmax(0, 1fr)); ${styleString ?? ''}`)}
 >
   {#each tiers as tier (tier.id)}
     <div

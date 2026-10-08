@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/layout/MasterDetail.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
@@ -82,7 +83,7 @@
     'grid w-full overflow-hidden rounded-lg border border-border',
     className
   )}
-  style={`grid-template-columns: ${width} 1fr; min-height: 240px; ${styleString ?? ''}`}
+  style={safeStyle(`grid-template-columns: ${width} 1fr; min-height: 240px; ${styleString ?? ''}`)}
 >
   <ul
     class="border-r border-border bg-card/30 overflow-auto p-1.5 m-0 list-none"

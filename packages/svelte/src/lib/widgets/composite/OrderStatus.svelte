@@ -262,7 +262,7 @@
       <div class="rorder-tracking">
         <span class="rorder-tracking-label">Tracking</span>
         {#if tracking.url}
-          <a href={safeUrl(tracking.url)} target="_blank" rel="noopener" class="rorder-tracking-num">
+          <a href={safeUrl(tracking.url)} target="_blank" rel="noopener noreferrer" class="rorder-tracking-num">
             {tracking.carrier} · {tracking.number}
             <Icon name="external-link" size={12} />
           </a>

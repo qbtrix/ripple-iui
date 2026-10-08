@@ -12,6 +12,7 @@
     bytes don't belong in spec state).
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { Pencil, Eraser, Undo, Redo, Trash2, Download } from '@lucide/svelte';
@@ -197,7 +198,7 @@
               ? 'border-primary ring-2 ring-primary/20'
               : 'border-transparent'
           )}
-          style="background-color: {color}"
+          style={safeStyle(`background-color: ${color}`)}
           title={color}
           aria-label="Color {color}"
         ></button>
@@ -265,7 +266,7 @@
       {width}
       {height}
       class="w-full rounded-lg border cursor-crosshair touch-none"
-      style="aspect-ratio: {width}/{height}; background: {backgroundColor}"
+      style={safeStyle(`aspect-ratio: ${width}/${height}; background: ${backgroundColor}`)}
       onmousedown={startDrawing}
       onmousemove={draw}
       onmouseup={stopDrawing}

@@ -171,11 +171,11 @@
   </header>
 
   <div class="rops-banner" style={safeStyle(`background:${meta.bg}; border-color:color-mix(in oklab, ${meta.color} 30%, transparent);`)}>
-    <span class="rops-banner-icon" style={`color:${meta.color};`}>
+    <span class="rops-banner-icon" style={safeStyle(`color:${meta.color};`)}>
       <Icon name={meta.icon} size={20} />
     </span>
     <div class="rops-banner-text">
-      <div class="rops-banner-title" style={`color:${meta.color};`}>{meta.label}</div>
+      <div class="rops-banner-title" style={safeStyle(`color:${meta.color};`)}>{meta.label}</div>
       {#if statusMessage}<div class="rops-banner-body">{statusMessage}</div>{/if}
     </div>
   </div>
@@ -186,7 +186,7 @@
         <div class="rops-metric">
           <div class="rops-metric-label">{m.label}</div>
           <div class="rops-metric-row">
-            <div class="rops-metric-value" style={m.color ? `color:${m.color};` : undefined}>
+            <div class="rops-metric-value" style={safeStyle(m.color ? `color:${m.color};` : undefined)}>
               {m.value}
               {#if m.unit}<span class="rops-metric-unit">{m.unit}</span>{/if}
             </div>

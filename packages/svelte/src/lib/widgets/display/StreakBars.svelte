@@ -6,6 +6,7 @@
   fully SSR-safe, no JS.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   type Seg = number | { intensity?: number; color?: string; on?: boolean };
@@ -85,7 +86,7 @@
   {#each segments as s (s.key)}
     <span
       class="flex-1 rounded-[1px]"
-      style="height:{height}px; background:{s.bg}; opacity:{s.opacity}"
+      style={safeStyle(`height:${height}px; background:${s.bg}; opacity:${s.opacity}`)}
     ></span>
   {/each}
 </div>

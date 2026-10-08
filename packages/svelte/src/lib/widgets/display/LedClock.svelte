@@ -9,6 +9,7 @@
   (the "ms" ticker). Hero widget of the console telemetry pack.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
 
@@ -167,27 +168,27 @@
 >
   <div class="flex items-end gap-4">
     <!-- main matrix -->
-    <div class="flex items-start" style="gap:{dot}px" aria-hidden="true">
+    <div class="flex items-start" style={safeStyle(`gap:${dot}px`)} aria-hidden="true">
       {#each chars as ch, ci (ci + '-' + ch)}
         {@const glyph = glyphFor(ch)}
         {@const narrow = ch === ':' || ch === '.'}
         <div
           class="grid"
-          style="
-            grid-template-columns: repeat({narrow ? 2 : COLS}, {dot}px);
-            grid-template-rows: repeat({ROWS}, {dot}px);
-            gap: {gap}px;
-          "
+          style={safeStyle(`
+            grid-template-columns: repeat(${narrow ? 2 : COLS}, ${dot}px);
+            grid-template-rows: repeat(${ROWS}, ${dot}px);
+            gap: ${gap}px;
+          `)}
         >
           {#each glyph as rowStr, r (r)}
             {#each rowStr.split('').slice(0, narrow ? 2 : COLS) as cell, c (c)}
               <span
                 class="rounded-[1px]"
-                style="
-                  width:{dot}px; height:{dot}px;
-                  background:{cell === '1' ? accent : 'var(--foreground)'};
-                  opacity:{cell === '1' ? 1 : 0.07};
-                "
+                style={safeStyle(`
+                  width:${dot}px; height:${dot}px;
+                  background:${cell === '1' ? accent : 'var(--foreground)'};
+                  opacity:${cell === '1' ? 1 : 0.07};
+                `)}
               ></span>
             {/each}
           {/each}
@@ -197,27 +198,27 @@
 
     <!-- dim sub-readout (the ms ticker) -->
     {#if subDisplay}
-      <div class="flex items-start pb-1" style="gap:{subDot}px" aria-hidden="true">
+      <div class="flex items-start pb-1" style={safeStyle(`gap:${subDot}px`)} aria-hidden="true">
         {#each subChars as ch, ci (ci + '-' + ch)}
           {@const glyph = glyphFor(ch)}
           {@const narrow = ch === ':' || ch === '.'}
           <div
             class="grid"
-            style="
-              grid-template-columns: repeat({narrow ? 2 : COLS}, {subDot}px);
-              grid-template-rows: repeat({ROWS}, {subDot}px);
-              gap: {subGap}px;
-            "
+            style={safeStyle(`
+              grid-template-columns: repeat(${narrow ? 2 : COLS}, ${subDot}px);
+              grid-template-rows: repeat(${ROWS}, ${subDot}px);
+              gap: ${subGap}px;
+            `)}
           >
             {#each glyph as rowStr, r (r)}
               {#each rowStr.split('').slice(0, narrow ? 2 : COLS) as cell, c (c)}
                 <span
                   class="rounded-[1px]"
-                  style="
-                    width:{subDot}px; height:{subDot}px;
+                  style={safeStyle(`
+                    width:${subDot}px; height:${subDot}px;
                     background:var(--muted-foreground);
-                    opacity:{cell === '1' ? 0.55 : 0.08};
-                  "
+                    opacity:${cell === '1' ? 0.55 : 0.08};
+                  `)}
                 ></span>
               {/each}
             {/each}

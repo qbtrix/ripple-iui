@@ -8,6 +8,7 @@
   @created 2026-05-30 — RFC 12 premium pack.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { asText } from '$lib/widgets/text-coerce';
   interface Props {
@@ -36,7 +37,7 @@
 
 <span {id} data-text-effect class={cn('ripple-text-effect inline-block', `ripple-te-${effect}`, className)} style={styleString} aria-label={text}>
   {#each units as unit, i}
-    <span class="ripple-te-unit" style={`animation-delay:${(i * stagger).toFixed(3)}s`} aria-hidden="true">{unit === ' ' ? ' ' : unit}</span>{#if by === 'word' && i < units.length - 1}{' '}{/if}
+    <span class="ripple-te-unit" style={safeStyle(`animation-delay:${(i * stagger).toFixed(3)}s`)} aria-hidden="true">{unit === ' ' ? ' ' : unit}</span>{#if by === 'word' && i < units.length - 1}{' '}{/if}
   {/each}
 </span>
 

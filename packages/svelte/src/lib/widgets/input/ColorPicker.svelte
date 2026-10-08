@@ -304,7 +304,7 @@
       <span
         aria-hidden="true"
         class={cn('relative shrink-0 overflow-hidden rounded-[4px] ring-1 ring-inset ring-ripple-surface-foreground/15', compact ? 'size-5' : 'h-5 w-5')}
-        style={isNone || mixed ? undefined : `background:${value}`}
+        style={safeStyle(isNone || mixed ? undefined : `background:${value}`)}
       >
         {#if isNone}{@render noneSlash('absolute inset-0 size-full bg-ripple-surface')}{/if}
         {#if mixed}<span class="absolute inset-0 bg-ripple-surface-foreground/15"></span>{/if}
@@ -385,7 +385,7 @@
                 class="craft-checker relative h-2.5 cursor-pointer touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ripple-ring"
               >
                 <span class="absolute inset-0 rounded-full" style={safeStyle(`background: linear-gradient(to right, transparent, ${current});`)}></span>
-                <span class="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ripple-popover shadow-md ring-2 ring-white" style={`left:${alpha}%;`}></span>
+                <span class="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ripple-popover shadow-md ring-2 ring-white" style={safeStyle(`left:${alpha}%;`)}></span>
               </div>
             {/if}
           </div>

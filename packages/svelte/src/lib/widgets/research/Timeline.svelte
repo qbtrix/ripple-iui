@@ -1,5 +1,6 @@
 <!-- 2026-06-27: forward node id — bind id + data-ripple-node on root for editor selection (SP-0 id-forwarding codemod). -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
 
@@ -56,7 +57,7 @@
   {#each visible as ev, i}
     <div class="rtl-item">
       <div class="rtl-rail">
-        <span class="rtl-dot" style="background:{dotColor(ev)}"></span>
+        <span class="rtl-dot" style={safeStyle(`background:${dotColor(ev)}`)}></span>
         {#if i < visible.length - 1}
           <span class="rtl-line"></span>
         {/if}

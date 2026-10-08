@@ -38,6 +38,7 @@
   Tokens only, no colour literals.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { untrack } from 'svelte';
   import { cn } from '$lib/utils.js';
@@ -394,12 +395,12 @@
             {@attach onGuide(i)}
             data-guide={g.orientation}
             class={cn('craft-guide', g.orientation, guidesEditable && onguide && 'editable')}
-            style={g.orientation === 'horizontal' ? `top:${p}px` : `left:${p}px`}
+            style={safeStyle(g.orientation === 'horizontal' ? `top:${p}px` : `left:${p}px`)}
           ></div>
         {/if}
       {/each}
       {#if draft}
-        <div class={cn('craft-guide', draft.orientation, 'dragging', !draft.offRuler && 'removing')} style={draft.orientation === 'horizontal' ? `top:${guideScreen(draft)}px` : `left:${guideScreen(draft)}px`}></div>
+        <div class={cn('craft-guide', draft.orientation, 'dragging', !draft.offRuler && 'removing')} style={safeStyle(draft.orientation === 'horizontal' ? `top:${guideScreen(draft)}px` : `left:${guideScreen(draft)}px`)}></div>
       {/if}
     </div>
   {/if}

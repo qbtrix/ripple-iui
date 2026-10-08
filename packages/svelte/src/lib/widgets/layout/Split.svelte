@@ -8,6 +8,7 @@
      seed is a one-time initial value, so its state_referenced_locally warning is
      suppressed with a directive directly above the $state line. -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Snippet } from 'svelte';
   import { cn } from '$lib/utils.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
@@ -130,7 +131,7 @@
     direction === 'horizontal' ? 'flex-row' : 'flex-col',
     className
   )}
-  style={`${gridStyle} ${styleString ?? ''}`}
+  style={safeStyle(`${gridStyle} ${styleString ?? ''}`)}
 >
   <div class="overflow-auto min-w-0 min-h-0">
     {#if startSnippet}

@@ -6,6 +6,7 @@
   segment readouts. Pure CSS — fully SSR-safe, no JS.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -75,7 +76,7 @@
   {#each cells as c (c.key)}
     <span
       class="rounded-[1px]"
-      style="height:{cellHeight}px; background:{c.on ? color : 'var(--foreground)'}; opacity:{c.on ? 1 : 0.08}"
+      style={safeStyle(`height:${cellHeight}px; background:${c.on ? color : 'var(--foreground)'}; opacity:${c.on ? 1 : 0.08}`)}
     ></span>
   {/each}
 </div>

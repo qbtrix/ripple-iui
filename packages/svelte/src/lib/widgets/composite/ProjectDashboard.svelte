@@ -154,7 +154,7 @@
               <span class="rproj-progress-pct">{Math.round(progress)}%</span>
             </div>
             <div class="rproj-progress-track">
-              <div class="rproj-progress-fill" style={`width:${Math.max(0, Math.min(100, progress))}%`}></div>
+              <div class="rproj-progress-fill" style={safeStyle(`width:${Math.max(0, Math.min(100, progress))}%`)}></div>
             </div>
           </div>
         {/if}
@@ -216,28 +216,28 @@
             {#if breakdown.done !== undefined}
               <div class="rproj-bd-row">
                 <span class="rproj-bd-label">Done</span>
-                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-done" style={`width:${pct(breakdown.done)}%`}></div></div>
+                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-done" style={safeStyle(`width:${pct(breakdown.done)}%`)}></div></div>
                 <span class="rproj-bd-num">{breakdown.done}</span>
               </div>
             {/if}
             {#if breakdown.inProgress !== undefined}
               <div class="rproj-bd-row">
                 <span class="rproj-bd-label">In progress</span>
-                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-progress" style={`width:${pct(breakdown.inProgress)}%`}></div></div>
+                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-progress" style={safeStyle(`width:${pct(breakdown.inProgress)}%`)}></div></div>
                 <span class="rproj-bd-num">{breakdown.inProgress}</span>
               </div>
             {/if}
             {#if breakdown.todo !== undefined}
               <div class="rproj-bd-row">
                 <span class="rproj-bd-label">To do</span>
-                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-todo" style={`width:${pct(breakdown.todo)}%`}></div></div>
+                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-todo" style={safeStyle(`width:${pct(breakdown.todo)}%`)}></div></div>
                 <span class="rproj-bd-num">{breakdown.todo}</span>
               </div>
             {/if}
             {#if breakdown.blocked !== undefined && breakdown.blocked > 0}
               <div class="rproj-bd-row">
                 <span class="rproj-bd-label">Blocked</span>
-                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-blocked" style={`width:${pct(breakdown.blocked)}%`}></div></div>
+                <div class="rproj-bd-track"><div class="rproj-bd-fill rproj-bd-blocked" style={safeStyle(`width:${pct(breakdown.blocked)}%`)}></div></div>
                 <span class="rproj-bd-num">{breakdown.blocked}</span>
               </div>
             {/if}
@@ -273,7 +273,7 @@
                   </div>
                   {#if m.load !== undefined}
                     <div class="rproj-team-load">
-                      <div class={cn('rproj-team-bar', overloaded && 'rproj-team-bar-over')} style={`width:${Math.min(100, load)}%`}></div>
+                      <div class={cn('rproj-team-bar', overloaded && 'rproj-team-bar-over')} style={safeStyle(`width:${Math.min(100, load)}%`)}></div>
                       <span class="rproj-team-load-num">{load}%</span>
                     </div>
                   {/if}

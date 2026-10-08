@@ -10,6 +10,8 @@
   ~42 KB library in when the widget actually mounts.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
+  import { sanitizeHtml } from '$lib/utils/sanitize-html.js';
   import { onMount, getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import type { EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
@@ -177,8 +179,8 @@
     const size = opts.size ?? 32;
     const color = opts.color ?? 'oklch(0.55 0.18 250)';
     const inner = opts.icon
-      ? `<span class="rmap-pin-icon" data-icon="${opts.icon}" style="background:${color};"></span>`
-      : `<span class="rmap-pin-dot" style="background:${color};"></span>`;
+      ? `<span class="rmap-pin-icon" data-icon="${escapeHtml(String(opts.icon))}" style="${escapeHtml(safeStyle(`background:${color};`))}"></span>`
+      : `<span class="rmap-pin-dot" style="${escapeHtml(safeStyle(`background:${color};`))}"></span>`;
     const labelHtml = opts.label
       ? `<span class="rmap-pin-label">${escapeHtml(opts.label)}</span>`
       : '';
@@ -194,7 +196,7 @@
     const color = t.color ?? 'oklch(0.65 0.22 25)';
     const heading = t.heading ?? 0;
     const html = `
-      <div class="rmap-tracker-wrap" style="--rmap-tracker-color:${color}; --rmap-tracker-rot:${heading}deg;">
+      <div class="rmap-tracker-wrap" style="${escapeHtml(safeStyle(`--rmap-tracker-color:${color}; --rmap-tracker-rot:${Number(heading) || 0}deg;`))}">
         <div class="rmap-tracker-pulse"></div>
         <div class="rmap-tracker-arrow"></div>
         ${t.label ? `<span class="rmap-tracker-label">${escapeHtml(t.label)}</span>` : ''}
@@ -218,7 +220,7 @@
     if (tiles === 'custom') {
       return {
         url: tileUrl ?? TILE_PRESETS['carto-voyager'].url,
-        attribution: tileAttribution ?? TILE_PRESETS['carto-voyager'].attribution,
+        attribution: sanitizeHtml(tileAttribution ?? TILE_PRESETS['carto-voyager'].attribution),
         maxZoom: maxZoom ?? 20
       };
     }
@@ -311,7 +313,7 @@
     markerLayer.clearLayers();
     for (const m of markers) {
       const lm = LRef.marker([m.lat, m.lng], { icon: makeDivIcon(LRef, { color: m.color, icon: m.icon, label: m.label }) });
-      if (m.popup) lm.bindPopup(m.popup);
+      if (m.popup) lm.bindPopup(escapeHtml(String(m.popup)));
       lm.on('click', () => {
         const dispatched = dispatch(m.actions, m);
         if (!dispatched) onmarkerclick?.(m.id);
@@ -332,7 +334,7 @@
       if (p.dashed || p.animate) opts.dashArray = '8, 8';
       if (p.animate) opts.className = 'rmap-path-animated';
       const line = LRef.polyline(p.points, opts);
-      if (p.label) line.bindTooltip(p.label, { sticky: true });
+      if (p.label) line.bindTooltip(escapeHtml(String(p.label)), { sticky: true });
       pathLayer.addLayer(line);
     }
   }
@@ -347,7 +349,7 @@
         fillColor: g.fillColor ?? g.color ?? 'oklch(0.55 0.18 250)',
         fillOpacity: g.fillOpacity ?? 0.15
       });
-      if (g.label) poly.bindTooltip(g.label, { sticky: true });
+      if (g.label) poly.bindTooltip(escapeHtml(String(g.label)), { sticky: true });
       polygonLayer.addLayer(poly);
     }
   }
@@ -412,7 +414,7 @@
 <div
   {id}
   class={cn('rmap', className)}
-  style={`height:${heightStr};${styleString ?? ''}`}
+  style={safeStyle(`height:${heightStr};${styleString ?? ''}`)}
   bind:this={mapEl}
 ></div>
 

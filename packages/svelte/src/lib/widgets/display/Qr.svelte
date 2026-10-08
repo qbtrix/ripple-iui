@@ -8,6 +8,7 @@
      applied at BOTH the onMount and $effect call sites), and sanitizeSvg the
      output (the HTML profile would strip <svg>, so this uses the SVG profile). -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { sanitizeSvg } from '$lib/utils/sanitize-html.js';
@@ -125,7 +126,7 @@
   <div
     role="img"
     aria-label={`QR code for ${value}`}
-    style={`width:${size}px; height:${size}px;`}
+    style={safeStyle(`width:${size}px; height:${size}px;`)}
     class="rounded bg-white p-1"
   >
     <!-- svg is generated from validated colors (safeColor) and passed through

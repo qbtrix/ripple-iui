@@ -11,7 +11,7 @@
   `viewMode` $state — intentional uncontrolled default seed from `defaultView` prop. Recipe 7.
 -->
 <script lang="ts">
-  import { safeUrl } from '@ripple-ui/core';
+  import { safeUrl, safeStyle } from '@ripple-ui/core';
   import { getContext } from 'svelte';
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
@@ -427,7 +427,7 @@
                         {:else if feature.type === 'color'}
                           <span
                             class="inline-block h-5 w-5 rounded-full border border-border shadow-sm align-middle"
-                            style="background-color: {item[feature.key]}"
+                            style={safeStyle(`background-color: ${item[feature.key]}`)}
                           ></span>
                         {:else if feature.type === 'image' && item[feature.key]}
                           <img src={safeUrl(item[feature.key] as string, { kind: 'resource' })} alt={feature.label} class="inline-block h-6 w-auto object-contain" />
@@ -451,7 +451,7 @@
             <!-- Header -->
             <div
               class="cmp-grid sticky top-0 z-10 border-b border-border/70 bg-muted/40 backdrop-blur-md supports-[backdrop-filter]:bg-muted/30"
-              style="--cmp-cols: {safeItems.length};"
+              style={safeStyle(`--cmp-cols: ${safeItems.length};`)}
             >
               <div class="p-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:p-3 sm:text-xs">
                 {activeSection ?? ''}
@@ -480,7 +480,7 @@
                     'cmp-grid border-b border-border/60 transition-colors last:border-0 hover:bg-muted/20',
                     rowIdx % 2 === 1 && 'bg-muted/10'
                   )}
-                  style="--cmp-cols: {safeItems.length};"
+                  style={safeStyle(`--cmp-cols: ${safeItems.length};`)}
                 >
                   <div class="flex items-center gap-1.5 p-2 text-xs text-muted-foreground sm:gap-2 sm:p-3 sm:text-sm">
                     {#if feature.icon}
@@ -501,7 +501,7 @@
                       {:else if feature.type === 'color'}
                         <div
                           class="h-4 w-4 rounded-full border border-border shadow-sm sm:h-5 sm:w-5"
-                          style="background-color: {item[feature.key]}"
+                          style={safeStyle(`background-color: ${item[feature.key]}`)}
                         ></div>
                       {:else if feature.type === 'rating'}
                         <div class="flex gap-0.5">

@@ -214,7 +214,7 @@
       {#if showProgress && items.length > 0}
         <div class="rcheck-progress">
           <div class="rcheck-progress-track">
-            <div class="rcheck-progress-fill" style={`width:${Math.max(0, Math.min(100, computedProgress))}%`}></div>
+            <div class="rcheck-progress-fill" style={safeStyle(`width:${Math.max(0, Math.min(100, computedProgress))}%`)}></div>
           </div>
           <span class="rcheck-progress-label">{computedProgress}% · {counts.done + counts.skipped}/{items.length} done</span>
         </div>

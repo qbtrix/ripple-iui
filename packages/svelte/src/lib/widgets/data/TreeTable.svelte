@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/data/TreeTable.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import NodeRenderer from '$lib/components/NodeRenderer.svelte';
@@ -127,7 +128,7 @@
           {#each columns as col, ci (col.key)}
             <th
               scope="col"
-              style={col.width ? `width: ${col.width}` : undefined}
+              style={safeStyle(col.width ? `width: ${col.width}` : undefined)}
               class={cn(
                 'px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground',
                 col.align === 'right' && 'text-right',
@@ -171,7 +172,7 @@
                     col.align === 'right' && 'text-right',
                     col.align === 'center' && 'text-center'
                   )}
-                  style={ci === 0 ? `padding-left: ${depth * 16 + 12}px` : undefined}
+                  style={safeStyle(ci === 0 ? `padding-left: ${depth * 16 + 12}px` : undefined)}
                 >
                   {#if ci === 0}
                     <span class="inline-flex items-center gap-1.5">

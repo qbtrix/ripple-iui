@@ -1,5 +1,6 @@
 <!-- src/lib/widgets/display/Icon.svelte -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import type { Component } from 'svelte';
   import * as iconMap from '@lucide/svelte';
   import { cn } from '$lib/utils.js';
@@ -52,7 +53,7 @@
   <span
     {id}
     class={cn('inline-block', className)}
-    style="width:{size}px;height:{size}px;{styleString ?? ''}"
+    style={safeStyle(`width:${size}px;height:${size}px;${styleString ?? ''}`)}
     aria-hidden="true"
   ></span>
 {/if}

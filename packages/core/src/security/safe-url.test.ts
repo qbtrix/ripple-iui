@@ -25,7 +25,8 @@ const BAD = [
 ];
 
 describe('safeUrl — link', () => {
-	it.each(BAD)('neutralizes %j to #', (v) => expect(safeUrl(v)).toBe('#'));
+	// undefined, not '#': an <a target=_blank href=#> would open a copy of the page
+	it.each(BAD)('blocks %j as undefined', (v) => expect(safeUrl(v)).toBeUndefined());
 	it.each([
 		'https://example.com/a?b=1#c',
 		'http://example.com',
@@ -46,7 +47,7 @@ describe('safeUrl — link', () => {
 		expect(safeUrl(42 as unknown as string)).toBeUndefined();
 	});
 	it('trims surrounding whitespace', () => expect(safeUrl('  https://x.dev  ')).toBe('https://x.dev'));
-	it('blocks data: images for links', () => expect(safeUrl('data:image/png;base64,AAAA')).toBe('#'));
+	it('blocks data: images for links', () => expect(safeUrl('data:image/png;base64,AAAA')).toBeUndefined());
 });
 
 describe('safeUrl — resource', () => {
@@ -86,6 +87,61 @@ describe('safeStyle', () => {
 		expect(safeStyle('color: red; background: url(javascript:alert(1)); margin: 0')).toBe('color: red; margin: 0');
 	});
 	it('passes undefined through', () => expect(safeStyle(undefined)).toBeUndefined());
+	it('refuses var() inside a resource function (custom-property bypass)', () => {
+		// the custom property alone is text; the resource function that reads it is refused
+		expect(safeStyle({ '--a': '"//evil.example/x.png"', 'background-image': 'image-set(var(--a) 1x)' })).toEqual({
+			'--a': '"//evil.example/x.png"'
+		});
+		expect(safeStyle({ color: 'red', background: 'url(var(--a))' })).toEqual({ color: 'red' });
+		for (const fn of ['image(var(--a))', 'cross-fade(var(--a), red)', 'element(var(--a))', '-webkit-image-set(var(--a) 1x)'])
+			expect(safeStyle({ 'background-image': fn })).toEqual({});
+	});
+	it('checks quoted targets inside resource functions only', () => {
+		expect(safeStyle({ 'background-image': 'image("//evil.example/x.png")' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'cross-fade(url(javascript:x), red)' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("javascript:x" 1x, "/ok.png" 2x)' })).toEqual({});
+		// a quoted `word:` outside a resource function is text, not a URL
+		const text = { 'font-family': '"Foo: Bar", sans-serif', content: '"Error: x"', '--label': '"note: hi"', '--c': '"/ok.png"' };
+		expect(safeStyle(text)).toEqual(text);
+	});
+	it('does not let a comment marker inside a string hide a url', () => {
+		expect(safeStyle({ 'list-style': '"/*" url("//evil.example/*/x.png")' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("/*" 2x, "//evil.example/*/x.png" 1x)' })).toEqual({});
+	});
+	it('refuses escapes, newlines and unbalanced quotes or brackets that could shift parsing', () => {
+		expect(safeStyle({ 'background-image': 'image-set("\\a//evil.example/x.png" 1x)' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("\n//evil.example/x.png" 1x)' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("a\\22" 2x, "//evil.example/x.png" 1x)' })).toEqual({});
+		// widgets join a record with ';', so one value must not open a string the next one closes
+		expect(safeStyle({ 'background-image': 'image-set("', x: '" 2x, "//evil.example/x.png" 1x)' })).toEqual({});
+		expect(safeStyle({ a: 'red\\', b: '(', c: '"' })).toEqual({});
+	});
+	it('stays linear on adversarial comment input', () => {
+		const evil = '/*a'.repeat(34000);
+		const t0 = performance.now();
+		safeStyle({ width: evil });
+		safeStyle(`width: ${evil}`);
+		expect(performance.now() - t0).toBeLessThan(50);
+	});
+	it('stays linear on deeply nested resource functions', () => {
+		const n = 20000;
+		const evil = 'src('.repeat(n) + ')'.repeat(n);
+		const t0 = performance.now();
+		expect(safeStyle({ 'background-image': evil })).toEqual({});
+		expect(safeStyle(`background-image: ${evil}`)).toBe('');
+		expect(performance.now() - t0).toBeLessThan(50);
+	});
+	it('refuses @import and comment-split script tokens', () => {
+		expect(safeStyle({ color: 'red; @import "//evil.example/x.css"' })).toEqual({});
+		expect(safeStyle({ width: 'expr/**/ession(alert(1))' })).toEqual({});
+	});
+	it('splits a style string on top-level semicolons only', () => {
+		expect(safeStyle('color: red; background: url(data:image/png;base64,AAAA); margin: 0')).toBe(
+			'color: red; background: url(data:image/png;base64,AAAA); margin: 0'
+		);
+		expect(safeStyle('content: "a;b"; color: red')).toBe('content: "a;b"; color: red');
+		expect(safeStyle('color: red; background: url(//evil.example/x.png); margin: 0')).toBe('color: red; margin: 0');
+	});
 });
 
 describe('navigate action', () => {
@@ -99,7 +155,8 @@ describe('navigate action', () => {
 		const d = new EventDispatcher(state, onEvent, new WidgetRegistry());
 		await d.dispatch({ action: 'navigate', url }, { state: state.state });
 		expect(onEvent).toHaveBeenCalledTimes(1);
-		expect(onEvent.mock.calls[0][0].url).toBe('#');
+		// blocked == missing: the host gets '' and does nothing
+		expect(onEvent.mock.calls[0][0].url).toBe('');
 	});
 	it('still passes a safe resolved url', async () => {
 		const state = createHeadlessStateManager({ p: 'docs' });

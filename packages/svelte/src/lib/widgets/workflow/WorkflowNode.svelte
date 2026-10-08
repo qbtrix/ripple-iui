@@ -5,6 +5,7 @@
   Condition nodes get two output handles (yes/no).
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { Handle, Position } from '@xyflow/svelte';
 
   let { data, id }: { data: Record<string, unknown>; id?: string } = $props();
@@ -37,11 +38,11 @@
 
 <div
   class="workflow-node"
-  style="
-    background: {config.bg};
-    border: 1px solid {config.borderColor};
-    --node-color: {config.color};
-  "
+  style={safeStyle(`
+    background: ${config.bg};
+    border: 1px solid ${config.borderColor};
+    --node-color: ${config.color};
+  `)}
 >
   <!-- Input handle (left) — all nodes except triggers -->
   {#if nodeType !== 'trigger'}
@@ -49,9 +50,9 @@
   {/if}
 
   <div class="node-content">
-    <span class="node-icon" style="color: {config.color}">{icon}</span>
+    <span class="node-icon" style={safeStyle(`color: ${config.color}`)}>{icon}</span>
     <span class="node-label">{label}</span>
-    <span class="node-status" style="background: {statusColor}" title={status}></span>
+    <span class="node-status" style={safeStyle(`background: ${statusColor}`)} title={status}></span>
   </div>
 
   <!-- Output handles -->

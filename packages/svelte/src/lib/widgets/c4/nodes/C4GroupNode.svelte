@@ -4,6 +4,7 @@
   that nest child container nodes. Rendered as a SvelteFlow parent/group node.
 -->
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { Handle, Position } from '@xyflow/svelte';
   import type { C4NodeData } from '$lib/widgets/c4/index.js';
 
@@ -27,9 +28,9 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="c4-group-node"
-  style="
-    border-color: {isExternal ? 'rgba(107,114,128,0.35)' : 'rgba(37,99,235,0.3)'};
-  "
+  style={safeStyle(`
+    border-color: ${isExternal ? 'rgba(107,114,128,0.35)' : 'rgba(37,99,235,0.3)'};
+  `)}
   onclick={handleClick}
 >
   <!-- Label in the top-left corner of the group box -->

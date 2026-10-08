@@ -22,6 +22,7 @@
      meter should not read as a warning. -->
 
 <script lang="ts">
+  import { safeStyle } from '@ripple-ui/core';
   import { cn } from '$lib/utils.js';
 
   interface Props {
@@ -73,7 +74,7 @@
 <div
   {id}
   class={cn('relative inline-grid place-items-center', className)}
-  style={`width:${size}px; height:${size}px; ${styleString ?? ''}`}
+  style={safeStyle(`width:${size}px; height:${size}px; ${styleString ?? ''}`)}
   role="meter"
   aria-valuemin={0}
   aria-valuemax={max}
