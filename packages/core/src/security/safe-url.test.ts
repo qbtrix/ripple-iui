@@ -25,7 +25,8 @@ const BAD = [
 ];
 
 describe('safeUrl — link', () => {
-	it.each(BAD)('neutralizes %j to #', (v) => expect(safeUrl(v)).toBe('#'));
+	// undefined, not '#': an <a target=_blank href=#> would open a copy of the page
+	it.each(BAD)('blocks %j as undefined', (v) => expect(safeUrl(v)).toBeUndefined());
 	it.each([
 		'https://example.com/a?b=1#c',
 		'http://example.com',
@@ -46,7 +47,7 @@ describe('safeUrl — link', () => {
 		expect(safeUrl(42 as unknown as string)).toBeUndefined();
 	});
 	it('trims surrounding whitespace', () => expect(safeUrl('  https://x.dev  ')).toBe('https://x.dev'));
-	it('blocks data: images for links', () => expect(safeUrl('data:image/png;base64,AAAA')).toBe('#'));
+	it('blocks data: images for links', () => expect(safeUrl('data:image/png;base64,AAAA')).toBeUndefined());
 });
 
 describe('safeUrl — resource', () => {
@@ -86,6 +87,33 @@ describe('safeStyle', () => {
 		expect(safeStyle('color: red; background: url(javascript:alert(1)); margin: 0')).toBe('color: red; margin: 0');
 	});
 	it('passes undefined through', () => expect(safeStyle(undefined)).toBeUndefined());
+	it('refuses var() inside a resource function (custom-property bypass)', () => {
+		expect(safeStyle({ '--a': '"//evil.example/x.png"', 'background-image': 'image-set(var(--a) 1x)' })).toEqual({});
+		expect(safeStyle({ color: 'red', background: 'url(var(--a))' })).toEqual({ color: 'red' });
+		for (const fn of ['image(var(--a))', 'cross-fade(var(--a), red)', 'element(var(--a))', '-webkit-image-set(var(--a) 1x)'])
+			expect(safeStyle({ 'background-image': fn })).toEqual({});
+	});
+	it('checks quoted strings in every declaration, custom properties included', () => {
+		expect(safeStyle({ '--a': '"javascript:alert(1)"' })).toEqual({});
+		expect(safeStyle({ '--b': "'//evil.example/x.png'" })).toEqual({});
+		expect(safeStyle({ '--c': '"/ok.png"', 'font-family': '"Inter", sans-serif' })).toEqual({
+			'--c': '"/ok.png"',
+			'font-family': '"Inter", sans-serif'
+		});
+		expect(safeStyle({ 'background-image': 'image("//evil.example/x.png")' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'cross-fade(url(javascript:x), red)' })).toEqual({});
+	});
+	it('refuses @import and comment-split script tokens', () => {
+		expect(safeStyle({ color: 'red; @import "//evil.example/x.css"' })).toEqual({});
+		expect(safeStyle({ width: 'expr/**/ession(alert(1))' })).toEqual({});
+	});
+	it('splits a style string on top-level semicolons only', () => {
+		expect(safeStyle('color: red; background: url(data:image/png;base64,AAAA); margin: 0')).toBe(
+			'color: red; background: url(data:image/png;base64,AAAA); margin: 0'
+		);
+		expect(safeStyle('content: "a;b"; color: red')).toBe('content: "a;b"; color: red');
+		expect(safeStyle('color: red; background: url(//evil.example/x.png); margin: 0')).toBe('color: red; margin: 0');
+	});
 });
 
 describe('navigate action', () => {
@@ -99,7 +127,8 @@ describe('navigate action', () => {
 		const d = new EventDispatcher(state, onEvent, new WidgetRegistry());
 		await d.dispatch({ action: 'navigate', url }, { state: state.state });
 		expect(onEvent).toHaveBeenCalledTimes(1);
-		expect(onEvent.mock.calls[0][0].url).toBe('#');
+		// blocked == missing: the host gets '' and does nothing
+		expect(onEvent.mock.calls[0][0].url).toBe('');
 	});
 	it('still passes a safe resolved url', async () => {
 		const state = createHeadlessStateManager({ p: 'docs' });
