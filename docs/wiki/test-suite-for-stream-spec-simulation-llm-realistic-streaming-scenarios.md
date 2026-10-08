@@ -85,7 +85,7 @@ The same fixture is run with seeds 1, 7, and 42. Each run must converge to the c
 
 ## Truncated Corpus Suite
 
-`truncated-corpus.json` contains raw buffer strings representing edge cases collected from real and synthetic streaming sessions. For each case, `parsePartialSpec` is called and the result tree is walked: any enum-key value must also appear as a fully-closed quoted string in the raw buffer. This directly validates the `isStringClosed` contract.
+`truncated-corpus.json` contains raw buffer strings representing edge cases collected from real and synthetic streaming sessions. For each case, `parsePartialSpec` is called and the result tree is walked: any enum-key value must also appear as a fully-closed quoted string in the raw buffer. It is a weaker check than the parser's own (a matching closed value elsewhere satisfies it), so the position cases live in `stream-spec.test.ts`.
 
 ## runSim Helper
 
