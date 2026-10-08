@@ -389,14 +389,10 @@
 </div>
 
 <style>
-  /* The page hosts a full-bleed console. The ripple-root carries the theme
-     vars; we paint the page background from the same near-black for an
-     edge-to-edge instrument feel. */
-  :global(body) {
-    background: #0b0a09;
-  }
+  /* The console paints its own near-black panel edge to edge; the site's top
+     bar and footer keep the shared ground, so nothing leaks onto <body>. */
   .mc-page {
-    min-height: 100vh;
+    flex: 1;
     background: #0b0a09;
     padding: 20px;
   }
