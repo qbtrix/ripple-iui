@@ -93,15 +93,32 @@ describe('safeStyle', () => {
 		for (const fn of ['image(var(--a))', 'cross-fade(var(--a), red)', 'element(var(--a))', '-webkit-image-set(var(--a) 1x)'])
 			expect(safeStyle({ 'background-image': fn })).toEqual({});
 	});
-	it('checks quoted strings in every declaration, custom properties included', () => {
-		expect(safeStyle({ '--a': '"javascript:alert(1)"' })).toEqual({});
-		expect(safeStyle({ '--b': "'//evil.example/x.png'" })).toEqual({});
-		expect(safeStyle({ '--c': '"/ok.png"', 'font-family': '"Inter", sans-serif' })).toEqual({
-			'--c': '"/ok.png"',
-			'font-family': '"Inter", sans-serif'
-		});
+	it('checks quoted targets inside resource functions only', () => {
 		expect(safeStyle({ 'background-image': 'image("//evil.example/x.png")' })).toEqual({});
 		expect(safeStyle({ 'background-image': 'cross-fade(url(javascript:x), red)' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("javascript:x" 1x, "/ok.png" 2x)' })).toEqual({});
+		// a quoted `word:` outside a resource function is text, not a URL
+		const text = { 'font-family': '"Foo: Bar", sans-serif', content: '"Error: x"', '--label': '"note: hi"', '--c': '"/ok.png"' };
+		expect(safeStyle(text)).toEqual(text);
+	});
+	it('does not let a comment marker inside a string hide a url', () => {
+		expect(safeStyle({ 'list-style': '"/*" url("//evil.example/*/x.png")' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("/*" 2x, "//evil.example/*/x.png" 1x)' })).toEqual({});
+	});
+	it('refuses escapes, newlines and unbalanced quotes or brackets that could shift parsing', () => {
+		expect(safeStyle({ 'background-image': 'image-set("\\a//evil.example/x.png" 1x)' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("\n//evil.example/x.png" 1x)' })).toEqual({});
+		expect(safeStyle({ 'background-image': 'image-set("a\\22" 2x, "//evil.example/x.png" 1x)' })).toEqual({});
+		// widgets join a record with ';', so one value must not open a string the next one closes
+		expect(safeStyle({ 'background-image': 'image-set("', x: '" 2x, "//evil.example/x.png" 1x)' })).toEqual({});
+		expect(safeStyle({ a: 'red\\', b: '(', c: '"' })).toEqual({});
+	});
+	it('stays linear on adversarial comment input', () => {
+		const evil = '/*a'.repeat(34000);
+		const t0 = performance.now();
+		safeStyle({ width: evil });
+		safeStyle(`width: ${evil}`);
+		expect(performance.now() - t0).toBeLessThan(50);
 	});
 	it('refuses @import and comment-split script tokens', () => {
 		expect(safeStyle({ color: 'red; @import "//evil.example/x.css"' })).toEqual({});

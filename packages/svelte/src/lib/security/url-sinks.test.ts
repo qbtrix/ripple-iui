@@ -178,7 +178,9 @@ const EXEMPT_MISSES = new Set([
 	// srcdoc is the documented escape hatch: renderer-fixed sandbox, no allow-same-origin
 	'widgets/media/Embed.svelte: srcdoc={…}',
 	// bits-ui trigger props (renderer-owned); href={safeUrl(href)} comes after and wins
-	'widgets/display/Mention.svelte: {...spread} on native <a>'
+	'widgets/display/Mention.svelte: {...spread} on native <a>',
+	// TipTap parses into an inert DOMParser document and keeps only schema nodes
+	'widgets/input/RichText.svelte: .setContent() takes unescaped HTML'
 ]);
 const SINK_ATTRS = "href|src|srcset|action|formaction|poster|ping|xlink:href|environment-image";
 const NATIVE = new Set(['a', 'img', 'iframe', 'form', 'object', 'embed', 'video', 'audio', 'source']);
@@ -268,6 +270,13 @@ function auditSvelte(rel: string, raw: string): string[] {
 		const guard = m[1] === 'style' ? /^\$\{escapeHtml\(safeStyle\(/ : /^\$\{escapeHtml\(/;
 		if (!guard.test(m[2])) misses.push(`${rel}: ${m[1]}="\${${m[2]}}" in an HTML string`);
 	}
+	// Leaflet (and similar) APIs that take an HTML string render it as innerHTML.
+	for (const m of script.matchAll(/\.(bindPopup|bindTooltip|setContent|setPopupContent|setTooltipContent)\(\s*/g))
+		if (!/^(escapeHtml\(|sanitizeHtml\(|['"`])/.test(script.slice(m.index! + m[0].length)))
+			misses.push(`${rel}: .${m[1]}() takes unescaped HTML`);
+	for (const m of script.matchAll(/\battribution:\s*([^,}\n]+)/g))
+		if (!/^(sanitizeHtml\(|['"`]|string\b|[\w$.]+\.attribution\s*$)/.test(m[1].trim()))
+			misses.push(`${rel}: attribution: ${m[1].trim()} takes unsanitized HTML`);
 	return misses.filter((m) => !EXEMPT_MISSES.has(m));
 }
 
@@ -302,7 +311,11 @@ describe('static audit rules catch bad fixtures', () => {
 		['window.open raw', '<script>window.open(url, "_blank", "noopener")</script>'],
 		['window.open no noopener', '<script>window.open(safeLink, "_blank")</script>'],
 		['HTML string style', '<script>const h = `<span style="background:${color};"></span>`;</script>'],
-		['HTML string attr', '<script>const h = `<span data-icon="${icon}"></span>`;</script>']
+		['HTML string attr', '<script>const h = `<span data-icon="${icon}"></span>`;</script>'],
+		['leaflet popup', '<script>lm.bindPopup(m.popup);</script>'],
+		['leaflet tooltip', '<script>line.bindTooltip(p.label, { sticky: true });</script>'],
+		['leaflet setContent', '<script>popup.setContent(html);</script>'],
+		['leaflet attribution', '<script>L.tileLayer(u, { attribution: tileAttribution ?? preset.attribution });</script>']
 	];
 	it.each(BAD_SVELTE)('flags %s', (_n, src) => expect(auditSvelte('widgets/x/Fixture.svelte', src)).not.toEqual([]));
 
@@ -316,6 +329,9 @@ describe('static audit rules catch bad fixtures', () => {
 		['window.open guarded', '<script>window.open(safeLink, "_blank", "noopener,noreferrer")</script>'],
 		['HTML string escaped', '<script>const h = `<span style="${escapeHtml(safeStyle(`background:${c}`))}"></span>`;</script>'],
 		['spread on a component', '<Button {...rest}>x</Button>'],
+		['leaflet popup escaped', '<script>lm.bindPopup(escapeHtml(String(m.popup)));</script>'],
+		['leaflet attribution sanitized', '<script>L.tileLayer(u, { attribution: sanitizeHtml(a) });</script>'],
+		['leaflet attribution preset', "<script>const P = { a: { attribution: '&copy; OSM' } }; L.tileLayer(u, { attribution: src.attribution });</script>"],
 		['data shorthand on a component', '<Chart {data} />']
 	];
 	it.each(GOOD_SVELTE)('passes %s', (_n, src) => expect(auditSvelte('widgets/x/Fixture.svelte', src)).toEqual([]));
