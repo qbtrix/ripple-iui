@@ -13,12 +13,14 @@
 //
 // checkout() validates, POSTs `${storeUrl}/api/checkout` with returnTo:'ripple',
 // and resolves to a RippleEventResult so the spec's on_error can run too.
-// On success it hands the Stripe Checkout (or mock) URL to `navigate`.
+// It navigates only to an allowlisted origin (Stripe Checkout, or this page
+// for the store's mock mode), https unless the host is localhost, so a bad
+// store response can't send visitors elsewhere. readReturn() accepts only a
+// session-id-shaped `?order=` so a crafted link can't fake a receipt.
 
 import type { RippleEvent, RippleEventResult } from '$lib/index.js';
 
 export const CHECKOUT_PATH = '/api/checkout';
-export const DEFAULT_STORE_URL = 'https://lab.pocketpaw.xyz/test-store';
 export const ORDER_SUMMARY_KEY = 'ripple-live-order';
 
 export interface OrderLine {
@@ -73,6 +75,8 @@ export function toStoreRequest(body: unknown):
 
 export interface CheckoutDeps {
 	storeUrl: string;
+	/** location.origin: the store's mock mode returns here. */
+	pageOrigin: string;
 	fetch?: typeof fetch;
 	navigate: (url: string) => void;
 	/** Called with the cart summary just before navigating, so /live?order= can show it. */
@@ -101,14 +105,34 @@ export async function checkout(body: unknown, deps: CheckoutDeps): Promise<Rippl
 	if (!res.ok) return fail(`The store rejected the order: ${String(data?.message ?? res.statusText ?? 'bad request')}`, res.status);
 
 	const url = typeof data?.url === 'string' ? data.url : '';
-	let safe = false;
-	try {
-		safe = ['https:', 'http:'].includes(new URL(url).protocol);
-	} catch {
-		/* not a URL */
+	if (!isAllowedRedirect(url, deps.pageOrigin)) {
+		return fail("Couldn't start checkout: the store sent back a payment link this page won't follow.", res.status);
 	}
-	if (!safe) return fail('The store sent back an unusable checkout link.', res.status);
 	deps.remember?.(parsed.summary);
 	deps.navigate(url);
 	return { ok: true, data: { sessionId: data?.sessionId } };
+}
+
+const STRIPE_CHECKOUT = 'https://checkout.stripe.com';
+const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
+
+export function isAllowedRedirect(url: string, pageOrigin: string): boolean {
+	let u: URL;
+	try {
+		u = new URL(url);
+	} catch {
+		return false;
+	}
+	if (u.origin !== STRIPE_CHECKOUT && u.origin !== pageOrigin) return false;
+	return u.protocol === 'https:' || (u.protocol === 'http:' && LOCAL_HOSTS.includes(u.hostname));
+}
+
+const SESSION_ID = /^[A-Za-z0-9_]{1,255}$/;
+
+/** The store's return to /live: `?order=<session>[&mock=true]` or `?cancelled=1`; null otherwise. */
+export function readReturn(search: string): { order: string | null; mock: boolean; cancelled: boolean } | null {
+	const q = new URLSearchParams(search);
+	if (q.has('cancelled')) return { order: null, mock: false, cancelled: true };
+	const order = q.get('order');
+	return order && SESSION_ID.test(order) ? { order, mock: q.get('mock') === 'true', cancelled: false } : null;
 }

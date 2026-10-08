@@ -498,6 +498,25 @@ describe('OrderReceipt', () => {
 		expect(fetch).toHaveBeenCalledWith(`${store}/api/orders?limit=20`);
 	});
 
+	test('gives up after 5 polls that never list the order', async () => {
+		const fetch = vi.fn(async () => Response.json({ orders: [] }));
+		const { container } = render(OrderReceipt, { props: { storeUrl: store, order: 'cs_test_9', fetch, pollMs: 1 } });
+		await vi.waitFor(() => expect(container.textContent).toMatch(/hasn't listed the order yet/));
+		await new Promise((r) => setTimeout(r, 20));
+		expect(fetch).toHaveBeenCalledTimes(5);
+	});
+
+	test('an in-flight poll schedules nothing after unmount', async () => {
+		let answer!: (r: Response) => void;
+		const fetch = vi.fn(() => new Promise<Response>((r) => (answer = r)));
+		const { unmount } = render(OrderReceipt, { props: { storeUrl: store, order: 'cs_test_9', fetch, pollMs: 1 } });
+		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+		unmount();
+		answer(Response.json({ orders: [] }));
+		await new Promise((r) => setTimeout(r, 20));
+		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+
 	test('cancelled return is a gentle note', () => {
 		const { container } = render(OrderReceipt, { props: { storeUrl: store, cancelled: true } });
 		expect(container.textContent).toMatch(/Checkout cancelled/);

@@ -31,20 +31,25 @@
 	$effect(() => {
 		if (!order || mock) return;
 		let tries = 0;
+		let stopped = false;
 		let timer: ReturnType<typeof setTimeout>;
 		const look = async () => {
 			try {
 				const res = await get(`${storeUrl}/api/orders?limit=20`);
 				const found = ((await res.json()).orders ?? []).find((o: { id?: string }) => o.id === order);
-				if (found) return void (status = { status: String(found.status), total: Number(found.total) || undefined });
+				if (found && !stopped) return void (status = { status: String(found.status), total: Number(found.total) || undefined });
 			} catch {
 				/* store unreachable: keep trying a little, then say so */
 			}
+			if (stopped) return;
 			if (++tries < 5) timer = setTimeout(look, pollMs);
 			else gaveUp = true;
 		};
 		look();
-		return () => clearTimeout(timer);
+		return () => {
+			stopped = true;
+			clearTimeout(timer);
+		};
 	});
 </script>
 

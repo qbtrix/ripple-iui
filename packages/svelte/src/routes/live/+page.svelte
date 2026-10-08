@@ -26,7 +26,7 @@
 	import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 	import { replay } from './replay.js';
 	import { scenarios, type Scenario } from './scenarios.js';
-	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, type OrderSummary } from './checkout.js';
+	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, readReturn, type OrderSummary } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
 
 	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
@@ -95,15 +95,18 @@
 		}
 		const detail = kind === 'toast' ? String(e.message ?? '') : (e.target ?? event.url ?? '');
 		events = [{ id: ++eventId, text: detail ? `${kind}: ${detail}` : kind }, ...events].slice(0, 4);
-		console.info('[live] host event', event);
+		console.info('[live] host event', { type: kind, url: event.url }); // never the body: it carries customer details
 		if (isCheckoutEvent(event)) return placeOrder(event.body);
 		return undefined;
 	}
 
 	async function placeOrder(body: unknown) {
+		// One checkout at a time: a double click would open two store sessions.
+		if (checkoutNote?.busy) return { ok: false, error: { message: 'Checkout is already opening.' } };
 		checkoutNote = { busy: true, text: 'Opening the store checkout...' };
 		const result = await checkout(body, {
 			storeUrl: STORE_URL,
+			pageOrigin: location.origin,
 			navigate: (url) => location.assign(url),
 			remember: (summary) => {
 				try {
@@ -134,16 +137,17 @@
 	});
 
 	onMount(() => {
-		const q = new URLSearchParams(location.search);
-		const wanted = q.get('s');
-		if (q.has('order') || q.has('cancelled')) {
+		const wanted = new URLSearchParams(location.search).get('s');
+		const back = readReturn(location.search);
+		if (back) {
 			let summary: OrderSummary | null = null;
 			try {
-				summary = JSON.parse(sessionStorage.getItem(ORDER_SUMMARY_KEY) ?? 'null');
+				const saved = JSON.parse(sessionStorage.getItem(ORDER_SUMMARY_KEY) ?? 'null');
+				if (Array.isArray(saved?.lines)) summary = saved;
 			} catch {
 				/* no saved cart */
 			}
-			receipt = { order: q.get('order'), mock: q.get('mock') === 'true', cancelled: q.has('cancelled'), summary };
+			receipt = { ...back, summary };
 		}
 		const s = scenarios.find((x) => x.id === wanted) ?? scenarios[0];
 		if (window.matchMedia('(max-width: 720px)').matches) jsonOpen = false;
@@ -154,6 +158,9 @@
 		return () => controller?.abort();
 	});
 </script>
+
+<!-- Back from the store's checkout via bfcache: drop the stale "Redirecting..." note. -->
+<svelte:window onpageshow={(e) => e.persisted && (checkoutNote = null)} />
 
 <svelte:head>
 	<title>Live: watch a model build a UI with Ripple</title>
