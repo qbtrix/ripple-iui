@@ -7,6 +7,8 @@
     <Ripple streaming> while it arrives and swaps to <Ripple spec> on final (a
     remount, so the validated spec is what the visitor keeps using). Host
     events go to session.hostEvent, which ignores them until the card is final.
+    A notice that offers a replay gets a button that plays the closest
+    recorded answer into the same turn (session.replayRecorded).
 -->
 <script lang="ts">
 	import { tick } from 'svelte';
@@ -100,6 +102,11 @@
 							<p class="notice" data-kind={turn.notice.kind} role="status">
 								{turn.notice.text}
 								{#if turn.notice.link}<a href={turn.notice.link.href}>{turn.notice.link.label}</a>{/if}
+								{#if turn.notice.replay}
+									<button type="button" class="replay" disabled={session.busy} onclick={() => session.replayRecorded(turn.id)}>
+										Play the closest recorded answer here
+									</button>
+								{/if}
 							</p>
 						{/if}
 					{/if}
@@ -270,6 +277,27 @@
 		font-weight: 600;
 		margin-left: 4px;
 	}
+	.replay {
+		display: block;
+		margin-top: 10px;
+		padding: 7px 13px;
+		border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
+		border-radius: 999px;
+		background: color-mix(in oklch, var(--primary) 12%, transparent);
+		color: var(--site-ink);
+		font: inherit;
+		font-size: 13.5px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.replay:hover:not(:disabled) {
+		background: color-mix(in oklch, var(--primary) 22%, transparent);
+	}
+	.replay:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
 	.composer {
 		position: sticky;
 		bottom: 12px;
@@ -363,6 +391,7 @@
 	}
 	.send:focus-visible,
 	.chip:focus-visible,
+	.replay:focus-visible,
 	.notice a:focus-visible {
 		outline: 2px solid var(--primary);
 		outline-offset: 2px;

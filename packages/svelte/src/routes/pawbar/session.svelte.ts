@@ -7,6 +7,9 @@
 // is pushed, with `"version":"1.0",` spliced in after the first `{`, into a
 // streamSpec store; `card.final` swaps in the validated spec; `card.rejected`
 // (or a turn that ends first: "truncated") drops it for a short note. The
+// When the live answer is unavailable (limit, busy, unreachable) and the
+// session has a `fallback` transport, the notice carries `replay`, and
+// replayRecorded() plays the closest recorded answer into that same turn.
 // legacy ```pawbar-card fence in chunk text is re-split on every chunk and
 // fed through the same Card. Every partial spec and the final card pass
 // card-policy.ts first; a refused card is dropped like a rejected one. Host
@@ -186,6 +189,8 @@ export interface Notice {
 	kind: NoticeKind;
 	text: string;
 	link?: { href: string; label: string };
+	/** The recorded answer can play in this turn instead: ChatSession.replayRecorded. */
+	replay?: boolean;
 }
 export interface Turn {
 	id: number;
@@ -210,6 +215,8 @@ interface TurnState {
 	run: string;
 	runStart: number;
 	legacy: Card[];
+	/** Unavailable notices in this turn may offer the recorded answer. */
+	replay: boolean;
 }
 
 let turnSeq = 0;
@@ -220,27 +227,48 @@ export class ChatSession {
 	busy = $state(false);
 	#abort: AbortController | null = null;
 
-	constructor(private readonly transport: Transport) {}
+	constructor(
+		private readonly transport: Transport,
+		private readonly fallback?: Transport
+	) {}
 
 	async send(message: string) {
 		const text = message.trim();
 		if (!text || this.busy) return;
 		this.turns.push({ id: ++turnSeq, role: 'user', parts: [{ kind: 'text', text }], notice: null, pending: false });
 		this.turns.push({ id: ++turnSeq, role: 'assistant', parts: [], notice: null, pending: true });
-		const turn = this.turns[this.turns.length - 1];
-		const st: TurnState = { cards: new Map(), run: '', runStart: 0, legacy: [] };
+		await this.#run(this.turns[this.turns.length - 1], text, this.transport);
+	}
+
+	/** Plays the recorded answer into a turn whose notice offered it, in place. */
+	async replayRecorded(turnId: number) {
+		const i = this.turns.findIndex((t) => t.id === turnId);
+		const turn = this.turns[i];
+		const ask = this.turns[i - 1];
+		if (!this.fallback || this.busy || !turn?.notice?.replay || ask?.parts[0]?.kind !== 'text') return;
+		turn.notice = null;
+		turn.parts = [];
+		turn.pending = true;
+		await this.#run(turn, ask.parts[0].text, this.fallback);
+	}
+
+	async #run(turn: Turn, text: string, transport: Transport) {
+		const replay = this.fallback != null && transport !== this.fallback;
+		const st: TurnState = { cards: new Map(), run: '', runStart: 0, legacy: [], replay };
 		this.busy = true;
 		const abort = (this.#abort = new AbortController());
 		try {
-			for await (const frame of this.transport(text, abort.signal)) {
+			for await (const frame of transport(text, abort.signal)) {
 				if (abort.signal.aborted) break;
 				if (this.#apply(turn, st, frame)) break;
 			}
 			if (abort.signal.aborted) turn.notice ??= { kind: 'stopped', text: 'Stopped.' };
 		} catch (err) {
 			if (abort.signal.aborted) turn.notice ??= { kind: 'stopped', text: 'Stopped.' };
-			else if (err instanceof ChatHttpError) turn.notice = describeHttpError(err.status, err.detail);
-			else turn.notice = { kind: 'error', text: 'The assistant could not be reached. Try again in a moment.' };
+			else if (err instanceof ChatHttpError) {
+				const rejected = err.status === 400 || err.detail === 'message_rejected';
+				turn.notice = { ...describeHttpError(err.status, err.detail), ...(replay && !rejected ? { replay } : {}) };
+			} else turn.notice = { kind: 'error', text: 'The assistant could not be reached. Try again in a moment.', ...(replay ? { replay } : {}) };
 		} finally {
 			this.#flushRun(turn, st, true);
 			for (const card of [...st.cards.values(), ...st.legacy]) card.reject('truncated');
@@ -310,12 +338,13 @@ export class ChatSession {
 						? {
 								kind: 'limit',
 								text: 'You have used the free answers for today.',
-								link: { href: BYOK_URL, label: 'Bring your own key for unlimited use' }
+								link: { href: BYOK_URL, label: 'Bring your own key for unlimited use' },
+								...(st.replay ? { replay: true } : {})
 							}
-						: { kind: 'busy', text: 'The assistant is busy right now. Try again in a minute.' };
+						: { kind: 'busy', text: 'The assistant is busy right now. Try again in a minute.', ...(st.replay ? { replay: true } : {}) };
 				return true;
 			case 'error':
-				turn.notice = { kind: 'error', text: 'Something went wrong partway through. Try sending it again.' };
+				turn.notice = { kind: 'error', text: 'Something went wrong partway through. Try sending it again.', ...(st.replay ? { replay: true } : {}) };
 				return true;
 			case 'interrupted':
 				turn.notice = { kind: 'stopped', text: 'The answer stopped early.' };
