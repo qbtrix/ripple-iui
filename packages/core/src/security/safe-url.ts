@@ -48,15 +48,17 @@ function probe(raw: string): string {
  *
  * - `link` (default; href, form action, window.open, navigate): relative
  *   paths (`/x`, `./x`, `?q`, `#h`, `//host`), http, https, mailto, tel.
- *   Anything else becomes `'#'`.
+ *   Anything else is `undefined`: the sink drops the attribute, leaving an
+ *   inert `<a>` (a `'#'` fallback would open a copy of the page under
+ *   `target=_blank`).
  * - `resource` (src, poster, CSS url()): relative paths except
  *   protocol-relative `//host` (it inherits the page scheme, so on a `file:`
  *   host it reads local files), http, https, and `data:image/(png|gif|jpeg|webp)`.
  *   SVG data is refused (it can carry script). Anything else is `undefined`,
  *   which a renderer turns into "no attribute".
  *
- * Empty or non-string input is `undefined` for both kinds, so an absent link
- * stays absent rather than becoming `'#'`.
+ * Empty or non-string input is `undefined` too, so blocked and absent look
+ * the same to every sink.
  */
 export function safeUrl(value: unknown, opts: { kind?: SafeUrlKind } = {}): string | undefined {
 	if (typeof value !== 'string') return undefined;
@@ -67,46 +69,79 @@ export function safeUrl(value: unknown, opts: { kind?: SafeUrlKind } = {}): stri
 	const scheme = /^([a-z][a-z0-9+.-]*):/.exec(p)?.[1];
 	if (scheme === undefined) return link || !p.startsWith('//') ? url : undefined;
 	if (!link && scheme === 'data') return SAFE_DATA_IMAGE.test(p) ? url : undefined;
-	if ((link ? LINK_SCHEMES : RESOURCE_SCHEMES).has(scheme)) return url;
-	return link ? '#' : undefined;
+	return (link ? LINK_SCHEMES : RESOURCE_SCHEMES).has(scheme) ? url : undefined;
 }
 
 const CSS_PROP = /^-{0,2}[a-z][a-z0-9-]*$/i;
-const CSS_SCRIPT = /expression\(|-moz-binding|behavior:|javascript:|vbscript:/;
+const CSS_SCRIPT = /expression\(|-moz-binding|behavior:|javascript:|vbscript:|@import/;
+// Functions that fetch a resource. `image(` also matches `-webkit-image(`;
+// `image-set(` and `cross-fade(` match their `-webkit-` forms.
+const CSS_RESOURCE = /url\(|image-set\(|image\(|cross-fade\(|element\(|src\(/;
 
 function cssProbe(v: string): string {
 	return v
 		.replace(/\\([0-9a-f]{1,6})\s?/gi, (_, h: string) => cp(parseInt(h, 16)))
 		.replace(/\\(.)/g, '$1')
+		.replace(/\/\*[\s\S]*?\*\//g, '')
 		.toLowerCase();
 }
 
 function safeDeclaration(prop: string, value: unknown): boolean {
 	if (!CSS_PROP.test(prop.trim())) return false;
 	const v = cssProbe(String(value));
-	if (CSS_SCRIPT.test(v.replace(/\s+/g, ''))) return false;
-	if (!/url\(|image-set\(/.test(v)) return true;
+	const flat = v.replace(/\s+/g, '');
+	if (CSS_SCRIPT.test(flat)) return false;
+	// A var() inside a resource function hides its target in another
+	// declaration (`--a:"//evil"` + `image-set(var(--a) 1x)`): refuse outright.
+	if (CSS_RESOURCE.test(flat) && flat.includes('var(')) return false;
+	// Every quoted string is checked, in every declaration, custom properties
+	// included: any of them can reach a resource function through var().
 	const targets = [
 		...[...v.matchAll(/url\(\s*(['"]?)([^'")]*)/g)].map((m) => m[2]),
 		...[...v.matchAll(/(['"])(.*?)\1/g)].map((m) => m[2])
 	];
-	return targets.every((t) => safeUrl(t, { kind: 'resource' }) !== undefined);
+	return targets.every((t) => t.trim() === '' || safeUrl(t, { kind: 'resource' }) !== undefined);
+}
+
+/** Split a declaration list on `;` outside quotes and ()/[]/{} blocks, as a CSS parser does. */
+function declarations(css: string): string[] {
+	const out: string[] = [];
+	let depth = 0;
+	let quote = '';
+	let start = 0;
+	for (let i = 0; i < css.length; i++) {
+		const c = css[i];
+		if (c === '\\') i++;
+		else if (quote) quote = c === quote ? '' : quote;
+		else if (c === '"' || c === "'") quote = c;
+		else if ('([{'.includes(c)) depth++;
+		else if (')]}'.includes(c)) depth = Math.max(0, depth - 1);
+		else if (c === ';' && depth === 0) {
+			out.push(css.slice(start, i));
+			start = i + 1;
+		}
+	}
+	out.push(css.slice(start));
+	return out;
 }
 
 /**
- * Drop style declarations that could load or run something unsafe: a url()
- * or image-set() target that fails `safeUrl(…, { kind: 'resource' })`,
- * `expression(`, `-moz-binding`, or a property name that is not a plain CSS
+ * Drop style declarations that could load or run something unsafe: a
+ * resource function (url(), image-set(), image(), cross-fade(), element())
+ * whose target fails `safeUrl(…, { kind: 'resource' })` or comes through
+ * var(), any quoted string that fails the same check, `expression(`,
+ * `-moz-binding`, `@import`, or a property name that is not a plain CSS
  * identifier (a key like `color:red;background` would inject a declaration).
- * Accepts the record form widgets join themselves, or a declaration string.
+ * Accepts the record form widgets join themselves, or a declaration string,
+ * which is split the way a CSS parser splits it (so `url(data:…;base64,…)`
+ * stays whole).
  */
 export function safeStyle(style: string): string;
 export function safeStyle(style: Record<string, unknown>): Record<string, unknown>;
 export function safeStyle<T>(style: T): T;
 export function safeStyle(style: unknown): unknown {
 	if (typeof style === 'string') {
-		return style
-			.split(';')
+		return declarations(style)
 			.map((d) => d.trim())
 			.filter((d) => {
 				const i = d.indexOf(':');
