@@ -39,6 +39,7 @@ they're seed values. Write `{state.x}` only inside `props`, `bind`,
 | Null-coalesce                     | `{state.label ?? 'Untitled'}`                          | first non-null/undefined |
 | Ternary                           | `{state.ok ? 'yes' : 'no'}`                            | one of the two branches  |
 | Arithmetic                        | `{state.x + 1}`, `{a * b}`, `{a / b}`                  | number (or concat)       |
+| Grouping                          | `{(state.a + state.b) * (state.c + 1)}`                | the grouped value        |
 | String literal                    | `'foo'`, `"foo"`                                       | the string               |
 | Number literal                    | `42`, `-1.5`                                           | the number               |
 | Boolean / null / undefined        | `true`, `false`, `null`, `undefined`                   | the literal              |
@@ -58,6 +59,9 @@ Only these methods are evaluated. Anything else returns `undefined`.
 **On arrays:** `includes(v)`, `join(sep)`, `sum(field)`, `count()`,
 `first()`, `last()`, `reverse()`, `limit(n)`, `where(field, value)`,
 `whereIn(field, values)`, `sortBy(field, 'asc'|'desc')`.
+
+A call can be an operand: `{state.total / state.items.count()}` and
+`{state.items.count() > 0}` divide and compare the call's result.
 
 `where('field', value)` is pass-through when `value` is `null`,
 `undefined`, or `'All'` — so a "no filter" select binds directly with no

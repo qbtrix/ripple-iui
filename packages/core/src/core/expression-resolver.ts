@@ -99,6 +99,8 @@ export function isSingleExpression(value: string): boolean {
  * - Inequality: "state.selected != null"
  * - Comparison: "state.count > 0", "item.price < 100"
  * - Ternary: "state.selected == 'foo' ? 'yes' : 'no'"
+ * - Arithmetic and grouping: "(state.a + state.b) * (state.c + 1)"
+ * - Whitelisted method calls, also as operands: "state.total / state.list.count()"
  *
  * @param expression - The expression without curly braces
  * @param context - The resolver context
@@ -156,16 +158,12 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 
 	// Check for NOT operator (!)
 	if (trimmed.startsWith('!')) {
-		const inner = trimmed.slice(1).trim();
-		// Handle parentheses: !(...)
-		if (inner.startsWith('(') && inner.endsWith(')')) {
-			return !evaluateExpression(inner.slice(1, -1), context);
-		}
-		return !evaluateExpression(inner, context);
+		return !evaluateExpression(trimmed.slice(1), context);
 	}
 
-	// Handle parentheses for grouping
-	if (trimmed.startsWith('(') && trimmed.endsWith(')')) {
+	// Grouping: peel `(...)` only when the first `(` closes at the last char.
+	// `(a + b) * (c + d)` starts and ends with a paren but is not one group.
+	if (openOfTrailingGroup(trimmed) === 0) {
 		return evaluateExpression(trimmed.slice(1, -1), context);
 	}
 
@@ -181,21 +179,13 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 		}
 	}
 
-	// Whitelisted method calls — `<receiver>.<method>(<args>)`
-	const methodCall = matchMethodCall(trimmed);
-	if (methodCall) {
-		const receiver = evaluateExpression(methodCall.receiver, context);
-		const args = methodCall.args.map((a) => evaluateExpression(a, context));
-		return applyMethod(receiver, methodCall.method, args);
-	}
-
-	// Check for comparison operators (order matters - check === before ==)
-	const comparisonMatch = trimmed.match(/^(.+?)\s*(===|!==|==|!=|>=|<=|>|<)\s*(.+)$/);
-
-	if (comparisonMatch) {
-		const [, leftExpr, operator, rightExpr] = comparisonMatch;
-		const left = evaluateSimplePath(leftExpr.trim(), context);
-		const right = parseValue(rightExpr.trim(), context);
+	// Comparison: split on the first top-level operator; both sides are full
+	// expressions, so `state.list.count() > 0` and `(a + b) > c` work.
+	const comparison = splitComparison(trimmed);
+	if (comparison) {
+		const { left: leftExpr, operator, right: rightExpr } = comparison;
+		const left = evaluateExpression(leftExpr, context);
+		const right = evaluateExpression(rightExpr, context);
 
 		switch (operator) {
 			case '===':
@@ -248,6 +238,16 @@ export function evaluateExpression(expression: string, context: ResolverContext)
 			else result = right === 0 ? 0 : result % right;
 		}
 		return result;
+	}
+
+	// Whitelisted method calls — `<receiver>.<method>(<args>)`. Checked after
+	// every binary split: a call binds tighter than any operator, so in
+	// `a / b.count()` the receiver is `b`, not `a / b`.
+	const methodCall = matchMethodCall(trimmed);
+	if (methodCall) {
+		const receiver = evaluateExpression(methodCall.receiver, context);
+		const args = methodCall.args.map((a) => evaluateExpression(a, context));
+		return applyMethod(receiver, methodCall.method, args);
 	}
 
 	// Fallback: try to parse as value (literal or path)
@@ -350,6 +350,61 @@ function splitArithmetic(
 	return { ops, parts };
 }
 
+const COMPARISON_OPERATORS = ['===', '!==', '==', '!=', '>=', '<=', '>', '<'];
+
+/**
+ * Split on the first comparison operator outside parens, brackets, braces and
+ * string literals. Longer operators are tried first, so `===` never reads as `==`.
+ */
+function splitComparison(
+	expr: string
+): { left: string; operator: string; right: string } | null {
+	let depth = 0;
+	let inStr: '"' | "'" | null = null;
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") inStr = ch;
+		else if (ch === '(' || ch === '[' || ch === '{') depth++;
+		else if (ch === ')' || ch === ']' || ch === '}') depth--;
+		else if (depth === 0 && i > 0) {
+			const operator = COMPARISON_OPERATORS.find((op) => expr.startsWith(op, i));
+			if (!operator) continue;
+			const right = expr.slice(i + operator.length).trim();
+			return right ? { left: expr.slice(0, i).trim(), operator, right } : null;
+		}
+	}
+	return null;
+}
+
+/**
+ * Index of the `(` matched by the `)` that ends `expr`, or -1 when `expr` does
+ * not end in a balanced paren group. Parens inside string literals don't count,
+ * so `('a)' + 'b')` is one group and `(a) * (b)` ends in the group at `(b`.
+ */
+function openOfTrailingGroup(expr: string): number {
+	if (!expr.endsWith(')')) return -1;
+	let depth = 0;
+	let open = -1;
+	let inStr: '"' | "'" | null = null;
+	for (let i = 0; i < expr.length; i++) {
+		const ch = expr[i];
+		if (inStr) {
+			if (ch === inStr && expr[i - 1] !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === '"' || ch === "'") inStr = ch;
+		else if (ch === '(') {
+			if (depth === 0) open = i;
+			depth++;
+		} else if (ch === ')' && --depth < 0) return -1;
+	}
+	return depth === 0 && inStr === null ? open : -1;
+}
+
 /**
  * Match a method call at the end of an expression: `<receiver>.<method>(<args>)`.
  * Respects nested parens and quoted strings inside args.
@@ -357,22 +412,7 @@ function splitArithmetic(
 function matchMethodCall(
 	expr: string
 ): { receiver: string; method: string; args: string[] } | null {
-	if (!expr.endsWith(')')) return null;
-
-	// Find the matching `(` for the trailing `)`.
-	let depth = 0;
-	let openIdx = -1;
-	for (let i = expr.length - 1; i >= 0; i--) {
-		const ch = expr[i];
-		if (ch === ')') depth++;
-		else if (ch === '(') {
-			depth--;
-			if (depth === 0) {
-				openIdx = i;
-				break;
-			}
-		}
-	}
+	const openIdx = openOfTrailingGroup(expr);
 	if (openIdx <= 0) return null;
 
 	// `<head>.<method>(<argsExpr>)` — head must end with `.method`.
@@ -524,17 +564,24 @@ function applyMethod(receiver: unknown, method: string, args: unknown[]): unknow
 }
 
 /**
- * Split expression by logical operator, respecting parentheses.
+ * Split expression by logical operator, respecting parentheses and string literals.
  */
 function splitLogicalOperator(expr: string, operator: string): string[] {
 	const parts: string[] = [];
 	let depth = 0;
+	let inStr: '"' | "'" | null = null;
 	let current = '';
 
 	for (let i = 0; i < expr.length; i++) {
 		const char = expr[i];
 
-		if (char === '(') {
+		if (inStr) {
+			current += char;
+			if (char === inStr && expr[i - 1] !== '\\') inStr = null;
+		} else if (char === '"' || char === "'") {
+			inStr = char;
+			current += char;
+		} else if (char === '(') {
 			depth++;
 			current += char;
 		} else if (char === ')') {
