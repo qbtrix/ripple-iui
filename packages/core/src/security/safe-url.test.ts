@@ -123,6 +123,14 @@ describe('safeStyle', () => {
 		safeStyle(`width: ${evil}`);
 		expect(performance.now() - t0).toBeLessThan(50);
 	});
+	it('stays linear on deeply nested resource functions', () => {
+		const n = 20000;
+		const evil = 'src('.repeat(n) + ')'.repeat(n);
+		const t0 = performance.now();
+		expect(safeStyle({ 'background-image': evil })).toEqual({});
+		expect(safeStyle(`background-image: ${evil}`)).toBe('');
+		expect(performance.now() - t0).toBeLessThan(50);
+	});
 	it('refuses @import and comment-split script tokens', () => {
 		expect(safeStyle({ color: 'red; @import "//evil.example/x.css"' })).toEqual({});
 		expect(safeStyle({ width: 'expr/**/ession(alert(1))' })).toEqual({});

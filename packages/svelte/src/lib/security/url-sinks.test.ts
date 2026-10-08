@@ -313,6 +313,7 @@ describe('static audit rules catch bad fixtures', () => {
 		['HTML string style', '<script>const h = `<span style="background:${color};"></span>`;</script>'],
 		['HTML string attr', '<script>const h = `<span data-icon="${icon}"></span>`;</script>'],
 		['leaflet popup', '<script>lm.bindPopup(m.popup);</script>'],
+		['leaflet popup template', '<script>lm.bindPopup(`<b>${x}</b>`);</script>'],
 		['leaflet tooltip', '<script>line.bindTooltip(p.label, { sticky: true });</script>'],
 		['leaflet setContent', '<script>popup.setContent(html);</script>'],
 		['leaflet attribution', '<script>L.tileLayer(u, { attribution: tileAttribution ?? preset.attribution });</script>']
@@ -330,6 +331,7 @@ describe('static audit rules catch bad fixtures', () => {
 		['HTML string escaped', '<script>const h = `<span style="${escapeHtml(safeStyle(`background:${c}`))}"></span>`;</script>'],
 		['spread on a component', '<Button {...rest}>x</Button>'],
 		['leaflet popup escaped', '<script>lm.bindPopup(escapeHtml(String(m.popup)));</script>'],
+		['leaflet popup static', "<script>lm.bindPopup('<b>Depot</b>'); t.bindTooltip(`Static`);</script>"],
 		['leaflet attribution sanitized', '<script>L.tileLayer(u, { attribution: sanitizeHtml(a) });</script>'],
 		['leaflet attribution preset', "<script>const P = { a: { attribution: '&copy; OSM' } }; L.tileLayer(u, { attribution: src.attribution });</script>"],
 		['data shorthand on a component', '<Chart {data} />']
