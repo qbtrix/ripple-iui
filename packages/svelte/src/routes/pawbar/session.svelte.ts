@@ -16,7 +16,7 @@
 // Model text is stored as plain strings; the component never uses {@html}.
 
 import type { RippleEvent } from '$lib/index.js';
-import { streamSpec, type StreamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
+import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 import { refuseCard } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
@@ -26,10 +26,11 @@ const REF_PATTERN = /^[A-Za-z0-9_-]{8,128}$/;
 
 let memoryRef: string | null = null;
 
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' || typeof v === 'number' ? String(v) : fallback);
 
 /** A stable anonymous id for rate limiting. localStorage when allowed, memory otherwise. */
-export function customerRef(storage: () => Storage | undefined = () => globalThis.localStorage): string {
+export function customerRef(storage: () => Pick<Storage, 'getItem' | 'setItem'> | undefined = () => globalThis.localStorage): string {
 	try {
 		const saved = storage()?.getItem(CUSTOMER_REF_KEY);
 		if (saved && REF_PATTERN.test(saved)) return saved;
@@ -89,14 +90,15 @@ export function pawbarTransport(cfg: PawbarConfig): { send: Transport; conversat
 		if (!res.ok || !res.body) {
 			let detail = '';
 			try {
-				detail = str(((await res.json()) as { detail?: unknown }).detail);
+				const body: unknown = await res.json();
+				if (isRecord(body)) detail = str(body.detail);
 			} catch {
 				/* not JSON */
 			}
 			throw new ChatHttpError(res.status, detail);
 		}
 		for await (const frame of parseSSE(readText(res.body))) {
-			const id = (frame.data as { conversation_id?: unknown } | null)?.conversation_id;
+			const id = isRecord(frame.data) ? frame.data.conversation_id : undefined;
 			if (typeof id === 'string') conversationId = id;
 			yield frame;
 		}
@@ -104,9 +106,13 @@ export function pawbarTransport(cfg: PawbarConfig): { send: Transport; conversat
 	return { send, conversationId: () => conversationId };
 }
 
+let cardSeq = 0;
+
 export class Card {
+	/** Unique per page, whatever card_id the server sent (it may repeat or be empty). */
+	readonly id = `card-${++cardSeq}`;
 	status = $state<'streaming' | 'final' | 'rejected'>('streaming');
-	spec = $state.raw<StreamSpec | null>(null);
+	spec = $state.raw<Record<string, unknown> | null>(null);
 	reason = $state<string | null>(null);
 	/** The last host event this card sent, once it is final. */
 	sent = $state<string | null>(null);
@@ -115,7 +121,7 @@ export class Card {
 	#fed = '';
 	#open = true;
 
-	constructor(readonly id: string) {
+	constructor() {
 		const source = new ReadableStream<string>({ start: (c) => void (this.#push = c) });
 		// throttleMs 0: streamSpec's throttle has no trailing parse, so a pause in
 		// the stream would leave the card behind the text it has already received.
@@ -149,11 +155,10 @@ export class Card {
 
 	final(card: unknown) {
 		if (!this.#open) return;
-		const c = card as { ui?: unknown; state?: unknown } | null;
-		if (!c || typeof c !== 'object' || !c.ui || typeof c.ui !== 'object') return this.reject('invalid');
-		const why = refuseCard(c);
+		if (!isRecord(card) || !isRecord(card.ui)) return this.reject('invalid');
+		const why = refuseCard(card);
 		if (why) return this.reject(why);
-		this.spec = { version: '1.0', ui: c.ui, ...(c.state === undefined ? {} : { state: c.state }) } as StreamSpec;
+		this.spec = { version: '1.0', ui: card.ui, ...(card.state === undefined ? {} : { state: card.state }) };
 		this.status = 'final';
 		this.#close();
 	}
@@ -208,6 +213,7 @@ interface TurnState {
 }
 
 let turnSeq = 0;
+const MAX_RUN = 1_000_000;
 
 export class ChatSession {
 	turns = $state<Turn[]>([]);
@@ -251,27 +257,35 @@ export class ChatSession {
 	/** The `onEvent` handler for a card's <Ripple>. Inert until the card is final. */
 	hostEvent(card: Card, event: RippleEvent): undefined {
 		if (card.status !== 'final') return undefined;
-		const e = event as RippleEvent & { action?: string; message?: unknown; event?: unknown; target?: unknown };
+		const e: Record<string, unknown> = { ...event };
 		const kind = str(e.action, str(e.type, 'event'));
-		const detail = str(e.message) || str(e.event) || str(e.target) || str(event.url);
+		const detail = str(e.message) || str(e.event) || str(e.target) || str(e.url);
 		card.sent = detail ? `${kind}: ${detail}` : kind;
 		return undefined;
 	}
 
 	/** Applies one frame; returns true when the turn is over. */
 	#apply(turn: Turn, st: TurnState, { event, data }: SSEFrame): boolean {
-		const d = (data ?? {}) as Record<string, unknown>;
+		const d = isRecord(data) ? data : {};
 		const id = str(d.card_id);
 		switch (event) {
 			case 'chunk':
 				if (typeof d.content === 'string') {
 					st.run += d.content;
+					if (st.run.length > MAX_RUN) {
+						turn.notice = { kind: 'error', text: 'That answer was too long to show.' };
+						return true;
+					}
 					this.#flushRun(turn, st, false);
 				}
 				return false;
 			case 'card.start': {
+				// Close what is open: held-back text, a legacy fence never closed,
+				// a card already started under this id.
 				this.#flushRun(turn, st, true);
-				const card = new Card(id);
+				for (const open of st.legacy) open.reject('truncated');
+				st.cards.get(id)?.reject('truncated');
+				const card = new Card();
 				st.cards.set(id, card);
 				turn.parts.push({ kind: 'card', card });
 				st.run = '';
@@ -326,7 +340,7 @@ export class ChatSession {
 				parts.push({ kind: 'text', text: seg.text });
 				continue;
 			}
-			const card = (st.legacy[k] ??= new Card(`legacy-${turn.id}-${k}`));
+			const card = (st.legacy[k] ??= new Card());
 			k++;
 			card.feed(seg.text);
 			if (seg.closed && card.status === 'streaming') {

@@ -3,12 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<!-- Dark is the default; drop it before paint when the visitor chose light (+layout.svelte stores it). -->
-		<script>
-			try {
-				if (localStorage.getItem('ripple-theme') === 'light') document.documentElement.classList.remove('dark');
-			} catch (e) {}
-		</script>
+		<script src="/theme-init.js"></script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

@@ -66,7 +66,7 @@ test('a streamed card renders, stays inert to the host until final, then works',
 test('a rejected card leaves a short note instead of a broken card', async () => {
 	const session = new ChatSession(async function* () {
 		yield { event: 'card.start', data: { card_id: 'x' } };
-		yield { event: 'card.delta', data: { card_id: 'x', text: '{"ui":{"type":"nope"' } };
+		yield { event: 'card.delta', data: { card_id: 'x', text: '{"ui":{"type":"text"' } };
 		yield { event: 'card.rejected', data: { card_id: 'x', reason: 'truncated' } };
 		yield { event: 'stream_end', data: { cancelled: false } };
 	});

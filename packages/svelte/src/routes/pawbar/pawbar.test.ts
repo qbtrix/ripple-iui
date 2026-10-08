@@ -4,9 +4,10 @@
 // ChatSession turn model across both card paths and every failure event.
 
 import { describe, expect, test, vi } from 'vitest';
+import type { RippleEvent } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, ChatSession, customerRef, pawbarTransport, type Card, type Transport } from './session.svelte.js';
+import { BYOK_URL, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
@@ -27,7 +28,15 @@ const frames = (...f: SSEFrame[]): Transport => async function* () {
 const bill = scenarios.find((s) => s.id === 'bill-splitter')!;
 const billSpec = JSON.parse(bill.fixture.chunks.map((c) => c.text).join(''));
 const lastTurn = (s: ChatSession) => s.turns[s.turns.length - 1];
-const cardOf = (s: ChatSession) => (lastTurn(s).parts.find((p) => p.kind === 'card') as { card: Card } | undefined)?.card;
+const cardsOf = (s: ChatSession) => lastTurn(s).parts.flatMap((p) => (p.kind === 'card' ? [p.card] : []));
+const cardOf = (s: ChatSession) => cardsOf(s)[0];
+const memStorage = () => {
+	const m = new Map<string, string>();
+	return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) };
+};
+const brokenStorage = () => {
+	throw new Error('SecurityError');
+};
 
 describe('parseSSE', () => {
 	const wire = sse([
@@ -45,6 +54,10 @@ describe('parseSSE', () => {
 	test('tolerates CRLF, comments, multi-line data and field lines without a colon', async () => {
 		const text = ': keepalive\r\nevent: chunk\r\nbogus line\r\ndata: {"content":\r\ndata: "x"}\r\n\r\n';
 		expect(await collect(parseSSE(from(text)))).toEqual([{ event: 'chunk', data: { content: 'x' } }]);
+	});
+
+	test('throws on a frame over 1 MB instead of buffering forever', async () => {
+		await expect(collect(parseSSE(from('event: chunk\ndata: "', 'x'.repeat(600_000), 'x'.repeat(600_000))))).rejects.toThrow(/1 MB/);
 	});
 
 	test('drops a malformed frame and keeps going; discards an unterminated last frame', async () => {
@@ -96,11 +109,6 @@ describe('recorded scenarios', () => {
 });
 
 describe('customerRef', () => {
-	const memStorage = () => {
-		const m = new Map<string, string>();
-		return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) } as Storage;
-	};
-
 	test('generates a contract-valid id, stores it and reuses it', () => {
 		const s = memStorage();
 		const ref = customerRef(() => s);
@@ -110,12 +118,9 @@ describe('customerRef', () => {
 	});
 
 	test('falls back to a stable in-memory id when storage throws', () => {
-		const broken = () => {
-			throw new Error('SecurityError');
-		};
-		const a = customerRef(broken);
+		const a = customerRef(brokenStorage);
 		expect(a).toMatch(/^[A-Za-z0-9_-]{8,128}$/);
-		expect(customerRef(broken)).toBe(a);
+		expect(customerRef(brokenStorage)).toBe(a);
 	});
 });
 
@@ -205,12 +210,14 @@ describe('ChatSession', () => {
 		});
 		const sent = session.send('x');
 		await waitFor(() => expect(cardOf(session)).toBeDefined());
-		const card = cardOf(session)!;
-		session.hostEvent(card, { type: 'emit', action: 'emit', target: 'early' } as never);
+		const card = cardOf(session);
+		const early: RippleEvent = { type: 'emit', target: 'early' };
+		session.hostEvent(card, early);
 		expect(card.sent).toBeNull();
 		release();
 		await sent;
-		session.hostEvent(card, { type: 'emit', action: 'emit', target: 'picked' } as never);
+		const picked: RippleEvent = { type: 'emit', target: 'picked' };
+		session.hostEvent(card, picked);
 		expect(card.sent).toBe('emit: picked');
 	});
 
@@ -247,6 +254,39 @@ describe('ChatSession', () => {
 		expect(cardOf(store)?.status).toBe('rejected');
 	});
 
+	test('a repeated card_id closes the first card; an empty card_id still works; keys stay unique', async () => {
+		const session = new ChatSession(
+			frames(
+				{ event: 'card.start', data: { card_id: 'c' } },
+				{ event: 'card.delta', data: { card_id: 'c', text: '{"ui":' } },
+				{ event: 'card.start', data: { card_id: 'c' } },
+				{ event: 'card.final', data: { card_id: 'c', card: { ui: { type: 'text' } } } },
+				{ event: 'card.start', data: { card_id: '' } },
+				{ event: 'card.final', data: { card_id: '', card: { ui: { type: 'badge' } } } }
+			)
+		);
+		await session.send('x');
+		const cards = cardsOf(session);
+		expect(cards.map((c) => c.status)).toEqual(['rejected', 'final', 'final']);
+		expect(cards[0].reason).toBe('truncated');
+		expect(new Set(cards.map((c) => c.id)).size).toBe(3);
+	});
+
+	test('card.start while a legacy fence is still open rejects the fence card cleanly', async () => {
+		const session = new ChatSession(
+			frames(
+				{ event: 'chunk', data: { content: 'Hi\n```pawbar-card\n{"ui":{"type":"te' } },
+				{ event: 'card.start', data: { card_id: 'n' } },
+				{ event: 'card.final', data: { card_id: 'n', card: { ui: { type: 'text' } } } }
+			)
+		);
+		await session.send('x');
+		expect(cardsOf(session).map((c) => [c.status, c.reason])).toEqual([
+			['rejected', 'truncated'],
+			['final', null]
+		]);
+	});
+
 	test('host events from a final card never touch the network or navigate', async () => {
 		const fetchSpy = vi.fn();
 		vi.stubGlobal('fetch', fetchSpy);
@@ -258,16 +298,16 @@ describe('ChatSession', () => {
 			)
 		);
 		await session.send('x');
-		const card = cardOf(session)!;
-		for (const action of ['emit', 'api', 'navigate', 'toast', 'run_source'])
-			expect(session.hostEvent(card, { type: action, action, url: 'https://evil.example', target: '/away' } as never)).toBeUndefined();
+		const card = cardOf(session);
+		for (const type of ['emit', 'api', 'navigate', 'toast', 'run_source'] as const)
+			expect(session.hostEvent(card, { type, url: 'https://evil.example', target: '/away' })).toBeUndefined();
 		expect(fetchSpy).not.toHaveBeenCalled();
 		expect(location.href).toBe(href);
 		vi.unstubAllGlobals();
 	});
 
 	test('pawbarTransport posts the contract body and reads the SSE reply', async () => {
-		const fetch = vi.fn(async () =>
+		const fetch = vi.fn<typeof globalThis.fetch>(async () =>
 			new Response(sse([{ event: 'chunk', data: { content: 'Hello', type: 'text' } }, { event: 'stream_end', data: { cancelled: false } }]), {
 				headers: { 'content-type': 'text/event-stream' }
 			})
@@ -275,10 +315,10 @@ describe('ChatSession', () => {
 		const t = pawbarTransport({ endpoint: 'http://localhost:5288/', widgetId: 'w', siteKey: 'k', fetch, ref: () => 'visitor_123' });
 		const session = new ChatSession(t.send);
 		await session.send('  hi  ');
-		const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+		const [url, init] = fetch.mock.calls[0];
 		expect(url).toBe('http://localhost:5288/api/v1/paw-bar/chat');
-		expect(init.credentials).toBe('omit');
-		expect(JSON.parse(init.body as string)).toEqual({ widget_id: 'w', signed_key: 'k', customer_ref: 'visitor_123', message: 'hi' });
+		expect(init?.credentials).toBe('omit');
+		expect(JSON.parse(typeof init?.body === 'string' ? init.body : '')).toEqual({ widget_id: 'w', signed_key: 'k', customer_ref: 'visitor_123', message: 'hi' });
 		expect(lastTurn(session).parts).toEqual([{ kind: 'text', text: 'Hello' }]);
 	});
 
@@ -288,7 +328,7 @@ describe('ChatSession', () => {
 		[403, { detail: 'origin_not_allowed' }, 'error'],
 		[400, { detail: 'message_rejected' }, 'error']
 	])('HTTP %i becomes a %s notice, not a crash', async (status, body, kind) => {
-		const fetch = vi.fn(async () => new Response(JSON.stringify(body), { status }));
+		const fetch = vi.fn<typeof globalThis.fetch>(async () => new Response(JSON.stringify(body), { status }));
 		const session = new ChatSession(pawbarTransport({ endpoint: 'http://x', widgetId: 'w', siteKey: 'k', fetch, ref: () => 'visitor_123' }).send);
 		await session.send('hi');
 		expect(lastTurn(session).notice?.kind).toBe(kind);
