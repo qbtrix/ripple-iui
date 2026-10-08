@@ -45,7 +45,7 @@ wrapper that yields chunks.
 
 | Option | Default | What it does |
 |---|---|---|
-| `throttleMs` | `50` | Minimum ms between parse attempts. Tied to perception, not frame rate. |
+| `throttleMs` | `50` | Minimum ms between parse attempts. Tied to perception, not frame rate. Text arriving inside the window gets one parse when it closes, so a pausing stream still shows everything received. |
 | `maxBufferBytes` | `2_000_000` | Safety cap. Stream is cancelled with an `overflow` error if the buffer grows past this. |
 | `allow` | `OBJ \| ARR \| STR` | `partial-json` flags. Whatever the flags, a value for an enum-like key (`type`, `intent`, `version`, `action`, `variant`) stays out of the tree while the buffer ends inside it. |
 | `signal` | — | AbortSignal for caller-driven cancellation. |

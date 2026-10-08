@@ -31,6 +31,18 @@ async function waitFor(predicate: () => boolean, timeoutMs = 1000, stepMs = 5): 
   }
 }
 
+/** A ReadableStream the test feeds by hand and can leave open (a model that pauses). */
+function openStream(): { stream: ReadableStream<string>; push: ReadableStreamDefaultController<string> } {
+  let push!: ReadableStreamDefaultController<string>;
+  const stream = new ReadableStream<string>({ start: (c) => void (push = c) });
+  return { stream, push };
+}
+
+function uiType(spec: unknown): unknown {
+  const ui = spec && typeof spec === 'object' && 'ui' in spec ? spec.ui : undefined;
+  return ui && typeof ui === 'object' && 'type' in ui ? ui.type : undefined;
+}
+
 function shredString(s: string, chunkSize: number): string[] {
   const out: string[] = [];
   for (let i = 0; i < s.length; i += chunkSize) {
@@ -111,6 +123,61 @@ describe('streamSpec — options', () => {
     });
     await waitFor(() => store.done);
     expect(count).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('streamSpec — trailing-edge throttle', () => {
+  it('parses the received tail during a pause (throttle has a trailing parse)', async () => {
+    const { stream, push } = openStream();
+    const store = streamSpec(stream, { throttleMs: 40 });
+    push.enqueue('{"version":"1.0","state":{"a":1}');
+    push.enqueue(',"ui":{"type":"text"}}');
+    // The stream stays open, so only a trailing parse can surface the second chunk.
+    await waitFor(() => uiType(store.current) === 'text');
+    expect(store.current).toMatchObject({ state: { a: 1 }, ui: { type: 'text' } });
+    expect(store.done).toBe(false);
+  });
+
+  it('parses once on the leading edge and once on the trailing edge of a window', async () => {
+    const { stream, push } = openStream();
+    let updates = 0;
+    const store = streamSpec(stream, { throttleMs: 40, onUpdate: () => updates++ });
+    for (const chunk of ['{"version":"1.0"', ',"state":{"a":1}', ',"ui":{"type":"text"}', '}']) {
+      push.enqueue(chunk);
+    }
+    await sleep(150);
+    expect(updates).toBe(2);
+    expect(uiType(store.current)).toBe('text');
+  });
+
+  type Handle = {
+    store: ReturnType<typeof streamSpec>;
+    controller: AbortController;
+    push: ReadableStreamDefaultController<string>;
+  };
+  it.each<[string, (h: Handle) => void]>([
+    ['cancel()', (h) => h.store.cancel()],
+    ['abort', (h) => h.controller.abort()],
+    ['end of stream', (h) => h.push.close()],
+    ['source error', (h) => h.push.error(new Error('boom'))],
+  ])('a pending trailing parse never fires after %s', async (_, finish) => {
+    const { stream, push } = openStream();
+    const controller = new AbortController();
+    let updates = 0;
+    const store = streamSpec(stream, {
+      throttleMs: 40,
+      signal: controller.signal,
+      onUpdate: () => updates++,
+    });
+    push.enqueue('{"version":"1.0"');
+    push.enqueue(',"ui":{"type":"text"}}');
+    await sleep(0); // leading parse ran; the second chunk sits inside the window
+    expect(updates).toBe(1);
+    finish({ store, controller, push });
+    await waitFor(() => store.done);
+    const settled = updates;
+    await sleep(100);
+    expect(updates).toBe(settled);
   });
 });
 
