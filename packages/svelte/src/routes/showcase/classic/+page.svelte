@@ -14,9 +14,9 @@
       type: 'flex',
       props: { direction: 'column', gap: '20px' },
       children: [
-        { type: 'heading', props: { text: "India's emergency fuel shipment arrives in Sri Lanka amid Gulf crisis", level: 3 } },
+        { type: 'heading', props: { text: "Varan's emergency fuel shipment arrives in Coralis amid Gulf crisis", level: 3 } },
         { type: 'text', props: {
-          text: 'A shipment of 38,000 metric tonnes of fuel from India is set to arrive in Sri Lanka on Saturday, marking New Delhi\'s most concrete response yet to the energy crisis gripping South Asia.',
+          text: 'A shipment of 38,000 metric tonnes of fuel from Varan is set to arrive in Coralis on Saturday, marking Varan\'s most concrete response yet to the energy crisis gripping the region.',
           size: 'sm'
         }},
         {
@@ -24,10 +24,10 @@
           props: { gap: '10px' },
           style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
           children: [
-            { type: 'source-card', props: { source: 'moneycontrol', title: "India's neighbours seek fuel supplies from New Delhi...", color: '#22c55e' } },
-            { type: 'source-card', props: { source: 'energy.economictimes', title: 'Indian fuel shipment to arrive in Lanka on Saturday...', color: '#ef4444' } },
-            { type: 'source-card', props: { source: 'firstpost', title: 'India seeks security assurances for urgent fuel...', color: '#3b82f6' } },
-            { type: 'source-card', props: { source: 'aljazeera', title: 'India, Europe feel fuel crunch as Gulf gas supplie...', color: '#f97316' } },
+            { type: 'source-card', props: { source: 'marketline', title: "Varan's neighbours seek fuel supplies from Varan...", color: '#22c55e' } },
+            { type: 'source-card', props: { source: 'energy.ledger', title: 'Varani fuel shipment to arrive in Coralis on Saturday...', color: '#ef4444' } },
+            { type: 'source-card', props: { source: 'northpost', title: 'Varan seeks security assurances for urgent fuel...', color: '#3b82f6' } },
+            { type: 'source-card', props: { source: 'worldwire', title: 'Varan, Europe feel fuel crunch as Gulf gas supplie...', color: '#f97316' } },
           ]
         },
         { type: 'image', props: {
@@ -36,22 +36,22 @@
         }},
         { type: 'heading', props: { text: 'A Region in Crisis', level: 4 } },
         { type: 'text', props: {
-          text: 'The energy emergency across South Asia stems from the effective closure of the Strait of Hormuz. The narrow waterway, through which roughly a fifth of the world\'s oil passes, has been largely shut to commercial traffic, severing supply lines for import-dependent nations.',
+          text: 'The energy emergency across the region stems from the effective closure of the Kessel Strait. The narrow waterway, through which roughly a fifth of the world\'s oil passes, has been largely shut to commercial traffic, severing supply lines for import-dependent nations.',
           size: 'sm'
         }},
         {
           type: 'flex', props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'firstpost', color: '#3b82f6', number: 1 } },
-            { type: 'citation', props: { source: 'reddit', color: '#ff4500', number: 2 } },
+            { type: 'citation', props: { source: 'northpost', color: '#3b82f6', number: 1 } },
+            { type: 'citation', props: { source: 'forumline', color: '#ff4500', number: 2 } },
           ]
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'firstpost', color: '#3b82f6' },
-            { name: 'moneycontrol', color: '#22c55e' },
-            { name: 'aljazeera', color: '#f97316' },
-            { name: 'energy.economictimes', color: '#ef4444' },
+            { name: 'northpost', color: '#3b82f6' },
+            { name: 'marketline', color: '#22c55e' },
+            { name: 'worldwire', color: '#f97316' },
+            { name: 'energy.ledger', color: '#ef4444' },
           ],
         }},
         { type: 'heading', props: { text: 'Discover more', level: 4 } },
@@ -59,9 +59,9 @@
           type: 'flex', props: { gap: '12px' },
           style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
           children: [
-            { type: 'discover-card', props: { title: 'India and Russia Move to Restart LNG Trade...', description: 'India and Russia are preparing to restart direct...', image: 'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=300&q=70' } },
-            { type: 'discover-card', props: { title: 'India, Pakistan race to secure Gulf food...', description: 'Both nations\' food security efforts are intertwined...', image: 'https://images.unsplash.com/photo-1504711434969-e33886168d6c?w=300&q=70' } },
-            { type: 'discover-card', props: { title: 'Philippines declares energy emergency...', description: 'The crisis traces back to joint US-Israeli strikes...', image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=300&q=70' } },
+            { type: 'discover-card', props: { title: 'Varan and Nordmark Move to Restart LNG Trade...', description: 'Varan and Nordmark are preparing to restart direct...', image: 'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=300&q=70' } },
+            { type: 'discover-card', props: { title: 'Varan, Kestria race to secure Gulf food...', description: 'Both nations\' food security efforts are intertwined...', image: 'https://images.unsplash.com/photo-1504711434969-e33886168d6c?w=300&q=70' } },
+            { type: 'discover-card', props: { title: 'Isla Marena declares energy emergency...', description: 'The crisis traces back to joint a regional naval blockade...', image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=300&q=70' } },
           ]
         },
         { type: 'follow-up', props: { placeholder: 'Ask follow-up' } }
@@ -90,7 +90,7 @@
             {
               type: 'flex', props: { direction: 'column', gap: '4px' },
               children: [
-                { type: 'text', props: { text: 'NIFTY 50', size: 'xs' } },
+                { type: 'text', props: { text: 'MX 50', size: 'xs' } },
                 { type: 'text', props: { text: '23,710.45', size: 'lg', weight: 'bold' } },
                 { type: 'chart', props: { type: 'sparkline', height: 36, data: [
                   { label: '1', value: 23420 }, { label: '2', value: 23485 }, { label: '3', value: 23510 },
@@ -103,7 +103,7 @@
             {
               type: 'flex', props: { direction: 'column', gap: '4px' },
               children: [
-                { type: 'text', props: { text: 'SENSEX', size: 'xs' } },
+                { type: 'text', props: { text: 'MX BROAD', size: 'xs' } },
                 { type: 'text', props: { text: '78,053.52', size: 'lg', weight: 'bold' } },
                 { type: 'chart', props: { type: 'sparkline', height: 36, data: [
                   { label: '1', value: 77200 }, { label: '2', value: 77450 }, { label: '3', value: 77380 },
@@ -116,7 +116,7 @@
             {
               type: 'flex', props: { direction: 'column', gap: '4px' },
               children: [
-                { type: 'text', props: { text: 'BANK NIFTY', size: 'xs' } },
+                { type: 'text', props: { text: 'MX BANK', size: 'xs' } },
                 { type: 'text', props: { text: '51,280.10', size: 'lg', weight: 'bold' } },
                 { type: 'chart', props: { type: 'sparkline', height: 36, data: [
                   { label: '1', value: 51600 }, { label: '2', value: 51500 }, { label: '3', value: 51420 },
@@ -128,7 +128,7 @@
           ]
         },
         { type: 'chart', props: {
-          type: 'candlestick', height: 200, title: 'RELIANCE — 5 Day',
+          type: 'candlestick', height: 200, title: 'MERIDIAN — 5 Day',
           data: [
             { label: 'Mar 24', value: 0, open: 2830, close: 2862, high: 2875, low: 2815 },
             { label: 'Mar 25', value: 0, open: 2862, close: 2845, high: 2880, low: 2835 },
@@ -147,18 +147,18 @@
               { key: 'volume', label: 'Volume' },
             ],
             rows: [
-              { symbol: 'TCS', price: '3,842.50', change: '+1.8%', volume: '2.1M' },
-              { symbol: 'INFY', price: '1,587.25', change: '+2.3%', volume: '4.5M' },
-              { symbol: 'HDFC Bank', price: '1,692.40', change: '-0.4%', volume: '3.8M' },
-              { symbol: 'Wipro', price: '465.70', change: '+0.9%', volume: '1.9M' },
+              { symbol: 'KSTL', price: '3,842.50', change: '+1.8%', volume: '2.1M' },
+              { symbol: 'NVTX', price: '1,587.25', change: '+2.3%', volume: '4.5M' },
+              { symbol: 'Harbor Bank', price: '1,692.40', change: '-0.4%', volume: '3.8M' },
+              { symbol: 'Wavelet', price: '465.70', change: '+0.9%', volume: '1.9M' },
             ]
           }
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'NSE India', color: '#0080ff' },
-            { name: 'moneycontrol', color: '#22c55e' },
-            { name: 'BSE', color: '#ef4444' },
+            { name: 'MX Exchange', color: '#0080ff' },
+            { name: 'marketline', color: '#22c55e' },
+            { name: 'MX', color: '#ef4444' },
           ]
         }},
         { type: 'follow-up', props: { placeholder: 'Ask about any stock or index...' } }
@@ -336,26 +336,26 @@
       type: 'flex',
       props: { direction: 'column', gap: '16px' },
       children: [
-        { type: 'heading', props: { text: 'iPhone 16 Pro vs Samsung Galaxy S25 Ultra', level: 3 } },
+        { type: 'heading', props: { text: 'Halo 7 Pro vs Nimbus S9 Ultra', level: 3 } },
         { type: 'text', props: { text: 'Here\'s a side-by-side comparison of the two flagship phones based on key specs and features.', size: 'sm' } },
         {
           type: 'table', props: {
             columns: [
               { key: 'spec', label: 'Spec' },
-              { key: 'iphone', label: 'iPhone 16 Pro' },
-              { key: 'samsung', label: 'Galaxy S25 Ultra' },
+              { key: 'halo', label: 'Halo 7 Pro' },
+              { key: 'nimbus', label: 'Nimbus S9 Ultra' },
             ],
             rows: [
-              { spec: 'Display', iphone: '6.3" OLED 120Hz', samsung: '6.9" AMOLED 120Hz' },
-              { spec: 'Processor', iphone: 'A18 Pro', samsung: 'Snapdragon 8 Elite' },
-              { spec: 'RAM', iphone: '8 GB', samsung: '12 GB' },
-              { spec: 'Camera', iphone: '48MP + 48MP + 12MP', samsung: '200MP + 50MP + 10MP + 50MP' },
-              { spec: 'Battery', iphone: '3,582 mAh', samsung: '5,000 mAh' },
-              { spec: 'Starting Price', iphone: '$999', samsung: '$1,299' },
+              { spec: 'Display', halo: '6.3" OLED 120Hz', nimbus: '6.9" AMOLED 120Hz' },
+              { spec: 'Processor', halo: 'H7 chip', nimbus: 'Vertex 9' },
+              { spec: 'RAM', halo: '8 GB', nimbus: '12 GB' },
+              { spec: 'Camera', halo: '48MP + 48MP + 12MP', nimbus: '200MP + 50MP + 10MP + 50MP' },
+              { spec: 'Battery', halo: '3,582 mAh', nimbus: '5,000 mAh' },
+              { spec: 'Starting Price', halo: '$999', nimbus: '$1,299' },
             ]
           }
         },
-        { type: 'text', props: { text: 'The iPhone 16 Pro excels in software optimization and ecosystem integration, while the Galaxy S25 Ultra leads in raw hardware specs, especially display size and battery capacity.', size: 'sm' } },
+        { type: 'text', props: { text: 'The Halo 7 Pro excels in software optimization and ecosystem integration, while the Nimbus S9 Ultra leads in raw hardware specs, especially display size and battery capacity.', size: 'sm' } },
         {
           type: 'flex', props: { gap: '6px', wrap: 'wrap' },
           children: [
@@ -512,7 +512,7 @@
     { id: 'header', span: 'full', spec: {
       version: '1.0' as const,
       ui: { type: 'company-header', props: {
-        name: 'Reliance Industries', ticker: 'RELIANCE', exchange: 'NSE',
+        name: 'Meridian Industries', ticker: 'MERIDIAN', exchange: 'MX',
         description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
         domain: 'ril.com', tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
         price: '\u20B92,920.45', change: '+40.05', changePercent: '+1.39%', marketCap: '\u20B919.76L Cr',
@@ -523,9 +523,9 @@
     { id: 'ticker', span: 'full', spec: {
       version: '1.0' as const,
       ui: { type: 'ticker', props: { items: [
-        { symbol: 'RELIANCE', price: '2,920.45', change: '+40.05', changePercent: '+1.39%' },
-        { symbol: 'NIFTY 50', price: '23,710.45', change: '+290.30', changePercent: '+1.24%' },
-        { symbol: 'SENSEX', price: '78,053.52', change: '+848.20', changePercent: '+1.10%' },
+        { symbol: 'MERIDIAN', price: '2,920.45', change: '+40.05', changePercent: '+1.39%' },
+        { symbol: 'MX 50', price: '23,710.45', change: '+290.30', changePercent: '+1.24%' },
+        { symbol: 'MX BROAD', price: '78,053.52', change: '+848.20', changePercent: '+1.10%' },
       ]}}
     }},
 
@@ -558,7 +558,7 @@
       version: '1.0' as const,
       ui: { type: 'callout', props: {
         variant: 'insight', title: 'Near 52-Week High',
-        text: 'Trading at 98.8% of 52-week high, driven by Jio ARPU growth (+15% YoY) and new energy vertical ramp to 10GW.',
+        text: 'Trading at 98.8% of 52-week high, driven by Volt ARPU growth (+15% YoY) and new energy vertical ramp to 10GW.',
       }}
     }},
 
@@ -579,7 +579,7 @@
       ui: { type: 'kv-table', props: { columns: 1, rows: [
         { key: 'Founded', value: '1966' },
         { key: 'Headquarters', value: 'Mumbai, India' },
-        { key: 'Chairman & MD', value: 'Mukesh Ambani' },
+        { key: 'Chairman & MD', value: 'Arun Mehra' },
         { key: 'Employees', value: '3,47,000' },
         { key: 'P/E Ratio', value: '25.3x' },
         { key: 'EV/EBITDA', value: '14.8x' },
@@ -606,7 +606,7 @@
     { id: 'price', span: 'full', spec: {
       version: '1.0' as const,
       ui: { type: 'chart', props: {
-        type: 'area', height: 180, colors: ['#3b82f6'], title: 'RELIANCE — 6 Month',
+        type: 'area', height: 180, colors: ['#3b82f6'], title: 'MERIDIAN — 6 Month',
         data: [
           { label: 'Oct', value: 2680 }, { label: 'Nov', value: 2720 },
           { label: 'Dec', value: 2650 }, { label: 'Jan', value: 2750 },
@@ -623,7 +623,7 @@
         { type: 'chart', props: { type: 'donut', height: 155, data: [
           { label: 'O2C (Energy)', value: 55 },
           { label: 'Retail', value: 22 },
-          { label: 'Digital (Jio)', value: 18 },
+          { label: 'Digital (Volt)', value: 18 },
           { label: 'Others', value: 5 },
         ]}},
       ]}
@@ -680,10 +680,10 @@
             { key: 'since', label: 'Since' },
           ],
           rows: [
-            { name: 'Mukesh Ambani', role: 'Chairman & MD', since: '2002' },
+            { name: 'Arun Mehra', role: 'Chairman & MD', since: '2002' },
             { name: 'V. Srikanth', role: 'Joint CFO', since: '2023' },
-            { name: 'Isha Ambani', role: 'ED, Retail', since: '2024' },
-            { name: 'Akash Ambani', role: 'Chair, Jio', since: '2022' },
+            { name: 'Nisha Mehra', role: 'ED, Retail', since: '2024' },
+            { name: 'Kabir Mehra', role: 'Chair, Volt', since: '2022' },
           ]
         }},
       ]}
@@ -695,7 +695,7 @@
       ui: { type: 'flex', props: { direction: 'column', gap: '8px' }, children: [
         { type: 'heading', props: { text: 'Key Risks', level: 4 } },
         { type: 'callout', props: { variant: 'warning', title: 'Oil Price Volatility', text: 'O2C segment (55% of revenue) directly exposed to crude and refining margins.' }},
-        { type: 'callout', props: { variant: 'warning', title: 'Telecom ARPU', text: 'Jio faces pricing competition from Airtel; TRAI floor pricing an overhang.' }},
+        { type: 'callout', props: { variant: 'warning', title: 'Telecom ARPU', text: 'Volt faces pricing competition from Kestrel; TRB floor pricing an overhang.' }},
         { type: 'callout', props: { variant: 'info', title: 'Succession', text: 'Next-gen leadership transition underway — closely watched by institutions.' }},
       ]}
     }},
@@ -704,10 +704,10 @@
     { id: 'news', span: 'full', spec: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '0' }, children: [
-        { type: 'news-card', props: { headline: 'Reliance Jio adds 8.3M subscribers in February, ARPU rises to \u20B9203.5', source: 'moneycontrol', time: '2h ago', sentiment: 'bullish' }},
-        { type: 'news-card', props: { headline: 'Reliance Retail partners with Shein for India comeback launch', source: 'energy.economictimes', time: '5h ago', sentiment: 'bullish' }},
-        { type: 'news-card', props: { headline: 'RIL new energy arm targets 20GW solar capacity by 2026', source: 'ndtv', time: '1d ago', sentiment: 'neutral' }},
-        { type: 'news-card', props: { headline: 'Aramco deal valuation under review amid oil price volatility', source: 'bloomberg', time: '2d ago', sentiment: 'bearish' }},
+        { type: 'news-card', props: { headline: 'Volt Mobile adds 8.3M subscribers in February, ARPU rises to \u20B9203.5', source: 'marketline', time: '2h ago', sentiment: 'bullish' }},
+        { type: 'news-card', props: { headline: 'Meridian Retail partners with Loomhaus for India comeback launch', source: 'energy.ledger', time: '5h ago', sentiment: 'bullish' }},
+        { type: 'news-card', props: { headline: 'RIL new energy arm targets 20GW solar capacity by 2026', source: 'metro24', time: '1d ago', sentiment: 'neutral' }},
+        { type: 'news-card', props: { headline: 'Petral deal valuation under review amid oil price volatility', source: 'tickerwire', time: '2d ago', sentiment: 'bearish' }},
       ]}
     }},
 
@@ -717,11 +717,11 @@
       ui: { type: 'flex', props: { direction: 'column', gap: '8px' }, children: [
         { type: 'heading', props: { text: 'Key Events', level: 4 } },
         { type: 'timeline', props: { maxItems: 4, events: [
-          { date: 'Mar 2026', title: 'Jio Financial Services IPO filing', type: 'info' },
-          { date: 'Jan 2026', title: 'Retail acquires Metro Cash & Carry India', type: 'success' },
+          { date: 'Mar 2026', title: 'Volt Financial Services IPO filing', type: 'info' },
+          { date: 'Jan 2026', title: 'Retail acquires Northway Wholesale', type: 'success' },
           { date: 'Nov 2025', title: '10GW solar factory begins production', type: 'success' },
           { date: 'Sep 2025', title: 'Q2 FY26 results beat estimates', type: 'success' },
-          { date: 'Jul 2025', title: 'Aramco stake sale talks restart', type: 'warning' },
+          { date: 'Jul 2025', title: 'Petral stake sale talks restart', type: 'warning' },
         ]}},
       ]}
     }},
@@ -740,10 +740,10 @@
             { key: 'roe', label: 'ROE' },
           ],
           rows: [
-            { co: 'Reliance', pe: '25.3x', npm: '8.1%', roe: '9.4%' },
-            { co: 'Adani Ent.', pe: '72.1x', npm: '2.4%', roe: '6.8%' },
-            { co: 'TCS', pe: '31.2x', npm: '18.5%', roe: '48.5%' },
-            { co: 'HDFC Bank', pe: '18.7x', npm: '22.3%', roe: '16.4%' },
+            { co: 'Meridian', pe: '25.3x', npm: '8.1%', roe: '9.4%' },
+            { co: 'Orion Ent.', pe: '72.1x', npm: '2.4%', roe: '6.8%' },
+            { co: 'KSTL', pe: '31.2x', npm: '18.5%', roe: '48.5%' },
+            { co: 'Harbor Bank', pe: '18.7x', npm: '22.3%', roe: '16.4%' },
           ]
         }},
       ]}
@@ -754,10 +754,10 @@
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '12px' }, children: [
         { type: 'sources-bar', props: { sources: [
-          { name: 'moneycontrol' }, { name: 'NSE India' }, { name: 'bloomberg' },
-          { name: 'reuters' }, { name: 'ndtv' }, { name: 'energy.economictimes' },
+          { name: 'marketline' }, { name: 'MX Exchange' }, { name: 'tickerwire' },
+          { name: 'wirefeed' }, { name: 'metro24' }, { name: 'energy.ledger' },
         ]}},
-        { type: 'follow-up', props: { placeholder: 'Ask about financials, segments, Jio, risks, management...' } },
+        { type: 'follow-up', props: { placeholder: 'Ask about financials, segments, Volt, risks, management...' } },
       ]}
     }},
   ];
@@ -771,9 +771,9 @@
       children: [
         // ── Header ──
         { type: 'company-header', props: {
-          name: 'Reliance Industries',
-          ticker: 'RELIANCE',
-          exchange: 'NSE',
+          name: 'Meridian Industries',
+          ticker: 'MERIDIAN',
+          exchange: 'MX',
           description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
           domain: 'ril.com',
           tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
@@ -786,9 +786,9 @@
         // ── Ticker context ──
         { type: 'ticker', props: {
           items: [
-            { symbol: 'RELIANCE', price: '2,920.45', change: '+40.05', changePercent: '+1.39%' },
-            { symbol: 'NIFTY 50', price: '23,710.45', change: '+290.30', changePercent: '+1.24%' },
-            { symbol: 'SENSEX', price: '78,053.52', change: '+848.20', changePercent: '+1.10%' },
+            { symbol: 'MERIDIAN', price: '2,920.45', change: '+40.05', changePercent: '+1.39%' },
+            { symbol: 'MX 50', price: '23,710.45', change: '+290.30', changePercent: '+1.24%' },
+            { symbol: 'MX BROAD', price: '78,053.52', change: '+848.20', changePercent: '+1.10%' },
           ]
         }},
 
@@ -820,7 +820,7 @@
         { type: 'callout', props: {
           variant: 'insight',
           title: 'Near 52-Week High',
-          text: 'Reliance is trading at 98.8% of its 52-week high, driven by Jio\'s ARPU growth (+15% YoY) and the new energy vertical ramping to 10GW capacity.',
+          text: 'Meridian is trading at 98.8% of its 52-week high, driven by Volt\'s ARPU growth (+15% YoY) and the new energy vertical ramping to 10GW capacity.',
         }},
 
         // ── Company Facts ──
@@ -830,7 +830,7 @@
           rows: [
             { key: 'Founded', value: '1966' },
             { key: 'Headquarters', value: 'Mumbai, India' },
-            { key: 'Chairman & MD', value: 'Mukesh Ambani' },
+            { key: 'Chairman & MD', value: 'Arun Mehra' },
             { key: 'Employees', value: '3,47,000' },
             { key: 'Revenue (FY25)', value: '\u20B99,74,864 Cr' },
             { key: 'Net Profit (FY25)', value: '\u20B979,020 Cr' },
@@ -857,7 +857,7 @@
 
         // ── Price chart ──
         { type: 'chart', props: {
-          type: 'area', height: 180, colors: ['#3b82f6'], title: 'RELIANCE — 6 Month',
+          type: 'area', height: 180, colors: ['#3b82f6'], title: 'MERIDIAN — 6 Month',
           data: [
             { label: 'Oct', value: 2680 }, { label: 'Nov', value: 2720 },
             { label: 'Dec', value: 2650 }, { label: 'Jan', value: 2750 },
@@ -876,7 +876,7 @@
                 data: [
                   { label: 'O2C (Energy)', value: 55 },
                   { label: 'Retail', value: 22 },
-                  { label: 'Digital (Jio)', value: 18 },
+                  { label: 'Digital (Volt)', value: 18 },
                   { label: 'Others', value: 5 },
                 ]
               }}]
@@ -964,11 +964,11 @@
             { key: 'since', label: 'Since' },
           ],
           rows: [
-            { name: 'Mukesh D. Ambani', role: 'Chairman & Managing Director', since: '2002' },
+            { name: 'Mukesh D. Mehra', role: 'Chairman & Managing Director', since: '2002' },
             { name: 'V. Srikanth', role: 'Joint CFO', since: '2023' },
             { name: 'K.V. Chowdary', role: 'Lead Independent Director', since: '2020' },
-            { name: 'Isha M. Ambani', role: 'Executive Director, Retail', since: '2024' },
-            { name: 'Akash M. Ambani', role: 'Chairman, Jio Platforms', since: '2022' },
+            { name: 'Isha M. Mehra', role: 'Executive Director, Retail', since: '2024' },
+            { name: 'Akash M. Mehra', role: 'Chairman, Volt Platforms', since: '2022' },
           ]
         }},
 
@@ -977,17 +977,17 @@
         { type: 'callout', props: {
           variant: 'warning',
           title: 'Oil Price Volatility',
-          text: 'O2C segment (55% of revenue) is directly exposed to global crude and refining margins. Strait of Hormuz disruption could cut feedstock supply.',
+          text: 'O2C segment (55% of revenue) is directly exposed to global crude and refining margins. Kessel Strait disruption could cut feedstock supply.',
         }},
         { type: 'callout', props: {
           variant: 'warning',
           title: 'Telecom ARPU Pressure',
-          text: 'Jio faces pricing competition from Airtel. TRAI regulatory changes on interconnect and floor pricing remain an overhang.',
+          text: 'Volt faces pricing competition from Kestrel. TRB regulatory changes on interconnect and floor pricing remain an overhang.',
         }},
         { type: 'callout', props: {
           variant: 'info',
           title: 'Succession Planning',
-          text: 'Transition of key roles to next-gen leadership (Isha, Akash Ambani) is underway. Execution continuity is being closely watched by institutional investors.',
+          text: 'Transition of key roles to next-gen leadership (Isha, Kabir Mehra) is underway. Execution continuity is being closely watched by institutional investors.',
         }},
 
         // ── Recent News ──
@@ -996,24 +996,24 @@
           type: 'flex', props: { direction: 'column', gap: '0' },
           children: [
             { type: 'news-card', props: {
-              headline: 'Reliance Jio adds 8.3M subscribers in February, ARPU rises to \u20B9203.5',
-              source: 'moneycontrol', time: '2h ago', sentiment: 'bullish',
+              headline: 'Volt Mobile adds 8.3M subscribers in February, ARPU rises to \u20B9203.5',
+              source: 'marketline', time: '2h ago', sentiment: 'bullish',
             }},
             { type: 'news-card', props: {
-              headline: 'Reliance Retail partners with Shein for India comeback launch',
-              source: 'energy.economictimes', time: '5h ago', sentiment: 'bullish',
+              headline: 'Meridian Retail partners with Loomhaus for India comeback launch',
+              source: 'energy.ledger', time: '5h ago', sentiment: 'bullish',
             }},
             { type: 'news-card', props: {
               headline: 'RIL new energy arm targets 20GW solar capacity by 2026',
-              source: 'ndtv', time: '1d ago', sentiment: 'neutral',
+              source: 'metro24', time: '1d ago', sentiment: 'neutral',
             }},
             { type: 'news-card', props: {
-              headline: 'Aramco deal valuation under review amid oil price volatility',
-              source: 'bloomberg', time: '2d ago', sentiment: 'bearish',
+              headline: 'Petral deal valuation under review amid oil price volatility',
+              source: 'tickerwire', time: '2d ago', sentiment: 'bearish',
             }},
             { type: 'news-card', props: {
-              headline: 'SEBI approves Jio Financial Services IPO; listing expected Q2 2026',
-              source: 'reuters', time: '3d ago', sentiment: 'bullish',
+              headline: 'SRB approves Volt Financial Services IPO; listing expected Q2 2026',
+              source: 'wirefeed', time: '3d ago', sentiment: 'bullish',
             }},
           ]
         },
@@ -1022,12 +1022,12 @@
         { type: 'heading', props: { text: 'Key Events & M&A', level: 4 } },
         { type: 'timeline', props: {
           events: [
-            { date: 'Mar 2026', title: 'Jio Financial Services IPO filing', detail: 'DRHP filed with SEBI for a \u20B91,800 Cr IPO of the fintech arm', type: 'info' },
-            { date: 'Jan 2026', title: 'Reliance Retail acquires Metro Cash & Carry India', detail: 'Completed \u20B92,850 Cr acquisition of Metro\'s wholesale business', type: 'success' },
+            { date: 'Mar 2026', title: 'Volt Financial Services IPO filing', detail: 'DRHP filed with SRB for a \u20B91,800 Cr IPO of the fintech arm', type: 'info' },
+            { date: 'Jan 2026', title: 'Meridian Retail acquires Northway Wholesale', detail: 'Completed \u20B92,850 Cr acquisition of Metro\'s wholesale business', type: 'success' },
             { date: 'Nov 2025', title: 'New energy arm operationalized', detail: '10GW solar cell factory in Jamnagar begins commercial production', type: 'success' },
             { date: 'Sep 2025', title: 'Q2 FY26 results beat estimates', detail: 'Revenue \u20B92.48L Cr (+9.1%), PAT \u20B920,100 Cr (+14.3%)', type: 'success' },
-            { date: 'Jul 2025', title: 'Aramco stake sale negotiations restart', detail: 'O2C business carve-out valued at $75B; Aramco may take 20% stake', type: 'warning' },
-            { date: 'Apr 2025', title: 'Reliance acquires Paramount India content library', detail: '\u20B91,200 Cr deal for Paramount+ India streaming catalog', type: 'info' },
+            { date: 'Jul 2025', title: 'Petral stake sale negotiations restart', detail: 'O2C business carve-out valued at $75B; Petral may take 20% stake', type: 'warning' },
+            { date: 'Apr 2025', title: 'Meridian acquires Silverline Studios content library', detail: '\u20B91,200 Cr deal for Silverline+ streaming catalog', type: 'info' },
           ],
           maxItems: 5,
         }},
@@ -1046,28 +1046,28 @@
             { key: 'roe', label: 'ROE' },
           ],
           rows: [
-            { company: 'Reliance Industries', mcap: '\u20B919.76L Cr', pe: '25.3x', revenue: '\u20B99.75L Cr', profit: '\u20B979,020 Cr', margin: '8.1%', roe: '9.4%' },
-            { company: 'Adani Enterprises', mcap: '\u20B93.82L Cr', pe: '72.1x', revenue: '\u20B91.18L Cr', profit: '\u20B92,840 Cr', margin: '2.4%', roe: '6.8%' },
-            { company: 'TCS', mcap: '\u20B915.20L Cr', pe: '31.2x', revenue: '\u20B92.41L Cr', profit: '\u20B944,600 Cr', margin: '18.5%', roe: '48.5%' },
-            { company: 'HDFC Bank', mcap: '\u20B913.10L Cr', pe: '18.7x', revenue: '\u20B93.15L Cr', profit: '\u20B970,200 Cr', margin: '22.3%', roe: '16.4%' },
-            { company: 'ITC', mcap: '\u20B95.92L Cr', pe: '27.4x', revenue: '\u20B970,820 Cr', profit: '\u20B920,510 Cr', margin: '29.0%', roe: '28.7%' },
+            { company: 'Meridian Industries', mcap: '\u20B919.76L Cr', pe: '25.3x', revenue: '\u20B99.75L Cr', profit: '\u20B979,020 Cr', margin: '8.1%', roe: '9.4%' },
+            { company: 'Orion Enterprises', mcap: '\u20B93.82L Cr', pe: '72.1x', revenue: '\u20B91.18L Cr', profit: '\u20B92,840 Cr', margin: '2.4%', roe: '6.8%' },
+            { company: 'KSTL', mcap: '\u20B915.20L Cr', pe: '31.2x', revenue: '\u20B92.41L Cr', profit: '\u20B944,600 Cr', margin: '18.5%', roe: '48.5%' },
+            { company: 'Harbor Bank', mcap: '\u20B913.10L Cr', pe: '18.7x', revenue: '\u20B93.15L Cr', profit: '\u20B970,200 Cr', margin: '22.3%', roe: '16.4%' },
+            { company: 'Kaveri', mcap: '\u20B95.92L Cr', pe: '27.4x', revenue: '\u20B970,820 Cr', profit: '\u20B920,510 Cr', margin: '29.0%', roe: '28.7%' },
           ]
         }},
 
         // ── Sources ──
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'moneycontrol' },
-            { name: 'NSE India' },
-            { name: 'bloomberg' },
-            { name: 'reuters' },
-            { name: 'ndtv' },
-            { name: 'energy.economictimes' },
+            { name: 'marketline' },
+            { name: 'MX Exchange' },
+            { name: 'tickerwire' },
+            { name: 'wirefeed' },
+            { name: 'metro24' },
+            { name: 'energy.ledger' },
           ]
         }},
 
         // ── Follow-up ──
-        { type: 'follow-up', props: { placeholder: 'Ask about financials, segments, Jio, risks, management...' } },
+        { type: 'follow-up', props: { placeholder: 'Ask about financials, segments, Volt, risks, management...' } },
       ]
     }
   };
@@ -1215,7 +1215,7 @@
   // ── Pocket definitions for the gallery ────────────────────────
 
   const pockets = [
-    { id: 'research', label: 'Research Article', tag: 'Perplexity-style', spec: researchPocket },
+    { id: 'research', label: 'Research Article', tag: 'Cited answer', spec: researchPocket },
     { id: 'market', label: 'Market Watch', tag: 'Finance', spec: marketPocket },
     { id: 'cicd', label: 'CI/CD Pipeline', tag: 'Workflow', spec: cicdWorkflowPocket },
     { id: 'onboarding', label: 'Customer Onboarding', tag: 'Workflow', spec: onboardingWorkflowPocket },
@@ -1234,12 +1234,12 @@
     news: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '20px' }, children: [
-        { type: 'heading', props: { text: 'Reliance Jio adds 8.3M subscribers in February, ARPU rises to \u20B9203.5', level: 3 } },
-        { type: 'text', props: { text: 'Jio Platforms reported 8.3 million net subscriber additions in February 2026, pushing its total subscriber base past 490 million. Average Revenue Per User (ARPU) rose to \u20B9203.5, up 15.1% year-on-year, driven by the July 2025 tariff hike and growing adoption of 5G-bundled plans.', size: 'sm' } },
+        { type: 'heading', props: { text: 'Volt Mobile adds 8.3M subscribers in February, ARPU rises to \u20B9203.5', level: 3 } },
+        { type: 'text', props: { text: 'Volt Platforms reported 8.3 million net subscriber additions in February 2026, pushing its total subscriber base past 490 million. Average Revenue Per User (ARPU) rose to \u20B9203.5, up 15.1% year-on-year, driven by the July 2025 tariff hike and growing adoption of 5G-bundled plans.', size: 'sm' } },
         { type: 'flex', props: { gap: '10px' }, style: { 'overflow-x': 'auto', 'padding-bottom': '4px' }, children: [
-          { type: 'source-card', props: { source: 'moneycontrol', title: 'Jio adds 8.3M subs in Feb, ARPU crosses \u20B9200 for first time', color: '#22c55e' } },
-          { type: 'source-card', props: { source: 'energy.economictimes', title: 'Telecom subscriber data Feb 2026: Jio leads, Airtel steady', color: '#ef4444' } },
-          { type: 'source-card', props: { source: 'ndtv', title: 'Jio 5G adoption crosses 200M users milestone', color: '#3b82f6' } },
+          { type: 'source-card', props: { source: 'marketline', title: 'Volt adds 8.3M subs in Feb, ARPU crosses \u20B9200 for first time', color: '#22c55e' } },
+          { type: 'source-card', props: { source: 'energy.ledger', title: 'Telecom subscriber data Feb 2026: Volt leads, Kestrel steady', color: '#ef4444' } },
+          { type: 'source-card', props: { source: 'metro24', title: 'Volt 5G adoption crosses 200M users milestone', color: '#3b82f6' } },
         ]},
         { type: 'heading', props: { text: 'ARPU Trend', level: 4 } },
         { type: 'chart', props: { type: 'line', height: 160, colors: ['#22c55e'], data: [
@@ -1250,33 +1250,33 @@
         ]}},
         { type: 'text', props: { text: 'Analysts view the ARPU expansion as sustainable. The July 2025 tariff hike added \u20B915–20 to blended ARPU, and 5G-bundled plans carry a further \u20B910–15 premium over 4G equivalents.', size: 'sm' } },
         { type: 'flex', props: { gap: '6px', wrap: 'wrap' }, children: [
-          { type: 'citation', props: { source: 'moneycontrol', number: 1 } },
-          { type: 'citation', props: { source: 'ndtv', number: 2 } },
+          { type: 'citation', props: { source: 'marketline', number: 1 } },
+          { type: 'citation', props: { source: 'metro24', number: 2 } },
         ]},
-        { type: 'callout', props: { variant: 'success', title: 'Bullish Signal', text: 'Jio\'s ARPU has grown for 7 consecutive quarters — the longest streak since its 2016 launch. At \u20B9203.5, it is now within 5% of management\'s FY26 target of \u20B9210.' } },
+        { type: 'callout', props: { variant: 'success', title: 'Bullish Signal', text: 'Volt\'s ARPU has grown for 7 consecutive quarters — the longest streak since its 2016 launch. At \u20B9203.5, it is now within 5% of management\'s FY26 target of \u20B9210.' } },
         { type: 'heading', props: { text: 'Subscriber Market Share', level: 4 } },
         { type: 'chart', props: { type: 'donut', height: 150, data: [
-          { label: 'Jio', value: 39.2 },
-          { label: 'Airtel', value: 33.8 },
+          { label: 'Volt', value: 39.2 },
+          { label: 'Kestrel', value: 33.8 },
           { label: 'Vi', value: 18.5 },
-          { label: 'BSNL', value: 8.5 },
+          { label: 'Statelink', value: 8.5 },
         ]}},
         { type: 'sources-bar', props: { sources: [
-          { name: 'moneycontrol' }, { name: 'ndtv' }, { name: 'energy.economictimes' }, { name: 'TRAI' },
+          { name: 'marketline' }, { name: 'metro24' }, { name: 'energy.ledger' }, { name: 'TRB' },
         ]}},
         { type: 'heading', props: { text: 'Discover more', level: 4 } },
         { type: 'flex', props: { gap: '12px' }, style: { 'overflow-x': 'auto', 'padding-bottom': '4px' }, children: [
-          { type: 'discover-card', props: { title: 'Airtel vs Jio: Q3 Subscriber Battle', description: 'Airtel reports steady growth but Jio widens the gap...', image: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?w=300&q=70' } },
-          { type: 'discover-card', props: { title: 'India 5G Coverage Reaches 85% of Urban Areas', description: 'Both Jio and Airtel now cover major metros...', image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=300&q=70' } },
+          { type: 'discover-card', props: { title: 'Kestrel vs Volt: Q3 Subscriber Battle', description: 'Kestrel reports steady growth but Volt widens the gap...', image: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?w=300&q=70' } },
+          { type: 'discover-card', props: { title: 'India 5G Coverage Reaches 85% of Urban Areas', description: 'Both Volt and Kestrel now cover major metros...', image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=300&q=70' } },
         ]},
-        { type: 'follow-up', props: { placeholder: 'Ask about Jio financials, 5G rollout, Airtel comparison...' } },
+        { type: 'follow-up', props: { placeholder: 'Ask about Volt financials, 5G rollout, Kestrel comparison...' } },
       ]}
     },
 
     earnings: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '20px' }, children: [
-        { type: 'heading', props: { text: 'Reliance Industries — Earnings Deep Dive', level: 3 } },
+        { type: 'heading', props: { text: 'Meridian Industries — Earnings Deep Dive', level: 3 } },
         { type: 'callout', props: { variant: 'success', title: 'Q4 FY25: Beat on Both Lines', text: 'Revenue \u20B92.52L Cr (+5.9% QoQ) vs estimate \u20B92.47L Cr. EPS \u20B920.1 vs estimate \u20B919.5, a +3.1% surprise.' } },
         { type: 'grid', props: { columns: 4, gap: '12px' }, children: [
           { type: 'metric', props: { label: 'Revenue', value: '\u20B92.52L Cr', trend: '+5.9%' } },
@@ -1298,16 +1298,16 @@
         ], rows: [
           { seg: 'O2C', rev: '\u20B91.38L Cr', ebitda: '\u20B915,200 Cr', margin: '11.0%', yoy: '+4.2%' },
           { seg: 'Retail', rev: '\u20B975,600 Cr', ebitda: '\u20B95,800 Cr', margin: '7.7%', yoy: '+18.5%' },
-          { seg: 'Digital (Jio)', rev: '\u20B934,200 Cr', ebitda: '\u20B918,100 Cr', margin: '52.9%', yoy: '+15.1%' },
+          { seg: 'Digital (Volt)', rev: '\u20B934,200 Cr', ebitda: '\u20B918,100 Cr', margin: '52.9%', yoy: '+15.1%' },
           { seg: 'Others', rev: '\u20B94,200 Cr', ebitda: '\u20B9850 Cr', margin: '20.2%', yoy: '-2.4%' },
         ]}},
         { type: 'flex', props: { gap: '6px', wrap: 'wrap' }, children: [
-          { type: 'citation', props: { source: 'moneycontrol', number: 1 } },
-          { type: 'citation', props: { source: 'bloomberg', number: 2 } },
-          { type: 'citation', props: { source: 'NSE India', number: 3 } },
+          { type: 'citation', props: { source: 'marketline', number: 1 } },
+          { type: 'citation', props: { source: 'tickerwire', number: 2 } },
+          { type: 'citation', props: { source: 'MX Exchange', number: 3 } },
         ]},
         { type: 'sources-bar', props: { sources: [
-          { name: 'moneycontrol' }, { name: 'bloomberg' }, { name: 'NSE India' }, { name: 'reuters' },
+          { name: 'marketline' }, { name: 'tickerwire' }, { name: 'MX Exchange' }, { name: 'wirefeed' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about segment margins, guidance, next quarter...' } },
       ]}
@@ -1316,9 +1316,9 @@
     holding: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '20px' }, children: [
-        { type: 'heading', props: { text: 'Shareholding Pattern — Reliance Industries', level: 3 } },
+        { type: 'heading', props: { text: 'Shareholding Pattern — Meridian Industries', level: 3 } },
         { type: 'chart', props: { type: 'donut', height: 180, data: [
-          { label: 'Promoter (Ambani Family)', value: 50.3 },
+          { label: 'Promoter (Mehra Family)', value: 50.3 },
           { label: 'FII / FPI', value: 23.1 },
           { label: 'DII (MF + Insurance)', value: 14.2 },
           { label: 'Retail & HNI', value: 12.4 },
@@ -1333,19 +1333,19 @@
           { cat: 'DII', q1: '14.90%', q2: '14.60%', q3: '14.40%', q4: '14.20%' },
           { cat: 'Retail & Others', q1: '12.70%', q2: '12.60%', q3: '12.50%', q4: '12.40%' },
         ]}},
-        { type: 'callout', props: { variant: 'insight', title: 'FII Accumulation', text: 'Foreign institutional investors have increased their stake by 1.0% over the last 4 quarters — the largest FII build-up since 2021. This coincides with Jio\'s ARPU inflection and new energy capex clarity.' } },
+        { type: 'callout', props: { variant: 'insight', title: 'FII Accumulation', text: 'Foreign institutional investors have increased their stake by 1.0% over the last 4 quarters — the largest FII build-up since 2021. This coincides with Volt\'s ARPU inflection and new energy capex clarity.' } },
         { type: 'heading', props: { text: 'Top Institutional Holders', level: 4 } },
         { type: 'table', props: { variant: 'compact', columns: [
           { key: 'name', label: 'Institution' }, { key: 'stake', label: 'Stake' }, { key: 'change', label: 'QoQ' },
         ], rows: [
-          { name: 'Life Insurance Corp.', stake: '6.12%', change: '-0.08%' },
-          { name: 'Vanguard Group', stake: '2.84%', change: '+0.12%' },
-          { name: 'BlackRock', stake: '2.21%', change: '+0.15%' },
+          { name: 'National Assurance Corp.', stake: '6.12%', change: '-0.08%' },
+          { name: 'Lodestar Group', stake: '2.84%', change: '+0.12%' },
+          { name: 'Ironleaf Capital', stake: '2.21%', change: '+0.15%' },
           { name: 'SBI Mutual Fund', stake: '1.95%', change: '+0.04%' },
           { name: 'GIC Singapore', stake: '1.42%', change: '+0.22%' },
         ]}},
         { type: 'sources-bar', props: { sources: [
-          { name: 'NSE India' }, { name: 'moneycontrol' }, { name: 'trendlyne' },
+          { name: 'MX Exchange' }, { name: 'marketline' }, { name: 'stocktrend' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about promoter pledge, FII trends, specific funds...' } },
       ]}
@@ -1354,14 +1354,14 @@
     risks: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '16px' }, children: [
-        { type: 'heading', props: { text: 'Risk Assessment — Reliance Industries', level: 3 } },
-        { type: 'callout', props: { variant: 'warning', title: 'Oil & Gas Price Risk (High)', text: 'O2C contributes 55% of revenue. Strait of Hormuz disruption has already reduced GRM to $8.2/bbl from $11.5/bbl. Prolonged closure could cut EBITDA by \u20B912,000–15,000 Cr annually.' } },
-        { type: 'callout', props: { variant: 'warning', title: 'Telecom Competition (Medium)', text: 'Airtel\'s aggressive 5G pricing and BSNL\'s 4G launch could pressure Jio\'s market share. TRAI floor pricing regulation remains an uncertainty for the sector.' } },
-        { type: 'callout', props: { variant: 'info', title: 'Succession & Governance (Medium)', text: 'Transition of operational control to Isha and Akash Ambani is progressing. While institutional investors view this favorably, execution continuity is key during the handover period.' } },
+        { type: 'heading', props: { text: 'Risk Assessment — Meridian Industries', level: 3 } },
+        { type: 'callout', props: { variant: 'warning', title: 'Oil & Gas Price Risk (High)', text: 'O2C contributes 55% of revenue. Kessel Strait disruption has already reduced GRM to $8.2/bbl from $11.5/bbl. Prolonged closure could cut EBITDA by \u20B912,000–15,000 Cr annually.' } },
+        { type: 'callout', props: { variant: 'warning', title: 'Telecom Competition (Medium)', text: 'Kestrel\'s aggressive 5G pricing and Statelink\'s 4G launch could pressure Volt\'s market share. TRB floor pricing regulation remains an uncertainty for the sector.' } },
+        { type: 'callout', props: { variant: 'info', title: 'Succession & Governance (Medium)', text: 'Transition of operational control to Nisha and Kabir Mehra is progressing. While institutional investors view this favorably, execution continuity is key during the handover period.' } },
         { type: 'callout', props: { variant: 'warning', title: 'Capex Intensity (Medium)', text: 'New energy vertical requires \u20B975,000 Cr capex through FY28. Funding via internal accruals + debt. Debt/Equity ratio could rise from 0.38 to 0.55 if retail and digital FCF underperforms.' } },
         { type: 'callout', props: { variant: 'info', title: 'Regulatory Exposure (Low-Medium)', text: 'Multi-sector exposure means regulatory changes in telecom, retail FDI, refining, or renewables could individually impact business units. No single regulatory event poses existential risk.' } },
         { type: 'sources-bar', props: { sources: [
-          { name: 'bloomberg' }, { name: 'reuters' }, { name: 'moneycontrol' },
+          { name: 'tickerwire' }, { name: 'wirefeed' }, { name: 'marketline' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about specific risk factors, mitigation...' } },
       ]}
@@ -1370,19 +1370,19 @@
     events: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '16px' }, children: [
-        { type: 'heading', props: { text: 'Key Events & M&A — Reliance Industries', level: 3 } },
+        { type: 'heading', props: { text: 'Key Events & M&A — Meridian Industries', level: 3 } },
         { type: 'timeline', props: { events: [
-          { date: 'Mar 2026', title: 'Jio Financial Services IPO filing', detail: 'DRHP filed with SEBI for a \u20B91,800 Cr IPO of the fintech arm. Listing expected Q2 2026.', type: 'info' },
-          { date: 'Jan 2026', title: 'Reliance Retail acquires Metro Cash & Carry India', detail: 'Completed \u20B92,850 Cr acquisition of Metro\'s wholesale business across 31 stores.', type: 'success' },
+          { date: 'Mar 2026', title: 'Volt Financial Services IPO filing', detail: 'DRHP filed with SRB for a \u20B91,800 Cr IPO of the fintech arm. Listing expected Q2 2026.', type: 'info' },
+          { date: 'Jan 2026', title: 'Meridian Retail acquires Northway Wholesale', detail: 'Completed \u20B92,850 Cr acquisition of Metro\'s wholesale business across 31 stores.', type: 'success' },
           { date: 'Nov 2025', title: 'New energy arm operationalized', detail: '10GW solar cell factory in Jamnagar begins commercial production. Additional 5GW battery line under construction.', type: 'success' },
-          { date: 'Sep 2025', title: 'Q2 FY26 results beat estimates', detail: 'Revenue \u20B92.48L Cr (+9.1%), PAT \u20B920,100 Cr (+14.3%). Jio ARPU crossed \u20B9195.', type: 'success' },
-          { date: 'Jul 2025', title: 'Aramco O2C stake sale restart', detail: 'O2C business carve-out valued at $75B; Aramco may take 20% stake. Deal expected to close H1 2026.', type: 'warning' },
-          { date: 'Apr 2025', title: 'Paramount India content library acquired', detail: '\u20B91,200 Cr deal for Paramount+ India streaming catalog, merged into JioCinema.', type: 'info' },
-          { date: 'Feb 2025', title: 'Retail crosses 18,000 stores', detail: 'Reliance Retail network reaches 18,446 stores across 7,000+ cities.', type: 'success' },
-          { date: 'Oct 2024', title: 'Jio tariff hike', detail: 'Across-the-board 12–25% tariff increase. ARPU expected to reach \u20B9200+ by Q4 FY25.', type: 'info' },
+          { date: 'Sep 2025', title: 'Q2 FY26 results beat estimates', detail: 'Revenue \u20B92.48L Cr (+9.1%), PAT \u20B920,100 Cr (+14.3%). Volt ARPU crossed \u20B9195.', type: 'success' },
+          { date: 'Jul 2025', title: 'Petral O2C stake sale restart', detail: 'O2C business carve-out valued at $75B; Petral may take 20% stake. Deal expected to close H1 2026.', type: 'warning' },
+          { date: 'Apr 2025', title: 'Silverline Studios content library acquired', detail: '\u20B91,200 Cr deal for Silverline+ streaming catalog, merged into VoltCinema.', type: 'info' },
+          { date: 'Feb 2025', title: 'Retail crosses 18,000 stores', detail: 'Meridian Retail network reaches 18,446 stores across 7,000+ cities.', type: 'success' },
+          { date: 'Oct 2024', title: 'Volt tariff hike', detail: 'Across-the-board 12–25% tariff increase. ARPU expected to reach \u20B9200+ by Q4 FY25.', type: 'info' },
         ]}},
         { type: 'sources-bar', props: { sources: [
-          { name: 'moneycontrol' }, { name: 'bloomberg' }, { name: 'reuters' }, { name: 'ndtv' },
+          { name: 'marketline' }, { name: 'tickerwire' }, { name: 'wirefeed' }, { name: 'metro24' },
         ]}},
         { type: 'follow-up', props: { placeholder: 'Ask about specific deals, upcoming events...' } },
       ]}
