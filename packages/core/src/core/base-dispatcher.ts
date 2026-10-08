@@ -27,6 +27,7 @@ import type { StateStore } from './state-store.js';
 import { resolveString, resolveValue, type ResolverContext } from './expression-resolver.js';
 import type { RippleEvent, RippleEventResult } from '../types.js';
 import { asText } from './text-coerce.js';
+import { safeUrl } from '../security/safe-url.js';
 
 /**
  * Thrown when a step wants to stop the current flow early (e.g. `validate`
@@ -329,7 +330,9 @@ export class BaseDispatcher {
 			// from the emit/pin/unpin shape). Accept either so the click
 			// still works; the prompt teaches `url` going forward.
 			const rawUrl = handler.url ?? (handler as { target?: string }).target;
-			event.url = rawUrl ? (resolveString(rawUrl, context) as string) : '';
+			// The resolved value goes to the host, which may assign it to
+			// location: an expression can build `javascript:` at this point.
+			event.url = (rawUrl && safeUrl(String(resolveString(rawUrl, context)))) || '';
 		}
 
 		if (handler.action === 'toast') {

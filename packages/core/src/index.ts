@@ -169,3 +169,6 @@ export {
 	type ResolvedTree,
 	type ResolveContext
 } from './headless/index.js';
+
+// ---------------------------------------------------------------- security
+export { safeUrl, safeStyle, type SafeUrlKind } from './security/safe-url.js';
