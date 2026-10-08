@@ -3,6 +3,7 @@
 // scripts/record-scenario.ts. Other tasks import these types and this list,
 // so the shapes below are a contract: add fields, never rename or remove.
 
+import orderBurger from './fixtures/order-burger.json';
 import billSplitter from './fixtures/bill-splitter.json';
 import savingsCalculator from './fixtures/savings-calculator.json';
 import tokyoTrip from './fixtures/tokyo-trip.json';
@@ -33,6 +34,7 @@ export interface Scenario {
 }
 
 export const scenarios: Scenario[] = [
+	{ id: 'order-burger', title: 'Order a burger', category: 'Store', fixture: orderBurger, needsStore: true },
 	{ id: 'bill-splitter', title: 'Split the bill', category: 'Everyday', fixture: billSplitter },
 	{ id: 'savings-calculator', title: 'Watch savings grow', category: 'Money', fixture: savingsCalculator },
 	{ id: 'tokyo-trip', title: 'Plan 5 days in Tokyo', category: 'Travel', fixture: tokyoTrip },
