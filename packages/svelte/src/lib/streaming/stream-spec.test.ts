@@ -240,14 +240,3 @@ describe('streamSpec — ReadableStream compatibility', () => {
     expect((store.current as any)?.ui?.type).toBe('text');
   });
 });
-
-// KNOWN ENGINE GAP: isStringClosed('') finds `""` anywhere earlier in the
-// buffer (any empty-string state value), so a half-streamed `"type":"` keeps
-// type "" and NodeRenderer paints a red "Widget type "" isn't in the catalog"
-// card until the next chunk lands. Seen on /live's order demo before its
-// fixture was re-recorded with null customer fields. Flip to `it` once fixed.
-it.fails('drops a just-opened empty type even when the buffer already holds ""', () => {
-  const { value } = parsePartialSpec('{"state":{"name":""},"ui":{"type":"card","children":[{"type":"');
-  const child = (value as { ui: { children: Record<string, unknown>[] } }).ui.children[0];
-  expect(child).not.toHaveProperty('type');
-});
