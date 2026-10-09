@@ -6,7 +6,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
-import { cardChunks, findScenario, pickScenario, recordedEvents } from './recorded.js';
+import { cardChunks, findScenario, pickScenario, recordedEvents, recordedExchange } from './recorded.js';
 import { BYOK_URL, ChatHttpError, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 
@@ -373,3 +373,19 @@ describe('ChatSession', () => {
 	});
 });
 
+describe('ChatSession.seed', () => {
+	test('folds a recorded exchange in synchronously: a final card with its title and text', () => {
+		const session = new ChatSession(frames());
+		session.seed(bill.fixture.prompt, recordedExchange(bill, 'Replaying a recorded answer that matches.'));
+		expect(session.turns.map((t) => [t.role, t.pending])).toEqual([
+			['user', false],
+			['assistant', false]
+		]);
+		expect(session.busy).toBe(false);
+		const card = cardOf(session);
+		expect(card.status).toBe('final');
+		expect(card.title).toBe(bill.title);
+		expect(JSON.parse(card.text)).toEqual({ state: billSpec.state, ui: billSpec.ui });
+		expect(lastTurn(session).parts.map((p) => p.kind)).toEqual(['text', 'card', 'text']);
+	});
+});

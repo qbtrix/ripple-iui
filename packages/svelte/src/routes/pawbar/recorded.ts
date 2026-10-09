@@ -3,9 +3,10 @@
 // as SSE, and the landing's offline fallback (no endpoint configured) feeds
 // them straight to the chat store, so both exercise the same client path.
 // `findScenario` is a plain keyword-overlap match (null when nothing overlaps);
-// `pickScenario` defaults that to the bill splitter. `cardChunks` re-cuts a fixture (a whole `{version,state,ui}` spec)
-// into the card wire shape `{state,ui}` on the fixture's own chunk boundaries
-// and timing. `mode` drives the mock's failure paths.
+// `pickScenario` defaults that to the bill splitter. `cardChunks` re-cuts a
+// fixture (a whole `{version,state,ui}` spec) into the card wire shape
+// `{state,ui}` on the fixture's own chunk boundaries and timing. `mode` drives the mock's failure paths. `recordedExchange` is the
+// same normal answer as one untimed frame list, for ChatSession.seed.
 
 import { replay } from '../live/replay.js';
 import { scenarios, type Scenario, type ScenarioFixture } from '../live/scenarios.js';
@@ -13,6 +14,7 @@ import { FENCE_OPEN, type SSEFrame } from './sse.js';
 
 export type RecordedMode = 'normal' | 'reject' | 'truncate' | 'legacy';
 
+const DONE = 'The card is live now. Change something and see.';
 const chunk = (content: string): SSEFrame => ({ event: 'chunk', data: { content, type: 'text' } });
 
 const STOP = new Set(['the', 'and', 'for', 'with', 'me', 'my', 'show', 'let', 'can', 'how', 'that', 'what', 'make', 'give']);
@@ -87,18 +89,34 @@ export async function* recordedEvents(
 		yield chunk('\n``');
 		yield chunk('`\n\nThe card is live now. Change something and see.');
 	} else {
-		yield { event: 'card.start', data: { card_id: cardId } };
+		yield { event: 'card.start', data: { card_id: cardId, title: scenario.title } };
 		const cutoff = mode === 'normal' ? pieces.length : Math.ceil(pieces.length / 2);
 		for await (const text of stream(cutoff)) yield { event: 'card.delta', data: { card_id: cardId, text } };
 		if (signal?.aborted) return;
 		if (mode === 'normal') {
 			const card: unknown = JSON.parse(pieces.map((p) => p.text).join(''));
 			yield { event: 'card.final', data: { card_id: cardId, card } };
-			yield chunk('The card is live now. Change something and see.');
+			yield chunk(DONE);
 		} else {
 			yield { event: 'card.rejected', data: { card_id: cardId, reason: mode === 'truncate' ? 'truncated' : 'invalid_widget' } };
 			yield chunk('That card did not come through, so I left it out.');
 		}
 	}
 	yield { event: 'stream_end', data: { assistant_message_id: `msg_${scenario.id}`, cancelled: false } };
+}
+
+/** The whole normal exchange at once, no timing: what ChatSession.seed folds in. */
+export function recordedExchange(scenario: Scenario, intro: string): SSEFrame[] {
+	const cardId = `card_${scenario.id}`;
+	const text = cardChunks(scenario.fixture)
+		.map((p) => p.text)
+		.join('');
+	return [
+		chunk(intro),
+		{ event: 'card.start', data: { card_id: cardId, title: scenario.title } },
+		{ event: 'card.delta', data: { card_id: cardId, text } },
+		{ event: 'card.final', data: { card_id: cardId, card: JSON.parse(text) } },
+		chunk(DONE),
+		{ event: 'stream_end', data: { assistant_message_id: `msg_${scenario.id}`, cancelled: false } }
+	];
 }
