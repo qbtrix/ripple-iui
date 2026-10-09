@@ -141,3 +141,77 @@ describe('readReturn()', () => {
 		(q) => expect(readReturn(q)).toBeNull()
 	);
 });
+
+describe('toStoreRequest with a menu-order Cart', () => {
+	const cart = (over: Record<string, unknown> = {}) => ({
+		lines: [
+			{ product_id: 'burger-1', qty: 2, option_ids: ['size-large', 'extra-cheese'], name: 'Classic Cheeseburger', unit_price: 14.49 },
+			{ product_id: 'drink-2', qty: 1, option_ids: [], name: 'Iced Tea', unit_price: 2.99 }
+		],
+		fulfilment: 'pickup',
+		customer: { name: 'Sam', email: 'sam@example.com', phone: '555 0100' },
+		total: 31.97,
+		...over
+	});
+
+	test('maps lines to ids, quantities and option ids, fulfilment to orderType', () => {
+		const r = toStoreRequest(cart());
+		expect(r).toEqual({
+			request: {
+				items: [
+					{ item: { id: 'burger-1' }, quantity: 2, options: ['size-large', 'extra-cheese'] },
+					{ item: { id: 'drink-2' }, quantity: 1, options: [] }
+				],
+				customer: { name: 'Sam', email: 'sam@example.com', phone: '555 0100' },
+				orderType: 'pickup',
+				returnTo: 'ripple'
+			},
+			summary: {
+				lines: [
+					{ name: 'Classic Cheeseburger', qty: 2, price: 14.49 },
+					{ name: 'Iced Tea', qty: 1, price: 2.99 }
+				],
+				orderType: 'pickup'
+			}
+		});
+		// The card's prices and total never reach the store.
+		expect(JSON.stringify((r as { request: unknown }).request)).not.toMatch(/14\.49|31\.97|unit_price|total/);
+	});
+
+	test('delivery carries the address', () => {
+		const r = toStoreRequest(cart({ fulfilment: 'delivery', customer: { name: 'Sam', email: 'sam@example.com', phone: '555 0100', address: '1 Main St' } }));
+		expect(r).toMatchObject({ request: { orderType: 'delivery', customer: { address: '1 Main St' } } });
+		expect(toStoreRequest(cart({ fulfilment: 'delivery' }))).toEqual({ error: 'Enter a delivery address.' });
+	});
+
+	test.each([
+		['qty 0', { lines: [{ product_id: 'burger-1', qty: 0, option_ids: [] }] }, 'Up to 20'],
+		['qty 21', { lines: [{ product_id: 'burger-1', qty: 21, option_ids: [] }] }, 'Up to 20'],
+		['qty 1.5', { lines: [{ product_id: 'burger-1', qty: 1.5, option_ids: [] }] }, 'Up to 20'],
+		['31 lines', { lines: Array.from({ length: 31 }, () => ({ product_id: 'burger-1', qty: 1, option_ids: [] })) }, 'Up to 30 lines'],
+		['no lines', { lines: [] }, 'Add at least one item'],
+		['a bad product id', { lines: [{ product_id: '../x', qty: 1, option_ids: [] }] }, 'does not recognise'],
+		['a bad option id', { lines: [{ product_id: 'burger-1', qty: 1, option_ids: [{ id: 'x' }] }] }, 'option this page'],
+		['options not a list', { lines: [{ product_id: 'burger-1', qty: 1, option_ids: 'size-large' }] }, 'option this page'],
+		['no phone (the store needs all three)', { customer: { name: 'Sam', email: 'sam@example.com' } }, 'name and phone'],
+		['no email', { customer: { name: 'Sam', phone: '555 0100' } }, 'valid email'],
+		['a long name', { customer: { name: 'x'.repeat(81), email: 'sam@example.com', phone: '555 0100' } }, 'under 80'],
+		['a junk phone', { customer: { name: 'Sam', email: 'sam@example.com', phone: 'call me' } }, 'valid phone'],
+		['no fulfilment', { fulfilment: undefined }, 'pickup or delivery']
+	])('refuses %s', (_, over, message) => {
+		const r = toStoreRequest(cart(over));
+		expect('error' in r && r.error).toContain(message);
+	});
+
+	test('checkout() posts the mapped Cart and remembers its summary', async () => {
+		const fetch = reply(200, { url: `${PAGE}/live?order=mock_1&mock=true`, sessionId: 'mock_1' });
+		const navigate = vi.fn();
+		const remember = vi.fn();
+		const r = await checkout(cart(), { storeUrl: STORE, pageOrigin: PAGE, fetch, navigate, remember });
+		expect(r.ok).toBe(true);
+		const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+		expect(JSON.parse(init.body as string).items[0]).toEqual({ item: { id: 'burger-1' }, quantity: 2, options: ['size-large', 'extra-cheese'] });
+		expect(remember).toHaveBeenCalledWith(expect.objectContaining({ orderType: 'pickup' }));
+		expect(navigate).toHaveBeenCalledWith(`${PAGE}/live?order=mock_1&mock=true`);
+	});
+});
