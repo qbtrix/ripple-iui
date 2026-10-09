@@ -17,8 +17,14 @@
 		(page.data.headings ?? []) as { id: string; text: string; depth: number }[]
 	);
 	const current = $derived(page.url.pathname.replace(/^\/docs\/?/, ''));
+	// Set by a widget page's load: its category and that category's widget types.
+	const widgetPage = $derived(
+		page.data.siblings ? { category: page.data.category as { id: string }, siblings: page.data.siblings as string[] } : null
+	);
 	const currentTitle = $derived(
-		data.nav.flatMap((s) => s.pages).find((p) => p.slug === current)?.title ?? 'Docs'
+		data.nav.flatMap((s) => s.pages).find((p) => p.slug === current)?.title ??
+			(current === 'widgets' ? 'Widgets' : (page.data.type as string | undefined)) ??
+			'Docs'
 	);
 </script>
 
@@ -37,6 +43,32 @@
 			{/each}
 		</ul>
 	{/each}
+	<p class="section">Widgets</p>
+	<ul>
+		<li>
+			<a href="/docs/widgets" aria-current={current === 'widgets' ? 'page' : undefined} onclick={() => drawer?.close()}
+				>All widgets</a
+			>
+		</li>
+		{#each data.widgetNav as c (c.id)}
+			<li>
+				<a href="/docs/widgets#{c.id}" onclick={() => drawer?.close()}>{c.title}</a>
+				{#if widgetPage?.category.id === c.id}
+					<ul class="sub">
+						{#each widgetPage.siblings as type (type)}
+							<li>
+								<a
+									href="/docs/widgets/{type}"
+									aria-current={current === `widgets/${type}` ? 'page' : undefined}
+									onclick={() => drawer?.close()}><code>{type}</code></a
+								>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</li>
+		{/each}
+	</ul>
 {/snippet}
 
 <div class="subbar">
@@ -136,6 +168,16 @@
 		color: var(--site-ink);
 		background: var(--site-pressed);
 		font-weight: 500;
+	}
+	ul.sub {
+		margin: 2px 0 6px 10px;
+		padding-left: 6px;
+		border-left: 1px solid var(--site-line);
+	}
+	ul.sub code {
+		font: 13px var(--font-mono);
+		font-variant-ligatures: none;
+		overflow-wrap: anywhere;
 	}
 	.rail a {
 		font-size: 13px;
