@@ -5,6 +5,8 @@
 // menu-order's OPTION_ICONS and OptionList's CHOICE_ICONS: an option may carry
 // an `icon`, honoured only when it is a key of that map; otherwise a keyword
 // scan of the option's name infers the key (optionIconKey, choiceIconKey).
+// habit-tracker's HABIT_ICONS is the same closed-key idea without the scan: a
+// habit's `icon` is honoured only when it is a key of the map.
 //
 // One map per enum in the doc, each its own export so a widget's bundle carries
 // only the icons it imports. A widget with an enum not listed here
@@ -118,6 +120,17 @@ import Heart from '@lucide/svelte/icons/heart';
 import Baby from '@lucide/svelte/icons/baby';
 import CalendarDays from '@lucide/svelte/icons/calendar-days';
 import Zap from '@lucide/svelte/icons/zap';
+// habits
+import BookOpen from '@lucide/svelte/icons/book-open';
+import GlassWater from '@lucide/svelte/icons/glass-water';
+import Bed from '@lucide/svelte/icons/bed';
+import Flower2 from '@lucide/svelte/icons/flower-2';
+import NotebookPen from '@lucide/svelte/icons/notebook-pen';
+import Code from '@lucide/svelte/icons/code';
+import Music from '@lucide/svelte/icons/music';
+import CandyOff from '@lucide/svelte/icons/candy-off';
+import Bike from '@lucide/svelte/icons/bike';
+import Pill from '@lucide/svelte/icons/pill';
 
 export const FALLBACK_ICON: LucideIcon = CircleDot;
 
@@ -403,6 +416,25 @@ export const FEATURE_ICONS = {
 	support: Headset
 } satisfies Record<string, LucideIcon>;
 
+/** habit-tracker habit `icon`: the closed set a habit's icon may name; anything else renders CircleDot. */
+export const HABIT_ICONS = {
+	read: BookOpen,
+	run: Activity,
+	walk: Footprints,
+	bike: Bike,
+	gym: Dumbbell,
+	stretch: PersonStanding,
+	water: GlassWater,
+	sleep: Bed,
+	meditate: Flower2,
+	journal: NotebookPen,
+	code: Code,
+	music: Music,
+	veg: Carrot,
+	'no-sugar': CandyOff,
+	vitamins: Pill
+} satisfies Record<string, LucideIcon>;
+
 export type StopKind = keyof typeof STOP_ICONS;
 export type LegKind = keyof typeof LEG_ICONS;
 export type MealKind = keyof typeof MEAL_ICONS;
@@ -412,3 +444,4 @@ export type ServiceKind = keyof typeof SERVICE_ICONS;
 export type ExerciseKind = keyof typeof EXERCISE_ICONS;
 export type RecordKind = keyof typeof RECORD_ICONS;
 export type FeatureKind = keyof typeof FEATURE_ICONS;
+export type HabitIconKey = keyof typeof HABIT_ICONS;

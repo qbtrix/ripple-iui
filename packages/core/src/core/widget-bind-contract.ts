@@ -163,6 +163,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   // memory-match binds its game ({ moves, matched, completed, seconds }),
   // written by the widget on each move, never on a timer tick
   'memory-match', 'memory-game', 'match-pairs',
+  // habit-tracker binds { habits, ticks: { [habitId]: ISO days } }
+  'habit-tracker', 'habits', 'streak-tracker',
 ]);
 
 const warnedTypes = new Set<string>();

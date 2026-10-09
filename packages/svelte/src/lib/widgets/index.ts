@@ -19,7 +19,7 @@ import {
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   WordGuess,
-  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, Quiz, MemoryMatch,
+  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, Quiz, MemoryMatch, HabitTracker,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -301,6 +301,9 @@ const defaultRegistry: WidgetMap = {
   'workout-timer': IntervalWorkout,
   'interval-timer': IntervalWorkout,
   'hiit-timer': IntervalWorkout,
+  'habit-tracker': HabitTracker,
+  habits: HabitTracker,
+  'streak-tracker': HabitTracker,
   'flashcard-deck': FlashcardDeck,
   flashcards: FlashcardDeck,
   'study-deck': FlashcardDeck,
@@ -493,7 +496,7 @@ export {
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, MemoryMatch,
+  AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, MemoryMatch, HabitTracker,
   WordGuess,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
   LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
