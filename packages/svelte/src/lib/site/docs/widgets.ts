@@ -7,6 +7,7 @@
 
 import { manifestEntries, type WidgetManifestEntry, type WidgetPropSpec } from '../../manifest/index.js';
 import { SITE_URL } from './model.js';
+import { objectFields } from './props.js';
 
 export const SPEC_VERSION = '1.0';
 const REPO_WIDGETS = 'https://github.com/qbtrix/ripple-iui/tree/main/packages/svelte/src/lib/widgets';
@@ -89,6 +90,56 @@ export function interactiveSpecs(e: WidgetManifestEntry): NamedSpec[] {
 
 export const rows = (r?: Record<string, WidgetPropSpec>): PropRow[] =>
 	Object.entries(r ?? {}).map(([name, spec]) => ({ name, ...spec }));
+
+export interface AnatomyPart {
+	name: string;
+	/** Where the part lives on the node: a node-level field, a structured prop, or `children`. */
+	kind: 'node field' | 'prop' | 'children';
+	/** The part's own fields (object props) or the node types it holds (children). */
+	parts: string[];
+	/** It holds a list: an array prop, or children. */
+	many: boolean;
+	description: string;
+}
+
+const isList = (type: string) => /^Array<|\[\]$/.test(type.trim());
+const nodeType = (n: unknown) =>
+	n && typeof n === 'object' && typeof (n as { type?: unknown }).type === 'string' ? (n as { type: string }).type : null;
+
+/**
+ * The parts a composite widget is assembled from, all read from its manifest
+ * entry: its node fields, every prop that takes structured content (an object,
+ * an array of objects, or a nested spec), and the node types its example puts
+ * in `children`.
+ */
+export function anatomy(e: WidgetManifestEntry): AnatomyPart[] {
+	const fields = rows(e.nodeFields).map((r) => ({
+		name: r.name,
+		kind: 'node field' as const,
+		parts: objectFields(r.type).map((f) => f.name + (f.optional ? '?' : '')),
+		many: isList(r.type),
+		description: r.description
+	}));
+	const props = rows(e.props).flatMap((r) => {
+		const parts = objectFields(r.type).map((f) => f.name + (f.optional ? '?' : ''));
+		return parts.length || /\bUISpec\b/.test(r.type)
+			? [{ name: r.name, kind: 'prop' as const, parts, many: isList(r.type), description: r.description }]
+			: [];
+	});
+	const kids = Array.isArray(e.example.children) ? e.example.children.map(nodeType).filter((t) => t !== null) : [];
+	const children = kids.length
+		? [
+				{
+					name: 'children',
+					kind: 'children' as const,
+					parts: [...new Set(kids)],
+					many: true,
+					description: 'Child nodes. The example nests these types.'
+				}
+			]
+		: [];
+	return [...fields, ...props, ...children];
+}
 
 const sources = Object.keys(import.meta.glob('/src/lib/widgets/**/*.svelte'));
 const pascal = (type: string) => type.replace(/(^|-)([a-z0-9])/g, (_, __, c: string) => c.toUpperCase());

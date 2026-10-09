@@ -1,23 +1,26 @@
 <!--
   @file routes/docs/widgets/[type]/+page.svelte
   @description One generated widget reference page: type, category, description,
-    the manifest example live in a SpecExample (plus any interactive pocket
-    specs), then Props / Events / Node fields tables, each only when it has
-    rows. All copy comes from the manifest entry. Tables scroll inside their own
-    box so a phone never scrolls sideways. Indexed by Pagefind (data-pagefind-body).
+    the Copy page split button, then the example in a props configurator (or a
+    plain SpecExample when no prop can be modelled or the example's root is not
+    this widget), one row of live previews per variant-like prop, an Anatomy
+    outline for composite widgets, any interactive pocket specs, and the Props /
+    Events / Node fields tables, each only when it has rows. All copy comes from
+    the manifest entry. Tables scroll inside their own box so a phone never
+    scrolls sideways. Indexed by Pagefind (data-pagefind-body).
 -->
 <script lang="ts">
 	import SpecExample from '$lib/site/SpecExample.svelte';
+	import CopyPage from '$lib/site/docs/CopyPage.svelte';
+	import PropsConfigurator from '$lib/site/docs/PropsConfigurator.svelte';
+	import VariantRow from '$lib/site/docs/VariantRow.svelte';
+	import { configurableProps } from '$lib/site/docs/props.js';
 
 	let { data } = $props();
 
-	let copied = $state(false);
-
-	async function copySpec() {
-		await navigator.clipboard.writeText(JSON.stringify(data.example, null, 2));
-		copied = true;
-		setTimeout(() => (copied = false), 1500);
-	}
+	// Categories whose widgets are page or panel sized and need the full column to read.
+	const WIDE = new Set(['composite', 'data', 'layout', 'marketing', 'research', 'vertical']);
+	const configurable = $derived(data.rootIsWidget && configurableProps(data.props).length > 0);
 </script>
 
 <svelte:head>
@@ -59,15 +62,46 @@
 			<p class="badge">Renders without JS</p>
 		{/if}
 		<div class="actions" data-pagefind-ignore>
-			<button type="button" onclick={copySpec}>{copied ? 'Copied' : 'Copy spec'}</button>
-			<a href="/docs/widgets/{data.type}.md">View as Markdown</a>
+			<CopyPage markdown={data.markdown} href="/docs/widgets/{data.type}.md" />
 			<a href={data.source} rel="noopener">Source on GitHub</a>
 		</div>
-		<span class="sr-only" aria-live="polite">{copied ? 'Spec copied' : ''}</span>
 	</header>
 
 	<h2 id="example">Example</h2>
-	<SpecExample spec={data.example} />
+	{#if configurable}
+		<PropsConfigurator spec={data.example} rows={data.props} wide={WIDE.has(data.category.id)} />
+	{:else}
+		<SpecExample spec={data.example} />
+	{/if}
+
+	{#each data.axes as axis (axis.name)}
+		{@const title = data.headings.find((h) => h.id === `axis-${axis.name}`)?.text}
+		<h2 id="axis-{axis.name}">{title}</h2>
+		<p class="note">The example with only <code>{axis.name}</code> changed.</p>
+		<VariantRow spec={data.example} {axis} />
+	{/each}
+
+	{#if data.anatomy.length}
+		<h2 id="anatomy">Anatomy</h2>
+		<p class="note">The parts <code>{data.type}</code> is assembled from, read from its manifest entry.</p>
+		<ul class="anatomy">
+			<li class="root"><code>{data.type}</code></li>
+			{#each data.anatomy as part (part.name)}
+				<li>
+					<div class="part">
+						<code class="pname">{part.name}{part.many ? '[]' : ''}</code>
+						<span class="kind">{part.kind}</span>
+					</div>
+					{#if part.parts.length}
+						<p class="fields">
+							{#each part.parts as f (f)}<code>{f}</code>{/each}
+						</p>
+					{/if}
+					<p class="pdesc">{part.description}</p>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 
 	{#each data.interactive as s, i (s.name)}
 		<h2 id="interactive-{i}">{s.name}</h2>
@@ -142,8 +176,7 @@
 		padding-bottom: 24px;
 		border-bottom: 1px solid var(--site-line);
 	}
-	.actions button,
-	.actions a {
+	.actions > a {
 		padding: 6px 11px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-control);
@@ -156,12 +189,11 @@
 			color 0.15s,
 			background 0.15s;
 	}
-	.actions button:hover,
-	.actions a:hover {
+	.actions > a:hover {
 		color: var(--site-ink);
 		background: var(--site-hover);
 	}
-	:is(a, button):focus-visible {
+	a:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
@@ -245,12 +277,82 @@
 		margin-left: auto;
 		align-items: flex-end !important;
 	}
-	.sr-only {
+	.note {
+		margin: 0;
+		max-width: 70ch;
+		color: var(--site-soft);
+	}
+	.note code,
+	.anatomy code {
+		padding: 0;
+		border: 0;
+		background: none;
+	}
+	.anatomy {
+		margin: 20px 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.anatomy li {
+		position: relative;
+		margin-left: 10px;
+		padding: 0 0 14px 22px;
+		border-left: 1px solid var(--site-line);
+	}
+	.anatomy li:last-child {
+		border-left-color: transparent;
+	}
+	/* The elbow from the trunk to each part; the last one carries the trunk's end. */
+	.anatomy li:not(.root)::before {
+		content: '';
 		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-		white-space: nowrap;
+		top: 0;
+		left: -1px;
+		width: 16px;
+		height: 12px;
+		border-bottom: 1px solid var(--site-line);
+	}
+	.anatomy li:last-child::before {
+		border-left: 1px solid var(--site-line);
+		border-bottom-left-radius: 6px;
+	}
+	.anatomy .root {
+		margin-left: 0;
+		padding: 0 0 10px;
+		border-left: 0;
+	}
+	.anatomy .root code {
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--site-ink);
+	}
+	.part {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+	}
+	.pname {
+		font-weight: 600;
+		color: var(--site-ink);
+	}
+	.kind {
+		font-size: 13px;
+		color: var(--site-faint);
+	}
+	.fields {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 12px;
+		margin: 4px 0 0;
+	}
+	.fields code {
+		font-size: 13px;
+		color: var(--site-soft);
+	}
+	.pdesc {
+		margin: 4px 0 0;
+		max-width: 70ch;
+		font-size: 14.5px;
+		color: var(--site-soft);
 	}
 </style>

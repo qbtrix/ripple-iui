@@ -96,13 +96,18 @@ export function configurableProps(rows: { name: string; type: string; descriptio
 	});
 }
 
-/** The example spec with its root node's props replaced; undefined and '' values are dropped. */
+/** The example spec with its root node's props replaced in place (key order kept); undefined and '' values are dropped. */
 export function applyProps(spec: Spec, values: Record<string, unknown>): Spec {
 	const node = (spec.ui ?? {}) as Node;
 	const props = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined && v !== ''));
-	const rest = { ...node };
-	delete rest.props;
-	return { ...spec, ui: Object.keys(props).length ? { ...rest, props } : rest };
+	const has = Object.keys(props).length > 0;
+	const ui: Node = {};
+	for (const [k, v] of Object.entries(node)) {
+		if (k !== 'props') ui[k] = v;
+		else if (has) ui.props = props;
+	}
+	if (has && !('props' in node)) ui.props = props;
+	return { ...spec, ui };
 }
 
 /** Prop names that read as a visual variant axis. */

@@ -108,6 +108,12 @@ describe('applyProps', () => {
 		expect(applyProps(spec, { label: '' }).ui).toEqual({ type: 'button', on_click: [] });
 	});
 
+	it('keeps the node key order, so props stay ahead of children in the copied spec', () => {
+		const out = applyProps({ ui: { type: 'card', props: { title: 'A' }, children: [] } }, { title: 'B' });
+		expect(Object.keys(out.ui as object)).toEqual(['type', 'props', 'children']);
+		expect(Object.keys(applyProps({ ui: { type: 'card' } }, { title: 'B' }).ui as object)).toEqual(['type', 'props']);
+	});
+
 	it('does not mutate the input spec', () => {
 		const before = structuredClone(spec);
 		applyProps(spec, { label: 'x' });
