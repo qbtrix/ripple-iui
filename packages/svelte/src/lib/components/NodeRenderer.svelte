@@ -22,7 +22,11 @@
     must be a real box, not display:contents, or the transform never paints).
   - Widget and organism branches sit in <svelte:boundary> with an ErrorState
     fallback, so one throwing widget can't blank the message. Raw error text
-    goes to `detail`, never `description`.
+    goes to `detail`, never `description`. In a streamed render ('ui-streaming'
+    context) the boundary retries on every new frame, and while the stream is
+    open the fallback is a muted `data-ripple-node-pending` block instead: a
+    half-parsed node that throws usually renders once the rest arrives. After
+    the stream ends, and for a plain spec, a throw shows ErrorState.
   - `data-ripple-node` / `data-ripple-type` are stamped last into widgetProps
     for the visual editor; they reach the DOM only where a widget forwards them.
 -->
@@ -38,7 +42,7 @@
 -->
 <script lang="ts">
 	import { safeStyle } from '@ripple-ui/core';
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import {
 		resolveValue,
 		resolveString,
@@ -85,6 +89,9 @@
 	// the `state` scope so a later step can pre-fill from an earlier one. Read as
 	// a getter so it tracks the executor's reactive `$state` context.
 	const getFlowContext = getContext<(() => Record<string, unknown>) | undefined>('ui-flow-context');
+	// Set by a streamed Ripple: 'active' while the spec is still arriving, then
+	// 'done'. Undefined for a plain spec.
+	const getStreamPhase = getContext<(() => 'active' | 'done' | undefined) | undefined>('ui-streaming');
 
 	/**
 	 * Build the resolver context for expression evaluation.
@@ -395,7 +402,58 @@
 		}
 		return buckets;
 	});
+
+	/**
+	 * Streamed renders retry a failed boundary when the node changes. A widget
+	 * that throws on half-parsed props (one item of the three it needs) renders
+	 * once the rest arrives, but a boundary stays on its first error until
+	 * reset(). Every parse hands each node a fresh object, so `node` identity is
+	 * the per-frame signal: no deep compare of the subtree. Plain specs never
+	 * retry, so their error card behaves as it always has.
+	 */
+	let retryBoundary: (() => void) | null = null;
+
+	function onBoundaryError(_error: unknown, reset: () => void) {
+		if (getStreamPhase?.()) retryBoundary = reset;
+	}
+
+	$effect(() => {
+		{ const _ = node; }
+		if (!retryBoundary) return;
+		const retry = retryBoundary;
+		retryBoundary = null;
+		untrack(retry);
+	});
 </script>
+
+<!--
+	Shared fallback for both per-node boundaries (RCR-4). Mid-stream a throwing
+	node holds its place as a quiet muted block; the retry above re-renders it on
+	the next frame. Otherwise: ErrorState, with "Try again" wired to reset() so a
+	node that transiently threw (or one the editor fixed in place) can recover.
+	Raw exception messages can leak internals (paths, expression fragments) into
+	a consumer-facing card, so the description stays generic and the message
+	goes to `detail` (small monospace, built for exactly this).
+-->
+{#snippet nodeFailed(error: unknown, reset: () => void)}
+	{#if getStreamPhase?.() === 'active'}
+		<div
+			data-ripple-node-pending={node.id ?? ''}
+			aria-hidden="true"
+			class="h-8 rounded bg-muted motion-safe:animate-pulse"
+		></div>
+	{:else}
+		<div role="alert" data-ripple-node-error={node.id}>
+			<ErrorState
+				icon="error"
+				title="This widget hit an error"
+				description="The rest of the message is unaffected."
+				detail={error instanceof Error ? error.message : String(error)}
+				onaction={reset}
+			/>
+		</div>
+	{/if}
+{/snippet}
 
 <!-- Don't render if show condition is false -->
 {#if shouldShow}
@@ -439,19 +497,8 @@
 			are exactly the rich generated cards this boundary exists for, and a
 			top-level throwing organism would otherwise blank the whole message.
 		-->
-		<svelte:boundary>
+		<svelte:boundary failed={nodeFailed} onerror={onBoundaryError}>
 			<OrganismRenderer organism={organismRef.organism} props={organismRef.props} />
-			{#snippet failed(error, reset)}
-				<div role="alert" data-ripple-node-error={node.id}>
-					<ErrorState
-						icon="error"
-						title="This widget hit an error"
-						description="The rest of the message is unaffected."
-						detail={error instanceof Error ? error.message : String(error)}
-						onaction={reset}
-					/>
-				</div>
-			{/snippet}
 		</svelte:boundary>
 	{:else if WidgetComponent}
 		<!-- Regular widget rendering -->
@@ -527,7 +574,7 @@
 				<Self node={child} {loopContext} />
 			{/each}
 		{/snippet}
-		<svelte:boundary>
+		<svelte:boundary failed={nodeFailed} onerror={onBoundaryError}>
 			<!-- RCR-4: per-node error boundary. A widget that throws during
 			     render shows an inline ErrorState for THIS node while its siblings
 			     keep rendering, so one bad widget can't take down the message. -->
@@ -562,28 +609,6 @@
 				children={defaultKids.length > 0 ? defaultSnippet : undefined}
 			/>
 		{/if}
-			{#snippet failed(error, reset)}
-				<!-- Wire the boundary's reset() to ErrorState's "Try again" action.
-				     Without it the button rendered but did nothing, so a node that
-				     transiently threw (e.g. a mid-stream partial spec, or a widget
-				     fixed in-place by the editor) stayed wedged on ErrorState with no
-				     way back. reset() re-attempts the render. (The chat streaming
-				     preview also self-heals on close — the final interactive render is
-				     a separate mount — so this covers the editor / stable cases.)
-				     Raw exception messages can leak internals (paths, expression
-				     fragments) into a consumer-facing card, so the description
-				     stays generic and the message goes to `detail` (small
-				     monospace, built for exactly this). -->
-				<div role="alert" data-ripple-node-error={node.id}>
-					<ErrorState
-						icon="error"
-						title="This widget hit an error"
-						description="The rest of the message is unaffected."
-						detail={error instanceof Error ? error.message : String(error)}
-						onaction={reset}
-					/>
-				</div>
-			{/snippet}
 		</svelte:boundary>
 	{:else}
 		<!--

@@ -9,7 +9,9 @@
     slides, ...) go to IntentRenderer, dashboards to DashboardRenderer, and
     `custom` / unmapped intents to NodeRenderer.
   - Streaming: a Skeleton shows until the first valid parse; a stream error with
-    no parse renders only the error line.
+    no parse renders only the error line. The 'ui-streaming' context getter
+    reports 'active' / 'done' (undefined for a plain spec) so NodeRenderer can
+    hold a throwing node as a placeholder until the stream ends.
   - State: seeded once from spec.state + the `state` prop. Later spec.state
     changes sync key by key against a private copy of what the spec last said.
     Live state and that copy never share objects with the spec (a streamed spec
@@ -307,6 +309,10 @@
   // svelte-ignore state_referenced_locally
   setContext('ui-host-event', onEvent);
   setContext('ui-toasts', toastBus);
+  // 'active' while a streamed spec is still arriving, 'done' after; undefined
+  // for a plain spec. NodeRenderer's per-node boundary reads it.
+  const streamPhase = $derived(streaming ? (streaming.done ? 'done' : 'active') : undefined);
+  setContext('ui-streaming', () => streamPhase);
 
   $effect(() => {
     if (!onStateChange) return;
@@ -403,7 +409,7 @@
   style={[style, brandStyle, themeStyle].filter(Boolean).join('; ')}
   data-ripple-version={spec.version}
   data-ripple-intent={spec.intent}
-  data-ripple-streaming={streaming ? (streaming.done ? 'done' : 'active') : undefined}
+  data-ripple-streaming={streamPhase}
 >
   {#if renderMode === 'skeleton'}
     <Skeleton variant={skeleton} />
