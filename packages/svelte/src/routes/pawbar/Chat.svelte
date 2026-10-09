@@ -72,9 +72,11 @@
 			);
 
 	const rejectedNote = (c: Card) =>
-		c.reason === 'truncated'
+		c.reason === 'truncated' || c.reason === 'server:truncated'
 			? 'The card was cut off before it finished, so it is left out.'
-			: 'The card did not pass its checks, so it is left out.';
+			: c.reason?.startsWith('server:')
+				? 'The model wrote a card that did not come out right, so it is left out. Asking again usually works.'
+				: 'The card did not pass this page\'s checks, so it is left out.';
 </script>
 
 {#snippet prose(text: string)}

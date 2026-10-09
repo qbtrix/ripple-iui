@@ -181,7 +181,7 @@ describe('ChatSession', () => {
 		const rejected = new ChatSession((_m, signal) => recordedEvents(bill, { mode: 'reject', speed: Infinity, signal }));
 		await rejected.send('x');
 		expect(cardOf(rejected)?.status).toBe('rejected');
-		expect(cardOf(rejected)?.reason).toBe('invalid_widget');
+		expect(cardOf(rejected)?.reason).toBe('server:invalid_widget');
 
 		const cut = new ChatSession(
 			frames({ event: 'card.start', data: { card_id: 'c' } }, { event: 'card.delta', data: { card_id: 'c', text: '{"ui":{' } })

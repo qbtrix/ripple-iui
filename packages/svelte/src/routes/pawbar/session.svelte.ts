@@ -510,7 +510,7 @@ export class ChatSession {
 				st.cards.delete(id);
 				return false;
 			case 'card.rejected':
-				st.cards.get(id)?.reject(str(d.reason, 'rejected'));
+				st.cards.get(id)?.reject(`server:${str(d.reason, 'rejected')}`);
 				st.cards.delete(id);
 				return false;
 			case 'unavailable':
