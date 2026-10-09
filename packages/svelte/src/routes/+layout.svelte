@@ -17,6 +17,7 @@
 	import { page } from '$app/state';
 	import '$lib/styles.css';
 	import './site.css';
+	import Search from '$lib/site/docs/Search.svelte';
 
 	let { children } = $props();
 
@@ -73,7 +74,7 @@
 			</a>
 			<nav class="links" aria-label="Site">{@render links()}</nav>
 			<div class="tools">
-				<!-- Search slot: the ⌘K button lands here with the docs search. -->
+				<Search />
 				<a href={GITHUB_URL} class="icon" aria-label="GitHub">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
 						><path
