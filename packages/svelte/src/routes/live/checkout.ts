@@ -93,7 +93,8 @@ export function toStoreRequest(body: unknown):
 
 	const c = (b.customer ?? {}) as Record<string, unknown>;
 	const customer = { name: str(c.name), email: str(c.email), phone: str(c.phone), address: str(c.address) };
-	if (!customer.name || !customer.phone) return { error: 'Enter your name and phone number.' };
+	if (!customer.name) return { error: 'Enter your name.' };
+	if (!customer.phone) return { error: 'The store needs a phone number too. Add one under Details.' };
 	if (customer.name.length > 80) return { error: 'Keep the name under 80 characters.' };
 	if (customer.email.length > 254 || !EMAIL.test(customer.email)) return { error: 'Enter a valid email address.' };
 	if (!PHONE.test(customer.phone) || customer.phone.replace(/\D/g, '').length < 7) return { error: 'Enter a valid phone number.' };
