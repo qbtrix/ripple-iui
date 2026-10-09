@@ -16,7 +16,7 @@ export const orderStatusEntry: WidgetManifestEntry = {
     origin: { type: '{ name?: string; address?: string; lat?: number; lng?: number }', required: false, description: 'Origin place. lat/lng are used to plot a marker on the map.' },
     destination: { type: '{ name?: string; address?: string; lat?: number; lng?: number }', required: false, description: 'Destination place. lat/lng are used to plot a marker on the map.' },
     tracker: { type: '{ lat: number; lng: number; heading?: number; label?: string; color?: string }', required: false, description: 'Live courier position. Heading rotates the directional arrow. Each new position glides linearly from the old one over the time since the previous update (0.3s to 5s), so polling hosts get continuous motion; reduced motion jumps.' },
-    route: { type: '[number, number][]', required: false, description: 'Polyline points for the route. If omitted but origin+destination are set, a dashed line connects them.' },
+    route: { type: '[number, number][]', required: false, description: 'Polyline points for the route. If omitted but origin+destination are set, a dashed line connects them. An empty array after a route was sent keeps the last route drawn.' },
     showMap: { type: 'boolean', required: false, description: 'Force-show or hide the embedded map. Defaults to true when any geographic data is supplied.' },
     mapHeight: { type: 'string | number', required: false, description: 'Map height. Default "320px".' },
     mapTiles: { type: '"osm" | "carto-voyager" | "carto-light" | "carto-dark" | "osm-hot" | "custom"', required: false, description: 'Map tile preset. Default "carto-voyager".' },

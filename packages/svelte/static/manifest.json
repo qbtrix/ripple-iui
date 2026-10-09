@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-09T16:39:11.956Z",
+  "generatedAt": "2026-10-09T17:23:00.789Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -9762,7 +9762,7 @@
         "route": {
           "type": "[number, number][]",
           "required": false,
-          "description": "Polyline points for the route. If omitted but origin+destination are set, a dashed line connects them."
+          "description": "Polyline points for the route. If omitted but origin+destination are set, a dashed line connects them. An empty array after a route was sent keeps the last route drawn."
         },
         "showMap": {
           "type": "boolean",
