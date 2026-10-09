@@ -85,6 +85,18 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'meal-plan': { prop: 'people', event: 'onpeoplechange' },
   'meal-planner': { prop: 'people', event: 'onpeoplechange' },
   'weekly-meal-plan': { prop: 'people', event: 'onpeoplechange' },
+  // interval-workout binds its work seconds (the demo's "let me set the work
+  // interval"); restSec and the current step stay Svelte-side $bindables.
+  'interval-workout': { prop: 'workSec', event: 'onworksecchange' },
+  'workout-timer': { prop: 'workSec', event: 'onworksecchange' },
+  'interval-timer': { prop: 'workSec', event: 'onworksecchange' },
+  'hiit-timer': { prop: 'workSec', event: 'onworksecchange' },
+  // flashcard-deck binds its score (cards known since the last restart),
+  // written by the widget; the deal and the current card stay widget-side.
+  'flashcard-deck': { prop: 'score', event: 'onscorechange' },
+  flashcards: { prop: 'score', event: 'onscorechange' },
+  'study-deck': { prop: 'score', event: 'onscorechange' },
+  'flip-cards': { prop: 'score', event: 'onscorechange' },
 };
 
 /**

@@ -126,6 +126,8 @@ import { invoiceLayoutEntry } from './entries/invoice-layout.js';
 import { invoiceLinesEntry } from './entries/invoice-lines.js';
 import { itineraryEntry } from './entries/itinerary.js';
 import { growthProjectionEntry } from './entries/growth-projection.js';
+import { intervalWorkoutEntry } from './entries/interval-workout.js';
+import { flashcardDeckEntry } from './entries/flashcard-deck.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -448,6 +450,8 @@ export const manifestEntries: WidgetManifestEntry[] = [
   orderStatusEntry,
   bookingEntry,
   menuOrderEntry,
+  intervalWorkoutEntry,
+  flashcardDeckEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
