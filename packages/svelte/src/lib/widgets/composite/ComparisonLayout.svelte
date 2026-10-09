@@ -7,8 +7,8 @@
     - EventHandler-driven actions (primary + "Learn more") with onselect/onlearnmore fallbacks
     - Auto-feature inference when `features` is not supplied
     - Direct lucide icon imports for fixed glyphs; ripple's Icon for user-supplied icon names
-  Modified: 2026-06-09 — state_referenced_locally: added svelte-ignore above
-  `viewMode` $state — intentional uncontrolled default seed from `defaultView` prop. Recipe 7.
+    - `defaultView` is followed until the visitor picks a view: a streamed spec
+      can deliver it after the widget has mounted
 -->
 <script lang="ts">
   import { safeUrl, safeStyle } from '@ripple-ui/core';
@@ -61,7 +61,7 @@
     secondaryLabel?: string;
     showPrimary?: boolean;
     showSecondary?: boolean;
-    /** Initial view mode for the detailed feature grid. */
+    /** View mode for the detailed feature grid until the visitor picks one. */
     defaultView?: 'card' | 'table';
     /** Show the "differences only" toggle. */
     showDiffToggle?: boolean;
@@ -91,8 +91,10 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  // svelte-ignore state_referenced_locally
-  let viewMode = $state<'card' | 'table'>(defaultView);
+  // The visitor's pick wins; until then follow `defaultView`, which a streamed
+  // spec can deliver (or finish writing) after mount.
+  let pickedView = $state<'card' | 'table' | null>(null);
+  const viewMode = $derived(pickedView ?? (defaultView === 'table' ? 'table' : 'card'));
   let showDiffOnly = $state(false);
   let activeSection = $state<string | null>(null);
 
@@ -203,7 +205,8 @@
 
   <!-- Horizontal product cards -->
   <div class="space-y-2.5 sm:space-y-3">
-    {#each safeItems as item (item.id)}
+    <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+    {#each safeItems as item, idx (`${item.id}:${idx}`)}
       <div class="group relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm ring-1 ring-transparent transition-all duration-300 hover:border-border hover:shadow-md hover:ring-primary/10">
         <div class="flex flex-row items-stretch">
           <!-- Image -->
@@ -315,7 +318,7 @@
                 ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
                 : 'text-muted-foreground hover:text-foreground'
             )}
-            onclick={() => (viewMode = 'card')}
+            onclick={() => (pickedView = 'card')}
           >
             <LayoutGridIcon size={14} />
             <span class="hidden xs:inline">Cards</span>
@@ -329,7 +332,7 @@
                 ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
                 : 'text-muted-foreground hover:text-foreground'
             )}
-            onclick={() => (viewMode = 'table')}
+            onclick={() => (pickedView = 'table')}
           >
             <TableIcon size={14} />
             <span class="hidden xs:inline">Table</span>
@@ -375,7 +378,7 @@
       <!-- Card view (mobile) -->
       <div class={cn(viewMode === 'table' ? 'hidden' : 'lg:hidden')}>
         <div class="space-y-2.5 sm:space-y-3">
-          {#each safeItems as item (item.id)}
+          {#each safeItems as item, idx (`${item.id}:${idx}`)}
             <div class="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
               <div class="flex items-center gap-2.5 border-b border-border/70 bg-muted/30 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
                 {#if item.image}
@@ -456,7 +459,7 @@
               <div class="p-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:p-3 sm:text-xs">
                 {activeSection ?? ''}
               </div>
-              {#each safeItems as item (item.id)}
+              {#each safeItems as item, idx (`${item.id}:${idx}`)}
                 <div class="flex flex-col items-center justify-center gap-1 border-l border-border/70 p-2 text-center sm:p-3">
                   {#if item.image}
                     <img
@@ -488,7 +491,7 @@
                     {/if}
                     <span class="cmp-clamp-2">{feature.label}</span>
                   </div>
-                  {#each safeItems as item (item.id)}
+                  {#each safeItems as item, idx (`${item.id}:${idx}`)}
                     <div class="flex items-center justify-center border-l border-border/60 p-2 text-center sm:p-3">
                       {#if feature.type === 'boolean'}
                         {#if item[feature.key]}

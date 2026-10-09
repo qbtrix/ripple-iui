@@ -22,7 +22,7 @@ export const comparisonLayoutEntry: WidgetManifestEntry = {
     secondaryLabel: { type: 'string', required: false, description: 'Secondary "Learn more" label. Default "Learn more".' },
     showPrimary: { type: 'boolean', required: false, description: 'Render the primary CTA. Default true.' },
     showSecondary: { type: 'boolean', required: false, description: 'Render the "Learn more" button. Default true.' },
-    defaultView: { type: '"card" | "table"', required: false, description: 'Initial view mode for the detailed feature grid on mobile. Default "card". Desktop always shows the table.' },
+    defaultView: { type: '"card" | "table"', required: false, description: 'View mode for the detailed feature grid on mobile until the visitor picks one. Default "card". Desktop always shows the table.' },
     showDiffToggle: { type: 'boolean', required: false, description: 'Show the "differences only" filter toggle. Default true.' },
   },
   example: {
