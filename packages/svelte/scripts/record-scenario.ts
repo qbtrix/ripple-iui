@@ -40,12 +40,8 @@ const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'ov
 // Plus these by name (whole composite + research categories would add ~100 KB):
 // the data widgets and the summary pieces the SYSTEM rules point at.
 const DATA_WIDGETS = new Set([
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'word-guess',
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'quiz',
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'memory-match',
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'habit-tracker', 'flashcard-deck',
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'focus-timer', 'flashcard-deck',
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'board-game',
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck',
+	'word-guess', 'quiz', 'memory-match', 'habit-tracker', 'focus-timer', 'board-game',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
