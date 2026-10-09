@@ -19,6 +19,15 @@
       folds under it in a <details>, open in the prerender. Wide: spec left,
       render right, the summary hidden while open.
     - A fixture change resets the clock and remounts Ripple (fresh app state).
+    - Optional host hooks: `onEvent` goes to Ripple as-is (its return value is
+      the action result, so a spec's on_error runs); `panes` ('render',
+      'spec' or 'none') overrides the fold and the split at every width, so
+      a page can drive its own tabs, and 'both' (default) keeps them; `autoplayFrom`
+      moves the clock when autoplay starts, so the markup can hold the
+      finished frame while the visit plays from the first byte;
+      `holdSkeleton` keeps the skeleton up mid-stream until the spec has a
+      `ui` (or `intent`), since a stream that opens with a long `state` block
+      otherwise shows an empty pane.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -27,6 +36,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Ripple from '$lib/Ripple.svelte';
 	import type { StreamSpecStore } from '$lib/streaming/types.js';
+	import type { OnEventCallback } from '$lib/index.js';
 	import JsonLines from '../JsonLines.svelte';
 	import { createScrubModel, type Recording } from './scrub-model.js';
 
@@ -39,9 +49,17 @@
 		/** Figure caption, e.g. "fig. 1, bill splitter, 2,794 chars". */
 		caption?: string;
 		class?: string;
+		/** Host handler for the render's events; its result goes back to Ripple. */
+		onEvent?: OnEventCallback;
+		/** Which panes to show. Default both (stacked when narrow). */
+		panes?: 'both' | 'render' | 'spec' | 'none';
+		/** Where autoplay starts, as a fraction. Default: wherever `start` put the clock. */
+		autoplayFrom?: number;
+		/** Mid-stream, show the skeleton until the spec has something to render. */
+		holdSkeleton?: boolean;
 	}
 
-	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '' }: Props = $props();
+	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '', onEvent, panes = 'both', autoplayFrom, holdSkeleton = false }: Props = $props();
 
 	const SPEEDS = [0.5, 1, 2];
 	const model = $derived(createScrubModel(fixture));
@@ -54,7 +72,11 @@
 	const count = $derived(model.countAt(ms));
 	const text = $derived(model.text(count));
 	const atEnd = $derived(count === model.total);
-	const store: StreamSpecStore = $derived({ current: model.spec(count), done: atEnd, error: null, cancel() {} });
+	const shown = $derived.by(() => {
+		const s = model.spec(count);
+		return holdSkeleton && !atEnd && s && !('ui' in s && s.ui) && !('intent' in s && s.intent) ? null : s;
+	});
+	const store: StreamSpecStore = $derived({ current: shown, done: atEnd, error: null, cancel() {} });
 	const pct = $derived(model.duration ? (ms / model.duration) * 100 : 0);
 
 	// Fixed locale so the server and the browser print the same text.
@@ -80,7 +102,10 @@
 
 	onMount(() => {
 		if (matchMedia('(prefers-reduced-motion: reduce)').matches) ms = model.duration;
-		else if (autoplay) playing = true;
+		else if (autoplay) {
+			if (autoplayFrom != null) ms = Math.min(1, Math.max(0, autoplayFrom)) * model.duration;
+			playing = true;
+		}
 	});
 
 	function toggle() {
@@ -151,13 +176,14 @@
 </script>
 
 <figure class="scrub {className}" class:playing>
-	<div class="panes">
+	<div class="panes" data-show={panes}>
 		<div class="render" data-pagefind-ignore="all">
 			{#key model}
-				<Ripple streaming={store} skeleton="card" />
+				<Ripple streaming={store} skeleton="card" {onEvent} />
 			{/key}
 		</div>
-		<details class="spec" open>
+		<!-- Set only on a pane change, so a reader's fold survives; the Spec tab reopens it. -->
+		<details class="spec" open={panes !== 'render'}>
 			<summary>
 				<span>Spec so far</span>
 				<span class="summary-bytes">{num(model.bytes(count))} B</span>
@@ -279,6 +305,31 @@
 	}
 	.spec[open] summary {
 		border-bottom: 1px solid var(--site-line);
+	}
+
+	/* `panes` (a page's own tabs) wins at every width; 'both' keeps the
+	   narrow fold and the wide split. A single pane takes the whole box, and
+	   the Spec tab shows the JSON without the fold's summary. These outrank
+	   the container query below. */
+	.panes[data-show='none'],
+	.panes[data-show='render'] .spec,
+	.panes[data-show='spec'] .render,
+	.panes[data-show='spec'] summary {
+		display: none;
+	}
+	.panes[data-show='render'],
+	.panes[data-show='spec'] {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.panes[data-show='render'] .render,
+	.panes[data-show='spec'] .spec {
+		grid-area: auto;
+	}
+	.panes[data-show='spec'] .spec {
+		border: 0;
+	}
+	.panes[data-show='spec'] .json {
+		height: var(--scrub-h);
 	}
 
 	/* column-reverse starts the scroll at the bottom: the caret is visible

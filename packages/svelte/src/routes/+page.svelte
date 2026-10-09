@@ -30,6 +30,7 @@
 -->
 <script lang="ts">
 	import ScrubPlayer from '$lib/site/scrub/ScrubPlayer.svelte';
+	import { modelName } from '$lib/site/scrub/model-name.js';
 	import { BYOK_URL } from './pawbar/session.svelte.js';
 	import { scenarios } from './live/scenarios.js';
 	import { SITE_URL, SLIM_MANIFEST_URL } from '$lib/site/docs/model.js';
@@ -46,8 +47,6 @@
 		...scenarios.filter((s) => s.id === 'bill-splitter'),
 		...scenarios.filter((s) => s.id !== 'bill-splitter' && !s.needsStore)
 	];
-	// The recorder stores the CLI alias; the caption names the model.
-	const MODEL_NAMES: Record<string, string> = { sonnet: 'Claude Sonnet' };
 
 	let figureId = $state(figures[0].id);
 	let swapped = $state(false);
@@ -55,8 +54,7 @@
 	const caption = $derived.by(() => {
 		const n = figures.indexOf(figure) + 1;
 		const chars = figure.fixture.chunks.reduce((sum, c) => sum + c.text.length, 0).toLocaleString('en-US');
-		const model = MODEL_NAMES[figure.fixture.model] ?? figure.fixture.model;
-		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${model}`;
+		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${modelName(figure.fixture.model)}`;
 	});
 
 	function show(id: string) {
@@ -107,7 +105,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 		</div>
 
 		{#key figure.id}
-			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay {caption} />
+			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay holdSkeleton {caption} />
 		{/key}
 
 		<div class="figures" role="group" aria-label="Recorded streams">

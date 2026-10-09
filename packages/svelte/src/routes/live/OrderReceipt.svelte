@@ -93,15 +93,11 @@
 <style>
 	.receipt {
 		border: 1px solid var(--line, var(--border));
-		border-left: 3px solid var(--accent, hsl(216 74% 50%));
 		border-radius: 12px;
 		background: var(--panel, var(--card));
 		padding: 16px 18px;
 		margin-bottom: 20px;
 		max-width: 640px;
-	}
-	.receipt[data-state='cancelled'] {
-		border-left-color: var(--ink-soft, gray);
 	}
 	.title {
 		margin: 0;
@@ -147,7 +143,7 @@
 		font-size: 14px;
 	}
 	.actions a {
-		color: var(--accent, inherit);
+		color: var(--primary-ink, inherit);
 		font-weight: 500;
 	}
 	.actions button {
