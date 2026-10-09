@@ -14,7 +14,11 @@
 //      ripple-frame, richtext, rich-text, map and company-header. An alias
 //      (iframe, frame, ...) is refused.
 //   4. URL-ish keys (href, src, imageUrl, iconSrc, target, ...): no `{` at all, so
-//      an expression can never assemble a URL; otherwise https or relative.
+//      an expression can never assemble a URL; otherwise https or relative. One
+//      exception: the `target` of an object whose exact `action` is in
+//      PATH_TARGET_ACTIONS is a state path (`stops.{index}.done`), modal id or
+//      event name, never a URL, so it takes rule 5 instead. `navigate` reads its
+//      `target` as the URL, so it must never join that list.
 //   5. Every other string: no javascript:/vbscript:/data: URL, no CSS url(), no
 //      markup or markdown image/link (`![`, `<img`, `<a`, `<svg`, `<details`,
 //      `](https:`, any tag with an on*= handler), and no bare http(s) or www.
@@ -30,6 +34,8 @@ import { CHAT_WIDGET_TYPES } from './widget-types.js';
 
 export const ALLOWED_ACTIONS = ['set', 'toggle', 'push', 'remove', 'open', 'emit', 'flow', 'branch', 'validate', 'toast'] as const;
 const CARD_KEYS = ['version', 'ui', 'state'];
+/** Actions whose `target` the engine reads as a state path, modal id or event name. Never `navigate`. */
+export const PATH_TARGET_ACTIONS: readonly string[] = ['set', 'toggle', 'push', 'remove', 'open', 'emit', 'flow', 'branch', 'validate', 'toast'];
 const URL_KEY = /(href|url|uri|src|srcset|link|image|img|avatar|icon|favicon|poster|cover|background|action|target)$/i;
 const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 const SCRIPT_URL = /^(javascript|vbscript):/i;
@@ -109,12 +115,14 @@ export function refuseCard(card: unknown, { partial = false } = {}): string | nu
 		if (typeof type === 'string' && (isNode || getWidget(type)) && !CHAT_WIDGET_TYPES.has(type)) {
 			if (!(partial && isNode && typeNames.some((t) => t.startsWith(type)))) return `widget:${type}`;
 		}
+		const pathTarget = typeof node.action === 'string' && allowed(PATH_TARGET_ACTIONS, node.action, partial);
 		for (const [k, v] of Object.entries(node)) {
 			if (k.toLowerCase() === 'action' && typeof v === 'string') {
 				if (!allowed(ALLOWED_ACTIONS, v, partial)) return `action:${v}`;
 				continue;
 			}
-			stack.push([v, k, false]);
+			// A state action's target is checked as text (rule 5), not as a URL.
+			stack.push([v, pathTarget && k === 'target' ? 'path' : k, false]);
 		}
 	}
 	return null;

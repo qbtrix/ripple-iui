@@ -5,7 +5,7 @@
 // allowlist must match the vendored manifest.
 
 import { describe, expect, test } from 'vitest';
-import { decodeEntities, refuseCard } from './card-policy.js';
+import { PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
@@ -123,6 +123,38 @@ describe('urls', () => {
 		['href', 'data:text/html,<script>']
 	])('refuses %s = %s', (key, value) => {
 		expect(refuseCard(prop(key, value))).toBe('unsafe_url');
+	});
+
+	test.each([
+		['set', { action: 'set', target: 'stops.{index}.done', value: true }],
+		['toggle', { action: 'toggle', target: 'rows.{index}.open' }],
+		['remove', { action: 'remove', target: 'items', index: '{index}' }],
+		['remove', { target: 'lists.{i}.items', value: '{item}', action: 'remove' }],
+		['push', { action: 'push', target: 'groups.{g}.rows', value: 'x' }],
+		['open', { action: 'open', target: 'modal_{id}' }]
+	])("a state action's target is a path, so %s may use an expression", (_, handler) => {
+		expect(refuseCard(button(handler))).toBeNull();
+		expect(refuseCard(button({ action: 'flow', steps: [handler] }))).toBeNull();
+	});
+
+	test("navigate's target is a URL: never a path-target action, and refused", () => {
+		expect(PATH_TARGET_ACTIONS).not.toContain('navigate');
+		expect(refuseCard(button({ action: 'navigate', target: '{state.url}' }))).toBe('action:navigate');
+		expect(refuseCard(button({ target: '{state.url}', action: 'navigate' }))).toBe('action:navigate');
+		expect(refuseCard(button({ action: 'navigate', target: 'javascript:alert(1)' }))).toBe('action:navigate');
+	});
+
+	test('a path target still gets the text rules; nothing else on the action is loosened', () => {
+		expect(refuseCard(button({ action: 'set', target: 'javascript:alert(1)' }))).toBe('unsafe_url');
+		expect(refuseCard(button({ action: 'emit', target: '<img src=x onerror=alert(1)>' }))).toBe('markup');
+		expect(refuseCard(button({ action: 'set', target: 'a.{i}', href: '{state.x}' }))).toBe('expression_url');
+		expect(refuseCard(button({ action: 'set', target: 'a', value: { url: '{state.x}' } }))).toBe('expression_url');
+	});
+
+	test('a target outside an action object keeps the URL rule', () => {
+		expect(refuseCard(prop('target', '{state.x}', 'link-preview'))).toBe('expression_url');
+		expect(refuseCard(button({ Action: 'set', target: '{state.x}' }))).toBe('expression_url');
+		expect(refuseCard({ ui: { type: 'text' }, state: { target: '{state.x}' } })).toBe('expression_url');
 	});
 
 	test('refuses CSS url() in a URL key or a style string', () => {
