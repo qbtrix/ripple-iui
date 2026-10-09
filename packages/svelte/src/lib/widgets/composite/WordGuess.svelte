@@ -293,7 +293,7 @@
 </script>
 
 <div {id} class={['@container text-ripple-surface-foreground', className]} style={rootStyle} data-widget="word-guess">
-	<div class="mx-auto flex max-w-[480px] flex-col gap-3">
+	<div class="flex flex-col gap-3">
 		<header class="flex min-w-0 flex-col gap-0.5">
 			<h2 class="text-title-3 font-semibold text-pretty">{heading || 'Word guess'}</h2>
 			{#if word}
@@ -308,138 +308,141 @@
 				{parsed.error}
 			</p>
 		{:else}
-			<!-- The board takes physical keys while it (or one of its keys) has focus. -->
-			<div
-				role="application"
-				{...BOARD}
-				aria-label="Word guess board. Type letters, Enter to guess, Backspace to delete."
-				class={['flex flex-col items-center gap-3 rounded-ripple p-1', focusRing]}
-				data-slot="board"
-			>
-				<ol class="grid w-full justify-center gap-1.5" aria-label="Guesses" data-slot="grid">
-					{#each Array.from({ length: max }, (_, r) => r) as r (r)}
-						{@const played = rows[r]}
-						{@const isTyping = !played && r === guesses.length && status === 'playing'}
-						<li
-							class={['grid gap-1.5', isTyping && shaking && 'wg-shake']}
-							style:grid-template-columns="repeat({word.length}, minmax(0, 3.25rem))"
-							aria-label={played ? `Guess ${r + 1}` : isTyping ? `Guess ${r + 1}, typing` : `Guess ${r + 1}, not played`}
-							data-row={played ? 'played' : isTyping ? 'typing' : 'empty'}
-							onanimationend={() => (shaking = false)}
-						>
-							{#each Array.from({ length: word.length }, (_, i) => i) as i (i)}
-								{#if played}
-									{@const f = played.fb[i]}
-									{@const Glyph = GLYPH[f]}
-									<span
-										role="img"
-										aria-label="{played.g[i]}, {WORDS[f]}"
-										class={['relative grid aspect-square place-items-center rounded-md border-2 text-title-2 font-bold uppercase', TILE[f], r === revealed && 'wg-flip']}
-										style:animation-delay={r === revealed ? `${i * 120}ms` : undefined}
-										data-state={f}
-									>
-										{played.g[i]}
-										<Glyph size={10} strokeWidth={3} aria-hidden="true" class="absolute top-1 right-1 opacity-80" />
-									</span>
-								{:else}
-									{@const l = isTyping ? typed[i] : undefined}
-									<span
-										class={[
-											'grid aspect-square place-items-center rounded-md border-2 bg-ripple-surface text-title-2 font-bold uppercase',
-											l ? 'border-ripple-muted-foreground' : 'border-ripple-border'
-										]}
-										aria-hidden={!isTyping}
-										aria-label={isTyping ? (l ?? 'empty') : undefined}
-										role={isTyping ? 'img' : undefined}
-										data-state={l ? 'typed' : 'empty'}
-									>
-										{l ?? ''}
-									</span>
-								{/if}
-							{/each}
-						</li>
-					{/each}
-				</ol>
+			<!-- The header aligns to the card's padding like the other data widgets; the game column centres under it. -->
+			<div class="mx-auto flex w-full max-w-[480px] flex-col gap-3" data-slot="play">
+				<!-- The board takes physical keys while it (or one of its keys) has focus. -->
+				<div
+					role="application"
+					{...BOARD}
+					aria-label="Word guess board. Type letters, Enter to guess, Backspace to delete."
+					class={['flex flex-col items-center gap-3 rounded-ripple p-1', focusRing]}
+					data-slot="board"
+				>
+					<ol class="grid w-full justify-center gap-1.5" aria-label="Guesses" data-slot="grid">
+						{#each Array.from({ length: max }, (_, r) => r) as r (r)}
+							{@const played = rows[r]}
+							{@const isTyping = !played && r === guesses.length && status === 'playing'}
+							<li
+								class={['grid gap-1.5', isTyping && shaking && 'wg-shake']}
+								style:grid-template-columns="repeat({word.length}, minmax(0, 3.25rem))"
+								aria-label={played ? `Guess ${r + 1}` : isTyping ? `Guess ${r + 1}, typing` : `Guess ${r + 1}, not played`}
+								data-row={played ? 'played' : isTyping ? 'typing' : 'empty'}
+								onanimationend={() => (shaking = false)}
+							>
+								{#each Array.from({ length: word.length }, (_, i) => i) as i (i)}
+									{#if played}
+										{@const f = played.fb[i]}
+										{@const Glyph = GLYPH[f]}
+										<span
+											role="img"
+											aria-label="{played.g[i]}, {WORDS[f]}"
+											class={['relative grid aspect-square place-items-center rounded-md border-2 text-title-2 font-bold uppercase', TILE[f], r === revealed && 'wg-flip']}
+											style:animation-delay={r === revealed ? `${i * 120}ms` : undefined}
+											data-state={f}
+										>
+											{played.g[i]}
+											<Glyph size={10} strokeWidth={3} aria-hidden="true" class="absolute top-1 right-1 opacity-80" />
+										</span>
+									{:else}
+										{@const l = isTyping ? typed[i] : undefined}
+										<span
+											class={[
+												'grid aspect-square place-items-center rounded-md border-2 bg-ripple-surface text-title-2 font-bold uppercase',
+												l ? 'border-ripple-muted-foreground' : 'border-ripple-border'
+											]}
+											aria-hidden={!isTyping}
+											aria-label={isTyping ? (l ?? 'empty') : undefined}
+											role={isTyping ? 'img' : undefined}
+											data-state={l ? 'typed' : 'empty'}
+										>
+											{l ?? ''}
+										</span>
+									{/if}
+								{/each}
+							</li>
+						{/each}
+					</ol>
 
-				{#if notice}
-					<p class="text-callout text-ripple-error-text" data-slot="notice">{notice}</p>
+					{#if notice}
+						<p class="text-callout text-ripple-error-text" data-slot="notice">{notice}</p>
+					{/if}
+
+					{#if status === 'playing'}
+						<div class="flex w-full flex-col gap-1.5" aria-label="Keyboard" role="group" data-slot="keyboard">
+							{#each ROWS as row, ri (ri)}
+								<div class="flex justify-center gap-1">
+									{#if ri === 2}
+										<button type="button" class={['h-12 rounded-md border border-ripple-border bg-ripple-surface px-2 text-caption-1 font-semibold hover:bg-ripple-muted', focusRing]} onclick={() => void submit()}>Enter</button>
+									{/if}
+									{#each row as k (k)}
+										{@const f = keys[k]}
+										{@const Glyph = f ? GLYPH[f] : undefined}
+										<button
+											type="button"
+											class={[
+												'relative h-12 max-w-10 min-w-0 flex-1 rounded-md border text-body-emph font-semibold',
+												f ? TILE[f] : 'border-ripple-border bg-ripple-surface hover:bg-ripple-muted',
+												focusRing
+											]}
+											aria-label={f ? `${k}, ${WORDS[f]}` : k}
+											data-key={k}
+											data-state={f ?? 'unused'}
+											onclick={() => type(k)}
+										>
+											{k}
+											{#if Glyph}<Glyph size={8} strokeWidth={3} aria-hidden="true" class="absolute top-0.5 right-0.5 opacity-80" />{/if}
+										</button>
+									{/each}
+									{#if ri === 2}
+										<button type="button" class={['grid h-12 place-items-center rounded-md border border-ripple-border bg-ripple-surface px-2 hover:bg-ripple-muted', focusRing]} aria-label="Delete letter" onclick={back}>
+											<Delete size={18} strokeWidth={1.75} aria-hidden="true" />
+										</button>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+
+				<p class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-footnote text-ripple-muted-foreground" data-slot="legend">
+					<span class="inline-flex items-center gap-1"><Check size={12} strokeWidth={2.5} aria-hidden="true" />correct spot</span>
+					<span class="inline-flex items-center gap-1"><ArrowLeftRight size={12} strokeWidth={2.5} aria-hidden="true" />in word</span>
+					<span class="inline-flex items-center gap-1"><Minus size={12} strokeWidth={2.5} aria-hidden="true" />not in word</span>
+				</p>
+
+				{#if hintText}
+					{#if hintUsed}
+						<p
+							bind:this={hintEl}
+							tabindex="-1"
+							class="flex items-start gap-2 rounded-md bg-ripple-muted px-3 py-2 text-callout"
+							data-slot="hint"
+						>
+							<Lightbulb size={14} strokeWidth={1.75} aria-hidden="true" class="mt-px shrink-0 text-ripple-warning-text" />{hintText}
+						</p>
+					{:else if status === 'playing'}
+						<button type="button" class={[quiet, 'self-center']} onclick={showHint}>
+							<Lightbulb size={14} strokeWidth={1.75} aria-hidden="true" />Show hint
+						</button>
+					{/if}
 				{/if}
 
-				{#if status === 'playing'}
-					<div class="flex w-full flex-col gap-1.5" aria-label="Keyboard" role="group" data-slot="keyboard">
-						{#each ROWS as row, ri (ri)}
-							<div class="flex justify-center gap-1">
-								{#if ri === 2}
-									<button type="button" class={['h-12 rounded-md border border-ripple-border bg-ripple-surface px-2 text-caption-1 font-semibold hover:bg-ripple-muted', focusRing]} onclick={() => void submit()}>Enter</button>
-								{/if}
-								{#each row as k (k)}
-									{@const f = keys[k]}
-									{@const Glyph = f ? GLYPH[f] : undefined}
-									<button
-										type="button"
-										class={[
-											'relative h-12 max-w-10 min-w-0 flex-1 rounded-md border text-body-emph font-semibold',
-											f ? TILE[f] : 'border-ripple-border bg-ripple-surface hover:bg-ripple-muted',
-											focusRing
-										]}
-										aria-label={f ? `${k}, ${WORDS[f]}` : k}
-										data-key={k}
-										data-state={f ?? 'unused'}
-										onclick={() => type(k)}
-									>
-										{k}
-										{#if Glyph}<Glyph size={8} strokeWidth={3} aria-hidden="true" class="absolute top-0.5 right-0.5 opacity-80" />{/if}
-									</button>
-								{/each}
-								{#if ri === 2}
-									<button type="button" class={['grid h-12 place-items-center rounded-md border border-ripple-border bg-ripple-surface px-2 hover:bg-ripple-muted', focusRing]} aria-label="Delete letter" onclick={back}>
-										<Delete size={18} strokeWidth={1.75} aria-hidden="true" />
-									</button>
-								{/if}
-							</div>
-						{/each}
-					</div>
+				{#if status !== 'playing'}
+					<section class="flex flex-col items-center gap-2 rounded-ripple border border-ripple-border bg-ripple-surface p-4 text-center" aria-label="Result" data-slot="end">
+						<h3 bind:this={endEl} tabindex="-1" class="text-title-3 font-semibold" data-slot="result">
+							{status === 'won' ? `Solved in ${guesses.length}` : 'Out of guesses'}
+						</h3>
+						<p class="text-callout text-ripple-muted-foreground">
+							The word was <strong class="font-semibold tracking-[0.08em] text-ripple-surface-foreground" data-slot="answer">{word}</strong>
+						</p>
+						<pre class="font-sans text-callout leading-tight" aria-label="Share grid" data-slot="share">{share}</pre>
+						<button type="button" class={quiet} onclick={copy}>
+							<Copy size={14} strokeWidth={2} aria-hidden="true" />Copy result
+						</button>
+						{#if copied}<p class="text-footnote text-ripple-muted-foreground" data-slot="copied">{copied}</p>{/if}
+					</section>
 				{/if}
 			</div>
-
-			<p class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-footnote text-ripple-muted-foreground" data-slot="legend">
-				<span class="inline-flex items-center gap-1"><Check size={12} strokeWidth={2.5} aria-hidden="true" />correct spot</span>
-				<span class="inline-flex items-center gap-1"><ArrowLeftRight size={12} strokeWidth={2.5} aria-hidden="true" />in word</span>
-				<span class="inline-flex items-center gap-1"><Minus size={12} strokeWidth={2.5} aria-hidden="true" />not in word</span>
-			</p>
-
-			{#if hintText}
-				{#if hintUsed}
-					<p
-						bind:this={hintEl}
-						tabindex="-1"
-						class="flex items-start gap-2 rounded-md bg-ripple-muted px-3 py-2 text-callout"
-						data-slot="hint"
-					>
-						<Lightbulb size={14} strokeWidth={1.75} aria-hidden="true" class="mt-px shrink-0 text-ripple-warning-text" />{hintText}
-					</p>
-				{:else if status === 'playing'}
-					<button type="button" class={[quiet, 'self-center']} onclick={showHint}>
-						<Lightbulb size={14} strokeWidth={1.75} aria-hidden="true" />Show hint
-					</button>
-				{/if}
-			{/if}
-
-			{#if status !== 'playing'}
-				<section class="flex flex-col items-center gap-2 rounded-ripple border border-ripple-border bg-ripple-surface p-4 text-center" aria-label="Result" data-slot="end">
-					<h3 bind:this={endEl} tabindex="-1" class="text-title-3 font-semibold" data-slot="result">
-						{status === 'won' ? `Solved in ${guesses.length}` : 'Out of guesses'}
-					</h3>
-					<p class="text-callout text-ripple-muted-foreground">
-						The word was <strong class="font-semibold tracking-[0.08em] text-ripple-surface-foreground" data-slot="answer">{word}</strong>
-					</p>
-					<pre class="font-sans text-callout leading-tight" aria-label="Share grid" data-slot="share">{share}</pre>
-					<button type="button" class={quiet} onclick={copy}>
-						<Copy size={14} strokeWidth={2} aria-hidden="true" />Copy result
-					</button>
-					{#if copied}<p class="text-footnote text-ripple-muted-foreground" data-slot="copied">{copied}</p>{/if}
-				</section>
-			{/if}
 		{/if}
 
 		<p class="sr-only" aria-live="polite" data-slot="announce">{announce}</p>
