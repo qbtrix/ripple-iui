@@ -13,6 +13,8 @@
 	interface Tab {
 		id: string;
 		label: string;
+		/** A caveat shown above the files. */
+		note?: string;
 		docs: { href: string; title: string }[];
 		files: CodeFile[];
 	}
@@ -58,6 +60,7 @@
 
 	{#each tabs as tab, i (tab.id)}
 		<div class="panel" role="tabpanel" id="panel-{tab.id}" aria-labelledby="tab-{tab.id}" hidden={i !== current}>
+			{#if tab.note}<p class="note">{tab.note}</p>{/if}
 			<div class="files">
 				{#each [tab.files.slice(0, -1), tab.files.slice(-1)] as column, c (c)}
 					<div class="column">
@@ -182,6 +185,12 @@
 		tab-size: 2;
 	}
 
+	.note {
+		max-width: 72ch;
+		margin: 0 0 12px;
+		font-size: 15px;
+		color: var(--site-soft);
+	}
 	.docs {
 		margin: 16px 0 0;
 		font-size: 15px;

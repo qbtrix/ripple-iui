@@ -81,6 +81,7 @@ export function integration(list = pages) {
 		{
 			id: 'headless',
 			label: 'Any framework',
+			note: 'The headless runtime takes a whole spec. It has no stream parser of its own (that ships in the Svelte package), so read the response to the end, then pass the spec in.',
 			docs: [{ href: '/docs/concepts/headless', title: 'Headless runtime' }],
 			files: [
 				named(f('concepts/headless', 'npm install @ripple-ui/core'), 'Terminal'),
