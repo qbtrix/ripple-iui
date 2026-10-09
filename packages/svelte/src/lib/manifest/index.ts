@@ -121,6 +121,7 @@ import { hoverCardEntry } from './entries/hover-card.js';
 import { iconEntry } from './entries/icon.js';
 import { ifEntry } from './entries/if.js';
 import { imageEntry } from './entries/image.js';
+import { illustrationEntry } from './entries/illustration.js';
 import { inputEntry } from './entries/input.js';
 import { invoiceLayoutEntry } from './entries/invoice-layout.js';
 import { invoiceLinesEntry } from './entries/invoice-lines.js';
@@ -418,6 +419,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   iconEntry,
   ifEntry,
   imageEntry,
+  illustrationEntry,
   inputEntry,
   invoiceLayoutEntry,
   invoiceLinesEntry,

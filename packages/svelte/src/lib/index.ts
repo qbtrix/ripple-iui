@@ -71,6 +71,13 @@ export {
   applyStateOp
 } from '@ripple-ui/core';
 
+// The `illustration` widget's SVG policy check and rebuild, for host card policies.
+export {
+  checkIllustrationSvg,
+  sanitizeIllustrationSvg,
+  type IllustrationCheck
+} from './security/illustration-svg.js';
+
 // Widget registry
 export {
   getWidget,

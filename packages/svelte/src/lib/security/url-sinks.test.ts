@@ -4,7 +4,9 @@
 // `javascript:` at render time), and a static audit (`auditSvelte`,
 // `auditTs`) that fails on any sink that skips the guard. The audit's rules
 // are themselves tested against in-file fixture snippets, so a regex that
-// stops matching fails here instead of passing silently.
+// stops matching fails here instead of passing silently. Markup sinks (a prop
+// that carries markup, like illustration's `svg`) are rendered with hostile
+// payloads and checked for handlers and outside refs as well.
 import { fireEvent, render } from '@testing-library/svelte';
 import { tick, type Component } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -27,6 +29,7 @@ import Citation from '$lib/widgets/research/Citation.svelte';
 import NewsCard from '$lib/widgets/research/NewsCard.svelte';
 import SourceCard from '$lib/widgets/research/SourceCard.svelte';
 import DiscoverCard from '$lib/widgets/research/DiscoverCard.svelte';
+import Illustration from '$lib/widgets/display/Illustration.svelte';
 
 const P = 'javascript:alert(1)';
 const URL_ATTRS = ['href', 'src', 'srcset', 'action', 'formaction', 'poster', 'data', 'xlink:href', 'environment-image'];
@@ -112,6 +115,47 @@ describe('widget URL sinks', () => {
 		if (tag) expect(container.querySelector(tag)).not.toBeNull();
 		expect(dangerous(container)).toEqual([]);
 	});
+});
+
+// Props that carry markup the widget turns into DOM. Each renders every hostile
+// payload with no handler, no style, and no reference that leaves the art.
+const MARKUP_SINKS: Array<[string, Component<any>, (markup: string) => Record<string, unknown>]> = [
+	['illustration svg', Illustration, (svg) => ({ svg, title: 'Art' })]
+];
+const SVG_PAYLOADS = [
+	`<svg viewBox='0 0 9 9' onload='alert(1)'><use href='#a'><set attributeName='href' to='${P}'/></use><rect id='a'/></svg>`,
+	`<svg viewBox='0 0 9 9'><rect><animate attributeName='xlink:href' values='${P}' dur='1s'/><set attributeName='onclick' to='alert(1)'/></rect></svg>`,
+	`<svg viewBox='0 0 9 9'><a href='${P}'><rect/></a><image href='http://x/y.png'/><use href='http://x#a'/></svg>`,
+	`<svg viewBox='0 0 9 9'><style>@import url(http://x)</style><rect fill='url(http://x/#a)' style='fill:url(http://x)'/></svg>`,
+	`<svg viewBox='0 0 9 9'><foreignObject><iframe xmlns='http://www.w3.org/1999/xhtml' src='http://x'/></foreignObject></svg>`
+];
+
+function svgResidue(root: Element): string[] {
+	const out: string[] = [];
+	for (const svg of root.querySelectorAll('[data-widget] svg:not(.lucide-icon)'))
+		for (const el of [svg, ...svg.querySelectorAll('*')]) {
+			const tag = el.localName;
+			if (/^(script|style|foreignObject|iframe|a|image)$/i.test(tag)) out.push(`<${tag}>`);
+			for (const a of el.attributes) {
+				if (/^on/i.test(a.localName) || a.localName === 'style') out.push(`${tag}@${a.name}`);
+				if (a.localName === 'href' && !a.value.startsWith('#')) out.push(`${tag}@href=${a.value}`);
+				if (/url\((?!#)/i.test(a.value)) out.push(`${tag}@${a.name}=${a.value}`);
+				if (a.localName === 'attributeName' && /href|^on/i.test(a.value)) out.push(`${tag}@attributeName=${a.value}`);
+			}
+		}
+	return out;
+}
+
+describe('markup sinks', () => {
+	it.each(MARKUP_SINKS.flatMap(([n, C, props]) => SVG_PAYLOADS.map((m, i) => [`${n} #${i}`, C, props(m)] as const)))(
+		'%s renders no handler or outside reference',
+		async (_n, C, props) => {
+			const { container } = render(C, { props });
+			await tick();
+			expect(dangerous(container)).toEqual([]);
+			expect(svgResidue(container)).toEqual([]);
+		}
+	);
 });
 
 describe('window.open sinks', () => {

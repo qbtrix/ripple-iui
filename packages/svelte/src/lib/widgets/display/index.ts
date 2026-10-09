@@ -37,3 +37,4 @@ export { default as LedClock } from './LedClock.svelte';
 export { default as GlyphGrid } from './GlyphGrid.svelte';
 export { default as FillGrid } from './FillGrid.svelte';
 export { default as StreakBars } from './StreakBars.svelte';
+export { default as Illustration } from './Illustration.svelte';
