@@ -85,7 +85,8 @@
     </button>
     <span class="text-sm font-medium tabular-nums">{label}</span>
     <div class="ml-auto flex items-center gap-1.5">
-      {#each actions as a (a.id)}
+      <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+      {#each actions as a, idx (`${a.id}:${idx}`)}
         {@const Icon = getIcon(a.icon)}
         <button
           type="button"

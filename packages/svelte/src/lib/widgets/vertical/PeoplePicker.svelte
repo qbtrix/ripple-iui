@@ -137,7 +137,8 @@
         {#if selected.length === 0}
           <span class="text-muted-foreground px-1">{placeholder}</span>
         {:else}
-          {#each selected as idv (idv)}
+          <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+          {#each selected as idv, idx (`${idv}:${idx}`)}
             {@const p = getPerson(idv)}
             {#if p}
               <span class="inline-flex items-center gap-1.5 rounded-full bg-muted pl-0.5 pr-1.5 py-0.5 text-xs">
@@ -185,7 +186,7 @@
           {#if filtered.length === 0}
             <li class="px-3 py-6 text-center text-sm text-muted-foreground">{emptyText}</li>
           {:else}
-            {#each filtered as p (p.id)}
+            {#each filtered as p, idx (`${p.id}:${idx}`)}
               {@const isSelected = selectedSet.has(p.id)}
               <li>
                 <button

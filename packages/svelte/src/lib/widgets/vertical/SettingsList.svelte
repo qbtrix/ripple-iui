@@ -62,7 +62,8 @@
           {group}
         </div>
       {/if}
-      {#each list as item, i (item.id ?? i)}
+      <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+      {#each list as item, i (`${item.id}:${i}`)}
         <div class="flex items-center justify-between gap-4 px-4 py-3">
           <div class="min-w-0 flex-1">
             <div class="text-sm font-medium">{item.label}</div>

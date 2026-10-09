@@ -672,7 +672,8 @@
               </div>
             {:else}
               <ol class="rdash-activity-list">
-                {#each visibleActivity as a, i (a.id ?? i)}
+                <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+                {#each visibleActivity as a, i (`${a.id}:${i}`)}
                   {@const clickable = isClickableActivity(a)}
                   <li class={cn('rdash-activity-item', clickable && 'rdash-activity-item-clickable')}>
                     <button

@@ -90,7 +90,8 @@
       </tr>
     </thead>
     <tbody>
-      {#each lines as line, i (line.id ?? i)}
+      <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+      {#each lines as line, i (`${line.id}:${i}`)}
         <tr class="border-t border-border">
           <td class="px-3 py-2 align-top">
             <div>{line.description}</div>
@@ -119,7 +120,7 @@
         </td>
         <td class="px-3 py-2 text-right tabular-nums">{format(computedSubtotal)}</td>
       </tr>
-      {#each summary as s (s.label)}
+      {#each summary as s, idx (`${s.label}:${idx}`)}
         <tr>
           <td colspan={showRowTotals ? 3 : 2} class="px-3 py-1.5 text-right text-xs uppercase tracking-wide text-muted-foreground">
             {s.label}

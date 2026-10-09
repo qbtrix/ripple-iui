@@ -313,7 +313,8 @@
       <h3 class="auq-title">Review your answers</h3>
     </div>
     <div class="auq-review">
-      {#each questions as q, i (q.id ?? i)}
+      <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+      {#each questions as q, i (`${q.id}:${i}`)}
         {@const a = answers[q.id ?? `q-${i}`]}
         <div class={cn('auq-review-item', a?.skipped && 'auq-review-item-skipped')}>
           <span class="auq-review-q">{q.title}</span>
@@ -348,7 +349,7 @@
           class={cn('auq-options', layout === 'stacked' ? 'auq-options-stacked' : 'auq-options-inline')}
           role={isMulti ? 'group' : 'radiogroup'}
         >
-          {#each options as opt, i (opt.id ?? i)}
+          {#each options as opt, i (`${opt.id}:${i}`)}
             {@const title = optionTitle(opt, i)}
             {@const selected = isSelected(title)}
             <button
