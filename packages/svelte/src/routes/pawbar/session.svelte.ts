@@ -87,6 +87,7 @@ const answerText = (v: unknown): string => {
 function flowNames(root: unknown) {
 	const steps = new Map<string, string>();
 	const fields = new Map<string, string>();
+	const binds = new Map<string, string>();
 	const todo = [root];
 	for (let n = 0; todo.length && n < 64; n++) {
 		const step = todo.pop();
@@ -96,8 +97,18 @@ function flowNames(root: unknown) {
 		for (const f of Array.isArray(step.form_fields) ? step.form_fields : [])
 			if (isRecord(f) && typeof f.id === 'string' && typeof f.label === 'string') fields.set(f.id, oneLine(f.label));
 		todo.push(step.chain, ...(isRecord(step.chain_map) ? Object.values(step.chain_map) : []));
+		// Inputs bound into the flow's state: their label names the answer in payload.state.
+		const nodes = [step.ui];
+		for (let m = 0; nodes.length && m < 400; m++) {
+			const node = nodes.pop();
+			if (!isRecord(node)) continue;
+			const path = typeof node.bind === 'string' ? node.bind.replace(/^\{state\.|\}$/g, '') : '';
+			const label = isRecord(node.props) && typeof node.props.label === 'string' ? oneLine(node.props.label) : '';
+			if (path && label) binds.set(path, label);
+			if (Array.isArray(node.children)) nodes.push(...node.children);
+		}
 	}
-	return { steps, fields };
+	return { steps, fields, binds };
 }
 
 /**
@@ -118,7 +129,8 @@ export function flowMessage(message: string, payload: Record<string, unknown> = 
 	};
 	for (const [key, value] of Object.entries(payload)) {
 		const step = key.replace(/_(selection|formData)$/, '');
-		if (key.endsWith('_formData') && isRecord(value)) for (const [f, v] of Object.entries(value)) add(names.fields.get(f) ?? humanize(f), v);
+		if (key === 'state' && isRecord(value)) for (const [p, v] of Object.entries(value)) add(names.binds.get(p) ?? humanize(p.split('.').pop() ?? p), v);
+		else if (key.endsWith('_formData') && isRecord(value)) for (const [f, v] of Object.entries(value)) add(names.fields.get(f) ?? humanize(f), v);
 		else add(names.steps.get(step) ?? humanize(step), value);
 	}
 	return out;

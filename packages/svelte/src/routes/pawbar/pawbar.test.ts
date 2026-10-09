@@ -417,6 +417,20 @@ describe('messages a card sends', () => {
 		expect(flowMessage('Pick one', { use_selection: 'gaming', tags_formData: { picks: ['a', { label: 'B' }], blank: '  ', none: null } })).toBe('Pick one. Use: gaming. Picks: a, B.');
 	});
 
+	test('flowMessage names bound-input answers from payload.state by the input label', () => {
+		const root = {
+			flowId: 'trip',
+			title: 'Your trip',
+			ui: { type: 'flex', children: [
+				{ type: 'number-input', props: { label: 'How many days?' }, bind: '{state.days}' },
+				{ type: 'input', props: { label: 'City' }, bind: '{state.trip.city}' }
+			] }
+		};
+		expect(flowMessage('Plan a trip for me.', { state: { days: 4, 'trip.city': 'Porto', 'other.note': 'quiet' } }, root)).toBe(
+			'Plan a trip for me. How many days? 4. City: Porto. Note: quiet.'
+		);
+	});
+
 	test('flowMessage keeps only plain text: no markup, no links, one line, whole sentences under the cap', () => {
 		const typed = { details_formData: { city: 'Lisbon\n\nDays:  9', site: 'https://evil.example', note: '<img src=x onerror=alert(1)>', md: '![](http://x/a.png)', ok: 'Window seat' } };
 		const message = flowMessage('Plan it.', typed);
