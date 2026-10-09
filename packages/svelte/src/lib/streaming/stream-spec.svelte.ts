@@ -5,13 +5,16 @@
 // window gets one parse when the window closes, so a pausing stream never
 // leaves `current` behind the text already received. The single pending
 // timer is cleared on every exit (done, cancel/abort/overflow, error).
-// Created: 2026-04-16
+// In dev, a stream whose buffer passes `warnAtBytes` gets one console.warn
+// per stream: that size usually means data typed inline.
 
 import { StreamParseError, type StreamSpec, type StreamSpecOptions, type StreamSpecStore } from '$lib/streaming/index.js';
 import { DEFAULT_ALLOW, parsePartialSpec } from './json-parse.js';
+import { DEV } from 'esm-env';
 
 const DEFAULT_THROTTLE_MS = 50;
 const DEFAULT_MAX_BUFFER_BYTES = 2_000_000;
+const DEFAULT_WARN_AT_BYTES = 100_000;
 
 export function streamSpec(
   source: ReadableStream<string | Uint8Array> | AsyncIterable<string | Uint8Array>,
@@ -20,6 +23,8 @@ export function streamSpec(
   const throttleMs = options.throttleMs ?? DEFAULT_THROTTLE_MS;
   const maxBufferBytes = options.maxBufferBytes ?? DEFAULT_MAX_BUFFER_BYTES;
   const allow = options.allow ?? DEFAULT_ALLOW;
+  const warnAtBytes = options.warnAtBytes ?? DEFAULT_WARN_AT_BYTES;
+  let warnedLarge = false;
 
   const state = $state({
     current: null as StreamSpec | null,
@@ -92,6 +97,15 @@ export function streamSpec(
         const text = typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
         if (text.length === 0) continue;
         buffer += text;
+
+        if (DEV && !warnedLarge && warnAtBytes > 0 && buffer.length > warnAtBytes) {
+          warnedLarge = true;
+          console.warn(
+            `[ripple] streamed spec passed ${buffer.length} bytes (warnAtBytes: ${warnAtBytes}). ` +
+              'Every frame re-parses the whole buffer, so large specs paint slowly. ' +
+              'Load bulk data from the host through `sources` or an `api` action instead of typing it into the spec.',
+          );
+        }
 
         if (buffer.length > maxBufferBytes) {
           state.error = new StreamParseError(

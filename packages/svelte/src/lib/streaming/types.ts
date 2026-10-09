@@ -1,5 +1,4 @@
 // types.ts — Public types for the streaming module.
-// Created: 2026-04-16
 
 import { type UISpec, type UniversalSpec } from '@ripple-ui/core';
 
@@ -50,6 +49,15 @@ export interface StreamSpecOptions {
    * UI specs; guards against runaway streams.
    */
   maxBufferBytes?: number;
+
+  /**
+   * Dev-only size warning. When the buffer first grows past this many bytes,
+   * streamSpec calls console.warn once for that stream, pointing at host data
+   * (`sources` / `api`) instead of inline records. Measured like
+   * `maxBufferBytes` (the decoded buffer's length). Defaults to 100_000;
+   * `0` or `Infinity` turns it off. Silent in production builds (esm-env DEV).
+   */
+  warnAtBytes?: number;
 
   /**
    * partial-json Allow flags. Defaults to OBJ | ARR | STR with internal
