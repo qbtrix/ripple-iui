@@ -20,4 +20,30 @@ export const coachmarkEntry: WidgetManifestEntry = {
       ],
     },
   },
+  pocket: {
+    state: { tourOpen: false },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '12px' },
+      children: [
+        {
+          type: 'button',
+          props: { label: 'Start tour' },
+          on_click: { action: 'open', target: 'tourOpen' },
+        },
+        { type: 'input', class: 'coachmark-demo-search', props: { placeholder: 'Search documents' } },
+        { type: 'text', class: 'coachmark-demo-recent', props: { text: 'Recent: Q3 plan, Launch notes' } },
+        {
+          type: 'coachmark',
+          props: {
+            steps: [
+              { target: '.coachmark-demo-search', title: 'Search', description: 'Find any document by name.', side: 'bottom' },
+              { target: '.coachmark-demo-recent', title: 'Recent', description: 'Pick up where you left off.', side: 'bottom' },
+            ],
+          },
+          bind: 'state.tourOpen',
+        },
+      ],
+    },
+  },
 };

@@ -25,11 +25,12 @@ import {
  * explains why. The weak-example report lists the error each one hits.
  */
 const KNOWN_WEAK = new Set<string>([
-	// Control flow nodes whose example reads state the liftable node does not carry,
-	// so on their own they render nothing.
-	'each', // items: {state.users}
-	'if', // condition: {state.isAdmin}
-	// Overlays whose example is the closed state: nothing renders in place.
+	// `each` reads its items from state, and a bare example node has no state to
+	// carry, so it renders nothing. Its pocket seeds the state and renders.
+	'each',
+	// Overlays: the example must be the widget itself (manifest.test.ts pins
+	// example.type), and it is shown closed because an open one would cover the
+	// docs page on load. Each has a pocket with a trigger button that renders.
 	'coachmark',
 	'command-palette',
 	'confirm-dialog',
