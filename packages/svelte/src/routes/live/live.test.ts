@@ -139,7 +139,7 @@ async function mountStreamed(fixture: ScenarioFixture) {
 
 // Data widgets carry their own controls (sliders, steppers, ticks, filters);
 // bound to state, they are as interactive as a bound input.
-const DATA_WIDGETS = ['growth-projection', 'itinerary', 'meal-plan', 'recipe', 'interval-workout', 'flashcard-deck', 'exec-dashboard', 'menu-order', 'booking'];
+const DATA_WIDGETS = ['growth-projection', 'itinerary', 'meal-plan', 'recipe', 'interval-workout', 'flashcard-deck', 'exec-dashboard', 'menu-order', 'booking', 'bill-split'];
 
 type SpecNode = { type?: string; bind?: string; on_click?: unknown; props?: Record<string, unknown>; children?: unknown[] };
 

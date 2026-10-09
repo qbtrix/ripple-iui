@@ -368,6 +368,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
 | `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (option tiles with icons inferred from names, or an `icon` key from `OPTION_ICONS`), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
 | `growth-projection` | Savings growth from `initial`, monthly `deposit`, `rate` (% a year) and `years`: final balance, deposits-vs-growth chart, yearly table, optional `goal` and `inflation`, sliders to retune. Bind `deposit` |
+| `bill-split` | Split a bill with tip: `subtotal` (before tip and tax), optional `tax` (on top, shared in proportion), `tip_percent` with chips (`tip_options`) and a custom box, `people` `{ id, name, extras? }` (2 to 12; `extras` is what a person had on top, e.g. drinks). Cents-exact shares that add up to the total, a card per person, bill / tip / total row. Bind `value` `{ subtotal, tip_percent, people }` |
 | `recipe` | One dish: photo or kind icon, meta chips, a servings stepper that rescales numeric `qty` (1.5 cups prints 1½), tickable `ingredients`, numbered `steps` with timers and tips, kcal and protein per serving. Bind `servings` |
 | `meal-plan` | A week from one `recipes` library: `days` of meals by slot (cards below 720px, a days-by-slots grid above), swap per meal, protein and calories per day against `goal`, a shopping list summed per ingredient and scaled to `people`, grouped by aisle. Opening a meal shows its recipe. Bind `people` |
 | `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
@@ -459,6 +460,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |
 | `savings-projection`, `compound-interest` | `growth-projection` |
+| `split-bill`, `bill-splitter` | `bill-split` |
 | `recipe-card` | `recipe` |
 | `meal-planner`, `weekly-meal-plan` | `meal-plan` |
 | `report` | `report-layout` |
