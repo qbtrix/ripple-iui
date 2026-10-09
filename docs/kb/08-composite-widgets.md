@@ -55,6 +55,16 @@ Multi-step shipment status. Stepper for placed → confirmed → preparing → i
 
 Use for delivery tracking, courier dispatch, inbound logistics.
 
+### itinerary
+
+Day-by-day trip plan (aliases `trip-plan`, `travel-itinerary`). Answers "plan 5 days in Tokyo" and "what's next today".
+
+- `days[]`: `{ label, when?, theme?, stay?, stops[] }`; each stop `{ time?, title, kind, place?, cost?, minutes?, must?, done? }` with `kind` one of `sight | food | stay | transit | activity | shop | nature | nightlife | flight` (a Lucide icon per kind on the rail; never an icon name or emoji).
+- `route[]` (city names; derived from `legs` when omitted), `legs[]` `{ from, to, kind: flight | train | bus | car | ferry | walk, ref?, minutes?, cost? }`, `packing[]` `{ group, items[] }`.
+- `budget` and `currency` (ISO 4217, default USD): planned spend (every stop and leg cost) is shown against the budget, warning past 90% and alert when over. `verdict` leads when given.
+- `when` and `time` render as written; nothing parses a date. `open` is the expanded day's index (set it to today).
+- Bind `days` (`bind: "{state.days}"`): ticking a stop's rail dot or adding a stop (title, time, cost) writes a new days array to state. An added stop slots in by `HH:MM` time.
+
 ### Dashboard variants
 
 `exec-dashboard`, `ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (KPIs + chart + table for exec, status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.

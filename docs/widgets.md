@@ -364,6 +364,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `report-layout` | Long-form report with sections, embedded data widgets, and callouts |
 | `invoice-layout` | Invoice / quote / receipt with line items, computed totals, and download actions |
 | `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline |
+| `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
 | `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
@@ -444,6 +445,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `shipment-tracker`, `order-tracking` | `order-status` |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
+| `trip-plan`, `travel-itinerary` | `itinerary` |
 | `report` | `report-layout` |
 | `frame`, `nested-spec` | `ripple-frame` |
 | `tour` | `coachmark` |
