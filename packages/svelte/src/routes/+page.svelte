@@ -8,9 +8,13 @@
     it anywhere. Pills swap in the other recordings (remounting the player, so
     each starts from zero and plays). The order demo is not among them: its
     checkout needs /live's store wiring. The page makes no network call of its
-    own (routes/landing-no-fetch.test.ts). Below the hero: how it works, the
-    streaming code sample and install band, the recorded runs linking /live,
-    and the Paw OS closer.
+    own (routes/landing-no-fetch.test.ts). Below the hero, each section opens
+    with its title left and one muted paragraph right: a spec you can edit
+    live, the integration code (lifted from the docs at build), the widget
+    catalog (four renders that mount in view, then every widget), numbers
+    measured at build, the changelog from git tags, and the agent setup prompt
+    with the Paw OS closer. That data comes from +page.server.ts; a number or
+    the changelog that can't be computed is left out, never estimated.
 
   Creative Direction Declaration
     Scene: a developer comparing generative UI tools with a terminal open
@@ -18,18 +22,21 @@
       near-white ground, 1px lines for depth, no glow and no glass below the bar.
     Strategy: restrained neutrals + Paw blue as the single voice, and in the
       hero only on the scrub head, the caret and the primary link. Type:
-      Bricolage display, Inter body, JetBrains Mono for code and the figure
-      caption (a technical paper's "fig. 1").
+      Bricolage on the hero h1 only, Inter for section titles and body,
+      JetBrains Mono for code, widget names and the figure caption (a
+      technical paper's "fig. 1").
     Trap avoided: a chat box or a typed-out prompt as the hero. The first
       screen is a model's output you can scrub, not a description of it.
 -->
 <script lang="ts">
-	import { Ripple } from '$lib/index.js';
-	import JsonLines from '$lib/site/JsonLines.svelte';
 	import ScrubPlayer from '$lib/site/scrub/ScrubPlayer.svelte';
 	import { modelName } from '$lib/site/scrub/model-name.js';
 	import { BYOK_URL } from './pawbar/session.svelte.js';
 	import { scenarios } from './live/scenarios.js';
+	import { SITE_URL, SLIM_MANIFEST_URL } from '$lib/site/docs/model.js';
+	import SpecEditor from '$lib/site/landing/SpecEditor.svelte';
+	import CodeTabs from '$lib/site/landing/CodeTabs.svelte';
+	import LazyRipple from '$lib/site/landing/LazyRipple.svelte';
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
@@ -56,54 +63,27 @@
 		swapped = true;
 	}
 
-	// Step 3 of "how it works": a small spec, rendered for real.
-	const demoSpec = {
-		version: '1.0',
-		state: { name: 'Ada' },
-		ui: {
-			type: 'flex',
-			props: { direction: 'column', gap: '12px' },
-			children: [
-				{ type: 'heading', props: { text: 'Hello, {state.name}', level: 3 } },
-				{ type: 'input', props: { label: 'Your name', placeholder: 'Type a name' }, bind: '{state.name}' },
-				{
-					type: 'button',
-					props: { label: 'Clear', variant: 'outline', size: 'sm' },
-					on_click: { action: 'set', target: 'name', value: '' }
-				}
-			]
-		}
-	};
-	// Pretty-printed the way the spec peek shows a card (JsonLines).
-	const specSnippet = JSON.stringify({ state: demoSpec.state, ui: demoSpec.ui });
+	// Below the hero: built at prerender by +page.server.ts.
+	let { data } = $props();
 
-	const codeSample = `<script>
-  import { Ripple } from '@ripple-ui/svelte';
-  import { streamSpec } from '@ripple-ui/svelte/streaming';
-  import '@ripple-ui/svelte/theme.css';
+	const SETUP_PROMPT = `Add Ripple (@ripple-ui/svelte) to this project so a model can render UI from a JSON spec.
+Docs, written for agents: ${SITE_URL}/llms.txt
+Widget catalog to put in the model's system prompt: ${SLIM_MANIFEST_URL}
+Follow the Install and Stream a spec pages, then render one spec to check that Tailwind picks up the widget styles.`;
 
-  let store = $state(null);
-
-  async function generate(prompt) {
-    // your endpoint asks the model for a spec and streams the JSON back
-    const res = await fetch('/api/ui', { method: 'POST', body: prompt });
-    store = streamSpec(res.body);
-  }
-\u003C/script>
-
-{#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
-
-	let copied = $state<'hero' | 'code' | null>(null);
-	async function copyInstall(where: 'hero' | 'code') {
+	let copied = $state<'install' | 'prompt' | null>(null);
+	async function copy(text: string, what: 'install' | 'prompt') {
 		try {
-			await navigator.clipboard.writeText(INSTALL);
-			copied = where;
+			await navigator.clipboard.writeText(text);
+			copied = what;
 			setTimeout(() => (copied = null), 1600);
 		} catch {
-			/* clipboard blocked: the command is on screen to copy by hand */
+			/* clipboard blocked: the text is on screen to copy by hand */
 		}
 	}
 
+	const seconds = (ms: number) => (ms / 1000).toFixed(1);
+	const kb = (bytes: number) => (bytes / 1000).toFixed(1);
 </script>
 
 <svelte:head>
@@ -137,8 +117,8 @@
 		<div class="next">
 			<p class="get">
 				<code><span aria-hidden="true">$</span> {INSTALL}</code>
-				<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
-					{copied === 'hero' ? 'Copied' : 'Copy'}
+				<button type="button" onclick={() => copy(INSTALL, 'install')} aria-label="Copy install command">
+					{copied === 'install' ? 'Copied' : 'Copy'}
 				</button>
 			</p>
 			<a class="go primary" href="/playground">Playground</a>
@@ -146,92 +126,135 @@
 		</div>
 	</section>
 
-	<section class="how" aria-labelledby="how-title">
-		<h2 id="how-title">How it works</h2>
-		<ol class="steps">
-			<li class="step">
-				<h3>The model writes a spec</h3>
-				<p>A tree of widgets, the starting state, and what each control does. Plain JSON, small enough to stream.</p>
-				<pre class="snippet" aria-label="Example spec"><JsonLines text={specSnippet} /></pre>
-			</li>
-			<li class="step">
-				<h3>The engine runs it</h3>
-				<p>
-					<code>@ripple-ui/core</code> holds the state, resolves <code>{'{state.name}'}</code> expressions, keeps
-					two-way binds in sync and dispatches events. It has no framework dependency.
-				</p>
-				<ul class="facts">
-					<li>Local actions: <code>set</code>, <code>toggle</code>, <code>push</code>, <code>remove</code></li>
-					<li>Host actions your app handles: <code>emit</code>, <code>navigate</code>, <code>api</code></li>
-					<li>Partial JSON parses as it arrives, so the UI grows token by token</li>
-				</ul>
-			</li>
-			<li class="step">
-				<h3>You get a working UI</h3>
-				<p>That spec, rendered by <code>@ripple-ui/svelte</code>. Type in it.</p>
-				<div class="demo"><Ripple spec={demoSpec} /></div>
-			</li>
-		</ol>
+	<section aria-labelledby="edit-title">
+		<div class="head">
+			<h2 id="edit-title">One spec, edited live</h2>
+			<p>
+				The card is this JSON: its starting state, three widgets and what the button does. Change the goal to 6 or rename
+				the button and it re-renders. Click it a few times first: the count you reached survives the edit.
+			</p>
+		</div>
+		<SpecEditor />
 	</section>
 
-	<section class="code" aria-labelledby="code-title">
-		<div class="code-grid">
-			<div class="code-copy">
-				<h2 id="code-title">Stream a spec in a dozen lines</h2>
-				<p>
-					<code>streamSpec</code> reads any stream or async iterable and parses the partial JSON as it lands. Hand
-					the store to <code>&lt;Ripple&gt;</code> and the interface fills in, then stays interactive when the stream
-					ends.
-				</p>
-			</div>
-			<pre class="sample"><code>{codeSample}</code></pre>
+	<section aria-labelledby="integrate-title">
+		<div class="head">
+			<h2 id="integrate-title">Integrate tonight</h2>
+			<p>
+				One package, one endpoint that streams the model's text, and a page that hands the stream to
+				<code>&lt;Ripple&gt;</code>. The code below is lifted from the docs when the site builds.
+			</p>
 		</div>
-		<!-- The site's one Paw-blue band. -->
-		<div class="band">
-			<div class="band-inner">
-				<div class="install">
-					<code><span aria-hidden="true">$</span> {INSTALL}</code>
-					<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
-				</div>
-				<p class="small">
-					Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
-					<a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a>
-				</p>
-			</div>
-		</div>
+		<CodeTabs tabs={data.integration} />
 	</section>
 
-	<section class="examples" aria-labelledby="examples-title">
-		<div class="examples-head">
-			<h2 id="examples-title">Recorded runs</h2>
-			<p>Real model output, replayed on its original timing. Open one to watch the spec and the UI side by side.</p>
+	<section aria-labelledby="catalog-title">
+		<div class="head">
+			<h2 id="catalog-title">{data.widgetCount} widgets a model can ask for</h2>
+			<p>
+				From a single badge to a searchable data grid. Each one has a docs page with its props, events and an example spec, from the same
+				manifest the model reads.
+			</p>
 		</div>
-		<ul class="runs">
-			{#each scenarios as s (s.id)}
+		<ul class="minis">
+			{#each data.minis as m (m.type)}
 				<li>
-					<a href="/live?s={s.id}" class="run">
-						<span class="run-line"><span class="run-title">{s.title}</span><span class="run-cat">{s.category}</span></span>
-						<span class="run-prompt">{s.fixture.prompt}</span>
-					</a>
+					<div class="mini-frame"><LazyRipple spec={m.spec} label={m.type} /></div>
+					<a class="mini-name" href="/docs/widgets/{m.type}">{m.type}</a>
+					<p class="mini-desc">{m.description}</p>
 				</li>
 			{/each}
 		</ul>
+		<dl class="catalog">
+			{#each data.categories as c (c.id)}
+				<div class="row">
+					<dt>{c.title} <span>{c.types.length}</span></dt>
+					<dd>
+						<ul>
+							{#each c.types as type (type)}<li><a href="/docs/widgets/{type}">{type}</a></li>{/each}
+						</ul>
+					</dd>
+				</div>
+			{/each}
+		</dl>
 	</section>
 
+	<section aria-labelledby="numbers-title">
+		<div class="head">
+			<h2 id="numbers-title">The numbers</h2>
+			<p>Every number here is computed when the site builds, from the code and recordings in the repo.</p>
+		</div>
+		<dl class="numbers">
+			<div>
+				<dt>Widgets in the catalog</dt>
+				<dd class="figure">{data.widgetCount}</dd>
+				<dd class="method">Counted from the widget manifest that drives the docs and the model's catalog.</dd>
+			</div>
+			{#if data.firstWidget}
+				<div>
+					<dt>First widget on screen</dt>
+					<dd class="figure">{seconds(data.firstWidget.medianMs)} s</dd>
+					<dd class="method">
+						Median across {data.firstWidget.n} recorded {data.firstWidget.models.map((m) => modelName(m)).join(' and ')} streams, from the first byte to the first widget the partial spec can draw. The whole spec took a median {seconds(data.firstWidget.medianDoneMs)} s. The wait for the model's first token is not counted.
+						<a href="/live">Nine recordings of real model streams, scrubbable.</a>
+					</dd>
+				</div>
+			{/if}
+			{#if data.sizes}
+				<div>
+					<dt>Headless runtime</dt>
+					<dd class="figure">{kb(data.sizes.headless)} kB</dd>
+					<dd class="method">
+						<code>@ripple-ui/core/headless</code>, bundled by esbuild, minified and gzipped. The slim runtime is
+						{kb(data.sizes.slim)} kB.
+					</dd>
+				</div>
+			{/if}
+		</dl>
+	</section>
+
+	{#if data.releases.length}
+		<section aria-labelledby="changes-title">
+			<div class="head">
+				<h2 id="changes-title">Changelog</h2>
+				<p>The latest tagged releases, read from the repo's git tags when the site builds.</p>
+			</div>
+			<ol class="changes">
+				{#each data.releases as r (r.tag)}
+					<li>
+						<a href={r.url}>{r.tag}</a>
+						<time datetime={r.date}>{r.date}</time>
+						<p>{r.note}</p>
+					</li>
+				{/each}
+			</ol>
+		</section>
+	{/if}
+
 	<section class="closer" aria-labelledby="closer-title">
-		<h2 id="closer-title">Ask for your own tools in Paw OS</h2>
-		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
-		<div class="closer-actions">
-			<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
-			<a class="link" href={GITHUB_URL}>Read the source</a>
+		<div class="setup">
+			<div class="setup-copy">
+				<h2 id="closer-title">Copy the setup prompt for your agent</h2>
+				<p>It points a coding agent at the docs written for models and at the widget catalog, then has it check the install.</p>
+			</div>
+			<div class="prompt">
+				<pre>{SETUP_PROMPT}</pre>
+				<button type="button" onclick={() => copy(SETUP_PROMPT, 'prompt')}>{copied === 'prompt' ? 'Copied' : 'Copy prompt'}</button>
+			</div>
+		</div>
+		<div class="paw">
+			<p>Or skip the setup and ask for your own tools in Paw OS, with your own model key.</p>
+			<div class="closer-actions">
+				<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
+				<a class="link" href={GITHUB_URL}>Read the source</a>
+			</div>
 		</div>
 	</section>
 </main>
 
 <style>
 	/* Sections sit on the site grid, edge-aligned with the top bar's content
-	   (--site-max less a gutter each side; 16px gutters on phones).
-	   overflow-x clip lets the blue band run full bleed. */
+	   (--site-max less a gutter each side; 16px gutters on phones). */
 	.landing {
 		position: relative;
 		isolation: isolate;
@@ -248,27 +271,28 @@
 		margin-inline: auto;
 	}
 	h1,
-	h2,
-	h3 {
-		font-family: var(--font-display);
+	h2 {
 		text-wrap: balance;
 		margin: 0;
 	}
-	h1,
-	h2 {
+	/* The display face is the hero's alone; section titles are the body face. */
+	h1 {
+		font-family: var(--font-display);
 		font-weight: 650;
-		letter-spacing: -0.03em;
 	}
 	h2 {
 		font-size: clamp(1.6rem, 2.6vw, 2.1rem);
-		line-height: 1.1;
+		font-weight: 600;
+		line-height: 1.15;
+		letter-spacing: -0.025em;
+		color: var(--site-ink);
 	}
 	code,
 	pre {
 		font-family: var(--font-mono);
 	}
 	p code,
-	li code {
+	.method code {
 		font-size: 0.86em;
 		padding: 1px 5px;
 		border-radius: 5px;
@@ -410,248 +434,70 @@
 		color: var(--primary-ink);
 	}
 
-	/* How it works: spec, engine, UI joined by one 1px line (across the three
-	   columns from 768px, down the left edge below). Each step sits on it at
-	   a small open node; no numbers, the line gives the order. */
-	.how {
-		padding: 72px 0;
+	/* Below the hero. Every section opens the same way (Linear's grammar): the
+	   title on the left, one muted paragraph on the right, then the real thing
+	   at full width. Sections are separated by space and one hairline. */
+	.landing > section:not(.hero) {
+		padding: 88px 0;
 		border-top: 1px solid var(--site-line);
 	}
-	.steps {
-		list-style: none;
-		margin: 40px 0 0;
-		padding: 0 0 0 24px;
+	.head {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		gap: 40px;
-		border-left: 1px solid var(--site-line);
-	}
-	.step {
-		position: relative;
-		display: flex;
-		flex-direction: column;
 		gap: 12px;
-		min-width: 0;
+		margin-bottom: 36px;
 	}
-	.step::before {
-		content: '';
-		position: absolute;
-		top: 0.5em;
-		left: -29px;
-		width: 9px;
-		height: 9px;
-		box-sizing: border-box;
-		border: 1px solid var(--site-faint);
-		border-radius: 50%;
-		background: var(--site-ground);
-	}
-	@media (min-width: 768px) {
-		.steps {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: 32px;
-			padding: 28px 0 0;
-			border-left: 0;
-			border-top: 1px solid var(--site-line);
-		}
-		.step::before {
-			top: -33px;
-			left: 0;
+	@media (min-width: 900px) {
+		.head {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+			align-items: end;
+			gap: 48px;
 		}
 	}
-	.step h3 {
-		font-size: 1.2rem;
-		font-weight: 650;
-		letter-spacing: -0.015em;
-	}
-	.step p {
+	.head p {
 		margin: 0;
-		line-height: 1.6;
+		max-width: 58ch;
 		color: var(--site-soft);
-	}
-	/* The shared code style: code tokens, 12px radius, 1px line. */
-	.snippet,
-	.sample {
-		margin: 0;
-		padding: 16px 18px;
-		overflow-x: auto;
-		border: 1px solid var(--code-line);
-		border-radius: var(--radius-card);
-		background: var(--code-bg);
-		font-size: 13px;
-		line-height: 1.6;
-		color: var(--code-ink);
-	}
-	/* The full spec is ~40 lines; it scrolls inside so step 1 stays the
-	   height of its neighbours. */
-	.snippet {
-		max-height: 340px;
-		overflow-y: auto;
-		padding-inline: 14px;
-		font-size: 12.5px;
-		line-height: 1.55;
-	}
-	.facts {
-		margin: 4px 0 0;
-		padding: 0 0 0 18px;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		line-height: 1.5;
-		color: var(--site-soft);
-	}
-	/* A rendered card: the one tinted shadow. */
-	.demo {
-		padding: 16px;
-		border: 1px solid var(--site-line);
-		border-radius: var(--radius-card);
-		background: var(--card);
-		box-shadow: var(--shadow-card);
+		text-wrap: pretty;
 	}
 
-	/* Install + streaming sample, then the blue band. */
-	.code {
-		padding: 72px 0 0;
-		border-top: 1px solid var(--site-line);
-	}
-	.code-grid {
-		display: grid;
-		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-		gap: 40px;
-		align-items: start;
-	}
-	.code-copy {
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
-	}
-	.code-copy p {
-		margin: 0;
-		line-height: 1.65;
-		color: var(--site-soft);
-	}
-	/* The one Paw-blue band on the site: full bleed, white ink only (no blue
-	   ink, no faded white). Every text on it is --site-on-primary on --primary. */
-	.band {
-		margin: 72px calc(50% - 50vw) 0;
-		background: var(--primary);
-		color: var(--site-on-primary);
-	}
-	.band-inner {
-		max-width: var(--site-max);
-		margin-inline: auto;
-		padding: 28px var(--site-gutter);
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px 40px;
-	}
-	.install {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		min-width: 0;
-		max-width: 100%;
-		font-size: 15px;
-	}
-	.install code {
-		overflow-x: auto;
-		white-space: nowrap;
-		color: inherit;
-	}
-	.install code span {
-		margin-right: 6px;
-	}
-	.install button {
-		flex: none;
-		min-height: 44px;
-		padding: 0 16px;
-		border: 1px solid var(--site-on-primary);
-		border-radius: var(--radius-control);
-		background: transparent;
-		color: var(--site-on-primary);
-		font: inherit;
-		font-family: var(--font-sans);
-		font-size: 14px;
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.install button:hover {
-		background: color-mix(in oklch, var(--primary) 82%, black);
-	}
-	.small {
-		margin: 0;
-		max-width: 52ch;
-		font-size: 15px;
-		line-height: 1.55;
-	}
-	.band a {
-		color: inherit;
-		font-weight: 600;
-		text-underline-offset: 3px;
-	}
-
-	/* Recorded runs: a divided list; title and category on one line, the
-	   prompt under them in muted ink, two lines at most. */
-	.examples {
-		padding: 72px 0;
-	}
-	.examples-head {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: end;
-		justify-content: space-between;
-		gap: 12px 40px;
-	}
-	.examples-head p {
-		margin: 0;
-		max-width: 46ch;
-		line-height: 1.6;
-		color: var(--site-soft);
-	}
-	.runs {
+	/* The catalog: four live renders, then every widget as a dense index. */
+	.minis {
 		list-style: none;
-		margin: 32px 0 0;
+		margin: 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-		column-gap: 32px;
-		border-top: 1px solid var(--site-line);
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+		gap: 36px 24px;
 	}
-	.run {
+	.minis li {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		height: 100%;
+		min-width: 0;
+	}
+	.mini-frame {
+		height: 340px;
+		padding: 20px;
 		box-sizing: border-box;
-		padding: 18px 0;
-		border-bottom: 1px solid var(--site-line);
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
+		background: var(--background);
+		overflow: hidden;
+	}
+	.mini-name {
+		align-self: start;
+		margin-top: 14px;
+		font: 500 14px/1.4 var(--font-mono);
 		color: var(--site-ink);
-		text-decoration: none;
+		text-underline-offset: 3px;
+		text-decoration-color: var(--site-line);
 	}
-	.run-line {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 12px;
-	}
-	.run:hover .run-title {
+	.mini-name:hover {
 		color: var(--primary-ink);
+		text-decoration-color: currentColor;
 	}
-	.run:focus-visible {
-		outline: 2px solid var(--ring);
-		outline-offset: 2px;
-	}
-	.run-title {
-		font-weight: 600;
-		transition: color 0.15s;
-	}
-	.run-cat {
-		flex: none;
-		font-size: 13px;
-		color: var(--site-soft);
-	}
-	.run-prompt {
+	.mini-desc {
+		margin: 4px 0 0;
 		font-size: 14px;
 		line-height: 1.5;
 		color: var(--site-soft);
@@ -662,14 +508,215 @@
 		overflow: hidden;
 	}
 
-	/* Closer: one primary button, the secondary is a link. */
-	.closer {
-		padding: 80px 0 96px;
+	.catalog {
+		margin: 56px 0 0;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 6px;
+		padding: 16px 0;
 		border-top: 1px solid var(--site-line);
 	}
-	.closer p {
-		margin: 14px 0 26px;
-		font-size: 17px;
+	@media (min-width: 720px) {
+		.row {
+			grid-template-columns: 180px minmax(0, 1fr);
+			gap: 24px;
+		}
+	}
+	.row dt {
+		font-weight: 600;
+		font-size: 15px;
+		color: var(--site-ink);
+	}
+	.row dt span {
+		margin-left: 4px;
+		font-weight: 400;
+		font-variant-numeric: tabular-nums;
+		color: var(--site-faint);
+	}
+	.row dd {
+		margin: 0;
+	}
+	.row ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 18px;
+	}
+	.row a {
+		display: inline-block;
+		padding: 2px 0;
+		font: 13.5px/1.6 var(--font-mono);
+		color: var(--site-soft);
+		text-decoration: none;
+	}
+	.row a:hover {
+		color: var(--primary-ink);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	/* Numbers: big figure, then exactly how it was measured. */
+	.numbers {
+		margin: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+		border-top: 1px solid var(--site-line);
+	}
+	.numbers > div {
+		display: flex;
+		flex-direction: column;
+		padding: 24px 32px 8px 0;
+	}
+	@media (min-width: 900px) {
+		.numbers > div + div {
+			padding-left: 32px;
+			border-left: 1px solid var(--site-line);
+		}
+	}
+	.numbers dt {
+		order: 1;
+		font-weight: 600;
+		font-size: 15px;
+		color: var(--site-ink);
+	}
+	.numbers dd {
+		margin: 0;
+	}
+	.numbers .figure {
+		order: 0;
+		margin-bottom: 10px;
+		font-size: clamp(2.4rem, 4vw, 3.2rem);
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: -0.03em;
+		font-variant-numeric: tabular-nums;
+		color: var(--site-ink);
+	}
+	.numbers .method {
+		order: 2;
+		margin-top: 6px;
+		font-size: 14px;
+		line-height: 1.55;
+		color: var(--site-soft);
+	}
+	.method a {
+		display: block;
+		margin-top: 8px;
+		text-underline-offset: 3px;
+	}
+
+	/* Changelog: version, date, note on one row; stacked on phones. */
+	.changes {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.changes li {
+		display: grid;
+		grid-template-columns: 88px minmax(0, 1fr);
+		gap: 2px 24px;
+		padding: 16px 0;
+		border-top: 1px solid var(--site-line);
+	}
+	@media (min-width: 720px) {
+		.changes li {
+			grid-template-columns: 88px 120px minmax(0, 1fr);
+		}
+	}
+	.changes a {
+		font: 500 14px/1.6 var(--font-mono);
+		text-underline-offset: 3px;
+	}
+	.changes time {
+		font-size: 14px;
+		line-height: 1.6;
+		font-variant-numeric: tabular-nums;
+		color: var(--site-soft);
+	}
+	.changes p {
+		grid-column: 1 / -1;
+		margin: 0;
+		font-size: 15px;
+		line-height: 1.55;
+		color: var(--site-ink);
+	}
+	@media (min-width: 720px) {
+		.changes p {
+			grid-column: auto;
+		}
+	}
+
+	/* Closer: the setup prompt in one framed box, then Paw OS below. */
+	.landing > section.closer {
+		padding-bottom: 96px;
+	}
+	.setup {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 24px 48px;
+		padding: 32px;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
+		background: var(--card);
+	}
+	@media (min-width: 900px) {
+		.setup {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+			align-items: center;
+		}
+	}
+	.setup-copy p {
+		margin: 12px 0 0;
+		max-width: 46ch;
+		color: var(--site-soft);
+	}
+	.prompt {
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		gap: 12px;
+		min-width: 0;
+	}
+	.prompt pre {
+		align-self: stretch;
+		margin: 0;
+		padding: 14px 16px;
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-control);
+		background: var(--code-bg);
+		font-size: 12.5px;
+		line-height: 1.6;
+		color: var(--code-ink);
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+	.prompt button {
+		min-height: 44px;
+		padding: 0 18px;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-control);
+		background: transparent;
+		color: var(--site-ink);
+		font: 600 15px/1 var(--font-sans);
+		cursor: pointer;
+	}
+	.prompt button:hover {
+		background: var(--site-hover);
+	}
+	.paw {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px 32px;
+		margin-top: 40px;
+	}
+	.paw p {
+		margin: 0;
 		color: var(--site-soft);
 	}
 	.closer-actions {
@@ -708,29 +755,23 @@
 	.link:focus-visible,
 	.get button:focus-visible,
 	.go:focus-visible,
-	.figures button:focus-visible {
+	.figures button:focus-visible,
+	.prompt button:focus-visible,
+	.landing section a:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
-	/* --ring is the band's own blue, so focus on the band is white. */
-	.band .install button:focus-visible,
-	.band a:focus-visible {
-		outline: 2px solid var(--site-on-primary);
-		outline-offset: 2px;
-	}
 
-	@media (max-width: 860px) {
-		.code-grid {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
 	/* Phones: a tighter hero, so the top of the player is in the first screen. */
 	@media (max-width: 639px) {
 		.landing {
 			padding-inline: 16px;
 		}
-		.band-inner {
-			padding-inline: 16px;
+		.landing > section:not(.hero) {
+			padding: 56px 0;
+		}
+		.setup {
+			padding: 20px;
 		}
 		.hero {
 			padding: 24px 0 56px;
