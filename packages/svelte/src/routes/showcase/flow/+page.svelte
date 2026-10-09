@@ -157,7 +157,7 @@
   };
 </script>
 
-<div class="min-h-screen bg-background p-8">
+<div class="p-4 sm:p-8">
   <header class="mx-auto max-w-3xl pb-4">
     <h1 class="text-2xl font-semibold">Flow actions — showcase</h1>
     <p class="mt-1 text-sm text-muted-foreground">

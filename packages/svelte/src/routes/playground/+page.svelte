@@ -1,6 +1,20 @@
+<!--
+  @file routes/playground/+page.svelte
+  @description The spec playground: a JSON editor on the left, its render and
+    the host events it fires on the right. The shell is itself a Ripple spec
+    (dog food); this file holds the truth in Svelte and mirrors it in through
+    the state override. A link can carry a spec: ?spec=<url-encoded JSON> or
+    ?s=<base64url JSON>, read in onMount (the page is prerendered, so the URL
+    is not known at build) through lib/site/specFromUrl.ts, which caps the
+    size and only JSON.parses. A bad link keeps the example and says why in
+    an inline alert. Look: the site chrome and ground; the editor uses the
+    shared code tokens (--code-bg, --code-line, --code-ink, mono).
+-->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
+  import { specFromUrl } from '$lib/site/specFromUrl.js';
 
   const EXAMPLE = JSON.stringify(
     {
@@ -46,6 +60,13 @@
   let autoRender = $state(true);
   let committedSource = $state(EXAMPLE);
   let events = $state<RippleEvent[]>([]);
+  let urlError = $state<string | null>(null);
+
+  onMount(() => {
+    const linked = specFromUrl(location.search);
+    if (linked && 'text' in linked) source = committedSource = linked.text;
+    else if (linked) urlError = linked.error;
+  });
 
   const parsed = $derived.by<{ spec: unknown | null; error: string | null }>(() => {
     const text = autoRender ? source : committedSource;
@@ -76,6 +97,7 @@
         source = EXAMPLE;
         committedSource = EXAMPLE;
         events = [];
+        urlError = null;
         return;
       }
       if (event.target === 'pg-clear-events') {
@@ -126,7 +148,7 @@
           children: [
             {
               type: 'page-header',
-              props: { eyebrow: 'PLAYGROUND', title: 'Spec Playground', subtitle: 'Paste or edit a Ripple JSON spec and render it live.' },
+              props: { title: 'Spec Playground', subtitle: 'Paste or edit a Ripple JSON spec and render it live.' },
               class: 'flex-1 min-w-0'
             },
             {
@@ -157,12 +179,13 @@
             // Left: textarea
             {
               type: 'card',
+              class: 'playground-editor',
               children: [
                 {
                   type: 'flex',
                   props: { justify: 'between', align: 'center' },
                   children: [
-                    { type: 'text', props: { text: 'JSON spec', size: 'xs', weight: 'semibold' }, class: 'uppercase tracking-wide' },
+                    { type: 'text', props: { text: 'JSON spec', size: 'xs', weight: 'semibold' } },
                     {
                       type: 'if',
                       condition: '{state.error == null}',
@@ -194,7 +217,7 @@
                 {
                   type: 'card',
                   children: [
-                    { type: 'text', props: { text: 'Preview', size: 'xs', weight: 'semibold' }, class: 'uppercase tracking-wide mb-2' },
+                    { type: 'text', props: { text: 'Preview', size: 'xs', weight: 'semibold' }, class: 'mb-2' },
                     {
                       type: 'if',
                       condition: '{state.parsedSpec != null}',
@@ -214,7 +237,7 @@
                       type: 'flex',
                       props: { justify: 'between', align: 'center' },
                       children: [
-                        { type: 'text', props: { text: 'Events ({state.eventsJson.length})', size: 'xs', weight: 'semibold' }, class: 'uppercase tracking-wide' },
+                        { type: 'text', props: { text: 'Events ({state.eventsJson.length})', size: 'xs', weight: 'semibold' } },
                         { type: 'button', props: { label: 'clear', variant: 'ghost', size: 'sm' }, on_click: { action: 'emit', target: 'pg-clear-events' } }
                       ]
                     },
@@ -247,6 +270,7 @@
 </script>
 
 <div class="page">
+  {#if urlError}<p class="url-error" role="alert">{urlError} Showing the example instead.</p>{/if}
   <Ripple
     spec={playgroundSpec}
     state={stateOverride}
@@ -257,14 +281,43 @@
 
 <style>
   .page {
-    max-width: 1400px;
+    max-width: var(--site-max);
     margin: 0 auto;
-    padding: 20px 24px 40px;
+    padding: 24px var(--site-gutter) 56px;
+  }
+  .url-error {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in oklch, var(--destructive, oklch(0.58 0.22 27)) 45%, transparent);
+    border-radius: var(--radius-control);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--site-ink);
   }
   :global(.playground-split) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
+  /* A wide preview (a 3-up stat grid on a phone) scrolls inside its column. */
+  :global(.playground-split > *) {
+    min-width: 0;
+    overflow-x: auto;
+  }
+  /* The editor in the shared code style. */
+  :global(.playground-editor textarea) {
+    border: 1px solid var(--code-line);
+    border-radius: var(--radius-control);
+    background: var(--code-bg);
+    color: var(--code-ink);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 640px;
+    overflow: auto;
+  }
   @media (max-width: 900px) {
     :global(.playground-split) { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 639px) {
+    .page { padding-inline: 16px; }
   }
 </style>

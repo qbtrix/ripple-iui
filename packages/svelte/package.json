@@ -84,16 +84,18 @@
     "LICENSE",
     "dist",
     "!dist/**/*.test.*",
-    "!dist/**/__fixtures__/**"
+    "!dist/**/__fixtures__/**",
+    "!dist/site/**"
   ],
   "scripts": {
     "dev": "vite dev",
+    "dev:mock": "bun scripts/mock-pawbar.ts",
     "build": "bun run lint:anim && svelte-package && bun --conditions source scripts/build-manifest.ts",
     "build:manifest": "bun --conditions source scripts/build-manifest.ts",
     "lint": "oxlint && bun run lint:anim",
     "lint:anim": "bun run scripts/check-no-toplevel-anim-imports.ts",
     "preview": "vite preview",
-    "build:site": "bun run --cwd ../core build && vite build",
+    "build:site": "bun run --cwd ../core build && vite build && pagefind --site build",
     "deploy:site": "bun run build:site && bunx wrangler deploy",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -156,6 +158,7 @@
     "jsdom": "^29.0.2",
     "oxlint": "^1.82.0",
     "oxlint-tsgolint": "^7.0.2001",
+    "pagefind": "1.5.2",
     "svelte": "^5.51.0",
     "svelte-check": "^4.4.2",
     "tailwindcss": "^4.2.2",

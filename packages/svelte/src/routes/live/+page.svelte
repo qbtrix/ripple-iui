@@ -11,13 +11,15 @@
     its checkout; the store sends visitors back to `?order=<session>` or
     `?cancelled=1`, which OrderReceipt renders.
 
-  Creative Direction Declaration
-    Archetype: Technology. Richness: Premium minimal.
-    Design read: the landing's Clean-Tech system (shadcn tokens, one cool blue
-      accent, system UI and mono stacks), carried onto a viewer page.
-    Trap avoided: a chat-app clone. The prompt is one bubble; the stage is the
-      raw stream beside the UI it becomes.
-    Dials: variance 5, motion 4, density 4.
+  Look: the site's Paw OS skin (site.css tokens and fonts) under the shared
+    top bar and footer from +layout.svelte; this page adds no chrome of its own.
+    Its local tokens are prefixed (--live-accent, --live-radius) so the widgets
+    in the render frame keep their own --accent and --radius. The picker is a
+    3x3 grid from 1024px and compact one-line rows under 768px, so on a phone
+    the player starts in the first screen and a half; the selected run is an
+    accent border and accent title, not a fill. The model output pane is
+    pretty-printed as it streams (JsonLines). Speed and Replay are one 8px
+    segmented control.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -28,6 +30,7 @@
 	import { scenarios, type Scenario } from './scenarios.js';
 	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, readReturn, type OrderSummary } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
+	import JsonLines from '$lib/site/JsonLines.svelte';
 
 	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
 
@@ -172,7 +175,7 @@
 
 <main class="live">
 	<header class="head">
-		<h1>Watch a model build the tool <span>it was asked for.</span></h1>
+		<h1>Watch a model build the tool it was asked for.</h1>
 		<p class="lede">
 			Each run below is a real recording of a model's output, replayed on its original timing. Ripple
 			renders the spec while it streams, and the finished UI is live: change the inputs and the numbers
@@ -193,8 +196,7 @@
 					aria-pressed={s.id === active.id}
 					onclick={() => pick(s)}
 				>
-					<span class="scenario-cat">{s.category}</span>
-					<span class="scenario-title">{s.title}</span>
+					<span class="scenario-line"><span class="scenario-title">{s.title}</span><span class="scenario-cat">{s.category}</span></span>
 					<span class="scenario-prompt">{s.fixture.prompt}</span>
 				</button>
 			</li>
@@ -208,12 +210,12 @@
 				<span class="status" aria-live="polite">
 					{streaming ? `streaming ${typed.length} / ${total} bytes` : 'done, try it'}
 				</span>
-				<div class="speed" role="group" aria-label="Replay speed">
+				<div class="segmented" role="group" aria-label="Replay controls">
 					{#each [1, 2] as n (n)}
-						<button type="button" aria-pressed={speed === n} onclick={() => setSpeed(n)}>{n}x</button>
+						<button type="button" aria-pressed={speed === n} aria-label="{n}x speed" onclick={() => setSpeed(n)}>{n}x</button>
 					{/each}
+					<button type="button" onclick={() => play()}>Replay</button>
 				</div>
-				<button type="button" class="replay" onclick={() => play()}>Replay</button>
 			</div>
 		</div>
 
@@ -246,61 +248,51 @@
 
 			<details class="json" bind:open={jsonOpen}>
 				<summary class="label">model output <span>{active.fixture.model}, {total} bytes</span></summary>
-				<pre bind:this={pre}><code>{typed}</code></pre>
+				<pre bind:this={pre}><JsonLines text={typed} /></pre>
 			</details>
 		</div>
 	</section>
 
-	<footer class="foot">
-		<a href="/">Ripple home</a>
-		<a href="https://github.com/qbtrix/ripple-iui">github.com/qbtrix/ripple-iui</a>
-	</footer>
 </main>
 
 <style>
-	/* Tokens mirror routes/+page.svelte so /live reads as the same site. */
+	/* Paw OS tokens from site.css, so /live reads as the same site. Local names
+	   are prefixed: --accent and --radius belong to the widgets in the frame.
+	   (--line, --panel, --ink-soft are read by OrderReceipt.) */
 	.live {
-		--accent: hsl(216 74% 50%);
-		--accent-ink: hsl(0 0% 100%);
-		--ground: hsl(220 20% 98.4%);
+		--live-accent: var(--primary);
+		--live-accent-ink: var(--primary-ink);
+		--ground: var(--site-ground);
 		--panel: var(--card);
-		--ink-soft: color-mix(in srgb, var(--foreground) 62%, var(--ground));
-		--line: var(--border);
-		--mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-		--radius: 12px;
-		font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+		--ink-soft: var(--site-soft);
+		--line: var(--site-line);
+		--mono: var(--font-mono);
+		--live-radius: var(--radius-card);
+		font-family: var(--font-sans);
 		background: var(--ground);
-		color: var(--foreground);
-		padding: 0 24px;
+		color: var(--site-ink);
+		padding: 0 var(--site-gutter) 72px;
 		overflow-x: clip;
 	}
-	:global(.dark) .live {
-		--accent: hsl(214 80% 62%);
-		--accent-ink: hsl(222 30% 8%);
-		--ground: hsl(222 14% 6%);
-		--panel: hsl(222 12% 9%);
-	}
 	.live > * {
-		max-width: 1160px;
+		max-width: var(--site-max);
 		margin-inline: auto;
 	}
-	code,
 	pre {
 		font-family: var(--mono);
 	}
 
 	.head {
-		padding: 64px 0 32px;
+		padding: clamp(40px, 7vw, 72px) 0 32px;
 	}
 	h1 {
 		margin: 0;
-		font-size: clamp(2rem, 3.6vw, 3.1rem);
-		line-height: 1.06;
+		font-family: var(--font-display);
+		font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+		line-height: 1.04;
 		letter-spacing: -0.03em;
-		font-weight: 600;
-	}
-	h1 span {
-		color: var(--ink-soft);
+		font-weight: 650;
+		text-wrap: balance;
 	}
 	.lede {
 		margin: 16px 0 0;
@@ -309,16 +301,24 @@
 		color: var(--ink-soft);
 	}
 
+	/* Picker: 3x3 from 1024px, two columns between, one-line rows on phones.
+	   Selected = accent border and accent title; no fill. */
 	.picker {
 		list-style: none;
-		margin: 0 0 20px;
+		margin: 0 auto 24px;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 12px;
+	}
+	@media (min-width: 1024px) {
+		.picker {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
 	}
 	.scenario {
 		width: 100%;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
@@ -327,27 +327,41 @@
 		color: inherit;
 		padding: 14px 16px;
 		border: 1px solid var(--line);
-		border-radius: var(--radius);
+		border-radius: var(--live-radius);
 		background: var(--panel);
 		cursor: pointer;
 		transition: border-color 0.15s;
 	}
 	.scenario:hover {
-		border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+		border-color: color-mix(in oklch, var(--site-ink) 30%, transparent);
 	}
 	.scenario[aria-pressed='true'] {
-		border-color: var(--accent);
+		border-color: var(--live-accent);
+		box-shadow: inset 0 0 0 1px var(--live-accent);
 	}
-	.scenario-cat {
-		font-family: var(--mono);
-		font-size: 11px;
-		color: var(--ink-soft);
+	.scenario[aria-pressed='true'] .scenario-title {
+		color: var(--live-accent-ink);
+	}
+	.scenario:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.scenario-line {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
 	}
 	.scenario-title {
 		font-weight: 600;
 	}
-	.scenario-prompt {
+	.scenario-cat {
+		flex: none;
 		font-size: 13px;
+		color: var(--ink-soft);
+	}
+	.scenario-prompt {
+		font-size: 14px;
 		line-height: 1.45;
 		color: var(--ink-soft);
 		display: -webkit-box;
@@ -359,9 +373,9 @@
 
 	.stage {
 		border: 1px solid var(--line);
-		border-radius: 16px;
+		border-radius: var(--live-radius);
 		background: var(--panel);
-		box-shadow: 0 30px 60px -36px color-mix(in srgb, var(--foreground) 28%, transparent);
+		box-shadow: var(--shadow-card);
 		overflow: hidden;
 	}
 	.bar {
@@ -370,65 +384,69 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 12px 20px;
-		padding: 14px 16px;
+		padding: 12px 16px;
 		border-bottom: 1px solid var(--line);
 	}
 	.bubble {
 		margin: 0;
 		max-width: 60ch;
 		padding: 10px 14px;
-		border-radius: 14px 14px 14px 4px;
-		background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+		border-radius: var(--live-radius);
+		background: var(--site-hover);
 		line-height: 1.5;
 		font-size: 15px;
 	}
 	.who {
 		display: block;
-		font-family: var(--mono);
-		font-size: 11px;
+		font-size: 13px;
+		font-weight: 600;
 		color: var(--ink-soft);
 		margin-bottom: 2px;
 	}
 	.controls {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 12px;
 		margin-left: auto;
 	}
 	.status {
-		font-family: var(--mono);
-		font-size: 11px;
-		color: var(--accent);
+		font-size: 13px;
+		color: var(--ink-soft);
 		font-variant-numeric: tabular-nums;
 	}
-	.speed {
+	/* One 8px segmented control: the speeds, then Replay. */
+	.segmented {
 		display: inline-flex;
 		border: 1px solid var(--line);
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 		overflow: hidden;
 	}
-	.speed button,
-	.replay {
-		font: inherit;
-		font-size: 12px;
-		font-weight: 500;
-		padding: 6px 10px;
+	.segmented button {
+		min-height: 44px;
+		min-width: 44px;
+		padding: 0 14px;
 		border: 0;
 		background: transparent;
-		color: var(--foreground);
+		color: var(--site-ink);
+		font: inherit;
+		font-size: 14px;
+		font-weight: 500;
 		cursor: pointer;
+		transition: background 0.15s;
 	}
-	.speed button[aria-pressed='true'] {
-		background: color-mix(in srgb, var(--foreground) 8%, transparent);
+	.segmented button + button {
+		border-left: 1px solid var(--line);
 	}
-	.replay {
-		padding: 6px 12px;
-		border-radius: 8px;
-		background: var(--accent);
-		color: var(--accent-ink);
+	.segmented button:hover {
+		background: var(--site-hover);
 	}
-	.replay:hover {
-		background: color-mix(in srgb, var(--accent) 88%, var(--foreground));
+	.segmented button[aria-pressed='true'] {
+		background: var(--site-pressed);
+		font-weight: 600;
+	}
+	.segmented button:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: -2px;
 	}
 
 	.panes {
@@ -438,9 +456,8 @@
 		height: 640px;
 	}
 	.label {
-		font-family: var(--mono);
-		font-size: 11px;
-		letter-spacing: 0.04em;
+		font-size: 13px;
+		font-weight: 600;
 		color: var(--ink-soft);
 	}
 	.render {
@@ -462,30 +479,29 @@
 		bottom: 8px;
 		margin-top: 12px;
 		padding: 10px 14px;
-		border-radius: 10px;
-		background: var(--foreground);
-		color: var(--background);
+		border-radius: var(--radius-control);
+		background: var(--site-ink);
+		color: var(--site-ground);
 		font-size: 14px;
 	}
 	.checkout-note {
 		margin: 0;
 		max-width: 560px;
 		padding: 10px 14px;
-		border-radius: 10px;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-control);
 		font-size: 14px;
 		line-height: 1.45;
-		background: color-mix(in srgb, var(--accent) 9%, var(--panel));
 	}
 	.checkout-note[data-busy='false'] {
-		background: color-mix(in srgb, hsl(0 72% 51%) 10%, var(--panel));
-		color: color-mix(in srgb, hsl(0 72% 40%) 80%, var(--foreground));
+		border-color: color-mix(in oklch, var(--destructive, oklch(0.58 0.22 27)) 45%, transparent);
 	}
 	.events {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 		font-family: var(--mono);
-		font-size: 11px;
+		font-size: 12px;
 		color: var(--ink-soft);
 	}
 	.json {
@@ -493,57 +509,77 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
-		background: color-mix(in srgb, var(--ground) 70%, var(--panel));
+		background: var(--code-bg);
 		border-right: 1px solid var(--line);
 	}
 	.json summary {
 		display: flex;
+		align-items: center;
 		justify-content: space-between;
 		gap: 8px;
-		padding: 14px 16px 0;
+		min-height: 44px;
+		padding: 0 16px;
 		cursor: pointer;
 		list-style: none;
 	}
 	.json summary span {
+		font-weight: 400;
 		color: var(--ink-soft);
-		opacity: 0.8;
+	}
+	.json summary:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: -2px;
 	}
 	.json[open] {
 		overflow: hidden;
 	}
 	.json pre {
 		margin: 0;
-		padding: 12px 16px 16px;
-		height: calc(640px - 40px);
+		padding: 4px 16px 16px;
+		height: calc(640px - 48px);
 		overflow: auto;
-		font-size: 11.5px;
+		font-size: 12.5px;
 		line-height: 1.55;
-		color: var(--ink-soft);
-		white-space: pre-wrap;
-		word-break: break-all;
+		color: var(--code-ink);
 	}
 
-	.foot {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 8px;
-		margin-top: 64px;
-		padding: 24px 0 32px;
-		border-top: 1px solid var(--line);
-		font-size: 13px;
-		color: var(--ink-soft);
-	}
-	.foot a {
-		color: inherit;
-	}
-
-	@media (max-width: 720px) {
-		.live {
-			padding: 0 16px;
-		}
+	@media (max-width: 767px) {
 		.head {
-			padding: 40px 0 24px;
+			padding: 16px 0 16px;
+		}
+		h1 {
+			font-size: 1.75rem;
+		}
+		.lede {
+			margin-top: 10px;
+			font-size: 15px;
+			line-height: 1.5;
+		}
+		/* Compact rows: title and category on one line, no prompt. */
+		.picker {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0;
+			margin-bottom: 16px;
+			border-top: 1px solid var(--line);
+		}
+		.scenario {
+			min-height: 44px;
+			justify-content: center;
+			padding: 0 12px;
+			border: 0;
+			border-bottom: 1px solid var(--line);
+			border-radius: 0;
+			background: transparent;
+		}
+		.scenario[aria-pressed='true'] {
+			border-radius: var(--radius-control);
+			box-shadow: inset 0 0 0 1px var(--live-accent);
+		}
+		.scenario[aria-pressed='true'] .scenario-cat {
+			color: var(--live-accent-ink);
+		}
+		.scenario-prompt {
+			display: none;
 		}
 		.panes {
 			grid-template-columns: minmax(0, 1fr);
@@ -557,18 +593,16 @@
 			border-right: 0;
 			border-top: 1px solid var(--line);
 		}
-		.json summary {
-			padding-bottom: 14px;
-		}
 		.json pre {
 			height: 260px;
 		}
 		.controls {
+			flex-wrap: wrap;
 			margin-left: 0;
 			width: 100%;
 		}
 		.status {
-			margin-right: auto;
+			flex-basis: 100%;
 		}
 	}
 </style>

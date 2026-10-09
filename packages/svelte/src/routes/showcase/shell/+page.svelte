@@ -31,7 +31,7 @@
   let log = $state('');
 </script>
 
-<main class="min-h-screen bg-background p-8 text-foreground">
+<main class="p-4 text-foreground sm:p-8">
   <h1 class="mb-1 text-xl font-semibold">Shell primitives</h1>
   <p class="mb-6 text-sm text-muted-foreground">ListRow, SectionHeader, PanelHeader, Kbd and Segmented badges from <code>./ui</code>.</p>
 

@@ -1,32 +1,66 @@
 <!--
   @file routes/+page.svelte
-  @description The public Ripple landing page (ripple.pocketpaw.xyz). Pitch,
-    install line, a streaming code sample, and a live demo that replays a spec
-    streaming into the real <Ripple> renderer through streamSpec. The page is
-    prerendered: the demo's resting state (full spec text + rendered form) is
-    in the markup, and onMount only replays the stream on top of it.
-    Keep labs routes unlinked here.
+  @description Ripple's landing, chat-first. The hero IS a chat: a visitor types
+    a request or taps one of the recorded scenarios, the answer streams in and
+    its card renders through <Ripple> while it arrives. The chat opens on one
+    finished recorded exchange (the bill splitter, seeded synchronously so it is
+    in the prerendered HTML and hydrates without a re-render), so the fold shows
+    a working card before any tap and with JavaScript off. The chat calls the
+    Paw Bar API only when PUBLIC_PAWBAR_LIVE=1 (lib/site/pawbar-env.ts, read in
+    vite.config.ts); otherwise it replays the recorded answers locally and says
+    so. Below: how it works (spec, engine, UI, with a live card), install and
+    the streaming code sample, the recorded examples linking /live, and the
+    bring-your-own-key link.
 
   Creative Direction Declaration
-    Archetype: Technology. Richness: Premium minimal.
-    Design read: an open engine for developers, Clean-Tech family on the repo's
-      shadcn tokens, one cool blue accent, the system UI and mono stacks (no third-party
-      requests at runtime).
-    Trap avoided: the dark hero + three feature cards + logo strip template.
-      The fold shows the product doing its one job instead: JSON arriving on
-      the left, a working UI growing on the right.
-    Dials: variance 7, motion 5, density 3.
+    Scene: a developer at night, comparing generative UI tools with a terminal
+      open beside the browser. The theme follows the OS; a flat blue-black or
+      near-white ground, 1px lines for depth, no glow and no glass below the bar.
+    Strategy: restrained neutrals + Paw blue as the single voice, and only on
+      what is interactive or live. Type: Bricolage display, Inter body,
+      JetBrains Mono for code (identity, copied from Paw OS).
+    Trap avoided: a feature-grid SaaS page. The first screen is the product
+      working, not a description of it.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
-	import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
+	import JsonLines from '$lib/site/JsonLines.svelte';
+	import Chat from './pawbar/Chat.svelte';
+	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
+	import { findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
+	import { scenarios } from './live/scenarios.js';
 
-	const BUILD_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
+	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
+	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
+	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
+	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
+	const LIVE = import.meta.env.PUBLIC_PAWBAR_LIVE === '1' && Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
+
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
 
-	// The demo spec: one bound input and two lines that read it back.
+	// The order demo needs the test store's checkout (an `api` action), which the
+	// chat's card policy refuses; it stays on /live and in the runs list below.
+	const chatScenarios = scenarios.filter((s) => !s.needsStore);
+	// The intro says what is replaying: a matching recording, or (when no
+	// recording overlaps the request) the bill splitter, said plainly.
+	const intro = (message: string) =>
+		findScenario(message, chatScenarios)
+			? 'Replaying a recorded answer that matches.'
+			: 'No recording matches that yet, so here is the bill splitter.';
+	const recorded: Transport = (message, signal) =>
+		recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro: intro(message) });
+	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
+	// is unavailable. Default build: the recordings answer directly.
+	const session = LIVE
+		? new ChatSession(pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send, recorded)
+		: new ChatSession(recorded);
+	const bill = chatScenarios.find((s) => s.id === 'bill-splitter');
+	if (bill) session.seed(bill.fixture.prompt, recordedExchange(bill, intro(bill.fixture.prompt)));
+	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
+
+	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
 		version: '1.0',
 		state: { name: 'Ada' },
@@ -35,18 +69,7 @@
 			props: { direction: 'column', gap: '12px' },
 			children: [
 				{ type: 'heading', props: { text: 'Hello, {state.name}', level: 3 } },
-				{
-					type: 'input',
-					props: { label: 'Your name', placeholder: 'Type a name' },
-					bind: '{state.name}'
-				},
-				{
-					type: 'text',
-					props: {
-						text: "{state.name ? 'The heading updates on every keystroke.' : 'Type a name above.'}",
-						size: 'sm'
-					}
-				},
+				{ type: 'input', props: { label: 'Your name', placeholder: 'Type a name' }, bind: '{state.name}' },
 				{
 					type: 'button',
 					props: { label: 'Clear', variant: 'outline', size: 'sm' },
@@ -55,7 +78,8 @@
 			]
 		}
 	};
-	const specText = JSON.stringify(demoSpec, null, 2);
+	// Pretty-printed the way the spec peek shows a card (JsonLines).
+	const specSnippet = JSON.stringify({ state: demoSpec.state, ui: demoSpec.ui });
 
 	const codeSample = `<script>
   import { Ripple } from '@ripple-ui/svelte';
@@ -69,565 +93,595 @@
     const res = await fetch('/api/ui', { method: 'POST', body: prompt });
     store = streamSpec(res.body);
   }
-</scr` + `ipt>
+\u003C/script>
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
 
-	let typed = $state(specText);
-	let store = $state<StreamSpecStore | null>(null);
-	let streaming = $state(false);
-	let controller: AbortController | null = null;
-
-	async function* typeOut(text: string, signal: AbortSignal) {
-		// ponytail: fixed chunk size and delay; a real model's cadence is uneven.
-		for (let i = 0; i < text.length && !signal.aborted; i += 7) {
-			await new Promise((r) => setTimeout(r, 24));
-			const chunk = text.slice(i, i + 7);
-			typed += chunk;
-			yield chunk;
-		}
-		streaming = false;
-	}
-
-	function replay() {
-		controller?.abort();
-		controller = new AbortController();
-		typed = '';
-		streaming = true;
-		store = streamSpec(typeOut(specText, controller.signal), {
-			signal: controller.signal,
-			throttleMs: 40
-		});
-	}
-
-	onMount(() => {
-		if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) replay();
-		return () => controller?.abort();
-	});
-
-	let copied = $state(false);
-	async function copyInstall() {
+	let copied = $state<'hero' | 'code' | null>(null);
+	async function copyInstall(where: 'hero' | 'code') {
 		try {
 			await navigator.clipboard.writeText(INSTALL);
-			copied = true;
-			setTimeout(() => (copied = false), 1600);
+			copied = where;
+			setTimeout(() => (copied = null), 1600);
 		} catch {
-			// Clipboard blocked (insecure context or denied): the text stays selectable.
+			/* clipboard blocked: the command is on screen to copy by hand */
 		}
 	}
+
+	onMount(() => () => session.stop());
 </script>
 
 <svelte:head>
-	<title>Ripple: generative UI from a JSON spec</title>
+	<title>Ripple: ask for a tool, watch it build</title>
 	<meta
 		name="description"
-		content="Ripple is an open, embeddable generative UI engine. Your model writes a small JSON spec; Ripple renders a working interface with state, binds, expressions and events, and streams it in as the model types."
+		content="Ripple is the open-source generative UI engine from Paw OS by PocketPaw. A model writes a small JSON spec and Ripple renders it as a working interface while the spec streams in."
 	/>
 </svelte:head>
 
 <main class="landing">
-	<section class="hero">
-		<div class="hero-copy">
-			<h1>
-				Your model writes a spec.
-				<span>Ripple turns it into a working UI.</span>
-			</h1>
-			<p class="lede">
-				An open, embeddable generative UI engine for any model. The model emits a small JSON spec;
-				Ripple handles state, two-way binds, expressions and events, and renders it while the model is
-				still typing.
-			</p>
-
-			<div class="install">
-				<code><span class="prompt" aria-hidden="true">$</span> {INSTALL}</code>
-				<button type="button" class="copy" onclick={copyInstall} aria-label="Copy install command">
-					{copied ? 'Copied' : 'Copy'}
-				</button>
-			</div>
-
-			<div class="actions">
-				<a class="btn primary" href={BUILD_URL}>Build your own</a>
-				<a class="btn ghost" href="/playground">Open the playground</a>
-			</div>
-		</div>
-
-		<figure class="demo" aria-label="A spec streaming into a live Ripple UI">
-			<div class="demo-bar">
-				<span class="demo-label">model output</span>
-				<span class="demo-status" aria-live="polite">
-					{streaming ? `streaming ${typed.length} / ${specText.length} bytes` : 'done, try the input'}
-				</span>
-				<button type="button" class="replay" onclick={replay} disabled={streaming}>Replay</button>
-			</div>
-			<div class="demo-panes">
-				<pre class="spec" aria-label="Spec JSON"><code>{typed}</code></pre>
-				<div class="render">
-					<span class="demo-label">ripple render</span>
-					<div class="render-frame">
-						{#if store}
-							<Ripple streaming={store} skeleton="card" />
-						{:else}
-							<Ripple spec={demoSpec} />
-						{/if}
-					</div>
-				</div>
-			</div>
-		</figure>
+	<section class="hero" aria-labelledby="hero-title">
+		<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
+		<p class="lede">
+			Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
+			working interface as the spec streams in. Ask for something below.
+		</p>
+		<p class="get">
+			<code><span aria-hidden="true">$</span> {INSTALL}</code>
+			<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
+				{copied === 'hero' ? 'Copied' : 'Copy'}
+			</button>
+		</p>
+		<Chat
+			{session}
+			{suggestions}
+			note={LIVE ? '' : 'This demo replays recorded model answers. Each request plays the closest match.'}
+		/>
+		<p class="byok">
+			{#if LIVE}
+				The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
+			{:else}
+				Want answers to your own requests? <a href={BYOK_URL}>Build your own in PocketPaw</a>
+			{/if}
+		</p>
 	</section>
 
-	<section class="code-section">
-		<div class="code-copy">
-			<h2>Stream a spec in a dozen lines</h2>
-			<p>
-				<code>streamSpec</code> takes any readable stream or async iterable and parses partial JSON as it
-				arrives. Hand the store to <code>&lt;Ripple&gt;</code> and the UI grows token by token, then stays
-				interactive when the stream ends.
-			</p>
-			<dl class="facts">
-				<div>
-					<dt>The model writes</dt>
-					<dd>A tree of widgets, initial state, and actions like <code>set</code>, <code>toggle</code> and <code>push</code>.</dd>
-				</div>
-				<div>
-					<dt>Ripple handles</dt>
-					<dd>Reactivity, <code>{'{state.path}'}</code> expressions, two-way <code>bind</code>, and events.</dd>
-				</div>
-				<div>
-					<dt>Ships with</dt>
-					<dd>189 widgets in <code>@ripple-ui/svelte</code>, on a framework-agnostic engine in <code>@ripple-ui/core</code>.</dd>
-				</div>
-			</dl>
+	<section class="how" aria-labelledby="how-title">
+		<h2 id="how-title">How it works</h2>
+		<ol class="steps">
+			<li class="step">
+				<h3>The model writes a spec</h3>
+				<p>A tree of widgets, the starting state, and what each control does. Plain JSON, small enough to stream.</p>
+				<pre class="snippet" aria-label="Example spec"><JsonLines text={specSnippet} /></pre>
+			</li>
+			<li class="step">
+				<h3>The engine runs it</h3>
+				<p>
+					<code>@ripple-ui/core</code> holds the state, resolves <code>{'{state.name}'}</code> expressions, keeps
+					two-way binds in sync and dispatches events. It has no framework dependency.
+				</p>
+				<ul class="facts">
+					<li>Local actions: <code>set</code>, <code>toggle</code>, <code>push</code>, <code>remove</code></li>
+					<li>Host actions your app handles: <code>emit</code>, <code>navigate</code>, <code>api</code></li>
+					<li>Partial JSON parses as it arrives, so the UI grows token by token</li>
+				</ul>
+			</li>
+			<li class="step">
+				<h3>You get a working UI</h3>
+				<p>That spec, rendered by <code>@ripple-ui/svelte</code>. Type in it.</p>
+				<div class="demo"><Ripple spec={demoSpec} /></div>
+			</li>
+		</ol>
+	</section>
+
+	<section class="code" aria-labelledby="code-title">
+		<div class="code-grid">
+			<div class="code-copy">
+				<h2 id="code-title">Stream a spec in a dozen lines</h2>
+				<p>
+					<code>streamSpec</code> reads any stream or async iterable and parses the partial JSON as it lands. Hand
+					the store to <code>&lt;Ripple&gt;</code> and the interface fills in, then stays interactive when the stream
+					ends.
+				</p>
+			</div>
+			<pre class="sample"><code>{codeSample}</code></pre>
 		</div>
-		<div class="code-block">
-			<pre class="code"><code>{codeSample}</code></pre>
-			<p class="code-note">
-				Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
-				<a href="https://github.com/qbtrix/ripple-iui/tree/main/packages/svelte#styling">Styling setup</a>
-			</p>
+		<!-- The site's one Paw-blue band. -->
+		<div class="band">
+			<div class="band-inner">
+				<div class="install">
+					<code><span aria-hidden="true">$</span> {INSTALL}</code>
+					<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
+				</div>
+				<p class="small">
+					Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
+					<a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a>
+				</p>
+			</div>
 		</div>
 	</section>
 
-	<section class="explore" aria-labelledby="explore-title">
-		<h2 id="explore-title">See more of it</h2>
-		<ul class="rows">
-			<li>
-				<a href="/live" class="row">
-					<span class="row-title">Live</span>
-					<span class="row-desc">Watch specs stream in from a model in real time.</span>
-				</a>
-			</li>
-			<li>
-				<a href="/playground" class="row">
-					<span class="row-title">Playground</span>
-					<span class="row-desc">Edit a spec and see the render update next to it.</span>
-				</a>
-			</li>
-			<li>
-				<a href="/showcase" class="row">
-					<span class="row-title">Showcase</span>
-					<span class="row-desc">Widgets, layouts and full pages, each one a spec.</span>
-				</a>
-			</li>
-			<li>
-				<a href={GITHUB_URL} class="row">
-					<span class="row-title">GitHub</span>
-					<span class="row-desc">Source, docs and releases. MIT licensed.</span>
-				</a>
-			</li>
+	<section class="examples" aria-labelledby="examples-title">
+		<div class="examples-head">
+			<h2 id="examples-title">Recorded runs</h2>
+			<p>Real model output, replayed on its original timing. Open one to watch the spec and the UI side by side.</p>
+		</div>
+		<ul class="runs">
+			{#each scenarios as s (s.id)}
+				<li>
+					<a href="/live?s={s.id}" class="run">
+						<span class="run-line"><span class="run-title">{s.title}</span><span class="run-cat">{s.category}</span></span>
+						<span class="run-prompt">{s.fixture.prompt}</span>
+					</a>
+				</li>
+			{/each}
 		</ul>
 	</section>
 
-	<section class="closer">
-		<h2>Try it with your own prompts</h2>
-		<p>Describe the interface you want and watch a model build it with Ripple.</p>
-		<a class="btn primary" href={BUILD_URL}>Build your own</a>
+	<section class="closer" aria-labelledby="closer-title">
+		<h2 id="closer-title">Keep asking in Paw OS</h2>
+		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
+		<div class="closer-actions">
+			<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
+			<a class="link" href={GITHUB_URL}>Read the source</a>
+		</div>
 	</section>
-
-	<footer class="foot">
-		<span>Ripple, MIT licensed.</span>
-		<a href={GITHUB_URL}>github.com/qbtrix/ripple-iui</a>
-	</footer>
 </main>
 
 <style>
+	/* Sections sit on the site grid: --site-max wide, --site-gutter each side
+	   (16px on phones). overflow-x clip lets the blue band run full bleed. */
 	.landing {
-		--accent: hsl(216 74% 50%);
-		--accent-ink: hsl(0 0% 100%);
-		--ground: hsl(220 20% 98.4%);
-		--panel: var(--card);
-		--ink-soft: color-mix(in srgb, var(--foreground) 62%, var(--ground));
-		--line: var(--border);
-		--mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-		--radius: 12px;
-		font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-		background: var(--ground);
-		color: var(--foreground);
-		padding: 0 24px;
+		position: relative;
+		isolation: isolate;
+		padding: 0 var(--site-gutter);
 		overflow-x: clip;
+		font-size: 17px;
+		line-height: 1.6;
 	}
 	:global(.dark) .landing {
-		--accent: hsl(214 80% 62%);
-		--accent-ink: hsl(222 30% 8%);
-		--ground: hsl(222 14% 6%);
-		--panel: hsl(222 12% 9%);
+		line-height: 1.65;
 	}
-	.landing > * {
-		max-width: 1160px;
+	.landing > section {
+		max-width: var(--site-max);
 		margin-inline: auto;
 	}
-	code,
-	pre {
-		font-family: var(--mono);
+	h1,
+	h2,
+	h3 {
+		font-family: var(--font-display);
+		text-wrap: balance;
+		margin: 0;
 	}
 	h1,
 	h2 {
+		font-weight: 650;
 		letter-spacing: -0.03em;
-		font-weight: 600;
-		margin: 0;
+	}
+	h2 {
+		font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+		line-height: 1.1;
+	}
+	code,
+	pre {
+		font-family: var(--font-mono);
+	}
+	p code,
+	li code {
+		font-size: 0.86em;
+		padding: 1px 5px;
+		border-radius: 5px;
+		background: var(--site-hover);
+	}
+	a {
+		color: var(--primary-ink);
 	}
 
-	/* Hero */
+	/* Hero: the chat. */
 	.hero {
-		display: grid;
-		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-		gap: 56px;
-		align-items: center;
-		padding: 96px 0 112px;
+		max-width: 880px !important;
+		padding: clamp(48px, 9vw, 104px) 0 72px;
 	}
 	h1 {
-		font-size: clamp(2.4rem, 4.6vw, 4rem);
+		font-size: clamp(2.2rem, 4.2vw, 3.4rem);
 		line-height: 1.04;
 	}
 	h1 span {
 		display: block;
-		color: var(--ink-soft);
+		margin-top: 0.12em;
 	}
 	.lede {
-		margin: 24px 0 0;
-		max-width: 52ch;
-		font-size: 1.075rem;
+		margin: 22px 0 18px;
+		max-width: 62ch;
+		color: var(--site-soft);
+		text-wrap: pretty;
+	}
+	/* The install line, as a quiet mono chip. */
+	.get {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		max-width: 100%;
+		margin: 0 0 36px;
+		padding: 0 0 0 12px;
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-control);
+		background: var(--code-bg);
+		font-size: 14px;
+	}
+	.get code {
+		overflow-x: auto;
+		white-space: nowrap;
+		padding: 0;
+		background: none;
+		font-size: inherit;
+		color: var(--code-ink);
+	}
+	.get code span {
+		color: var(--site-soft);
+		margin-right: 6px;
+	}
+	.get button {
+		flex: none;
+		min-height: 44px;
+		padding: 0 12px;
+		border: 0;
+		border-radius: calc(var(--radius-control) - 1px);
+		background: transparent;
+		color: var(--site-soft);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+	}
+	.get button:hover {
+		background: var(--site-hover);
+		color: var(--site-ink);
+	}
+	.byok {
+		margin: 14px 0 0;
+		font-size: 13.5px;
+		color: var(--site-soft);
+	}
+	.byok a {
+		font-weight: 600;
+		text-underline-offset: 3px;
+	}
+
+	/* How it works: spec, engine, UI joined by one 1px line (across the three
+	   columns from 768px, down the left edge below). Each step sits on it at
+	   a small open node; no numbers, the line gives the order. */
+	.how {
+		padding: 72px 0;
+		border-top: 1px solid var(--site-line);
+	}
+	.steps {
+		list-style: none;
+		margin: 40px 0 0;
+		padding: 0 0 0 24px;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 40px;
+		border-left: 1px solid var(--site-line);
+	}
+	.step {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
+	}
+	.step::before {
+		content: '';
+		position: absolute;
+		top: 0.5em;
+		left: -29px;
+		width: 9px;
+		height: 9px;
+		box-sizing: border-box;
+		border: 1px solid var(--site-faint);
+		border-radius: 50%;
+		background: var(--site-ground);
+	}
+	@media (min-width: 768px) {
+		.steps {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 32px;
+			padding: 28px 0 0;
+			border-left: 0;
+			border-top: 1px solid var(--site-line);
+		}
+		.step::before {
+			top: -33px;
+			left: 0;
+		}
+	}
+	.step h3 {
+		font-size: 1.2rem;
+		font-weight: 650;
+		letter-spacing: -0.015em;
+	}
+	.step p {
+		margin: 0;
 		line-height: 1.6;
-		color: var(--ink-soft);
+		color: var(--site-soft);
+	}
+	/* The shared code style: code tokens, 12px radius, 1px line. */
+	.snippet,
+	.sample {
+		margin: 0;
+		padding: 16px 18px;
+		overflow-x: auto;
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-card);
+		background: var(--code-bg);
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--code-ink);
+	}
+	/* The full spec is ~40 lines; it scrolls inside so step 1 stays the
+	   height of its neighbours. */
+	.snippet {
+		max-height: 340px;
+		overflow-y: auto;
+		padding-inline: 14px;
+		font-size: 12.5px;
+		line-height: 1.55;
+	}
+	.facts {
+		margin: 4px 0 0;
+		padding: 0 0 0 18px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		line-height: 1.5;
+		color: var(--site-soft);
+	}
+	/* A rendered card: the one tinted shadow. */
+	.demo {
+		padding: 16px;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
+		background: var(--card);
+		box-shadow: var(--shadow-card);
+	}
+
+	/* Install + streaming sample, then the blue band. */
+	.code {
+		padding: 72px 0 0;
+		border-top: 1px solid var(--site-line);
+	}
+	.code-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+		gap: 40px;
+		align-items: start;
+	}
+	.code-copy {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+	.code-copy p {
+		margin: 0;
+		line-height: 1.65;
+		color: var(--site-soft);
+	}
+	/* The one Paw-blue band on the site: full bleed, white ink only (no blue
+	   ink, no faded white). Every text on it is --site-on-primary on --primary. */
+	.band {
+		margin: 72px calc(50% - 50vw) 0;
+		background: var(--primary);
+		color: var(--site-on-primary);
+	}
+	.band-inner {
+		max-width: var(--site-max);
+		margin-inline: auto;
+		padding: 28px var(--site-gutter);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px 40px;
 	}
 	.install {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		gap: 12px;
-		margin-top: 32px;
-		max-width: 420px;
-		padding: 8px 8px 8px 16px;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		background: var(--panel);
-		font-size: 14px;
+		min-width: 0;
+		max-width: 100%;
+		font-size: 15px;
 	}
 	.install code {
+		overflow-x: auto;
 		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		color: inherit;
 	}
-	.prompt {
-		color: var(--accent);
-		margin-right: 4px;
+	.install code span {
+		margin-right: 6px;
 	}
-	.copy,
-	.replay {
+	.install button {
 		flex: none;
-		font: inherit;
-		font-size: 12px;
-		font-weight: 500;
-		padding: 6px 12px;
-		border-radius: 8px;
-		border: 1px solid var(--line);
+		min-height: 44px;
+		padding: 0 16px;
+		border: 1px solid var(--site-on-primary);
+		border-radius: var(--radius-control);
 		background: transparent;
-		color: var(--foreground);
+		color: var(--site-on-primary);
+		font: inherit;
+		font-family: var(--font-sans);
+		font-size: 14px;
+		font-weight: 600;
 		cursor: pointer;
-		transition: border-color 0.15s, background 0.15s;
 	}
-	.copy:hover,
-	.replay:hover:not(:disabled) {
-		border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+	.install button:hover {
+		background: color-mix(in oklch, var(--primary) 82%, black);
 	}
-	.replay:disabled {
-		opacity: 0.45;
-		cursor: default;
+	.small {
+		margin: 0;
+		max-width: 52ch;
+		font-size: 15px;
+		line-height: 1.55;
 	}
-	.actions {
+	.band a {
+		color: inherit;
+		font-weight: 600;
+		text-underline-offset: 3px;
+	}
+
+	/* Recorded runs: a divided list; title and category on one line, the
+	   prompt under them in muted ink, two lines at most. */
+	.examples {
+		padding: 72px 0;
+	}
+	.examples-head {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: end;
+		justify-content: space-between;
+		gap: 12px 40px;
+	}
+	.examples-head p {
+		margin: 0;
+		max-width: 46ch;
+		line-height: 1.6;
+		color: var(--site-soft);
+	}
+	.runs {
+		list-style: none;
+		margin: 32px 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+		column-gap: 32px;
+		border-top: 1px solid var(--site-line);
+	}
+	.run {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		height: 100%;
+		box-sizing: border-box;
+		padding: 18px 0;
+		border-bottom: 1px solid var(--site-line);
+		color: var(--site-ink);
+		text-decoration: none;
+	}
+	.run-line {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
 		gap: 12px;
-		margin-top: 20px;
+	}
+	.run:hover .run-title {
+		color: var(--primary-ink);
+	}
+	.run:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.run-title {
+		font-weight: 600;
+		transition: color 0.15s;
+	}
+	.run-cat {
+		flex: none;
+		font-size: 13px;
+		color: var(--site-soft);
+	}
+	.run-prompt {
+		font-size: 14px;
+		line-height: 1.5;
+		color: var(--site-soft);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	/* Closer: one primary button, the secondary is a link. */
+	.closer {
+		padding: 80px 0 96px;
+		border-top: 1px solid var(--site-line);
+	}
+	.closer p {
+		margin: 14px 0 26px;
+		font-size: 17px;
+		color: var(--site-soft);
+	}
+	.closer-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px 24px;
 	}
 	.btn {
 		display: inline-flex;
 		align-items: center;
 		height: 44px;
 		padding: 0 20px;
-		border-radius: 999px;
-		font-weight: 500;
+		border-radius: var(--radius-control);
+		font-weight: 600;
 		font-size: 15px;
 		text-decoration: none;
-		transition: transform 0.15s, background 0.15s, border-color 0.15s;
-	}
-	.btn:active {
-		transform: scale(0.98);
+		transition: background 0.15s;
 	}
 	.btn.primary {
-		background: var(--accent);
-		color: var(--accent-ink);
+		background: var(--primary);
+		color: var(--site-on-primary);
 	}
 	.btn.primary:hover {
-		background: color-mix(in srgb, var(--accent) 88%, var(--foreground));
+		background: color-mix(in oklch, var(--primary) 88%, black);
 	}
-	.btn.ghost {
-		color: var(--foreground);
-		border: 1px solid var(--line);
-	}
-	.btn.ghost:hover {
-		border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
-	}
-
-	/* Demo */
-	.demo {
-		margin: 0;
-		border: 1px solid var(--line);
-		border-radius: 16px;
-		background: var(--panel);
-		box-shadow: 0 30px 60px -36px color-mix(in srgb, var(--foreground) 28%, transparent);
-		overflow: hidden;
-	}
-	.demo-bar {
-		display: flex;
+	.link {
+		display: inline-flex;
 		align-items: center;
-		gap: 12px;
-		padding: 10px 12px 10px 16px;
-		border-bottom: 1px solid var(--line);
-	}
-	.demo-label {
-		font-family: var(--mono);
-		font-size: 11px;
-		letter-spacing: 0.04em;
-		color: var(--ink-soft);
-	}
-	.demo-status {
-		margin-left: auto;
-		font-family: var(--mono);
-		font-size: 11px;
-		color: var(--accent);
-		font-variant-numeric: tabular-nums;
-	}
-	.demo-panes {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		height: 400px;
-	}
-	.spec {
-		margin: 0;
-		padding: 16px;
-		font-size: 11.5px;
-		line-height: 1.55;
-		color: var(--ink-soft);
-		background: color-mix(in srgb, var(--ground) 70%, var(--panel));
-		border-right: 1px solid var(--line);
-		overflow: auto;
-		white-space: pre;
-	}
-	.render {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding: 16px;
-		min-width: 0;
-		overflow: auto;
-	}
-
-	/* Code section */
-	.code-section {
-		display: grid;
-		grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
-		gap: 56px;
-		align-items: start;
-		padding: 96px 0;
-		border-top: 1px solid var(--line);
-	}
-	h2 {
-		font-size: clamp(1.75rem, 3vw, 2.4rem);
-		line-height: 1.1;
-	}
-	.code-copy p {
-		margin: 16px 0 0;
-		max-width: 50ch;
-		line-height: 1.6;
-		color: var(--ink-soft);
-	}
-	.code-copy code,
-	.facts code {
-		font-size: 0.88em;
-		color: var(--foreground);
-	}
-	.facts {
-		margin: 32px 0 0;
-	}
-	.facts > div {
-		padding: 14px 0;
-		border-top: 1px solid var(--line);
-	}
-	.facts dt {
-		font-size: 13px;
+		min-height: 44px;
 		font-weight: 600;
+		font-size: 15px;
+		text-underline-offset: 3px;
 	}
-	.facts dd {
-		margin: 4px 0 0;
-		line-height: 1.55;
-		color: var(--ink-soft);
+	.btn:focus-visible,
+	.link:focus-visible,
+	.get button:focus-visible,
+	.byok a:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
 	}
-	.code {
-		margin: 0;
-		padding: 24px;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		background: var(--panel);
-		font-size: 13px;
-		line-height: 1.65;
-		overflow-x: auto;
-	}
-
-	.code-block {
-		min-width: 0;
-	}
-	.code-note {
-		margin: 12px 0 0;
-		font-size: 13px;
-		color: var(--ink-soft);
-	}
-	.code-note a {
-		color: var(--accent);
+	/* --ring is the band's own blue, so focus on the band is white. */
+	.band .install button:focus-visible,
+	.band a:focus-visible {
+		outline: 2px solid var(--site-on-primary);
+		outline-offset: 2px;
 	}
 
-	/* Explore */
-	.explore {
-		padding: 96px 0;
-		border-top: 1px solid var(--line);
-	}
-	.rows {
-		list-style: none;
-		margin: 32px 0 0;
-		padding: 0;
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0 48px;
-	}
-	.row {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		padding: 20px 0;
-		border-top: 1px solid var(--line);
-		color: inherit;
-		text-decoration: none;
-	}
-	.row-title {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		font-size: 1.15rem;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		transition: color 0.15s;
-	}
-	.row-title::after {
-		content: '→';
-		margin-left: auto;
-		color: var(--ink-soft);
-		transition: transform 0.2s;
-	}
-	.row:hover .row-title {
-		color: var(--accent);
-	}
-	.row:hover .row-title::after {
-		transform: translateX(4px);
-	}
-	.row-desc {
-		color: var(--ink-soft);
-		line-height: 1.5;
-	}
-
-	/* Closer + footer */
-	.closer {
-		padding: 96px 0;
-		border-top: 1px solid var(--line);
-		text-align: center;
-	}
-	.closer p {
-		margin: 12px auto 28px;
-		color: var(--ink-soft);
-	}
-	.foot {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 8px;
-		padding: 24px 0 32px;
-		border-top: 1px solid var(--line);
-		font-size: 13px;
-		color: var(--ink-soft);
-	}
-	.foot a {
-		color: inherit;
-	}
-
-	/* Arrival: the hero rises in once, CSS only, so prerendered HTML is final. */
-	@media (prefers-reduced-motion: no-preference) {
-		.hero-copy,
-		.demo {
-			animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-		}
-		.demo {
-			animation-delay: 0.12s;
-		}
-	}
-	@keyframes rise {
-		from {
-			opacity: 0;
-			transform: translateY(12px);
-		}
-	}
-
-	@media (max-width: 900px) {
-		.hero,
-		.code-section {
+	@media (max-width: 860px) {
+		.code-grid {
 			grid-template-columns: minmax(0, 1fr);
-			gap: 40px;
+		}
+	}
+	/* Phones: a tighter hero, so the prerendered card's header and the top of
+	   its UI are in the first screen. */
+	@media (max-width: 639px) {
+		.landing {
+			padding-inline: 16px;
+		}
+		.band-inner {
+			padding-inline: 16px;
 		}
 		.hero {
-			padding: 56px 0 72px;
+			padding: 24px 0 56px;
 		}
-		.code-section,
-		.explore,
-		.closer {
-			padding: 64px 0;
+		h1 {
+			font-size: 1.95rem;
 		}
-		.rows {
-			grid-template-columns: minmax(0, 1fr);
+		.lede {
+			margin: 12px 0;
+			font-size: 16px;
+			line-height: 1.5;
 		}
-	}
-	@media (max-width: 600px) {
-		.landing {
-			padding: 0 16px;
-		}
-		.demo-panes {
-			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: 150px minmax(0, 1fr);
-			height: 470px;
-		}
-		.spec {
-			border-right: 0;
-			border-bottom: 1px solid var(--line);
-		}
-		.code {
-			padding: 16px;
-			font-size: 12px;
+		.get {
+			margin-bottom: 20px;
 		}
 	}
 </style>
