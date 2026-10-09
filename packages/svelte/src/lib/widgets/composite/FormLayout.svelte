@@ -4,9 +4,11 @@
   of section anchors, content slot, optional progress, sticky save bar with
   submit/cancel and a "dirty" / "saving" indicator. Used for onboarding,
   settings, application forms, RFP submissions, account profile, etc.
-  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
-  `children?.()` call, so a hand-written Svelte caller that passes children but no
-  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
+  The body renders when `hasChildren || children`, so a hand-written Svelte
+  caller that passes children but no `hasChildren` still gets them.
+  The 220px section nav sits beside the fields only when the widget's own box
+  is at least 640px wide (a container query, not the viewport); below that it
+  stacks above them. The first section is active until the visitor picks one.
 -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
@@ -80,11 +82,10 @@
   const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
   const stateManager = getContext<StateManager | undefined>('ui-state');
 
-  let activeId = $state<string | null>(null);
-
-  $effect(() => {
-    if (activeId === null && sections.length > 0) activeId = sections[0].id;
-  });
+  // The visitor's pick wins; until then the first section is active. Derived,
+  // not seeded once: a streamed first id arrives a few characters at a time.
+  let pickedId = $state<string | null>(null);
+  const activeId = $derived(pickedId ?? sections[0]?.id ?? null);
 
   function fire(handler: EventHandlerOrArray | undefined, fallback?: () => void) {
     if (handler && eventDispatcher) {
@@ -104,7 +105,7 @@
   }
 
   function jumpTo(sId: string) {
-    activeId = sId;
+    pickedId = sId;
     if (typeof document !== 'undefined') {
       const el = document.getElementById(sId);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -206,6 +207,7 @@
 
 <style>
   .rform {
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -267,7 +269,7 @@
     gap: 16px;
     min-width: 0;
   }
-  @media (min-width: 900px) {
+  @container (min-width: 640px) {
     .rform-body {
       display: grid;
       grid-template-columns: 220px minmax(0, 1fr);

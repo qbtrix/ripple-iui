@@ -87,3 +87,52 @@ describe('comparison-layout defaultView', () => {
 		expect(pressed(/cards/i)).toBe('true');
 	});
 });
+
+describe('form-layout streamed', () => {
+	// The first section id streams in a few characters at a time; the active
+	// section must end up on the finished id, not a truncated one.
+	const spec = {
+		ui: {
+			type: 'form-layout',
+			props: {
+				title: 'Account',
+				sections: [
+					{ id: 'profile-details', title: 'Profile' },
+					{ id: 'billing', title: 'Billing' }
+				]
+			}
+		}
+	};
+
+	it('marks the first section active once its id is complete', async () => {
+		const { container, errors } = await mountStreamed(spec, { chunkSize: 4 });
+		expect(errors).toEqual([]);
+		expect(container.querySelector('.rform-nav-item-active')?.textContent).toContain('Profile');
+	});
+});
+
+describe('wizard-layout streamed with a bound step', () => {
+	// The bound step is set in state before the steps list streams in, so for a
+	// while it is not in the list. Once the list is complete the bound step wins.
+	const spec = {
+		state: { step: 'billing' },
+		ui: {
+			type: 'wizard-layout',
+			bind: '{state.step}',
+			props: {
+				steps: [
+					{ id: 'account', label: 'Account' },
+					{ id: 'billing', label: 'Billing' },
+					{ id: 'review', label: 'Review' }
+				]
+			}
+		}
+	};
+
+	it('shows the bound step once the list arrives', async () => {
+		const { container, errors } = await mountStreamed(spec);
+		expect(errors).toEqual([]);
+		const current = container.querySelector('.rwizard-step-active');
+		expect(current?.textContent).toContain('Billing');
+	});
+});
