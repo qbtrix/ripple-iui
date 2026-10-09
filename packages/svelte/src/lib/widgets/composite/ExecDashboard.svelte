@@ -1,13 +1,24 @@
 <!--
   @file ExecDashboard.svelte
-  @description Executive / KPI dashboard archetype: header (title + date range
-  + actions) → KPI strip (4–6 tiles, optionally with sparklines) → primary
-  chart (2/3) + activity rail (1/3) → optional secondary chart row → optional
-  bottom data table.
-  @changes 2026-09-17 (fix/port-gaps) — the refresh icon's loading spin stops
-  under prefers-reduced-motion, from a scoped @media block (the pattern
-  ReasoningTrace and TaskRows use). While loading, the button is still disabled
-  at 60% opacity, so a still icon still reads as busy.
+  @description Executive / KPI dashboard (`exec-dashboard`, aliases
+  `kpi-dashboard`, `executive-dashboard`). Two modes:
+
+  - Rows mode (a spec with `rows`): the model writes raw records plus
+    `measures`, `dimensions`, `x`, `split` and optional `compare` rows, and
+    ExecDashboardRows computes every KPI, trend, chart series, breakdown and
+    table total from the filtered rows (logic in exec-dashboard.ts). `filters`
+    is the bound field (contract event `onfilterschange`); a spec's
+    `on_filter` gets `{ key, value }`.
+  - KPI mode (no `rows`): the original prebuilt archetype. Header (title, date
+    range chips, granularity, refresh, actions), KPI strip with sparklines and
+    `byKey` overrides, primary chart plus activity rail, secondary charts and a
+    table footer, all drawn from props as given.
+
+  Events: the date-range chip fires both `ondaterangechange` (what a spec's
+  `on_date_range_change` becomes) and the camel-cased `ondateRangeChange`, which
+  stays separate so a bind writer and a spec handler never replace each other.
+  Layout reads the widget's own width through container queries. The refresh
+  icon's spin stops under prefers-reduced-motion.
 -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
@@ -21,6 +32,10 @@
   import type { EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
   import type { EventDispatcher } from '@ripple-ui/core';
   import type { StateManager } from '$lib/core/state-manager.svelte.js';
+  import VerdictLine from '../data-kit/VerdictLine.svelte';
+  import type { Verdict } from '../data-kit/types.js';
+  import ExecDashboardRows from './ExecDashboardRows.svelte';
+  import { readFilters, type Filters } from './exec-dashboard.js';
 
   type Trend = 'up' | 'down' | 'flat';
   type ChartType = 'bar' | 'line' | 'area' | 'pie' | 'donut' | 'radar' | 'heatmap';
@@ -187,10 +202,33 @@
     activityTitle?: string;
     charts?: ChartConfig[];
     table?: TableConfig;
+    /** The answer up front: one model-written sentence, at most 140 chars. */
+    verdict?: Verdict;
+    /** ISO 4217 code for money measures in rows mode. Default USD. */
+    currency?: string;
+    /** Rows mode: raw records, e.g. orders `{ date, region, channel, amount }`. */
+    rows?: Record<string, unknown>[];
+    /** Rows mode: what to compute, in order; the first is the chart and breakdown measure. */
+    measures?: { key?: string; label: string; format?: 'money' | 'number' | 'percent'; agg?: 'sum' | 'avg' | 'count'; good?: 'up' | 'down' }[];
+    /** Rows mode: filter chip rows, in order. */
+    dimensions?: { key: string; label: string }[];
+    /** Rows mode: the time (or label) column the chart runs along. */
+    x?: string;
+    /** Rows mode: a column that stacks the chart by entity colour. */
+    split?: string;
+    /** Rows mode: the previous period's rows, for KPI trends. */
+    compare?: Record<string, unknown>[];
+    /** Rows mode: trend wording, e.g. "vs Q2". */
+    compareLabel?: string;
+    /** Rows mode: the active filter per dimension (the bound field). */
+    filters?: Filters;
+    onfilterschange?: (filters: Filters) => void;
+    onfilter?: (pick: { key: string; value: string | null }) => void;
     onaction?: (id: string) => void;
     onkpiclick?: (id: string) => void;
     onactivityclick?: (id: string) => void;
     ondateRangeChange?: (range: string) => void;
+    ondaterangechange?: (range: string) => void;
     ongranularitychange?: (g: string) => void;
     onactivityfilterchange?: (f: string) => void;
     onrefresh?: () => void;
@@ -209,7 +247,7 @@
     activeGranularity = $bindable(),
     activityFilters,
     activeActivityFilter = $bindable(),
-    showRefresh = true,
+    showRefresh: showRefreshProp,
     refreshActions,
     lastUpdated,
     loading = false,
@@ -223,14 +261,32 @@
     activityTitle = 'Recent activity',
     charts: rawCharts = [],
     table,
+    verdict,
+    currency,
+    rows,
+    measures,
+    dimensions,
+    x,
+    split,
+    compare,
+    compareLabel,
+    filters = $bindable(),
+    onfilterschange,
+    onfilter,
     onaction,
     onkpiclick,
     onactivityclick,
     ondateRangeChange,
+    ondaterangechange,
     ongranularitychange,
     onactivityfilterchange,
     onrefresh
   }: Props = $props();
+
+  // Rows mode starts at the `rows` key, even while it is still empty mid-stream.
+  const rowsMode = $derived(rows !== undefined && rows !== null);
+  // A refresh button with nothing to refresh is noise; rows mode leaves it off.
+  const showRefresh = $derived(showRefreshProp ?? !rowsMode);
 
   const actions = $derived(safeArray<Action>(rawActions, { widget: 'exec-dashboard', key: 'actions' }));
   const kpis = $derived(safeArray<Kpi>(rawKpis, { widget: 'exec-dashboard', key: 'kpis' }));
@@ -405,6 +461,15 @@
   function pickDateRange(r: string) {
     activeDateRange = r;
     ondateRangeChange?.(r);
+    ondaterangechange?.(r);
+  }
+  function pickFilter(key: string, value: string | undefined) {
+    const next = readFilters(filters);
+    if (value === undefined) delete next[key];
+    else next[key] = value;
+    filters = next;
+    onfilterschange?.(next);
+    onfilter?.({ key, value: value ?? null });
   }
   function pickGranularity(g: string) {
     activeGranularity = g;
@@ -434,7 +499,26 @@
   const isClickableActivity = (a: ActivityItem) => Boolean(a.actions || (a.id && onactivityclick));
 </script>
 
-<div {id} class={cn('rdash', `rdash-density-${density}`, className)} style={styleString}>
+<div {id} class={cn('rdash', `rdash-density-${density}`, className)} style={styleString} data-widget="exec-dashboard">
+  {#if rowsMode && !error}
+    <ExecDashboardRows
+      {title}
+      {subtitle}
+      {verdict}
+      {currency}
+      {rows}
+      {measures}
+      {dimensions}
+      {x}
+      {split}
+      {compare}
+      {compareLabel}
+      tableTitle={table?.title}
+      tableColumns={table?.columns}
+      {filters}
+      onpick={pickFilter}
+    />
+  {:else}
   {#if title || subtitle || dateRange || dateRanges || granularities || actions.length > 0 || showRefresh || lastUpdated}
     <header class="rdash-header">
       <div class="rdash-header-main">
@@ -506,6 +590,8 @@
       </div>
     </header>
   {/if}
+
+  <VerdictLine {verdict} />
 
   {#if error}
     <div class="rdash-error" role="alert">
@@ -748,6 +834,7 @@
       </div>
     {/if}
   {/if}
+  {/if}
 </div>
 
 <style>
@@ -766,6 +853,8 @@
     flex-direction: column;
     gap: var(--rdash-gap);
     width: 100%;
+    /* Breakpoints below read the widget's own width, not the viewport. */
+    container-type: inline-size;
   }
   .rdash-density-compact {
     --rdash-gap: 12px;
@@ -775,8 +864,10 @@
     --rdash-kpi-value-size: 22px;
     --rdash-kpi-min: 150px;
   }
-  @media (max-width: 640px) {
-    .rdash {
+  /* A container query cannot style the container itself, so the narrow
+     sizes land on its children, which inherit them. */
+  @container (max-width: 640px) {
+    .rdash > :global(*) {
       --rdash-kpi-min: 150px;
       --rdash-kpi-value-size: 22px;
     }
@@ -833,7 +924,7 @@
     flex-wrap: wrap;
     max-width: 100%;
   }
-  @media (max-width: 640px) {
+  @container (max-width: 640px) {
     .rdash-header-tools {
       width: 100%;
       flex-wrap: nowrap;
@@ -1075,7 +1166,7 @@
     width: 72px;
     flex-shrink: 0;
   }
-  @media (max-width: 480px) {
+  @container (max-width: 480px) {
     .rdash-kpi-spark { width: 60px; }
   }
   .rdash-kpi-meta {
@@ -1125,7 +1216,7 @@
   }
   .rdash-row-1 { grid-template-columns: 1fr; }
   .rdash-row-2 { grid-template-columns: 1fr; }
-  @media (min-width: 920px) {
+  @container (min-width: 920px) {
     .rdash-row-2 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
   }
 

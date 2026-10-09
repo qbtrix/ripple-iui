@@ -136,7 +136,8 @@ function utcLabel(iso: string, opts: Intl.DateTimeFormatOptions): string {
 	return new Intl.DateTimeFormat(undefined, { ...opts, timeZone: 'UTC' }).format(Date.UTC(y, mo - 1, d || 1));
 }
 
-export type Bucketer = { buckets: Bucket[]; keyOf: (row: Row) => string | undefined };
+/** `unit` names the bucket for a chart title: 'day', 'month', or the x column's own name. */
+export type Bucketer = { buckets: Bucket[]; keyOf: (row: Row) => string | undefined; unit: string };
 
 /**
  * The x axis. When every x value is an ISO day, rows bucket by day for a span
@@ -144,7 +145,7 @@ export type Bucketer = { buckets: Bucket[]; keyOf: (row: Row) => string | undefi
  * group by the label as written, in first-seen order.
  */
 export function bucketer(allRows: Row[], x: string | undefined): Bucketer {
-	if (!x) return { buckets: [], keyOf: () => undefined };
+	if (!x) return { buckets: [], keyOf: () => undefined, unit: '' };
 	const values = allRows.map((r) => r[x]).filter((v) => text(v));
 	const days = values.map(isoDay);
 	if (values.length && days.every(Boolean)) {
@@ -163,10 +164,10 @@ export function bucketer(allRows: Row[], x: string | undefined): Bucketer {
 				? utcLabel(k, { month: 'short', day: 'numeric' })
 				: utcLabel(k, multiYear ? { month: 'short', year: 'numeric' } : { month: 'short' })
 		}));
-		return { buckets, keyOf };
+		return { buckets, keyOf, unit: byDay ? 'day' : 'month' };
 	}
 	const labels = distinct(allRows, x);
-	return { buckets: labels.map((l) => ({ key: l, label: l })), keyOf: (row) => text(row[x]) || undefined };
+	return { buckets: labels.map((l) => ({ key: l, label: l })), keyOf: (row) => text(row[x]) || undefined, unit: x.replace(/_/g, ' ') };
 }
 
 export type SeriesPoint = { key: string; label: string; total: number; parts: Record<string, number> };
@@ -265,7 +266,7 @@ export function defaultColumns(x: string | undefined, dims: Dimension[], split: 
 	return cols;
 }
 
-const title = (k: string) => k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' ');
+export const title = (k: string) => k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' ');
 
 /** The measure that formats a column, preferring a summed one. */
 export function measureFor(key: string, measures: Measure[]): Measure | undefined {
@@ -309,10 +310,10 @@ export function fmt(v: unknown, format: Format, currency?: string, compact = fal
 	return format === 'money' ? intl({ ...opts, style: 'currency' }, currency).format(n) : intl(opts).format(n);
 }
 
-/** Clean y-axis ticks from 0 to a nice ceiling over `max` (about four steps). */
+/** Clean y-axis ticks from 0 to a nice ceiling over `max` (four to six steps). */
 export function ticks(max: number): number[] {
 	if (!(max > 0) || !Number.isFinite(max)) return [0];
-	const raw = max / 4;
+	const raw = max / 5;
 	const mag = 10 ** Math.floor(Math.log10(raw));
 	const step = [1, 2, 2.5, 5, 10].map((f) => f * mag).find((s) => s >= raw)!;
 	const out: number[] = [];

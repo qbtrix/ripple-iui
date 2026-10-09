@@ -201,7 +201,8 @@ describe('columns, totals and formatting', () => {
 	it('makes clean ticks that cover the max', () => {
 		expect(ticks(38)).toEqual([0, 10, 20, 30, 40]);
 		expect(ticks(40)).toEqual([0, 10, 20, 30, 40]);
-		expect(ticks(9200)).toEqual([0, 2500, 5000, 7500, 10000]);
+		expect(ticks(9200)).toEqual([0, 2000, 4000, 6000, 8000, 10000]);
+		expect(ticks(440)).toEqual([0, 100, 200, 300, 400, 500]);
 		expect(ticks(0)).toEqual([0]);
 		expect(ticks(NaN)).toEqual([0]);
 	});
