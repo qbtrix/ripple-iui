@@ -350,9 +350,7 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 12px 28px;
-		margin-top: 40px;
-		padding-top: 28px;
-		border-top: 1px solid var(--site-line);
+		margin-top: 36px;
 	}
 	/* The install line, as a quiet mono chip. */
 	.get {
@@ -402,8 +400,13 @@
 		font-weight: 600;
 		font-size: 15px;
 		color: var(--site-ink);
-		text-underline-offset: 4px;
+		text-decoration-line: underline;
+		text-underline-offset: 5px;
 		text-decoration-thickness: 1px;
+		text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+	}
+	.go:hover {
+		text-decoration-color: currentColor;
 	}
 	.go.primary {
 		color: var(--primary-ink);
