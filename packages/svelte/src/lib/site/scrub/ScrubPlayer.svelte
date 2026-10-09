@@ -19,7 +19,10 @@
       the action result, so a spec's on_error runs); `panes` hides one or both
       panes at every width, so a page can drive its own tabs; `autoplayFrom`
       moves the clock when autoplay starts, so the markup can hold the
-      finished frame while the visit plays from the first byte.
+      finished frame while the visit plays from the first byte;
+      `holdSkeleton` keeps the skeleton up mid-stream until the spec has a
+      `ui` (or `intent`), since a stream that opens with a long `state` block
+      otherwise shows an empty pane.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -47,9 +50,11 @@
 		panes?: 'both' | 'render' | 'spec' | 'none';
 		/** Where autoplay starts, as a fraction. Default: wherever `start` put the clock. */
 		autoplayFrom?: number;
+		/** Mid-stream, show the skeleton until the spec has something to render. */
+		holdSkeleton?: boolean;
 	}
 
-	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '', onEvent, panes = 'both', autoplayFrom }: Props = $props();
+	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '', onEvent, panes = 'both', autoplayFrom, holdSkeleton = false }: Props = $props();
 
 	const SPEEDS = [0.5, 1, 2];
 	const model = $derived(createScrubModel(fixture));
@@ -62,7 +67,11 @@
 	const count = $derived(model.countAt(ms));
 	const text = $derived(model.text(count));
 	const atEnd = $derived(count === model.total);
-	const store: StreamSpecStore = $derived({ current: model.spec(count), done: atEnd, error: null, cancel() {} });
+	const shown = $derived.by(() => {
+		const s = model.spec(count);
+		return holdSkeleton && !atEnd && s && !s.ui && !s.intent ? null : s;
+	});
+	const store: StreamSpecStore = $derived({ current: shown, done: atEnd, error: null, cancel() {} });
 	const pct = $derived(model.duration ? (ms / model.duration) * 100 : 0);
 
 	// Fixed locale so the server and the browser print the same text.
