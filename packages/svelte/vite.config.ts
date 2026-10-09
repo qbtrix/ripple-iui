@@ -2,6 +2,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { pawbarEnv } from './src/lib/site/pawbar-env.js';
+import pkg from './package.json' with { type: 'json' };
 
 // The top bar's GitHub star count, fetched once per production build so the
 // site never calls GitHub at runtime (CSP and the no-third-party rule). Any
@@ -38,7 +39,10 @@ export default defineConfig(async ({ command, mode }) => {
 			'import.meta.env.PUBLIC_PAWBAR_ENDPOINT': JSON.stringify(pawbar.endpoint),
 			'import.meta.env.PUBLIC_PAWBAR_WIDGET_ID': JSON.stringify(pawbar.widgetId),
 			'import.meta.env.PUBLIC_PAWBAR_SITE_KEY': JSON.stringify(pawbar.siteKey),
-			'import.meta.env.PUBLIC_GITHUB_STARS': JSON.stringify(stars)
+			'import.meta.env.PUBLIC_GITHUB_STARS': JSON.stringify(stars),
+			// Read here, not imported by the page: package.json sits outside the
+			// dev server's fs.allow, so a page import works in the build but not in dev.
+			'import.meta.env.PUBLIC_RIPPLE_VERSION': JSON.stringify(pkg.version)
 		}
 	};
 });
