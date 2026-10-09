@@ -363,7 +363,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `checklist-layout` | Launch checklist / pre-flight / runbook with grouped items, completion progress, and per-item details |
 | `report-layout` | Long-form report with sections, embedded data widgets, and callouts |
 | `invoice-layout` | Invoice / quote / receipt with line items, computed totals, and download actions |
-| `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline |
+| `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline. Delivery or pickup (`ready-for-pickup`, `picked-up`) pipeline; the final step shows done. A polled `tracker` glides between positions |
 | `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
 | `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
 | `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (option tiles with icons inferred from names, or an `icon` key from `OPTION_ICONS`), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |

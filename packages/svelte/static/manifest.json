@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-09T06:36:29.936Z",
+  "generatedAt": "2026-10-09T16:34:27.608Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -3422,9 +3422,9 @@
           "description": "ISO 4217 code for numeric prices. Default \"USD\". Never put a symbol in the data."
         },
         "items": {
-          "type": "Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; [featureKey: string]: unknown }>",
+          "type": "Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; actions?: EventAction | EventAction[]; learn_more?: EventAction | EventAction[]; [featureKey: string]: unknown }>",
           "required": true,
-          "description": "2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image."
+          "description": "2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image. Per item, `actions` fires on Choose and `learn_more` on Learn more."
         },
         "features": {
           "type": "Array<{ key: string; label: string; section?: string; kind?: \"text\" | \"number\" | \"boolean\" | \"rating\" | \"icon\" | \"price\" | \"color\"; better?: \"higher\" | \"lower\"; unit?: string; icon?: \"battery\" | \"weight\" | \"display\" | \"cpu\" | \"memory\" | \"storage\" | \"camera\" | \"speed\" | \"price\" | \"ports\" | \"wifi\" | \"keyboard\" | \"audio\" | \"security\" | \"warranty\" | \"size\" | \"rating\" | \"support\"; highlight?: boolean }>",
@@ -7717,7 +7717,12 @@
         "bounds": {
           "type": "[[number, number], [number, number]]",
           "required": false,
-          "description": "Fit-to-bounds rectangle [[swLat, swLng], [neLat, neLng]]. Overrides center+zoom when supplied."
+          "description": "Fit-to-bounds rectangle [[swLat, swLng], [neLat, neLng]]. Overrides center+zoom when supplied. Refits only when the rectangle changes."
+        },
+        "boundsPadding": {
+          "type": "number",
+          "required": false,
+          "description": "Pixel padding around `bounds` when fitting. Default 0."
         },
         "tiles": {
           "type": "\"osm\" | \"carto-voyager\" | \"carto-light\" | \"carto-dark\" | \"osm-hot\" | \"custom\"",
@@ -9678,9 +9683,9 @@
           "description": "Order / shipment / job number shown in the eyebrow."
         },
         "status": {
-          "type": "\"placed\" | \"confirmed\" | \"preparing\" | \"in-transit\" | \"out-for-delivery\" | \"delivered\" | \"failed\" | \"cancelled\"",
+          "type": "\"placed\" | \"confirmed\" | \"preparing\" | \"in-transit\" | \"out-for-delivery\" | \"delivered\" | \"ready-for-pickup\" | \"picked-up\" | \"failed\" | \"cancelled\"",
           "required": false,
-          "description": "Default-pipeline status. Used to compute the active stepper position when `steps` is not supplied."
+          "description": "Default-pipeline status. Sets the active stepper position. \"ready-for-pickup\" and \"picked-up\" switch the default steps to the pickup pipeline (placed, confirmed, preparing, ready for pickup, picked up). When status is the last step it renders done with a check, not active."
         },
         "steps": {
           "type": "Array<{ id: string; label: string; description?: string; completedAt?: string; current?: boolean; failed?: boolean }>",
@@ -9715,7 +9720,7 @@
         "tracker": {
           "type": "{ lat: number; lng: number; heading?: number; label?: string; color?: string }",
           "required": false,
-          "description": "Live courier position. Heading rotates the directional arrow."
+          "description": "Live courier position. Heading rotates the directional arrow. Each new position glides linearly from the old one over the time since the previous update (0.3s to 5s), so polling hosts get continuous motion; reduced motion jumps."
         },
         "route": {
           "type": "[number, number][]",
@@ -10057,7 +10062,7 @@
           "description": "ISO 4217 code. Default USD. Never a symbol."
         },
         "items": {
-          "type": "Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: \"main\" | \"side\" | \"drink\" | \"dessert\" | \"product\"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: \"one\" | \"many\"; required?: boolean; max?: number; options: Array<{ id: string; name: string; price_delta?: number }> }> }>",
+          "type": "Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: \"main\" | \"side\" | \"drink\" | \"dessert\" | \"product\"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: \"one\" | \"many\"; required?: boolean; max?: number; icon?: string; options: Array<{ id: string; name: string; price_delta?: number; icon?: string }> }> }>",
           "required": true,
           "description": "Menu items. Write product_id (and name for streaming); the server fills price, image and groups. Items without product_id are display only. Rows use kind, never type."
         },
@@ -10096,7 +10101,7 @@
         "on_checkout": {
           "type": "EventAction | EventAction[]",
           "required": false,
-          "description": "Server-wired. Fires with { lines, fulfilment, customer: { name, email?, phone?, address? }, total } when the visitor continues to payment."
+          "description": "Server-wired. Fires with { lines, fulfilment, customer: { name, email, phone, address? }, total } when the visitor continues to payment. Name, email and phone are required, plus the address for delivery."
         }
       },
       "example": {
