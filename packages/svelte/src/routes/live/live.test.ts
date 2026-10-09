@@ -198,44 +198,43 @@ async function clickEachSpecButton(
 	return dead;
 }
 
-// The bill splitter's numbers must add up, not just change. Labels ("Pays",
-// "Grand total") come from the recorded fixture: re-recording may rename them.
-describe('bill-splitter numbers', () => {
+// The bill splitter is one bill-split widget; its numbers must add up, not
+// just change. $186.40 at 18% is $219.95 for 4: $54.99 for the first three,
+// $54.98 for the last (the spare cents go first).
+describe('bill-splitter numbers (bill-split)', () => {
 	const scenario = scenarios.find((s) => s.id === 'bill-splitter')!;
-	const money = (s: string) => Number(s.replace(/[$,]/g, ''));
+	const money = (s: string) => Math.round(Number(s.replace(/[$,]/g, '')) * 100);
 
-	async function addsUp(container: HTMLElement) {
+	async function addsUp(container: HTMLElement, onStateChange?: ReturnType<typeof vi.fn>) {
+		const ui = within(container);
 		const check = (rows: number) => {
-			const text = container.textContent ?? '';
-			const shares = [...text.matchAll(/Pays\s*(\$[\d,]+\.\d\d)/g)].map((m) => money(m[1]));
-			const grand = money(/Grand total\s*(\$[\d,]+\.\d\d)/.exec(text)![1]);
+			const shares = [...container.querySelectorAll('[data-slot="pays"]')].map((e) => money(e.textContent ?? ''));
+			const total = money(/Total\s*(\$[\d,]+\.\d\d)/.exec(container.querySelector('[data-slot="totals"]')?.textContent ?? '')![1]);
 			expect(shares.length).toBe(rows);
-			expect(Math.abs(shares.reduce((a, b) => a + b, 0) - grand)).toBeLessThan(0.05);
+			expect(shares.reduce((a, b) => a + b, 0)).toBe(total);
 			return shares;
 		};
-		const start = check(4);
-		expect(new Set(start).size).toBeGreaterThan(1); // drinkers pay more
-		const add = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add person')!;
-		await fireEvent.click(add);
+		expect(check(4)).toEqual([5499, 5499, 5499, 5498]);
+		await fireEvent.click(ui.getByRole('button', { name: 'Add person' }));
 		await waitFor(() => check(5));
-		const remove = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Remove')!;
-		await fireEvent.click(remove);
+		await fireEvent.click(ui.getByRole('button', { name: 'Remove Person 5' }));
 		await waitFor(() => check(4));
-		await fireEvent.click(container.querySelector('[role="switch"]')!);
-		await waitFor(() => check(4));
+		const drinks = ui.getByRole('spinbutton', { name: 'Drinks for Person 2' });
+		await fireEvent.input(drinks, { target: { value: '24' } });
+		await fireEvent.change(drinks);
+		await waitFor(() => expect(new Set(check(4)).size).toBeGreaterThan(1)); // the drinker pays more
+		if (onStateChange) expect((lastWrite(onStateChange, 'bill') as { people: { extras: number }[] }).people[1].extras).toBe(24);
 	}
 
-	test('mounted whole, shares add up to the grand total through add, remove and drinks', async () => {
+	test('mounted whole, shares add up to the total through add, remove and drinks', async () => {
 		const { container } = render(Ripple, { props: { spec: JSON.parse(join(scenario.fixture)) } });
 		await tick();
 		await addsUp(container);
 	});
 
-	// A streamed render must recompute a row's share when its bound checkbox
-	// ("people.{index}.drinks") flips, same as a whole-spec mount.
-	test('after streaming, shares still add up through add, remove and drinks', async () => {
-		const { container } = await mountStreamed(scenario.fixture);
-		await addsUp(container);
+	test('after streaming, shares still add up and the edits write the bound bill', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario.fixture);
+		await addsUp(container, onStateChange);
 	});
 });
 

@@ -3,635 +3,147 @@
  "title": "Split the bill",
  "prompt": "Dinner for 4 came to $186.40. Help me split it with tip, and let me adjust who had drinks.",
  "model": "sonnet",
- "recordedAt": "2026-10-09T06:44:16.245Z",
+ "recordedAt": "2026-10-09T18:01:07.185Z",
  "chunks": [
   {
    "t": 0,
-   "text": "{"
+   "text": "{\"version\":\"1.0"
   },
   {
-   "t": 19,
-   "text": "\"version"
+   "t": 400,
+   "text": "\",\"state\":{\"bill\":"
   },
   {
-   "t": 52,
-   "text": "\":\"1.0\",\"state\":"
+   "t": 400,
+   "text": "186"
   },
   {
-   "t": 87,
-   "text": "{\"total\":186.4"
+   "t": 400,
+   "text": ".4"
   },
   {
-   "t": 121,
-   "text": ",\"tipPercent\":"
+   "t": 401,
+   "text": "},\"ui\":{\"type"
   },
   {
-   "t": 154,
-   "text": "18,\"drinksTot"
+   "t": 401,
+   "text": "\":\"bill-split\",\"b"
   },
   {
-   "t": 191,
-   "text": "al\":48,\"dr"
+   "t": 401,
+   "text": "ind\":\"{state.bill"
   },
   {
-   "t": 223,
-   "text": "inkers\":3,\"people"
+   "t": 402,
+   "text": "}\",\"props\":{\"title\":"
   },
   {
-   "t": 260,
-   "text": "\":[{\"name\":\""
+   "t": 402,
+   "text": "\"Dinner for 4"
   },
   {
-   "t": 288,
-   "text": "Alex\",\"drinks\":true"
+   "t": 402,
+   "text": "\",\"currency\":\"USD\",\""
   },
   {
-   "t": 321,
-   "text": "},{\"name\":\"S"
+   "t": 402,
+   "text": "subtotal\":186.4"
   },
   {
-   "t": 354,
-   "text": "am\",\"drinks\":true},"
+   "t": 403,
+   "text": ",\"tip_percent\":"
   },
   {
-   "t": 388,
-   "text": "{\"name\":\"Jo"
+   "t": 403,
+   "text": "18,\"tip_options\":"
   },
   {
-   "t": 422,
-   "text": "\",\"drinks\":false},{"
+   "t": 403,
+   "text": "[15,18,20,22"
   },
   {
-   "t": 457,
-   "text": "\"name\":\"Riley\",\""
+   "t": 404,
+   "text": "],\"ext"
   },
   {
-   "t": 494,
-   "text": "drinks\":true}]},"
+   "t": 404,
+   "text": "ras_label\":\"Drin"
   },
   {
-   "t": 523,
-   "text": "\"ui\":{\"type\":"
+   "t": 404,
+   "text": "ks\",\"people"
   },
   {
-   "t": 555,
-   "text": "\"card\",\"props\":{\"title"
+   "t": 404,
+   "text": "\":[{\"id\":\"p"
   },
   {
-   "t": 589,
-   "text": "\":\"D"
+   "t": 404,
+   "text": "1\",\"name\":\"Person"
   },
   {
-   "t": 624,
-   "text": "inner split\",\"description\":\""
+   "t": 404,
+   "text": " 1\",\"extras\":0},"
   },
   {
-   "t": 657,
-   "text": "Food is shared evenly."
+   "t": 405,
+   "text": "{\"id\":\"p2\",\""
   },
   {
-   "t": 689,
-   "text": " Drinks are sh"
+   "t": 407,
+   "text": "name\":\"Person 2\",\""
   },
   {
-   "t": 724,
-   "text": "ared only among drinkers."
+   "t": 407,
+   "text": "extras\":0},{\"id"
   },
   {
-   "t": 756,
-   "text": " Tip is added"
+   "t": 407,
+   "text": "\":\"p3\",\"name\":\""
   },
   {
-   "t": 789,
-   "text": " in"
+   "t": 407,
+   "text": "Person 3\",\"extras\":"
   },
   {
-   "t": 823,
-   "text": " proportion.\"},\"children\":"
+   "t": 437,
+   "text": "0},{\"id\":\"p"
   },
   {
-   "t": 856,
-   "text": "[{\"type\":\"flex"
+   "t": 437,
+   "text": "4\",\"name\":\"Person "
   },
   {
-   "t": 889,
-   "text": "\",\"props\":{\"direction\":"
+   "t": 437,
+   "text": "4\",\"extras\":0}],"
   },
   {
-   "t": 924,
-   "text": "\"column\",\"gap\":\"16"
+   "t": 438,
+   "text": "\"note\":\"Enter each"
   },
   {
-   "t": 956,
-   "text": "px\"},\"children\":[{"
+   "t": 438,
+   "text": " person's drin"
   },
   {
-   "t": 990,
-   "text": "\"type\":\"grid\",\"props"
+   "t": 438,
+   "text": "ks amount to sh"
   },
   {
-   "t": 1026,
-   "text": "\":{\"columns\":\"rep"
+   "t": 438,
+   "text": "ift their"
   },
   {
-   "t": 1056,
-   "text": "eat(au"
+   "t": 438,
+   "text": " share; the"
   },
   {
-   "t": 1089,
-   "text": "to-fit, minmax"
+   "t": 439,
+   "text": " rest is split evenly.\""
   },
   {
-   "t": 1123,
-   "text": "(200px, 1fr"
-  },
-  {
-   "t": 1157,
-   "text": "))\",\"gap\":\"12px"
-  },
-  {
-   "t": 1190,
-   "text": "\"},\"children\":[{\""
-  },
-  {
-   "t": 1225,
-   "text": "type\":\"number-input\",\"props"
-  },
-  {
-   "t": 1259,
-   "text": "\":{\"label\":\"B"
-  },
-  {
-   "t": 1292,
-   "text": "ill total ($)\",\"min\":"
-  },
-  {
-   "t": 1325,
-   "text": "0,\"step\":0.5"
-  },
-  {
-   "t": 1359,
-   "text": "},\"bind\":\"{state"
-  },
-  {
-   "t": 1392,
-   "text": ".total}\"},{\"type"
-  },
-  {
-   "t": 1426,
-   "text": "\":\"number-input\",\"props\":"
-  },
-  {
-   "t": 1459,
-   "text": "{\"label\":\"Of"
-  },
-  {
-   "t": 1491,
-   "text": " which"
-  },
-  {
-   "t": 1524,
-   "text": " dr"
-  },
-  {
-   "t": 1559,
-   "text": "inks ($)\",\"min\":"
-  },
-  {
-   "t": 1592,
-   "text": "0,\"step\":0."
-  },
-  {
-   "t": 1626,
-   "text": "5},\"bind\":\"{"
-  },
-  {
-   "t": 1659,
-   "text": "state.drinksTotal"
-  },
-  {
-   "t": 1692,
-   "text": "}\"}]},{\"type"
-  },
-  {
-   "t": 1726,
-   "text": "\":\"slider\",\"props\":{"
-  },
-  {
-   "t": 1759,
-   "text": "\"label\":\"Tip ("
-  },
-  {
-   "t": 1793,
-   "text": "%)\",\"min\":0,\""
-  },
-  {
-   "t": 1826,
-   "text": "max\":40,\"step\":1"
-  },
-  {
-   "t": 1859,
-   "text": ",\"showValue\":true},"
-  },
-  {
-   "t": 1893,
-   "text": "\"bind\":\"{state."
-  },
-  {
-   "t": 1926,
-   "text": "tipPercent}\"},"
-  },
-  {
-   "t": 1960,
-   "text": "{\"type\":\"grid\",\""
-  },
-  {
-   "t": 1994,
-   "text": "props\":{\"columns\":\""
-  },
-  {
-   "t": 2027,
-   "text": "repeat(auto-f"
-  },
-  {
-   "t": 2060,
-   "text": "it, minmax(150px"
-  },
-  {
-   "t": 2093,
-   "text": ", 1fr))\",\"g"
-  },
-  {
-   "t": 2126,
-   "text": "ap\":\"12px\"},\""
-  },
-  {
-   "t": 2159,
-   "text": "children\":[{\"type\":\""
-  },
-  {
-   "t": 2194,
-   "text": "stat\",\"props\":{\"label"
-  },
-  {
-   "t": 2228,
-   "text": "\":\"Tip\",\"value\":"
-  },
-  {
-   "t": 2260,
-   "text": "\"{state.total * state."
-  },
-  {
-   "t": 2294,
-   "text": "tipPercent / 100"
-  },
-  {
-   "t": 2328,
-   "text": "}\",\"format\":\"currency\""
-  },
-  {
-   "t": 2364,
-   "text": "}},{\"type\":\"st"
-  },
-  {
-   "t": 2395,
-   "text": "at\",\"props\":{\"label\":"
-  },
-  {
-   "t": 2428,
-   "text": "\"Grand total\",\"value\":"
-  },
-  {
-   "t": 2509,
-   "text": "\"{state.total * (1"
-  },
-  {
-   "t": 2841,
-   "text": " + state.tipPerc"
-  },
-  {
-   "t": 2841,
-   "text": "ent / 100)}\",\"format"
-  },
-  {
-   "t": 2841,
-   "text": "\":\"currency\"}},{"
-  },
-  {
-   "t": 2841,
-   "text": "\"type\":\"stat\",\"props"
-  },
-  {
-   "t": 2841,
-   "text": "\":{\"label\":\"Food"
-  },
-  {
-   "t": 2841,
-   "text": " sh"
-  },
-  {
-   "t": 2841,
-   "text": "ared by"
-  },
-  {
-   "t": 2841,
-   "text": " all\",\"value\":\"{state"
-  },
-  {
-   "t": 2841,
-   "text": ".total - state.drinks"
-  },
-  {
-   "t": 2841,
-   "text": "Total}\",\"format\":\""
-  },
-  {
-   "t": 2841,
-   "text": "currency\"}}]},{"
-  },
-  {
-   "t": 2861,
-   "text": "\"type\":\"separator\",\"props"
-  },
-  {
-   "t": 2896,
-   "text": "\":{}"
-  },
-  {
-   "t": 2931,
-   "text": "},{\"type\":\"text\",\""
-  },
-  {
-   "t": 2962,
-   "text": "props\":{\"text\":\""
-  },
-  {
-   "t": 2996,
-   "text": "Who had drinks? "
-  },
-  {
-   "t": 3029,
-   "text": "({state.drinkers}"
-  },
-  {
-   "t": 3062,
-   "text": " of {state.people.length})"
-  },
-  {
-   "t": 3097,
-   "text": "\",\"weight\":\"semibold"
-  },
-  {
-   "t": 3129,
-   "text": "\"}},{\"type\":\""
-  },
-  {
-   "t": 3163,
-   "text": "each\",\"items\":\"{state."
-  },
-  {
-   "t": 3196,
-   "text": "people}\",\"children\":[{\""
-  },
-  {
-   "t": 3229,
-   "text": "type\":\"flex\",\"props\":"
-  },
-  {
-   "t": 3263,
-   "text": "{\"direction\":\"row\",\""
-  },
-  {
-   "t": 3298,
-   "text": "gap\":\"12px\",\"align"
-  },
-  {
-   "t": 3330,
-   "text": "\":\"center\",\"just"
-  },
-  {
-   "t": 3362,
-   "text": "ify\":\"between\",\"wrap"
-  },
-  {
-   "t": 3396,
-   "text": "\":true},"
-  },
-  {
-   "t": 3430,
-   "text": "\"children\":[{\"type\":"
-  },
-  {
-   "t": 3464,
-   "text": "\"input\",\"props\":{\"plac"
-  },
-  {
-   "t": 3498,
-   "text": "eholder\":\"Name\""
-  },
-  {
-   "t": 3530,
-   "text": "},\"bind\":\"people."
-  },
-  {
-   "t": 3564,
-   "text": "{index}.name\"},{"
-  },
-  {
-   "t": 3596,
-   "text": "\"type\":\"switch\",\"props"
-  },
-  {
-   "t": 3629,
-   "text": "\":{\"label\":\"Dr"
-  },
-  {
-   "t": 3663,
-   "text": "inks\"},\"bind\":"
-  },
-  {
-   "t": 3696,
-   "text": "\"people.{index}.dr"
-  },
-  {
-   "t": 3729,
-   "text": "inks\",\"on_change\":{"
-  },
-  {
-   "t": 3762,
-   "text": "\"action\":\"set\",\"target"
-  },
-  {
-   "t": 3796,
-   "text": "\":\"drinkers\",\"value"
-  },
-  {
-   "t": 3829,
-   "text": "\":\"{state.people.where"
-  },
-  {
-   "t": 3864,
-   "text": "('drinks', true).count"
-  },
-  {
-   "t": 3897,
-   "text": "()}\"}},{\"type"
-  },
-  {
-   "t": 3930,
-   "text": "\":\"stat\",\"props\":{"
-  },
-  {
-   "t": 3964,
-   "text": "\"label\":\"Pays\",\""
-  },
-  {
-   "t": 3998,
-   "text": "value\":\"{((state.total"
-  },
-  {
-   "t": 4032,
-   "text": " - state.drinksTot"
-  },
-  {
-   "t": 4063,
-   "text": "al) / state.people.length"
-  },
-  {
-   "t": 4096,
-   "text": " + item.drinks * state"
-  },
-  {
-   "t": 4129,
-   "text": ".drinksTotal /"
-  },
-  {
-   "t": 4163,
-   "text": " state.drinkers) *"
-  },
-  {
-   "t": 4197,
-   "text": " (1 + state.tip"
-  },
-  {
-   "t": 4230,
-   "text": "Percent / 100)}"
-  },
-  {
-   "t": 4268,
-   "text": "\",\"format\":\"currency\",\"size"
-  },
-  {
-   "t": 4298,
-   "text": "\":\"sm\"}},{"
-  },
-  {
-   "t": 4333,
-   "text": "\"type\":\"button\",\"props\":"
-  },
-  {
-   "t": 4365,
-   "text": "{\"label\":\"Remove"
-  },
-  {
-   "t": 4398,
-   "text": "\",\"variant\":\"ghost"
-  },
-  {
-   "t": 4432,
-   "text": "\",\"size\":\"sm\"},"
-  },
-  {
-   "t": 4465,
-   "text": "\"on_click\":[{\""
-  },
-  {
-   "t": 4498,
-   "text": "action\":\"remove\",\"target\":"
-  },
-  {
-   "t": 4532,
-   "text": "\"people\",\"value\":\"{item"
-  },
-  {
-   "t": 4565,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 4598,
-   "text": "set\",\"target\":\"drink"
-  },
-  {
-   "t": 4632,
-   "text": "ers\",\"value\":\"{state."
-  },
-  {
-   "t": 4666,
-   "text": "people.where('drinks',"
-  },
-  {
-   "t": 4700,
-   "text": " true).count()}\"}]"
-  },
-  {
-   "t": 4733,
-   "text": "}]}"
-  },
-  {
-   "t": 4764,
-   "text": "]},{\"type\":\"button"
-  },
-  {
-   "t": 4798,
-   "text": "\",\"props\":{\"label\":\""
-  },
-  {
-   "t": 4831,
-   "text": "Add person\",\"variant\":\""
-  },
-  {
-   "t": 4864,
-   "text": "outline\"},\"on_click"
-  },
-  {
-   "t": 4897,
-   "text": "\":[{\"action\":\"push"
-  },
-  {
-   "t": 4932,
-   "text": "\",\"target\":\"people\",\"value\":"
-  },
-  {
-   "t": 4966,
-   "text": "{\"name\":\"Guest"
-  },
-  {
-   "t": 4999,
-   "text": "\",\"drinks\":false}},"
-  },
-  {
-   "t": 5033,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 5066,
-   "text": "\":\"drinkers\",\"value"
-  },
-  {
-   "t": 5100,
-   "text": "\":\"{state.people.where"
-  },
-  {
-   "t": 5134,
-   "text": "('drinks', true).count"
-  },
-  {
-   "t": 5166,
-   "text": "()}\"}]}]}"
-  },
-  {
-   "t": 5217,
-   "text": "]}}"
+   "t": 439,
+   "text": "}}}"
   }
  ]
 }
