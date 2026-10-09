@@ -337,7 +337,7 @@
 		color: var(--site-ink);
 	}
 	.byok {
-		margin: 14px 2px 0;
+		margin: 14px 0 0;
 		font-size: 13.5px;
 		color: var(--site-soft);
 	}
