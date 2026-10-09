@@ -1,12 +1,10 @@
 <!--
   Stat.svelte — single metric display (label + formatted value + optional delta).
-  Change: formatValue now guards non-finite coercions (undefined/null/object)
-  and renders blank instead of the literal "NaN". Strings still pass through.
-  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
-  text tokens (text-ripple-{error,success,warning,info}-text; red text that
-  read text-destructive now reads text-ripple-error-text, the same hue since
-  --ripple-error aliases --destructive). The raw tones are fill colours and
-  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged.
+  Non-finite values (undefined/null/object) render blank, never "NaN"; strings
+  pass through. Status-coloured text uses the readable text tokens
+  (text-ripple-*-text), not the raw fill tones, which fail contrast as text.
+  The root is shrink-0: in a crowded flex row the value holds its width and
+  the siblings give way, instead of the stat collapsing to 0px.
 -->
 <script lang="ts">
   import { tv } from 'tailwind-variants';
@@ -128,7 +126,7 @@
   const displayDelta = $derived(hasDelta ? formatDelta() : '');
 
   const root = tv({
-    base: 'flex flex-col min-w-0',
+    base: 'flex flex-col min-w-0 shrink-0',
     variants: {
       size: {
         sm: 'gap-[2px]',
