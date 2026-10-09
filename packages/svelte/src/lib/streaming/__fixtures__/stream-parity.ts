@@ -5,9 +5,9 @@
 //   then mounts the whole spec and requires the two final renders to match.
 //   A mismatch means the widget captured a half-streamed value at mount (an
 //   untrack seed, a non-derived read) and never caught up.
-//   domShape() is the comparison: markup with Svelte's anchor comments and
-//   generated ids and the root's streaming marker removed, so two mounts of the
-//   same spec compare equal.
+//   domShape() is the comparison: markup with Svelte's anchor comments,
+//   generated ids, the illustration widget's per-instance id prefix and the
+//   root's streaming marker removed, so two mounts of the same spec compare equal.
 //   Write the fixture with id-less and field-less items; that is the point.
 //   Lives under __fixtures__ so package.json keeps it out of the published files.
 import { render } from '@testing-library/svelte';
@@ -21,7 +21,7 @@ import { mountStreamed } from './mount-streamed.js';
 const IGNORED = /\s(id|for|aria-controls|aria-labelledby|aria-describedby|aria-owns|data-ripple-streaming)="[^"]*"|\sname="[cs]\d+"/g;
 
 export function domShape(root: Element): string {
-	return root.innerHTML.replace(/<!--[\s\S]*?-->/g, '').replace(IGNORED, '');
+	return root.innerHTML.replace(/<!--[\s\S]*?-->/g, '').replace(IGNORED, '').replace(/\bill-c\d+-/g, 'ill-');
 }
 
 export async function expectStreamParity(spec: object, opts: { chunkSize?: number } = {}) {
