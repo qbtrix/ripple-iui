@@ -19,12 +19,12 @@ Ripple renders interactive UIs from JSON specs. The top-level structure is UISpe
 ```json
 {
   "version": "1.0",
-  "state": { "count": 0, "filter": "all", "items": [] },
   "ui": {
     "type": "flex",
     "props": { "direction": "column", "gap": "16px" },
     "children": []
   },
+  "state": { "count": 0, "filter": "all", "items": [] },
   "theme": {
     "mode": "dark",
     "radius": "0.5rem"
@@ -38,6 +38,7 @@ Ripple renders interactive UIs from JSON specs. The top-level structure is UISpe
 
 **Required fields:** `version` (always "1.0"), `ui` (root UINode).
 **Optional fields:** `state` (initial state object), `theme`, `meta`, `data` (client-side data fetchers), `sources` (server-executed read bindings — see below).
+**Key order:** write `ui` before `state`. Specs often stream, and the renderer can draw the tree as soon as `ui` arrives; keep the seed `state` small.
 
 ### `sources` — server-executed read bindings (RFC 04)
 
@@ -140,7 +141,6 @@ Supported in any string value using `{expression}` syntax:
 ```json
 {
   "version": "1.0",
-  "state": { "count": 0 },
   "ui": {
     "type": "flex",
     "props": { "direction": "column", "gap": "8px", "align": "center" },
@@ -164,6 +164,7 @@ Supported in any string value using `{expression}` syntax:
         ]
       }
     ]
-  }
+  },
+  "state": { "count": 0 }
 }
 ```

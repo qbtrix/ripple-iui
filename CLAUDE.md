@@ -97,7 +97,7 @@ Building a master-detail (list + detail) layout? Read `packages/svelte/src/docs/
 
 ### Key Context Keys
 
-Widgets receive context via Svelte's `setContext`: `ui-state` (StateManager), `ui-events` (EventDispatcher), `ui-data` (data fetcher results), `ui-widget-resolver` (custom widget lookup).
+Widgets receive context via Svelte's `setContext`: `ui-state` (StateManager), `ui-events` (EventDispatcher), `ui-data` (data fetcher results), `ui-widget-resolver` (custom widget lookup), `ui-streaming` (getter: `'active'` / `'done'` for a streamed spec, `undefined` for a plain one; NodeRenderer's per-node boundary shows a quiet placeholder while it is `'active'` and retries on each new frame).
 
 ## Conventions
 

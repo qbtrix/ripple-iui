@@ -1,0 +1,32 @@
+// envelope.test.ts — the spec envelope teaches `ui` before `state`.
+// Models copy the envelope example's key order, and a streamed spec cannot
+// paint until `ui` arrives, so an example that leads with `state` makes every
+// streamed spec wait out the whole state block before its first frame. Both
+// manifests (full and slim) hand out this same `specEnvelope` object, so
+// pinning it here covers manifest.json and manifest.slim.json.
+
+import { describe, expect, it } from 'vitest';
+import { specEnvelope } from './envelope.js';
+import { buildSlimManifest } from './slim.js';
+import { SLIM_WIDGETS } from './slim-widgets.js';
+
+describe('spec envelope key order', () => {
+	it('the example lists `ui` before `state`', () => {
+		const keys = Object.keys(specEnvelope.example);
+		expect(keys).toContain('ui');
+		expect(keys).toContain('state');
+		expect(keys.indexOf('ui')).toBeLessThan(keys.indexOf('state'));
+	});
+
+	it('the serialized slim manifest example has `ui` before `state`', () => {
+		const json = JSON.stringify(buildSlimManifest({ widgets: SLIM_WIDGETS }).spec.example);
+		expect(json.indexOf('"ui"')).toBeGreaterThan(-1);
+		expect(json.indexOf('"ui"')).toBeLessThan(json.indexOf('"state"'));
+	});
+
+	// Deliberately loose: any sentence telling the model to put `ui` first
+	// (or before `state`) passes. Pins that the guidance exists, not its wording.
+	it('the description tells the model to emit `ui` first', () => {
+		expect(specEnvelope.description).toMatch(/`ui`[^.]*\b(first|before)\b/i);
+	});
+});

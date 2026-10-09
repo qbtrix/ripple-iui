@@ -63,13 +63,6 @@ Iterates over an array and renders children for each item. Creates `item` and `i
 ```json
 {
   "version": "1.0",
-  "state": {
-    "tasks": [
-      { "id": 1, "title": "Write docs", "done": false },
-      { "id": 2, "title": "Fix bug", "done": true },
-      { "id": 3, "title": "Deploy v2", "done": false }
-    ]
-  },
   "ui": {
     "type": "flex",
     "props": { "direction": "column", "gap": "8px" },
@@ -91,6 +84,13 @@ Iterates over an array and renders children for each item. Creates `item` and `i
           }
         ]
       }
+    ]
+  },
+  "state": {
+    "tasks": [
+      { "id": 1, "title": "Write docs", "done": false },
+      { "id": 2, "title": "Fix bug", "done": true },
+      { "id": 3, "title": "Deploy v2", "done": false }
     ]
   }
 }

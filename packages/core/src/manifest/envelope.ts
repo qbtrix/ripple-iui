@@ -1,8 +1,8 @@
 /**
  * @file manifest/envelope.ts
- * @description The top-level spec envelope contract (`ui`, `state`), moved
- * here from `@ripple-ui/svelte`'s manifest on 2026-09-27 so both the full and
- * the slim manifest share it. Content unchanged.
+ * @description The top-level spec envelope contract (`ui`, `state`), shared by
+ * the full and the slim manifest. The example leads with `ui` because models
+ * copy its key order, and a streamed spec cannot paint until `ui` arrives.
  */
 
 /**
@@ -40,10 +40,10 @@ export const specEnvelope: SpecEnvelope = {
     '(the StateManager seed — required when any node uses `bind` or reads ' +
     '`{state.*}`). The renderable tree field is named `ui` exactly — never ' +
     '`root`, `tree`, `view`, `body`, or `content`. Specs that use those ' +
-    'aliases will not render.',
+    'aliases will not render. Write `ui` before `state` so the interface can ' +
+    'draw while the rest of the spec streams in, and keep the seed `state` small.',
   example: {
     version: '1.0',
-    state: { draft: '', items: [] },
     ui: {
       type: 'flex',
       props: { direction: 'column', gap: '12px' },
@@ -51,5 +51,6 @@ export const specEnvelope: SpecEnvelope = {
         { type: 'input', bind: 'draft', props: { placeholder: 'Add an item' } },
       ],
     },
+    state: { draft: '', items: [] },
   },
 };

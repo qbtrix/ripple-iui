@@ -61,7 +61,7 @@ const SYSTEM = `You generate Ripple specs. Ripple renders a JSON spec into a liv
 
 OUTPUT RULES
 - Output ONLY a single JSON object. No markdown code fences, no prose before or after it.
-- Shape: {"version":"1.0","state":{...},"ui":{...}}. Write "state" BEFORE "ui" so the UI can render as it arrives.
+- Shape: {"version":"1.0","ui":{...},"state":{...}}. Write "ui" BEFORE "state" so the UI can render as it arrives, and keep the seed "state" small.
 - Use only widget types from the manifest below, with their documented props and events. Put two-way binds in the node's top-level "bind" field, e.g. "bind": "{state.tipPercent}". Event handlers go at node level, e.g. "on_click": {...}.
 - Build a genuinely interactive tool, not a static mockup: seed state with the user's numbers, bind inputs (number-input, slider, segmented, switch, checkbox) to state, derive every output from state with expressions so it updates live, and wire buttons with actions (set, toggle, push, remove, toast).
 - Every quantity the user mentions (amounts, counts, percentages) must be adjustable in the UI, and every derived number must follow from state. Never hardcode a copy of a state value in an expression: write state.people.length, not 4.
