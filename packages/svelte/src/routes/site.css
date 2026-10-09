@@ -12,6 +12,11 @@
    - Widget tokens: --primary/--background/--card/--accent/--border etc. are the
      shadcn tokens the rendered Ripple UI reads. Only the existing re-tints live
      here; site chrome reads --site-*, never a widget token it does not own.
+   - Frame: the --frame-* set is the one surface rendered Ripple output sits on
+     (widget card colour, a hairline, 12px radius, inner padding, and the one
+     tinted shadow), so a reader can always tell product from page. Site text
+     stays on the ground. Use .site-frame, or the tokens in a scoped rule.
+   - Display face: .site-display sets Bricolage on the hero headline only.
    - Glass (backdrop blur) is the top bar's alone. Theme: app.html starts dark,
      static/theme-init.js follows the OS unless the visitor chose. */
 
@@ -133,6 +138,13 @@
 	--code-bg: color-mix(in oklch, var(--site-ink-base) 4%, var(--site-ground));
 	--code-line: var(--site-line);
 	--code-ink: var(--site-ink);
+
+	/* The framed surface for rendered Ripple output. */
+	--frame-ground: var(--card);
+	--frame-line: var(--site-line);
+	--frame-radius: var(--radius-card);
+	--frame-pad: 24px;
+	--frame-shadow: var(--shadow-card);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -147,6 +159,32 @@ body {
 	background: var(--site-ground);
 	color: var(--site-ink);
 	-webkit-font-smoothing: antialiased;
+}
+
+.site-frame {
+	box-sizing: border-box;
+	padding: var(--frame-pad);
+	border: 1px solid var(--frame-line);
+	border-radius: var(--frame-radius);
+	background: var(--frame-ground);
+	box-shadow: var(--frame-shadow);
+}
+@media (max-width: 639.98px) {
+	:root,
+	.dark {
+		--frame-pad: 16px;
+	}
+}
+
+/* The hero headline's face. The self-hosted file is weight-only (no opsz axis),
+   so size, weight, tracking and leading carry the display feel. */
+.site-display {
+	font-family: var(--font-display);
+	font-weight: 650;
+	font-size: clamp(40px, 6vw, 72px);
+	line-height: 1.02;
+	letter-spacing: -0.035em;
+	text-wrap: balance;
 }
 
 /* JSON syntax tokens (docs code blocks, SpecExample). Ink ladder only: blue

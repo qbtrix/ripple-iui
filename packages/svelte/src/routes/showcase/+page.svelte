@@ -5331,7 +5331,7 @@
 <!-- Focused sub-route demos. The gallery below is a single dog-food spec; these
      standalone pages each render their own specs (card/stat/flow/spec) plus the
      three new RFC-12 pages (motion + the marketing & premium widget packs). -->
-<nav class="subroute-nav" aria-label="Showcase sub-routes">
+<nav class="subroute-nav" aria-label="Showcase sub-routes" data-pagefind-body data-pagefind-meta="title:Showcase">
   <span class="subroute-nav-label">Pages</span>
   <a href="/showcase/motion">Motion</a>
   <a href="/showcase/moving-indicator">Moving indicator</a>

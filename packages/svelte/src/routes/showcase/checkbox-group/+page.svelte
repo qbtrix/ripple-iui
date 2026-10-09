@@ -139,7 +139,7 @@
   };
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Checkbox group" class="showcase">
   <header class="showcase-header">
     <h1>Checkbox group — the gliding highlight</h1>
     <p>

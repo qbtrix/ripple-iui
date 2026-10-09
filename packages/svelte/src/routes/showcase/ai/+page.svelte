@@ -269,7 +269,7 @@
   };
 </script>
 
-<div class="mx-auto max-w-2xl space-y-10 p-8">
+<div data-pagefind-body data-pagefind-meta="title:AI-native display tier" class="mx-auto max-w-2xl space-y-10 p-8">
   <header class="space-y-1">
     <h1 class="text-2xl font-semibold">AI-native display tier</h1>
     <p class="text-sm text-muted-foreground">

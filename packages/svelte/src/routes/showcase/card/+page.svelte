@@ -3,7 +3,7 @@
   import Stat from '$lib/widgets/display/Stat.svelte';
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Card" class="showcase">
   <header class="showcase-header">
     <h1>Card — Visual QA</h1>
     <p>
