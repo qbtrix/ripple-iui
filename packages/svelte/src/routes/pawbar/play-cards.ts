@@ -127,8 +127,8 @@ const RED_ROUTE = 'M312 112 L236 112 Q216 112 214 128 L214 168 Q212 194 192 190 
 /** A two-leaflet valve at (x, y): flat when shut, swung down when open. */
 const valve = (id: string, x: number, y: number) =>
 	`<g id='${id}' stroke='#fff4f2' stroke-width='3.5' stroke-linecap='round' fill='none'>` +
-	`<path d='M${x - 15} ${y} L${x} ${y}'><animate attributeName='d' values='M${x - 15} ${y} L${x} ${y};M${x - 15} ${y} L${x - 4} ${y + 14};M${x - 15} ${y} L${x} ${y}' keyTimes='0;0.3;0.6' ${BEAT}/></path>` +
-	`<path d='M${x + 15} ${y} L${x} ${y}'><animate attributeName='d' values='M${x + 15} ${y} L${x} ${y};M${x + 15} ${y} L${x + 4} ${y + 14};M${x + 15} ${y} L${x} ${y}' keyTimes='0;0.3;0.6' ${BEAT}/></path>` +
+	`<path d='M${x - 15} ${y} L${x} ${y}'><animate attributeName='d' values='M${x - 15} ${y} L${x} ${y};M${x - 15} ${y} L${x - 4} ${y + 14};M${x - 15} ${y} L${x} ${y};M${x - 15} ${y} L${x} ${y}' keyTimes='0;0.3;0.6;1' ${BEAT}/></path>` +
+	`<path d='M${x + 15} ${y} L${x} ${y}'><animate attributeName='d' values='M${x + 15} ${y} L${x} ${y};M${x + 15} ${y} L${x + 4} ${y + 14};M${x + 15} ${y} L${x} ${y};M${x + 15} ${y} L${x} ${y}' keyTimes='0;0.3;0.6;1' ${BEAT}/></path>` +
 	`</g>`;
 
 /** Three dots riding a route, a third of the loop apart. */
