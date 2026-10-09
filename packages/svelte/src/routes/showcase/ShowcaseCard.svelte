@@ -68,7 +68,7 @@
 	<div class="meta">
 		<span class="title">{item.title}</span>
 		<span class="cat">{label}</span>
-		<span class="line">{item.line}</span>
+		<span class="line">{#each item.line.split('`') as part, i (i)}{#if i % 2}<code>{part}</code>{:else}{part}{/if}{/each}</span>
 	</div>
 </a>
 
@@ -128,6 +128,9 @@
 	.title {
 		font: 600 15px/1.35 var(--font-sans);
 		color: var(--site-ink);
+	}
+	.line code {
+		font: 0.9em/1 var(--font-mono);
 	}
 	.cat {
 		font: 400 13px/1.5 var(--font-sans);

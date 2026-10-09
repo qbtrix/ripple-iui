@@ -56,7 +56,7 @@
 		flows: ['flow', 'flows']
 	};
 	/** Desktop layout width a card's preview is drawn at before scaling; widgets render at their natural size. */
-	const WIDTH: Partial<Record<Facet, number>> = { apps: 1280, patterns: 1040, flows: 760 };
+	const WIDTH: Partial<Record<Facet, number>> = { apps: 1100, patterns: 1040, flows: 760 };
 
 	const label = (i: ShowcaseItem) =>
 		i.facet === 'widgets' ? (catTitle[i.category] ?? i.category) : i.facet === 'patterns' ? 'Page pattern' : i.category;
@@ -136,7 +136,7 @@
 		{/if}
 	</p>
 
-	<div class="grid">
+	<div class="cards" class:roomy={st.f !== 'widgets'}>
 		{#each shown as item (`${item.facet}:${item.id}`)}
 			<ShowcaseCard
 				{item}
@@ -315,10 +315,14 @@
 		color: var(--primary-ink);
 		cursor: pointer;
 	}
-	.grid {
+	.cards {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 		gap: 40px 24px;
+	}
+	/* Apps, patterns and flows are whole pages drawn small: fewer, wider cards. */
+	.cards.roomy {
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
 	}
 
 	@media (max-width: 639.98px) {

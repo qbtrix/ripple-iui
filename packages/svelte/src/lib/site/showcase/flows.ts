@@ -426,7 +426,7 @@ const settingsFlow: Spec = {
 		type: 'flex',
 		props: { direction: 'column', gap: '16px' },
 		children: [
-			{ type: 'page-header', props: { eyebrow: 'Account', title: 'Settings', subtitle: 'Edit and save. Every input is bound to draft state.' } },
+			{ type: 'page-header', props: { title: 'Settings', subtitle: 'Edit and save. Every input is bound to draft state.' } },
 
 			// Profile section
 			{
@@ -743,7 +743,7 @@ const invoiceFlow: Spec = {
 		type: 'flex',
 		props: { direction: 'column', gap: '12px' },
 		children: [
-			{ type: 'page-header', props: { eyebrow: 'Billing', title: 'New invoice', subtitle: 'Add line items; line totals and grand total update live.' } },
+			{ type: 'page-header', props: { title: 'New invoice', subtitle: 'Add line items; line totals and grand total update live.' } },
 
 			// Line items
 			{
@@ -875,7 +875,7 @@ const issueTrackerFlow: Spec = {
 			// Header
 			{
 				type: 'page-header',
-				props: { eyebrow: 'Project', title: 'Issues', subtitle: 'A complete spec where every button, dropdown, and filter is wired.' }
+				props: { title: 'Issues', subtitle: 'A complete spec where every button, dropdown, and filter is wired.' }
 			},
 
 			// Filter row

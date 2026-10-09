@@ -60,7 +60,7 @@
 	</nav>
 	<header class="head">
 		<h1>{title}</h1>
-		<p class="line">{line}</p>
+		<p class="line">{#each line.split('`') as part, i (i)}{#if i % 2}<code>{part}</code>{:else}{part}{/if}{/each}</p>
 		<p class="cat">{category}</p>
 	</header>
 
@@ -144,6 +144,9 @@
 		font: 400 17px/1.55 var(--font-sans);
 		color: var(--site-soft);
 		text-wrap: pretty;
+	}
+	.line code {
+		font: 0.9em/1 var(--font-mono);
 	}
 	.cat {
 		margin: 8px 0 0;
