@@ -3,8 +3,10 @@
 // aliases for the blocked widgets, markdown images and http links, `/\host`,
 // and CSS url(); and the flow-card review's handler bypasses (a whole-string
 // expression in a handler slot that runs an action object kept in state, and a
-// follow-up emitting a free-text event). The recorded chat scenarios must all
-// pass, and the widget allowlist must match the vendored manifest.
+// follow-up emitting a free-text event); and the node-slot review's bypass (a
+// whole-string expression in a prop the engine renders as a node). The recorded
+// chat scenarios must all pass, and the widget allowlist must match the vendored
+// manifest.
 
 import { describe, expect, test } from 'vitest';
 import { HOST_EVENTS, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
@@ -15,6 +17,7 @@ import manifest from '../../../static/manifest.json';
 const button = (on_click: unknown) => ({ ui: { type: 'button', props: { label: 'Go' }, on_click } });
 const prop = (key: string, value: string, type = 'image') => ({ ui: { type, props: { [key]: value } } });
 const text = (value: string) => ({ ui: { type: 'text', props: { text: value } } });
+const set = (target: string, value: string) => ({ action: 'set', target, value });
 
 describe('card shape', () => {
 	test('only version, ui and state at the top', () => {
@@ -162,6 +165,85 @@ describe('handler slots and state', () => {
 	test('only the handler names are gated, case-exact', () => {
 		expect(refuseCard({ ui: { type: 'metric', props: { label: 'Transactions', transactions: '1,204', reactions: 'many' } } })).toBeNull();
 		expect(refuseCard({ ui: { type: 'text' }, state: { onboarding: 'done', actionsTaken: 'none' } })).toBeNull();
+	});
+});
+
+describe('node slots', () => {
+	// The review's finding: a prop the engine renders as a node takes "{state.n}",
+	// so a node assembled in state at runtime renders without this check.
+	const node = { type: 'text', props: { text: 'hi' } };
+	const slots: [string, (v: unknown) => Record<string, unknown>][] = [
+		['settings-list items[].control', (v) => ({ type: 'settings-list', props: { items: [{ label: 'x', control: v }] } })],
+		['tabs panels[]', (v) => ({ type: 'tabs', props: { tabs: [{ value: 'a', label: 'A' }], panels: [v] } })],
+		['split start', (v) => ({ type: 'split', props: { start: v } })],
+		['split end', (v) => ({ type: 'split', props: { end: v } })],
+		['master-detail detail', (v) => ({ type: 'master-detail', props: { items: [{ id: 'a' }], detail: v } })],
+		['kanban cardTemplate', (v) => ({ type: 'kanban', props: { columns: [{ id: 'c', title: 'C' }], cardTemplate: v } })],
+		['data-grid columns[].formatter', (v) => ({ type: 'data-grid', props: { columns: [{ key: 'a', label: 'A', formatter: v }], rows: [{ a: 1 }] } })],
+		['tree-table columns[].formatter', (v) => ({ type: 'tree-table', props: { columns: [{ key: 'a', label: 'A', formatter: v }], rows: [{ a: 1 }] } })],
+		['virtual-list item', (v) => ({ type: 'virtual-list', props: { items: [1], item: v } })],
+		['popover content', (v) => ({ type: 'popover', props: { trigger: 'More', content: v } })],
+		['popover trigger', (v) => ({ type: 'popover', props: { trigger: v, content: 'Body' } })],
+		['hover-card content', (v) => ({ type: 'hover-card', props: { trigger: 'More', content: v } })],
+		['hover-card trigger', (v) => ({ type: 'hover-card', props: { trigger: v, content: 'Body' } })],
+		['tooltip trigger', (v) => ({ type: 'tooltip', props: { trigger: v, content: 'Tip' } })],
+		['context-menu trigger', (v) => ({ type: 'context-menu', props: { trigger: v, items: [{ label: 'Copy' }] } })]
+	];
+
+	test.each(slots)('%s refuses a whole-string expression and takes a literal node', (_, at) => {
+		for (const expr of ['{state.n}', '{item}', '{row.cell}']) expect(refuseCard({ ui: at(expr), state: { n: node } })).toBe('node_expression');
+		expect(refuseCard({ ui: at(node), state: { n: node } })).toBeNull();
+		// A literal node in the slot is still walked by every other rule.
+		expect(refuseCard({ ui: at({ type: 'embed', props: {} }) })).toBe('widget:embed');
+		expect(refuseCard({ ui: at({ type: 'button', on_click: { action: 'api' } }) })).toBe('action:api');
+	});
+
+	test.each([
+		['settings-list', 'items', { label: 'x', control: node }],
+		['data-grid', 'columns', { key: 'a', label: 'A', formatter: node }],
+		['tree-table', 'columns', { key: 'a', label: 'A', formatter: node }],
+		['tabs', 'panels', node]
+	])('the %s %s list holding node slots is literal: the list and each element', (type, key, element) => {
+		expect(refuseCard({ ui: { type, props: { [key]: '{state.rows}' } } })).toBe('node_expression');
+		expect(refuseCard({ ui: { type, props: { [key]: [element, '{state.row}'] } } })).toBe('node_expression');
+		expect(refuseCard({ ui: { type, props: { [key]: [element] } } })).toBeNull();
+	});
+
+	test("refuses the review's runtime build: set pieces a button into state, a slot renders it", () => {
+		const card = {
+			ui: {
+				type: 'flex',
+				children: [
+					{
+						type: 'input',
+						bind: 'q',
+						props: { label: 'Your name' },
+						on_focus: [set('n.type', 'button'), set('n.props.label', 'Go'), set('n.on_click.action', 'api'), set('n.on_click.url', '/api/v1/x')]
+					},
+					{ type: 'settings-list', props: { items: [{ label: 'More', control: '{state.n}' }] } }
+				]
+			}
+		};
+		expect(refuseCard(card)).toBe('node_expression');
+	});
+
+	test('no node takes its whole props from an expression', () => {
+		expect(refuseCard({ ui: { type: 'settings-list', props: '{state.p}' } })).toBe('props_expression');
+		expect(refuseCard({ ui: { type: 'ask-user-questions', props: '{state.p}' } })).toBe('props_expression');
+		expect(refuseCard({ ui: { type: 'flex', children: [{ type: 'text', props: '{state.p}' }] } })).toBe('props_expression');
+	});
+
+	test('text in a string-or-node slot, interpolation, and the same keys elsewhere still pass', () => {
+		expect(refuseCard({ ui: { type: 'popover', props: { trigger: 'Details', content: 'Total: {state.n}' } }, state: { n: 3 } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'tooltip', props: { trigger: '{state.a} and {state.b}', content: 'Tip' } } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'table', props: { columns: [], rows: '{state.rows}' } }, state: { rows: [] } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'date-picker', props: { start: '{state.from}', end: '{state.to}' } } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'text', props: { content: '{state.msg}', item: '{item}' } } })).toBeNull();
+	});
+
+	test('while streaming, an expression is refused once its closing brace arrives', () => {
+		expect(refuseCard({ ui: { type: 'split', props: { start: '{state.' } } }, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'split', props: { start: '{state.n}' } } }, { partial: true })).toBe('node_expression');
 	});
 });
 
