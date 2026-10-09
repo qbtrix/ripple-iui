@@ -15,7 +15,9 @@
     the resolved bind path, so a no-JS <form action> POST carries the field.
   - Dispatch tiers: control flow (if/each), organism refs (`{ organism, props }`
     with no `type`, routed to OrganismRenderer), catalog widgets, and a loud
-    "not in the catalog" box for unknown types.
+    "not in the catalog" box for unknown types. While the stream is open
+    ('ui-streaming' is 'active') that box is held back: a typeless node renders
+    nothing and an unknown type gets the pending placeholder.
   - Default children go to the widget as a `children` snippet prop only when
     there are any; named slots (header/footer/sidebar/topbar/actions) likewise.
   - node.motion wraps the widget in a block-level div with use:withMotion (it
@@ -435,13 +437,17 @@
 	a consumer-facing card, so the description stays generic and the message
 	goes to `detail` (small monospace, built for exactly this).
 -->
+{#snippet nodePending()}
+	<div
+		data-ripple-node-pending={node.id ?? ''}
+		aria-hidden="true"
+		class="h-8 rounded bg-muted motion-safe:animate-pulse"
+	></div>
+{/snippet}
+
 {#snippet nodeFailed(error: unknown, reset: () => void)}
 	{#if getStreamPhase?.() === 'active'}
-		<div
-			data-ripple-node-pending={node.id ?? ''}
-			aria-hidden="true"
-			class="h-8 rounded bg-muted motion-safe:animate-pulse"
-		></div>
+		{@render nodePending()}
 	{:else}
 		<div role="alert" data-ripple-node-error={node.id}>
 			<ErrorState
@@ -610,6 +616,15 @@
 			/>
 		{/if}
 		</svelte:boundary>
+	{:else if getStreamPhase?.() === 'active'}
+		<!--
+			Mid-stream: a node with no type yet (`{}` until its `"type"` string
+			closes) renders nothing; one whose type isn't in the catalog holds a
+			quiet placeholder, since the stream may still be catching up.
+		-->
+		{#if node.type}
+			{@render nodePending()}
+		{/if}
 	{:else}
 		<!--
 			Unknown widget type — the node's `type` is not in the widget catalog.
