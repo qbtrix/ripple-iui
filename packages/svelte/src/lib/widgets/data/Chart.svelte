@@ -246,8 +246,8 @@
 						lineStyle: { color, width: 2 },
 						itemStyle: { color },
 						areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-							{ offset: 0, color: color + '40' },
-							{ offset: 1, color: color + '05' },
+							{ offset: 0, color: applyAlpha(color, 0.25) },
+							{ offset: 1, color: applyAlpha(color, 0.02) },
 						]}} : undefined,
 						symbol: 'circle', symbolSize: 4,
 					};
@@ -275,8 +275,8 @@
 						lineStyle: { color: itemColors[0], width: 2 },
 						itemStyle: { color: itemColors[0] },
 						areaStyle: type === 'area' ? { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-							{ offset: 0, color: itemColors[0] + '40' },
-							{ offset: 1, color: itemColors[0] + '05' },
+							{ offset: 0, color: applyAlpha(itemColors[0], 0.25) },
+							{ offset: 1, color: applyAlpha(itemColors[0], 0.02) },
 						]}} : undefined,
 						symbol: 'circle', symbolSize: 4,
 					}],
@@ -341,8 +341,8 @@
 					lineStyle: { color: lineColor, width: 1.5 },
 					areaStyle: {
 						color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-							{ offset: 0, color: lineColor + '30' },
-							{ offset: 1, color: lineColor + '05' },
+							{ offset: 0, color: applyAlpha(lineColor, 0.19) },
+							{ offset: 1, color: applyAlpha(lineColor, 0.02) },
 						]}
 					},
 				}],
@@ -378,7 +378,7 @@
 				visualMap: {
 					min: minHeat, max: maxHeat,
 					calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
-					inRange: { color: [itemColors[0] + '20', itemColors[0]] },
+					inRange: { color: [applyAlpha(itemColors[0], 0.125), itemColors[0]] },
 					textStyle: { color: tc.fgSoft, fontSize: 10 },
 				},
 				series: [{
@@ -433,7 +433,7 @@
 					type: 'radar',
 					data: [{
 						value: values, name: title || '',
-						areaStyle: { color: itemColors[0] + '30' },
+						areaStyle: { color: applyAlpha(itemColors[0], 0.19) },
 						lineStyle: { color: itemColors[0], width: 2 },
 						itemStyle: { color: itemColors[0] },
 						symbol: 'circle', symbolSize: 4,
