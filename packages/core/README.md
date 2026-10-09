@@ -19,7 +19,7 @@ const rt = createHeadlessRuntime({
   spec: {
     type: 'container',
     children: [
-      { type: 'text', id: 'label', props: { content: 'Count: {state.count}' } },
+      { type: 'text', id: 'label', props: { text: 'Count: {state.count}' } },
       {
         type: 'button',
         id: 'inc',
@@ -30,9 +30,9 @@ const rt = createHeadlessRuntime({
   state: { count: 0 }
 });
 
-rt.findById('label').props.content;              // 'Count: 0'
+rt.findById('label').props.text;                 // 'Count: 0'
 await rt.dispatch(rt.findById('inc'), 'onclick');
-rt.findById('label').props.content;              // 'Count: 1'
+rt.findById('label').props.text;                 // 'Count: 1'
 ```
 
 ## What's in here
@@ -74,8 +74,8 @@ prop/event pair to wire it to, and its raw handler specs.
 
 ## Docs
 
-Full documentation lives in [`docs/`](../../docs) at the repo root. The
-headless runtime specifically: [`docs/headless.md`](../../docs/headless.md).
+Full documentation: https://ripple.pocketpaw.xyz/docs. The headless runtime specifically:
+https://ripple.pocketpaw.xyz/docs/concepts/headless. API: https://ripple.pocketpaw.xyz/docs/api/core.
 
 ## License
 
