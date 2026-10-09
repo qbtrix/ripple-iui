@@ -1,7 +1,10 @@
 // scripts/record-scenario.ts — Record a real model stream as a /live replay fixture.
 //
 //   bun scripts/record-scenario.ts --id bill-splitter --title "Split the bill" \
-//     --prompt "Dinner for 4 came to ..." [--model sonnet] [--store <base-url>]
+//     --prompt "Dinner for 4 came to ..." [--model sonnet] [--store <base-url>] [--out <dir>]
+//
+// --out writes the fixture to <dir>/<id>.json instead of the fixtures dir
+// (scratch runs, e.g. a cheap-model comparison).
 //
 // --store (store-backed scenarios such as order-burger) fetches the test
 // store's real menu from <base-url>/api/menu and appends a STORE section to
@@ -15,7 +18,10 @@
 // recording. Keeps only the assistant's text deltas, timestamps each one in
 // ms since the first delta, and clamps any single gap to MAX_GAP_MS.
 //
-// The fixture is written to src/routes/live/fixtures/<id>.json ONLY when the
+// The model sees the spec envelope, the action grammar and the widgets in
+// CATEGORIES plus the DATA_WIDGETS listed by name; it prints the size of that
+// manifest slice. The fixture is written to src/routes/live/fixtures/<id>.json
+// (or --out) ONLY when the
 // recorded text parses as JSON and every node type is in the widget catalog.
 // Dev-time only: the site never calls a model at runtime.
 // Fixture shape is a contract (see src/routes/live/scenarios.ts).
@@ -31,6 +37,12 @@ const MAX_GAP_MS = 400;
 // Widget categories offered to the model. The full manifest is ~250 KB; these
 // cover small interactive tools without the marketing/research/vertical sets.
 const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'overlay', 'interactive']);
+// Plus these by name (whole composite + research categories would add ~100 KB):
+// the data widgets and the summary pieces the SYSTEM rules point at.
+const DATA_WIDGETS = new Set([
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck',
+	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
+]);
 
 const here = dirname(fileURLToPath(import.meta.url));
 const { values: args } = parseArgs({
@@ -39,11 +51,12 @@ const { values: args } = parseArgs({
 		title: { type: 'string' },
 		prompt: { type: 'string' },
 		model: { type: 'string', default: 'sonnet' },
-		store: { type: 'string' }
+		store: { type: 'string' },
+		out: { type: 'string' }
 	}
 });
 if (!args.id || !args.title || !args.prompt || !/^[a-z0-9-]+$/.test(args.id)) {
-	console.error('usage: bun scripts/record-scenario.ts --id <kebab-id> --title "<title>" --prompt "<text>" [--model sonnet]');
+	console.error('usage: bun scripts/record-scenario.ts --id <kebab-id> --title "<title>" --prompt "<text>" [--model sonnet] [--store <url>] [--out <dir>]');
 	process.exit(2);
 }
 
@@ -53,9 +66,10 @@ const reference = {
 	spec: manifest.spec,
 	actions: manifest.actions,
 	widgets: manifest.widgets
-		.filter((w: { category: string }) => CATEGORIES.has(w.category))
+		.filter((w: { category: string; type: string }) => CATEGORIES.has(w.category) || DATA_WIDGETS.has(w.type))
 		.map(({ pocket: _pocket, ...w }: Record<string, unknown>) => w)
 };
+const referenceBytes = JSON.stringify(reference).length;
 
 const SYSTEM = `You generate Ripple specs. Ripple renders a JSON spec into a live, interactive UI while the JSON is still streaming in.
 
@@ -63,11 +77,13 @@ OUTPUT RULES
 - Output ONLY a single JSON object. No markdown code fences, no prose before or after it.
 - Shape: {"version":"1.0","state":{...},"ui":{...}}. Write "state" BEFORE "ui" so the UI can render as it arrives.
 - Use only widget types from the manifest below, with their documented props and events. Put two-way binds in the node's top-level "bind" field, e.g. "bind": "{state.tipPercent}". Event handlers go at node level, e.g. "on_click": {...}.
-- Build a genuinely interactive tool, not a static mockup: seed state with the user's numbers, bind inputs (number-input, slider, segmented, switch, checkbox) to state, derive every output from state with expressions so it updates live, and wire buttons with actions (set, toggle, push, remove, toast).
-- Every quantity the user mentions (amounts, counts, percentages) must be adjustable in the UI, and every derived number must follow from state. Never hardcode a copy of a state value in an expression: write state.people.length, not 4.
+- Match the card to the answer (see CARD SHAPE). When no data widget fits, build a genuinely interactive tool from primitives, not a static mockup: seed state with the user's numbers, bind inputs (number-input, slider, segmented, switch, checkbox) to state, derive every output from state with expressions so it updates live, and wire buttons with actions (set, toggle, push, remove, toast).
+- In a primitives tool, every quantity the user mentions (amounts, counts, percentages) must be adjustable in the UI, and every derived number must follow from state. Never hardcode a copy of a state value in an expression: write state.people.length, not 4.
 - Lists the user can grow or shrink live in state as arrays, render with "each", and change with push / remove actions. Inside "each", bind a row field with a templated path ("bind": "people.{index}.drinks") and remove the row with {"action":"remove","target":"people","value":"{item}"} (remove's "index" only accepts a literal number, so never "index": "{index}").
 - Write every node's keys in this order: "type", "props", then "bind" and handlers, then "children", so a widget has its props before it binds.
-- One clean card-sized layout (roughly 15 to 35 nodes). Short labels, plain language, no lorem ipsum, no invented brand names.
+- One clean card: a data widget card is 1 to 5 nodes; a primitives tool roughly 15 to 35 nodes. Short labels, plain language, no lorem ipsum, no invented brand names.
+- Data rows (stops, items, exercises, cards, ingredients, table rows) name their category "kind", never "type": a row's "type" is read as a widget.
+- Never write a URL: no http(s) links, no image "src", no CSS url(). Links and images use same-site paths only (/page, #section), or leave the image out; a data widget shows an icon tile when a photo is missing.
 - Never attach a specific price, rating, opening hours or any other claim to a real named business, venue, attraction or brand. Real public places (parks, temples, neighbourhoods) can appear, but an item that names a real place costs 0, even as "<place> entry"; put any cost on a separate unnamed item ("garden entry", "museum ticket", "airport train", "dinner out") with a round estimate. Placeholders and examples use generic words, never real brands.
 - Check every displayed number in the finished state too: a 1-based position or counter never runs past its total (show "20 of 20" when done, not 21).
 
@@ -83,8 +99,22 @@ EXPRESSIONS (verified against the engine; follow exactly)
 - There is no exponent operator (no ** or ^) and no Math functions. Write compound growth as repeated multiplication starting from a state path, e.g. three years at a yearly rate: state.start * (1 + state.rate / 100) * (1 + state.rate / 100) * (1 + state.rate / 100).
 - Chart "data" items resolve expressions, and the chart redraws when they change, so a chart can follow state: {"label":"Jul","value":"{state.jul}"}.
 
+CARD SHAPE (pick this first)
+- A data widget carries its own controls, totals, charts and progress. When one fits, the card is that widget: put the user's numbers and items in its props, the one-line takeaway in its "verdict" ({"text","status"}, at most 140 characters), and never duplicate its inputs or outputs with sliders, stats, progress bars or charts beside it.
+  - savings, deposits, compound growth: growth-projection
+  - splitting a bill or a tip between people: bill-split
+  - a trip or a day-by-day plan: itinerary
+  - a week of meals: meal-plan; one dish: recipe
+  - an interval, circuit or HIIT workout: interval-workout
+  - a study or flip-card deck: flashcard-deck
+  - a menu or food order: menu-order; a reservation or appointment: booking
+  - sales, KPIs or a dashboard over records: exec-dashboard with "rows", "measures", "dimensions" (bind "filters")
+  - choosing between options: comparison-layout
+- A summary of one thing (a person, an account, an order) starts with entity-detail (title, status, kpis, meta) and puts its sections in its children; dated events go in a timeline, plain facts in a kv-table.
+- A small tool no data widget covers (a calculator, a checklist, an explainer) is built from primitives with the rules above.
+
 LAYOUT
-- The tool must also work in a card about 300px wide (phones). Use grid "columns" of 2 at most. A number-input needs about 140px, so give number inputs and sliders a full-width row or a 2-column grid. A flex row with more than two children sets "wrap": true.
+- The card is about 720px wide on a desktop and must still read on a 360px phone. For a row of tiles give the grid "columns": "repeat(auto-fit, minmax(150px, 1fr))" so it wraps; otherwise at most 2 fixed grid columns. A number-input needs about 140px, so give number inputs and sliders a full-width row or a 2-column grid. A flex row with more than two children sets "wrap": true.
 
 MANIFEST (spec envelope, action grammar, widgets)
 ${JSON.stringify(reference)}${args.store ? await storeSection(args.store) : ''}`;
@@ -99,6 +129,7 @@ async function storeSection(base: string): Promise<string> {
 	return `
 
 STORE ORDER CONTEXT (this request orders from a real test store; follow exactly)
+- Build this order from primitives as described here, not with menu-order: the page's checkout reads exactly this contract.
 - The store's menu, with real ids and prices. Use ids, names and prices verbatim; never invent an item:
 ${JSON.stringify(menu)}
 - Offer every Burgers item plus two Appetizers as sides and two or three Drinks. Keep them in state as "menu": an array of {"id","name","price","category","qty","line"} where price is a number, qty is how many the user wants (seed from the request, else 0) and line = price * qty.
@@ -123,7 +154,10 @@ const cmd = [
 	'--disable-slash-commands',
 	'--no-session-persistence'
 ];
-console.error(`recording ${args.id} with ${args.model} in ${cwd} (${SYSTEM.length} char system prompt)...`);
+console.error(
+	`recording ${args.id} with ${args.model} in ${cwd} (${SYSTEM.length} char system prompt; ` +
+		`manifest slice ${reference.widgets.length} widgets, ${(referenceBytes / 1024).toFixed(1)} KB)...`
+);
 
 const proc = Bun.spawn(cmd, { cwd, stdout: 'pipe', stderr: 'inherit' });
 const raw: { at: number; text: string }[] = [];
@@ -200,6 +234,6 @@ const fixture = {
 	recordedAt: new Date().toISOString(),
 	chunks
 };
-const out = resolve(here, `../src/routes/live/fixtures/${args.id}.json`);
+const out = resolve(args.out ?? resolve(here, '../src/routes/live/fixtures'), `${args.id}.json`);
 writeFileSync(out, JSON.stringify(fixture, null, 1) + '\n', 'utf-8');
 console.error(`wrote ${out}: ${chunks.length} chunks, ${text.length} chars, ${chunks.at(-1)!.t} ms`);

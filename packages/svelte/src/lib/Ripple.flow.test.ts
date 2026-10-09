@@ -22,17 +22,23 @@ import Ripple from './Ripple.svelte';
 import { buildOnboardingWizard } from './intent/fixtures/onboarding-wizard.js';
 import type { TerminalResult } from './intent/chain-executor.svelte.js';
 
+// A choice card is a native radio named by its label span (aria-labelledby);
+// every other control is named by its text.
+const nameOf = (el: HTMLElement) => {
+	const by = el.getAttribute('aria-labelledby');
+	return (by ? el.ownerDocument.getElementById(by) : el)?.textContent?.trim();
+};
+
 function clickButton(container: HTMLElement, label: string) {
-	// Options render as `<button role="radio">` inside a radiogroup (the
-	// single-select a11y pattern), so their accessible role is "radio", not
-	// "button". Search both roles to find a labelled control to click.
+	// Options render as choice cards: native radios inside a radiogroup, so
+	// their role is "radio", not "button". Search both roles.
 	const q = within(container);
 	const candidates = [...q.queryAllByRole('button'), ...q.queryAllByRole('radio')];
-	const btn = candidates.find((b) => b.textContent?.trim() === label);
+	const btn = candidates.find((b) => nameOf(b) === label);
 	if (!btn) {
 		throw new Error(
 			`control "${label}" not found; have: ${candidates
-				.map((b) => b.textContent?.trim())
+				.map(nameOf)
 				.join(', ')}`
 		);
 	}
@@ -94,6 +100,8 @@ describe('Ripple auto-detects a Chain Flow (bare top-level root)', () => {
 			label: 'Focus on my own work'
 		});
 		expect(result.payload['enter_details_formData']).toEqual({ workspace: 'Acme HQ' });
+		// `workspace` is bound AND sent as formData, so it is not repeated under `state`.
+		expect(result.payload.state).toBeUndefined();
 	});
 
 	it('mounts exactly ONE FlowRunner — the step host does not recurse', () => {
@@ -195,5 +203,110 @@ describe('Ripple leaves NON-chain specs byte-identical (zero behavior change)', 
 		expect(onEvent).toHaveBeenCalled();
 		const event = onEvent.mock.calls.at(-1)![0];
 		expect(event.name).toBe('demo.save');
+	});
+});
+
+// The chat-card shape for the flow-state tests below.
+function tripCard() {
+	return {
+		ui: {
+			flowId: 'trip_days',
+			ui: {
+				type: 'container',
+				children: [
+					{ type: 'input', bind: 'days', props: { label: 'Days' } },
+					{
+						type: 'button',
+						props: { label: 'Next' },
+						on_click: { action: 'emit', target: 'flow.next', value: {} }
+					}
+				]
+			},
+			chain: {
+				flowId: 'trip_summary',
+				ui: {
+					type: 'container',
+					children: [
+						{ type: 'text', props: { text: 'Staying {state.days} days' } },
+						{
+							type: 'button',
+							props: { label: 'Book' },
+							on_click: { action: 'emit', target: 'flow.submit', value: {} }
+						}
+					]
+				},
+				onComplete: { kind: 'chat', message: 'Book it' }
+			}
+		},
+		state: { days: 3 }
+	};
+}
+
+describe("a flow card seeds its steps from the card's own `state`", () => {
+	// The chat-card shape: the chain root is wrapped under `ui`, and the card's
+	// `state` sits beside it at the top. Step 1 binds an input to `days`; step 2
+	// reads `{state.days}`. Before the fix the runner got the host's state (none
+	// here), so the input rendered empty and step 2 never saw the value.
+	it('renders the step-1 input with the seeded value', () => {
+		const { container } = render(Ripple, { props: { spec: tripCard() } });
+		expect(container.querySelector('.flow-runner')).not.toBeNull();
+		expect(container.querySelector('input')?.value).toBe('3');
+	});
+
+	it('step 2 reads the seeded value after flow.next', async () => {
+		const { container } = render(Ripple, { props: { spec: tripCard() } });
+		await clickButton(container, 'Next');
+		expect(container.textContent).toContain('Staying 3 days');
+	});
+
+	it('carries a value the visitor typed in step 1 into step 2', async () => {
+		const { container } = render(Ripple, { props: { spec: tripCard() } });
+		await fireEvent.input(container.querySelector('input')!, { target: { value: '5' } });
+		await clickButton(container, 'Next');
+		expect(container.textContent).toContain('Staying 5 days');
+	});
+
+	it("a step's own state is a default: Back keeps the typed value", async () => {
+		const card = tripCard();
+		(card.ui as Record<string, unknown>).state = { days: 1 };
+		const { container } = render(Ripple, { props: { spec: card } });
+		// The card's top-level state (3) wins over the step's default (1).
+		expect(container.querySelector('input')?.value).toBe('3');
+		await fireEvent.input(container.querySelector('input')!, { target: { value: '5' } });
+		await clickButton(container, 'Next');
+		await fireEvent.click(container.querySelector('.flow-runner__back')!);
+		expect(container.querySelector('input')?.value).toBe('5');
+	});
+
+	it('hands the bound values to onComplete under payload.state', async () => {
+		const onComplete = vi.fn<(r: TerminalResult) => void>();
+		const { container } = render(Ripple, { props: { spec: tripCard(), onComplete } });
+		await fireEvent.input(container.querySelector('input')!, { target: { value: '5' } });
+		await clickButton(container, 'Next');
+		await clickButton(container, 'Book');
+		expect(onComplete).toHaveBeenCalledTimes(1);
+		expect(onComplete.mock.calls[0][0].payload.state).toEqual({ days: '5' });
+	});
+});
+
+describe('choice cards stream', () => {
+	it('a streamed flow select step renders the same cards as the whole spec', async () => {
+		const { expectStreamParity } = await import('./streaming/__fixtures__/stream-parity.js');
+		const opt = (id: string, label: string, description?: string) => ({
+			type: 'button',
+			props: { label, ...(description ? { description } : {}) },
+			on_click: { action: 'emit', target: 'flow.submit', value: { selection: { id, label } } }
+		});
+		const { whole } = await expectStreamParity({
+			ui: {
+				flowId: 'main_use',
+				intent: 'select',
+				title: 'What will you use it for most?',
+				onComplete: { kind: 'chat', message: 'Recommend a laptop.' },
+				ui: { type: 'flex', props: { direction: 'column', gap: '8px' }, children: [opt('work', 'Work and study', 'Docs, email, video calls'), opt('gaming', 'Gaming'), opt('everyday', 'Everyday browsing')] }
+			}
+		});
+		expect(whole.querySelectorAll('[data-option-card]')).toHaveLength(3);
+		expect(whole.querySelector('[data-option-card="gaming"] [data-choice-icon]')?.getAttribute('data-choice-icon')).toBe('gaming');
 	});
 });

@@ -3,13 +3,22 @@
   @description Multi-step shipment / order / fulfillment status with optional
   embedded live map and event timeline. Composes the existing `map` widget
   for the courier position + route, and renders a horizontal stepper inline.
+  The map frames the whole trip (origin, destination, route, courier, 32px
+  padding) at mount and refits only when origin or destination move. The route
+  is latched: an empty `route` (a tracker API's final state) keeps the last one
+  drawn, and a null `tracker` just drops the courier marker.
 
   Use cases: package delivery, courier tracking, RMA, ticket lifecycle,
   manufacturing job status, build pipeline, repair status.
+
+  Two default pipelines: delivery (placed to delivered) and pickup (placed to
+  picked-up, chosen when status is ready-for-pickup or picked-up). Reaching the
+  last step by `status` (or the last step having `completedAt`) renders it done
+  with a check, not active, and the header uses that step's label.
 -->
 <script lang="ts">
   import { safeUrl } from '@ripple-ui/core';
-  import { getContext } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
   import Icon from '$lib/widgets/display/Icon.svelte';
@@ -27,6 +36,8 @@
     | 'in-transit'
     | 'out-for-delivery'
     | 'delivered'
+    | 'ready-for-pickup'
+    | 'picked-up'
     | 'failed'
     | 'cancelled';
 
@@ -142,7 +153,6 @@
   const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
   const stateManager = getContext<StateManager | undefined>('ui-state');
 
-  // Default 5-step pipeline.
   const DEFAULT_STEPS: { id: DefaultStatus; label: string }[] = [
     { id: 'placed', label: 'Placed' },
     { id: 'confirmed', label: 'Confirmed' },
@@ -151,10 +161,18 @@
     { id: 'out-for-delivery', label: 'Out for delivery' },
     { id: 'delivered', label: 'Delivered' }
   ];
+  const PICKUP_STEPS: { id: DefaultStatus; label: string }[] = [
+    { id: 'placed', label: 'Placed' },
+    { id: 'confirmed', label: 'Confirmed' },
+    { id: 'preparing', label: 'Preparing' },
+    { id: 'ready-for-pickup', label: 'Ready for pickup' },
+    { id: 'picked-up', label: 'Picked up' }
+  ];
 
   const effectiveSteps = $derived.by<Step[]>(() => {
     if (steps && steps.length > 0) return steps;
-    return DEFAULT_STEPS.map((s) => ({ id: s.id, label: s.label }));
+    const base = status === 'ready-for-pickup' || status === 'picked-up' ? PICKUP_STEPS : DEFAULT_STEPS;
+    return base.map((s) => ({ id: s.id, label: s.label }));
   });
 
   const activeIdx = $derived.by(() => {
@@ -175,7 +193,15 @@
   });
 
   const isFailed = $derived(status === 'failed' || status === 'cancelled' || effectiveSteps.some((s) => s.failed));
-  const isComplete = $derived(status === 'delivered' || activeIdx === effectiveSteps.length - 1 && effectiveSteps[activeIdx]?.completedAt);
+  const lastStep = $derived(effectiveSteps[effectiveSteps.length - 1]);
+  // The final step is done, not in progress, once status lands on it or it has
+  // a completion time. An explicit `current`/`currentStep` on it without either
+  // still reads as in progress (e.g. a pipeline's last "Deploy" stage).
+  const finished = $derived(
+    !isFailed && activeIdx === effectiveSteps.length - 1 && (status === lastStep?.id || Boolean(lastStep?.completedAt))
+  );
+  const isComplete = $derived(finished || status === 'delivered');
+  const completeLabel = $derived(finished ? lastStep.label : 'Delivered');
 
   const computedShowMap = $derived(
     showMap !== undefined
@@ -194,9 +220,18 @@
     return m;
   });
 
+  // A tracking API may send an empty route once the trip ends; keep drawing
+  // the last one it sent. ponytail: never cleared, so a new destination without
+  // a new route keeps the old line; clear on tripKey change if a host does that.
+  let lastRoute: LatLng[] = [];
+  const tripRoute = $derived.by<LatLng[]>(() => {
+    if (route && route.length > 0) lastRoute = route;
+    return lastRoute;
+  });
+
   const mapPaths = $derived.by(() => {
-    if (route && route.length > 1) {
-      return [{ id: 'route', points: route, color: 'oklch(0.55 0.18 250)', weight: 4, dashed: true, animate: true }];
+    if (tripRoute.length > 1) {
+      return [{ id: 'route', points: tripRoute, color: 'oklch(0.55 0.18 250)', weight: 4, dashed: true, animate: true }];
     }
     if (origin?.lat !== undefined && origin?.lng !== undefined && destination?.lat !== undefined && destination?.lng !== undefined) {
       return [{ id: 'route', points: [[origin.lat, origin.lng], [destination.lat, destination.lng]] as LatLng[], color: 'oklch(0.55 0.18 250)', weight: 3, dashed: true, animate: true }];
@@ -221,6 +256,27 @@
         follow: followTracker
       }
     ];
+  });
+
+  // Frame the whole trip: origin, destination, route and courier. Keyed on the
+  // origin/destination coordinates only (a string, so an equal value stops
+  // here), so courier polling never refits over the visitor's pan and zoom.
+  const tripKey = $derived(JSON.stringify([origin?.lat, origin?.lng, destination?.lat, destination?.lng]));
+  const tripBounds = $derived.by<[LatLng, LatLng] | undefined>(() => {
+    void tripKey;
+    return untrack(() => {
+      const pts: LatLng[] = [...tripRoute];
+      if (origin?.lat !== undefined && origin?.lng !== undefined) pts.push([origin.lat, origin.lng]);
+      if (destination?.lat !== undefined && destination?.lng !== undefined) pts.push([destination.lat, destination.lng]);
+      if (tracker) pts.push([tracker.lat, tracker.lng]);
+      const lats = pts.map((p) => p[0]).filter(Number.isFinite);
+      const lngs = pts.map((p) => p[1]).filter(Number.isFinite);
+      if (lats.length < 2 || lngs.length < 2) return undefined;
+      const sw: LatLng = [Math.min(...lats), Math.min(...lngs)];
+      const ne: LatLng = [Math.max(...lats), Math.max(...lngs)];
+      // A single spot has no extent; center + zoom handles that.
+      return sw[0] === ne[0] && sw[1] === ne[1] ? undefined : [sw, ne];
+    });
   });
 
   const mapCenter = $derived.by<LatLng>(() => {
@@ -250,11 +306,11 @@
   <header class="rorder-header">
     <div class="rorder-header-main">
       <div class="rorder-eyebrow">Order #{orderId}</div>
-      <h2 class="rorder-title">{title ?? (isFailed ? 'Order paused' : isComplete ? 'Delivered' : 'Tracking your order')}</h2>
+      <h2 class="rorder-title">{title ?? (isFailed ? 'Order paused' : isComplete ? completeLabel : 'Tracking your order')}</h2>
       {#if eta}
         <p class="rorder-eta">
           <Icon name="clock" size={13} />
-          {isComplete ? 'Delivered' : 'ETA'}: <span class="rorder-eta-value">{eta}</span>
+          {isComplete ? completeLabel : 'ETA'}: <span class="rorder-eta-value">{eta}</span>
         </p>
       {/if}
     </div>
@@ -276,7 +332,7 @@
   <!-- Stepper -->
   <ol class={cn('rorder-steps', isFailed && 'rorder-steps-failed')}>
     {#each effectiveSteps as s, i}
-      {@const state = i < activeIdx ? 'done' : i === activeIdx ? (isFailed ? 'failed' : 'active') : 'pending'}
+      {@const state = i < activeIdx || (i === activeIdx && finished) ? 'done' : i === activeIdx ? (isFailed ? 'failed' : 'active') : 'pending'}
       <li class={cn('rorder-step', `rorder-step-${state}`)}>
         <span class="rorder-step-pip">
           {#if state === 'done'}
@@ -306,6 +362,8 @@
           tiles={mapTiles}
           center={mapCenter}
           zoom={12}
+          bounds={tripBounds}
+          boundsPadding={32}
           height={mapHeight}
           markers={mapMarkers}
           paths={mapPaths}

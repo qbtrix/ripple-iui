@@ -38,7 +38,7 @@ That spec is a fully working two-way-bound form. No glue code.
 
 Three things, in order of how often you'll touch them:
 
-1. **Renders 189 typed widgets from JSON.** Every node in the tree (`{ "type": "...", "props": {...}, "children": [...] }`) maps to a Svelte component — `flex`, `card`, `kanban`, `chart`, `comparison-layout`, `wizard-layout`, `pricing-table`, all of them. The full catalog with prop schemas lives in [`dist/manifest.json`](./dist/manifest.json).
+1. **Renders 197 typed widgets from JSON.** Every node in the tree (`{ "type": "...", "props": {...}, "children": [...] }`) maps to a Svelte component — `flex`, `card`, `kanban`, `chart`, `comparison-layout`, `wizard-layout`, `pricing-table`, all of them. The full catalog with prop schemas lives in [`dist/manifest.json`](./dist/manifest.json).
 
 2. **Wires state and interactivity declaratively.** `state` is a top-level object on the spec. Inputs use `"bind": "<state-path>"` for two-way binding. Buttons fire `on_click` action chains (`set`, `push`, `remove`, `toggle`, `validate`, `branch`, `confirm`, `api`, `navigate`, `toast`, `emit`). Expressions inside any string — `{state.count + 1}`, `{state.x > 0 ? 'yes' : 'no'}`, `{item.price}` — are resolved at render time against state and loop context.
 
@@ -92,13 +92,13 @@ Three reasons that compound:
 
 1. **LLMs produce structured data better than they produce code.** A model emits a spec like the one above with high reliability; the same model writing equivalent Svelte code is several times more error-prone.
 2. **Specs are inspectable, diffable, persistable.** You can save a UI to a database, send it over the wire, replay it from a log, run a regression test against it. JSX-as-rendered output gives you none of that.
-3. **The contract is small.** Every widget's prop schema lives in `dist/manifest.json` (189 widgets). A model can fetch it once and have a complete catalog, including runnable examples. New widgets ship by adding to the registry — no SDK update on the agent side.
+3. **The contract is small.** Every widget's prop schema lives in `dist/manifest.json` (197 widgets). A model can fetch it once and have a complete catalog, including runnable examples. New widgets ship by adding to the registry — no SDK update on the agent side.
 
 ## Features
 
 - **JSON-driven rendering** — Define UIs as data, not code
 - **Two spec formats** — Low-level UISpec (v1.0) for full control, or high-level UniversalSpec (v2.0) for intent-based UIs
-- **189 built-in widgets** across nine categories — layout, display, input, data, overlay, control, composite, research, and enterprise verticals
+- **197 built-in widgets** across nine categories — layout, display, input, data, overlay, control, composite, research, and enterprise verticals
 - **Reactive expressions** — `{state.user.name}` syntax with comparisons, ternary, and logical operators
 - **State management** — Svelte 5 rune-based with dot-notation path access
 - **Event system** — Declarative handlers for state updates, API calls, navigation, toasts, and custom events

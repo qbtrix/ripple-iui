@@ -12,6 +12,10 @@
     no parse renders only the error line.
   - State: seeded once from spec.state + the `state` prop. Later spec.state
     changes sync key by key against a private copy of what the spec last said.
+    A flow spec seeds this store the same way and hands it to FlowRunner, and
+    every step's inner Ripple (flowHosted) reuses it through 'ui-flow-state',
+    so bound values carry across steps; a step's own `state` only fills keys
+    the store does not have yet.
     Live state and that copy never share objects with the spec (a streamed spec
     is the stream store's $state proxy), or a user write would read as a spec
     change and be reverted.
@@ -41,7 +45,7 @@
 		type RippleEvent
   } from '@ripple-ui/core';
   import type { StreamSpecStore } from './streaming/types.js';
-  import { createStateManager } from './core/state-manager.svelte.js';
+  import { createStateManager, type StateManager } from './core/state-manager.svelte.js';
   import { createToastBus, type ToastVariant } from './core/toast-bus.svelte.js';
   import { getWidget } from './widgets/index.js';
   import NodeRenderer from './components/NodeRenderer.svelte';
@@ -160,8 +164,12 @@
     ...(initialStateOverride ?? {})
   });
 
+  // A flow step shares its FlowRunner's store (the outer Ripple's) instead of
+  // seeding a fresh one, so a value bound in step 1 is still there in step 2.
   // svelte-ignore state_referenced_locally
-  const stateManager = createStateManager(mergedInitialState);
+  const flowStore = flowHosted ? getContext<StateManager | undefined>('ui-flow-state') : undefined;
+  // svelte-ignore state_referenced_locally
+  const stateManager = flowStore ?? createStateManager(mergedInitialState);
   const widgetRegistry = createWidgetRegistry();
   const toastBus = createToastBus();
 
@@ -286,6 +294,9 @@
       ? new Set(Object.keys(initialStateOverride))
       : null;
     for (const [key, value] of Object.entries(next)) {
+      // On the shared flow store a step's own `state` is a default: it never
+      // overwrites what an earlier step, or this step before a Back, left there.
+      if (flowStore && stateManager.get(key) !== undefined) continue;
       // initialStateOverride wins on conflict — preserve the host's
       // API-data precedence from `mergedInitialState`.
       if (overrideKeys && overrideKeys.has(key)) continue;
@@ -391,11 +402,13 @@
     inner `ui` node for a `{version, ui:<root>}` envelope). FlowRunner mounts a
     per-step inner <Ripple flowHosted={true}>, so the recursion guard above
     keeps detection from re-engaging on a still-chain-bearing step. Terminal
-    completion forwards to this component's `onComplete`. This branch replaces
+    completion forwards to this component's `onComplete`. The runner gets this
+    component's store (seeded from spec.state + the `state` prop) so every step
+    starts from the card's own state. This branch replaces
     the normal `.ripple-root` tree entirely; the non-flow path below is
     untouched (byte-identical output for plain specs).
   -->
-  <FlowRunner spec={flowRoot} {onComplete} {onEvent} state={initialStateOverride} class={className} />
+  <FlowRunner spec={flowRoot} {onComplete} {onEvent} store={stateManager} class={className} />
 {:else}
 <div
   bind:this={rootEl}

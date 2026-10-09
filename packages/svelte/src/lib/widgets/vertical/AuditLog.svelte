@@ -297,7 +297,8 @@
           </div>
         {/if}
         <ul class="flex flex-col gap-0 m-0 p-0 list-none">
-          {#each g.entries as entry, i (entry.id)}
+          <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+          {#each g.entries as entry, i (`${entry.id}:${i}`)}
             {@const ActorIcon = getIcon(entry.actorIcon)}
             {@const isOpen = expanded.has(entry.id)}
             {@const isLast = i === g.entries.length - 1}

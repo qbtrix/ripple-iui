@@ -968,11 +968,13 @@
     state: { activeDateRange: '30d', activeGranularity: 'Month', activeActivityFilter: 'All' },
     ui: {
       type: 'exec-dashboard',
-      // Ripple `bind` is a single state path → maps to the widget's primary bindable
-      // (activeDateRange). Granularity and activity-filter still work via the widget's
-      // internal $bindable state — they just don't persist back to the spec.
-      bind: 'activeDateRange',
+      // KPI mode: the widget's `bind` field is `filters` (rows mode), so the range,
+      // granularity and activity filter are seeded from state as props and the
+      // visitor's chip picks hold inside the widget.
       props: {
+        activeDateRange: '{state.activeDateRange}',
+        activeGranularity: '{state.activeGranularity}',
+        activeActivityFilter: '{state.activeActivityFilter}',
         title: 'Q2 performance',
         subtitle: 'Cross-team metrics — flip the range or granularity to swap data',
         dateRanges: ['Today', '7d', '30d', '90d', 'QTD', 'YTD'],
@@ -5347,6 +5349,7 @@
   <a href="/showcase/card">Card</a>
   <a href="/showcase/stat">Stat</a>
   <a href="/showcase/flow">Flow actions</a>
+  <a href="/showcase/choice-cards">Choice cards</a>
   <a href="/showcase/spec">Spec</a>
   <a href="/showcase/button">Button</a>
   <a href="/showcase/exec-dashboard">Exec dashboard</a>

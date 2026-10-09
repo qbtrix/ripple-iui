@@ -66,7 +66,8 @@
         <th class="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Permission
         </th>
-        {#each roles as role (role.id)}
+        <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+        {#each roles as role, roleIdx (`${role.id}:${roleIdx}`)}
           <th class="text-center px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <div>{role.label}</div>
             {#if role.description}
@@ -79,7 +80,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each permissions as perm (perm.id)}
+      {#each permissions as perm, permIdx (`${perm.id}:${permIdx}`)}
         <tr class="border-t border-border">
           <td class="px-3 py-2 align-top">
             <div class="font-medium">{perm.label}</div>
@@ -87,7 +88,7 @@
               <div class="text-xs text-muted-foreground mt-0.5">{perm.description}</div>
             {/if}
           </td>
-          {#each roles as role (role.id)}
+          {#each roles as role, roleIdx (`${role.id}:${roleIdx}`)}
             {@const allowed = isAllowed(role.id, perm.id)}
             <td class="px-3 py-2 text-center align-middle">
               <button

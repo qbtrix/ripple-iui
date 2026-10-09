@@ -99,7 +99,8 @@
               class="absolute top-0 left-3 right-3 h-px bg-border"
             ></span>
           {/if}
-          {#each kids as kid (kid.id)}
+          <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+          {#each kids as kid, idx (`${kid.id}:${idx}`)}
             <div class="flex flex-col items-center gap-3">
               <span class="block w-px h-3 bg-border" aria-hidden="true"></span>
               <Self root={kid} _isRoot={false} {value} {onchange} />

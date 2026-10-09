@@ -62,7 +62,8 @@
   class={cn('flex flex-col gap-3', className)}
   style={styleString}
 >
-  {#each comments as c (c.id)}
+  <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+  {#each comments as c, idx (`${c.id}:${idx}`)}
     <article
       class={cn(
         'flex gap-3',

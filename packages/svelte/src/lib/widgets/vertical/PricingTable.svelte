@@ -54,7 +54,8 @@
   class={cn('grid gap-4', className)}
   style={safeStyle(`grid-template-columns: repeat(${Math.max(1, tiers.length)}, minmax(0, 1fr)); ${styleString ?? ''}`)}
 >
-  {#each tiers as tier (tier.id)}
+  <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+  {#each tiers as tier, tierIdx (`${tier.id}:${tierIdx}`)}
     <div
       class={cn(
         'relative flex flex-col rounded-xl border bg-card p-6 transition-shadow',
@@ -84,7 +85,7 @@
       </div>
 
       <ul class="flex flex-col gap-2 mb-6 m-0 p-0 list-none flex-1">
-        {#each (tier.features ?? []) as raw (typeof raw === 'string' ? raw : raw.label)}
+        {#each (tier.features ?? []) as raw, featIdx (`${typeof raw === 'string' ? raw : raw.label}:${featIdx}`)}
           {@const f = normalizeFeature(raw)}
           <li class={cn('flex items-start gap-2 text-sm', !f.included && 'text-muted-foreground')}>
             {#if f.included}
