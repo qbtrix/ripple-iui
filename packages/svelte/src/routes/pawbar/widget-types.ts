@@ -17,7 +17,7 @@ export const CHAT_WIDGET_TYPES: ReadonlySet<string> = new Set([
 	'cta', 'dashboard', 'dashboard-slot', 'data-grid', 'date-picker', 'definition-list', 'diff',
 	'discover-card', 'drawing-canvas', 'dropdown-menu', 'each', 'empty-state', 'entity-detail',
 	'error-state', 'exec-dashboard', 'faq', 'feature-grid', 'file-upload', 'fill-grid', 'filter-bar',
-	'flashcard', 'flashcard-deck', 'flex', 'follow-up', 'footer', 'form', 'form-layout', 'funnel',
+	'flashcard', 'flashcard-deck', 'flex', 'focus-timer', 'follow-up', 'footer', 'form', 'form-layout', 'funnel',
 	'gantt', 'gauge', 'glass-card', 'glyph-grid', 'grid', 'growth-projection', 'heading', 'heatmap',
 	'hero', 'highlight', 'hover-card', 'icon', 'if', 'illustration', 'image', 'input', 'interval-workout',
 	'invoice-layout', 'invoice-lines', 'itinerary', 'kanban', 'kbd', 'kv-table', 'led-clock',

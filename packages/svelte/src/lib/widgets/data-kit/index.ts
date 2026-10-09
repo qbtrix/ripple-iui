@@ -9,7 +9,7 @@ export { default as SectionCard } from './SectionCard.svelte';
 export { default as SectionGrid } from './SectionGrid.svelte';
 export { default as PhotoTile } from './PhotoTile.svelte';
 export { default as StageRail } from './StageRail.svelte';
-export { finite, num, sum, money, plain, dateKey, dateLabel } from './format.js';
+export { finite, num, sum, money, plain, dateKey, dateLabel, clampSec, clock } from './format.js';
 export { STATUSES, toStatus, RISK_STATUS, STATUS_ICONS, STATUS_WORDS, STATUS_CLASS, STATUS_VAR } from './status.js';
 export {
 	FALLBACK_ICON,

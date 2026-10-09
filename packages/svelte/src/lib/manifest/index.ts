@@ -129,6 +129,7 @@ import { itineraryEntry } from './entries/itinerary.js';
 import { growthProjectionEntry } from './entries/growth-projection.js';
 import { billSplitEntry } from './entries/bill-split.js';
 import { intervalWorkoutEntry } from './entries/interval-workout.js';
+import { focusTimerEntry } from './entries/focus-timer.js';
 import { flashcardDeckEntry } from './entries/flashcard-deck.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
@@ -455,6 +456,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   bookingEntry,
   menuOrderEntry,
   intervalWorkoutEntry,
+  focusTimerEntry,
   flashcardDeckEntry,
   orgChartEntry,
   otpInputEntry,

@@ -156,6 +156,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'sidebar', 'nav',
   // bill-split binds the bill as edited ({ subtotal, tip_percent, people })
   'bill-split', 'split-bill', 'bill-splitter',
+  // focus-timer binds its session ({ phase, remaining_s, running, rounds_done, task, log })
+  'focus-timer', 'pomodoro', 'pomodoro-timer',
 ]);
 
 const warnedTypes = new Set<string>();

@@ -23,4 +23,5 @@ export { default as BillSplit } from './BillSplit.svelte';
 export { default as Recipe } from './Recipe.svelte';
 export { default as MealPlan } from './MealPlan.svelte';
 export { default as IntervalWorkout } from './IntervalWorkout.svelte';
+export { default as FocusTimer } from './FocusTimer.svelte';
 export { default as FlashcardDeck } from './FlashcardDeck.svelte';

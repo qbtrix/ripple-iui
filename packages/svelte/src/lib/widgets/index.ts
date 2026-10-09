@@ -3,7 +3,7 @@
 // Updated 2026-05-30: registered the `motion/` sugar widgets — Reveal (type `reveal`) and Parallax (type `parallax`), which desugar to a motion field (RFC 12 animation primitive).
 // Updated 2026-05-30: registered the `marketing/` widget pack — Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud (+ aliases) for the RFC 12 landing-page pack (Phase 3).
 // Updated 2026-05-30: registered the full `premium/` MIT-ported pack (Phase 4) — Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora (+ aurora-background), Spotlight, BentoGrid (+ bento), TextEffect (+ animated-text).
-// Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`/`pomodoro`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
+// Updated 2026-05-31: registered the composite consumer widgets ported from ocean-flow — interactive/ (TodoList type `todo-list`/`todo`/`todos`, DrawingCanvas type `drawing-canvas`/`drawing`/`canvas`/`sketchpad`, Timer type `timer`/`countdown`, Flashcard type `flashcard`/`flip-card`) and media/ (AudioPlayer type `audio`/`audio-player`, VideoPlayer type `video`/`video-player`).
 // Updated 2026-06-09: marketing-pack enrich — registered Faq (native <details>, type `faq`/`faqs`) and MarketingHero (bespoke static-safe hero, type `marketing-hero`).
 // Updated 2026-06-24: registered the `ai/` AI-native display tier — StreamText (progressive/streaming text, type `stream-text`/aliases), ToolCall (tool-invocation card, type `tool-call`/aliases), ReasoningTrace (collapsible thinking steps, type `reasoning-trace`/aliases). Read-only widgets a generative-UI engine uses to show an agent's work.
 // Updated 2026-06-24: registered ApprovalGate (type `approval-gate`/`approval`/`approve-card`/`human-gate`) — the human-in-the-loop approve/deny/diff-review organism (the Instinct "human mans the gate" layer); composes Diff + ToolCall in its body and persists its decision via the bind contract.
@@ -18,7 +18,7 @@ import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
+  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FocusTimer, FlashcardDeck,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -300,6 +300,9 @@ const defaultRegistry: WidgetMap = {
   'workout-timer': IntervalWorkout,
   'interval-timer': IntervalWorkout,
   'hiit-timer': IntervalWorkout,
+  'focus-timer': FocusTimer,
+  pomodoro: FocusTimer,
+  'pomodoro-timer': FocusTimer,
   'flashcard-deck': FlashcardDeck,
   flashcards: FlashcardDeck,
   'study-deck': FlashcardDeck,
@@ -394,7 +397,6 @@ const defaultRegistry: WidgetMap = {
   sketchpad: DrawingCanvas,
   timer: Timer,
   countdown: Timer,
-  pomodoro: Timer,
   flashcard: Flashcard,
   'flip-card': Flashcard,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
@@ -483,7 +485,7 @@ export {
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
+  AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FocusTimer, FlashcardDeck,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
   LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
   // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
