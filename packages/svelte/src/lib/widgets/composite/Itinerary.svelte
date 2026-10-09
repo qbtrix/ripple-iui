@@ -348,7 +348,7 @@
 							{#if !h.last}
 								{@const LegIcon = kindIcon(LEG_ICONS, h.leg?.kind)}
 								<div class="relative mx-1 flex h-2.5 flex-1 items-center justify-center" data-leg={h.leg?.kind ?? ''}>
-									<svg class="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 overflow-visible text-ripple-border" viewBox="0 0 100 1" preserveAspectRatio="none" aria-hidden="true">
+									<svg class="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 overflow-visible text-ripple-muted-foreground/40" viewBox="0 0 100 1" preserveAspectRatio="none" aria-hidden="true">
 										<line x1="0" y1="0.5" x2="100" y2="0.5" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" stroke-dasharray={h.leg?.kind === 'flight' ? '4 3' : undefined} />
 									</svg>
 									{#if h.leg}
@@ -406,7 +406,7 @@
 								<span class="grid size-9 shrink-0 place-items-center rounded-md bg-ripple-muted text-headline tabular-nums" aria-hidden="true">{di + 1}</span>
 								<span class="flex min-w-0 flex-1 flex-col">
 									<span class="truncate text-caption-1 font-medium tracking-[0.04em] text-ripple-muted-foreground uppercase">
-										{d.label}{#if d.when}<span class="normal-case"> · {d.when}</span>{/if}
+										{d.label}{#if d.when}<span class="normal-case">{` · ${d.when}`}</span>{/if}
 									</span>
 									<span class="truncate text-body-emph">{d.theme || `${d.stops.length} ${d.stops.length === 1 ? 'stop' : 'stops'}`}</span>
 								</span>
@@ -450,7 +450,7 @@
 												{/if}
 												<div class="relative flex justify-center">
 													{#if k < d.stops.length - 1}
-														<span class={['absolute top-6 bottom-0 w-px', s.done ? 'bg-ripple-success' : 'bg-ripple-border']} aria-hidden="true"></span>
+														<span class={['absolute top-6 bottom-0 w-px', s.done ? 'bg-ripple-success' : 'bg-ripple-muted-foreground/30']} aria-hidden="true"></span>
 													{/if}
 													<button
 														type="button"
@@ -462,7 +462,7 @@
 															focusRing,
 															s.done
 																? 'border-ripple-success bg-ripple-success text-ripple-success-foreground'
-																: 'border-ripple-border bg-ripple-surface text-ripple-muted-foreground hover:border-ripple-accent hover:text-ripple-surface-foreground',
+																: 'border-transparent bg-ripple-muted text-ripple-muted-foreground hover:border-ripple-accent hover:text-ripple-surface-foreground',
 															isNext && 'ring-2 ring-ripple-accent/50'
 														]}
 														onclick={() => toggle(di, s.i)}
