@@ -2,7 +2,7 @@
 
 Composite widgets are full-pane typed layouts. Emit ONE node and the whole pattern (header + body + actions) renders — don't rebuild these out of `flex` + `card` + inputs. Two flavors:
 
-1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, `booking`, the dashboard variants) — pre-composed business surfaces.
+1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, `booking`, `recipe`, `meal-plan`, the dashboard variants) — pre-composed business surfaces.
 2. **Specialized canvases** (`terminal`, `workflow`, `c4`) — niche widgets for CLI output, flow diagrams, and architecture diagrams.
 
 Refer to `dist/manifest.json` (or `get_widget_spec` from an agent) for the exact prop schema of each — this page covers shape and intended use.
@@ -88,6 +88,25 @@ Savings growth from four numbers (aliases `savings-projection`, `compound-intere
 - Renders the final balance and "you put in X; growth adds Y", a stacked area chart of deposits under growth (legend, end labels, crosshair readout by pointer or arrow keys), a yearly table behind a toggle, and sliders plus number boxes for deposit, rate and years.
 - Clamps negatives to 0, rate and inflation to 100%, years to 100, and lists what it changed.
 - Bind `deposit` (`bind: "{state.deposit}"`); a slider or box edit commits a number on release. Rate and years edits fire `on_ratechange` / `on_yearschange` with the new number (`{ action: "set", target: "rate", value: "{event}" }`).
+
+### recipe
+
+One dish you can cook from (alias `recipe-card`). Answers "give me a recipe for X".
+
+- `name`, `serves` (the servings the quantities are written for), `minutes`, `kcal` and `protein_g` PER SERVING, `kind` (`breakfast | lunch | dinner | snack`, the icon when there is no photo), `difficulty`, `tags[]`.
+- `ingredients[]` `{ name, qty?, unit?, note?, aisle? }`: `qty` is a NUMBER (1.5, never "1 1/2") with a separate `unit`; the widget prints cook's fractions (1½, ¾, ⅓) and agrees counted units with the number (1 can, 2 cans). Omit `unit` for counted things ("2" eggs).
+- `steps[]` `{ text, minutes?, tip? }`: numbered and tickable, `minutes` shows a timer chip, `tip` sits under the step. Ingredients and steps stack below 720px and sit side by side above it; there are no tabs.
+- Bind `servings` (`bind: "{state.servings}"`): the stepper multiplies every numeric `qty` by `servings / serves`. Without a usable `serves` nothing scales. Nutrition does not scale. `goal.protein_g` shows a serving's share of the daily goal.
+
+### meal-plan
+
+A week of meals (aliases `meal-planner`, `weekly-meal-plan`). Answers "a high-protein meal plan for the week; let me swap meals, set how many people, keep a shopping list".
+
+- `recipes[]` is the library, each recipe written once (the `recipe` shape, with an `id`). `days[]` `{ day, meals[{ slot, recipe }] }` point into it by id (a name also matches); a day's `label` is read when `day` is missing.
+- `goal` `{ protein_g?, kcal? }` is per person per day: each day shows its protein (or calories) against it, and the header shows the daily averages and the week's per-person total.
+- Swap: a select per meal offers the recipes of that slot's kind (and kind-less ones). Tap a meal to open its recipe inline, scaled to `people`.
+- Shopping list: derived, never written. Every planned meal's ingredients, times `people / serves`, summed by name + unit, grouped by aisle, tickable.
+- Bind `people` (`bind: "{state.people}"`). Swaps and ticks stay in the widget (Svelte callers can `bind:days` and `bind:got`), and a host re-rendering the same spec does not undo them. A meal whose recipe has not arrived renders a skeleton row.
 
 ### Dashboard variants
 

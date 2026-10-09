@@ -139,6 +139,7 @@ import { markdownEntry } from './entries/markdown.js';
 import { marketingHeroEntry } from './entries/marketing-hero.js';
 import { marqueeEntry } from './entries/marquee.js';
 import { masterDetailEntry } from './entries/master-detail.js';
+import { mealPlanEntry } from './entries/meal-plan.js';
 import { mentionEntry } from './entries/mention.js';
 import { metricEntry } from './entries/metric.js';
 import { modalEntry } from './entries/modal.js';
@@ -172,6 +173,7 @@ import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
 import { reasoningTraceEntry } from './entries/reasoning-trace.js';
+import { recipeEntry } from './entries/recipe.js';
 import { reportLayoutEntry } from './entries/report-layout.js';
 import { revealEntry } from './entries/reveal.js';
 import { richTextEntry } from './entries/rich-text.js';
@@ -431,6 +433,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   marketingHeroEntry,
   marqueeEntry,
   masterDetailEntry,
+  mealPlanEntry,
   mentionEntry,
   metricEntry,
   modalEntry,
@@ -463,6 +466,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   radioGroupEntry,
   rangeBarEntry,
   ratingEntry,
+  recipeEntry,
   reportLayoutEntry,
   revealEntry,
   richTextEntry,

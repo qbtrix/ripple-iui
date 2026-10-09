@@ -76,6 +76,15 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'growth-projection': { prop: 'deposit', event: 'ondepositchange' },
   'savings-projection': { prop: 'deposit', event: 'ondepositchange' },
   'compound-interest': { prop: 'deposit', event: 'ondepositchange' },
+  // recipe binds the servings count it scales quantities to; ticked steps
+  // stay a Svelte-side `$bindable` (one bind per node).
+  recipe: { prop: 'servings', event: 'onservingschange' },
+  'recipe-card': { prop: 'servings', event: 'onservingschange' },
+  // meal-plan binds the people count; swapped `days` and ticked `got` stay
+  // Svelte-side `$bindable`s.
+  'meal-plan': { prop: 'people', event: 'onpeoplechange' },
+  'meal-planner': { prop: 'people', event: 'onpeoplechange' },
+  'weekly-meal-plan': { prop: 'people', event: 'onpeoplechange' },
 };
 
 /**
