@@ -289,6 +289,86 @@ describe('menu-order — stages', () => {
 	});
 });
 
+const tile = (name: RegExp) => screen.getByLabelText(name).closest('label')!;
+
+describe('menu-order — customise tiles', () => {
+	const openBurger = async (props: Record<string, unknown> = {}) => {
+		const r = render(MenuOrder, { props: { items, checkout: true, ...props } });
+		await fireEvent.click(btn('Choose options for Double Smash Burger'));
+		return r;
+	};
+
+	it('gives every store option an icon from its name, and an unknown name its group icon', async () => {
+		await openBurger();
+		expect(tile(/Large/).querySelector('.lucide-maximize-2')).not.toBeNull();
+		expect(tile(/Regular/).querySelector('.lucide-ruler')).not.toBeNull(); // unknown → Size's icon
+		expect(tile(/Extra cheese/).querySelector('.lucide-milk')).not.toBeNull();
+		expect(tile(/Bacon/).querySelector('.lucide-ham')).not.toBeNull();
+		expect(tile(/Jalapeños/).querySelector('.lucide-flame')).not.toBeNull();
+		expect(tile(/Garlic aioli/).querySelector('.lucide-droplet')).not.toBeNull();
+		expect(tile(/No sauce/).querySelector('.lucide-ban')).not.toBeNull();
+	});
+
+	it('ignores an option icon outside the map and uses the one inside it', async () => {
+		const odd: MenuItem = {
+			product_id: 'bowl',
+			name: 'Grain Bowl',
+			price: 10,
+			groups: [{ id: 'base', name: 'Base', choose: 'one', icon: 'Trash2', options: [{ id: 'rice', name: 'Rice', icon: '<script>' }, { id: 'egg', name: 'Quinoa', icon: 'egg' }] }]
+		};
+		render(MenuOrder, { props: { items: [odd], checkout: true } });
+		await fireEvent.click(btn('Choose options for Grain Bowl'));
+		expect(tile(/Rice/).querySelector('.lucide-circle-dot')).not.toBeNull();
+		expect(tile(/Quinoa/).querySelector('.lucide-egg-fried')).not.toBeNull();
+	});
+
+	it('lists what is chosen under the name, in menu order, with the running price', async () => {
+		const { container } = await openBurger();
+		const chosen = () => container.querySelector('[data-chosen]')!.textContent!.trim();
+		expect(chosen()).toBe('Regular');
+		await fireEvent.click(screen.getByLabelText(/Garlic aioli/));
+		await fireEvent.click(screen.getByLabelText(/Extra cheese/));
+		await fireEvent.click(screen.getByLabelText(/Large/));
+		expect(chosen()).toBe('Large · Extra cheese · Garlic aioli');
+		expect(chosen()).not.toContain('Bacon');
+		expect(container.querySelector('[data-chosen]')!.parentElement!.textContent).toContain('$15.49'); // 11.99 + 2 + 1 + 0.5
+		expect(btn(/^Add · \$15\.49$/)).toBeTruthy();
+	});
+
+	it('says when a capped group is full, and not before', async () => {
+		await openBurger();
+		for (const o of [/Avocado/, /Extra cheese/]) await fireEvent.click(screen.getByLabelText(o));
+		expect(screen.queryByText(/picked the max/)).toBeNull();
+		await fireEvent.click(screen.getByLabelText(/Bacon/));
+		expect(screen.getByText("You've picked the max of 3. Untick one to swap it.")).toBeTruthy();
+		await fireEvent.click(screen.getByLabelText(/Bacon/));
+		expect(screen.queryByText(/picked the max/)).toBeNull();
+	});
+
+	it('moves and selects radio tiles with the arrow keys, wrapping, and focuses the choice', async () => {
+		await openBurger();
+		const regular = screen.getByLabelText(/Regular/) as HTMLInputElement;
+		const large = screen.getByLabelText(/Large/) as HTMLInputElement;
+		expect(regular.type).toBe('radio');
+		expect(screen.getByRole('radiogroup', { name: 'Size' })).toBeTruthy();
+		await fireEvent.keyDown(regular, { key: 'ArrowRight' });
+		expect(large.checked).toBe(true);
+		expect(document.activeElement).toBe(large);
+		await fireEvent.keyDown(large, { key: 'ArrowDown' });
+		expect((screen.getByLabelText(/Regular/) as HTMLInputElement).checked).toBe(true);
+		await fireEvent.keyDown(screen.getByLabelText(/Regular/), { key: 'ArrowUp' });
+		expect((screen.getByLabelText(/Large/) as HTMLInputElement).checked).toBe(true);
+		expect(btn(/^Add · \$13\.99$/)).toBeTruthy();
+	});
+
+	it('shows a designed tile, not an empty box, when the item has no photo', async () => {
+		const { container } = await openBurger();
+		const tileEl = container.querySelector('[data-fallback]')!;
+		expect(tileEl.textContent).toContain('Double Smash Burger');
+		expect(tileEl.querySelector('.lucide-hamburger')).not.toBeNull();
+	});
+});
+
 describe('menu-order — streamed', () => {
 	it('final streamed render equals the whole-spec render, with no error box', async () => {
 		await expectStreamParity({

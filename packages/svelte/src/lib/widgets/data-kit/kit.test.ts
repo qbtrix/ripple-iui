@@ -17,6 +17,8 @@ import {
 	STATUS_WORDS,
 	STOP_ICONS,
 	kindIcon,
+	optionIconKey,
+	OPTION_ICONS,
 	FALLBACK_ICON
 } from './index.js';
 import { STATUSES } from './status.js';
@@ -198,5 +200,41 @@ describe('every kit component survives junk props', () => {
 		['VerdictLine', VerdictLine]
 	] as Array<[string, Component<any>]>)('%s', (_n, C) => {
 		expect(() => render(C, { props: junk })).not.toThrow();
+	});
+});
+
+describe('optionIconKey (menu-order option icons)', () => {
+	it.each([
+		['Size', 'size'],
+		['Extras', 'extra'],
+		['Sauce', 'sauce'],
+		['Large', 'large'],
+		['Extra cheese', 'cheese'],
+		['Bacon', 'bacon'],
+		['Avocado', 'avocado'],
+		['Fried egg', 'egg'],
+		['Jalapeños', 'spicy'],
+		['BBQ sauce', 'sauce'],
+		['Garlic aioli', 'sauce'],
+		['Chipotle mayo', 'sauce'],
+		['No sauce', 'none'],
+		['Shoestring fries', 'fries'],
+		['Craft cola', 'drink'],
+		['Gluten-free bun', 'gluten_free']
+	])('%s → %s', (name, key) => {
+		expect(optionIconKey(name)).toBe(key);
+		expect(kindIcon(OPTION_ICONS, optionIconKey(name))).not.toBe(FALLBACK_ICON);
+	});
+
+	it('returns undefined for an unknown name, so the caller falls back to the group', () => {
+		expect(optionIconKey('Regular')).toBeUndefined();
+		expect(optionIconKey(42)).toBeUndefined();
+		expect(kindIcon(OPTION_ICONS, optionIconKey('Regular') ?? optionIconKey('Size'))).toBe(OPTION_ICONS.size);
+	});
+
+	it('honours an explicit icon only when it is a key of the map', () => {
+		expect(optionIconKey('Regular', 'egg')).toBe('egg');
+		for (const junk of ['Hamburger', 'Trash2', '__proto__', 'constructor', '<script>', 7, null])
+			expect(optionIconKey('Bacon', junk)).toBe('bacon');
 	});
 });

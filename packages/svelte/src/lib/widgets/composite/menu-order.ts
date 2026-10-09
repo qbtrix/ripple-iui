@@ -26,7 +26,9 @@ export interface MenuOptionGroup {
 	choose: 'one' | 'many';
 	required?: boolean;
 	max?: number;
-	options: Array<{ id: string; name: string; price_delta?: number }>;
+	/** An OPTION_ICONS key; anything else is ignored and the name decides. */
+	icon?: string;
+	options: Array<{ id: string; name: string; price_delta?: number; icon?: string }>;
 }
 
 /** A menu item as the model or the store's hydration writes it. */
@@ -79,6 +81,7 @@ export interface Option {
 	id: string;
 	name: string;
 	delta: number;
+	icon?: string;
 }
 
 export interface Group {
@@ -88,6 +91,7 @@ export interface Group {
 	required: boolean;
 	/** 1 for a `one` group; the cap (default: every option) for a `many` group. */
 	max: number;
+	icon?: string;
 	options: Option[];
 }
 
@@ -119,11 +123,11 @@ function toGroups(v: unknown): Group[] {
 				.filter(isObj)
 				.flatMap((o) => {
 					const id = str(o.id);
-					return id ? [{ id, name: plain(o.name) || id, delta: finite(o.price_delta) ?? 0 }] : [];
+					return id ? [{ id, name: plain(o.name) || id, delta: finite(o.price_delta) ?? 0, icon: str(o.icon) || undefined }] : [];
 				});
 			const choose = g.choose === 'many' ? 'many' : 'one';
 			const max = choose === 'many' ? Math.max(1, Math.trunc(finite(g.max) ?? options.length)) : 1;
-			return { key: str(g.id) || `g${i}`, name: plain(g.name), choose, required: g.required === true, max, options };
+			return { key: str(g.id) || `g${i}`, name: plain(g.name), choose, required: g.required === true, max, icon: str(g.icon) || undefined, options };
 		});
 }
 
@@ -210,6 +214,11 @@ export function clearGroup(groups: Group[], ids: readonly string[], group: Group
 		groups,
 		ids.filter((id) => !own.has(id))
 	);
+}
+
+/** The chosen options' names, in menu order (the customise summary, the review line). */
+export function chosenNames(groups: Group[], ids: readonly string[]): string[] {
+	return groups.flatMap((g) => g.options).filter((o) => ids.includes(o.id)).map((o) => o.name);
 }
 
 /** Unit price the way the store computes it. Undefined while the price is unknown. */

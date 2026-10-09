@@ -1,7 +1,10 @@
 // widgets/data-kit/icons.ts — the KIND_ICONS maps (design doc 2026-10-09 §2.4).
 // The model writes a `kind` from a closed enum, never an icon name; the widget
 // looks it up here, and an unknown or missing kind renders CircleDot. Emoji in
-// model text stay text and never become icons.
+// model text stay text and never become icons. The one exception is
+// menu-order's OPTION_ICONS: an option or group may carry an `icon`, honoured
+// only when it is a key of that map; otherwise optionIconKey infers the key
+// from the option's name with a keyword scan.
 //
 // One map per enum in the doc, each its own export so a widget's bundle carries
 // only the icons it imports. A widget with an enum not listed here
@@ -40,6 +43,25 @@ import Hamburger from '@lucide/svelte/icons/hamburger';
 import Salad from '@lucide/svelte/icons/salad';
 import CupSoda from '@lucide/svelte/icons/cup-soda';
 import IceCreamCone from '@lucide/svelte/icons/ice-cream-cone';
+// menu options
+import Maximize2 from '@lucide/svelte/icons/maximize-2';
+import Minimize2 from '@lucide/svelte/icons/minimize-2';
+import Ham from '@lucide/svelte/icons/ham';
+import Drumstick from '@lucide/svelte/icons/drumstick';
+import Fish from '@lucide/svelte/icons/fish';
+import EggFried from '@lucide/svelte/icons/egg-fried';
+import Leaf from '@lucide/svelte/icons/leaf';
+import LeafyGreen from '@lucide/svelte/icons/leafy-green';
+import Droplet from '@lucide/svelte/icons/droplet';
+import Ban from '@lucide/svelte/icons/ban';
+import CirclePlus from '@lucide/svelte/icons/circle-plus';
+import Popcorn from '@lucide/svelte/icons/popcorn';
+import HandPlatter from '@lucide/svelte/icons/hand-platter';
+import Croissant from '@lucide/svelte/icons/croissant';
+import WheatOff from '@lucide/svelte/icons/wheat-off';
+import Vegan from '@lucide/svelte/icons/vegan';
+import Nut from '@lucide/svelte/icons/nut';
+import CakeSlice from '@lucide/svelte/icons/cake-slice';
 // booking services
 import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 import Scissors from '@lucide/svelte/icons/scissors';
@@ -137,6 +159,85 @@ export const MENU_ICONS = {
 	dessert: IceCreamCone,
 	product: ShoppingBag
 } satisfies Record<string, LucideIcon>;
+
+/** menu-order option and group icons: the closed set an option's `icon` may name. */
+export const OPTION_ICONS = {
+	size: Ruler,
+	large: Maximize2,
+	small: Minimize2,
+	cheese: Milk,
+	bacon: Ham,
+	meat: Beef,
+	chicken: Drumstick,
+	fish: Fish,
+	egg: EggFried,
+	avocado: Leaf,
+	veg: LeafyGreen,
+	spicy: Flame,
+	sauce: Droplet,
+	none: Ban,
+	extra: CirclePlus,
+	fries: Popcorn,
+	side: HandPlatter,
+	drink: CupSoda,
+	coffee: Coffee,
+	shake: Milk,
+	ice: Snowflake,
+	bread: Croissant,
+	gluten_free: WheatOff,
+	vegan: Vegan,
+	nut: Nut,
+	sweet: CakeSlice
+} satisfies Record<string, LucideIcon>;
+
+export type OptionIconKey = keyof typeof OPTION_ICONS;
+
+// First match wins, so the order is the rule: "No sauce" is `none` before it
+// is `sauce`, "Extra cheese" is `cheese` before `extra`, "Chipotle mayo" is a
+// sauce before chipotle reads as spicy, "Gluten-free bun" is not bread.
+const OPTION_WORDS: ReadonlyArray<[RegExp, OptionIconKey]> = [
+	[/^(no|without|hold the)\b|\bnone\b/, 'none'],
+	[/gluten/, 'gluten_free'],
+	[/vegan|plant[- ]based/, 'vegan'],
+	[/chees|cheddar|mozzarella|parmesan|feta|halloumi|brie|swiss/, 'cheese'],
+	[/bacon|\bham\b|pork|prosciutto|pancetta|chorizo|sausage|pepperoni/, 'bacon'],
+	[/chicken|wing|drumstick|turkey/, 'chicken'],
+	[/fish|salmon|tuna|shrimp|prawn|anchov/, 'fish'],
+	[/beef|patty|patties|steak|brisket|burger/, 'meat'],
+	[/\beggs?\b/, 'egg'],
+	[/avocado|guac/, 'avocado'],
+	[/sauce|aioli|mayo|ketchup|mustard|dressing|\bdip\b|gravy|ranch|salsa|honey|syrup|glaze|bbq|barbecue|pesto|vinaigrette/, 'sauce'],
+	[/jalapeno|chil(i|e|li)|spic|\bhot\b|sriracha|habanero|cayenne|chipotle/, 'spicy'],
+	[/lettuce|tomato|onion|pickle|mushroom|pepper|spinach|kale|cucumber|olive|veg|salad|slaw|greens/, 'veg'],
+	[/fries|chips|wedges|tots/, 'fries'],
+	[/coffee|latte|espresso|cappuccino|mocha/, 'coffee'],
+	[/shake|milk|smoothie/, 'shake'],
+	[/cola|soda|lemonade|juice|drink|water|\btea\b|beverage/, 'drink'],
+	[/\bice\b|iced|frozen/, 'ice'],
+	[/\bbuns?\b|bread|wrap|brioche|toast|sourdough|bagel|croissant|tortilla/, 'bread'],
+	[/\bnuts?\b|almond|peanut|walnut|pecan|cashew|pistachio/, 'nut'],
+	[/cake|cookie|brownie|chocolate|caramel|dessert|sweet/, 'sweet'],
+	[/\bsides?\b/, 'side'],
+	[/large|\bbig\b|double|triple|jumbo|\bxl\b/, 'large'],
+	[/small|single|mini|kids|\bxs\b/, 'small'],
+	[/\bsizes?\b/, 'size'],
+	[/extra|topping|add[- ]?ons?|\badd\b/, 'extra']
+];
+
+const isOptionIconKey = (k: unknown): k is OptionIconKey => typeof k === 'string' && Object.hasOwn(OPTION_ICONS, k);
+
+/**
+ * The OPTION_ICONS key for a menu option or group: a valid `explicit` key
+ * first (anything else is ignored, never rendered), then the first keyword in
+ * the accent-stripped name. Undefined when nothing matches, so the caller falls
+ * back (option → its group's icon → CircleDot via kindIcon).
+ */
+export function optionIconKey(name: unknown, explicit?: unknown): OptionIconKey | undefined {
+	if (isOptionIconKey(explicit)) return explicit;
+	if (typeof name !== 'string') return undefined;
+	const n = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+	return OPTION_WORDS.find(([re]) => re.test(n))?.[1];
+}
 
 /** booking service kind (§3.4) */
 export const SERVICE_ICONS = {

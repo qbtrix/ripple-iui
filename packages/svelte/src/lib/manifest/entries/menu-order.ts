@@ -17,7 +17,7 @@ export const menuOrderEntry: WidgetManifestEntry = {
     verdict: { type: '{ text: string; status?: "good" | "warn" | "bad" | "info" | "neutral" }', required: false, description: 'One sentence shown first, at most 140 chars.' },
     currency: { type: 'string', required: false, description: 'ISO 4217 code. Default USD. Never a symbol.' },
     items: {
-      type: 'Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: "main" | "side" | "drink" | "dessert" | "product"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: "one" | "many"; required?: boolean; max?: number; options: Array<{ id: string; name: string; price_delta?: number }> }> }>',
+      type: 'Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: "main" | "side" | "drink" | "dessert" | "product"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: "one" | "many"; required?: boolean; max?: number; icon?: string; options: Array<{ id: string; name: string; price_delta?: number; icon?: string }> }> }>',
       required: true,
       description: 'Menu items. Write product_id (and name for streaming); the server fills price, image and groups. Items without product_id are display only. Rows use kind, never type.',
     },
