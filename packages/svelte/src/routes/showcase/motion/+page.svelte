@@ -1,31 +1,17 @@
 <!--
-  Created: 2026-05-30 — RFC 12 motion-primitive showcase. Renders declarative
-  Ripple specs that exercise the node-level `motion` field so the captain can
-  SEE the motion: staggered fade-up-on-scroll cards (motion.inView + per-card
-  transition.delay), a magnetic/spring hover CTA (motion.hover/tap, `bouncy`),
-  the `reveal` + `parallax` sugar widgets, and a button that fires the
-  `animate` action. Each panel is one <Ripple {spec} onEvent={...} />, matching
-  the card/stat/flow sub-route pattern.
-  Changes:
-    - 2026-05-30 (PR #45 motion runtime close-out): the staggered cards and the
-      parallax demo now animate for real. The cascade is driven by per-card
-      transition.delay in SECONDS (delay: i * 0.12 → 0/120/240/360ms) — FIX 2 —
-      and each card now both fades AND rises because inView arms the full
-      from-state (FIX 1). The parallax panel is powered by the new motion.scroll
-      runtime (FIX 3: IO/scroll-rAF translateY every frame, the robust path).
-    - 2026-05-30 (PR #45 animate runtime): the `animate` action now VISIBLY moves
-      a target. The button was re-authored per the AnimateHandler schema
-      ({ action, target, motion }) — the old { action: 'animate', name: 'pulse' }
-      was wrong (`name` is not a field, so target + motion arrived undefined). It
-      now targets a card by id ('animate-target') and the dispatcher's runtime
-      pulses that node through the shared withMotion engine, so the click moves
-      pixels with no host code. The host still echoes the event below.
+  @file routes/showcase/motion/+page.svelte
+  @description The motion primitive: staggered fade-up on scroll, spring hover and tap, the
+    reveal and parallax widgets, and the animate action pulsing a node by id.
+    Each panel is one <Ripple {spec}>.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
-  let lastEvent = $state('—');
+  let lastEvent = $state('none yet');
   function handleEvent(event: RippleEvent) {
     // Surface host-delegated events (e.g. the `animate` action) so the demo is
     // visibly interactive even for actions Ripple hands back to the host.
@@ -41,7 +27,7 @@
   const STEPS = [
     { n: '01', title: 'Describe', body: 'Tell the agent what you want in plain language.' },
     { n: '02', title: 'Generate', body: 'Ripple compiles a spec into live Svelte UI.' },
-    { n: '03', title: 'Refine', body: 'Keep editing by chat — the spec re-renders in place.' },
+    { n: '03', title: 'Refine', body: 'Keep editing by chat: the spec re-renders in place.' },
     { n: '04', title: 'Ship', body: 'Publish to the edge. Your brand, your domain.' },
   ];
 
@@ -51,7 +37,7 @@
       type: 'flex',
       props: { direction: 'column', gap: '12px' },
       children: [
-        { type: 'text', props: { text: 'Scroll so this row enters the viewport — the cards fade + rise in sequence.', size: 'sm' }, class: 'text-muted-foreground' },
+        { type: 'text', props: { text: 'Scroll so this row enters the viewport: the cards fade + rise in sequence.', size: 'sm' }, class: 'text-muted-foreground' },
         {
           type: 'grid',
           props: { columns: 4, gap: '12px' },
@@ -98,7 +84,7 @@
             transition: { preset: 'snappy' },
           },
         },
-        { type: 'text', props: { text: 'Hover and press — the spring overshoots on the way up, presses in on tap.', size: 'sm' }, class: 'text-muted-foreground' },
+        { type: 'text', props: { text: 'Hover and press: the spring overshoots on the way up, presses in on tap.', size: 'sm' }, class: 'text-muted-foreground' },
       ],
     },
   };
@@ -198,22 +184,22 @@
         {
           type: 'card',
           id: 'animate-target',
-          props: { title: 'Pulse me', description: 'Click the button — I scale + pop, then settle back.' },
+          props: { title: 'Pulse me', description: 'Click the button: I scale + pop, then settle back.' },
           class: 'inline-block',
         },
-        { type: 'text', props: { text: 'The `animate` action targets the badge by id and pulses it through the runtime — no host code. The host also echoes the event below.', size: 'sm' }, class: 'text-muted-foreground' },
+        { type: 'text', props: { text: 'The `animate` action targets the badge by id and pulses it through the runtime: no host code. The host also echoes the event below.', size: 'sm' }, class: 'text-muted-foreground' },
       ],
     },
   };
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Motion" class="showcase">
+<ShowcasePage slug="motion">
+<div class="showcase">
   <header class="showcase-header">
-    <h1>Motion — the animation primitive</h1>
     <p>
       Everything below is a declarative JSON spec rendered through
       <code>&lt;Ripple&gt;</code>. The <code>motion</code> field is a sibling to
-      <code>props</code>/<code>class</code>/<code>style</code> on any node — no
+      <code>props</code>/<code>class</code>/<code>style</code> on any node: no
       per-widget wiring. Scroll, hover, and click to see it move.
     </p>
     <nav class="showcase-nav">
@@ -227,7 +213,7 @@
   </header>
 
   <section id="stagger" class="showcase-section">
-    <h2 class="showcase-section-title">Staggered fade-up on scroll — <code>motion.inView</code></h2>
+    <h2 class="showcase-section-title">Staggered fade-up on scroll: <code>motion.inView</code></h2>
     <div class="showcase-item">
       <div class="showcase-item-demo">
         <Ripple spec={staggerSpec} onEvent={handleEvent} />
@@ -236,7 +222,7 @@
   </section>
 
   <section id="hover" class="showcase-section">
-    <h2 class="showcase-section-title">Magnetic / spring hover — <code>motion.hover</code> + <code>tap</code> (bouncy)</h2>
+    <h2 class="showcase-section-title">Magnetic / spring hover: <code>motion.hover</code> + <code>tap</code> (bouncy)</h2>
     <div class="showcase-item">
       <div class="showcase-item-demo">
         <Ripple spec={magneticCtaSpec} onEvent={handleEvent} />
@@ -275,6 +261,7 @@
        animate as the page scrolls. -->
   <div class="scroll-spacer" aria-hidden="true"></div>
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -285,11 +272,6 @@
   }
   .showcase-header {
     margin-bottom: 2.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

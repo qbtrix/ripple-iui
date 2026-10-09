@@ -1,10 +1,13 @@
 <!--
-  Created: 2026-04-21 — Flow actions showcase. Renders the form-submit
-  example from docs/flow-actions.md so the captain can visually verify
-  flow, branch, confirm, validate, delay, invoke and async api chaining
-  against a mocked host.
+  @file routes/showcase/flow/+page.svelte
+  @description Flow actions against a mocked host: a form submit that runs flow, branch,
+    confirm, validate, delay, invoke and a chained api call, with the host log
+    shown under the spec.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import Ripple from '$lib/Ripple.svelte';
   import type { RippleEvent, RippleEventResult } from '@ripple-ui/core';
 
@@ -157,9 +160,9 @@
   };
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Flow actions" class="p-4 sm:p-8">
+<ShowcasePage slug="flow">
+<div>
   <header class="mx-auto max-w-3xl pb-4">
-    <h1 class="text-2xl font-semibold">Flow actions — showcase</h1>
     <p class="mt-1 text-sm text-muted-foreground">
       Exercises flow, branch, confirm, validate, delay, invoke and async api chaining
       against a mocked host. Watch the event log on the right.
@@ -187,3 +190,4 @@
     </aside>
   </div>
 </div>
+</ShowcasePage>

@@ -1,26 +1,18 @@
 <!--
-  src/routes/showcase/moving-indicator/+page.svelte
   @file routes/showcase/moving-indicator/+page.svelte
-  @description Showcase for the GENERIC `movingIndicator` (shared-layout)
-    primitive — "a highlight springs to the active item among its siblings."
-    The page proves genericity: ONE primitive drives TWO different widgets with
-    TWO different active sources, side by side, so the captain can see it.
-      1. SEGMENTED CONTROL — active source = SELECTION. A white pill glides to the
-         selected segment (axis 'x', FF-fast 80ms). The classic macOS control.
-      2. CHECKBOX GROUP — active source = HOVER. The same primitive drives the
-         hover highlight that glides between UNSELECTED rows (the doubled-highlight
-         bug is fixed — hovering a selected row shows no separate highlight).
-    Both indicators are a single `use:movingIndicator` element; the only
-    difference is what they treat as "active." Matches the /showcase/checkbox-group
-    + /showcase/motion sub-route pattern (header + nav + sectioned panels).
-  @created 2026-05-30 — RFC 12: generic moving-indicator primitive showcase.
+  @description The moving indicator primitive with two consumers: a segmented control whose
+    pill follows the selection and a checkbox group whose highlight follows
+    the hover.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
   import SegmentedControl from './SegmentedControl.svelte';
 
-  let lastEvent = $state('—');
+  let lastEvent = $state('none yet');
   function handleEvent(event: RippleEvent) {
     lastEvent = `${event.type}${event.name ? ` · ${event.name}` : ''}`;
     console.log('RippleEvent:', event);
@@ -45,7 +37,7 @@
       children: [
         {
           type: 'text',
-          props: { text: 'Hover an already-checked row — no second highlight paints inside the selection. Hover an unchecked row — the highlight glides to it.', size: 'sm' },
+          props: { text: 'Hover an already-checked row: no second highlight paints inside the selection. Hover an unchecked row: the highlight glides to it.', size: 'sm' },
           class: 'text-muted-foreground'
         },
         {
@@ -68,17 +60,17 @@
   };
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Moving indicator" class="showcase">
+<ShowcasePage slug="moving-indicator">
+<div class="showcase">
   <header class="showcase-header">
-    <h1>The moving indicator — one primitive, many widgets</h1>
     <p>
       A reusable <code>movingIndicator</code> action: a highlight springs to the
       active item among its siblings. Mount it on a highlight element, tell it the
-      container, how to enumerate the items, and which one is active — it measures
+      container, how to enumerate the items, and which one is active: it measures
       the active item's box (transform-immune <code>offset*</code>) and glides the
       highlight there on the FF <code>fast</code> (80ms) token. The two demos below
       run the <strong>same primitive</strong>; the only difference is what each
-      calls "active" — <strong>selection</strong> on the left, <strong>hover</strong>
+      calls "active": <strong>selection</strong> on the left, <strong>hover</strong>
       on the right.
     </p>
     <nav class="showcase-nav">
@@ -92,10 +84,10 @@
 
   <section id="segmented" class="showcase-section">
     <h2 class="showcase-section-title">
-      Consumer 1 — segmented control · active source = <code>selection</code>
+      Consumer 1: segmented control · active source = <code>selection</code>
     </h2>
     <p class="showcase-note">
-      Click a segment (or arrow-key it). The white pill glides to the selection —
+      Click a segment (or arrow-key it). The white pill glides to the selection :
       <code>movingIndicator</code> with <code>axis: 'x'</code>, active = the
       selected index.
     </p>
@@ -126,11 +118,11 @@
 
   <section id="checkbox" class="showcase-section">
     <h2 class="showcase-section-title">
-      Consumer 2 — checkbox group · active source = <code>hover</code>
+      Consumer 2: checkbox group · active source = <code>hover</code>
     </h2>
     <p class="showcase-note">
       The same primitive drives the hover highlight (it tracks unselected rows
-      only). Two rows start selected as one merged block — hover it to confirm no
+      only). Two rows start selected as one merged block: hover it to confirm no
       doubled highlight paints inside the selection.
     </p>
     <div class="showcase-item">
@@ -140,6 +132,7 @@
     </div>
   </section>
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -150,12 +143,6 @@
   }
   .showcase-header {
     margin-bottom: 2.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

@@ -1,34 +1,18 @@
 <!--
-  src/routes/showcase/checkbox-group/+page.svelte
   @file routes/showcase/checkbox-group/+page.svelte
-  @description Focused showcase for the Fluid-Functionalism-ported `checkbox-group`
-    widget so the captain can HOVER and feel the gliding highlight. Three panels,
-    each a declarative <Ripple {spec} /> with bound state:
-      1. The glide — a notification-preferences group. Move the cursor down the
-         list; the background highlight glides between rows on the 80ms FF-fast
-         timing. This is the "Apple-level" interaction the port is about.
-      2. Merged backgrounds — a build-your-box group. Check adjacent items and
-         their selected backgrounds MERGE into one rounded shape (FF's signature);
-         the merged shape morphs on the 160ms FF-moderate spring-overshoot timing.
-         HOVER an already-checked row inside the merged block: no separate hover
-         highlight paints (the doubled-highlight bug is fixed — the hover highlight
-         tracks unselected rows only, FF's hover-on-selected rule).
-      3. States — disabled group + per-item disabled, proving the affordances.
-    The hover highlight + focus ring are now driven by the generic
-    `movingIndicator` primitive (see /showcase/moving-indicator for the same
-    primitive driving a segmented control). Matches the /showcase/motion sub-route
-    pattern (header + nav + sectioned <Ripple> panels). Linked from the showcase
-    index sub-route strip.
-  @created 2026-05-30 — RFC 12 premium pack: FF checkbox-group port (PR #45).
-  @changes
-    - 2026-05-30 (RFC 12 moving-indicator): copy notes the hover-on-selected bug
-      fix; added a link to the /showcase/moving-indicator genericity demo.
+  @description The checkbox-group widget up close: a highlight that glides between rows on
+    hover, checked neighbours whose backgrounds merge into one shape (with no
+    second hover highlight inside it), and the disabled states. Three bound
+    <Ripple {spec}> panels.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
-  let lastEvent = $state('—');
+  let lastEvent = $state('none yet');
   function handleEvent(event: RippleEvent) {
     lastEvent = `${event.type}${event.name ? ` · ${event.name}` : ''}`;
     console.log('RippleEvent:', event);
@@ -46,7 +30,7 @@
       children: [
         {
           type: 'text',
-          props: { text: 'Move your cursor slowly down the rows — the highlight glides to follow it.', size: 'sm' },
+          props: { text: 'Move your cursor slowly down the rows: the highlight glides to follow it.', size: 'sm' },
           class: 'text-muted-foreground'
         },
         {
@@ -81,7 +65,7 @@
       children: [
         {
           type: 'text',
-          props: { text: 'Check two neighbouring rows — their backgrounds merge into one shape. Now hover that merged block: no second highlight paints inside it (the hover highlight tracks unselected rows only).', size: 'sm' },
+          props: { text: 'Check two neighbouring rows: their backgrounds merge into one shape. Now hover that merged block: no second highlight paints inside it (the hover highlight tracks unselected rows only).', size: 'sm' },
           class: 'text-muted-foreground'
         },
         {
@@ -139,13 +123,13 @@
   };
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Checkbox group" class="showcase">
+<ShowcasePage slug="checkbox-group">
+<div class="showcase">
   <header class="showcase-header">
-    <h1>Checkbox group — the gliding highlight</h1>
     <p>
       Ported from <a href="https://www.fluidfunctionalism.com/docs/checkbox-group" target="_blank" rel="noreferrer">Fluid Functionalism</a>
       (MIT) onto Ripple's motion primitive. A single background element
-      <strong>glides</strong> between rows as you hover — driven by a CSS
+      <strong>glides</strong> between rows as you hover: driven by a CSS
       transition on the highlight's box, timed by the FF spring tokens
       (<code>fast</code> 80ms for the glide, <code>moderate</code> 160ms for the
       merge). Everything below is a declarative <code>&lt;Ripple&gt;</code> spec.
@@ -161,7 +145,7 @@
   </header>
 
   <section id="glide" class="showcase-section">
-    <h2 class="showcase-section-title">The gliding highlight — <code>FF_SPRING_TOKENS.fast</code> (80ms)</h2>
+    <h2 class="showcase-section-title">The gliding highlight: <code>FF_SPRING_TOKENS.fast</code> (80ms)</h2>
     <div class="showcase-item">
       <div class="showcase-item-demo">
         <Ripple spec={glideSpec} onEvent={handleEvent} />
@@ -170,7 +154,7 @@
   </section>
 
   <section id="merge" class="showcase-section">
-    <h2 class="showcase-section-title">Merged backgrounds for contiguous selections — <code>FF_SPRING_TOKENS.moderate</code> (160ms)</h2>
+    <h2 class="showcase-section-title">Merged backgrounds for contiguous selections: <code>FF_SPRING_TOKENS.moderate</code> (160ms)</h2>
     <div class="showcase-item">
       <div class="showcase-item-demo">
         <Ripple spec={mergeSpec} onEvent={handleEvent} />
@@ -179,7 +163,7 @@
   </section>
 
   <section id="states" class="showcase-section">
-    <h2 class="showcase-section-title">States — disabled group &amp; per-item disabled</h2>
+    <h2 class="showcase-section-title">States: disabled group &amp; per-item disabled</h2>
     <div class="showcase-item">
       <div class="showcase-item-demo">
         <Ripple spec={statesSpec} onEvent={handleEvent} />
@@ -187,6 +171,7 @@
     </div>
   </section>
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -197,12 +182,6 @@
   }
   .showcase-header {
     margin-bottom: 2.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

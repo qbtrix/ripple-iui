@@ -1,13 +1,12 @@
 <!--
-  Created: 2026-05-30 — RFC 12 premium-pack showcase. Renders the 8 ported
-  premium widgets (svelte-animations + aceternity.sveltekit.io, all MIT), each
-  in its own labeled demo so the captain can see the motion: marquee,
-  border-beam, shimmer, animated-beam, aurora, spotlight, bento-grid,
-  text-effect. Each panel is one declarative <Ripple {spec} onEvent={...} />,
-  matching the card/stat/flow sub-route pattern. All effects are pure CSS/SVG
-  (Tier 0) and SSR-safe; nothing touches the motion engine.
+  @file routes/showcase/premium/+page.svelte
+  @description The premium pack: glass cards, beams, marquee, spotlight and text effects,
+    one labelled <Ripple {spec}> per widget.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
@@ -69,7 +68,7 @@
       props: { direction: 'column', gap: '6px' },
       children: [
         { type: 'animated-beam', props: { duration: 4, curvature: -50 }, class: 'h-24 text-muted-foreground' },
-        { type: 'text', props: { text: 'A gradient pulse flows along the curve — suggests a connection or data flow.', size: 'sm' }, class: 'text-muted-foreground' },
+        { type: 'text', props: { text: 'A gradient pulse flows along the curve: suggests a connection or data flow.', size: 'sm' }, class: 'text-muted-foreground' },
       ],
     },
   };
@@ -100,7 +99,7 @@
       children: [
         { type: 'flex', props: { direction: 'column', gap: '6px', align: 'center' }, children: [
           { type: 'heading', props: { text: 'Hover to light it up', level: 3 } },
-          { type: 'text', props: { text: 'Move your cursor across the card — a radial highlight tracks it.', size: 'sm' }, class: 'text-muted-foreground' },
+          { type: 'text', props: { text: 'Move your cursor across the card: a radial highlight tracks it.', size: 'sm' }, class: 'text-muted-foreground' },
         ] },
       ],
     },
@@ -117,7 +116,7 @@
           { title: 'Edge-fast', description: 'Served from the closest edge node, worldwide.', span: 2 },
           { title: 'White-label', description: 'Your brand, end to end.', span: 1 },
           { title: 'No infra', description: 'We host it.', span: 1 },
-          { title: 'Edit by chat', description: 'Change anything just by asking — the spec re-renders in place.', span: 2 },
+          { title: 'Edit by chat', description: 'Change anything just by asking: the spec re-renders in place.', span: 2 },
         ],
       },
     },
@@ -140,7 +139,7 @@
   // Drives the labeled grid below. Each entry is rendered through its own
   // isolated <Ripple> instance.
   const demos = [
-    { id: 'marquee', label: 'marquee', note: 'Seamless scrolling row — pauses on hover.', spec: marqueeSpec },
+    { id: 'marquee', label: 'marquee', note: 'Seamless scrolling row: pauses on hover.', spec: marqueeSpec },
     { id: 'border-beam', label: 'border-beam', note: 'Gradient beam orbiting a card border.', spec: borderBeamSpec },
     { id: 'shimmer', label: 'shimmer', note: 'Highlight band swept across a label.', spec: shimmerSpec },
     { id: 'animated-beam', label: 'animated-beam', note: 'SVG curve with a flowing gradient pulse.', spec: animatedBeamSpec },
@@ -151,9 +150,9 @@
   ];
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Premium pack" class="showcase">
+<ShowcasePage slug="premium">
+<div class="showcase">
   <header class="showcase-header">
-    <h1>Premium pack — 8 motion widgets</h1>
     <p>
       The ported premium widgets (svelte-animations + aceternity.sveltekit.io,
       all MIT). Every effect is pure CSS/SVG (Tier 0) and SSR-safe. Each demo
@@ -180,6 +179,7 @@
     </section>
   {/each}
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -190,11 +190,6 @@
   }
   .showcase-header {
     margin-bottom: 2.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

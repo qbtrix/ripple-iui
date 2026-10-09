@@ -1,4 +1,11 @@
+<!--
+  @file routes/showcase/spec/+page.svelte
+  @description KPI cards from JSON specs: a KPI row and Card, Stat and Chart compositions,
+    the shape agents emit into pockets.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
+-->
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import Ripple from '$lib/Ripple.svelte';
 
   // 30-day revenue series (trending up)
@@ -142,11 +149,11 @@
   };
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Spec" class="mx-auto max-w-5xl space-y-10 p-8">
+<ShowcasePage slug="spec">
+<div class="mx-auto max-w-5xl space-y-10">
   <header class="space-y-2">
-    <h1 class="text-2xl font-semibold">JSON-spec composition</h1>
     <p class="text-muted-foreground">
-      Card + Stat + Chart rendered from declarative JSON specs — the shape agents emit into pockets.
+      Card + Stat + Chart rendered from declarative JSON specs: the shape agents emit into pockets.
       Uses <code class="text-xs bg-muted px-1 py-0.5 rounded">slot: 'header'</code> to route
       children into Card's named snippet slots.
     </p>
@@ -159,21 +166,21 @@
 
   <section class="space-y-3">
     <h2 class="text-sm font-medium uppercase text-muted-foreground tracking-wide">
-      Chart-in-card — area (revenue, up-good)
+      Chart-in-card: area (revenue, up-good)
     </h2>
     <Ripple spec={revenueCardSpec} />
   </section>
 
   <section class="space-y-3">
     <h2 class="text-sm font-medium uppercase text-muted-foreground tracking-wide">
-      Chart-in-card — line (latency, down-good)
+      Chart-in-card: line (latency, down-good)
     </h2>
     <Ripple spec={latencyCardSpec} />
   </section>
 
   <section class="space-y-3">
     <h2 class="text-sm font-medium uppercase text-muted-foreground tracking-wide">
-      Chart-in-card — bar (weekly signups)
+      Chart-in-card: bar (weekly signups)
     </h2>
     <Ripple spec={signupsCardSpec} />
   </section>
@@ -193,3 +200,4 @@
     </div>
   </section>
 </div>
+</ShowcasePage>

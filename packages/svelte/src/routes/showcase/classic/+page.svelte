@@ -1,4 +1,13 @@
+<!--
+  @file routes/showcase/classic/+page.svelte
+  @description Classic pockets: one page spec of research, market, weather, analytics,
+    comparison, code and travel answers, each a self-contained pocket.
+    Fictional companies in the market data; sources use the local
+    /icons/source.svg.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
+-->
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
@@ -128,7 +137,7 @@
           ]
         },
         { type: 'chart', props: {
-          type: 'candlestick', height: 200, title: 'MERIDIAN — 5 Day',
+          type: 'candlestick', height: 200, title: 'MERIDIAN: 5 Day',
           data: [
             { label: 'Mar 24', value: 0, open: 2830, close: 2862, high: 2875, low: 2815 },
             { label: 'Mar 25', value: 0, open: 2862, close: 2845, high: 2880, low: 2835 },
@@ -181,7 +190,7 @@
               type: 'flex', props: { direction: 'column', gap: '2px' },
               children: [
                 { type: 'heading', props: { text: 'New Delhi', level: 3 } },
-                { type: 'text', props: { text: 'Fri, 28 Mar 2026 — Partly Cloudy', size: 'xs' } },
+                { type: 'text', props: { text: 'Fri, 28 Mar 2026: Partly Cloudy', size: 'xs' } },
               ]
             },
             { type: 'text', props: { text: '34\u00b0C', size: '2xl', weight: 'bold' } },
@@ -436,13 +445,13 @@
       type: 'flex',
       props: { direction: 'column', gap: '16px' },
       children: [
-        { type: 'heading', props: { text: 'Kyoto — 3-Day Itinerary', level: 3 } },
+        { type: 'heading', props: { text: 'Kyoto: 3-Day Itinerary', level: 3 } },
         { type: 'image', props: {
           src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=700&q=80',
           alt: 'Kyoto temple', width: '100%', height: '200px', fit: 'cover', rounded: 'lg'
         }},
         { type: 'text', props: {
-          text: 'Kyoto is Japan\'s cultural heart — home to 17 UNESCO World Heritage sites, 2,000 temples, and some of the best food in the country. Here\'s how to spend three days.',
+          text: 'Kyoto is Japan\'s cultural heart: home to 17 UNESCO World Heritage sites, 2,000 temples, and some of the best food in the country. Here\'s how to spend three days.',
           size: 'sm'
         }},
         {
@@ -452,10 +461,10 @@
               type: 'timeline', props: {
                 density: 'compact',
                 events: [
-                  { date: '7:00', title: 'Fushimi Inari — walk the thousand torii gates (early morning)', type: 'success' },
-                  { date: '11:00', title: 'Nishiki Market — street food and local ingredients', type: 'info' },
-                  { date: '14:00', title: 'Kiyomizu-dera — panoramic views of the city', type: 'success' },
-                  { date: '18:00', title: 'Gion district — evening walk, spot maiko', type: 'default' },
+                  { date: '7:00', title: 'Fushimi Inari: walk the thousand torii gates (early morning)', type: 'success' },
+                  { date: '11:00', title: 'Nishiki Market: street food and local ingredients', type: 'info' },
+                  { date: '14:00', title: 'Kiyomizu-dera: panoramic views of the city', type: 'success' },
+                  { date: '18:00', title: 'Gion district: evening walk, spot maiko', type: 'default' },
                 ]
               }
             },
@@ -463,10 +472,10 @@
               type: 'timeline', props: {
                 density: 'compact',
                 events: [
-                  { date: '7:30', title: 'Arashiyama Bamboo Grove — arrive before crowds', type: 'success' },
+                  { date: '7:30', title: 'Arashiyama Bamboo Grove: arrive before crowds', type: 'success' },
                   { date: '10:00', title: 'Tenryu-ji temple and garden', type: 'info' },
-                  { date: '13:00', title: 'Monkey Park Iwatayama — hilltop views', type: 'default' },
-                  { date: '17:00', title: 'Togetsukyo Bridge — sunset photos', type: 'success' },
+                  { date: '13:00', title: 'Monkey Park Iwatayama: hilltop views', type: 'default' },
+                  { date: '17:00', title: 'Togetsukyo Bridge: sunset photos', type: 'success' },
                 ]
               }
             },
@@ -475,9 +484,9 @@
                 density: 'compact',
                 events: [
                   { date: '8:30', title: 'Kinkaku-ji (Golden Pavilion)', type: 'success' },
-                  { date: '10:30', title: 'Ryoan-ji — famous rock garden', type: 'info' },
-                  { date: '13:00', title: 'Philosopher\'s Path — peaceful canal walk', type: 'default' },
-                  { date: '18:30', title: 'Pontocho alley — farewell dinner', type: 'success' },
+                  { date: '10:30', title: 'Ryoan-ji: famous rock garden', type: 'info' },
+                  { date: '13:00', title: 'Philosopher\'s Path: peaceful canal walk', type: 'default' },
+                  { date: '18:30', title: 'Pontocho alley: farewell dinner', type: 'success' },
                 ]
               }
             },
@@ -513,7 +522,7 @@
       version: '1.0' as const,
       ui: { type: 'company-header', props: {
         name: 'Meridian Industries', ticker: 'MERIDIAN', exchange: 'MX',
-        description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
+        description: 'India\'s largest private sector company: energy, petrochemicals, retail, and digital services',
         tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
         price: '\u20B92,920.45', change: '+40.05', changePercent: '+1.39%', marketCap: '\u20B919.76L Cr',
       }}
@@ -606,7 +615,7 @@
     { id: 'price', span: 'full', spec: {
       version: '1.0' as const,
       ui: { type: 'chart', props: {
-        type: 'area', height: 180, colors: ['#3b82f6'], title: 'MERIDIAN — 6 Month',
+        type: 'area', height: 180, colors: ['#3b82f6'], title: 'MERIDIAN: 6 Month',
         data: [
           { label: 'Oct', value: 2680 }, { label: 'Nov', value: 2720 },
           { label: 'Dec', value: 2650 }, { label: 'Jan', value: 2750 },
@@ -696,7 +705,7 @@
         { type: 'heading', props: { text: 'Key Risks', level: 4 } },
         { type: 'callout', props: { variant: 'warning', title: 'Oil Price Volatility', text: 'O2C segment (55% of revenue) directly exposed to crude and refining margins.' }},
         { type: 'callout', props: { variant: 'warning', title: 'Telecom ARPU', text: 'Volt faces pricing competition from Kestrel; TRB floor pricing an overhang.' }},
-        { type: 'callout', props: { variant: 'info', title: 'Succession', text: 'Next-gen leadership transition underway — closely watched by institutions.' }},
+        { type: 'callout', props: { variant: 'info', title: 'Succession', text: 'Next-gen leadership transition underway: closely watched by institutions.' }},
       ]}
     }},
 
@@ -706,7 +715,7 @@
       ui: { type: 'flex', props: { direction: 'column', gap: '0' }, children: [
         { type: 'news-card', props: { headline: 'Volt Mobile adds 8.3M subscribers in February, ARPU rises to \u20B9203.5', source: 'marketline', time: '2h ago', sentiment: 'bullish' }},
         { type: 'news-card', props: { headline: 'Meridian Retail partners with Loomhaus for India comeback launch', source: 'energy.ledger', time: '5h ago', sentiment: 'bullish' }},
-        { type: 'news-card', props: { headline: 'RIL new energy arm targets 20GW solar capacity by 2026', source: 'metro24', time: '1d ago', sentiment: 'neutral' }},
+        { type: 'news-card', props: { headline: 'Meridian new energy arm targets 20GW solar capacity by 2026', source: 'metro24', time: '1d ago', sentiment: 'neutral' }},
         { type: 'news-card', props: { headline: 'Petral deal valuation under review amid oil price volatility', source: 'tickerwire', time: '2d ago', sentiment: 'bearish' }},
       ]}
     }},
@@ -774,7 +783,7 @@
           name: 'Meridian Industries',
           ticker: 'MERIDIAN',
           exchange: 'MX',
-          description: 'India\'s largest private sector company — energy, petrochemicals, retail, and digital services',
+          description: 'India\'s largest private sector company: energy, petrochemicals, retail, and digital services',
           tags: ['Conglomerate', 'Energy', 'Retail', 'Telecom'],
           price: '\u20B92,920.45',
           change: '+40.05',
@@ -856,7 +865,7 @@
 
         // ── Price chart ──
         { type: 'chart', props: {
-          type: 'area', height: 180, colors: ['#3b82f6'], title: 'MERIDIAN — 6 Month',
+          type: 'area', height: 180, colors: ['#3b82f6'], title: 'MERIDIAN: 6 Month',
           data: [
             { label: 'Oct', value: 2680 }, { label: 'Nov', value: 2720 },
             { label: 'Dec', value: 2650 }, { label: 'Jan', value: 2750 },
@@ -898,7 +907,7 @@
         // ── Quarterly Financials Trend ──
         { type: 'heading', props: { text: 'Quarterly Revenue & Profit Trend', level: 4 } },
         { type: 'chart', props: {
-          type: 'line', height: 160, title: 'Revenue (L Cr) — Last 8 Quarters',
+          type: 'line', height: 160, title: 'Revenue (L Cr): Last 8 Quarters',
           data: [
             { label: 'Q1 24', value: 2.15 }, { label: 'Q2 24', value: 2.22 },
             { label: 'Q3 24', value: 2.30 }, { label: 'Q4 24', value: 2.38 },
@@ -1003,7 +1012,7 @@
               source: 'energy.ledger', time: '5h ago', sentiment: 'bullish',
             }},
             { type: 'news-card', props: {
-              headline: 'RIL new energy arm targets 20GW solar capacity by 2026',
+              headline: 'Meridian new energy arm targets 20GW solar capacity by 2026',
               source: 'metro24', time: '1d ago', sentiment: 'neutral',
             }},
             { type: 'news-card', props: {
@@ -1247,12 +1256,12 @@
           { label: 'Sep 25', value: 195 }, { label: 'Dec 25', value: 199 },
           { label: 'Feb 26', value: 203.5 },
         ]}},
-        { type: 'text', props: { text: 'Analysts view the ARPU expansion as sustainable. The July 2025 tariff hike added \u20B915–20 to blended ARPU, and 5G-bundled plans carry a further \u20B910–15 premium over 4G equivalents.', size: 'sm' } },
+        { type: 'text', props: { text: 'Analysts view the ARPU expansion as sustainable. The July 2025 tariff hike added \u20B915 to 20 to blended ARPU, and 5G-bundled plans carry a further \u20B910 to 15 premium over 4G equivalents.', size: 'sm' } },
         { type: 'flex', props: { gap: '6px', wrap: 'wrap' }, children: [
           { type: 'citation', props: { favicon: '/icons/source.svg', source: 'marketline', number: 1 } },
           { type: 'citation', props: { favicon: '/icons/source.svg', source: 'metro24', number: 2 } },
         ]},
-        { type: 'callout', props: { variant: 'success', title: 'Bullish Signal', text: 'Volt\'s ARPU has grown for 7 consecutive quarters — the longest streak since its 2016 launch. At \u20B9203.5, it is now within 5% of management\'s FY26 target of \u20B9210.' } },
+        { type: 'callout', props: { variant: 'success', title: 'Bullish Signal', text: 'Volt\'s ARPU has grown for 7 consecutive quarters: the longest streak since its 2016 launch. At \u20B9203.5, it is now within 5% of management\'s FY26 target of \u20B9210.' } },
         { type: 'heading', props: { text: 'Subscriber Market Share', level: 4 } },
         { type: 'chart', props: { type: 'donut', height: 150, data: [
           { label: 'Volt', value: 39.2 },
@@ -1275,7 +1284,7 @@
     earnings: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '20px' }, children: [
-        { type: 'heading', props: { text: 'Meridian Industries — Earnings Deep Dive', level: 3 } },
+        { type: 'heading', props: { text: 'Meridian Industries: Earnings Deep Dive', level: 3 } },
         { type: 'callout', props: { variant: 'success', title: 'Q4 FY25: Beat on Both Lines', text: 'Revenue \u20B92.52L Cr (+5.9% QoQ) vs estimate \u20B92.47L Cr. EPS \u20B920.1 vs estimate \u20B919.5, a +3.1% surprise.' } },
         { type: 'grid', props: { columns: 4, gap: '12px' }, children: [
           { type: 'metric', props: { label: 'Revenue', value: '\u20B92.52L Cr', trend: '+5.9%' } },
@@ -1315,7 +1324,7 @@
     holding: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '20px' }, children: [
-        { type: 'heading', props: { text: 'Shareholding Pattern — Meridian Industries', level: 3 } },
+        { type: 'heading', props: { text: 'Shareholding Pattern: Meridian Industries', level: 3 } },
         { type: 'chart', props: { type: 'donut', height: 180, data: [
           { label: 'Promoter (Mehra Family)', value: 50.3 },
           { label: 'FII / FPI', value: 23.1 },
@@ -1332,7 +1341,7 @@
           { cat: 'DII', q1: '14.90%', q2: '14.60%', q3: '14.40%', q4: '14.20%' },
           { cat: 'Retail & Others', q1: '12.70%', q2: '12.60%', q3: '12.50%', q4: '12.40%' },
         ]}},
-        { type: 'callout', props: { variant: 'insight', title: 'FII Accumulation', text: 'Foreign institutional investors have increased their stake by 1.0% over the last 4 quarters — the largest FII build-up since 2021. This coincides with Volt\'s ARPU inflection and new energy capex clarity.' } },
+        { type: 'callout', props: { variant: 'insight', title: 'FII Accumulation', text: 'Foreign institutional investors have increased their stake by 1.0% over the last 4 quarters: the largest FII build-up since 2021. This coincides with Volt\'s ARPU inflection and new energy capex clarity.' } },
         { type: 'heading', props: { text: 'Top Institutional Holders', level: 4 } },
         { type: 'table', props: { variant: 'compact', columns: [
           { key: 'name', label: 'Institution' }, { key: 'stake', label: 'Stake' }, { key: 'change', label: 'QoQ' },
@@ -1353,8 +1362,8 @@
     risks: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '16px' }, children: [
-        { type: 'heading', props: { text: 'Risk Assessment — Meridian Industries', level: 3 } },
-        { type: 'callout', props: { variant: 'warning', title: 'Oil & Gas Price Risk (High)', text: 'O2C contributes 55% of revenue. Kessel Strait disruption has already reduced GRM to $8.2/bbl from $11.5/bbl. Prolonged closure could cut EBITDA by \u20B912,000–15,000 Cr annually.' } },
+        { type: 'heading', props: { text: 'Risk Assessment: Meridian Industries', level: 3 } },
+        { type: 'callout', props: { variant: 'warning', title: 'Oil & Gas Price Risk (High)', text: 'O2C contributes 55% of revenue. Kessel Strait disruption has already reduced GRM to $8.2/bbl from $11.5/bbl. Prolonged closure could cut EBITDA by \u20B912,000 to 15,000 Cr annually.' } },
         { type: 'callout', props: { variant: 'warning', title: 'Telecom Competition (Medium)', text: 'Kestrel\'s aggressive 5G pricing and Statelink\'s 4G launch could pressure Volt\'s market share. TRB floor pricing regulation remains an uncertainty for the sector.' } },
         { type: 'callout', props: { variant: 'info', title: 'Succession & Governance (Medium)', text: 'Transition of operational control to Nisha and Kabir Mehra is progressing. While institutional investors view this favorably, execution continuity is key during the handover period.' } },
         { type: 'callout', props: { variant: 'warning', title: 'Capex Intensity (Medium)', text: 'New energy vertical requires \u20B975,000 Cr capex through FY28. Funding via internal accruals + debt. Debt/Equity ratio could rise from 0.38 to 0.55 if retail and digital FCF underperforms.' } },
@@ -1369,7 +1378,7 @@
     events: {
       version: '1.0' as const,
       ui: { type: 'flex', props: { direction: 'column', gap: '16px' }, children: [
-        { type: 'heading', props: { text: 'Key Events & M&A — Meridian Industries', level: 3 } },
+        { type: 'heading', props: { text: 'Key Events & M&A: Meridian Industries', level: 3 } },
         { type: 'timeline', props: { events: [
           { date: 'Mar 2026', title: 'Volt Financial Services IPO filing', detail: 'DRHP filed with SRB for a \u20B91,800 Cr IPO of the fintech arm. Listing expected Q2 2026.', type: 'info' },
           { date: 'Jan 2026', title: 'Meridian Retail acquires Northway Wholesale', detail: 'Completed \u20B92,850 Cr acquisition of Metro\'s wholesale business across 31 stores.', type: 'success' },
@@ -1378,7 +1387,7 @@
           { date: 'Jul 2025', title: 'Petral O2C stake sale restart', detail: 'O2C business carve-out valued at $75B; Petral may take 20% stake. Deal expected to close H1 2026.', type: 'warning' },
           { date: 'Apr 2025', title: 'Silverline Studios content library acquired', detail: '\u20B91,200 Cr deal for Silverline+ streaming catalog, merged into VoltCinema.', type: 'info' },
           { date: 'Feb 2025', title: 'Retail crosses 18,000 stores', detail: 'Meridian Retail network reaches 18,446 stores across 7,000+ cities.', type: 'success' },
-          { date: 'Oct 2024', title: 'Volt tariff hike', detail: 'Across-the-board 12–25% tariff increase. ARPU expected to reach \u20B9200+ by Q4 FY25.', type: 'info' },
+          { date: 'Oct 2024', title: 'Volt tariff hike', detail: 'Across-the-board 12 to 25% tariff increase. ARPU expected to reach \u20B9200+ by Q4 FY25.', type: 'info' },
         ]}},
         { type: 'sources-bar', props: { sources: [
           { favicon: '/icons/source.svg', name: 'marketline' }, { favicon: '/icons/source.svg', name: 'tickerwire' }, { favicon: '/icons/source.svg', name: 'wirefeed' }, { favicon: '/icons/source.svg', name: 'metro24' },
@@ -1428,7 +1437,7 @@
           props: {
             eyebrow: 'POCKETS',
             title: 'Company Snapshot',
-            subtitle: 'Each section is its own card — exactly how paw-enterprise renders pockets in a dashboard grid.'
+            subtitle: 'Each section is its own card: exactly how paw-enterprise renders pockets in a dashboard grid.'
           }
         },
 
@@ -1508,7 +1517,7 @@
           children: [
             {
               type: 'page-header',
-              props: { eyebrow: 'GALLERY', title: 'Other Pockets', subtitle: 'Single-spec pockets for different use cases — click to expand.' }
+              props: { eyebrow: 'GALLERY', title: 'Other Pockets', subtitle: 'Single-spec pockets for different use cases: click to expand.' }
             },
             {
               type: 'flex',
@@ -1571,9 +1580,11 @@
   };
 </script>
 
-<div data-pagefind-body data-pagefind-meta="title:Classic pockets" class="page">
+<ShowcasePage slug="classic" wide>
+<div class="page">
   <Ripple spec={pageSpec} onEvent={handleEvent} />
 </div>
+</ShowcasePage>
 
 <style>
   .page {
