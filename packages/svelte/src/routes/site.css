@@ -1,15 +1,19 @@
-/* routes/site.css — The Ripple site's Paw OS skin. Site-only: it lives under
-   routes/, so svelte-package never ships it (src/lib/styles.css is the package's).
-   Loaded after $lib/styles.css so these tokens win at equal specificity.
-   - Fonts: Inter (body), JetBrains Mono (code), Bricolage Grotesque (display),
-     self-hosted OFL woff2 in static/fonts, latin subset. No third-party fetch.
-   - Brand: Paw OS electric blue (--primary) and crimson, values copied from
-     paw-enterprise src/styles/global.css. --primary-ink is the blue as TEXT
-     (Paw OS's --primary-lifted on dark grounds).
-   - Neutrals: shadcn tokens re-tinted toward the brand hue so Ripple cards sit
-     on the same ground as the chrome. Dark is the default (app.html sets it).
-   - --glass is Paw OS's frosted surface: rgb(0 0 0 / .55) + blur 12px,
-     saturate 1.4, 12px radius in dark; a light frost in light mode. */
+/* routes/site.css — The Ripple site's tokens and fonts. Site-only: it lives
+   under routes/, so svelte-package never ships it (src/lib/styles.css is the
+   package's). Loaded after $lib/styles.css so these tokens win at equal
+   specificity.
+   - Fonts: Inter (body/UI), JetBrains Mono (code, spec and install lines only),
+     Bricolage Grotesque (h1/h2 only). Self-hosted OFL woff2 in static/fonts.
+   - Ground + ink ladder: the --site-* tokens. Text colours are ink at an alpha
+     (100 / 64 / 44 light, 100 / 56 / 36 dark); --site-faint fails 4.5:1 in both
+     themes, so it is for icons and rules, never text. Measured in the C1 status.
+   - One accent: Paw blue (--primary) means interactive or live, never decoration.
+     --primary-ink is the blue as TEXT; --site-on-primary is text on the blue.
+   - Widget tokens: --primary/--background/--card/--accent/--border etc. are the
+     shadcn tokens the rendered Ripple UI reads. Only the existing re-tints live
+     here; site chrome reads --site-*, never a widget token it does not own.
+   - Glass (backdrop blur) is the top bar's alone. Theme: app.html starts dark,
+     static/theme-init.js follows the OS unless the visitor chose. */
 
 @font-face {
 	font-family: 'Inter Variable';
@@ -42,8 +46,6 @@
 	--primary-foreground: oklch(1 0 0);
 	--ring: oklch(0.533 0.26 262.6);
 	--primary-ink: oklch(0.47 0.24 262.6);
-	--paw-crimson: oklch(0.55 0.2 18);
-	--paw-crimson-hover: oklch(0.48 0.2 18);
 
 	--background: oklch(0.982 0.003 262);
 	--foreground: oklch(0.18 0.015 262);
@@ -52,16 +54,33 @@
 	--muted-foreground: oklch(0.42 0.015 262);
 	--border: oklch(0.18 0.015 262 / 12%);
 
-	--site-ground: oklch(0.975 0.004 262);
-	--site-ink: oklch(0.18 0.015 262);
-	--site-soft: oklch(0.42 0.015 262);
-	--site-line: oklch(0.18 0.015 262 / 12%);
-	--glass: oklch(1 0 0 / 0.66);
-	--glass-line: oklch(0.18 0.015 262 / 11%);
-	--glow: oklch(0.533 0.26 262.6 / 0.16);
-	--glow-warm: oklch(0.55 0.2 18 / 0.08);
-	--radius-paw: 12px;
-	--site-topbar: 53px;
+	/* Ground and the ink ladder. */
+	--site-ground: oklch(0.985 0.006 262);
+	--site-ink-base: oklch(0.18 0.015 262);
+	--site-ink-soft: 64%;
+	--site-ink-faint: 44%;
+	--site-ink-hover: 5%;
+	--site-ink-pressed: 9%;
+	--site-glass: 78%;
+
+	/* Shape and depth: a 1px line, or this one shadow on rendered Ripple cards. */
+	--radius-control: 8px;
+	--radius-chip: 8px;
+	--radius-card: 12px;
+	--radius-paw: var(--radius-card);
+
+	--z-base: 0;
+	--z-sticky: 10;
+	--z-drawer: 20;
+	--z-modal: 30;
+	--z-toast: 40;
+
+	--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+	--dur-mount: 140ms;
+
+	--site-topbar: 56px;
+	--site-max: 1200px;
+	--site-gutter: 24px;
 	color-scheme: light;
 }
 
@@ -69,9 +88,7 @@
 	--primary: oklch(0.533 0.26 262.6);
 	--primary-foreground: oklch(1 0 0);
 	--ring: oklch(0.533 0.26 262.6);
-	--primary-ink: color-mix(in oklch, oklch(0.533 0.26 262.6) 35%, white);
-	--paw-crimson: oklch(0.62 0.2 18);
-	--paw-crimson-hover: oklch(0.55 0.2 18);
+	--primary-ink: oklch(0.74 0.13 262.6);
 
 	--background: oklch(0.155 0.012 262);
 	--foreground: oklch(0.95 0.005 260);
@@ -88,15 +105,40 @@
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 13%);
 
-	--site-ground: oklch(0.14 0.012 262);
-	--site-ink: oklch(0.95 0.005 260);
-	--site-soft: oklch(0.75 0.015 260);
-	--site-line: oklch(1 0 0 / 10%);
-	--glass: rgb(0 0 0 / 0.55);
-	--glass-line: oklch(1 0 0 / 10%);
-	--glow: oklch(0.533 0.26 262.6 / 0.34);
-	--glow-warm: oklch(0.62 0.2 18 / 0.14);
+	--site-ground: oklch(0.15 0.006 262);
+	--site-ink-base: oklch(0.96 0.005 262);
+	--site-ink-soft: 56%;
+	--site-ink-faint: 36%;
+	--site-ink-hover: 9%;
+	--site-ink-pressed: 14%;
+	--site-glass: 72%;
 	color-scheme: dark;
+}
+
+/* Derived on both, so a .dark subtree recomputes them from its own base. */
+:root,
+.dark {
+	--site-ink: var(--site-ink-base);
+	--site-soft: color-mix(in oklch, var(--site-ink-base) var(--site-ink-soft), transparent);
+	--site-faint: color-mix(in oklch, var(--site-ink-base) var(--site-ink-faint), transparent);
+	--site-line: color-mix(in oklch, var(--site-ink-base) 10%, transparent);
+	--site-hover: color-mix(in oklch, var(--site-ink-base) var(--site-ink-hover), transparent);
+	--site-pressed: color-mix(in oklch, var(--site-ink-base) var(--site-ink-pressed), transparent);
+	--site-on-primary: oklch(0.985 0.006 262);
+	--glass: color-mix(in oklch, var(--site-ground) var(--site-glass), transparent);
+	--glass-line: var(--site-line);
+	--shadow-card: 0 16px 32px -20px color-mix(in oklch, var(--site-ink-base) 18%, transparent);
+
+	/* Code blocks (docs, samples, the install line). */
+	--code-bg: color-mix(in oklch, var(--site-ink-base) 4%, var(--site-ground));
+	--code-line: var(--site-line);
+	--code-ink: var(--site-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--dur-mount: 0ms;
+	}
 }
 
 body {

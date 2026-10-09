@@ -283,17 +283,11 @@
 	h1 {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: clamp(2rem, 4.2vw, 3.3rem);
+		font-size: clamp(2.2rem, 4.2vw, 3.4rem);
 		line-height: 1.04;
-		letter-spacing: -0.035em;
-		font-weight: 700;
+		letter-spacing: -0.03em;
+		font-weight: 650;
 		text-wrap: balance;
-	}
-	h1 span {
-		font-weight: 500;
-	}
-	h1 span {
-		color: var(--ink-soft);
 	}
 	.lede {
 		margin: 16px 0 0;
