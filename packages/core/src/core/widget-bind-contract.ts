@@ -156,6 +156,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'sidebar', 'nav',
   // bill-split binds the bill as edited ({ subtotal, tip_percent, people })
   'bill-split', 'split-bill', 'bill-splitter',
+  // habit-tracker binds { habits, ticks: { [habitId]: ISO days } }
+  'habit-tracker', 'habits', 'streak-tracker',
 ]);
 
 const warnedTypes = new Set<string>();
