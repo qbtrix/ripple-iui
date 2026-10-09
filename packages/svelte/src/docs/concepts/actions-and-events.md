@@ -109,7 +109,7 @@ These arrive at `onEvent` as a `RippleEvent`:
 
 `toast` also feeds Ripple's own toast queue, so a spec that includes a `toast` widget shows the message without any host code.
 
-Expressions in `url`, `body`, `headers` and `message` are resolved before the event leaves the render. A `navigate` URL is also checked: anything other than a relative path, `http`, `https`, `mailto` or `tel` reaches your handler as `'#'`, even when an expression built it.
+Expressions in `url`, `body`, `headers` and `message` are resolved before the event leaves the render. A `navigate` URL is also checked: anything other than a relative path, `http`, `https`, `mailto` or `tel` reaches your handler as an empty string, even when an expression built it.
 
 ## Handling events
 
@@ -123,7 +123,7 @@ Expressions in `url`, `body`, `headers` and `message` are resolved before the ev
   async function onEvent(event: RippleEvent) {
     switch (event.type) {
       case 'navigate':
-        if (event.url && event.url !== '#') goto(event.url);
+        if (event.url) goto(event.url);
         return;
       case 'emit':
         console.log(event.name, event.payload);

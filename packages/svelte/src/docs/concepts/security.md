@@ -20,22 +20,22 @@ It has two modes:
 
 | Mode | Used for | Allowed | Anything else becomes |
 |---|---|---|---|
-| `link` (default) | `href`, form `action`, `window.open`, the `navigate` action | Relative paths (`/x`, `./x`, `?q`, `#h`, `//host`), `http`, `https`, `mailto`, `tel` | `'#'` |
+| `link` (default) | `href`, form `action`, `window.open`, the `navigate` action | Relative paths (`/x`, `./x`, `?q`, `#h`, `//host`), `http`, `https`, `mailto`, `tel` | `undefined` |
 | `resource` | `src`, `poster`, CSS `url()` | Relative paths except `//host`, `http`, `https`, and `data:image/` in PNG, GIF, JPEG or WebP | `undefined`, so the attribute is dropped |
 
 ```ts
 import { safeUrl } from '@ripple-ui/core';
 
 safeUrl('https://example.com');                 // 'https://example.com'
-safeUrl('javascript:alert(1)');                 // '#'
-safeUrl('java&#x61;script:alert(1)');           // '#'
+safeUrl('javascript:alert(1)');                 // undefined
+safeUrl('java&#x61;script:alert(1)');           // undefined
 safeUrl('data:image/svg+xml,...', { kind: 'resource' });  // undefined
 safeUrl('');                                     // undefined
 ```
 
 Before it looks at the scheme, `safeUrl` decodes HTML entities and percent-escapes once and removes whitespace and control characters, so `java&#x61;script:` and `java\tscript:` are caught. The value it returns is the trimmed input itself, so what was checked is what renders. Protocol-relative URLs (`//host`) are refused as resources because on a `file:` page they read local files. SVG data URLs are refused because SVG can carry script.
 
-Every built-in widget passes its URLs through `safeUrl`, and so does the `navigate` action: a refused `navigate` reaches your handler as `'#'`. A link that has no URL stays without one instead of becoming `'#'`.
+Every built-in widget passes its URLs through `safeUrl`, and so does the `navigate` action: a refused `navigate` reaches your handler with an empty `url`. A refused link is dropped, so the element renders without an `href`.
 
 ## Styles
 
@@ -55,7 +55,7 @@ The checks above cover the built-in widgets. If you write a [custom widget](/doc
 
 ## What your app still has to do
 
-- **Check every event before acting on it.** For `navigate`, ignore `'#'` and decide which destinations are allowed. For `api`, only call endpoints you expect, and don't forward `headers` from a spec to another origin.
+- **Check every event before acting on it.** For `navigate`, ignore an empty `url` and decide which destinations are allowed. For `api`, only call endpoints you expect, and don't forward `headers` from a spec to another origin.
 - **Authorize on the server.** For `run_source`, `call_binding` and `invoke_tool`, look up the name in an allowlist for the current user and reject anything else with `{ ok: false, error: { message, status: 403 } }`. The browser can't be trusted to have checked.
 - **Keep secrets out of state.** Anything in `state` or `data` can be read by an expression and sent in an `emit` or `api` event. Don't put tokens there.
 - **Set a Content Security Policy.** A CSP without `unsafe-inline` scripts, and with `frame-src` limited to origins you trust for `embed`, limits the damage if anything slips through.

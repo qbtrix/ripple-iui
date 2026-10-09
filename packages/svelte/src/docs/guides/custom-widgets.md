@@ -91,7 +91,7 @@ A spec is model output, and an expression can build a `javascript:` URL while it
 <img src={safeUrl(image, { kind: 'resource' })} alt="" />
 ```
 
-An unsafe link becomes `'#'`; an unsafe resource becomes `undefined`, so the attribute is dropped. If you build a style string from props yourself, pass it through `safeStyle`. All built-in widgets do both.
+An unsafe link or resource becomes `undefined`, so the attribute is dropped. If you build a style string from props yourself, pass it through `safeStyle`. All built-in widgets do both.
 
 ## Reach the engine from a widget
 

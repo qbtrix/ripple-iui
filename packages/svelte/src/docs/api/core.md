@@ -106,7 +106,7 @@ See [Theming](/docs/guides/theming).
 
 | Export | Signature | Notes |
 |---|---|---|
-| `safeUrl` | `(value: unknown, opts?: { kind?: 'link' \| 'resource' }) => string \| undefined` | `link` (default) allows relative paths, `http`, `https`, `mailto` and `tel`, and returns `'#'` for anything else. `resource` allows relative paths (not `//host`), `http`, `https` and `data:image/(png\|gif\|jpeg\|webp)`, and returns `undefined` for anything else. Empty or non-string input returns `undefined`. |
+| `safeUrl` | `(value: unknown, opts?: { kind?: 'link' \| 'resource' }) => string \| undefined` | `link` (default) allows relative paths, `http`, `https`, `mailto` and `tel`, and returns `undefined` for anything else. `resource` allows relative paths (not `//host`), `http`, `https` and `data:image/(png\|gif\|jpeg\|webp)`, and returns `undefined` for anything else. Empty or non-string input returns `undefined`. |
 | `safeStyle` | `(style: string \| Record<string, unknown>) => same type` | Drops declarations whose `url()` or `image-set()` target fails `safeUrl(..., { kind: 'resource' })`, plus `expression(`, `-moz-binding` and property names that aren't plain CSS identifiers. |
 
 Detection decodes HTML entities and percent-escapes once and ignores whitespace and control characters, so `java&#x61;script:` and `java\tscript:` are caught.
