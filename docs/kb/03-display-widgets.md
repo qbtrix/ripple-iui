@@ -1,4 +1,4 @@
-# Ripple Display Widgets — text, heading, image, badge, progress, avatar, metric, feed, soul-status
+# Ripple Display Widgets — text, heading, image, illustration, badge, progress, avatar, metric, feed, soul-status
 
 Display widgets show read-only content. They don't accept user input but support expressions for dynamic values.
 
@@ -46,6 +46,28 @@ Displays an image with sizing and fit controls.
 **Example:**
 ```json
 { "type": "image", "props": { "src": "https://example.com/photo.jpg", "alt": "Team photo", "width": 400, "rounded": "lg" } }
+```
+
+## illustration
+
+A small animated SVG you draw for "show me a sun rising", an animated icon, a tiny diagram. The widget rebuilds your markup from an allowlist; anything outside it is dropped silently.
+
+**Props:**
+- `svg`: string (required) — root `<svg viewBox='0 0 200 120'>`. Write attributes in single quotes so the JSON string needs no escaping
+- `title`: string (required) — accessible name
+- `caption`: string — line under the art
+- `max_height`: number (px, 80..640, default 320)
+
+**Rules:**
+- Elements: `svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set`
+- Motion with `animate` / `animateTransform` / `animateMotion`, every `dur` 0.5s or more, `repeatCount` up to 1000 or `indefinite`. Animate only presentation attributes (`fill`, `stroke`, `opacity`, `transform`, `d`, `points`, `x`, `cx`, `r`, `width`, `offset`, ...)
+- References only as `url(#id)` and plain `href='#id'` on `use` / `mpath`
+- Never: `style`, `script`, `a`, `image`, `foreignObject`, filters, `on*` handlers, outside URLs, DOCTYPE or entities other than `&lt; &gt; &amp; &quot; &apos;`
+- Under 24,000 chars, 400 elements, 40 animations, nesting depth 24
+
+**Example:**
+```json
+{ "type": "illustration", "props": { "title": "Bars growing", "max_height": 160, "svg": "<svg viewBox='0 0 120 80'><rect x='10' y='70' width='20' height='0' fill='#1877f2'><animate attributeName='height' from='0' to='40' dur='1s' fill='freeze'/><animate attributeName='y' from='70' to='30' dur='1s' fill='freeze'/></rect></svg>" } }
 ```
 
 ## badge
