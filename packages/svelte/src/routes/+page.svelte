@@ -183,7 +183,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 
 	<section aria-labelledby="numbers-title">
 		<div class="head">
-			<h2 id="numbers-title">Measured, not claimed</h2>
+			<h2 id="numbers-title">The numbers</h2>
 			<p>Every number here is computed when the site builds, from the code and recordings in the repo.</p>
 		</div>
 		<dl class="numbers">
@@ -219,7 +219,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 		<section aria-labelledby="changes-title">
 			<div class="head">
 				<h2 id="changes-title">Changelog</h2>
-				<p>The last {data.releases.length} tagged releases, read from the repo's git tags.</p>
+				<p>The latest tagged releases, read from the repo's git tags when the site builds.</p>
 			</div>
 			<ol class="changes">
 				{#each data.releases as r (r.tag)}
