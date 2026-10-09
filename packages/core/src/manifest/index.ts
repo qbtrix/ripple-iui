@@ -5,11 +5,10 @@
  * grammar and the spec envelope (shared with `@ripple-ui/svelte`'s full
  * manifest), and the slim manifest for `@ripple-ui/core/headless/slim`.
  *
- * Pure data and small builders: no zod, no Svelte, no DOM.
+ * Also the `illustration` widget's SVG allowlist (illustration-svg.ts), which
+ * the pocketpaw validator and the landing card policy mirror.
  *
- * @changes
- *   - 2026-09-27: created.
- *   - 2026-09-27: exports SLIM_WIDGETS, the standard atoms for slim hosts.
+ * Pure data and small builders: no zod, no Svelte, no DOM.
  */
 
 export { manifestActions, type ActionSpec } from './actions.js';
@@ -24,3 +23,17 @@ export {
 } from './slim.js';
 export { BASE_ACTIONS, type BaseAction } from '../core/base-dispatcher.js';
 export { SLIM_WIDGETS } from './slim-widgets.js';
+export {
+	ILLUSTRATION_ELEMENTS,
+	ILLUSTRATION_ATTRIBUTES,
+	ILLUSTRATION_ANIMATION_ELEMENTS,
+	ILLUSTRATION_ANIMATION_ATTRIBUTES,
+	ILLUSTRATION_ANIMATABLE,
+	ILLUSTRATION_HREF_ELEMENTS,
+	ILLUSTRATION_TRANSFORM_TYPES,
+	ILLUSTRATION_HOSTILE_ELEMENTS,
+	ILLUSTRATION_DANGER_TOKENS,
+	ILLUSTRATION_ENTITIES,
+	ILLUSTRATION_CAPS,
+	ILLUSTRATION_MAX_HEIGHT
+} from './illustration-svg.js';
