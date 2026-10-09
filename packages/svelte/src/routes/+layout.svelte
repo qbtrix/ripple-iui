@@ -4,7 +4,8 @@
     mark + "Ripple", Docs / Live / Playground / Showcase, a search slot, the
     GitHub icon, the theme toggle) and a one-row footer. Below 640px the nav
     links move into a disclosure menu; the logo, GitHub icon and theme toggle
-    stay in the bar. The bar is the only glass on the site, with a solid
+    stay in the bar. A skip link (first focus) jumps to #main, the wrapper
+    around every page. The bar is the only glass on the site, with a solid
     fallback under prefers-reduced-transparency. Tokens and fonts come from
     ./site.css. Theme: static/theme-init.js sets `dark` on <html> before paint
     (the stored choice, else the OS); this reads and flips that class and
@@ -65,6 +66,7 @@
 {/snippet}
 
 <div class="shell">
+	<a class="skip" href="#main">Skip to content</a>
 	<header class="topbar">
 		<div class="bar">
 			<a href="/" class="brand" aria-label="Ripple home">
@@ -109,7 +111,7 @@
 		<nav id="site-menu" class="menu" aria-label="Site menu" hidden={!menuOpen}>{@render links()}</nav>
 	</header>
 
-	{@render children()}
+	<div id="main" class="main" tabindex="-1">{@render children()}</div>
 
 	<footer class="foot">
 		<p>
@@ -135,6 +137,29 @@
 		display: flex;
 		flex-direction: column;
 		overflow-x: clip;
+	}
+	.main {
+		flex: 1 0 auto;
+		min-width: 0;
+		outline: none;
+	}
+	/* Skip link: off screen until focused, then above the top bar. */
+	.skip {
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		z-index: calc(var(--z-sticky) + 1);
+		padding: 10px 14px;
+		border-radius: var(--radius-control);
+		background: var(--site-ground);
+		color: var(--site-ink);
+		font-weight: 600;
+		transform: translateY(-200%);
+	}
+	.skip:focus-visible {
+		transform: none;
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
 	}
 	.topbar {
 		position: sticky;

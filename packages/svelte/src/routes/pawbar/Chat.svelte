@@ -10,10 +10,18 @@
     keeps using). Host events go to session.hostEvent, which ignores them until
     the card is final. A notice that offers a replay gets a button that plays
     the closest recorded answer into the same turn (session.replayRecorded).
-    Each card has a spec peek (its JSON, pretty-printed as it streams). Peeks
-    start closed, except the first card the visitor triggers in a browser
-    session (sessionStorage). Turns already in the session at mount (the
-    prerendered exchange) neither animate in nor auto-open their peek.
+    Each card has a spec peek (its JSON, pretty-printed as it streams, soft
+    wrapped with a hanging indent so deep lines never leave the pane; under
+    1024px it shows 8 lines until Expand). Peeks start closed, except the
+    first card the visitor triggers in a browser session (sessionStorage).
+    Turns already in the session at mount (the prerendered exchange) neither
+    animate in nor auto-open their peek. A card whose spec root is a `card`
+    widget gets a bare frame (no border, shadow or fill), so the widget's own
+    card is the surface. The composer is in the flow until the visitor
+    engages (focus, a chip, a send), then sticks to the bottom; before that
+    it would cover the prerendered card on a phone. The log is role="log"
+    and aria-busy while a turn streams; one polite region says "Building"
+    and "Done" per turn instead of reading tokens.
     DOM ids are positional, never Card.id: that counter can differ between the
     prerender and hydration. Reduced motion lives in CSS only.
 -->
@@ -21,6 +29,7 @@
 	import { tick, untrack } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import { prettyPrefix } from '$lib/site/prettyPrefix.js';
+	import JsonLines from '$lib/site/JsonLines.svelte';
 	import type { Card, ChatSession, Notice } from './session.svelte.js';
 
 	interface Suggestion {
@@ -32,6 +41,8 @@
 	let { session, suggestions = [], note = '' }: { session: ChatSession; suggestions?: Suggestion[]; note?: string } = $props();
 
 	let draft = $state('');
+	/** The visitor has engaged: from here on the composer is sticky. */
+	let engaged = $state(false);
 	let log = $state<HTMLOListElement>();
 
 	const cardsIn = (s: ChatSession) => s.turns.flatMap((t) => t.parts.flatMap((p) => (p.kind === 'card' ? [p.card] : [])));
@@ -40,6 +51,8 @@
 	const known = untrack(() => new Set(cardsIn(session)));
 
 	let peek = $state<Record<string, boolean>>({});
+	/** Under 1024px a peek shows 8 lines until expanded. */
+	let peekFull = $state<Record<string, boolean>>({});
 	let copied = $state<string | null>(null);
 	const PEEK_KEY = 'ripple.chat.peeked';
 
@@ -60,6 +73,7 @@
 
 	async function ask(text: string) {
 		if (session.busy || !text.trim()) return;
+		engaged = true;
 		draft = '';
 		const done = session.send(text);
 		await tick();
@@ -95,6 +109,18 @@
 		void card.text;
 		if (card.status === 'streaming') el.scrollTop = el.scrollHeight;
 	};
+
+	/** The spec root is itself a card widget, so our frame would draw a card in a card. */
+	const bare = (c: Card) =>
+		c.spec ? (c.spec.ui as { type?: unknown } | undefined)?.type === 'card' : /"ui"\s*:\s*\{\s*"type"\s*:\s*"card"/.test(c.text);
+
+	/** What the polite region says: per turn, never per token. */
+	const announce = $derived.by(() => {
+		const last = session.turns.at(-1);
+		if (!last || last.role !== 'assistant' || seeded.has(last.id)) return '';
+		if (!last.pending) return 'Done';
+		return last.parts.some((p) => p.kind === 'card' && p.card.status === 'streaming') ? 'Building' : '';
+	});
 
 	const paragraphs = (text: string) => text.trim().split(/\n{2,}/).filter(Boolean);
 	const inline = (para: string) =>
@@ -145,10 +171,10 @@
 		<p class="card-note">{rejectedNote(card)}</p>
 	{:else}
 		{@const open = peek[card.id] ?? false}
-		<figure class="card" data-status={card.status}>
+		<figure class="card" data-status={card.status} data-bare={bare(card) || undefined}>
 			<figcaption class="card-head">
 				<span class="card-title">{card.title || 'Card'}</span>
-				{#if card.status === 'streaming'}<span class="building" aria-live="polite">Building</span>{/if}
+				{#if card.status === 'streaming'}<span class="building" aria-hidden="true">Building</span>{/if}
 				<span class="tools">
 					<button type="button" class="tool" aria-expanded={open} aria-controls={pid} onclick={() => (peek[card.id] = !open)}>Spec</button>
 					<button type="button" class="tool" onclick={() => copySpec(card)}>{copied === card.id ? 'Copied' : 'Copy spec'}</button>
@@ -163,9 +189,18 @@
 					{/if}
 				</div>
 				<div class="peek" id={pid} inert={!open}>
-					<div class="peek-inner">
-						<p class="peek-meta"><span>JSON spec</span><span class="bytes">{bytes(card.text)}</span></p>
-						<pre {@attach follow(card)}><code>{prettyPrefix(card.text)}</code></pre>
+					<div class="peek-inner" data-full={peekFull[card.id] || undefined}>
+						<p class="peek-meta">
+							<span>JSON spec</span><span class="bytes">{bytes(card.text)}</span>
+							<button
+								type="button"
+								class="expand"
+								aria-expanded={peekFull[card.id] ?? false}
+								aria-controls="{pid}-code"
+								onclick={() => (peekFull[card.id] = !peekFull[card.id])}>{peekFull[card.id] ? 'Collapse' : 'Expand'}</button
+							>
+						</p>
+						<pre id="{pid}-code" {@attach follow(card)}><JsonLines text={card.text} /></pre>
 					</div>
 				</div>
 			</div>
@@ -174,9 +209,10 @@
 	{/if}
 {/snippet}
 
-<div class="chat">
+<div class="chat" data-engaged={engaged || undefined}>
+	<p class="sr-only" aria-live="polite">{announce}</p>
 	{#if session.turns.length}
-		<ol class="log" bind:this={log} aria-label="Conversation">
+		<ol class="log" bind:this={log} role="log" aria-label="Conversation" aria-busy={session.busy}>
 			{#each session.turns as turn, t (turn.id)}
 				<li class="turn" data-role={turn.role} data-seeded={seeded.has(turn.id) || undefined}>
 					{#if turn.role === 'user'}
@@ -212,6 +248,7 @@
 
 	<form
 		class="composer"
+		onfocusin={() => (engaged = true)}
 		onsubmit={(e) => {
 			e.preventDefault();
 			void ask(draft);
@@ -347,11 +384,31 @@
 		box-shadow: var(--shadow-card);
 		overflow: hidden;
 	}
+	/* The spec's root is a card widget: it is the surface, ours steps back. */
+	.card[data-bare] {
+		border: 0;
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+	}
+	.card[data-bare] .card-head {
+		padding-left: 0;
+		border-bottom: 0;
+	}
+	.card[data-bare] .card-ui {
+		padding: 2px 0 0;
+	}
+	.card[data-bare] .peek-inner {
+		margin-top: 12px;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
+		overflow: hidden;
+	}
 	.card-head {
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		padding: 6px 6px 6px 16px;
+		padding: 2px 2px 2px 16px;
 		border-bottom: 1px solid var(--site-line);
 		font-size: 14px;
 	}
@@ -369,7 +426,7 @@
 		flex: none;
 	}
 	.tool {
-		min-height: 36px;
+		min-height: 44px;
 		padding: 0 12px;
 		border: 0;
 		border-radius: var(--radius-control);
@@ -433,15 +490,38 @@
 		font-family: var(--font-mono);
 		font-variant-numeric: tabular-nums;
 	}
+	/* JsonLines soft wraps with a hanging indent, so a deep line stays in the
+	   pane: no sideways scroll to read a 1900px line in a 340px pane. */
 	.peek pre {
 		margin: 0;
 		padding: 0 16px 14px;
-		max-height: 320px;
-		overflow: auto;
+		/* 8 lines until Expand (under 1024px). */
+		max-height: calc(8 * 1.55em);
+		overflow: hidden;
 		font-family: var(--font-mono);
 		font-size: 12.5px;
 		line-height: 1.55;
 		color: var(--code-ink);
+	}
+	.peek-inner[data-full] pre {
+		max-height: 60vh;
+		overflow: auto;
+	}
+	.expand {
+		margin-left: auto;
+		min-height: 44px;
+		margin-block: -12px;
+		padding: 0 4px;
+		border: 0;
+		background: transparent;
+		color: var(--primary-ink);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.expand:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: -4px;
 	}
 	@media (min-width: 1024px) {
 		.card-body,
@@ -463,9 +543,17 @@
 			border-top: 0;
 			border-left: 1px solid var(--site-line);
 		}
-		.peek pre {
+		.peek pre,
+		.peek-inner[data-full] pre {
 			flex: 1;
 			max-height: none;
+			overflow: auto;
+		}
+		.expand {
+			display: none;
+		}
+		.card[data-bare] .peek-inner {
+			margin: 2px 0 0 12px;
 		}
 	}
 
@@ -511,7 +599,7 @@
 		text-underline-offset: 3px;
 	}
 	.replay {
-		min-height: 36px;
+		min-height: 44px;
 		padding: 0 12px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-control);
@@ -532,9 +620,9 @@
 		cursor: default;
 	}
 
+	/* In the flow until the visitor engages, then sticky above the safe area. */
 	.composer {
-		position: sticky;
-		bottom: 12px;
+		position: relative;
 		z-index: var(--z-sticky);
 		display: flex;
 		align-items: flex-end;
@@ -543,6 +631,10 @@
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-card);
 		background: var(--site-ground);
+	}
+	.chat[data-engaged] .composer {
+		position: sticky;
+		bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 	}
 	.composer:focus-within {
 		outline: 2px solid var(--ring);
@@ -566,7 +658,7 @@
 	}
 	.send {
 		flex: none;
-		min-height: 40px;
+		min-height: 44px;
 		padding: 0 18px;
 		border: 0;
 		border-radius: var(--radius-control);
@@ -661,7 +753,7 @@
 			padding: 10px;
 		}
 		/* Room for the sticky composer, so the end of a card can scroll above it. */
-		.log {
+		.chat[data-engaged] .log {
 			padding-bottom: 72px;
 		}
 	}
