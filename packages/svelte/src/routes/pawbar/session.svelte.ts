@@ -13,17 +13,72 @@
 // legacy ```pawbar-card fence in chunk text is re-split on every chunk and
 // fed through the same Card. Every partial spec and the final card pass
 // card-policy.ts first; a refused card is dropped like a rejected one. Host
-// events are inert until final, and even then only recorded for display: the
-// landing has no store, so no host event makes a network call or navigates.
+// events are inert until final. With a StoreHost (the landing passes one), a
+// final card's `emit checkout` (menu-order's Cart) goes to live/checkout.ts, and
+// the payment link it returns becomes the card's `pay` (a PayCard under the
+// card, which polls the order and turns into tracking; retryCheckout() starts
+// a new one after a cancel). The page never navigates. While a card's order is
+// pending or paid, another checkout from it opens no new session: it nudges
+// the pay card into view (payNudge); only `cancelled` frees it. The open order
+// is kept in sessionStorage (pay/resume.ts) and resume() brings it back as
+// `resumed`, for a pay link that navigated this tab away. `emit book` (booking's request) goes to
+// book.ts, and the answer is patched into the booking node's props (`notice`,
+// `confirmed`, fresh `days`) with a BookingReceipt under the card on 201. One
+// checkout or booking in flight per session. A final card's `emit ask` ({text})
+// and a finished flow (flowComplete: a `chat` onComplete, plus the visitor's
+// answers as plain sentences, see flowMessage) become the visitor's next message,
+// sent exactly as the transcript shows it, now or right after the answer in
+// flight (one waits; one per click). Any other host event, and every store event
+// without a StoreHost, is only recorded for display.
+// Text the visitor TYPES does not go to the Paw Bar: handoff() opens Paw OS
+// (pawosHandoffUrl: the prompt rides in the fragment, never the query, capped at
+// HANDOFF_MAX) and leaves a host note with a fallback link. Chips, card asks and
+// flow submits still go through send(); Chat.svelte makes that split.
 // Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
 
-import type { RippleEvent } from '$lib/index.js';
+import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
-import { refuseCard } from './card-policy.js';
+import { checkout, LOCAL_HOSTS, type Pay } from '../live/checkout.js';
+import { clearOrder, loadOrder, saveOrder, type Saved } from '../pay/resume.js';
+import type { Phase } from '../pay/watch.svelte.js';
+import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
+import { ASK_MAX, refuseCard, textRefusal } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
 export const BYOK_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
+export const PAWOS_URL = 'https://os.pocketpaw.xyz';
+/** The most of a typed message that rides along to Paw OS, in characters. */
+export const HANDOFF_MAX = 500;
+export const HANDOFF_NOTE = 'Opened in Paw OS. Sign in there and your Ripple agent picks this up.';
+
+const httpsOrLocal = (raw: string): URL | null => {
+	try {
+		const u = new URL(raw);
+		return u.protocol === 'https:' || (u.protocol === 'http:' && LOCAL_HOSTS.includes(u.hostname)) ? u : null;
+	} catch {
+		return null;
+	}
+};
+
+/** The Paw OS base url: https (http only on localhost), else PAWOS_URL. */
+export function pawosBase(raw = ''): string {
+	const u = httpsOrLocal(raw);
+	return u ? `${u.origin}${u.pathname.replace(/\/+$/, '')}` : PAWOS_URL;
+}
+
+/** Typed text stays on the Paw Bar only for a localhost endpoint with PUBLIC_TYPED_LOCAL=1 (mock and dev). */
+export function typedStaysLocal(endpoint = '', flag = ''): boolean {
+	const u = flag === '1' ? httpsOrLocal(endpoint) : null;
+	return u != null && LOCAL_HOSTS.includes(u.hostname);
+}
+
+/** Paw OS with the prompt in the fragment (never sent to a server), cut to HANDOFF_MAX characters. */
+export function pawosHandoffUrl(text: string, base?: string): { url: string; trimmed: boolean } {
+	const chars = Array.from(text.trim()); // code points, so a cut never splits an emoji
+	const prompt = chars.slice(0, HANDOFF_MAX).join('').trim();
+	return { url: `${pawosBase(base)}/?ref=ripple#prompt=${encodeURIComponent(prompt)}`, trimmed: chars.length > HANDOFF_MAX };
+}
 export const CUSTOMER_REF_KEY = 'ripple.pawbar.customer_ref';
 const REF_PATTERN = /^[A-Za-z0-9_-]{8,128}$/;
 
@@ -52,6 +107,77 @@ export function customerRef(storage: () => Pick<Storage, 'getItem' | 'setItem'> 
 function newRef(): string {
 	if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
 	return `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
+
+/** The most a finished flow's message may be. */
+export const FLOW_MESSAGE_MAX = 600;
+const ANSWER_MAX = 200;
+
+/** `chosen_style` -> "Chosen style". */
+const humanize = (key: string) => {
+	const words = key.replace(/[_-]+/g, ' ').trim();
+	return words.charAt(0).toUpperCase() + words.slice(1);
+};
+const oneLine = (v: string) => v.replace(/\s+/g, ' ').trim();
+const sentence = (v: string) => (/[.!?]$/.test(v) ? v : `${v}.`);
+const answerText = (v: unknown): string => {
+	if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return oneLine(String(v)).slice(0, ANSWER_MAX);
+	if (Array.isArray(v)) return v.map(answerText).filter(Boolean).join(', ');
+	if (isRecord(v)) return answerText(v.label ?? v.title ?? v.name ?? v.id);
+	return '';
+};
+
+/** Step titles by step key (flowId, id) and field labels by field id, read off a flow card's steps. */
+function flowNames(root: unknown) {
+	const steps = new Map<string, string>();
+	const fields = new Map<string, string>();
+	const binds = new Map<string, string>();
+	const todo = [root];
+	for (let n = 0; todo.length && n < 64; n++) {
+		const step = todo.pop();
+		if (!isRecord(step)) continue;
+		const title = typeof step.title === 'string' ? oneLine(step.title) : '';
+		for (const k of [step.flowId, step.id]) if (typeof k === 'string' && title) steps.set(k, title);
+		for (const f of Array.isArray(step.form_fields) ? step.form_fields : [])
+			if (isRecord(f) && typeof f.id === 'string' && typeof f.label === 'string') fields.set(f.id, oneLine(f.label));
+		todo.push(step.chain, ...(isRecord(step.chain_map) ? Object.values(step.chain_map) : []));
+		// Inputs bound into the flow's state: their label names the answer in payload.state.
+		const nodes = [step.ui];
+		for (let m = 0; nodes.length && m < 400; m++) {
+			const node = nodes.pop();
+			if (!isRecord(node)) continue;
+			const path = typeof node.bind === 'string' ? node.bind.replace(/^\{state\.|\}$/g, '') : '';
+			const label = isRecord(node.props) && typeof node.props.label === 'string' ? oneLine(node.props.label) : '';
+			if (path && label) binds.set(path, label);
+			if (Array.isArray(node.children)) nodes.push(...node.children);
+		}
+	}
+	return { steps, fields, binds };
+}
+
+/**
+ * A finished flow's message: the card's plain `onComplete` text, then one short
+ * sentence per answer the visitor gave, named by the step's title (a pick) or the
+ * field's label (a form value), e.g. "Plan a trip for me. What kind of trip? Food.
+ * City: Lisbon. Days: 3." The card can't template the answers in (no `{` in
+ * onComplete). An answer that fails the card policy's text rule (markup, a link)
+ * is left out, and whole sentences stop before FLOW_MESSAGE_MAX.
+ */
+export function flowMessage(message: string, payload: Record<string, unknown> = {}, root?: unknown): string {
+	const names = flowNames(root);
+	let out = sentence(oneLine(message));
+	const add = (name: string, value: unknown) => {
+		const said = answerText(value);
+		const clause = said && sentence(name.endsWith('?') ? `${name} ${said}` : `${name}: ${said}`);
+		if (clause && !textRefusal(clause) && out.length + clause.length < FLOW_MESSAGE_MAX) out += ` ${clause}`;
+	};
+	for (const [key, value] of Object.entries(payload)) {
+		const step = key.replace(/_(selection|formData)$/, '');
+		if (key === 'state' && isRecord(value)) for (const [p, v] of Object.entries(value)) add(names.binds.get(p) ?? humanize(p.split('.').pop() ?? p), v);
+		else if (key.endsWith('_formData') && isRecord(value)) for (const [f, v] of Object.entries(value)) add(names.fields.get(f) ?? humanize(f), v);
+		else add(names.steps.get(step) ?? humanize(step), value);
+	}
+	return out;
 }
 
 export type Transport = (message: string, signal: AbortSignal) => AsyncIterable<SSEFrame>;
@@ -119,6 +245,18 @@ export class Card {
 	reason = $state<string | null>(null);
 	/** The last host event this card sent, once it is final. */
 	sent = $state<string | null>(null);
+	/** The host's line about a checkout from this card (progress or the reason it stopped). */
+	note = $state<{ kind: 'busy' | 'error'; text: string } | null>(null);
+	/** A booking the store confirmed from this card, for the receipt under it. */
+	receipt = $state<{ booking: Booked; durationMin?: number; place?: string } | null>(null);
+	/** A checkout the store opened from this card, for the pay card under it. */
+	pay = $state.raw<Pay | null>(null);
+	/** Where that order is, as the pay card last saw it. */
+	payPhase = $state<Phase | null>(null);
+	/** Bumped when a second checkout should bring the pay card into view instead. */
+	payNudge = $state(0);
+	/** The Cart that opened it, so a cancelled payment can start a new checkout. */
+	cart: unknown = null;
 	readonly store: StreamSpecStore;
 	#push!: ReadableStreamDefaultController<string>;
 	#fed = '';
@@ -183,12 +321,20 @@ export class Card {
 	}
 }
 
+/** Where host events from a final card reach the store. Location defaults are read at call time. */
+export interface StoreHost {
+	storeUrl: string;
+	fetch?: typeof fetch;
+	pageOrigin?: string;
+}
+
 export type Part = { kind: 'text'; text: string } | { kind: 'card'; card: Card };
-export type NoticeKind = 'limit' | 'busy' | 'error' | 'info' | 'stopped';
+export type NoticeKind = 'limit' | 'busy' | 'error' | 'info' | 'stopped' | 'handoff';
 export interface Notice {
 	kind: NoticeKind;
 	text: string;
-	link?: { href: string; label: string };
+	/** A handoff link opens in a new tab; `prominent` when the new tab may not have opened. */
+	link?: { href: string; label: string; prominent?: boolean };
 	/** The recorded answer can play in this turn instead: ChatSession.replayRecorded. */
 	replay?: boolean;
 }
@@ -225,11 +371,20 @@ const MAX_RUN = 1_000_000;
 export class ChatSession {
 	turns = $state<Turn[]>([]);
 	busy = $state(false);
+	/** An order saved before this page loaded (resume()). */
+	resumed = $state.raw<Saved | null>(null);
 	#abort: AbortController | null = null;
+	/** A checkout or booking is on its way to the store. */
+	#hostBusy = false;
+	/** A card's message waiting for the answer in flight. */
+	#queued: string | null = null;
+	/** A card already sent a message in this task (one click). */
+	#said = false;
 
 	constructor(
 		private readonly transport: Transport,
-		private readonly fallback?: Transport
+		private readonly fallback?: Transport,
+		readonly store?: StoreHost
 	) {}
 
 	async send(message: string) {
@@ -238,6 +393,36 @@ export class ChatSession {
 		this.turns.push({ id: ++turnSeq, role: 'user', parts: [{ kind: 'text', text }], notice: null, pending: false });
 		this.turns.push({ id: ++turnSeq, role: 'assistant', parts: [], notice: null, pending: true });
 		await this.#run(this.turns[this.turns.length - 1], text, this.transport);
+	}
+
+	/**
+	 * Typed text: opens Paw OS in a new tab (call it from the send gesture, or the
+	 * popup is blocked) and notes it in the log. `window.open` with noopener returns
+	 * null even when the tab opened, so null shows the link prominently.
+	 */
+	handoff(message: string, base?: string, open: (url: string) => unknown = (u) => window.open(u, '_blank', 'noopener')) {
+		const text = message.trim();
+		if (!text) return;
+		const { url, trimmed } = pawosHandoffUrl(text, base);
+		let opened = false;
+		try {
+			opened = open(url) != null;
+		} catch {
+			/* treated as blocked */
+		}
+		const cut = trimmed ? ` Your message was long, so only the first ${HANDOFF_MAX} characters went along.` : '';
+		this.turns.push({ id: ++turnSeq, role: 'user', parts: [{ kind: 'text', text }], notice: null, pending: false });
+		this.turns.push({
+			id: ++turnSeq,
+			role: 'assistant',
+			parts: [],
+			pending: false,
+			notice: {
+				kind: 'handoff',
+				text: HANDOFF_NOTE + cut,
+				link: opened ? { href: url, label: 'Open it again' } : { href: url, label: 'No new tab? Continue in Paw OS', prominent: true }
+			}
+		});
 	}
 
 	/** Plays the recorded answer into a turn whose notice offered it, in place. */
@@ -276,20 +461,120 @@ export class ChatSession {
 			this.busy = false;
 			if (this.#abort === abort) this.#abort = null;
 		}
+		const next = this.#queued;
+		this.#queued = null;
+		if (next) await this.send(next);
 	}
 
 	stop() {
+		this.#queued = null;
 		this.#abort?.abort();
 	}
 
 	/** The `onEvent` handler for a card's <Ripple>. Inert until the card is final. */
-	hostEvent(card: Card, event: RippleEvent): undefined {
+	hostEvent(card: Card, event: RippleEvent): Promise<void> | undefined {
 		if (card.status !== 'final') return undefined;
+		const name = event.type === 'emit' ? (event.name ?? event.target) : undefined;
+		if (name === 'ask') {
+			const p = event.payload;
+			if (isRecord(p) && typeof p.text === 'string' && p.text.length <= ASK_MAX) this.#say(p.text);
+			return undefined;
+		}
+		if (this.store && name === 'checkout') return this.#checkout(card, this.store, event.payload);
+		if (this.store && name === 'book') return this.#book(card, this.store, event.payload);
 		const e: Record<string, unknown> = { ...event };
 		const kind = str(e.action, str(e.type, 'event'));
 		const detail = str(e.message) || str(e.event) || str(e.target) || str(e.url);
 		card.sent = detail ? `${kind}: ${detail}` : kind;
 		return undefined;
+	}
+
+	/** The `onComplete` for a card's <Ripple>: a finished flow's `chat` message goes out as the visitor's. */
+	flowComplete(card: Card, result: TerminalResult) {
+		const action = result.action;
+		if (card.status !== 'final' || action?.kind !== 'chat' || typeof action.message !== 'string') return;
+		this.#say(flowMessage(action.message, result.payload, card.spec?.ui));
+	}
+
+	/** Sends a card's message now, or after the answer in flight (the newest one waits). One per click. */
+	#say(text: string) {
+		if (this.#said || !text.trim()) return;
+		this.#said = true;
+		// ponytail: "one click" is one task; a handler list runs in microtasks, so a timer clears it.
+		setTimeout(() => (this.#said = false));
+		if (this.busy) this.#queued = text;
+		else void this.send(text);
+	}
+
+	/** Brings back the order a same-tab payment left in sessionStorage, if it still validates. */
+	resume() {
+		if (!this.store) return;
+		this.resumed = loadOrder({ pageOrigin: this.store.pageOrigin ?? location.origin, storeUrl: this.store.storeUrl });
+	}
+
+	/** The pay card's phase: kept on the card (null for the resumed one) and in sessionStorage. */
+	notePhase(card: Card | null, pay: Pay, phase: Phase) {
+		if (card) card.payPhase = phase;
+		if (phase === 'pending') saveOrder(pay, 'pending');
+		else if (phase === 'tracking') saveOrder(pay, 'paid');
+		else clearOrder(pay.sessionId);
+	}
+
+	async #checkout(card: Card, store: StoreHost, cart: unknown) {
+		if (card.pay && card.payPhase !== 'cancelled') {
+			card.payNudge++;
+			return;
+		}
+		if (this.#hostBusy) return void (card.note = { kind: 'error', text: 'Another order or booking is still on its way. Try again in a moment.' });
+		this.#hostBusy = true;
+		card.note = { kind: 'busy', text: 'Opening the store checkout...' };
+		try {
+			const result = await checkout(cart, { storeUrl: store.storeUrl, fetch: store.fetch, pageOrigin: store.pageOrigin ?? location.origin });
+			if (result.ok) {
+				card.pay = result.data;
+				card.payPhase = 'pending';
+				card.cart = cart;
+				card.note = null;
+				saveOrder(result.data, 'pending');
+			} else card.note = { kind: 'error', text: result.error.message };
+		} finally {
+			this.#hostBusy = false;
+		}
+	}
+
+	/** After a cancelled payment: the same Cart through a new checkout. */
+	retryCheckout(card: Card) {
+		if (!this.store || card.cart == null) return undefined;
+		return this.#checkout(card, this.store, card.cart);
+	}
+
+	async #book(card: Card, store: StoreHost, payload: unknown) {
+		const request = toBookingRequest(payload);
+		const asked = isRecord(payload) && typeof payload.service_id === 'string' ? payload.service_id : '';
+		const serviceId = 'error' in request ? asked : request.service_id;
+		const answer = (patch: Record<string, unknown>) => {
+			const next = card.spec && patchBooking(card.spec, serviceId, patch);
+			if (next) card.spec = next;
+		};
+		if ('error' in request) return answer({ notice: { kind: 'error', text: request.error } });
+		if (this.#hostBusy) return answer({ notice: { kind: 'info', text: 'Another order or booking is still on its way. Try again in a moment.' } });
+		this.#hostBusy = true;
+		try {
+			const deps = { storeUrl: store.storeUrl, fetch: store.fetch };
+			const result = await book(request, deps);
+			const props = bookingProps(card.spec, serviceId);
+			if (result.ok) {
+				const services = Array.isArray(props?.services) ? (props.services as { id?: unknown; duration_min?: unknown }[]) : [];
+				const minutes = services.find((s) => s?.id === serviceId)?.duration_min;
+				const place = [props?.subtitle, props?.title].find((v) => typeof v === 'string' && v.trim());
+				card.receipt = { booking: result.booking, durationMin: typeof minutes === 'number' ? minutes : undefined, place: place as string | undefined };
+				return answer({ confirmed: { ...result.booking } });
+			}
+			const days = result.reload && Array.isArray(props?.days) ? await reloadDays(props.days, serviceId, request.party, deps) : null;
+			answer({ notice: { ...result.notice }, ...(days ? { days } : {}) });
+		} finally {
+			this.#hostBusy = false;
+		}
 	}
 
 	/** Applies one frame; returns true when the turn is over. */
@@ -329,7 +614,7 @@ export class ChatSession {
 				st.cards.delete(id);
 				return false;
 			case 'card.rejected':
-				st.cards.get(id)?.reject(str(d.reason, 'rejected'));
+				st.cards.get(id)?.reject(`server:${str(d.reason, 'rejected')}`);
 				st.cards.delete(id);
 				return false;
 			case 'unavailable':

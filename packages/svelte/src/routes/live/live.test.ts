@@ -454,7 +454,7 @@ describe('order-burger', () => {
 
 describe('OrderReceipt', () => {
 	const store = 'http://store.test/test-store';
-	const summary = { lines: [{ name: 'Classic Cheeseburger', qty: 2, price: 11.99 }], orderType: 'pickup' as const };
+	const summary = { lines: [{ name: 'Classic Cheeseburger', qty: 2, price: 11.99 }], orderType: 'pickup' as const, total: 23.98 };
 
 	test('mock return says no order was recorded and links the orders board', async () => {
 		const fetch = vi.fn();
