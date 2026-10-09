@@ -1,45 +1,92 @@
 <!--
   @file routes/pawbar/Chat.svelte
   @description The landing's chat: the conversation log, a composer that stays
-    in reach while a long card is read, and the suggestion chips. Assistant text
+    in reach while a long card is read, and the suggestion chips. A chip runs
+    here (session.send); text the visitor types goes to Paw OS
+    (session.handoff, opened from the send gesture) unless `typedLocal` keeps
+    it on the Paw Bar (mock and dev only); the hint under the composer says so. Assistant text
     renders as markdown-lite (paragraphs, **bold**, `code`) built from Svelte
     nodes; model text never goes through {@html}. A card renders through
     <Ripple streaming> while it arrives and swaps to <Ripple spec> on final (a
     remount, so the validated spec is what the visitor keeps using). Host
-    events go to session.hostEvent, which ignores them until the card is final.
-    A notice that offers a replay gets a button that plays the closest
+    events go to session.hostEvent, which ignores them until the card is final;
+    a checkout's progress or failure shows as the card's note, an opened one as
+    a PayCard under the card (keyed by session, so a retry starts fresh; a
+    second checkout while it is open scrolls it into view), and a confirmed
+    booking as a BookingReceipt under the card. An order resumed from
+    sessionStorage (session.resumed) shows its PayCard above the log. A finished flow card hands its
+    result to session.flowComplete; it and a card's `ask` arrive as the visitor's
+    next message, and each new visitor message scrolls into view, however it was
+    sent. A notice that offers a replay gets a button that plays the closest
     recorded answer into the same turn (session.replayRecorded).
 -->
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Ripple } from '$lib/index.js';
-	import type { Card, ChatSession } from './session.svelte.js';
+	import BookingReceipt from './BookingReceipt.svelte';
+	import PayCard from './PayCard.svelte';
+	import { PAWOS_URL, type Card, type ChatSession } from './session.svelte.js';
 
 	interface Suggestion {
 		id: string;
 		title: string;
 		prompt: string;
+		/** The answer walks the visitor through steps: the chip says so. */
+		steps?: boolean;
 	}
 
-	let { session, suggestions = [], note = '' }: { session: ChatSession; suggestions?: Suggestion[]; note?: string } = $props();
+	let {
+		session,
+		suggestions = [],
+		note = '',
+		pawosUrl = PAWOS_URL,
+		typedLocal = false,
+		open
+	}: {
+		session: ChatSession;
+		suggestions?: Suggestion[];
+		note?: string;
+		/** Where typed text continues. */
+		pawosUrl?: string;
+		/** Typed text goes to the Paw Bar like a chip (mock and dev only). */
+		typedLocal?: boolean;
+		/** window.open stand-in for tests. */
+		open?: (url: string) => unknown;
+	} = $props();
 
 	let draft = $state('');
 	let log = $state<HTMLOListElement>();
 
 	async function ask(text: string) {
 		if (session.busy || !text.trim()) return;
-		draft = '';
-		const done = session.send(text);
-		await tick();
-		const mine = log?.children[log.children.length - 2];
-		mine?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-		await done;
+		await session.send(text);
 	}
+
+	/** The composer: Paw OS opens synchronously in this gesture, or the popup is blocked. */
+	function submit() {
+		const text = draft;
+		if (session.busy || !text.trim()) return;
+		draft = '';
+		if (typedLocal) void session.send(text);
+		else session.handoff(text, pawosUrl, open);
+	}
+
+	// The newest visitor message scrolls to the top: typed, a chip, or sent by a card.
+	let shownAsk = 0;
+	$effect(() => {
+		const i = session.turns.findLastIndex((t) => t.role === 'user');
+		const id = session.turns[i]?.id;
+		if (!id || id === shownAsk) return;
+		shownAsk = id;
+		void tick().then(() =>
+			log?.children[i]?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+		);
+	});
 
 	function onKey(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
 			e.preventDefault();
-			void ask(draft);
+			submit();
 		}
 	}
 
@@ -56,10 +103,30 @@
 						: { kind: 't', v }
 			);
 
+	/** Scrolls the pay card into view and focuses its first control each time `nudge` grows. */
+	function reveal(node: HTMLElement, nudge: number) {
+		return {
+			update(next: number) {
+				if (next <= nudge) return;
+				nudge = next;
+				node.scrollIntoView?.({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				node.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });
+			}
+		};
+	}
+
+	/** The cart's store name, when it carries one (the PayCard falls back to its own). */
+	const storeName = (cart: unknown) => {
+		const v = cart && typeof cart === 'object' ? (cart as { store?: unknown }).store : undefined;
+		return typeof v === 'string' && v.trim() ? v.trim().slice(0, 60) : undefined;
+	};
+
 	const rejectedNote = (c: Card) =>
-		c.reason === 'truncated'
+		c.reason === 'truncated' || c.reason === 'server:truncated'
 			? 'The card was cut off before it finished, so it is left out.'
-			: 'The card did not pass its checks, so it is left out.';
+			: c.reason?.startsWith('server:')
+				? 'The model wrote a card that did not come out right, so it is left out. Asking again usually works.'
+				: 'The card did not pass this page\'s checks, so it is left out.';
 </script>
 
 {#snippet prose(text: string)}
@@ -76,17 +143,41 @@
 	{:else}
 		<div class="card" data-status={card.status}>
 			{#if card.status === 'final' && card.spec}
-				<Ripple spec={card.spec} onEvent={(e) => session.hostEvent(card, e)} />
+				<Ripple spec={card.spec} onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 			{:else}
 				<span class="building" aria-live="polite">Building</span>
-				<Ripple streaming={card.store} skeleton="card" onEvent={(e) => session.hostEvent(card, e)} />
+				<Ripple streaming={card.store} skeleton="card" onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 			{/if}
 			{#if card.sent}<p class="sent" role="status">The card sent <code>{card.sent}</code> to this page.</p>{/if}
+			{#if card.note}<p class="host-note" data-kind={card.note.kind} role="status">{card.note.text}</p>{/if}
 		</div>
+		{#if card.receipt}<BookingReceipt {...card.receipt} />{/if}
+		{#if card.pay && session.store}
+			{@const pay = card.pay}
+			<div class="pay-slot" use:reveal={card.payNudge}>
+				{#key pay.sessionId}
+					<PayCard
+						{pay}
+						store={storeName(card.cart)}
+						storeUrl={session.store.storeUrl}
+						fetch={session.store.fetch}
+						onretry={() => session.retryCheckout(card)}
+						onphase={(p) => session.notePhase(card, pay, p)}
+					/>
+				{/key}
+			</div>
+		{/if}
 	{/if}
 {/snippet}
 
 <div class="chat">
+	{#if session.resumed && session.store}
+		{@const pay = session.resumed}
+		<section class="resumed" aria-label="Your order">
+			<p class="say">Your order from before:</p>
+			<PayCard {pay} storeUrl={session.store.storeUrl} fetch={session.store.fetch} onphase={(p) => session.notePhase(null, pay, p)} />
+		</section>
+	{/if}
 	{#if session.turns.length}
 		<ol class="log" bind:this={log} aria-label="Conversation">
 			{#each session.turns as turn (turn.id)}
@@ -101,7 +192,9 @@
 						{#if turn.notice}
 							<p class="notice" data-kind={turn.notice.kind} role="status">
 								{turn.notice.text}
-								{#if turn.notice.link}<a href={turn.notice.link.href}>{turn.notice.link.label}</a>{/if}
+								{#if turn.notice.link && turn.notice.kind === 'handoff'}
+									<a class:prominent={turn.notice.link.prominent} href={turn.notice.link.href} target="_blank" rel="noopener">{turn.notice.link.label}</a>
+								{:else if turn.notice.link}<a href={turn.notice.link.href}>{turn.notice.link.label}</a>{/if}
 								{#if turn.notice.replay}
 									<button type="button" class="replay" disabled={session.busy} onclick={() => session.replayRecorded(turn.id)}>
 										Play the closest recorded answer here
@@ -119,15 +212,16 @@
 		class="composer"
 		onsubmit={(e) => {
 			e.preventDefault();
-			void ask(draft);
+			submit();
 		}}
 	>
-		<label class="sr-only" for="ripple-ask">Describe the tool you want</label>
+		<label class="sr-only" for="ripple-ask">{typedLocal ? 'Describe the tool you want' : 'Type a request to continue in Paw OS'}</label>
 		<textarea
 			id="ripple-ask"
 			rows="2"
 			maxlength="2000"
-			placeholder="Ask for a tool, like a tip splitter"
+			aria-describedby={typedLocal ? undefined : 'ripple-ask-hint'}
+			placeholder={typedLocal ? 'Ask for a tool, like a tip splitter' : 'Type your own request to continue in Paw OS'}
 			bind:value={draft}
 			onkeydown={onKey}
 		></textarea>
@@ -137,12 +231,13 @@
 			<button type="submit" class="send" disabled={!draft.trim()}>Send</button>
 		{/if}
 	</form>
+	{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Try a suggestion here, or type your own and continue in Paw OS.</p>{/if}
 
 	{#if suggestions.length}
 		<ul class="chips" aria-label="Try one of these">
 			{#each suggestions as s (s.id)}
 				<li>
-					<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}</button>
+					<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
 				</li>
 			{/each}
 		</ul>
@@ -189,6 +284,7 @@
 		color: var(--primary-foreground);
 		line-height: 1.5;
 		overflow-wrap: anywhere;
+		white-space: pre-line;
 	}
 	.turn[data-role='assistant'] {
 		display: flex;
@@ -240,7 +336,7 @@
 		padding: 14px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-paw);
-		background: color-mix(in oklch, var(--background) 82%, transparent);
+		background: var(--site-panel, color-mix(in oklch, var(--background) 82%, transparent));
 		min-width: 0;
 		/* A card can be wider than a phone: it scrolls inside itself, never clips. */
 		overflow-x: auto;
@@ -248,6 +344,11 @@
 	}
 	.card[data-status='streaming'] {
 		border-color: color-mix(in oklch, var(--primary) 55%, transparent);
+	}
+	.resumed {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 	.card-note,
 	.chat-note {
@@ -260,6 +361,16 @@
 		font-size: 13px;
 		color: var(--site-soft);
 	}
+	.host-note {
+		margin: 0;
+		font-size: 14px;
+		color: var(--site-ink);
+	}
+	.host-note[data-kind='error'] {
+		padding: 8px 12px;
+		border-radius: 10px;
+		background: color-mix(in oklch, var(--paw-crimson) 14%, transparent);
+	}
 	.notice {
 		margin: 0;
 		padding: 10px 14px;
@@ -268,6 +379,20 @@
 		line-height: 1.5;
 		background: color-mix(in oklch, var(--site-ink) 6%, transparent);
 		color: var(--site-ink);
+	}
+	.notice[data-kind='handoff'] {
+		border: 1px solid color-mix(in oklch, var(--primary) 35%, transparent);
+		background: var(--site-panel, var(--card));
+	}
+	.notice a.prominent {
+		display: block;
+		width: fit-content;
+		margin: 10px 0 0;
+		padding: 7px 14px;
+		border-radius: 9px;
+		background: var(--primary);
+		color: var(--primary-foreground);
+		text-decoration: none;
 	}
 	.notice[data-kind='limit'] {
 		background: color-mix(in oklch, var(--paw-crimson) 14%, transparent);
@@ -360,6 +485,12 @@
 		background: color-mix(in oklch, var(--site-ink) 14%, transparent);
 		color: var(--site-ink);
 	}
+	.hint {
+		margin: -6px 0 0;
+		padding: 0 4px;
+		font-size: 13px;
+		color: var(--site-soft);
+	}
 	.chips {
 		list-style: none;
 		margin: 0;
@@ -380,6 +511,16 @@
 		transition:
 			border-color 0.15s,
 			background 0.15s;
+	}
+	.chip-steps {
+		margin-left: 3px;
+		padding: 1px 7px;
+		border-radius: 999px;
+		background: color-mix(in oklch, var(--primary) 14%, transparent);
+		color: var(--primary-ink);
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.01em;
 	}
 	.chip:hover:not(:disabled) {
 		border-color: color-mix(in oklch, var(--primary) 60%, transparent);

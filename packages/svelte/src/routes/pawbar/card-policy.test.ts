@@ -4,13 +4,21 @@
 // and CSS url(); and the flow-card review's handler bypasses (a whole-string
 // expression in a handler slot that runs an action object kept in state, and a
 // follow-up emitting a free-text event); and the node-slot review's bypass (a
-// whole-string expression in a prop the engine renders as a node). The recorded
-// chat scenarios must all pass, and the widget allowlist must match the vendored
-// manifest.
+// whole-string expression in a prop the engine renders as a node). Flow cards and
+// `ask` follow pocketpaw's card_spec.py rules. The recorded chat scenarios and the
+// mock's flow cards must all pass, and the widget allowlist must match the
+// vendored manifest. fixtures/trip-flow-card.json is a live model card (2026-10-09,
+// "Help me plan a trip step by step") that pocketpaw's card_spec.py accepted.
+// The `illustration` cases follow card_spec.py's _check_illustration and the
+// widget contract's hostile set and caps.
 
 import { describe, expect, test } from 'vitest';
-import { HOST_EVENTS, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
+import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
+import { gearsCard, gearsSvg, laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
+import { checkIllustrationSvg } from '$lib/security/illustration-svg.js';
+import { pickScenario } from './recorded.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
+import liveTripCard from './fixtures/trip-flow-card.json';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
 
@@ -18,6 +26,15 @@ const button = (on_click: unknown) => ({ ui: { type: 'button', props: { label: '
 const prop = (key: string, value: string, type = 'image') => ({ ui: { type, props: { [key]: value } } });
 const text = (value: string) => ({ ui: { type: 'text', props: { text: value } } });
 const set = (target: string, value: string) => ({ action: 'set', target, value });
+const wide = (n: number) => ({ type: 'flex', children: Array.from({ length: n }, () => ({ type: 'text', props: { text: 'x' } })) });
+const nested = (n: number): Record<string, unknown> => (n > 1 ? { type: 'flex', children: [nested(n - 1)] } : { type: 'text' });
+const go = (target: string, value: unknown = {}) => ({ action: 'emit', target, value });
+const optionButton = (target = 'flow.next') => ({ type: 'button', props: { label: 'Food' }, on_click: go(target, { selection: { id: 'food', label: 'Food' } }) });
+const step = (extra: Record<string, unknown> = {}, ui: unknown = { type: 'flex', children: [optionButton()] }) => ({ flowId: 's', title: 'Pick one', ui, ...extra });
+const done = { kind: 'chat', message: 'Plan a trip for me with these answers.' };
+const flowCard = (ui: Record<string, unknown>) => ({ ui });
+const twoSteps = (last: Record<string, unknown> = {}) => flowCard(step({ chain: step({ onComplete: done, ...last }, { type: 'button', props: { label: 'Finish' }, on_click: go('flow.submit') }) }));
+const ask = (value: unknown = { text: 'Tell me about the weekend menu.' }) => ({ action: 'emit', target: 'ask', value });
 
 describe('card shape', () => {
 	test('only version, ui and state at the top', () => {
@@ -248,7 +265,7 @@ describe('node slots', () => {
 });
 
 describe('follow-up', () => {
-	test.each(['ask', 'flow.submit', 'book', 'Checkout', 'checkout ', '{state.e}', 'tell me more'])('refuses the event %s', (event) => {
+	test.each(['ask', 'flow.submit', 'booking', 'Checkout', 'checkout ', '{state.e}', 'tell me more'])('refuses the event %s', (event) => {
 		expect(refuseCard({ ui: { type: 'follow-up', props: { event } } })).toBe('follow_up_event');
 	});
 
@@ -258,7 +275,13 @@ describe('follow-up', () => {
 		expect(refuseCard({ ui: { type: 'text' }, state: { n: { type: 'follow-up', props: { event: 'ask' } } } })).toBe('follow_up_event');
 	});
 
-	test.each([...HOST_EVENTS, 'follow-up'])('allows the event %s', (event) => {
+	test('the host events are checkout, add_to_cart, book and ask; a follow-up never asks', () => {
+		expect(HOST_EVENTS).toEqual(['checkout', 'add_to_cart', 'book', 'ask']);
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'bo' } } }, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'booking' } } })).toBe('follow_up_event');
+	});
+
+	test.each(['checkout', 'add_to_cart', 'book', 'follow-up'])('allows the event %s', (event) => {
 		expect(refuseCard({ ui: { type: 'follow-up', props: { placeholder: 'Ask follow-up', event } } })).toBeNull();
 	});
 
@@ -283,6 +306,10 @@ describe('widgets', () => {
 		expect(refuseCard({ ui: { type: 'chart', props: { type: 'bar', data: [] } } })).toBeNull();
 	});
 
+	test("a node's own props.type is a prop, not a widget: an input's number, date or text", () => {
+		for (const type of ['number', 'date', 'text', 'email']) expect(refuseCard({ ui: { type: 'input', bind: 'x', props: { type } } })).toBeNull();
+	});
+
 	test('streaming: a widget name on its way to an allowed one is not refused yet', () => {
 		expect(refuseCard({ ui: { type: 'car' } }, { partial: true })).toBeNull();
 		expect(refuseCard({ ui: { type: 'ifr' } }, { partial: true })).toBe('widget:ifr');
@@ -299,6 +326,48 @@ describe('widgets', () => {
 		const blocked = new Set(['embed', 'ripple-frame', 'richtext', 'rich-text', 'map', 'company-header']);
 		const expected = manifest.widgets.map((w) => w.type).filter((t) => !blocked.has(t));
 		expect([...CHAT_WIDGET_TYPES].toSorted()).toEqual(expected.toSorted());
+	});
+
+	// The shapes server hydration (and scripts/mock-pawbar.ts) sends: store data, one emit each.
+	const menuCard = (extra: Record<string, unknown> = {}) => ({
+		ui: {
+			type: 'menu-order',
+			props: {
+				title: 'Tasty Bites',
+				checkout: true,
+				items: [{ product_id: 'burger-1', name: 'Classic Cheeseburger', price: 11.99, image: 'https://store.example/test-store/img/burger-1.webp', groups: [] }],
+				...extra
+			},
+			on_checkout: { action: 'emit', target: 'checkout' }
+		}
+	});
+	const bookingCard = (on_book: unknown = { action: 'emit', target: 'book' }) => ({
+		ui: {
+			type: 'booking',
+			props: {
+				services: [{ id: 'table', name: 'Table reservation', kind: 'table', duration_min: 90, party: { min: 1, max: 8 } }],
+				days: [{ date: '2026-10-16', date_label: 'Fri 16 Oct', slots: [{ start: '2026-10-16T19:00:00-04:00', label: '7:00 PM', available: true }] }],
+				party: 4,
+				notice: { kind: 'error', text: 'That time was just taken. Pick another.', code: 'slot_taken', start: '2026-10-16T19:00:00-04:00' }
+			},
+			on_book
+		}
+	});
+
+	test('hydrated menu-order and booking cards pass, while streaming and at final', () => {
+		for (const card of [menuCard(), bookingCard()]) {
+			expect(refuseCard(card)).toBeNull();
+			expect(refuseCard(card, { partial: true })).toBeNull();
+		}
+	});
+
+	test('a menu-order or booking card keeps every refusal: network actions, handler expressions, http photos', () => {
+		expect(refuseCard(bookingCard({ action: 'api', url: '/api/bookings' }))).toBe('action:api');
+		expect(refuseCard(bookingCard([{ action: 'navigate', url: 'https://evil.example' }]))).toBe('action:navigate');
+		expect(refuseCard(bookingCard('{state.h}'))).toBe('handler_expression');
+		expect(refuseCard(menuCard({ items: [{ product_id: 'x', image: 'http://store.example/x.webp' }] }))).toBe('unsafe_url');
+		expect(refuseCard(menuCard({ items: [{ product_id: 'x', image: '{state.img}' }] }))).toBe('expression_url');
+		expect(refuseCard(menuCard({ featured: { id: 'x', reason: '<img src=x onerror=alert(1)>' } }))).toBe('markup');
 	});
 });
 
@@ -456,4 +525,233 @@ test('every recorded chat scenario passes; the store checkout demo does not', ()
 		const spec: unknown = JSON.parse(s.fixture.chunks.map((c) => c.text).join(''));
 		expect([s.id, refuseCard(spec)]).toEqual([s.id, s.needsStore ? 'action:api' : null]);
 	}
+});
+
+describe('flow cards', () => {
+
+	test("the mock's flow cards and the laptop answer pass, while streaming and at final", () => {
+		for (const card of [tripFlowCard, laptopFlowCard, laptopAnswerCard, liveTripCard]) {
+			expect(refuseCard(card)).toBeNull();
+			expect(refuseCard(card, { partial: true })).toBeNull();
+		}
+	});
+
+	test('a step holds only step keys, has a ui node, and chain_map is an object of steps', () => {
+		expect(refuseCard(twoSteps())).toBeNull();
+		expect(refuseCard(flowCard(step({ chain_map: { food: step({ onComplete: done }), culture: step() } })))).toBeNull();
+		expect(refuseCard(flowCard(step({ state: {} })))).toBe('flow_key:state');
+		expect(refuseCard(flowCard(step({ type: 'flex' })))).toBe('flow_key:type');
+		expect(refuseCard(flowCard(step({ chain: { flowId: 'b', ui: { type: 'text' }, on_click: go('ask', { text: 'hi' }) } })))).toBe('flow_key:on_click');
+		expect(refuseCard(flowCard({ flowId: 'a', title: 'No ui' }))).toBe('flow_step');
+		expect(refuseCard(flowCard(step({ chain: 'next' })))).toBe('flow_step');
+		expect(refuseCard(flowCard(step({ chain_map: [step()] })))).toBe('flow_step');
+		expect(refuseCard(flowCard(step({ chain_map: { a: 'step' } })))).toBe('flow_step');
+	});
+
+	test('at most 8 steps, counting every chain and chain_map value', () => {
+		const chain = (n: number): Record<string, unknown> => step(n > 1 ? { chain: chain(n - 1) } : {});
+		expect(refuseCard(flowCard(chain(8)))).toBeNull();
+		expect(refuseCard(flowCard(chain(9)))).toBe('flow_steps');
+		const map = Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`o${i}`, step()]));
+		expect(refuseCard(flowCard(step({ chain_map: map })))).toBe('flow_steps');
+	});
+
+	test("every step's ui is walked by every node rule", () => {
+		const second = (ui: unknown) => flowCard(step({ chain: step({}, ui) }));
+		expect(refuseCard(second({ type: 'embed', props: {} }))).toBe('widget:embed');
+		expect(refuseCard(second({ type: 'button', on_click: { action: 'api', url: '/x' } }))).toBe('action:api');
+		expect(refuseCard(second({ type: 'image', props: { src: 'http://img.example/a.png' } }))).toBe('unsafe_url');
+		expect(refuseCard(second({ type: 'button', on_click: '{state.h}' }))).toBe('handler_expression');
+		expect(refuseCard(flowCard(step({ chain_map: { a: step({}, { type: 'iframe' }) } })))).toBe('widget:iframe');
+		expect(refuseCard(flowCard(step({ title: '<img src=x onerror=alert(1)>' })))).toBe('markup');
+		expect(refuseCard(flowCard(step({ form_fields: [{ id: 'a', label: 'javascript:alert(1)' }] })))).toBe('unsafe_url');
+	});
+
+	test('400 widget nodes shared across steps, 16 deep within each step', () => {
+		expect(refuseCard(flowCard(step({ chain: step({}, wide(199)) }, wide(199))))).toBeNull();
+		expect(refuseCard(flowCard(step({ chain: step({}, wide(200)) }, wide(199))))).toBe('too_many_nodes');
+		expect(refuseCard({ ui: wide(MAX_CARD_NODES) })).toBe('too_many_nodes');
+		expect(refuseCard(flowCard(step({ chain: step({}, nested(MAX_DEPTH)) }, nested(MAX_DEPTH))))).toBeNull();
+		expect(refuseCard(flowCard(step({ chain: step({}, nested(MAX_DEPTH + 1)) })))).toBe('too_deep');
+		expect(refuseCard({ ui: nested(MAX_DEPTH + 1) })).toBe('too_deep');
+	});
+
+	test('onComplete is only a plain chat message of at most 500 characters', () => {
+		expect(refuseCard(twoSteps({ onComplete: { kind: 'chat', message: 'x'.repeat(500) } }))).toBeNull();
+		for (const onComplete of [
+			{ kind: 'chat', message: 'x'.repeat(501) },
+			{ kind: 'chat', message: 'Plan {state.days} days' },
+			{ kind: 'chat' },
+			{ kind: 'chat', message: 'hi', then: { kind: 'navigate', url: '/x' } },
+			{ kind: 'navigate', url: 'https://evil.example' },
+			{ kind: 'emit', event: 'checkout' },
+			{ kind: 'invoke_tool', tool: 'x' },
+			{ kind: 'create_pocket', name: 'x' },
+			{ kind: 'call_binding', binding: 'x', path: '/x' },
+			'chat'
+		])
+			expect([onComplete, refuseCard(twoSteps({ onComplete }))]).toEqual([onComplete, 'on_complete']);
+	});
+
+	test('onComplete anywhere but on a step is refused', () => {
+		expect(refuseCard({ ui: { type: 'flex', children: [{ type: 'button', onComplete: done }] } })).toBe('on_complete');
+		expect(refuseCard(flowCard(step({}, { type: 'button', props: { onComplete: done } })))).toBe('on_complete');
+		expect(refuseCard({ ui: { type: 'text' }, state: { next: { onComplete: done } } })).toBe('on_complete');
+	});
+
+	test('flow.next, back, forward and submit only inside a flow card', () => {
+		for (const verb of ['flow.next', 'flow.back', 'flow.forward', 'flow.submit']) {
+			expect(refuseCard(button(go(verb)))).toBe('flow_event');
+			expect(refuseCard(flowCard(step({}, button(go(verb)).ui)))).toBeNull();
+		}
+	});
+
+	test('flow.submit fires only from an explicit visitor action', () => {
+		const submitUnder = (key: string, at: 'node' | 'props' = 'node') =>
+			flowCard(step({}, at === 'node' ? { type: 'input', bind: 'x', [key]: go('flow.submit') } : { type: 'wizard-layout', props: { [key]: go('flow.submit') } }));
+		for (const key of ['on_click', 'on_submit', 'on_select']) expect(refuseCard(submitUnder(key))).toBeNull();
+		for (const key of ['on_change', 'on_focus', 'on_input']) expect(refuseCard(submitUnder(key))).toBe('ask_handler');
+		for (const key of ['finishActions', 'nextActions']) expect(refuseCard(submitUnder(key, 'props'))).toBe('ask_handler');
+		// Inside a flow under on_click it still fires from the click.
+		expect(refuseCard(flowCard(step({}, button({ action: 'flow', steps: [{ action: 'set', target: 'a', value: 1 }, go('flow.submit')] }).ui)))).toBeNull();
+	});
+
+	test('while streaming, flow verbs wait for the flow fields and a half-written step is not refused yet', () => {
+		expect(refuseCard(button(go('flow.next')), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'flex', children: [optionButton()] }, chain: { flowId: 'b' } }), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'text' }, onComplete: { kind: 'ch' } }), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'text' }, onComplete: { kind: 'ch' } }))).toBe('on_complete');
+		expect(refuseCard(flowCard({ flowId: 'a', ti: 'x' }), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'embed' } }), { partial: true })).toBe('widget:embed');
+	});
+});
+
+describe('ask', () => {
+
+	test('allowed from a click, a submit, a pick and a composite button list', () => {
+		expect(refuseCard(button(ask()))).toBeNull();
+		expect(refuseCard({ ui: { type: 'form', props: { fields: [] }, on_submit: ask() } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'select', on_select: [ask()] } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', actions: ask() }, { id: 'b', name: 'B' }] } } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'entity-detail', props: { actions: [{ id: 'more', label: 'More', actions: [ask()] }] } } })).toBeNull();
+		expect(refuseCard(button({ action: 'branch', condition: '{state.a}', then: [ask()] }))).toBeNull();
+	});
+
+	test.each([
+		['on_focus', { type: 'input', on_focus: ask() }],
+		['on_change', { type: 'input', on_change: [ask()] }],
+		['finishActions', { type: 'wizard-layout', props: { steps: [], finishActions: ask() } }],
+		['learn_more', { type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', learn_more: ask() }] } }],
+		['onRowClick', { type: 'table', props: { columns: [], rows: [], onRowClick: ask() } }],
+		['an actions list under on_focus', { type: 'input', on_focus: { action: 'flow', steps: [], actions: [ask()] } }],
+		['a node kept in a click handler value', { type: 'button', on_click: { action: 'set', target: 'n', value: { type: 'button', on_click: ask() } } }],
+		['an action kept in a plain prop', { type: 'text', props: { later: ask() } }]
+	])('refused under %s', (_, ui) => {
+		expect(refuseCard({ ui })).toBe('ask_handler');
+	});
+
+	test('never in state', () => {
+		expect(['state_action', 'ask_handler']).toContain(refuseCard({ ui: { type: 'text' }, state: { later: ask() } }));
+	});
+
+	test.each([
+		['no value', undefined],
+		['a string', 'hi'],
+		['an extra key', { text: 'hi', to: 'sales' }],
+		['a non-string text', { text: 42 }],
+		['an expression', { text: 'Tell me about {state.pick}' }],
+		['more than 500 characters', { text: 'x'.repeat(501) }],
+		['a different key', { message: 'hi' }]
+	])('refuses a value with %s', (_, value) => {
+		const handler = value === undefined ? { action: 'emit', target: 'ask' } : ask(value);
+		expect(refuseCard(button(handler))).toBe('ask_value');
+	});
+
+	test('the value still gets the text rules; 500 characters pass', () => {
+		expect(refuseCard(button(ask({ text: 'see https://evil.example' })))).toBe('markup');
+		expect(refuseCard(button(ask({ text: 'x'.repeat(500) })))).toBeNull();
+	});
+
+	test('while streaming, a value still arriving is not refused yet; a bad handler is', () => {
+		expect(refuseCard(button({ action: 'emit', target: 'ask' }), { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'input', on_focus: ask() } }, { partial: true })).toBe('ask_handler');
+	});
+});
+
+describe('illustration', () => {
+	const svg = (body: string, root = "viewBox='0 0 100 100'") => `<svg ${root}><title>t</title>${body}</svg>`;
+	const art = (props: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({ ui: { type: 'illustration', props: { svg: svg("<circle cx='50' cy='50' r='20' fill='#1877F2'/>"), title: 'A dot', ...props }, ...extra } });
+
+	test('a good illustration card is accepted, nested or at the root', () => {
+		expect(refuseCard(art({ caption: 'A blue dot', max_height: 200 }))).toBeNull();
+		expect(refuseCard(art({ caption: null, max_height: null }))).toBeNull();
+		expect(refuseCard({ ui: { type: 'flex', children: [art({}).ui] } })).toBeNull();
+	});
+
+	test("the mock's bike gears card passes the checker and the policy, and its chip routes to it", () => {
+		expect(checkIllustrationSvg(gearsSvg)).toEqual({ ok: true });
+		expect(gearsSvg).not.toMatch(/[{\\]|url\(/);
+		expect(refuseCard(gearsCard)).toBeNull();
+		const explainer = scenarios.find((s) => s.id === 'explainer')!;
+		expect(explainer.prompt).toMatch(/\bbike\b/i);
+		expect(explainer.prompt).toMatch(/\bgears\b/i);
+		expect(pickScenario(explainer.prompt!).id).toBe('explainer');
+	});
+
+	test.each([
+		['a set rewriting href to javascript:', svg("<rect width='10' height='10'><set attributeName='href' to='javascript:alert(1)'/></rect>")],
+		['a script', svg('<script>alert(1)</script>')],
+		['a foreignObject', svg('<foreignObject><div>hi</div></foreignObject>')],
+		['an external url()', svg("<rect width='10' height='10' fill='url(https://evil.example/x#g)'/>")],
+		['a style attribute', svg("<rect width='10' height='10' style='fill:red'/>")],
+		['a DOCTYPE', `<!DOCTYPE svg>${svg('')}`],
+		['a 0.01s animation', svg("<rect width='10' height='10'><animate attributeName='opacity' from='0' to='1' dur='0.01s'/></rect>")],
+		['a nested use', svg("<defs><g id='a'><rect width='1' height='1'/></g><g id='b'><use href='#a'/></g></defs><use href='#b'/>")]
+	])('refuses %s with the checker reason', (_name, markup) => {
+		const check = checkIllustrationSvg(markup);
+		expect(check.ok).toBe(false);
+		expect(refuseCard(art({ svg: markup }))).toBe(`illustration:${(check as { reason: string }).reason}`);
+	});
+
+	test('refuses a missing or empty title, a non-text caption, an out-of-range height, and a missing svg', () => {
+		expect(refuseCard({ ui: { type: 'illustration', props: { svg: svg('') } } })).toBe('illustration:title');
+		expect(refuseCard(art({ title: '  ' }))).toBe('illustration:title');
+		expect(refuseCard(art({ caption: 3 }))).toBe('illustration:caption');
+		expect(refuseCard(art({ max_height: 2000 }))).toBe('illustration:max_height');
+		expect(refuseCard(art({ max_height: 40 }))).toBe('illustration:max_height');
+		expect(refuseCard(art({ max_height: '200' }))).toBe('illustration:max_height');
+		expect(refuseCard(art({ svg: undefined }))).toBe('illustration:svg');
+	});
+
+	test('refuses a { anywhere in svg: a whole-string expression or a template inside the markup', () => {
+		expect(refuseCard(art({ svg: '{state.art}' }))).toBe('illustration:expression');
+		expect(refuseCard(art({ svg: svg('<text>{state.x}</text>') }))).toBe('illustration:expression');
+	});
+
+	test('refuses a backslash in an attribute value (a CSS escape could spell url)', () => {
+		const markup = svg("<rect width='10' height='10' fill='\\75 rl(https://evil.example/x)'/>");
+		expect(refuseCard(art({ svg: markup }))).toMatch(/^illustration:backslash/);
+		expect(refuseCard(art({ svg: svg('<text>a \\ b</text>') }))).toBeNull();
+	});
+
+	test('refuses a handler or bind on it, final or streaming', () => {
+		expect(refuseCard(art({}, { on_click: { action: 'set', target: 'x', value: 1 } }))).toBe('illustration:handler');
+		expect(refuseCard(art({ on_click: { action: 'set', target: 'x', value: 1 } }))).toBe('illustration:handler');
+		expect(refuseCard(art({}, { bind: 'x' }), { partial: true })).toBe('illustration:handler');
+	});
+
+	test('title and caption are still plain text (rule 5)', () => {
+		expect(refuseCard(art({ caption: '<img src=x onerror=alert(1)>' }))).toBe('markup');
+	});
+
+	test('a half-streamed svg does not refuse the card early; the final card gets the full check', () => {
+		const half = { ui: { type: 'illustration', props: { svg: "<svg viewBox='0 0 10 10'><rect width='1' height='1' fill='url(#" } } };
+		expect(refuseCard(half, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'illustration', props: { svg: gearsSvg.slice(0, 700), title: 'Ge', max_height: 2 } } }, { partial: true })).toBeNull();
+		expect(refuseCard(half)).not.toBeNull();
+		// props before type: the svg is not read as text mid-stream.
+		expect(refuseCard({ ui: { props: { svg: "<svg viewBox='0 0 10 10'><rec" } } }, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { props: { svg: "<svg viewBox='0 0 10 10'/>", title: 'x' }, type: 'illustration' } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'text', props: { svg: "<svg viewBox='0 0 10 10'/>" } } })).toBe('markup');
+	});
 });

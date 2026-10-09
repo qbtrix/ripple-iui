@@ -1,0 +1,148 @@
+{
+	"ui": {
+		"flowId": "trip_style",
+		"intent": "select",
+		"title": "What kind of trip?",
+		"ui": {
+			"type": "flex",
+			"props": {
+				"direction": "row",
+				"gap": 8,
+				"wrap": true
+			},
+			"children": [
+				{
+					"type": "button",
+					"props": {
+						"label": "Food"
+					},
+					"on_click": {
+						"action": "emit",
+						"target": "flow.next",
+						"value": {
+							"selection": {
+								"id": "food",
+								"label": "Food"
+							}
+						}
+					}
+				},
+				{
+					"type": "button",
+					"props": {
+						"label": "Culture"
+					},
+					"on_click": {
+						"action": "emit",
+						"target": "flow.next",
+						"value": {
+							"selection": {
+								"id": "culture",
+								"label": "Culture"
+							}
+						}
+					}
+				},
+				{
+					"type": "button",
+					"props": {
+						"label": "Nature"
+					},
+					"on_click": {
+						"action": "emit",
+						"target": "flow.next",
+						"value": {
+							"selection": {
+								"id": "nature",
+								"label": "Nature"
+							}
+						}
+					}
+				},
+				{
+					"type": "button",
+					"props": {
+						"label": "Relaxation"
+					},
+					"on_click": {
+						"action": "emit",
+						"target": "flow.next",
+						"value": {
+							"selection": {
+								"id": "relaxation",
+								"label": "Relaxation"
+							}
+						}
+					}
+				}
+			]
+		},
+		"chain": {
+			"flowId": "trip_days",
+			"intent": "select",
+			"title": "How many days?",
+			"ui": {
+				"type": "flex",
+				"props": {
+					"direction": "row",
+					"gap": 8,
+					"wrap": true
+				},
+				"children": [
+					{
+						"type": "button",
+						"props": {
+							"label": "3 days"
+						},
+						"on_click": {
+							"action": "emit",
+							"target": "flow.submit",
+							"value": {
+								"selection": {
+									"id": "3",
+									"label": "3 days"
+								}
+							}
+						}
+					},
+					{
+						"type": "button",
+						"props": {
+							"label": "5 days"
+						},
+						"on_click": {
+							"action": "emit",
+							"target": "flow.submit",
+							"value": {
+								"selection": {
+									"id": "5",
+									"label": "5 days"
+								}
+							}
+						}
+					},
+					{
+						"type": "button",
+						"props": {
+							"label": "A week"
+						},
+						"on_click": {
+							"action": "emit",
+							"target": "flow.submit",
+							"value": {
+								"selection": {
+									"id": "7",
+									"label": "A week"
+								}
+							}
+						}
+					}
+				]
+			},
+			"onComplete": {
+				"kind": "chat",
+				"message": "Plan a trip for me with these answers."
+			}
+		}
+	}
+}

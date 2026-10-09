@@ -73,7 +73,7 @@
 		{/if}
 		{#if summary?.lines.length}
 			<ul class="lines">
-				{#each summary.lines as l (l.name)}
+				{#each summary.lines as l, i (i)}
 					<li><span>{l.qty} × {l.name}</span><span>{money(l.price * l.qty)}</span></li>
 				{/each}
 				<li class="total">

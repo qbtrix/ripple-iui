@@ -1,14 +1,31 @@
 // routes/pawbar/pawbar.test.ts — The landing chat's wire layer and store, no DOM rendering.
 // parseSSE (chunk boundaries, CRLF, comments, malformed frames), the legacy
-// fence splitter, the recorded-scenario re-cut, customer_ref storage, and the
-// ChatSession turn model across both card paths and every failure event.
+// fence splitter, the recorded-scenario re-cut, customer_ref storage, the
+// ChatSession turn model across both card paths and every failure event, and the
+// messages a card sends (ask, a finished flow).
 
 import { describe, expect, test, vi } from 'vitest';
-import type { RippleEvent } from '$lib/index.js';
+import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, ChatHttpError, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
+import {
+	BYOK_URL,
+	FLOW_MESSAGE_MAX,
+	HANDOFF_MAX,
+	PAWOS_URL,
+	ChatHttpError,
+	ChatSession,
+	customerRef,
+	flowMessage,
+	pawbarTransport,
+	pawosBase,
+	pawosHandoffUrl,
+	typedStaysLocal,
+	type Transport
+} from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
+import { refuseCard, textRefusal } from './card-policy.js';
+import { laptopFlowCard, tripFlowCard } from './flow-cards.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
 vi.setConfig({ testTimeout: 20_000 });
@@ -178,7 +195,7 @@ describe('ChatSession', () => {
 		const rejected = new ChatSession((_m, signal) => recordedEvents(bill, { mode: 'reject', speed: Infinity, signal }));
 		await rejected.send('x');
 		expect(cardOf(rejected)?.status).toBe('rejected');
-		expect(cardOf(rejected)?.reason).toBe('invalid_widget');
+		expect(cardOf(rejected)?.reason).toBe('server:invalid_widget');
 
 		const cut = new ChatSession(
 			frames({ event: 'card.start', data: { card_id: 'c' } }, { event: 'card.delta', data: { card_id: 'c', text: '{"ui":{' } })
@@ -187,7 +204,7 @@ describe('ChatSession', () => {
 		expect(cardOf(cut)?.reason).toBe('truncated');
 		const server = new ChatSession((_m, signal) => recordedEvents(bill, { mode: 'truncate', speed: Infinity, signal }));
 		await server.send('x');
-		expect(cardOf(server)?.reason).toBe('truncated');
+		expect(cardOf(server)?.reason).toBe('server:truncated');
 	});
 
 	test('an unavailable live answer offers the recorded one and plays it in the same turn', async () => {
@@ -246,12 +263,12 @@ describe('ChatSession', () => {
 		await waitFor(() => expect(cardOf(session)).toBeDefined());
 		const card = cardOf(session);
 		const early: RippleEvent = { type: 'emit', target: 'early' };
-		session.hostEvent(card, early);
+		void session.hostEvent(card, early);
 		expect(card.sent).toBeNull();
 		release();
 		await sent;
 		const picked: RippleEvent = { type: 'emit', target: 'picked' };
-		session.hostEvent(card, picked);
+		void session.hostEvent(card, picked);
 		expect(card.sent).toBe('emit: picked');
 	});
 
@@ -370,3 +387,171 @@ describe('ChatSession', () => {
 	});
 });
 
+
+const asks = (s: ChatSession) => s.turns.filter((t) => t.role === 'user').map((t) => (t.parts[0]?.kind === 'text' ? t.parts[0].text : ''));
+const ask = (text: unknown): RippleEvent => ({ type: 'emit', name: 'ask', target: 'ask', payload: { text } });
+const chat = (message: string) => ({ action: { kind: 'chat' as const, message }, payload: { style_selection: { id: 'food', label: 'Food' }, style_formData: {}, details_formData: { city: 'Lisbon', days: 4 } } });
+
+describe('messages a card sends', () => {
+	/** A session whose first answer is one final card, and every later answer plain text. */
+	async function withCard(gate?: Promise<void>) {
+		const sent: string[] = [];
+		const session = new ChatSession(async function* (message, signal) {
+			sent.push(message);
+			if (sent.length > 1) {
+				await Promise.race([gate, new Promise((r) => signal.addEventListener('abort', r))]);
+				yield { event: 'chunk', data: { content: `Answer to ${message.split('\n')[0]}` } };
+				return;
+			}
+			yield { event: 'card.start', data: { card_id: 'c' } };
+			yield { event: 'card.final', data: { card_id: 'c', card: { ui: { type: 'button' } } } };
+		});
+		await session.send('first');
+		return { session, sent, card: cardOf(session) };
+	}
+
+	test('flowMessage names each answer by its step title or field label, in plain sentences', () => {
+		const trip = {
+			trip_style_selection: { id: 'food', label: 'Food' },
+			trip_style_formData: {},
+			trip_details_formData: { city: 'Lisbon', days: 3, budget: 1500 }
+		};
+		expect(flowMessage('Plan a trip for me with these answers (budget in US dollars).', trip, tripFlowCard.ui)).toBe(
+			'Plan a trip for me with these answers (budget in US dollars). What kind of trip? Food. City: Lisbon. Days: 3. Budget: 1500.'
+		);
+		const laptop = {
+			main_use_selection: { id: 'work', label: 'Work and study' },
+			budget_selection: { id: 'mid', label: '$800 to $1,500' },
+			weight_matters_selection: { id: 'yes', label: 'Yes, I carry it daily' }
+		};
+		expect(flowMessage('Recommend a laptop for me from these answers.', laptop, laptopFlowCard.ui)).toBe(
+			'Recommend a laptop for me from these answers. What will you use it for most? Work and study. What is your budget? $800 to $1,500. Does weight matter? Yes, I carry it daily.'
+		);
+		// No card to read names from: the payload keys, humanized; lists joined; blanks dropped.
+		expect(flowMessage('Pick one', { use_selection: 'gaming', tags_formData: { picks: ['a', { label: 'B' }], blank: '  ', none: null } })).toBe('Pick one. Use: gaming. Picks: a, B.');
+	});
+
+	test('flowMessage names bound-input answers from payload.state by the input label', () => {
+		const root = {
+			flowId: 'trip',
+			title: 'Your trip',
+			ui: { type: 'flex', children: [
+				{ type: 'number-input', props: { label: 'How many days?' }, bind: '{state.days}' },
+				{ type: 'input', props: { label: 'City' }, bind: '{state.trip.city}' }
+			] }
+		};
+		expect(flowMessage('Plan a trip for me.', { state: { days: 4, 'trip.city': 'Porto', 'other.note': 'quiet' } }, root)).toBe(
+			'Plan a trip for me. How many days? 4. City: Porto. Note: quiet.'
+		);
+	});
+
+	test('flowMessage keeps only plain text: no markup, no links, one line, whole sentences under the cap', () => {
+		const typed = { details_formData: { city: 'Lisbon\n\nDays:  9', site: 'https://evil.example', note: '<img src=x onerror=alert(1)>', md: '![](http://x/a.png)', ok: 'Window seat' } };
+		const message = flowMessage('Plan it.', typed);
+		expect(message).toBe('Plan it. City: Lisbon Days: 9. Ok: Window seat.');
+		expect(textRefusal(message)).toBeNull();
+		const many = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`f${i}`, 'y'.repeat(5000)]));
+		const long = flowMessage('x', { long_formData: many });
+		expect(long.length).toBeLessThan(FLOW_MESSAGE_MAX);
+		expect(long).toBe(`x. F0: ${'y'.repeat(200)}. F1: ${'y'.repeat(200)}.`);
+		// The flow cards it reads names from are ones the policy accepts.
+		expect(refuseCard(tripFlowCard)).toBeNull();
+	});
+
+	test("a final card's ask is sent as the visitor's next message", async () => {
+		const { session, sent, card } = await withCard();
+		void session.hostEvent(card, ask('Tell me about the weekend menu.'));
+		await waitFor(() => expect(sent).toEqual(['first', 'Tell me about the weekend menu.']));
+		expect(asks(session)).toEqual(['first', 'Tell me about the weekend menu.']);
+		expect(card.sent).toBeNull();
+	});
+
+	test('a finished flow sends its chat message with the answers; other kinds are ignored', async () => {
+		const { session, sent, card } = await withCard();
+		const others: TerminalResult['action'][] = [{ kind: 'navigate', url: '/x' }, { kind: 'emit', event: 'checkout' }, { kind: 'invoke_tool', tool: 't' }, undefined];
+		for (const action of others) session.flowComplete(card, { action, payload: {} });
+		expect(sent).toEqual(['first']);
+		session.flowComplete(card, chat('Plan a trip for me.'));
+		await waitFor(() => expect(sent).toHaveLength(2));
+		expect(sent[1]).toBe('Plan a trip for me. Style: Food. City: Lisbon. Days: 4.');
+		expect(asks(session)[1]).toBe(sent[1]);
+	});
+
+	test('inert until final; a malformed ask is ignored', async () => {
+		const { session, sent, card } = await withCard();
+		const streaming = new ChatSession(frames({ event: 'card.start', data: { card_id: 'c' } }, { event: 'card.delta', data: { card_id: 'c', text: '{"ui":' } }));
+		await streaming.send('x');
+		const open = cardOf(streaming);
+		open.status = 'streaming';
+		void streaming.hostEvent(open, ask('hi'));
+		streaming.flowComplete(open, chat('hi'));
+		for (const text of [42, '', '   ', 'x'.repeat(501)]) void session.hostEvent(card, ask(text));
+		void session.hostEvent(card, { type: 'emit', name: 'ask', payload: 'hi' });
+		await new Promise((r) => setTimeout(r, 20));
+		expect(sent).toEqual(['first']);
+		expect(asks(streaming)).toEqual(['x']);
+	});
+
+	test('one send per click: a handler list that asks twice sends the first', async () => {
+		const { session, sent, card } = await withCard();
+		void session.hostEvent(card, ask('one'));
+		void session.hostEvent(card, ask('two'));
+		await new Promise((r) => setTimeout(r, 20));
+		expect(sent).toEqual(['first', 'one']);
+		// A later click sends again.
+		void session.hostEvent(card, ask('three'));
+		await waitFor(() => expect(sent).toEqual(['first', 'one', 'three']));
+	});
+
+	test('while an answer is in flight, the newest card message waits and goes after it; Stop drops it', async () => {
+		let release!: () => void;
+		const gate = new Promise<void>((r) => (release = r));
+		const { session, sent, card } = await withCard(gate);
+		void session.send('second');
+		await waitFor(() => expect(session.busy).toBe(true));
+		session.flowComplete(card, chat('Plan a trip for me.'));
+		await new Promise((r) => setTimeout(r, 5));
+		void session.hostEvent(card, ask('Newest wins'));
+		await new Promise((r) => setTimeout(r, 5));
+		expect(sent).toEqual(['first', 'second']);
+		release();
+		await waitFor(() => expect(sent).toEqual(['first', 'second', 'Newest wins']));
+		await waitFor(() => expect(session.busy).toBe(false));
+
+		const stopped = await withCard(new Promise(() => {}));
+		void stopped.session.send('slow');
+		await waitFor(() => expect(stopped.session.busy).toBe(true));
+		void stopped.session.hostEvent(stopped.card, ask('queued'));
+		stopped.session.stop();
+		await waitFor(() => expect(stopped.session.busy).toBe(false));
+		await new Promise((r) => setTimeout(r, 20));
+		expect(stopped.sent).toEqual(['first', 'slow']);
+	});
+});
+
+describe('Paw OS handoff config', () => {
+	test('typed text stays local only for a localhost endpoint with PUBLIC_TYPED_LOCAL=1', () => {
+		expect(typedStaysLocal('http://localhost:5288', '1')).toBe(true);
+		expect(typedStaysLocal('http://127.0.0.1:5288', '1')).toBe(true);
+		expect(typedStaysLocal('http://localhost:5288', '')).toBe(false);
+		expect(typedStaysLocal('https://api.pocketpaw.xyz', '1')).toBe(false);
+		expect(typedStaysLocal('', '1')).toBe(false);
+	});
+
+	test('the Paw OS base is https, or http on localhost; anything else falls back', () => {
+		expect(pawosBase('https://os.example.test/')).toBe('https://os.example.test');
+		expect(pawosBase('http://localhost:5173')).toBe('http://localhost:5173');
+		expect(pawosBase('http://os.example.test')).toBe(PAWOS_URL);
+		expect(pawosBase('javascript:alert(1)')).toBe(PAWOS_URL);
+		expect(pawosBase('')).toBe(PAWOS_URL);
+	});
+
+	test('the prompt rides in the fragment, trimmed to HANDOFF_MAX', () => {
+		const { url, trimmed } = pawosHandoffUrl(`  ${'x'.repeat(HANDOFF_MAX + 10)}  `);
+		const u = new URL(url);
+		expect(u.search).toBe('?ref=ripple');
+		expect(decodeURIComponent(u.hash.slice('#prompt='.length))).toHaveLength(HANDOFF_MAX);
+		expect(trimmed).toBe(true);
+		expect(pawosHandoffUrl('short').trimmed).toBe(false);
+	});
+});

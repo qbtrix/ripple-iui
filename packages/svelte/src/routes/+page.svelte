@@ -1,14 +1,21 @@
 <!--
   @file routes/+page.svelte
   @description Ripple's landing, chat-first. The hero IS a chat: a visitor types
-    a request or taps one of the nine recorded scenarios, the answer streams in
-    and its card renders through <Ripple> while it arrives. With the Paw Bar
-    config set at build time (PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY,
-    defined in vite.config.ts like PUBLIC_STORE_URL) the chat calls the Paw Bar
-    API; without it the same chat replays the recorded answers locally and says
-    so. Below: how it works (spec, engine, UI, with a live card), install and
-    the streaming code sample, the recorded examples linking /live, and the
-    bring-your-own-key link. Prerendered; the chat only runs in the browser.
+    a request or taps a chip, the answer streams in and its card renders through
+    <Ripple> while it arrives. Live, the step-by-step chips come first (order,
+    book, plan a trip, pick a laptop: the cards walk the visitor through steps),
+    then the recorded scenarios; offline, only the recordings (minus the store
+    one). With the Paw Bar config set at build time (PUBLIC_PAWBAR_ENDPOINT /
+    _WIDGET_ID / _SITE_KEY, defined in vite.config.ts like PUBLIC_STORE_URL) the
+    chat calls the Paw Bar API; without it the same chat replays the recorded
+    answers locally and says so. Live, a card's `checkout` and `book` host events
+    go to the test store (PUBLIC_STORE_URL) through the chat session, and a flow
+    card's last step or an `ask` sends the visitor's next message. Typed text
+    opens Paw OS instead (PUBLIC_PAWOS_URL), unless PUBLIC_TYPED_LOCAL=1 with a
+    localhost endpoint keeps it on the Paw Bar. Below: how it
+    works (spec, engine, UI, with a live card), install and the streaming code
+    sample, the recorded examples linking /live, and the bring-your-own-key link.
+    Prerendered; the chat only runs in the browser.
 
   Creative Direction Declaration
     Scene: a developer at night, comparing generative UI tools with a terminal
@@ -24,34 +31,50 @@
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
-	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
+	import { BYOK_URL, ChatSession, pawbarTransport, pawosBase, typedStaysLocal, type Transport } from './pawbar/session.svelte.js';
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
-	import { scenarios } from './live/scenarios.js';
+	import { chatPrompts, scenarios } from './live/scenarios.js';
 
 	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
 	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
 	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
 	const LIVE = Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
+	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
+	const PAWOS_URL = pawosBase(import.meta.env.PUBLIC_PAWOS_URL ?? '');
+	const TYPED_LOCAL = typedStaysLocal(ENDPOINT, import.meta.env.PUBLIC_TYPED_LOCAL ?? '');
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
 
-	// The order demo needs the test store's checkout (an `api` action), which the
-	// chat's card policy refuses; it stays on /live and in the runs list below.
+	// The recorded order demo checks out with an `api` action, which the chat's card
+	// policy refuses, so the recorded answers exclude it; live, its chip asks the
+	// model, whose menu card checks out through the store host event.
 	const chatScenarios = scenarios.filter((s) => !s.needsStore);
 	const recorded =
 		(intro: string): Transport =>
 		(message, signal) =>
 			recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro });
+	// A chat card's `checkout` and `book` host events reach the test store
+	// (PUBLIC_STORE_URL, host config); a checkout's pay link and tracking stay in the chat.
+	const store = { storeUrl: STORE_URL };
 	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
 	// is unavailable. Offline build: the recordings answer directly.
 	const session = LIVE
 		? new ChatSession(
 				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
-				recorded('Here is a recorded answer that fits, on its original timing.')
+				recorded('Here is a recorded answer that fits, on its original timing.'),
+				store
 			)
 		: new ChatSession(recorded('The live model is not connected on this build, so here is a recorded answer that fits.'));
-	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
+	// Step-by-step chips first (live only: offline they would replay the wrong
+	// recording), then the recordings; "Plan a trip with me" stands in for Tokyo.
+	const liveChips = LIVE ? [...scenarios.filter((s) => s.needsStore), ...chatPrompts].filter((c) => !c.needsStore || STORE_URL) : [];
+	const suggestions = [...liveChips, ...chatScenarios.filter((s) => !(LIVE && s.id === 'tokyo-trip'))].map((c) => ({
+		id: c.id,
+		title: c.title,
+		prompt: c.prompt ?? ('fixture' in c ? c.fixture.prompt : ''),
+		steps: c.steps
+	}));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
@@ -110,7 +133,11 @@
 		}
 	}
 
-	onMount(() => () => session.stop());
+	onMount(() => {
+		// A pay link that opened in this tab comes back here: bring its order back.
+		session.resume();
+		return () => session.stop();
+	});
 </script>
 
 <svelte:head>
@@ -132,6 +159,8 @@
 			<Chat
 				{session}
 				{suggestions}
+				pawosUrl={PAWOS_URL}
+				typedLocal={TYPED_LOCAL}
 				note={LIVE ? '' : 'The live model is off in this build. Each request replays the closest recorded answer.'}
 			/>
 		</div>
