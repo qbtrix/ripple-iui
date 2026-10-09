@@ -15,7 +15,8 @@
   - State: given a `store` (Ripple passes its own, seeded from the card's
     `state`), every step's inner Ripple shares it through 'ui-flow-state', so a
     value bound in one step is read in the next, and the terminal payload gets
-    `state`: the current value of every plain `bind` path on the walked steps.
+    `state`: the current value of every plain `bind` path on the walked steps
+    that no step already sent as a formData field.
     Without a store (a direct mount) each step gets a fresh store seeded from the
     `state` prop, and the payload carries no `state`.
   - Each step mounts a fresh inner `<Ripple flowHosted>` ({#key stepKey}), so a
@@ -202,14 +203,25 @@
 		for (const child of Object.values(node)) collectBinds(child, out, seen);
 	}
 
-	/** The shared store's value for every path the walked steps bound, as plain data. */
-	function boundState(): Record<string, unknown> | null {
+	/**
+	 * The shared store's value for every path the walked steps bound, as plain
+	 * data. A path the payload already carries as a `_formData` field is left
+	 * out, so a step that sends its bound field as formData is not listed twice.
+	 */
+	function boundState(payload: Record<string, unknown>): Record<string, unknown> | null {
 		if (!store) return null;
 		const paths = new Set<string>();
 		const seen = new WeakSet<object>();
 		for (const entry of executor.history) collectBinds(entry.spec.ui, paths, seen);
+		const sent = new Set<string>();
+		for (const [key, value] of Object.entries(payload)) {
+			if (key.endsWith('_formData') && value && typeof value === 'object') {
+				for (const field of Object.keys(value)) sent.add(field);
+			}
+		}
 		const out: Record<string, unknown> = {};
 		for (const path of paths) {
+			if (sent.has(path)) continue;
 			const value = store.get(path);
 			if (value !== undefined) out[path] = $state.snapshot(value);
 		}
@@ -223,7 +235,7 @@
 			executor.markSubmitted();
 			return;
 		}
-		const bound = boundState();
+		const bound = boundState(terminal.payload);
 		if (bound) terminal.payload.state = bound;
 		const kind = (terminal.action as { kind?: string } | undefined)?.kind;
 		if (kind && WRITE_TERMINAL_KINDS.has(kind)) {

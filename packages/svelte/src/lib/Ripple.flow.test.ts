@@ -94,6 +94,8 @@ describe('Ripple auto-detects a Chain Flow (bare top-level root)', () => {
 			label: 'Focus on my own work'
 		});
 		expect(result.payload['enter_details_formData']).toEqual({ workspace: 'Acme HQ' });
+		// `workspace` is bound AND sent as formData, so it is not repeated under `state`.
+		expect(result.payload.state).toBeUndefined();
 	});
 
 	it('mounts exactly ONE FlowRunner — the step host does not recurse', () => {
