@@ -9,7 +9,9 @@
     slides, ...) go to IntentRenderer, dashboards to DashboardRenderer, and
     `custom` / unmapped intents to NodeRenderer.
   - Streaming: a Skeleton shows until the first valid parse; a stream error with
-    no parse renders only the error line.
+    no parse renders only the error line. 'ui-streaming' is a getter that is true
+    while this Ripple's stream, or an enclosing one, is still arriving (a flow
+    step's inner Ripple inherits it), so layouts can hold back half-read nodes.
   - State: seeded once from spec.state + the `state` prop. Later spec.state
     changes sync key by key against a private copy of what the spec last said.
     A flow spec seeds this store the same way and hands it to FlowRunner, and
@@ -318,6 +320,8 @@
   // svelte-ignore state_referenced_locally
   setContext('ui-host-event', onEvent);
   setContext('ui-toasts', toastBus);
+  const parentStreaming = getContext<(() => boolean) | undefined>('ui-streaming');
+  setContext('ui-streaming', () => (streaming ? !streaming.done : false) || parentStreaming?.() === true);
 
   $effect(() => {
     if (!onStateChange) return;
