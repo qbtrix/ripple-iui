@@ -356,7 +356,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 
 | Widget | When to use |
 |--------|-------------|
-| `comparison-layout` | Side-by-side comparison of 2–6 items with hero cards, section-tab feature grid, Card/Table view toggle |
+| `comparison-layout` | "Which should I pick": 2–6 items, a `winner` best-pick card with its reason, `picks` tags, features by `kind` with the best cell marked per `better`, each price's difference from the winner, a per-item card or table view. Binds `chosen` (the item id); `on_choose` gets `{id, name, product_id?}` |
 | `entity-detail` | Record / profile / entity page — header, properties, tabs |
 | `form-layout` | Multi-section form with grouped fields, validation, and a submit/cancel action row |
 | `wizard-layout` | Multi-step setup or onboarding flow with stepper, per-step body, and Back/Next actions |

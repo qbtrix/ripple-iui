@@ -15,6 +15,7 @@ import {
 } from '@ripple-ui/core';
 import Ripple from '$lib/Ripple.svelte';
 import { expectStreamParity } from '$lib/streaming/__fixtures__/stream-parity.js';
+import { comparisonLayoutEntry } from '$lib/manifest/entries/comparison-layout.js';
 import ComparisonLayout from './ComparisonLayout.svelte';
 import { getWidget, hasWidget } from '../index.js';
 
@@ -132,6 +133,12 @@ describe('comparison-layout: streamed', () => {
 		const { whole } = await expectStreamParity(spec);
 		expect(whole.querySelector('[data-slot="winner"]')?.textContent).toContain('Aero 14');
 		expect(whole.textContent).toContain('Ask in store');
+	});
+
+	it('streams the manifest example (the one the concierge copies)', async () => {
+		const { whole } = await expectStreamParity({ state: { pick: '' }, ui: comparisonLayoutEntry.example });
+		expect(whole.querySelector('[data-slot="winner"]')?.textContent).toContain('Aero 14');
+		expect(whole.querySelectorAll('[data-best]').length).toBeGreaterThan(0);
 	});
 });
 
