@@ -1,4 +1,5 @@
-<!-- src/lib/widgets/data/Treemap.svelte -->
+<!-- Treemap.svelte — echarts treemap of a recursive node tree. A node's own `color`
+     wins, then the spec's colors[i], then slot i of chart-palette.ts. -->
 <script module lang="ts">
   // Public type — declared at module scope so svelte-package can emit
   // it in the generated .d.ts. `export type` inside the per-instance
@@ -16,6 +17,7 @@
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
+  import { chartPalette, mergePalette } from './chart-palette.js';
 
   interface Props {
     id?: string;
@@ -73,7 +75,7 @@
         ? { text: title, left: 0, top: 0, textStyle: { fontSize: 13, fontWeight: 600 } }
         : undefined,
       tooltip: tooltip ? { formatter: '{b}: {c}' } : false,
-      ...(colors ? { color: colors } : {}),
+      color: mergePalette(colors, chartPalette(chartEl ? getComputedStyle(chartEl).color : '')),
       series: [
         {
           type: 'treemap',

@@ -1,9 +1,11 @@
-<!-- src/lib/widgets/data/Sankey.svelte -->
+<!-- Sankey.svelte — echarts sankey of weighted flows between named nodes. Node
+     colours come from chart-palette.ts (light or dark set from the resolved text colour). -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
+  import { chartPalette } from './chart-palette.js';
 
   type Node = { name: string };
   type Link = { source: string; target: string; value: number };
@@ -57,6 +59,7 @@
         ? { text: title, left: 0, top: 0, textStyle: { fontSize: 13, fontWeight: 600 } }
         : undefined,
       tooltip: tooltip ? { trigger: 'item' } : false,
+      color: [...chartPalette(chartEl ? getComputedStyle(chartEl).color : '')],
       series: [
         {
           type: 'sankey',

@@ -1,9 +1,11 @@
-<!-- src/lib/widgets/data/Funnel.svelte -->
+<!-- Funnel.svelte — echarts funnel of ordered stages. Stage i takes the spec's colors[i],
+     else slot i of chart-palette.ts (light or dark set from the resolved text colour). -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
   import { onMount } from 'svelte';
   import { cn } from '$lib/utils.js';
   import { safeArray } from '$lib/utils/safe-props.js';
+  import { chartPalette } from './chart-palette.js';
 
   type Stage = { label: string; value: number };
 
@@ -39,21 +41,17 @@
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
   );
 
-  const defaultColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#14b8a6'];
-  function getColor(i: number): string {
-    return colors[i] ?? defaultColors[i % defaultColors.length];
-  }
-
   let chartEl: HTMLDivElement;
   // Reactive so the redraw $effect subscribes once the instance exists.
   let chart: any = $state.raw(null);
   let echartsMod: any = null;
 
   function buildOption() {
+    const palette = chartPalette(chartEl ? getComputedStyle(chartEl).color : '');
     const series = data.map((d, i) => ({
       name: d.label,
       value: d.value,
-      itemStyle: { color: getColor(i) }
+      itemStyle: { color: colors[i] || palette[i % palette.length] }
     }));
     return {
       animation: true,

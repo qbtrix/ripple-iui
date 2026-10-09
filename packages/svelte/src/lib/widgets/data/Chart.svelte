@@ -8,6 +8,9 @@
   effect reads it as null on its first run, subscribes to nothing, and the
   chart freezes on whatever props it mounted with (e.g. a half-streamed spec).
   The root div forwards the node id (id + data-ripple-node) for editor selection.
+  Series colours: `colors[i]` from the spec, else slot i of chart-palette.ts,
+  whose light or dark set is picked from the chart's resolved text colour. A
+  single-series bar chart is one identity, so its bars share slot 1.
 -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
@@ -15,6 +18,7 @@
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils.js';
 	import { safeArray, safeObject } from '$lib/utils/safe-props.js';
+	import { chartPalette, toRgb } from './chart-palette.js';
 
 	interface DataPoint {
 		label: string;
@@ -66,8 +70,6 @@
 		safeObject<Record<string, unknown>>(rawThemeOverrides, { widget: 'chart', key: 'themeOverrides' })
 	);
 
-	const defaultColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-
 	function deepMerge<T extends Record<string, any>>(target: T, ...sources: Record<string, any>[]): T {
 		const result = { ...target };
 		for (const source of sources) {
@@ -92,10 +94,6 @@
 		return result;
 	}
 
-	function getColor(i: number): string {
-		return colors[i] || defaultColors[i % defaultColors.length];
-	}
-
 	let chartEl: HTMLDivElement | undefined = $state();
 	let chart: any = $state.raw(null);
 	let destroyed = false;
@@ -115,35 +113,14 @@
 	}
 
 	function applyAlpha(color: string, alpha: number): string {
-		// comma-separated: rgb(255, 255, 255)
-		const m = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-		if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha})`;
-		// space-separated (modern browsers): rgb(255 255 255) or rgb(255 255 255 / 1)
-		const m2 = color.match(/^rgba?\((\d+)\s+(\d+)\s+(\d+)/);
-		if (m2) return `rgba(${m2[1]},${m2[2]},${m2[3]},${alpha})`;
-		// hex
-		if (color.startsWith('#') && color.length >= 7) {
-			const r = parseInt(color.slice(1, 3), 16);
-			const g = parseInt(color.slice(3, 5), 16);
-			const b = parseInt(color.slice(5, 7), 16);
-			return `rgba(${r},${g},${b},${alpha})`;
-		}
-		// oklch/hsl/color() — resolve via canvas
-		try {
-			const cv = document.createElement('canvas');
-			cv.width = cv.height = 1;
-			const ctx = cv.getContext('2d')!;
-			ctx.fillStyle = color;
-			ctx.fillRect(0, 0, 1, 1);
-			const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-			return `rgba(${r},${g},${b},${alpha})`;
-		} catch {
-			return color;
-		}
+		const rgb = toRgb(color);
+		return rgb ? `rgba(${rgb.join(',')},${alpha})` : color;
 	}
 
 	function buildOption() {
 		const tc = themeColors();
+		const palette = chartPalette(chartEl ? getComputedStyle(chartEl).color : '');
+		const getColor = (i: number): string => colors[i] || palette[i % palette.length];
 		const labels = data.map(d => d.label);
 		const values = data.map(d => d.value ?? 0);
 		const itemColors = data.map((_, i) => getColor(i));
@@ -228,7 +205,9 @@
 						type: 'bar', data: values,
 						itemStyle: {
 							borderRadius: [3, 3, 0, 0],
-							color: (p: any) => itemColors[p.dataIndex],
+							// One series is one identity: every bar wears slot 1 unless
+							// the spec colours that bar itself.
+							color: (p: any) => colors[p.dataIndex] || palette[0],
 						},
 						barMaxWidth: 32,
 					}],
