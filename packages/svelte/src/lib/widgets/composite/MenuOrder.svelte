@@ -332,7 +332,7 @@
 		]}
 	>
 		{#if photos}
-			<PhotoTile src={item.image} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-24 shrink-0 self-start @min-[560px]:w-full" />
+			<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-24 shrink-0 self-start @min-[560px]:w-full" />
 		{:else}
 			<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, item.kind)} class="w-11 shrink-0 self-start" />
 		{/if}
@@ -428,7 +428,7 @@
 							aria-label="Best pick"
 						>
 							{#if photos}
-								<PhotoTile src={f.image} ratio="16:9" icon={kindIcon(MENU_ICONS, f.kind)} iconSize={32} class="max-h-[200px] w-full self-center" />
+								<PhotoTile src={safeUrl(f.image, { kind: 'resource' })} ratio="16:9" icon={kindIcon(MENU_ICONS, f.kind)} iconSize={32} class="max-h-[200px] w-full self-center" />
 							{:else}
 								<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, f.kind)} iconSize={24} class="w-14 shrink-0 self-start" />
 							{/if}
@@ -465,7 +465,7 @@
 				<div class="flex flex-col gap-3 @min-[720px]:grid @min-[720px]:grid-cols-[2fr_3fr] @min-[720px]:items-start">
 					<div class={['flex gap-3', photos && '@min-[720px]:flex-col']}>
 						{#if photos}
-							<PhotoTile src={item.image} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={28} class="w-24 shrink-0 self-start @min-[720px]:w-full" />
+							<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={28} class="w-24 shrink-0 self-start @min-[720px]:w-full" />
 						{:else}
 							<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-14 shrink-0 self-start" />
 						{/if}
