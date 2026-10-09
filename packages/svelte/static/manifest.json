@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-09T06:36:29.936Z",
+  "generatedAt": "2026-10-09T12:48:06.917Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -3422,9 +3422,9 @@
           "description": "ISO 4217 code for numeric prices. Default \"USD\". Never put a symbol in the data."
         },
         "items": {
-          "type": "Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; [featureKey: string]: unknown }>",
+          "type": "Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; actions?: EventAction | EventAction[]; learn_more?: EventAction | EventAction[]; [featureKey: string]: unknown }>",
           "required": true,
-          "description": "2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image."
+          "description": "2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image. Per item, `actions` fires on Choose and `learn_more` on Learn more."
         },
         "features": {
           "type": "Array<{ key: string; label: string; section?: string; kind?: \"text\" | \"number\" | \"boolean\" | \"rating\" | \"icon\" | \"price\" | \"color\"; better?: \"higher\" | \"lower\"; unit?: string; icon?: \"battery\" | \"weight\" | \"display\" | \"cpu\" | \"memory\" | \"storage\" | \"camera\" | \"speed\" | \"price\" | \"ports\" | \"wifi\" | \"keyboard\" | \"audio\" | \"security\" | \"warranty\" | \"size\" | \"rating\" | \"support\"; highlight?: boolean }>",
@@ -6630,6 +6630,43 @@
           "height": 150,
           "fit": "cover",
           "rounded": "md"
+        }
+      }
+    },
+    {
+      "type": "illustration",
+      "category": "display",
+      "staticSafe": false,
+      "description": "A small animated SVG drawing you write: <svg viewBox> with shapes, gradients and animate/animateTransform. No scripts, styles, links, images or filters. Display only.",
+      "props": {
+        "svg": {
+          "type": "string",
+          "required": true,
+          "description": "SVG markup, root <svg viewBox='...'>. Put attributes in single quotes so the JSON needs no escaping. Under 24,000 chars, 400 elements, 40 animations; every dur 0.5s or more. Elements: svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set. Refs only as url(#id) and href='#id' (plain href, not xlink:href). No style attribute, no on* handlers."
+        },
+        "title": {
+          "type": "string",
+          "required": true,
+          "description": "Accessible name, e.g. \"Sun rising over two hills\"."
+        },
+        "caption": {
+          "type": "string",
+          "required": false,
+          "description": "Optional line under the art."
+        },
+        "max_height": {
+          "type": "number",
+          "required": false,
+          "description": "Height cap in px, 80 to 640. Default 320."
+        }
+      },
+      "example": {
+        "type": "illustration",
+        "props": {
+          "title": "Sun rising over two hills",
+          "caption": "Morning, drawn in SVG.",
+          "max_height": 200,
+          "svg": "<svg viewBox='0 0 200 120'><defs><linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#bfe3ff'/><stop offset='1' stop-color='#fff4d6'/></linearGradient></defs><rect width='200' height='120' fill='url(#sky)'/><circle cx='100' cy='110' r='18' fill='#ffb703'><animate attributeName='cy' from='110' to='48' dur='3s' fill='freeze'/></circle><path d='M0 120 Q50 70 100 105 T200 95 V120 Z' fill='#7cb518'/><path d='M0 120 Q60 90 120 112 T200 108 V120 Z' fill='#4f772d'/></svg>"
         }
       }
     },
@@ -10057,7 +10094,7 @@
           "description": "ISO 4217 code. Default USD. Never a symbol."
         },
         "items": {
-          "type": "Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: \"main\" | \"side\" | \"drink\" | \"dessert\" | \"product\"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: \"one\" | \"many\"; required?: boolean; max?: number; options: Array<{ id: string; name: string; price_delta?: number }> }> }>",
+          "type": "Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: \"main\" | \"side\" | \"drink\" | \"dessert\" | \"product\"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: \"one\" | \"many\"; required?: boolean; max?: number; icon?: string; options: Array<{ id: string; name: string; price_delta?: number; icon?: string }> }> }>",
           "required": true,
           "description": "Menu items. Write product_id (and name for streaming); the server fills price, image and groups. Items without product_id are display only. Rows use kind, never type."
         },
@@ -10096,7 +10133,7 @@
         "on_checkout": {
           "type": "EventAction | EventAction[]",
           "required": false,
-          "description": "Server-wired. Fires with { lines, fulfilment, customer: { name, email?, phone?, address? }, total } when the visitor continues to payment."
+          "description": "Server-wired. Fires with { lines, fulfilment, customer: { name, email, phone, address? }, total } when the visitor continues to payment. Name, email and phone are required, plus the address for delivery."
         }
       },
       "example": {
