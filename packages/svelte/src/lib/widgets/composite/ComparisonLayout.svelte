@@ -22,7 +22,7 @@
   $derived, and the winner card appears only once its id matches an item.
 -->
 <script lang="ts">
-	import { safeStyle } from '@ripple-ui/core';
+	import { safeStyle, safeUrl } from '@ripple-ui/core';
 	import type { EventDispatcher, EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
 	import { getContext } from 'svelte';
 	import CheckIcon from '@lucide/svelte/icons/check';
@@ -321,6 +321,8 @@
 		dispatchOrFallback(item.actions, onselect, item);
 	}
 
+	/** A product_id the server has not filled yet: nothing to choose until it has a name. */
+	const pending = (item: CompareItem) => !nameOf(item) && typeof item.product_id === 'string' && item.product_id !== '';
 	const isChosen = (item: CompareItem) => !!chosen && itemId(item) === chosen;
 	const hasSecondary = (item: CompareItem) =>
 		showSecondary && (item.learn_more !== undefined || onlearnmore !== undefined);
@@ -339,7 +341,7 @@
 	{@const name = nameOf(item)}
 	{#if name}
 		<svelte:element this={tag} class={['block min-w-0 truncate', cls]}>{name}</svelte:element>
-	{:else if item.product_id}
+	{:else if pending(item)}
 		<!-- A product_id the server has not hydrated yet: a placeholder, not a blank. -->
 		<svelte:element this={tag} class="block min-w-0" data-slot="name-pending">
 			<span class="block h-3.5 w-24 max-w-full rounded bg-ripple-muted" aria-hidden="true"></span>
@@ -378,9 +380,10 @@
 {/snippet}
 
 {#snippet actions(item: CompareItem, primary: boolean)}
-	{#if showPrimary || hasSecondary(item)}
+	{@const canChoose = showPrimary && !pending(item)}
+	{#if canChoose || hasSecondary(item)}
 		<div class="mt-auto flex flex-wrap items-center gap-1.5">
-			{#if showPrimary}{@render chooseButton(item, primary)}{/if}
+			{#if canChoose}{@render chooseButton(item, primary)}{/if}
 			{#if hasSecondary(item)}
 				<button
 					type="button"
@@ -444,7 +447,7 @@
 				{/each}
 			</span>
 		{:else if k === 'image'}
-			<PhotoTile src={v} alt={labelOf(f)} class="w-8" iconSize={14} />
+			<PhotoTile src={safeUrl(v, { kind: 'resource' })} alt={labelOf(f)} class="w-8" iconSize={14} />
 		{:else}
 			{textOf(f, v)}
 		{/if}
@@ -473,9 +476,10 @@
 					isChosen(w) ? 'border-ripple-accent bg-ripple-accent/8' : 'border-ripple-accent/50 bg-ripple-surface'
 				]}
 			>
-				<div class="flex gap-3">
-					<PhotoTile src={w.image} alt={nameOf(w)} icon={PackageIcon} class="w-14 shrink-0 self-start @min-[720px]:w-[72px]" />
-					<div class="flex min-w-0 flex-1 flex-col gap-1">
+				<!-- Photo | details; the actions sit under the photo below 560px, under the details from 560px. -->
+				<div class="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+					<PhotoTile src={safeUrl(w.image, { kind: 'resource' })} alt={nameOf(w)} icon={PackageIcon} class="w-14 self-start @min-[560px]:row-span-2 @min-[720px]:w-[72px]" />
+					<div class="flex min-w-0 flex-col gap-1">
 						<p class="flex items-center gap-1 text-caption-1 font-medium tracking-[0.04em] text-ripple-muted-foreground uppercase">
 							<AwardIcon size={12} strokeWidth={2} aria-hidden="true" class="text-ripple-accent" />Best pick
 						</p>
@@ -493,8 +497,10 @@
 						{#if reason}<p class="text-callout text-pretty" data-slot="reason">{reason}</p>{/if}
 						{@render tags(w)}
 					</div>
+					{#if showPrimary || hasSecondary(w)}
+						<div class="col-span-2 @min-[560px]:col-span-1 @min-[560px]:col-start-2">{@render actions(w, true)}</div>
+					{/if}
 				</div>
-				{@render actions(w, true)}
 				{#if runnerUp}
 					<p class="border-t border-ripple-border pt-2 text-footnote text-ripple-muted-foreground" data-slot="runner-up">
 						<span class="font-medium text-ripple-surface-foreground">Runner-up: {nameOf(runnerUp.item)}</span>{#if runnerUp.reason}. {runnerUp.reason}{/if}
@@ -516,7 +522,7 @@
 						]}
 					>
 						<div class="flex gap-3">
-							<PhotoTile src={item.image} alt={nameOf(item)} icon={PackageIcon} class="w-14 shrink-0 self-start" />
+							<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} alt={nameOf(item)} icon={PackageIcon} class="w-14 shrink-0 self-start" />
 							<div class="min-w-0 flex-1">
 								{@render itemName(item, 'text-headline')}
 								{#if item.subtitle || item.chip}
@@ -608,7 +614,7 @@
 							{#each list as item, idx (`${item.id ?? ''}:${idx}`)}
 								<article class="min-w-0 overflow-hidden rounded-ripple border border-ripple-border bg-ripple-surface">
 									<header class="flex items-center gap-2.5 border-b border-ripple-border px-3 py-2">
-										<PhotoTile src={item.image} alt={nameOf(item)} icon={PackageIcon} iconSize={14} class="w-8 shrink-0" />
+										<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} alt={nameOf(item)} icon={PackageIcon} iconSize={14} class="w-8 shrink-0" />
 										<div class="min-w-0 flex-1">
 											{@render itemName(item, 'text-body-emph')}
 											{#if priceText(item)}<p class="truncate text-footnote tabular-nums text-ripple-muted-foreground">{priceText(item)}</p>{/if}
@@ -646,7 +652,7 @@
 												class={['border-l border-ripple-border px-3 py-2 text-center align-bottom font-normal', item === winnerItem && 'border-t-2 border-t-ripple-accent']}
 											>
 												<div class="flex flex-col items-center gap-1">
-													<PhotoTile src={item.image} alt="" icon={PackageIcon} iconSize={14} class="w-8" />
+													<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} alt="" icon={PackageIcon} iconSize={14} class="w-8" />
 													{@render itemName(item, 'text-body-emph', 'span')}
 													{#if priceText(item)}<span class="text-footnote tabular-nums text-ripple-muted-foreground">{priceText(item)}</span>{/if}
 													{#if item === winnerItem}

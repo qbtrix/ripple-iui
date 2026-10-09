@@ -7,7 +7,7 @@
 //   fallback for `kind`, the `icon` kind, and a product_id placeholder.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, within } from '@testing-library/svelte';
-import { tick } from 'svelte';
+import { tick, type ComponentProps } from 'svelte';
 import {
 	getBindContract,
 	warnUnregisteredBindContract,
@@ -21,13 +21,15 @@ import { getWidget, hasWidget } from '../index.js';
 
 afterEach(cleanup);
 
+type Features = NonNullable<ComponentProps<typeof ComparisonLayout>['features']>;
+
 const laptops = () => [
 	{ id: 'aero', name: 'Aero 14', subtitle: '14-inch ultralight', price: 1099, product_id: 'sku-aero-14', battery: 18, weight: 1.2, ram: 16, gpu: false, ports: ['usb', 'wifi'] },
 	{ id: 'nimbus', name: 'Nimbus Pro 15', subtitle: '15-inch creator', price: 1799, battery: 11, weight: 1.9, ram: 32, gpu: true, ports: ['usb', 'display'] },
 	{ id: 'vertex', name: 'Vertex X13', subtitle: '13-inch business', price: 1299, battery: 18, weight: 1.1, ram: 16, gpu: false, ports: ['security'] }
 ];
 
-const features = () => [
+const features = (): Features => [
 	{ key: 'battery', label: 'Battery', section: 'Everyday', kind: 'number', unit: 'h', better: 'higher', icon: 'battery', highlight: true },
 	{ key: 'weight', label: 'Weight', section: 'Everyday', kind: 'number', unit: 'kg', better: 'lower', icon: 'weight', highlight: true },
 	{ key: 'ram', label: 'Memory', section: 'Performance', kind: 'number', unit: 'GB', better: 'higher', icon: 'memory' },
@@ -180,7 +182,7 @@ describe('comparison-layout: logic', () => {
 			{ id: 'b', name: 'B', battery: 10, ram: Number.NaN },
 			{ id: 'c', name: 'C', battery: 10, ram: 8 }
 		];
-		const f = [
+		const f: Features = [
 			{ key: 'battery', label: 'Battery', kind: 'number', better: 'higher' },
 			{ key: 'ram', label: 'Memory', kind: 'number', better: 'higher' }
 		];
@@ -222,7 +224,7 @@ describe('comparison-layout: logic', () => {
 
 	it('reads the legacy `type` when `kind` is missing; `kind` wins', () => {
 		const items = [{ id: 'a', name: 'A', sso: true, seats: 5 }, { id: 'b', name: 'B', sso: 'no', seats: 10 }];
-		const f = [
+		const f: Features = [
 			{ key: 'sso', label: 'SSO', type: 'boolean' },
 			{ key: 'seats', label: 'Seats', type: 'boolean', kind: 'number', better: 'higher' }
 		];
@@ -243,6 +245,8 @@ describe('comparison-layout: logic', () => {
 		const items = [{ id: 'p1', product_id: 'sku-1' }, { id: 'b', name: 'B' }];
 		const c = render(ComparisonLayout, { props: { items } }).container;
 		expect(c.querySelector('[data-slot="name-pending"]')).not.toBeNull();
+		// Nothing to choose until the server has named it.
+		expect(c.querySelectorAll('[data-slot="choose"]')).toHaveLength(1);
 	});
 
 	it('infers features from item keys when none are given (legacy specs)', () => {
