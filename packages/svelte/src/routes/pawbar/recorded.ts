@@ -2,13 +2,15 @@
 // One source for two consumers: scripts/mock-pawbar.ts serialises these frames
 // as SSE, and the landing's offline fallback (no endpoint configured) feeds
 // them straight to the chat store, so both exercise the same client path.
-// `pickScenario` is a plain keyword-overlap match, defaulting to the bill
-// splitter. `cardChunks` re-cuts a fixture (a whole `{version,state,ui}` spec)
+// `pickScenario` is an exact prompt match or else a plain keyword-overlap match,
+// defaulting to the bill splitter; its pool is the recordings plus the
+// hand-written play cards (play-cards.ts). `cardChunks` re-cuts a fixture (a whole `{version,state,ui}` spec)
 // into the card wire shape `{state,ui}` on the fixture's own chunk boundaries
 // and timing. `mode` drives the mock's failure paths.
 
 import { replay } from '../live/replay.js';
 import { scenarios, type Scenario, type ScenarioFixture } from '../live/scenarios.js';
+import { playScenarios } from './play-cards.js';
 import { FENCE_OPEN, type SSEFrame } from './sse.js';
 
 export type RecordedMode = 'normal' | 'reject' | 'truncate' | 'legacy';
@@ -24,12 +26,15 @@ const words = (s: string) =>
 			.filter((w) => w.length > 2 && !STOP.has(w))
 	);
 
-export function pickScenario(message: string, pool: Scenario[] = scenarios): Scenario {
+/** Everything the chat can answer with offline: the recordings and the hand-written play cards. */
+export const answerPool: Scenario[] = [...scenarios, ...playScenarios];
+
+export function pickScenario(message: string, pool: Scenario[] = answerPool): Scenario {
 	const asked = words(message);
 	let best = pool.find((s) => s.id === 'bill-splitter') ?? pool[0];
 	let bestScore = 0;
 	for (const s of pool) {
-		if (s.fixture.prompt === message.trim()) return s;
+		if (s.fixture.prompt === message.trim() || s.prompt === message.trim()) return s;
 		let score = 0;
 		for (const w of words(`${s.title} ${s.fixture.prompt}`)) if (asked.has(w)) score++;
 		if (score > bestScore) [best, bestScore] = [s, score];
