@@ -15,3 +15,4 @@ export { default as OpsDashboard } from './OpsDashboard.svelte';
 export { default as AnalyticsDashboard } from './AnalyticsDashboard.svelte';
 export { default as PipelineDashboard } from './PipelineDashboard.svelte';
 export { default as ProjectDashboard } from './ProjectDashboard.svelte';
+export { default as Itinerary } from './Itinerary.svelte';

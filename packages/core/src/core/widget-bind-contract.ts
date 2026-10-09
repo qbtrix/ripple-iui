@@ -50,6 +50,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'exec-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
   'kpi-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
   'executive-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
+  // itinerary binds its days: ticking or adding a stop emits a new days array.
+  // The open day stays a Svelte-side `$bindable` (one bind per node).
+  itinerary: { prop: 'days', event: 'ondayschange' },
+  'trip-plan': { prop: 'days', event: 'ondayschange' },
+  'travel-itinerary': { prop: 'days', event: 'ondayschange' },
 };
 
 /**
