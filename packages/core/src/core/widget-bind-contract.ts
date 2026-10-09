@@ -156,6 +156,9 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'sidebar', 'nav',
   // bill-split binds the bill as edited ({ subtotal, tip_percent, people })
   'bill-split', 'split-bill', 'bill-splitter',
+  // board-game binds the game ({ board, turn, result, series }), written by
+  // the widget on every move, Rematch and New series
+  'board-game', 'tic-tac-toe', 'connect-four',
 ]);
 
 const warnedTypes = new Set<string>();

@@ -40,7 +40,7 @@ const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'ov
 // Plus these by name (whole composite + research categories would add ~100 KB):
 // the data widgets and the summary pieces the SYSTEM rules point at.
 const DATA_WIDGETS = new Set([
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck',
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'board-game',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
@@ -107,6 +107,7 @@ CARD SHAPE (pick this first)
   - a week of meals: meal-plan; one dish: recipe
   - an interval, circuit or HIIT workout: interval-workout
   - a study or flip-card deck: flashcard-deck
+  - tic-tac-toe or connect-four against the computer: board-game (set "game")
   - a menu or food order: menu-order; a reservation or appointment: booking
   - sales, KPIs or a dashboard over records: exec-dashboard with "rows", "measures", "dimensions" (bind "filters")
   - choosing between options: comparison-layout

@@ -130,6 +130,7 @@ import { growthProjectionEntry } from './entries/growth-projection.js';
 import { billSplitEntry } from './entries/bill-split.js';
 import { intervalWorkoutEntry } from './entries/interval-workout.js';
 import { flashcardDeckEntry } from './entries/flashcard-deck.js';
+import { boardGameEntry } from './entries/board-game.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -456,6 +457,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   menuOrderEntry,
   intervalWorkoutEntry,
   flashcardDeckEntry,
+  boardGameEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
