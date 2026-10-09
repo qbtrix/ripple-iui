@@ -38,10 +38,10 @@
 	--font-mono: 'JetBrains Mono Variable', 'SF Mono', ui-monospace, Menlo, monospace;
 	--font-display: 'Bricolage Grotesque Variable', 'Inter Variable', system-ui, sans-serif;
 
-	--primary: oklch(0.533 0.26 262.6);
+	--primary: #1877f2;
 	--primary-foreground: oklch(1 0 0);
-	--ring: oklch(0.533 0.26 262.6);
-	--primary-ink: oklch(0.47 0.24 262.6);
+	--ring: #1877f2;
+	--primary-ink: color-mix(in oklch, #1877f2 82%, black);
 	--paw-crimson: oklch(0.55 0.2 18);
 	--paw-crimson-hover: oklch(0.48 0.2 18);
 
@@ -58,7 +58,7 @@
 	--site-line: oklch(0.18 0.015 262 / 12%);
 	--glass: oklch(1 0 0 / 0.66);
 	--glass-line: oklch(0.18 0.015 262 / 11%);
-	--glow: oklch(0.533 0.26 262.6 / 0.16);
+	--glow: rgb(24 119 242 / 0.16);
 	--glow-warm: oklch(0.55 0.2 18 / 0.08);
 	--radius-paw: 12px;
 	--site-topbar: 53px;
@@ -66,10 +66,10 @@
 }
 
 .dark {
-	--primary: oklch(0.533 0.26 262.6);
+	--primary: #1877f2;
 	--primary-foreground: oklch(1 0 0);
-	--ring: oklch(0.533 0.26 262.6);
-	--primary-ink: color-mix(in oklch, oklch(0.533 0.26 262.6) 35%, white);
+	--ring: #1877f2;
+	--primary-ink: color-mix(in oklch, #1877f2 35%, white);
 	--paw-crimson: oklch(0.62 0.2 18);
 	--paw-crimson-hover: oklch(0.55 0.2 18);
 
@@ -95,7 +95,7 @@
 	--site-line: oklch(1 0 0 / 10%);
 	--glass: rgb(0 0 0 / 0.55);
 	--glass-line: oklch(1 0 0 / 10%);
-	--glow: oklch(0.533 0.26 262.6 / 0.34);
+	--glow: rgb(24 119 242 / 0.34);
 	--glow-warm: oklch(0.62 0.2 18 / 0.14);
 	color-scheme: dark;
 }
