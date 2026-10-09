@@ -16,7 +16,9 @@
 //   to null-namespace elements. Any other non-SVG namespace is hostile.
 // - Caps are measured on the parsed source before anything is dropped
 //   (measureCaps): every element in every namespace counts, the root is depth
-//   1, and `dur` / `repeatCount` are checked only where present.
+//   1, and `dur` / `repeatCount` are checked only where present. At most
+//   maxUse `use` elements, and no `use` may point at a `use` or at a subtree
+//   holding one (nested or self-referencing use), so fan-out stays bounded.
 // - The value rules apply to attribute values, never to text content.
 import {
 	ILLUSTRATION_ANIMATABLE as ANIMATABLE,
@@ -122,6 +124,28 @@ export function measureCaps(root: Element): string | null {
 			if (rc.trim() === '' || !Number.isFinite(n) || n < 0 || n > CAPS.maxRepeatCount) return `repeatCount "${rc}"`;
 		}
 	}
+	return useFanOut(root, all);
+}
+
+/** The `use` cap: at most maxUse, and none pointing at a `use` or a subtree holding one. */
+function useFanOut(root: Element, all: HTMLCollectionOf<Element>): string | null {
+	const els = [root, ...all];
+	const uses = els.filter((el) => el.localName === 'use' && isSvgNs(el.namespaceURI));
+	if (uses.length > CAPS.maxUse) return `over ${CAPS.maxUse} use elements`;
+	if (!uses.length) return null;
+	const byId = new Map<string, Element>();
+	for (const el of els) {
+		const id = el.getAttribute('id');
+		if (id !== null && !byId.has(id)) byId.set(id, el);
+	}
+	for (const u of uses)
+		for (const a of u.attributes) {
+			if (a.localName !== 'href' || (a.namespaceURI !== null && a.namespaceURI !== XLINK_NS)) continue;
+			const m = HASH_REF.exec(a.value.trim());
+			const target = m ? byId.get(m[1]) : undefined;
+			if (target && (target.localName === 'use' || uses.some((x) => x !== target && target.contains(x))))
+				return `nested use (#${m![1]})`;
+		}
 	return null;
 }
 

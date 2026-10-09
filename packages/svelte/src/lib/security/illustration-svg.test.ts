@@ -164,3 +164,24 @@ describe('a good animated SVG', () => {
 		expect(checkIllustrationSvg(wrap('<rect/>'.repeat(400))).ok).toBe(false);
 	});
 });
+
+describe('use fan-out cap', () => {
+	const REFUSED: Array<[string, string]> = [
+		['nested use', wrap(`<defs><symbol id='leaf'><circle r='2'/></symbol><g id='pair'><use href='#leaf'/><use href='#leaf' x='4'/></g></defs><use href='#pair'/>`)],
+		['self-referencing use', wrap(`<use id='loop' href='#loop'/>`)],
+		['use of an ancestor holding it', wrap(`<g id='tree'><rect width='1' height='1'/><use href='#tree' x='2'/></g>`)],
+		['use of a use (xlink)', wrap(`<rect id='r' width='1' height='1'/><use id='a' href='#r'/><use xmlns:xlink='http://www.w3.org/1999/xlink' xlink:href='#a'/>`)],
+		[`${ILLUSTRATION_CAPS.maxUse + 1} uses`, wrap(`<rect id='r' width='1' height='1'/>${"<use href='#r'/>".repeat(ILLUSTRATION_CAPS.maxUse + 1)}`)]
+	];
+
+	it.each(REFUSED)('%s is refused by the check and renders nothing', (_n, markup) => {
+		expect(checkIllustrationSvg(markup).ok).toBe(false);
+		expect(sanitizeIllustrationSvg(markup, document, 'p-')).toBeNull();
+	});
+
+	it('passes flat use, up to the cap', () => {
+		const flat = wrap(`<defs><symbol id='leaf'><circle r='2'/></symbol></defs>${"<use href='#leaf'/>".repeat(ILLUSTRATION_CAPS.maxUse)}`);
+		expect(checkIllustrationSvg(flat)).toEqual({ ok: true });
+		expect(sanitizeIllustrationSvg(flat, document, 'p-')!.querySelectorAll('use')).toHaveLength(ILLUSTRATION_CAPS.maxUse);
+	});
+});

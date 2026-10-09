@@ -71,7 +71,10 @@ export const ILLUSTRATION_CAPS = {
 	/** Minimum `dur` in seconds on every animation that sets one (flash guard). */
 	minDurSeconds: 0.5,
 	/** Largest numeric `repeatCount`; `indefinite` is also allowed. */
-	maxRepeatCount: 1000
+	maxRepeatCount: 1000,
+	/** `use` elements. A `use` may also never point at a `use` or at a subtree
+	 *  holding one (no nested use, no self-reference), so fan-out stays bounded. */
+	maxUse: 40
 } as const;
 
 /** `max_height` prop bounds, in px. */
