@@ -9,7 +9,7 @@
 export const CHAT_WIDGET_TYPES: ReadonlySet<string> = new Set([
 	'accordion', 'alert', 'analyst-bar', 'analytics-dashboard', 'animated-beam', 'api-key',
 	'app-shell', 'approval-gate', 'article-meta', 'ask-user-questions', 'audio', 'audit-log',
-	'aurora', 'avatar', 'avatar-group', 'badge', 'bento-grid', 'booking', 'border-beam', 'breadcrumb',
+	'aurora', 'avatar', 'avatar-group', 'badge', 'bento-grid', 'bill-split', 'booking', 'border-beam', 'breadcrumb',
 	'bulk-action-bar', 'button', 'c4', 'calendar', 'callout', 'card', 'chart', 'checkbox',
 	'checkbox-group', 'checklist-layout', 'chip', 'citation', 'coachmark', 'code', 'code-block',
 	'code-editor', 'collapsible', 'color-picker', 'combobox', 'command-palette', 'comment-thread',

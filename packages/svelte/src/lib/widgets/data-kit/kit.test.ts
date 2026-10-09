@@ -19,6 +19,8 @@ import {
 	kindIcon,
 	optionIconKey,
 	OPTION_ICONS,
+	CHOICE_ICONS,
+	choiceIconKey,
 	FALLBACK_ICON
 } from './index.js';
 import { STATUSES } from './status.js';
@@ -236,5 +238,51 @@ describe('optionIconKey (menu-order option icons)', () => {
 		expect(optionIconKey('Regular', 'egg')).toBe('egg');
 		for (const junk of ['Hamburger', 'Trash2', '__proto__', 'constructor', '<script>', 7, null])
 			expect(optionIconKey('Bacon', junk)).toBe('bacon');
+	});
+});
+
+describe('choiceIconKey (flow choice cards)', () => {
+	it.each([
+		['Work and study', 'work'],
+		['Creative work', 'creative'],
+		['Gaming', 'gaming'],
+		['School', 'school'],
+		['Everyday browsing', 'everyday'],
+		['Under $800', 'budget'],
+		['$800 to $1,500', 'mid'],
+		['Over $1,500', 'premium'],
+		['Yes, I carry it daily', 'light'],
+		['Food', 'food'],
+		['Vegetarian', 'veg'],
+		['Culture', 'culture'],
+		['Nature', 'outdoors'],
+		['Relaxation', 'relax'],
+		['Evening', 'evening'],
+		['3 days', 'days'],
+		['Just me', 'solo'],
+		['Party of 6', 'group'],
+		['Flights only', 'travel']
+	])('%s → %s', (label, key) => {
+		expect(choiceIconKey(label)).toBe(key);
+		expect(CHOICE_ICONS[key as keyof typeof CHOICE_ICONS]).toBeTruthy();
+	});
+
+	it('falls back to the hint, then to nothing', () => {
+		expect(choiceIconKey('Not really', undefined, 'It mostly stays on a desk')).toBe('home');
+		expect(choiceIconKey('Option B')).toBeUndefined();
+		expect(choiceIconKey(42)).toBeUndefined();
+	});
+
+	it('honours an explicit icon only when it is a key of the map', () => {
+		expect(choiceIconKey('Option B', 'gaming')).toBe('gaming');
+		for (const junk of ['gamepad-2', 'Trash2', '__proto__', 'constructor', '<svg onload=x>', 7, null])
+			expect(choiceIconKey('Option B', junk)).toBeUndefined();
+		expect(choiceIconKey('Food', 'not-a-key')).toBe('food');
+	});
+
+	it('the button manifest lists exactly the CHOICE_ICONS keys', async () => {
+		const { buttonEntry } = await import('$lib/manifest/entries/button.js');
+		const listed = [...String(buttonEntry.props.icon.type).matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
+		expect(listed.toSorted()).toEqual(Object.keys(CHOICE_ICONS).toSorted());
 	});
 });

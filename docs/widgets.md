@@ -249,8 +249,34 @@ Interactive button.
 | `variant` | `'default' \| 'destructive' \| 'outline' \| 'secondary' \| 'ghost' \| 'link'` | `'default'` | Button style |
 | `size` | `'default' \| 'sm' \| 'lg' \| 'icon'` | `'default'` | Button size |
 | `disabled` | `boolean` | `false` | Disabled state |
+| `icon` | choice icon key | none | Flow choice cards only: the tile icon (keys below) |
+| `description` | `string` | none | Flow choice cards only: a one-line hint under the label |
 
 **Events:** `onclick`
+
+**Choice cards in a flow step.** When a flow `select` step's buttons each emit
+`flow.next` or `flow.submit` with `value.selection`, SelectLayout renders them as
+choice cards (OptionList `layout: 'cards'`): a tile per option with an icon, the
+label and the `description` hint, selected in the accent with a check. Each tile
+wraps a real radio input (checkbox when the step has `selection: 'multiple'`).
+Click, Enter or Space picks and advances the flow once; the arrow keys move the
+selection without advancing. The grid is container-query sized: one column,
+two from 480px, three when there are 3 or 6 short options. `icon` must be one of
+these keys, anything else is ignored: work, school, creative, gaming, everyday, travel, light, home, budget, mid, premium, power, food, veg, meat, fish, sweet, coffee, drinks, culture, outdoors, relax, shopping, morning, afternoon, evening, night, solo, couple, family, group, days, quick. Without a valid key the icon is
+guessed from the label, then the hint; no match means no icon. Set
+`display: { layout: 'list' }` on the step to keep the one-column rows.
+
+```json
+{
+  "flowId": "main_use", "intent": "select", "title": "What will you use it for most?",
+  "ui": { "type": "flex", "props": { "direction": "column" }, "children": [
+    { "type": "button", "props": { "label": "Work and study", "icon": "work", "description": "Docs, email, video calls" },
+      "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "work", "label": "Work and study" } } } },
+    { "type": "button", "props": { "label": "Gaming", "icon": "gaming", "description": "Recent games at good frame rates" },
+      "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "gaming", "label": "Gaming" } } } }
+  ] }
+}
+```
 
 ### `input`
 
@@ -391,6 +417,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
 | `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (option tiles with icons inferred from names, or an `icon` key from `OPTION_ICONS`), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
 | `growth-projection` | Savings growth from `initial`, monthly `deposit`, `rate` (% a year) and `years`: final balance, deposits-vs-growth chart, yearly table, optional `goal` and `inflation`, sliders to retune. Bind `deposit` |
+| `bill-split` | Split a bill with tip: `subtotal` (before tip and tax), optional `tax` (on top, shared in proportion), `tip_percent` with chips (`tip_options`) and a custom box, `people` `{ id, name, extras? }` (2 to 12; `extras` is what a person had on top, e.g. drinks). Cents-exact shares that add up to the total, a card per person, bill / tip / total row. Bind `value` `{ subtotal, tip_percent, people }` |
 | `recipe` | One dish: photo or kind icon, meta chips, a servings stepper that rescales numeric `qty` (1.5 cups prints 1½), tickable `ingredients`, numbered `steps` with timers and tips, kcal and protein per serving. Bind `servings` |
 | `meal-plan` | A week from one `recipes` library: `days` of meals by slot (cards below 720px, a days-by-slots grid above), swap per meal, protein and calories per day against `goal`, a shopping list summed per ingredient and scaled to `people`, grouped by aisle. Opening a meal shows its recipe. Bind `people` |
 | `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
@@ -482,6 +509,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |
 | `savings-projection`, `compound-interest` | `growth-projection` |
+| `split-bill`, `bill-splitter` | `bill-split` |
 | `recipe-card` | `recipe` |
 | `meal-planner`, `weekly-meal-plan` | `meal-plan` |
 | `report` | `report-layout` |

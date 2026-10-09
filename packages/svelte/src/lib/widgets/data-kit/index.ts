@@ -22,6 +22,8 @@ export {
 	MENU_ICONS,
 	OPTION_ICONS,
 	optionIconKey,
+	CHOICE_ICONS,
+	choiceIconKey,
 	SERVICE_ICONS,
 	EXERCISE_ICONS,
 	RECORD_ICONS,
