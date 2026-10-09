@@ -27,7 +27,7 @@ export const askUserQuestionsEntry: WidgetManifestEntry = {
       type: 'EventAction | EventAction[]',
       required: false,
       description:
-        'Dispatched when the final question is answered. The formatted answer summary is passed as the event value — pair with `{ action: "emit", target: "chat.send" }` to send it as the next chat message (no explicit value needed).',
+        'Dispatched when the final question is answered. The formatted answer summary is passed as the event value. Pair it with `{ action: "emit", target: "chat.send" }` to send it as the next chat message (no explicit value needed).',
     },
     skipActions: {
       type: 'EventAction | EventAction[]',

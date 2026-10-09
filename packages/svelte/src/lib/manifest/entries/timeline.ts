@@ -16,7 +16,7 @@ export const timelineEntry: WidgetManifestEntry = {
       type: '"comfortable" | "compact"',
       required: false,
       description:
-        'Visual density. "comfortable" (default) shows a connecting rail and roomy spacing — milestones/roadmap. "compact" hides the rail and tightens rows — activity streams ("Deploy succeeded · 2m ago").',
+        'Visual density. "comfortable" (default) shows a connecting rail and roomy spacing (milestones, roadmap). "compact" hides the rail and tightens rows, for activity streams ("Deploy succeeded · 2m ago").',
     },
   },
   example: {

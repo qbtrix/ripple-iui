@@ -4,8 +4,7 @@ import { error } from '@sveltejs/kit';
 import { manifestEntries } from '$lib/manifest/index.js';
 import {
 	categoryTitle,
-	exampleSpec,
-	interactiveSpecs,
+	pageSpecs,
 	rows,
 	sourceUrl,
 	widgetCategories,
@@ -23,7 +22,7 @@ export const load: PageServerLoad = ({ params }) => {
 	const props = rows(e.props);
 	const events = rows(e.events);
 	const nodeFields = rows(e.nodeFields);
-	const interactive = interactiveSpecs(e);
+	const { example, interactive } = pageSpecs(e);
 	const headings = [
 		{ id: 'example', text: 'Example', depth: 2 },
 		...interactive.map((s, i) => ({ id: `interactive-${i}`, text: s.name, depth: 2 })),
@@ -38,7 +37,7 @@ export const load: PageServerLoad = ({ params }) => {
 		category: { id: e.category, title: categoryTitle(e.category) },
 		siblings: category.widgets.map((w) => w.type),
 		staticSafe: e.staticSafe === true,
-		example: exampleSpec(e),
+		example,
 		interactive,
 		props,
 		events,

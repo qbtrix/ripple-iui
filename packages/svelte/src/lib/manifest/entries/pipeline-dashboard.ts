@@ -10,7 +10,7 @@ export const pipelineDashboardEntry: WidgetManifestEntry = {
     period: { type: 'string', required: false, description: 'Period label (e.g. "Q2 2026").' },
     quota: { type: '{ label?: string; current: number; target: number; currency?: string; period?: string }', required: false, description: 'Big quota progress hero (current vs target).' },
     funnel: { type: '{ title?: string; stages: Array<{ label: string; value: number; color?: string }> }', required: false, description: 'Funnel chart data.' },
-    conversion: { type: 'Array<{ from: string; to: string; rate: number }>', required: false, description: 'Stage-to-stage conversion percentages (0–100).' },
+    conversion: { type: 'Array<{ from: string; to: string; rate: number }>', required: false, description: 'Stage-to-stage conversion percentages (0 to 100).' },
     leaderboard: { type: '{ title?: string; items: Array<{ name: string; avatar?: string; value: string | number; delta?: string; sublabel?: string; position?: number }> }', required: false, description: 'Leaderboard sidebar (medals on top 3).' },
     deals: { type: '{ title?: string; columns: Array<{ key: string; label: string; align?: "left" | "right" | "center" }>; rows: Record<string, unknown>[] }', required: false, description: 'Deals / opportunities table.' },
     ticker: { type: 'Array<{ time: string; label: string; actor?: string; icon?: string }>', required: false, description: 'Live activity ticker.' },
