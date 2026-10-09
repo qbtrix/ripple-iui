@@ -74,6 +74,13 @@ validateCatalog(spec: UISpec | UINode | null | undefined, opts?: {
 
 Returns every node whose `type` is not a registered widget, `if`, `each` or one of `extraWidgetTypes`. An empty array means the whole spec is in the catalog. It walks `children` and `else_children`. This version is bound to the Svelte registry, so custom widgets you registered count as known; the one in `@ripple-ui/core` needs `widgetTypes` passed in.
 
+| Export | Notes |
+|---|---|
+| `specIssues(spec, opts?)` | Schema and catalog problems as `SpecIssue[]`, each `{ path, message }`. Same options as `validateCatalog`, bound to the registry the same way. |
+| `formatSpecIssues(issues)` | Re-exported from core. The issues as a text block for the model's next turn, `''` when there are none. |
+
+See [Catalog and validation](/docs/concepts/catalog-and-validation#sending-problems-back-to-the-model).
+
 ## State
 
 | Export | Notes |
@@ -86,7 +93,7 @@ From `@ripple-ui/svelte/streaming`:
 
 | Export | Notes |
 |---|---|
-| `streamSpec(source, options?)` | Returns a `StreamSpecStore` with `current`, `done`, `error`, `cancel()`. Options: `throttleMs`, `maxBufferBytes`, `signal`, `onUpdate`, `allow`. |
+| `streamSpec(source, options?)` | Returns a `StreamSpecStore` with `current`, `done`, `error`, `cancel()`. Options: `throttleMs`, `maxBufferBytes`, `warnAtBytes` (dev console warning once per stream, default 100,000; `0` or `Infinity` turns it off), `signal`, `onUpdate`, `allow`. |
 | `parsePartialSpec(text, allow?)` | Parses a partial spec string. Returns `{ value }`, `null` when nothing parses yet. |
 | `StreamParseError` | `kind` is `malformed`, `incomplete`, `overflow` or `aborted`; `lastValid` holds the last good spec. |
 | `DEFAULT_ALLOW` | The partial-parser flags `streamSpec` uses. |

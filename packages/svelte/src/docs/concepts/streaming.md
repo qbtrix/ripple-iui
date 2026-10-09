@@ -22,11 +22,19 @@ A partial parser turns `{"type": "fl` into `{ type: "fl" }`, and `fl` is not a w
 
 Other strings render as they grow, so a heading types itself out.
 
+A widget whose props are still arriving can fail to render, for example a chart that has one of the three items it needs. While the stream is open, Ripple shows a quiet placeholder in its place and tries again with each new chunk. If the widget still fails once the stream ends, it gets the usual error card.
+
 ## Timing
 
 Ripple parses at most once every `throttleMs` (50 ms by default). Text that arrives inside the window is parsed when the window closes, so a stream that pauses mid-sentence still shows everything received so far.
 
 `maxBufferBytes` (2 MB by default) caps how much text one stream may send. Past it, Ripple cancels the source and sets an `overflow` error.
+
+## Size and order
+
+The [manifest](/docs/concepts/catalog-and-validation#the-manifests) tells models to write `ui` before `state`, so the first widget draws while the seed data is still arriving.
+
+Every parse reads the whole buffer again, so a long spec paints late. In development, `streamSpec` warns in the console once per stream when the text passes `warnAtBytes` (100,000 by default). Set it to `0` or `Infinity` to turn the warning off; production builds never warn. A spec that large is usually carrying data: have the host supply it through a `sources` binding or an `api` action instead of the model typing it into the spec.
 
 ## Errors
 

@@ -48,6 +48,12 @@ What the instructions are for:
 - **"Only the widget types listed"**: the model otherwise invents plausible names (`price-card`, `navbar2`) that fail the catalog check.
 - **State and bind**: keeps the UI interactive without your code; the model wires inputs to state instead of hard-coding values.
 
+The catalog's `spec` block adds rules that keep a spec short, so it streams and paints sooner. If you write your own prompt without it, include them:
+
+- Leave out any prop whose value equals the widget's documented default.
+- For repeated rows or cards, keep the records as an array in `state` and render them with one `each` node.
+- Bulk data (more than a few dozen records) comes from the host, through a `sources` binding or an `api` action, not typed into the spec.
+
 ## Ask for a spec
 
 The user message is the request itself. Short and concrete works best:
@@ -60,7 +66,7 @@ If you have data to show, put it in the message as JSON and say where it goes ("
 
 ## Check what comes back
 
-Run the three checks from [Catalog and validation](/docs/concepts/catalog-and-validation#three-checks-from-cheap-to-strict) on the final text: JSON, schema, catalog. When a check fails, you can send the error back as a new user message ("That spec has unknown widgets: price-card at ui.children[1]. Use only the catalog.") and ask again. Cap the retries, for example at two.
+Run the three checks from [Catalog and validation](/docs/concepts/catalog-and-validation#three-checks-from-cheap-to-strict) on the final text: JSON, schema, catalog. When a check fails, you can send the error back as a new user message ("That spec has unknown widgets: price-card at ui.children[1]. Use only the catalog.") and ask again. `formatSpecIssues(specIssues(json))` writes that message for you, covering the schema and catalog checks. Cap the retries, for example at two.
 
 When you stream, `<Ripple>` renders as the text arrives, so run the checks once the stream ends, and decide then whether to keep the result or retry.
 

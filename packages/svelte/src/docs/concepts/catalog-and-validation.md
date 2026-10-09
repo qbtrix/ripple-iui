@@ -79,6 +79,36 @@ const widgetTypes = manifest.widgets.map((w) => w.type);
 const unknown = validateCatalog(spec, { widgetTypes });
 ```
 
+## Sending problems back to the model
+
+`specIssues(spec)` runs the schema and catalog checks together and returns every problem as `{ path, message }`. Both checks use one path notation, such as `ui.children[2].props`, and a value that isn't an object at all reports the path `spec`. An empty array means the spec parses and every node renders. The version in `@ripple-ui/svelte` reads the live registry, like `validateCatalog`, so it needs no widget list.
+
+`formatSpecIssues(issues)` turns the list into a short block for the model's next turn, and returns `''` when there are none:
+
+```ts
+import { specIssues, formatSpecIssues } from '@ripple-ui/svelte';
+
+const feedback = formatSpecIssues(specIssues(json));
+if (feedback) {
+  messages.push({ role: 'user', content: feedback });
+  // call the model again
+}
+```
+
+The model then reads:
+
+```
+The last UI spec has 2 problems. Fix them in the next spec:
+- ui.props: Invalid input: expected record, received string
+- ui.children[1]: widget type "lsit" isn't in the catalog
+```
+
+Its limits:
+
+- It checks the low-level UISpec only, not a [UniversalSpec](/docs/concepts/the-spec#universalspec).
+- A union field, such as an event handler, fails as one `Invalid input` at the field's path, without saying which shape was meant.
+- The `@ripple-ui/core` version knows no widgets. Pass `{ widgetTypes }`, and `extraWidgetTypes` if you need it, as for `validateCatalog`.
+
 ## What happens if you don't check
 
 Ripple renders what it can. An unknown type becomes a red box naming the type and node id, and the rest of the spec renders around it. A spec that isn't valid JSON can't render at all. During [streaming](/docs/concepts/streaming), Ripple renders each partial parse and keeps the last good one if the stream fails, so checking happens best after the stream ends:

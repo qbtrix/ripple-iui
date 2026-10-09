@@ -77,6 +77,8 @@ The grammar is in [State and expressions](/docs/concepts/state-and-expressions).
 | `findById`, `findParent`, `getNodeProp` | Tree queries. |
 | `applyOp` and `applyAddNode`, `applyReplaceNode`, `applySetNodeProp`, `applyMoveNode`, `applyRemoveNode`, `applySetPropArrayItem`, `applyAppendPropArrayItem`, `applyRemovePropArrayItem` | Edit a spec by node id. Each has a matching `*Op` type. |
 | `validateCatalog(spec, { widgetTypes, extraWidgetTypes? })` | Returns `{ path, type }[]` for every node whose type isn't known. Core has no widgets, so pass `widgetTypes`; the version in `@ripple-ui/svelte` fills it from its registry. |
+| `specIssues(spec, { widgetTypes, extraWidgetTypes? })` | Returns `SpecIssue[]`, each `{ path, message }`: schema problems, then unknown widget types, worded for the model. `[]` means the spec parses and every node renders. Takes `widgetTypes` as `validateCatalog` does. See [Catalog and validation](/docs/concepts/catalog-and-validation#sending-problems-back-to-the-model). |
+| `formatSpecIssues(issues)` | The issues as a text block for the model's next turn. Returns `''` when there are none. |
 | `getBindContract(type)`, `DEFAULT_BIND_CONTRACT` | Which prop and event a widget's `bind` uses. |
 | `asText(value)` | Turns any value into display text. |
 
