@@ -8,7 +8,7 @@
     not offered (see props.ts), so an odd type never reaches a control. The
     values are a writable $derived, so they reset when the page moves to another
     widget. Page-sized widgets (`wide`) get the full width, with the controls
-    below. Live render and controls are kept out of the search index.
+    below. Live render, controls and spec JSON are kept out of the search index.
 -->
 <script lang="ts">
 	import { Ripple } from '$lib/index.js';
@@ -120,7 +120,7 @@
 		</fieldset>
 	</div>
 
-	<div class="out">
+	<div class="out" data-pagefind-ignore>
 		<div class="bar">
 			<span class="label">Spec</span>
 			<span class="btns">

@@ -26,6 +26,8 @@ describe('PropsConfigurator', () => {
 		expect(specText()).toEqual(exampleSpec(button));
 		expect(screen.getByLabelText<HTMLInputElement>('label').value).toBe(button.example.props?.label);
 		expect(screen.getByRole('button', { name: 'Reset' })).toHaveProperty('disabled', true);
+		// The render, the controls and the spec JSON stay out of the Pagefind index.
+		for (const sel of ['.stage', '.controls', '.out']) expect(document.querySelector(sel)?.hasAttribute('data-pagefind-ignore')).toBe(true);
 	});
 
 	it('applies a control to the spec and the live render, and Reset undoes it', async () => {
