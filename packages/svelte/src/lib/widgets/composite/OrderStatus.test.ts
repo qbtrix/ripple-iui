@@ -2,21 +2,50 @@
 // step renders done (check, no pulse) once status lands on it, the pickup
 // statuses get their own default pipeline, and an in-progress step still
 // pulses. The map-framing case mounts the map on a small Leaflet fake and
-// checks fitBounds runs at mount and on origin/destination moves only.
+// checks fitBounds runs at mount and on origin/destination moves only. The
+// polled case drives the widget through Ripple state from preparing to
+// delivered and checks the framing, the dashed route and the map survive it.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/svelte';
+import { tick } from 'svelte';
+import Ripple from '$lib/Ripple.svelte';
 import OrderStatus from './OrderStatus.svelte';
 
 const leaflet = vi.hoisted(() => {
 	const fitBounds = vi.fn();
 	const setView = vi.fn();
+	const maps = vi.fn();
 	const stub = (): any => new Proxy({}, { get: (_t, k) => (k === 'then' ? undefined : () => stub()) });
+	// Layer groups keep what is on them, so a test can read what the map shows now.
+	const groups: Set<any>[] = [];
 	const L = {
-		map: () => ({ fitBounds, setView, on() {}, remove() {}, panTo() {} }),
+		map: () => {
+			maps();
+			return { fitBounds, setView, on() {}, remove() {}, panTo() {} };
+		},
 		tileLayer: stub,
-		layerGroup: stub,
+		layerGroup: () => {
+			const layers = new Set<any>();
+			groups.push(layers);
+			const g = {
+				addTo: () => g,
+				addLayer: (l: any) => layers.add(l),
+				removeLayer: (l: any) => layers.delete(l),
+				clearLayers: () => layers.clear()
+			};
+			return g;
+		},
 		divIcon: (o: unknown) => o,
-		polyline: stub,
+		polyline: (points: [number, number][], opts: any) => {
+			const line = {
+				points,
+				opts,
+				bindTooltip() {},
+				setLatLngs: (p: [number, number][]) => (line.points = p),
+				setStyle() {}
+			};
+			return line;
+		},
 		polygon: stub,
 		marker: (p: [number, number]) => {
 			let pos = { lat: p[0], lng: p[1] };
@@ -30,7 +59,8 @@ const leaflet = vi.hoisted(() => {
 			};
 		}
 	};
-	return { L, fitBounds, setView };
+	const drawn = () => groups.flatMap((g) => [...g]);
+	return { L, fitBounds, setView, maps, groups, drawn };
 });
 vi.mock('leaflet', () => ({ default: leaflet.L }));
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
@@ -144,5 +174,75 @@ describe('order-status map framing', () => {
 			],
 			{ padding: [32, 32] }
 		);
+	});
+});
+
+describe('order-status polled to delivered', () => {
+	// The host shape: a fixed spec whose props read state, and each poll replaces
+	// the state (routes/pay/orders.ts trackState in the landing). Same demo
+	// geography as the store: a 10-point route from the kitchen to the drop-off.
+	const ROUTE: [number, number][] = [
+		[40.740298, -74.002095],
+		[40.740938, -74.000913],
+		[40.741377, -73.99987],
+		[40.741821, -73.998817],
+		[40.742264, -73.997765],
+		[40.742706, -73.996713],
+		[40.743146, -73.995661],
+		[40.743591, -73.994609],
+		[40.743235, -73.993705],
+		[40.742902, -73.992804]
+	];
+	const KITCHEN = { name: 'Kitchen', lat: 40.740298, lng: -74.002095 };
+	const DROP_OFF = { name: 'Drop-off', lat: 40.742902, lng: -73.992804 };
+	const keys = ['orderId', 'status', 'origin', 'destination', 'tracker', 'route'];
+	const spec = {
+		version: '1.0',
+		ui: {
+			type: 'order-status',
+			id: 'order-track',
+			props: { ...Object.fromEntries(keys.map((k) => [k, `{state.${k}}`])), showMap: true }
+		}
+	};
+	const poll = (status: string, courier: { lat: number; lng: number } | null, route: [number, number][]) => ({
+		orderId: 'A1',
+		status,
+		origin: { ...KITCHEN },
+		destination: { ...DROP_OFF },
+		tracker: courier && { ...courier, label: 'Courier' },
+		route: route.map((p) => [...p])
+	});
+	const routeLines = () =>
+		leaflet.drawn().filter((l) => l.opts?.dashArray === '8, 8' && l.points.length === ROUTE.length);
+
+	it.each([
+		['the courier at the drop-off and the route unchanged', { lat: DROP_OFF.lat, lng: DROP_OFF.lng }, ROUTE],
+		['no courier and an empty route', null, []]
+	])('keeps the framing, the route and the map at delivered with %s', async (_n, courier, finalRoute) => {
+		vi.stubGlobal('requestAnimationFrame', () => 1);
+		vi.stubGlobal('cancelAnimationFrame', () => {});
+		leaflet.fitBounds.mockClear();
+		leaflet.maps.mockClear();
+		leaflet.groups.length = 0;
+
+		const { rerender } = render(Ripple, { props: { spec, state: poll('preparing', null, ROUTE) } });
+		await vi.waitFor(() => expect(leaflet.fitBounds).toHaveBeenCalledTimes(1));
+		const framed = leaflet.fitBounds.mock.calls[0];
+
+		for (const c of [ROUTE[3], ROUTE[5], ROUTE[8]]) {
+			await rerender({ spec, state: poll('out-for-delivery', { lat: c[0], lng: c[1] }, ROUTE) });
+			await tick();
+		}
+		await rerender({ spec, state: poll('delivered', courier, finalRoute as [number, number][]) });
+		await tick();
+
+		// Same rectangle the whole way, fitted once.
+		expect(leaflet.fitBounds).toHaveBeenCalledTimes(1);
+		expect(leaflet.fitBounds.mock.calls.at(-1)).toEqual(framed);
+		// The dashed route is still on the map, with its real points.
+		expect(routeLines()).toHaveLength(1);
+		expect(routeLines()[0].points).toEqual(ROUTE);
+		// One Leaflet map for the whole session.
+		expect(leaflet.maps).toHaveBeenCalledTimes(1);
 	});
 });

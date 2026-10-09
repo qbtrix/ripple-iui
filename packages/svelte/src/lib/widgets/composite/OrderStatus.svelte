@@ -4,7 +4,9 @@
   embedded live map and event timeline. Composes the existing `map` widget
   for the courier position + route, and renders a horizontal stepper inline.
   The map frames the whole trip (origin, destination, route, courier, 32px
-  padding) at mount and refits only when origin or destination move.
+  padding) at mount and refits only when origin or destination move. The route
+  is latched: an empty `route` (a tracker API's final state) keeps the last one
+  drawn, and a null `tracker` just drops the courier marker.
 
   Use cases: package delivery, courier tracking, RMA, ticket lifecycle,
   manufacturing job status, build pipeline, repair status.
@@ -218,9 +220,18 @@
     return m;
   });
 
+  // A tracking API may send an empty route once the trip ends; keep drawing
+  // the last one it sent. ponytail: never cleared, so a new destination without
+  // a new route keeps the old line; clear on tripKey change if a host does that.
+  let lastRoute: LatLng[] = [];
+  const tripRoute = $derived.by<LatLng[]>(() => {
+    if (route && route.length > 0) lastRoute = route;
+    return lastRoute;
+  });
+
   const mapPaths = $derived.by(() => {
-    if (route && route.length > 1) {
-      return [{ id: 'route', points: route, color: 'oklch(0.55 0.18 250)', weight: 4, dashed: true, animate: true }];
+    if (tripRoute.length > 1) {
+      return [{ id: 'route', points: tripRoute, color: 'oklch(0.55 0.18 250)', weight: 4, dashed: true, animate: true }];
     }
     if (origin?.lat !== undefined && origin?.lng !== undefined && destination?.lat !== undefined && destination?.lng !== undefined) {
       return [{ id: 'route', points: [[origin.lat, origin.lng], [destination.lat, destination.lng]] as LatLng[], color: 'oklch(0.55 0.18 250)', weight: 3, dashed: true, animate: true }];
@@ -254,7 +265,7 @@
   const tripBounds = $derived.by<[LatLng, LatLng] | undefined>(() => {
     void tripKey;
     return untrack(() => {
-      const pts: LatLng[] = [...(route ?? [])];
+      const pts: LatLng[] = [...tripRoute];
       if (origin?.lat !== undefined && origin?.lng !== undefined) pts.push([origin.lat, origin.lng]);
       if (destination?.lat !== undefined && destination?.lng !== undefined) pts.push([destination.lat, destination.lng]);
       if (tracker) pts.push([tracker.lat, tracker.lng]);
