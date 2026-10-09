@@ -22,11 +22,16 @@
 // one `emit` to the host event (`checkout`, `book`). Photos that are not https
 // are dropped (the card policy refuses them), so a local store's own images
 // fall back to the widget's icon.
+// Flow cards (routes/pawbar/flow-cards.ts): "trip" + "step by step" answers with
+// the trip flow, "laptop" + "questions" with the laptop flow; the flows' own
+// follow-ups land on the Tokyo itinerary recording and, for "laptop", an inline
+// comparison-layout card with a winner.
 // Point the site at it: PUBLIC_PAWBAR_ENDPOINT=http://localhost:5288
 // PUBLIC_PAWBAR_WIDGET_ID=demo PUBLIC_PAWBAR_SITE_KEY=demo bun run dev
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { pickScenario, recordedEvents, type RecordedMode } from '../src/routes/pawbar/recorded.ts';
+import { laptopAnswerCard, laptopFlowCard, tripFlowCard } from '../src/routes/pawbar/flow-cards.ts';
 
 const PORT = Number(process.env.MOCK_PAWBAR_PORT ?? 5288);
 const STORE = (process.env.MOCK_STORE_URL ?? 'http://localhost:3917/test-store').replace(/\/$/, '');
@@ -126,6 +131,14 @@ async function bookingCard(message: string) {
 	};
 }
 
+/** A card the mock answers with as is: the two flows and the laptop comparison. */
+function inlineCard(message: string): [id: string, intro: string, card: unknown] | null {
+	if (/\btrip\b/i.test(message) && /\bstep by step\b/i.test(message)) return ['trip', 'Happy to. A couple of quick questions first.', tripFlowCard];
+	if (/\blaptop\b/i.test(message) && /\bquestions?\b/i.test(message)) return ['laptop', 'Sure. Three quick questions and I will narrow it down.', laptopFlowCard];
+	if (/\blaptops?\b/i.test(message)) return ['laptops', 'Here are three that fit what you told me.', laptopAnswerCard];
+	return null;
+}
+
 function storeCardKind(message: string): 'menu' | 'booking' | null {
 	if (/\b(book|table|reserv\w*)\b/i.test(message)) return 'booking';
 	if (/\b(order|burgers?)\b/i.test(message)) return 'menu';
@@ -222,6 +235,25 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
 		return void res.end();
 	}
 
+	const streamCard = async (id: string, intro: string, card: unknown) => {
+		const text = JSON.stringify(card);
+		send('chunk', { content: intro, type: 'text' });
+		send('card.start', { card_id: id });
+		for (let i = 0; i < text.length; i += 400) {
+			send('card.delta', { card_id: id, text: text.slice(i, i + 400) });
+			await sleep(15);
+		}
+		send('card.final', { card_id: id, card });
+		send('stream_end', { assistant_message_id: `msg_${id}`, cancelled: false });
+		res.end();
+	};
+
+	const inline = mode === 'normal' ? inlineCard(message) : null;
+	if (inline) {
+		console.info(`[mock-pawbar] inline card: ${inline[0]}`);
+		return streamCard(...inline);
+	}
+
 	const kind = mode === 'normal' ? storeCardKind(message) : null;
 	if (kind) {
 		console.info(`[mock-pawbar] store card: ${kind} from ${STORE}`);
@@ -234,16 +266,8 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
 			send('stream_end', { assistant_message_id: 'msg_store', cancelled: false });
 			return void res.end();
 		}
-		const text = JSON.stringify(card);
-		send('chunk', { content: kind === 'menu' ? 'Here is the menu. Pick what you like and check out when ready.' : 'Here are the open times. Pick one and add your details.', type: 'text' });
-		send('card.start', { card_id: kind });
-		for (let i = 0; i < text.length; i += 400) {
-			send('card.delta', { card_id: kind, text: text.slice(i, i + 400) });
-			await sleep(15);
-		}
-		send('card.final', { card_id: kind, card });
-		send('stream_end', { assistant_message_id: `msg_${kind}`, cancelled: false });
-		return void res.end();
+		const intro = kind === 'menu' ? 'Here is the menu. Pick what you like and check out when ready.' : 'Here are the open times. Pick one and add your details.';
+		return streamCard(kind, intro, card);
 	}
 
 	const abort = new AbortController();
