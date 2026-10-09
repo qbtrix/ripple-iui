@@ -19,7 +19,7 @@ import {
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   WordGuess,
-  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, Quiz,
+  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, Quiz, MemoryMatch,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -311,6 +311,9 @@ const defaultRegistry: WidgetMap = {
   quiz: Quiz,
   trivia: Quiz,
   'trivia-quiz': Quiz,
+  'memory-match': MemoryMatch,
+  'memory-game': MemoryMatch,
+  'match-pairs': MemoryMatch,
   if: If,
   each: Each,
   'source-card': SourceCard,
@@ -490,7 +493,7 @@ export {
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
+  AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, MemoryMatch,
   WordGuess,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
   LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,

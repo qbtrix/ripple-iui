@@ -160,6 +160,9 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'bill-split', 'split-bill', 'bill-splitter',
   // word-guess binds its game ({ guesses, status, hint_used }), written by the widget
   'word-guess', 'guess-the-word', 'word-game',
+  // memory-match binds its game ({ moves, matched, completed, seconds }),
+  // written by the widget on each move, never on a timer tick
+  'memory-match', 'memory-game', 'match-pairs',
 ]);
 
 const warnedTypes = new Set<string>();
