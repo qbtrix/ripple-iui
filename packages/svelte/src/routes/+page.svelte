@@ -643,15 +643,16 @@
 	}
 	.btn:focus-visible,
 	.link:focus-visible,
-	.install button:focus-visible,
-	.band a:focus-visible,
 	.get button:focus-visible,
 	.byok a:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
-	.band :focus-visible {
-		outline-color: var(--site-on-primary);
+	/* --ring is the band's own blue, so focus on the band is white. */
+	.band .install button:focus-visible,
+	.band a:focus-visible {
+		outline: 2px solid var(--site-on-primary);
+		outline-offset: 2px;
 	}
 
 	@media (max-width: 860px) {
