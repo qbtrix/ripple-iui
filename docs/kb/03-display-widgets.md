@@ -57,6 +57,9 @@ A small animated SVG you draw for "show me a sun rising", an animated icon, a ti
 - `title`: string (required) — accessible name
 - `caption`: string — line under the art
 - `max_height`: number (px, 80..640, default 320)
+- `annotations`: up to 8 `{ id, label, note, target?, at? }` numbered notes the reader taps to open. Plain text: `label` ≤ 40 chars, `note` ≤ 280. Exactly one of `target` (an `id` you put in the svg) or `at` (`[x, y]` in viewBox units). A target id missing from the svg drops the note
+
+**Events:** `on_select` fires with `{ id }` when the reader opens a note by clicking its pin or legend line. Use it for an `ask` like "tell me more about X".
 
 **Rules:**
 - Elements: `svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set`
@@ -68,6 +71,11 @@ A small animated SVG you draw for "show me a sun rising", an animated icon, a ti
 **Example:**
 ```json
 { "type": "illustration", "props": { "title": "Bars growing", "max_height": 160, "svg": "<svg viewBox='0 0 120 80'><rect x='10' y='70' width='20' height='0' fill='#1877f2'><animate attributeName='height' from='0' to='40' dur='1s' fill='freeze'/><animate attributeName='y' from='70' to='30' dur='1s' fill='freeze'/></rect></svg>" } }
+```
+
+**With notes:**
+```json
+{ "type": "illustration", "props": { "title": "Two gears", "svg": "<svg viewBox='0 0 200 100'><circle id='big' cx='70' cy='50' r='36' fill='#64748b'/><circle id='small' cx='140' cy='50' r='20' fill='#94a3b8'/></svg>", "annotations": [ { "id": "big", "label": "Chainring", "note": "The big gear the pedals turn.", "target": "big" }, { "id": "ratio", "label": "Ratio", "note": "Big over small: one pedal turn spins the wheel more.", "at": [105, 90] } ] } }
 ```
 
 ## badge

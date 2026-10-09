@@ -147,7 +147,7 @@ Image display with fit and rounding controls.
 
 ### `illustration`
 
-A small animated SVG drawing the model writes. The widget never renders the string: it parses it with `DOMParser` and rebuilds an allowlisted copy with `createElementNS`, dropping anything else silently. Display only: no bind, no events.
+A small animated SVG drawing the model writes. The widget never renders the string: it parses it with `DOMParser` and rebuilds an allowlisted copy with `createElementNS`, dropping anything else silently. No bind. Optional numbered notes (`annotations`) pin onto parts of the art, and `on_select` fires when one opens.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
@@ -155,6 +155,11 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 | `title` | `string` | (required) | Accessible name (the art is `role="img"`) |
 | `caption` | `string` | — | Line under the art |
 | `max_height` | `number` | `320` | Height cap in px, clamped to 80..640 |
+| `annotations` | `Array<{ id, label, note, target?, at? }>` | none | Up to 8 numbered notes. `label` ≤ 40 chars, `note` ≤ 280, plain text. Exactly one of `target` (an id in the svg) or `at` (`[x, y]` in viewBox units) |
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `on_select` | `{ id }` | A note was opened by a click on its pin or legend line (focus alone opens it without firing) |
 
 - Allowed elements: `svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set`. No filters, `<image>`, `<style>`, `<a>`, `<foreignObject>` or scripts.
 - References only as `url(#id)` and `href='#id'` on `use`/`mpath` (use plain `href`; `xlink:href` needs an `xmlns:xlink` declaration or the markup fails to parse). No `style` attribute, no `on*` handlers. Animations may only target presentation attributes (`fill`, `opacity`, `transform`, `cx`, `d`, ...).
@@ -162,10 +167,17 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 - Ids are prefixed per instance (and so are their `url(#..)`, `href` and `begin`/`end` refs), so two cards never collide.
 - Under `prefers-reduced-motion` the art starts paused; animated art gets a small pause/play button.
 - Text is kept readable. Write label text with `fill='currentColor'`: it is the card's text colour, so it reads in light and dark. Any other `text`/`tspan` fill (or none, which SVG draws black) that falls under 3:1 contrast against what it sits on, a solid shape under it or else the card, is swapped for the card's text or background colour, whichever reads better. It runs again when the theme changes. `url(#..)` fills and `currentColor` are never changed.
-- Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.
+- Notes are host buttons over the art, never SVG, so the art stays non-interactive. A pin sits on the target's bounding-box centre (or on `at`), mapped through the svg's screen CTM and placed again on resize. Clicking or focusing a pin opens its note and makes the target glow; Esc closes it, and one note is open at a time. On a frame narrower than 420px the note opens as a sheet under the art. A numbered list under the art mirrors the pins for keyboard and screen-reader users. A note whose `target` is not an id the rebuild kept is dropped; so is one with both or neither of `target`/`at`, or a non-finite `at`.
+- Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` (and `checkIllustrationAnnotations({ svg, annotations })` for the notes) from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.
 
 ```json
 { "type": "illustration", "props": { "title": "Sun rising over two hills", "svg": "<svg viewBox='0 0 200 120'><circle cx='100' cy='110' r='18' fill='#ffb703'><animate attributeName='cy' from='110' to='48' dur='3s' fill='freeze'/></circle></svg>" } }
+```
+
+With notes, and an `ask`-style hook on open:
+
+```json
+{ "type": "illustration", "on_select": { "action": "set", "target": "opened" }, "props": { "title": "Two gears", "svg": "<svg viewBox='0 0 200 100'><circle id='big' cx='70' cy='50' r='36' fill='#64748b'/><circle id='small' cx='140' cy='50' r='20' fill='#94a3b8'/></svg>", "annotations": [ { "id": "big", "label": "Chainring", "note": "The big gear the pedals turn.", "target": "big" }, { "id": "small", "label": "Cog", "note": "The small gear on the back wheel.", "target": "small" }, { "id": "ratio", "label": "Ratio", "note": "Big over small: one pedal turn spins the wheel more.", "at": [105, 90] } ] } }
 ```
 
 ### `badge`
