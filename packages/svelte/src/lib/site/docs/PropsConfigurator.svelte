@@ -69,7 +69,12 @@
 				<div class="row" title={c.description}>
 					{#if c.control.kind === 'boolean'}
 						<label class="check">
-							<input type="checkbox" role="switch" checked={v === true} onchange={(e) => set(c.name, e.currentTarget.checked)} />
+							<input
+								type="checkbox"
+								role="switch"
+								checked={v === undefined ? c.defaultOn === true : v === true}
+								onchange={(e) => set(c.name, e.currentTarget.checked)}
+							/>
 							<code>{c.name}</code>
 						</label>
 					{:else if segmented(c) && c.control.kind === 'enum'}

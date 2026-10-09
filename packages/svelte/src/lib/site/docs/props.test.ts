@@ -88,6 +88,23 @@ describe('configurableProps', () => {
 	});
 });
 
+describe('boolean defaults', () => {
+	it('reads "Default true" from the description so an unset switch shows what the widget does', () => {
+		const rows = [
+			{ name: 'valid', type: 'boolean', description: 'When false, submit is disabled. Default true.' },
+			{ name: 'sticky', type: 'boolean', description: 'Pin the bar. Defaults to true.' },
+			{ name: 'dirty', type: 'boolean', description: 'Show the tag. Default false.' },
+			{ name: 'label', type: 'string', description: 'Default true label.' }
+		];
+		expect(configurableProps(rows).map((p) => [p.name, p.defaultOn ?? false])).toEqual([
+			['valid', true],
+			['sticky', true],
+			['dirty', false],
+			['label', false]
+		]);
+	});
+});
+
 describe('applyProps', () => {
 	const spec = { version: '1.0', ui: { type: 'button', props: { label: 'Save', variant: 'default' }, on_click: [] } };
 

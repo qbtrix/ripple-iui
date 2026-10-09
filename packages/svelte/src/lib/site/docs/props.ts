@@ -18,6 +18,8 @@ export interface ConfigurableProp {
 	name: string;
 	description: string;
 	control: PropControl;
+	/** For a boolean, what the widget does when the prop is unset ("Default true" in its description). */
+	defaultOn?: boolean;
 }
 
 export interface VariantAxis {
@@ -92,7 +94,9 @@ const SKIP = new Set(['bind']);
 export function configurableProps(rows: { name: string; type: string; description: string }[]): ConfigurableProp[] {
 	return rows.flatMap((r) => {
 		const control = SKIP.has(r.name) ? null : parsePropType(r.type);
-		return control ? [{ name: r.name, description: r.description, control }] : [];
+		if (!control) return [];
+		const defaultOn = control.kind === 'boolean' && /\bdefaults?(?: to)? true\b/i.test(r.description);
+		return [{ name: r.name, description: r.description, control, ...(defaultOn && { defaultOn }) }];
 	});
 }
 
