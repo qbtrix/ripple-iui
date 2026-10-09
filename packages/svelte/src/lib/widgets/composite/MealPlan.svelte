@@ -206,8 +206,10 @@
 
 		<VerdictLine {verdict} />
 
-		<div class="grid grid-cols-2 gap-2 @min-[720px]:grid-cols-4" data-slot="totals">
-			<div class="col-span-2 flex min-w-0 items-center justify-between gap-2 rounded-md bg-ripple-muted px-3 py-2 @min-[720px]:col-span-1">
+		<!-- Two columns below 720px (the stepper spans both, an odd last chip too,
+		     so no chip sits beside an empty half); one row above it. -->
+		<div class="grid grid-cols-2 gap-2 @min-[720px]:flex" data-slot="totals">
+			<div class="col-span-2 flex min-w-0 items-center justify-between gap-2 rounded-md bg-ripple-muted px-3 py-2 @min-[720px]:flex-[1.3]">
 				<div class="flex min-w-0 flex-col">
 					<span class="text-footnote text-ripple-muted-foreground">Cooking for</span>
 					<span class="text-footnote text-ripple-muted-foreground">{count === 1 ? '1 person' : `${count} people`}</span>
@@ -215,12 +217,18 @@
 				{@render stepper(count, 1, MAX_PEOPLE, 'people', setPeople)}
 			</div>
 			{#if avgProtein !== undefined}
-				<StatChip label="Protein a day" value={g0(avgProtein)} unit="g" status={proteinCheck?.status} icon={Dumbbell} />
+				<StatChip label="Protein a day" value={g0(avgProtein)} unit="g" status={proteinCheck?.status} icon={Dumbbell} class="@min-[720px]:flex-1" />
 			{/if}
 			{#if avgKcal !== undefined}
-				<StatChip label="Calories a day" value={g0(avgKcal)} unit="kcal" status={kcalCheck?.status} icon={Flame} />
+				<StatChip label="Calories a day" value={g0(avgKcal)} unit="kcal" status={kcalCheck?.status} icon={Flame} class="@min-[720px]:flex-1" />
 			{/if}
-			<StatChip label="To buy" value={shopCount} unit={shopCount === 1 ? 'item' : 'items'} icon={ShoppingCart} />
+			<StatChip
+				label="To buy"
+				value={shopCount}
+				unit={shopCount === 1 ? 'item' : 'items'}
+				icon={ShoppingCart}
+				class={['@min-[720px]:flex-1', (avgProtein === undefined) === (avgKcal === undefined) && 'col-span-2'].filter(Boolean).join(' ')}
+			/>
 		</div>
 		{#if weekProtein !== undefined || weekKcal !== undefined || goalObj.protein_g !== undefined}
 			<p class="-mt-1 text-footnote text-ripple-muted-foreground tabular-nums" data-slot="week">

@@ -168,7 +168,7 @@
 	}
 
 	function toggleStep(i: number) {
-		const next = doneSet.has(i) ? [...doneSet].filter((n) => n !== i) : [...doneSet, i].sort((a, b) => a - b);
+		const next = doneSet.has(i) ? [...doneSet].filter((n) => n !== i) : [...doneSet, i].toSorted((a, b) => a - b);
 		doneEdit = nextEdit(doneEdit, done, next);
 		done = next;
 		ondonechange?.(next);
@@ -257,9 +257,9 @@
 		{/if}
 
 		{#if base || kcalN !== undefined || proteinN !== undefined}
-			<div class="grid grid-cols-1 gap-2 @min-[360px]:grid-cols-2 @min-[720px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+			<div class="grid grid-cols-2 gap-2 @min-[720px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
 				{#if base}
-					<div class="flex min-w-0 items-center justify-between gap-2 rounded-md bg-ripple-muted px-3 py-2 @min-[360px]:col-span-2 @min-[720px]:col-span-1" data-slot="servings">
+					<div class="col-span-2 flex min-w-0 items-center justify-between gap-2 rounded-md bg-ripple-muted px-3 py-2 @min-[720px]:col-span-1" data-slot="servings">
 						<div class="flex min-w-0 flex-col">
 							<span class="text-footnote text-ripple-muted-foreground">Servings</span>
 							{#if count !== base}

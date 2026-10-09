@@ -10,7 +10,7 @@ import { expectStreamParity } from '$lib/streaming/__fixtures__/stream-parity.js
 import { getWidget, hasWidget } from '../index.js';
 import { _resetBindContractWarnings, getBindContract, warnUnregisteredBindContract } from '@ripple-ui/core';
 import Recipe from './Recipe.svelte';
-import { formatQty, qtyLabel, readIngredients, readSteps, scaleFactor, type Ingredient, type RecipeStep } from './recipe.js';
+import { baseUnit, formatQty, qtyLabel, readIngredients, readSteps, scaleFactor, type Ingredient, type RecipeStep } from './recipe.js';
 
 afterEach(() => {
 	cleanup();
@@ -61,8 +61,8 @@ describe('recipe: bound servings', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
 		await fireEvent.click(screen.getByRole('button', { name: 'More servings' }));
 		expect(onStateChange).toHaveBeenLastCalledWith('servings', 6, expect.anything());
-		// ×1.5: 600 g, 2¼ cups, 1⅛ cup, 1½ lemons; "to taste" stays as written.
-		expect(qtys(container)).toEqual(['600 g', '2¼ cups', '1⅛ cup', '1½', 'to taste']);
+		// ×1.5: 600 g, 2¼ cups, 1⅛ cups, 1½ lemons; "to taste" stays as written.
+		expect(qtys(container)).toEqual(['600 g', '2¼ cups', '1⅛ cups', '1½', 'to taste']);
 
 		await fireEvent.click(screen.getByRole('button', { name: /Written for 4/ }));
 		expect(onStateChange).toHaveBeenLastCalledWith('servings', 4, expect.anything());
@@ -76,7 +76,7 @@ describe('recipe: bound servings', () => {
 		});
 		await fireEvent.click(screen.getByRole('button', { name: 'Fewer servings' }));
 		expect(seen).toEqual([1]);
-		expect(qtys(container)).toEqual(['¾ cups']);
+		expect(qtys(container)).toEqual(['¾ cup']);
 		await rerender({ servings: 4 });
 		expect(qtys(container)).toEqual(['3 cups']);
 	});
@@ -180,7 +180,21 @@ describe('recipe.ts: scaling and formatting', () => {
 		expect(formatQty(24.4)).toBe('24');
 		expect([formatQty(undefined), formatQty(Number.NaN), formatQty(-1), formatQty('lots')]).toEqual(['', '', '', '']);
 		expect(qtyLabel(2, '')).toBe('2');
+		// counted units agree with the number; spoons and metric never change
+		expect([qtyLabel(1, 'cans'), qtyLabel(2, 'can'), qtyLabel(0.5, 'cups'), qtyLabel(1.02, 'cups'), qtyLabel(2, 'pinch'), qtyLabel(3, 'tbsp'), qtyLabel(2, 'g')]).toEqual([
+			'1 can',
+			'2 cans',
+			'½ cup',
+			'1 cup',
+			'2 pinches',
+			'3 tbsp',
+			'2 g'
+		]);
 		expect(qtyLabel(undefined, 'to taste')).toBe('to taste');
+	});
+
+	it('baseUnit folds case and counted plurals, nothing else', () => {
+		expect([baseUnit('Cups'), baseUnit('cloves'), baseUnit('bunches'), baseUnit('tbsp'), baseUnit('g'), baseUnit(undefined)]).toEqual(['cup', 'clove', 'bunch', 'tbsp', 'g', '']);
 	});
 
 	it('reads rows without names as gaps but keeps step positions', () => {

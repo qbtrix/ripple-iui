@@ -71,6 +71,7 @@ const week = (): PlanDay[] => [
 	{ id: 'mon', day: 'Mon', meals: [{ slot: 'breakfast', recipe: 'oats' }, { slot: 'dinner', recipe: 'chili' }] },
 	{ id: 'tue', day: 'Tue', meals: [{ slot: 'breakfast', recipe: 'oats' }, { slot: 'dinner', recipe: 'salmon' }] }
 ];
+const yogurt = () => screen.getByRole('checkbox', { name: /Greek yogurt/ });
 const amount = (c: Element, key: string) => c.querySelector(`[data-item="${key}"] [data-slot="amount"]`)?.textContent?.trim();
 
 describe('meal-plan: registry and bind contract', () => {
@@ -107,11 +108,11 @@ describe('meal-plan: bound edits', () => {
 		const { container, onStateChange } = mountBound();
 		// 500 g turkey serves 4, cooked once for 2 → 250 g; oats twice for 2 → 2 cups.
 		expect(amount(container, 'ground turkey|g')).toBe('250 g');
-		expect(amount(container, 'rolled oats|cup')).toBe('2 cup');
+		expect(amount(container, 'rolled oats|cup')).toBe('2 cups');
 		await fireEvent.click(screen.getByRole('button', { name: 'More people' }));
 		expect(onStateChange).toHaveBeenLastCalledWith('people', 3, expect.anything());
 		expect(amount(container, 'ground turkey|g')).toBe('375 g');
-		expect(amount(container, 'rolled oats|cup')).toBe('3 cup');
+		expect(amount(container, 'rolled oats|cup')).toBe('3 cups');
 	});
 
 	it('a swap rewrites the list, and survives a later people change', async () => {
@@ -121,9 +122,8 @@ describe('meal-plan: bound edits', () => {
 		expect(container.querySelector('[data-day="Mon"] [data-meal="eggs"]')).not.toBeNull();
 		expect(amount(container, 'eggs|')).toBe('6');
 		// yogurt: Tue oats 0.75 + Mon eggs 0.25 = 1 cup, times 2 people
-		expect(amount(container, 'greek yogurt|cup')).toBe('2 cup');
+		expect(amount(container, 'greek yogurt|cup')).toBe('2 cups');
 
-		const yogurt = () => screen.getByRole('checkbox', { name: /Greek yogurt/ });
 		await fireEvent.click(yogurt());
 
 		await fireEvent.click(screen.getByRole('button', { name: 'More people' }));
@@ -230,13 +230,13 @@ describe('recipe.ts: meal-plan sums', () => {
 	it('keeps units apart, normalises names, and guards serves, aisle and missing recipes', () => {
 		const lib2 = readLibrary([
 			{ id: 'a', name: 'A', serves: 2, ingredients: [{ name: 'Milk ', qty: 1, unit: 'cup', aisle: 'dairy' }, { name: 'milk', qty: 200, unit: 'ml' }] },
-			{ id: 'b', name: 'B', ingredients: [{ name: 'milk', qty: 0.5, unit: 'Cup' }, { name: 'mystery', qty: 1, aisle: 'deli' }] },
+			{ id: 'b', name: 'B', ingredients: [{ name: 'milk', qty: 0.5, unit: 'Cups' }, { name: 'mystery', qty: 1, aisle: 'deli' }] },
 			{ id: 'c', name: 'C', serves: Number.NaN, ingredients: [{ name: 'milk', qty: 'x', unit: 'cup' }] }
 		]);
 		const days = [{ meals: [{ recipe: 'a' }, { recipe: 'b' }, { recipe: 'c' }, { recipe: 'gone' }] }];
 		const items = shoppingList(days, lib2, 4).flatMap((g) => g.items.map((i) => ({ ...i, g: g.aisle })));
 		const by = (k: string) => items.find((i) => i.key === k)!;
-		// A serves 2 for 4 people → ×2; B and C have no usable serves → as written.
+		// A serves 2 for 4 people → ×2; B and C have no usable serves → as written. cup and Cups are one unit.
 		expect(by('milk|cup')).toMatchObject({ name: 'Milk', qty: 2.5, uses: 3, g: 'dairy' });
 		expect(by('milk|ml')).toMatchObject({ qty: 400, g: 'other' });
 		expect(by('mystery|')).toMatchObject({ qty: 1, g: 'other' });

@@ -10,8 +10,8 @@
 //   and `goal` is per person per day.
 // - A recipe with no usable `serves` is not scaled (factor 1): its quantities
 //   are shown and summed as written rather than guessed.
-// - The shopping list sums by normalised `name|unit`; the same name in another
-//   unit stays its own row. That key is also what a tick (`got`) remembers, so a
+// - The shopping list sums by normalised `name|unit` ("cups" and "cup" are one
+//   unit); the same name in another unit stays its own row. That key is also what a tick (`got`) remembers, so a
 //   swap never moves a tick onto another item.
 // - Every reader takes `unknown` and never throws: props are model output.
 // - A widget's own edit of a non-bound prop (a swap, a tick) is an `Edit`: it
@@ -133,9 +133,29 @@ export function formatQty(qty: unknown, unit?: unknown): string {
 	return near ? `${whole || ''}${near[1]}` : decimal(q, 2);
 }
 
+// Counted units read singular at one and plural above it ("1 can", "2 cans");
+// a model writes either form. tbsp, tsp and metric units never change.
+const COUNTED = new Set(['cup', 'can', 'clove', 'slice', 'head', 'jar', 'bunch', 'pinch', 'sprig', 'stick', 'pack', 'bag', 'fillet', 'piece', 'tin', 'handful', 'bottle', 'scoop']);
+const singular = (u: string) => (u.endsWith('es') && COUNTED.has(u.slice(0, -2)) ? u.slice(0, -2) : u.endsWith('s') && COUNTED.has(u.slice(0, -1)) ? u.slice(0, -1) : u);
+
+/** The unit a sum is kept under: lowercased, a counted unit in its singular. */
+export function baseUnit(unit: unknown): string {
+	return singular(plain(unit).toLowerCase());
+}
+
+/** The unit as written, made singular or plural to agree with the quantity. */
+export function unitFor(qty: number | undefined, unit: unknown): string {
+	const u = plain(unit);
+	const one = singular(u.toLowerCase());
+	if (qty === undefined || !COUNTED.has(one)) return u;
+	return qty > 1 ? (/(ch|sh)$/.test(one) ? `${one}es` : `${one}s`) : one;
+}
+
 /** "1½ cups", "400 g", "2 eggs" (unit-less), or just the unit when there is no number. */
 export function qtyLabel(qty: unknown, unit?: unknown): string {
-	return [formatQty(qty, unit), plain(unit)].filter(Boolean).join(' ');
+	const n = formatQty(qty, unit);
+	// Agree with the number as printed: 1.02 prints "1", so "1 cup".
+	return [n, unitFor(n ? (n === '1' ? 1 : finite(qty)) : undefined, unit)].filter(Boolean).join(' ');
 }
 
 export interface IngredientRow {
@@ -153,7 +173,7 @@ export function readIngredients(v: unknown): IngredientRow[] {
 		const r = rec(raw);
 		const name = plain(r.name);
 		if (!name) return [];
-		return [{ key: `${r.id ?? ''}:${i}`, name, qty: finite(r.qty), unit: plain(r.unit), note: plain(r.note), aisle: toAisle(r.aisle) }];
+		return [{ key: `${plain(r.id)}:${i}`, name, qty: finite(r.qty), unit: plain(r.unit), note: plain(r.note), aisle: toAisle(r.aisle) }];
 	});
 }
 
@@ -171,7 +191,7 @@ export function readSteps(v: unknown): StepRow[] {
 		const r = typeof raw === 'string' ? { text: raw } : rec(raw);
 		const text = plain(r.text);
 		if (!text) return [];
-		return [{ key: `${r.id ?? ''}:${i}`, i, text, minutes: positive(r.minutes), tip: plain(r.tip) }];
+		return [{ key: `${plain(r.id)}:${i}`, i, text, minutes: positive(r.minutes), tip: plain(r.tip) }];
 	});
 }
 
@@ -269,7 +289,7 @@ export interface ShopItem {
 	uses: number;
 }
 
-export const shopKey = (name: string, unit: string) => `${name.trim().toLowerCase()}|${unit.trim().toLowerCase()}`;
+export const shopKey = (name: string, unit: string) => `${name.trim().toLowerCase()}|${baseUnit(unit)}`;
 
 /**
  * The shopping list: every planned meal's ingredients, each quantity times
@@ -299,7 +319,7 @@ export function shoppingList(days: unknown, lib: readonly LibraryRecipe[], peopl
 	const all = [...items.values()];
 	return AISLES.map((aisle) => ({
 		aisle,
-		items: all.filter((i) => i.aisle === aisle).sort((a, b) => a.name.localeCompare(b.name))
+		items: all.filter((i) => i.aisle === aisle).toSorted((a, b) => a.name.localeCompare(b.name))
 	})).filter((g) => g.items.length);
 }
 
