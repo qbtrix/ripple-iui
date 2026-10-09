@@ -79,9 +79,17 @@ A menu the visitor orders from inside the card, in four stages: menu (category c
 The model writes `items[].product_id` (plus `name` so rows stream), `featured: { id, reason }` and `preset: [{ id, qty }]`. Server hydration fills `price`, `image`, `groups`, `currency`, `fee`, `fulfilment` and `checkout: true`, and wires `on_checkout`. Without `checkout: true`, or for an item without `product_id`, the menu is display only. Required groups start on their first option; a `many` group caps at `max`.
 Bind `cart` (`{ lines, fulfilment, total }`, never the customer's details) so another node can show "2 items". `on_checkout` fires with `{ lines: [{ product_id, name, qty, option_ids, unit_price }], fulfilment, customer: { name, email?, phone?, address? }, total }`. Quantities are 1 to 20 per line, at most 30 lines. The total is display only: the store reprices every line.
 
+### exec-dashboard
+A KPI dashboard the model fills with raw records, not tiles (aliases `kpi-dashboard`, `executive-dashboard`). Answers "show me last quarter's sales by month, filterable by region".
+- Rows mode: `rows[]` (e.g. orders `{ id, date: "2026-07-14", region, channel, amount }`), `measures[]` `{ key?, label, format: money | number | percent, agg: sum | avg | count, good?: up | down }` (one KPI each; the first also drives the chart and breakdown), `dimensions[]` `{ key, label }` (filter chip rows), `x` (the chart's column), `split` (stack the chart by a column), `compare[]` (last period's rows) with `compareLabel`, `currency`, `verdict`.
+- Everything is computed from the filtered rows: KPIs, trends (against `compare`, else the last x group against the one before), the chart, the breakdown (the first dimension not filtered) and the table totals. ISO dates group by day up to a 31-day span, else by month; other x values group as written.
+- Chart rules: one colour for one series; a `split` gives each value a fixed `--chart-N` slot from the unfiltered rows, so filtering never repaints, and past five values the rest fold into Other. Columns at most 24px wide on one axis, a readout per column on hover, focus or tap, and a Table view.
+- Bind `filters` (`{ region: "West" }`). `on_filter` fires with `{ key, value }` (null for All).
+- KPI mode (no `rows`): the prebuilt `kpis` (with `byKey`), `primaryChart`, `charts`, `activity` and `table` props work as before; `on_date_range_change` fires with the picked chip.
+
 ### Dashboard variants
 
-`exec-dashboard`, `ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (KPIs + chart + table for exec, status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.
+`ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.
 
 ## Specialized canvases
 

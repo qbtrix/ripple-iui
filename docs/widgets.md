@@ -367,7 +367,8 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
 | `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
 | `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (priced option groups), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
-| `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
+| `exec-dashboard` | KPI dashboard from raw `rows` plus `measures` (sum, avg, count) and `dimensions`: it computes the KPIs with trends, a column chart along `x` (stacked by `split`), a breakdown and a filtered table with totals. A filter chip recomputes every number. Binds `filters`; `on_filter` gets `{key, value}`. Prebuilt `kpis`/`primaryChart`/`table` still work |
+| `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
 
