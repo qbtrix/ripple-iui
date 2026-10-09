@@ -273,7 +273,6 @@
 				bind:this={chat}
 				{session}
 				suggestions={tryAnother}
-				note={LIVE ? '' : 'Recorded answers: each request plays the closest of the recordings. No model is called.'}
 				chips={wide.current ? { viewing: current?.id ?? null, pick: pickCard } : null}
 				onspec={wide.current ? undefined : (card) => openSheet(card)}
 			/>
@@ -368,9 +367,10 @@
 	}
 	.welcome h2 {
 		margin: 8px 0 6px;
-		font-size: clamp(24px, 3vw, 30px);
+		font-size: 28px;
 		line-height: 1.15;
 		letter-spacing: -0.01em;
+		text-wrap: balance;
 	}
 	.welcome p {
 		margin: 0 0 16px;

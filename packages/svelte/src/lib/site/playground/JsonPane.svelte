@@ -255,7 +255,7 @@
 	}
 	/* New lines arrive with a short tint; unchanged lines are reused, so only they animate. */
 	.code[data-streaming] :global(.ln) {
-		animation: arrive 600ms var(--ease-out-quart);
+		animation: arrive 450ms var(--ease-out-quart);
 	}
 	.live {
 		position: absolute;
@@ -284,7 +284,7 @@
 	}
 	@keyframes arrive {
 		from {
-			background: color-mix(in oklch, var(--primary) 12%, transparent);
+			background: color-mix(in oklch, var(--primary) 8%, transparent);
 		}
 	}
 	@keyframes pulse {
