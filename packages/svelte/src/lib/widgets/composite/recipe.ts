@@ -14,9 +14,8 @@
 //   unit); the same name in another unit stays its own row. That key is also what a tick (`got`) remembers, so a
 //   swap never moves a tick onto another item.
 // - Every reader takes `unknown` and never throws: props are model output.
-// - A widget's own edit of a non-bound prop (a swap, a tick) is an `Edit`: it
-//   survives the host re-sending the value it was made from, and yields to a
-//   genuinely new value.
+// - A widget's own edit of a non-bound prop (a swap, a tick) is an `Edit`
+//   (data-kit/edit.ts).
 import { finite, plain } from '../data-kit/format.js';
 import type { AisleKind, MealKind } from '../data-kit/icons.js';
 import type { Status } from '../data-kit/types.js';
@@ -328,33 +327,4 @@ export function swapMeal(days: unknown, di: number, mi: number, ref: string): un
 	return list(days).map((d, i) =>
 		i !== di ? d : { ...rec(d), meals: list(rec(d).meals).map((m, j) => (j === mi ? { ...rec(m), recipe: ref } : m)) }
 	);
-}
-
-/** A widget-side edit of a prop: the edited value and the value it was made from. */
-export interface Edit<T> {
-	from: string;
-	value: T;
-}
-
-const sig = (v: unknown): string => {
-	try {
-		return JSON.stringify(v) ?? '';
-	} catch {
-		return '';
-	}
-};
-
-/**
- * Whether the edit still stands: `incoming` is the edit itself (assigned
- * locally, or echoed by a bound parent) or the value the edit was made from
- * (a host re-rendering the same spec re-sends the original). Anything else
- * is new data, and the edit gives way.
- */
-export function holds<T>(edit: Edit<T> | null, incoming: unknown): edit is Edit<T> {
-	return edit !== null && (incoming === edit.value || sig(incoming) === edit.from);
-}
-
-/** The next edit; a chain of edits stays anchored to the value the first one was made from. */
-export function nextEdit<T>(edit: Edit<T> | null, incoming: unknown, value: T): Edit<T> {
-	return { from: holds(edit, incoming) ? edit.from : sig(incoming), value };
 }

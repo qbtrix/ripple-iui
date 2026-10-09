@@ -177,6 +177,20 @@ describe('menu-order — stages', () => {
 		await vi.waitFor(() => expect(container.textContent).toContain('Bound total 5.25'));
 	});
 
+	it('the stage and typed details survive a bound fulfilment change that re-sends the spec', async () => {
+		const onStateChange = vi.fn();
+		const props = { items, checkout: true, fulfilment: ['pickup', 'delivery'], fee: { delivery: 3.99 } };
+		const { container } = render(Ripple, { props: { spec: { state: {}, ui: { type: 'menu-order', bind: '{state.cart}', props } }, onStateChange } });
+		await tick();
+		await fireEvent.click(btn('Add Shoestring Fries'));
+		await fireEvent.click(btn('Checkout'));
+		await fireEvent.input(screen.getByLabelText(/^Name/), { target: { value: 'Ada Park' } });
+		await fireEvent.click(screen.getByLabelText(/Delivery/));
+		expect(onStateChange).toHaveBeenLastCalledWith('cart', expect.objectContaining({ fulfilment: 'delivery' }), expect.anything());
+		expect(container.querySelector('[data-stage="details"]')).not.toBeNull();
+		expect((screen.getByLabelText(/^Name/) as HTMLInputElement).value).toBe('Ada Park');
+	});
+
 	it('customises with priced options, caps extras, and adds the line in menu order', async () => {
 		const oncartchange = vi.fn();
 		const { container } = render(MenuOrder, { props: { items, checkout: true, oncartchange } });

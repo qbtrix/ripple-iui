@@ -13,7 +13,9 @@
   Invariants:
   - `deposit` is the bound field (bind contract `deposit` / `ondepositchange`);
     `rate` and `years` are $bindable for Svelte parents and also emit
-    `onratechange` / `onyearschange`. An edit emits a plain number.
+    `onratechange` / `onyearschange`. An edit emits a plain number. A rate or
+    years edit is held as an Edit (data-kit/edit.ts), so a host re-sending the
+    original spec on a deposit change does not undo it; a new value does.
   - A drag or a half-typed number lives in `draft`; the prop changes only on
     commit (`change`), so a slider's `max` never moves under the thumb.
   - Inputs clamp (negatives to 0, rate and inflation to 100%, years to 100)
@@ -114,7 +116,8 @@
 	import { safeStyle } from '@ripple-ui/core';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import TableIcon from '@lucide/svelte/icons/table-2';
-	import { StatusPill, VerdictLine, num, plain } from '../data-kit/index.js';
+	import { StatusPill, VerdictLine, holds, nextEdit, num, plain } from '../data-kit/index.js';
+	import type { Edit } from '../data-kit/edit.js';
 	import type { Verdict } from '../data-kit/types.js';
 
 	type Field = 'deposit' | 'rate' | 'years';
@@ -203,8 +206,15 @@
 	let draft = $state<{ key: Field; value: number } | null>(null);
 	const pick = (key: Field, v: unknown) => (draft?.key === key ? draft.value : v);
 
-	const inp = $derived(clampInputs({ initial, inflation, deposit: pick('deposit', deposit), rate: pick('rate', rate), years: pick('years', years) }));
-	const committed = $derived(clampInputs({ deposit, rate, years }));
+	// Rate and years edits outlive a re-send of the values they were made from.
+	// Not deposit: it is the bound field, and its state path is the truth.
+	let rateEdit = $state.raw<Edit<number> | null>(null);
+	let yearsEdit = $state.raw<Edit<number> | null>(null);
+	const rateNow = $derived(holds(rateEdit, rate) ? rateEdit.value : rate);
+	const yearsNow = $derived(holds(yearsEdit, years) ? yearsEdit.value : years);
+
+	const inp = $derived(clampInputs({ initial, inflation, deposit: pick('deposit', deposit), rate: pick('rate', rateNow), years: pick('years', yearsNow) }));
+	const committed = $derived(clampInputs({ deposit, rate: rateNow, years: yearsNow }));
 	const mode: Compounding = $derived(compounding === 'yearly' || compounding === 'annual' || compounding === 'annually' ? 'yearly' : 'monthly');
 
 	const missing = $derived(
@@ -332,9 +342,11 @@
 			deposit = v;
 			ondepositchange?.(v);
 		} else if (key === 'rate') {
+			rateEdit = nextEdit(rateEdit, rate, v);
 			rate = v;
 			onratechange?.(v);
 		} else {
+			yearsEdit = nextEdit(yearsEdit, years, v);
 			years = v;
 			onyearschange?.(v);
 		}

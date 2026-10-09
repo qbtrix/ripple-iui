@@ -27,3 +27,4 @@ export {
 } from './icons.js';
 export { pairSpans, MAX_HALF_ROWS } from './pair.js';
 export { rise, slide } from './motion.js';
+export { holds, nextEdit } from './edit.js';

@@ -127,6 +127,18 @@ describe('booking registry and bind', () => {
 		}
 	});
 
+	it('the stage and the paged week survive a bound slot pick that re-sends the spec', async () => {
+		const onStateChange = vi.fn();
+		render(Ripple, { props: { spec: { state: { booking: { party: 4 } }, ui: { type: 'booking', bind: '{state.booking}', props: PROPS } }, onStateChange } });
+		await fireEvent.click(btn('Choose a time'));
+		await fireEvent.click(btn('Later week'));
+		await fireEvent.click(btn('6:00 PM'));
+		expect(onStateChange).toHaveBeenLastCalledWith('booking', expect.objectContaining({ start: expect.stringContaining('2026-10-22T18:00') }), expect.anything());
+		expect(btn(/^Thu 22 Oct/).getAttribute('aria-pressed')).toBe('true');
+		expect(btn('6:00 PM').getAttribute('aria-pressed')).toBe('true');
+		expect(btn('Add your details')).toBeEnabled();
+	});
+
 	it('a bound selection drives the widget and every edit writes a new value back', async () => {
 		const onStateChange = vi.fn();
 		render(Ripple, {

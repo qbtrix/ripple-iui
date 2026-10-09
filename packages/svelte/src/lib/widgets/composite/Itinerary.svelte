@@ -9,7 +9,9 @@
   Invariants:
   - `days` is the one bound field (bind contract `days` / `ondayschange`).
     Ticking or adding a stop builds a NEW days array, assigns the $bindable
-    and calls ondayschange; nothing mutates the prop in place.
+    and calls ondayschange; nothing mutates the prop in place. The open day
+    (`open`, a Svelte-side $bindable) is held as an Edit (data-kit/edit.ts),
+    so a host re-sending the spec on a days change does not close it.
   - Rows key by `${id ?? ''}:${index}`, never by a model string; a stop with
     no title (mid-stream, junk) is skipped but keeps its index for edits.
   - Nothing parses a date or time for display. `when` goes through dateLabel,
@@ -117,8 +119,11 @@
 		plain,
 		sum,
 		dateLabel,
+		holds,
+		nextEdit,
 		rise
 	} from '../data-kit/index.js';
+	import type { Edit } from '../data-kit/edit.js';
 	import type { Verdict } from '../data-kit/types.js';
 
 	interface Props {
@@ -169,7 +174,12 @@
 
 	const heading = $derived(plain(title));
 	const sub = $derived(plain(subtitle));
-	const at = $derived(Math.trunc(finite(open) ?? 0));
+	let openEdit = $state.raw<Edit<number> | null>(null);
+	const at = $derived(Math.trunc(finite(holds(openEdit, open) ? openEdit.value : open) ?? 0));
+	function setOpen(next: number) {
+		openEdit = nextEdit(openEdit, open, next);
+		open = next;
+	}
 	const dayList = $derived(safeArray<unknown>(days, { widget: 'itinerary', key: 'days' }));
 
 	const view = $derived(
@@ -401,7 +411,7 @@
 								class={['flex w-full items-center gap-3 rounded-ripple px-3 py-2.5 text-left', focusRing]}
 								aria-expanded={isOpen}
 								aria-controls={panel}
-								onclick={() => (open = isOpen ? -1 : di)}
+								onclick={() => setOpen(isOpen ? -1 : di)}
 							>
 								<span class="grid size-9 shrink-0 place-items-center rounded-md bg-ripple-muted text-headline tabular-nums" aria-hidden="true">{di + 1}</span>
 								<span class="flex min-w-0 flex-1 flex-col">

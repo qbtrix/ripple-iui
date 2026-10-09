@@ -106,6 +106,21 @@ describe('comparison-layout: Choose', () => {
 		expect(within(nimbus).getByRole('button', { name: 'Choose' }).getAttribute('aria-pressed')).toBe('false');
 	});
 
+	it('the picked section and differences filter survive a bound Choose that re-sends the spec', async () => {
+		const spec = { state: { pick: 'nimbus' }, ui: { type: 'comparison-layout', bind: '{state.pick}', props: { items: laptops(), features: features(), winner } } };
+		const r = render(Ripple, { props: { spec } });
+		await tick();
+		const ui = within(r.container);
+		await fireEvent.click(ui.getByRole('button', { name: 'Performance' }));
+		await fireEvent.click(ui.getByLabelText('Differences only'));
+		const vertex = ([...r.container.querySelectorAll('[data-slot="item"]')] as HTMLElement[]).find((li) => li.textContent?.includes('Vertex X13'))!;
+		await fireEvent.click(within(vertex).getByRole('button', { name: 'Choose' }));
+		await tick();
+		expect(within(vertex).getByRole('button', { name: /chosen/i }).getAttribute('aria-pressed')).toBe('true');
+		expect(ui.getByRole('button', { name: 'Performance' }).getAttribute('aria-pressed')).toBe('true');
+		expect((ui.getByLabelText('Differences only') as HTMLInputElement).checked).toBe(true);
+	});
+
 	it('still fires legacy item actions and onselect', async () => {
 		const onselect = vi.fn();
 		const r = render(ComparisonLayout, { props: { items: [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }], onselect } });
