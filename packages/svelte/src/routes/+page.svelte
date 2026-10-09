@@ -33,6 +33,7 @@
 	import { modelName } from '$lib/site/scrub/model-name.js';
 	import { BYOK_URL } from './pawbar/session.svelte.js';
 	import { AUDIENCES, scenarios, type Scenario } from './live/scenarios.js';
+	import { BRANDS } from './live/brands.js';
 	import { SITE_URL, SLIM_MANIFEST_URL } from '$lib/site/docs/model.js';
 	import SpecEditor from '$lib/site/landing/SpecEditor.svelte';
 	import CodeTabs from '$lib/site/landing/CodeTabs.svelte';
@@ -54,7 +55,8 @@
 	const caption = $derived.by(() => {
 		const n = figures.indexOf(figure) + 1;
 		const chars = figure.fixture.chunks.reduce((sum, c) => sum + c.text.length, 0).toLocaleString('en-US');
-		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${modelName(figure.fixture.model)}`;
+		const skin = BRANDS[figure.id] ? `, styled as ${BRANDS[figure.id].name}` : '';
+		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${modelName(figure.fixture.model)}${skin}`;
 	});
 
 	function show(id: string) {
@@ -105,7 +107,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 		</div>
 
 		{#key figure.id}
-			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay holdSkeleton {caption} />
+			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay holdSkeleton brand={BRANDS[figure.id]} {caption} />
 		{/key}
 
 		<div class="figures" role="group" aria-label="Recorded streams">
