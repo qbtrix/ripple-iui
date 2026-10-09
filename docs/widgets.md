@@ -161,7 +161,7 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 - Caps: 24,000 chars, 400 elements, depth 24, 40 animation elements, every `dur` at least 0.5s, `repeatCount` at most 1000 or `indefinite`. Past a cap, or while the markup is still streaming in, the widget shows a quiet placeholder at `max_height`.
 - Ids are prefixed per instance (and so are their `url(#..)`, `href` and `begin`/`end` refs), so two cards never collide.
 - Under `prefers-reduced-motion` the art starts paused; animated art gets a small pause/play button.
-- Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). Contract: `docs/design/drafts/2026-10-09-ripple-illustration-svg.md` in the workspace.
+- Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.
 
 ```json
 { "type": "illustration", "props": { "title": "Sun rising over two hills", "svg": "<svg viewBox='0 0 200 120'><circle cx='100' cy='110' r='18' fill='#ffb703'><animate attributeName='cy' from='110' to='48' dur='3s' fill='freeze'/></circle></svg>" } }

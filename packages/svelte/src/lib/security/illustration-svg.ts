@@ -3,7 +3,7 @@
 // allowlist itself is data in @ripple-ui/core/manifest.
 //
 // - checkIllustrationSvg: the POLICY check a card policy runs before showing a
-//   card. Refuses on the hostile set and the caps; passes harmless unknowns
+//   card. Needs a DOM (browser or jsdom); without DOMParser it refuses. Refuses on the hostile set and the caps; passes harmless unknowns
 //   (`filter`, `class`), which the widget drops.
 // - sanitizeIllustrationSvg: the WIDGET rebuild. Parses with DOMParser and
 //   rebuilds with createElementNS, keeping only allowlisted elements and
@@ -146,6 +146,7 @@ export function checkIllustrationSvg(markup: string): IllustrationCheck {
 	if (typeof markup !== 'string' || !markup.trim()) return { ok: false, reason: 'empty svg' };
 	const pre = preCheck(markup);
 	if (pre) return { ok: false, reason: pre };
+	if (typeof DOMParser === 'undefined') return { ok: false, reason: 'no DOMParser in this runtime (needs a browser or jsdom)' };
 	const root = parse(markup);
 	if (!root) return { ok: false, reason: 'not a well-formed <svg> document' };
 	const cap = measureCaps(root);

@@ -9,7 +9,7 @@ A **monorepo** holding Ripple's spec engine and its renderers. An LLM produces a
 | Package | Path | What |
 |---|---|---|
 | `@ripple-ui/core` | `packages/core/` | The engine: schema, expressions, state, event dispatcher, motion compiler, headless runtime. **Zero framework dependency.** Built with plain `tsc`. |
-| `@ripple-ui/svelte` | `packages/svelte/` | The Svelte 5 renderer: 197 widgets, editor, intents, streaming. Depends on core via `file:../core`. |
+| `@ripple-ui/svelte` | `packages/svelte/` | The Svelte 5 renderer: 198 widgets, editor, intents, streaming. Depends on core via `file:../core`. |
 
 **Which package does a change belong in?** If it needs the Svelte compiler
 (a `.svelte` file, a `$state` rune, a `use:` action) or a DOM, it is
