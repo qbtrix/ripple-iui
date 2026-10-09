@@ -38,7 +38,7 @@
   };
 </script>
 
-<main class="min-h-screen space-y-10 bg-background p-8 text-foreground">
+<main class="space-y-10 p-4 text-foreground sm:p-8">
   <section class="space-y-3">
     <label class="flex items-center gap-2 text-sm text-muted-foreground">
       <input type="checkbox" bind:checked={dense} /> Dense tool page (size="sm")

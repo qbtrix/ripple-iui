@@ -1,13 +1,11 @@
 <!--
   src/routes/showcase/+page.svelte
-  Updated 2026-09-30 (call UI new look, slice 0): the sub-route nav links the new
-  /showcase/call page (ControlButton, ControlBar, ParticipantTile, FloatingDock,
-  IncomingCallCard, BottomSheet, CountBadge, Slider).
-  Updated 2026-09-26 (feature pages canon, F1): the sub-route nav links the new
-  /showcase/feature page (PageHeader, EmptyState, InlineAlert, Segmented counts,
-  Label + Textarea).
-  Updated 2026-09-25 (shell new-look slice 1): the sub-route nav links the new
-  /showcase/shell page (ListRow, SectionHeader, PanelHeader, Kbd, Segmented badges).
+  The widget gallery: one dog-food Ripple spec (sidebar of categories, a panel
+  per widget) under the site's shared chrome, plus a strip of links to the
+  focused sub-route pages (motion, shell, call, feature, marketing and premium
+  packs, card/stat/flow/spec, exec dashboard, classic pockets). The sidebar
+  sticks under the top bar via --site-topbar from site.css. Research demos use
+  the local /icons/source.svg so no third-party favicon is fetched.
 -->
 <script lang="ts">
   import { Ripple } from '$lib/index.js';
@@ -3753,10 +3751,10 @@
       props: { gap: '10px' },
       style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
       children: [
-        { type: 'source-card', props: { source: 'wirefeed', title: 'Global markets rally as trade deal nears completion', color: '#0080ff' } },
-        { type: 'source-card', props: { source: 'tickerwire', title: 'Central banks signal rate cuts amid cooling inflation', color: '#6366f1' } },
-        { type: 'source-card', props: { source: 'ledgerpost', title: 'European energy prices stabilize after winter surge', color: '#f59e0b' } },
-        { type: 'source-card', props: { source: 'startupwire', title: 'AI startup raises $200M in Series C funding round', color: '#22c55e' } },
+        { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'wirefeed', title: 'Global markets rally as trade deal nears completion', color: '#0080ff' } },
+        { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'tickerwire', title: 'Central banks signal rate cuts amid cooling inflation', color: '#6366f1' } },
+        { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'ledgerpost', title: 'European energy prices stabilize after winter surge', color: '#f59e0b' } },
+        { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'startupwire', title: 'AI startup raises $200M in Series C funding round', color: '#22c55e' } },
       ]
     }
   };
@@ -3768,10 +3766,10 @@
       props: { gap: '6px', wrap: 'wrap', align: 'center' },
       children: [
         { type: 'text', props: { text: 'Inline citations:', size: 'sm' } },
-        { type: 'citation', props: { source: 'wirefeed', color: '#0080ff', number: 1 } },
-        { type: 'citation', props: { source: 'tickerwire', color: '#6366f1', number: 2 } },
-        { type: 'citation', props: { source: 'citydesk', color: '#000000' } },
-        { type: 'citation', props: { source: 'videohub', color: '#ff0000', number: 4 } },
+        { type: 'citation', props: { favicon: '/icons/source.svg', source: 'wirefeed', color: '#0080ff', number: 1 } },
+        { type: 'citation', props: { favicon: '/icons/source.svg', source: 'tickerwire', color: '#6366f1', number: 2 } },
+        { type: 'citation', props: { favicon: '/icons/source.svg', source: 'citydesk', color: '#000000' } },
+        { type: 'citation', props: { favicon: '/icons/source.svg', source: 'videohub', color: '#ff0000', number: 4 } },
       ]
     }
   };
@@ -3782,11 +3780,11 @@
       type: 'sources-bar',
       props: {
         sources: [
-          { name: 'wirefeed', color: '#0080ff' },
-          { name: 'tickerwire', color: '#6366f1' },
-          { name: 'ledgerpost', color: '#f59e0b' },
-          { name: 'citydesk', color: '#000000' },
-          { name: 'bbc', color: '#bb1919' },
+          { favicon: '/icons/source.svg', name: 'wirefeed', color: '#0080ff' },
+          { favicon: '/icons/source.svg', name: 'tickerwire', color: '#6366f1' },
+          { favicon: '/icons/source.svg', name: 'ledgerpost', color: '#f59e0b' },
+          { favicon: '/icons/source.svg', name: 'citydesk', color: '#000000' },
+          { favicon: '/icons/source.svg', name: 'bbc', color: '#bb1919' },
         ],
         label: 'sources'
       }
@@ -4964,9 +4962,9 @@
           props: { gap: '10px' },
           style: { 'overflow-x': 'auto', 'padding-bottom': '4px' },
           children: [
-            { type: 'source-card', props: { source: 'circuitpost', title: 'EU AI Act enforcement begins with first penalties', color: '#000' } },
-            { type: 'source-card', props: { source: 'startupwire', title: 'US senators introduce bipartisan AI safety bill', color: '#22c55e' } },
-            { type: 'source-card', props: { source: 'wirefeed', title: 'Regulators publish draft AI governance rules', color: '#0080ff' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'circuitpost', title: 'EU AI Act enforcement begins with first penalties', color: '#000' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'startupwire', title: 'US senators introduce bipartisan AI safety bill', color: '#22c55e' } },
+            { type: 'source-card', props: { favicon: '/icons/source.svg', source: 'wirefeed', title: 'Regulators publish draft AI governance rules', color: '#0080ff' } },
           ]
         },
         { type: 'heading', props: { text: 'Key Developments', level: 3 } },
@@ -4978,15 +4976,15 @@
           type: 'flex',
           props: { gap: '6px', wrap: 'wrap' },
           children: [
-            { type: 'citation', props: { source: 'circuitpost', color: '#000', number: 1 } },
-            { type: 'citation', props: { source: 'startupwire', color: '#22c55e', number: 2 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'circuitpost', color: '#000', number: 1 } },
+            { type: 'citation', props: { favicon: '/icons/source.svg', source: 'startupwire', color: '#22c55e', number: 2 } },
           ]
         },
         { type: 'sources-bar', props: {
           sources: [
-            { name: 'circuitpost', color: '#000' },
-            { name: 'startupwire', color: '#22c55e' },
-            { name: 'wirefeed', color: '#0080ff' },
+            { favicon: '/icons/source.svg', name: 'circuitpost', color: '#000' },
+            { favicon: '/icons/source.svg', name: 'startupwire', color: '#22c55e' },
+            { favicon: '/icons/source.svg', name: 'wirefeed', color: '#0080ff' },
           ],
           label: 'sources'
         }},
@@ -5359,55 +5357,67 @@
 <Ripple spec={showcaseSpec} state={initialOverride} {onStateChange} onEvent={handleEvent} />
 
 <style>
-  /* Sub-route link strip — sits above the dog-food gallery. */
+  /* Sub-route strip under the site top bar: quiet pills in the site tokens.
+     On a phone it scrolls sideways inside itself instead of stacking rows. */
   .subroute-nav {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    max-width: 1100px;
+    max-width: 1120px;
     margin: 0 auto;
-    padding: 0.75rem 2rem 0;
+    padding: 14px clamp(16px, 4vw, 32px) 0;
   }
   .subroute-nav-label {
-    font-size: 0.7rem;
+    font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted-foreground);
-    margin-right: 4px;
+    color: var(--site-ink);
+    margin-right: 6px;
   }
   .subroute-nav-sep {
-    color: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
+    color: var(--site-soft);
     padding: 0 2px;
   }
   .subroute-nav a {
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    flex: none;
+    padding: 5px 11px;
+    border: 1px solid var(--site-line);
+    border-radius: 999px;
+    font-size: 13px;
     font-weight: 500;
-    background: color-mix(in srgb, var(--muted) 40%, transparent);
-    color: var(--foreground);
+    color: var(--site-soft);
     text-decoration: none;
-    transition: background 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
   }
   .subroute-nav a:hover {
-    background: var(--muted);
+    color: var(--site-ink);
+    border-color: color-mix(in oklch, var(--primary) 55%, transparent);
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
+  }
+  .subroute-nav a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
   @media (max-width: 720px) {
     .subroute-nav {
-      padding: 0.75rem 1rem 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 4px;
     }
   }
 
   /* Layout-only glue. Widget visuals come from their own components. */
   :global(.showcase-shell) {
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - var(--site-topbar));
   }
   :global(.showcase-aside) {
     position: sticky;
-    top: 60px;
-    height: calc(100vh - 60px);
+    top: var(--site-topbar);
+    height: calc(100vh - var(--site-topbar));
     overflow-y: auto;
   }
   :global(.showcase-main) {

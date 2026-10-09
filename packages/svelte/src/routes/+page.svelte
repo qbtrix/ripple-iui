@@ -1,32 +1,59 @@
 <!--
   @file routes/+page.svelte
-  @description The public Ripple landing page (ripple.pocketpaw.xyz). Pitch,
-    install line, a streaming code sample, and a live demo that replays a spec
-    streaming into the real <Ripple> renderer through streamSpec. The page is
-    prerendered: the demo's resting state (full spec text + rendered form) is
-    in the markup, and onMount only replays the stream on top of it.
-    Keep labs routes unlinked here.
+  @description Ripple's landing, chat-first. The hero IS a chat: a visitor types
+    a request or taps one of the nine recorded scenarios, the answer streams in
+    and its card renders through <Ripple> while it arrives. With the Paw Bar
+    config set at build time (PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY,
+    defined in vite.config.ts like PUBLIC_STORE_URL) the chat calls the Paw Bar
+    API; without it the same chat replays the recorded answers locally and says
+    so. Below: how it works (spec, engine, UI, with a live card), install and
+    the streaming code sample, the recorded examples linking /live, and the
+    bring-your-own-key link. Prerendered; the chat only runs in the browser.
 
   Creative Direction Declaration
-    Archetype: Technology. Richness: Premium minimal.
-    Design read: an open engine for developers, Clean-Tech family on the repo's
-      shadcn tokens, one cool blue accent, the system UI and mono stacks (no third-party
-      requests at runtime).
-    Trap avoided: the dark hero + three feature cards + logo strip template.
-      The fold shows the product doing its one job instead: JSON arriving on
-      the left, a working UI growing on the right.
-    Dials: variance 7, motion 5, density 3.
+    Scene: a developer at night, comparing generative UI tools with a terminal
+      open beside the browser. Dark default, Paw OS frosted glass on a deep
+      blue-black ground lit by one electric-blue glow (the Paw OS wallpaper).
+    Strategy: restrained neutrals + Paw blue as the single voice, crimson only
+      on the one "keep going" action. Type: Bricolage display, Inter body,
+      JetBrains Mono for code (identity, copied from Paw OS).
+    Trap avoided: a feature-grid SaaS page. The first screen is the product
+      working, not a description of it.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
-	import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
+	import Chat from './pawbar/Chat.svelte';
+	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
+	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
+	import { scenarios } from './live/scenarios.js';
 
-	const BUILD_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
+	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
+	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
+	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
+	const LIVE = Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
+
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
 
-	// The demo spec: one bound input and two lines that read it back.
+	// The order demo needs the test store's checkout (an `api` action), which the
+	// chat's card policy refuses; it stays on /live and in the runs list below.
+	const chatScenarios = scenarios.filter((s) => !s.needsStore);
+	const recorded =
+		(intro: string): Transport =>
+		(message, signal) =>
+			recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro });
+	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
+	// is unavailable. Offline build: the recordings answer directly.
+	const session = LIVE
+		? new ChatSession(
+				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
+				recorded('Here is a recorded answer that fits, on its original timing.')
+			)
+		: new ChatSession(recorded('The live model is not connected on this build, so here is a recorded answer that fits.'));
+	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
+
+	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
 		version: '1.0',
 		state: { name: 'Ada' },
@@ -35,18 +62,7 @@
 			props: { direction: 'column', gap: '12px' },
 			children: [
 				{ type: 'heading', props: { text: 'Hello, {state.name}', level: 3 } },
-				{
-					type: 'input',
-					props: { label: 'Your name', placeholder: 'Type a name' },
-					bind: '{state.name}'
-				},
-				{
-					type: 'text',
-					props: {
-						text: "{state.name ? 'The heading updates on every keystroke.' : 'Type a name above.'}",
-						size: 'sm'
-					}
-				},
+				{ type: 'input', props: { label: 'Your name', placeholder: 'Type a name' }, bind: '{state.name}' },
 				{
 					type: 'button',
 					props: { label: 'Clear', variant: 'outline', size: 'sm' },
@@ -55,7 +71,17 @@
 			]
 		}
 	};
-	const specText = JSON.stringify(demoSpec, null, 2);
+	const specSnippet = `{
+  "state": { "name": "Ada" },
+  "ui": { "type": "flex", "children": [
+    { "type": "heading",
+      "props": { "text": "Hello, {state.name}" } },
+    { "type": "input", "bind": "{state.name}" },
+    { "type": "button", "props": { "label": "Clear" },
+      "on_click": { "action": "set",
+                    "target": "name", "value": "" } }
+  ] }
+}`;
 
 	const codeSample = `<script>
   import { Ripple } from '@ripple-ui/svelte';
@@ -69,41 +95,9 @@
     const res = await fetch('/api/ui', { method: 'POST', body: prompt });
     store = streamSpec(res.body);
   }
-</scr` + `ipt>
+\u003C/script>
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
-
-	let typed = $state(specText);
-	let store = $state<StreamSpecStore | null>(null);
-	let streaming = $state(false);
-	let controller: AbortController | null = null;
-
-	async function* typeOut(text: string, signal: AbortSignal) {
-		// ponytail: fixed chunk size and delay; a real model's cadence is uneven.
-		for (let i = 0; i < text.length && !signal.aborted; i += 7) {
-			await new Promise((r) => setTimeout(r, 24));
-			const chunk = text.slice(i, i + 7);
-			typed += chunk;
-			yield chunk;
-		}
-		streaming = false;
-	}
-
-	function replay() {
-		controller?.abort();
-		controller = new AbortController();
-		typed = '';
-		streaming = true;
-		store = streamSpec(typeOut(specText, controller.signal), {
-			signal: controller.signal,
-			throttleMs: 40
-		});
-	}
-
-	onMount(() => {
-		if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) replay();
-		return () => controller?.abort();
-	});
 
 	let copied = $state(false);
 	async function copyInstall() {
@@ -112,522 +106,457 @@
 			copied = true;
 			setTimeout(() => (copied = false), 1600);
 		} catch {
-			// Clipboard blocked (insecure context or denied): the text stays selectable.
+			/* clipboard blocked: the command is on screen to copy by hand */
 		}
 	}
+
+	onMount(() => () => session.stop());
 </script>
 
 <svelte:head>
-	<title>Ripple: generative UI from a JSON spec</title>
+	<title>Ripple: ask for a tool, watch it build</title>
 	<meta
 		name="description"
-		content="Ripple is an open, embeddable generative UI engine. Your model writes a small JSON spec; Ripple renders a working interface with state, binds, expressions and events, and streams it in as the model types."
+		content="Ripple is the open-source generative UI engine from Paw OS by PocketPaw. A model writes a small JSON spec and Ripple renders it as a working interface while the spec streams in."
 	/>
 </svelte:head>
 
 <main class="landing">
-	<section class="hero">
-		<div class="hero-copy">
-			<h1>
-				Your model writes a spec.
-				<span>Ripple turns it into a working UI.</span>
-			</h1>
-			<p class="lede">
-				An open, embeddable generative UI engine for any model. The model emits a small JSON spec;
-				Ripple handles state, two-way binds, expressions and events, and renders it while the model is
-				still typing.
-			</p>
-
-			<div class="install">
-				<code><span class="prompt" aria-hidden="true">$</span> {INSTALL}</code>
-				<button type="button" class="copy" onclick={copyInstall} aria-label="Copy install command">
-					{copied ? 'Copied' : 'Copy'}
-				</button>
-			</div>
-
-			<div class="actions">
-				<a class="btn primary" href={BUILD_URL}>Build your own</a>
-				<a class="btn ghost" href="/playground">Open the playground</a>
-			</div>
+	<section class="hero" aria-labelledby="hero-title">
+		<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
+		<p class="lede">
+			Ripple is the open-source generative UI engine from Paw OS by PocketPaw. A model writes a small JSON spec,
+			and Ripple turns it into a working interface as the spec streams in. Ask for something below.
+		</p>
+		<div class="chat-frame">
+			<Chat
+				{session}
+				{suggestions}
+				note={LIVE ? '' : 'The live model is off in this build. Each request replays the closest recorded answer.'}
+			/>
 		</div>
-
-		<figure class="demo" aria-label="A spec streaming into a live Ripple UI">
-			<div class="demo-bar">
-				<span class="demo-label">model output</span>
-				<span class="demo-status" aria-live="polite">
-					{streaming ? `streaming ${typed.length} / ${specText.length} bytes` : 'done, try the input'}
-				</span>
-				<button type="button" class="replay" onclick={replay} disabled={streaming}>Replay</button>
-			</div>
-			<div class="demo-panes">
-				<pre class="spec" aria-label="Spec JSON"><code>{typed}</code></pre>
-				<div class="render">
-					<span class="demo-label">ripple render</span>
-					<div class="render-frame">
-						{#if store}
-							<Ripple streaming={store} skeleton="card" />
-						{:else}
-							<Ripple spec={demoSpec} />
-						{/if}
-					</div>
-				</div>
-			</div>
-		</figure>
+		<p class="byok">
+			The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
+		</p>
 	</section>
 
-	<section class="code-section">
+	<section class="how" aria-labelledby="how-title">
+		<h2 id="how-title">How it works</h2>
+		<ol class="steps">
+			<li class="step">
+				<h3><span class="n">1</span> The model writes a spec</h3>
+				<p>A tree of widgets, the starting state, and what each control does. Plain JSON, small enough to stream.</p>
+				<pre class="snippet" aria-label="Example spec"><code>{specSnippet}</code></pre>
+			</li>
+			<li class="step">
+				<h3><span class="n">2</span> The engine runs it</h3>
+				<p>
+					<code>@ripple-ui/core</code> holds the state, resolves <code>{'{state.name}'}</code> expressions, keeps
+					two-way binds in sync and dispatches events. It has no framework dependency.
+				</p>
+				<ul class="facts">
+					<li>Local actions: <code>set</code>, <code>toggle</code>, <code>push</code>, <code>remove</code></li>
+					<li>Host actions your app handles: <code>emit</code>, <code>navigate</code>, <code>api</code></li>
+					<li>Partial JSON parses as it arrives, so the UI grows token by token</li>
+				</ul>
+			</li>
+			<li class="step">
+				<h3><span class="n">3</span> You get a working UI</h3>
+				<p>That spec, rendered by <code>@ripple-ui/svelte</code>. Type in it.</p>
+				<div class="demo"><Ripple spec={demoSpec} /></div>
+			</li>
+		</ol>
+	</section>
+
+	<section class="code" aria-labelledby="code-title">
 		<div class="code-copy">
-			<h2>Stream a spec in a dozen lines</h2>
+			<h2 id="code-title">Stream a spec in a dozen lines</h2>
 			<p>
-				<code>streamSpec</code> takes any readable stream or async iterable and parses partial JSON as it
-				arrives. Hand the store to <code>&lt;Ripple&gt;</code> and the UI grows token by token, then stays
-				interactive when the stream ends.
+				<code>streamSpec</code> reads any stream or async iterable and parses the partial JSON as it lands. Hand
+				the store to <code>&lt;Ripple&gt;</code> and the interface fills in, then stays interactive when the stream
+				ends.
 			</p>
-			<dl class="facts">
-				<div>
-					<dt>The model writes</dt>
-					<dd>A tree of widgets, initial state, and actions like <code>set</code>, <code>toggle</code> and <code>push</code>.</dd>
-				</div>
-				<div>
-					<dt>Ripple handles</dt>
-					<dd>Reactivity, <code>{'{state.path}'}</code> expressions, two-way <code>bind</code>, and events.</dd>
-				</div>
-				<div>
-					<dt>Ships with</dt>
-					<dd>189 widgets in <code>@ripple-ui/svelte</code>, on a framework-agnostic engine in <code>@ripple-ui/core</code>.</dd>
-				</div>
-			</dl>
-		</div>
-		<div class="code-block">
-			<pre class="code"><code>{codeSample}</code></pre>
-			<p class="code-note">
+			<div class="install">
+				<code><span aria-hidden="true">$</span> {INSTALL}</code>
+				<button type="button" onclick={copyInstall} aria-label="Copy install command">{copied ? 'Copied' : 'Copy'}</button>
+			</div>
+			<p class="small">
 				Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
-				<a href="https://github.com/qbtrix/ripple-iui/tree/main/packages/svelte#styling">Styling setup</a>
+				<a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a>
 			</p>
 		</div>
+		<pre class="sample"><code>{codeSample}</code></pre>
 	</section>
 
-	<section class="explore" aria-labelledby="explore-title">
-		<h2 id="explore-title">See more of it</h2>
-		<ul class="rows">
-			<li>
-				<a href="/live" class="row">
-					<span class="row-title">Live</span>
-					<span class="row-desc">Watch specs stream in from a model in real time.</span>
-				</a>
-			</li>
-			<li>
-				<a href="/playground" class="row">
-					<span class="row-title">Playground</span>
-					<span class="row-desc">Edit a spec and see the render update next to it.</span>
-				</a>
-			</li>
-			<li>
-				<a href="/showcase" class="row">
-					<span class="row-title">Showcase</span>
-					<span class="row-desc">Widgets, layouts and full pages, each one a spec.</span>
-				</a>
-			</li>
-			<li>
-				<a href={GITHUB_URL} class="row">
-					<span class="row-title">GitHub</span>
-					<span class="row-desc">Source, docs and releases. MIT licensed.</span>
-				</a>
-			</li>
+	<section class="examples" aria-labelledby="examples-title">
+		<div class="examples-head">
+			<h2 id="examples-title">Recorded runs</h2>
+			<p>Real model output, replayed on its original timing. Open one to watch the spec and the UI side by side.</p>
+		</div>
+		<ul class="runs">
+			{#each scenarios as s (s.id)}
+				<li>
+					<a href="/live?s={s.id}" class="run">
+						<span class="run-cat">{s.category}</span>
+						<span class="run-title">{s.title}</span>
+						<span class="run-prompt">{s.fixture.prompt}</span>
+					</a>
+				</li>
+			{/each}
 		</ul>
 	</section>
 
-	<section class="closer">
-		<h2>Try it with your own prompts</h2>
-		<p>Describe the interface you want and watch a model build it with Ripple.</p>
-		<a class="btn primary" href={BUILD_URL}>Build your own</a>
+	<section class="closer" aria-labelledby="closer-title">
+		<h2 id="closer-title">Keep asking in Paw OS</h2>
+		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
+		<div class="closer-actions">
+			<a class="btn crimson" href={BYOK_URL}>Bring your own key</a>
+			<a class="btn ghost" href={GITHUB_URL}>Read the source</a>
+		</div>
 	</section>
-
-	<footer class="foot">
-		<span>Ripple, MIT licensed.</span>
-		<a href={GITHUB_URL}>github.com/qbtrix/ripple-iui</a>
-	</footer>
 </main>
 
 <style>
 	.landing {
-		--accent: hsl(216 74% 50%);
-		--accent-ink: hsl(0 0% 100%);
-		--ground: hsl(220 20% 98.4%);
-		--panel: var(--card);
-		--ink-soft: color-mix(in srgb, var(--foreground) 62%, var(--ground));
-		--line: var(--border);
-		--mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-		--radius: 12px;
-		font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-		background: var(--ground);
-		color: var(--foreground);
-		padding: 0 24px;
-		overflow-x: clip;
+		position: relative;
+		isolation: isolate;
+		padding: 0 clamp(16px, 4vw, 32px);
 	}
-	:global(.dark) .landing {
-		--accent: hsl(214 80% 62%);
-		--accent-ink: hsl(222 30% 8%);
-		--ground: hsl(222 14% 6%);
-		--panel: hsl(222 12% 9%);
+	/* The Paw OS wallpaper: one electric-blue light behind the chat, a faint warm edge. */
+	.landing::before {
+		content: '';
+		position: absolute;
+		inset: -80px 0 auto;
+		height: 980px;
+		z-index: -1;
+		pointer-events: none;
+		background:
+			radial-gradient(60% 46% at 50% 18%, var(--glow), transparent 70%),
+			radial-gradient(34% 30% at 88% 52%, var(--glow-warm), transparent 72%);
 	}
-	.landing > * {
-		max-width: 1160px;
+	.landing > section {
+		max-width: 1120px;
 		margin-inline: auto;
+	}
+	h1,
+	h2,
+	h3 {
+		font-family: var(--font-display);
+		text-wrap: balance;
+		margin: 0;
+	}
+	h2 {
+		font-size: clamp(1.7rem, 3vw, 2.4rem);
+		font-weight: 650;
+		letter-spacing: -0.025em;
+		line-height: 1.1;
 	}
 	code,
 	pre {
-		font-family: var(--mono);
+		font-family: var(--font-mono);
 	}
-	h1,
-	h2 {
-		letter-spacing: -0.03em;
-		font-weight: 600;
-		margin: 0;
+	p code,
+	li code {
+		font-size: 0.86em;
+		padding: 1px 5px;
+		border-radius: 5px;
+		background: color-mix(in oklch, var(--site-ink) 8%, transparent);
+	}
+	a {
+		color: var(--primary-ink);
 	}
 
-	/* Hero */
+	/* Hero: the chat. */
 	.hero {
-		display: grid;
-		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-		gap: 56px;
-		align-items: center;
-		padding: 96px 0 112px;
+		max-width: 800px !important;
+		padding: clamp(48px, 9vw, 104px) 0 72px;
 	}
 	h1 {
-		font-size: clamp(2.4rem, 4.6vw, 4rem);
-		line-height: 1.04;
+		font-size: clamp(2.3rem, 5.4vw, 4.1rem);
+		font-weight: 700;
+		line-height: 1.02;
+		letter-spacing: -0.035em;
 	}
 	h1 span {
 		display: block;
-		color: var(--ink-soft);
+		margin-top: 0.12em;
+		font-weight: 500;
+		color: var(--site-soft);
 	}
 	.lede {
-		margin: 24px 0 0;
-		max-width: 52ch;
-		font-size: 1.075rem;
+		margin: 22px 0 32px;
+		max-width: 62ch;
+		font-size: 17px;
+		line-height: 1.65;
+		color: var(--site-soft);
+		text-wrap: pretty;
+	}
+	.chat-frame {
+		padding: clamp(14px, 2.4vw, 22px);
+		border: 1px solid var(--glass-line);
+		border-radius: 16px;
+		background: color-mix(in oklch, var(--glass) 55%, transparent);
+		backdrop-filter: blur(12px) saturate(1.4);
+		-webkit-backdrop-filter: blur(12px) saturate(1.4);
+	}
+	.byok {
+		margin: 14px 2px 0;
+		font-size: 13.5px;
+		color: var(--site-soft);
+	}
+	.byok a {
+		font-weight: 600;
+		text-underline-offset: 3px;
+	}
+
+	/* How it works: a real three-step sequence, so it is numbered. */
+	.how {
+		padding: 72px 0;
+		border-top: 1px solid var(--site-line);
+	}
+	.steps {
+		list-style: none;
+		margin: 36px 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+		gap: 36px 28px;
+	}
+	.step {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
+	}
+	.step h3 {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 1.2rem;
+		font-weight: 650;
+		letter-spacing: -0.015em;
+	}
+	.n {
+		display: grid;
+		place-items: center;
+		width: 26px;
+		height: 26px;
+		flex: none;
+		border-radius: 8px;
+		background: var(--primary);
+		color: var(--primary-foreground);
+		font-family: var(--font-mono);
+		font-size: 13px;
+		font-weight: 600;
+	}
+	.step p {
+		margin: 0;
 		line-height: 1.6;
-		color: var(--ink-soft);
+		color: var(--site-soft);
+	}
+	.snippet,
+	.sample {
+		margin: 0;
+		padding: 16px 18px;
+		overflow-x: auto;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-paw);
+		background: color-mix(in oklch, var(--site-ink) 4%, var(--site-ground));
+		font-size: 12.5px;
+		line-height: 1.6;
+		color: var(--site-ink);
+	}
+	.facts {
+		margin: 4px 0 0;
+		padding: 0 0 0 18px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		line-height: 1.5;
+		color: var(--site-soft);
+	}
+	.demo {
+		padding: 16px;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-paw);
+		background: var(--card);
+	}
+
+	/* Install + streaming sample. */
+	.code {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+		gap: 40px;
+		align-items: start;
+		padding: 72px 0;
+		border-top: 1px solid var(--site-line);
+	}
+	.code-copy {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+	.code-copy p {
+		margin: 0;
+		line-height: 1.65;
+		color: var(--site-soft);
 	}
 	.install {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 12px;
-		margin-top: 32px;
-		max-width: 420px;
 		padding: 8px 8px 8px 16px;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		background: var(--panel);
+		border: 1px solid var(--site-line);
+		border-radius: 10px;
+		background: color-mix(in oklch, var(--site-ink) 4%, var(--site-ground));
 		font-size: 14px;
 	}
 	.install code {
+		overflow-x: auto;
 		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
-	.prompt {
-		color: var(--accent);
-		margin-right: 4px;
+	.install code span {
+		color: var(--site-soft);
+		margin-right: 6px;
 	}
-	.copy,
-	.replay {
+	.install button {
 		flex: none;
-		font: inherit;
-		font-size: 12px;
-		font-weight: 500;
 		padding: 6px 12px;
-		border-radius: 8px;
-		border: 1px solid var(--line);
+		border: 1px solid var(--site-line);
+		border-radius: 7px;
 		background: transparent;
-		color: var(--foreground);
+		color: var(--site-ink);
+		font: inherit;
+		font-size: 13px;
 		cursor: pointer;
-		transition: border-color 0.15s, background 0.15s;
 	}
-	.copy:hover,
-	.replay:hover:not(:disabled) {
-		border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+	.small {
+		font-size: 13.5px;
 	}
-	.replay:disabled {
-		opacity: 0.45;
-		cursor: default;
+
+	/* Recorded runs. */
+	.examples {
+		padding: 72px 0;
+		border-top: 1px solid var(--site-line);
 	}
-	.actions {
+	.examples-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		justify-content: space-between;
+		gap: 12px 40px;
+	}
+	.examples-head p {
+		margin: 0;
+		max-width: 46ch;
+		line-height: 1.6;
+		color: var(--site-soft);
+	}
+	.runs {
+		list-style: none;
+		margin: 32px 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+		border-top: 1px solid var(--site-line);
+	}
+	.run {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 4px;
+		height: 100%;
+		box-sizing: border-box;
+		padding: 18px 16px 18px 0;
+		border-bottom: 1px solid var(--site-line);
+		color: var(--site-ink);
+		text-decoration: none;
+	}
+	.run:hover .run-title {
+		color: var(--primary-ink);
+	}
+	.run:focus-visible {
+		outline: 2px solid var(--primary);
+		outline-offset: -2px;
+	}
+	.run-cat {
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		color: var(--site-soft);
+	}
+	.run-title {
+		font-weight: 600;
+		transition: color 0.15s;
+	}
+	.run-prompt {
+		font-size: 14px;
+		line-height: 1.5;
+		color: var(--site-soft);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	/* Closer. */
+	.closer {
+		padding: 80px 0 96px;
+		border-top: 1px solid var(--site-line);
+	}
+	.closer p {
+		margin: 14px 0 26px;
+		font-size: 17px;
+		color: var(--site-soft);
+	}
+	.closer-actions {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 12px;
-		margin-top: 20px;
 	}
 	.btn {
 		display: inline-flex;
 		align-items: center;
 		height: 44px;
 		padding: 0 20px;
-		border-radius: 999px;
-		font-weight: 500;
+		border-radius: 10px;
+		font-weight: 600;
 		font-size: 15px;
 		text-decoration: none;
-		transition: transform 0.15s, background 0.15s, border-color 0.15s;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
 	}
-	.btn:active {
-		transform: scale(0.98);
+	.btn.crimson {
+		background: var(--paw-crimson);
+		color: oklch(1 0 0);
 	}
-	.btn.primary {
-		background: var(--accent);
-		color: var(--accent-ink);
-	}
-	.btn.primary:hover {
-		background: color-mix(in srgb, var(--accent) 88%, var(--foreground));
+	.btn.crimson:hover {
+		background: var(--paw-crimson-hover);
 	}
 	.btn.ghost {
-		color: var(--foreground);
-		border: 1px solid var(--line);
+		border: 1px solid var(--site-line);
+		color: var(--site-ink);
 	}
 	.btn.ghost:hover {
-		border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+		border-color: color-mix(in oklch, var(--site-ink) 35%, transparent);
+	}
+	.btn:focus-visible,
+	.install button:focus-visible,
+	.byok a:focus-visible {
+		outline: 2px solid var(--primary);
+		outline-offset: 2px;
 	}
 
-	/* Demo */
-	.demo {
-		margin: 0;
-		border: 1px solid var(--line);
-		border-radius: 16px;
-		background: var(--panel);
-		box-shadow: 0 30px 60px -36px color-mix(in srgb, var(--foreground) 28%, transparent);
-		overflow: hidden;
-	}
-	.demo-bar {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 10px 12px 10px 16px;
-		border-bottom: 1px solid var(--line);
-	}
-	.demo-label {
-		font-family: var(--mono);
-		font-size: 11px;
-		letter-spacing: 0.04em;
-		color: var(--ink-soft);
-	}
-	.demo-status {
-		margin-left: auto;
-		font-family: var(--mono);
-		font-size: 11px;
-		color: var(--accent);
-		font-variant-numeric: tabular-nums;
-	}
-	.demo-panes {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		height: 400px;
-	}
-	.spec {
-		margin: 0;
-		padding: 16px;
-		font-size: 11.5px;
-		line-height: 1.55;
-		color: var(--ink-soft);
-		background: color-mix(in srgb, var(--ground) 70%, var(--panel));
-		border-right: 1px solid var(--line);
-		overflow: auto;
-		white-space: pre;
-	}
-	.render {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding: 16px;
-		min-width: 0;
-		overflow: auto;
-	}
-
-	/* Code section */
-	.code-section {
-		display: grid;
-		grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
-		gap: 56px;
-		align-items: start;
-		padding: 96px 0;
-		border-top: 1px solid var(--line);
-	}
-	h2 {
-		font-size: clamp(1.75rem, 3vw, 2.4rem);
-		line-height: 1.1;
-	}
-	.code-copy p {
-		margin: 16px 0 0;
-		max-width: 50ch;
-		line-height: 1.6;
-		color: var(--ink-soft);
-	}
-	.code-copy code,
-	.facts code {
-		font-size: 0.88em;
-		color: var(--foreground);
-	}
-	.facts {
-		margin: 32px 0 0;
-	}
-	.facts > div {
-		padding: 14px 0;
-		border-top: 1px solid var(--line);
-	}
-	.facts dt {
-		font-size: 13px;
-		font-weight: 600;
-	}
-	.facts dd {
-		margin: 4px 0 0;
-		line-height: 1.55;
-		color: var(--ink-soft);
-	}
-	.code {
-		margin: 0;
-		padding: 24px;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		background: var(--panel);
-		font-size: 13px;
-		line-height: 1.65;
-		overflow-x: auto;
-	}
-
-	.code-block {
-		min-width: 0;
-	}
-	.code-note {
-		margin: 12px 0 0;
-		font-size: 13px;
-		color: var(--ink-soft);
-	}
-	.code-note a {
-		color: var(--accent);
-	}
-
-	/* Explore */
-	.explore {
-		padding: 96px 0;
-		border-top: 1px solid var(--line);
-	}
-	.rows {
-		list-style: none;
-		margin: 32px 0 0;
-		padding: 0;
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0 48px;
-	}
-	.row {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		padding: 20px 0;
-		border-top: 1px solid var(--line);
-		color: inherit;
-		text-decoration: none;
-	}
-	.row-title {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		font-size: 1.15rem;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		transition: color 0.15s;
-	}
-	.row-title::after {
-		content: '→';
-		margin-left: auto;
-		color: var(--ink-soft);
-		transition: transform 0.2s;
-	}
-	.row:hover .row-title {
-		color: var(--accent);
-	}
-	.row:hover .row-title::after {
-		transform: translateX(4px);
-	}
-	.row-desc {
-		color: var(--ink-soft);
-		line-height: 1.5;
-	}
-
-	/* Closer + footer */
-	.closer {
-		padding: 96px 0;
-		border-top: 1px solid var(--line);
-		text-align: center;
-	}
-	.closer p {
-		margin: 12px auto 28px;
-		color: var(--ink-soft);
-	}
-	.foot {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 8px;
-		padding: 24px 0 32px;
-		border-top: 1px solid var(--line);
-		font-size: 13px;
-		color: var(--ink-soft);
-	}
-	.foot a {
-		color: inherit;
-	}
-
-	/* Arrival: the hero rises in once, CSS only, so prerendered HTML is final. */
-	@media (prefers-reduced-motion: no-preference) {
-		.hero-copy,
-		.demo {
-			animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-		}
-		.demo {
-			animation-delay: 0.12s;
-		}
-	}
-	@keyframes rise {
-		from {
-			opacity: 0;
-			transform: translateY(12px);
-		}
-	}
-
-	@media (max-width: 900px) {
-		.hero,
-		.code-section {
-			grid-template-columns: minmax(0, 1fr);
-			gap: 40px;
-		}
-		.hero {
-			padding: 56px 0 72px;
-		}
-		.code-section,
-		.explore,
-		.closer {
-			padding: 64px 0;
-		}
-		.rows {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-	@media (max-width: 600px) {
-		.landing {
-			padding: 0 16px;
-		}
-		.demo-panes {
-			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: 150px minmax(0, 1fr);
-			height: 470px;
-		}
-		.spec {
-			border-right: 0;
-			border-bottom: 1px solid var(--line);
-		}
+	@media (max-width: 860px) {
 		.code {
-			padding: 16px;
-			font-size: 12px;
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	@media (max-width: 420px) {
+		.chat-frame {
+			padding: 8px;
+			border-radius: 14px;
 		}
 	}
 </style>
