@@ -12,7 +12,7 @@ export const reasoningTraceEntry: WidgetManifestEntry = {
     "Agent reasoning trace. Collapsed shows \"Reasoned for N steps\"; expanded shows an ordered list of {title, detail?, status} steps. Active step shimmers. Collapsed by default.",
   props: {
     steps: { type: 'array', required: false, description: 'Ordered steps: array of { title, detail?, status: "thinking"|"done"|"error" }.' },
-    streaming: { type: 'boolean', required: false, description: 'Agent is still reasoning — collapsed, the summary names the last thinking step, else "Reasoning…".' },
+    streaming: { type: 'boolean', required: false, description: 'Agent is still reasoning. Collapsed, the summary names the last thinking step, else "Reasoning…".' },
     collapsed: { type: 'boolean', required: false, description: 'Initial collapsed state. Default true.' },
   },
   example: {

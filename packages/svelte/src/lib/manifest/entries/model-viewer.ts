@@ -7,7 +7,7 @@ export const modelViewerEntry: WidgetManifestEntry = {
   type: 'model-viewer',
   category: 'media',
   description:
-    'Declarative 3D model viewer for GLB/GLTF assets — orbit controls, AR, and environment lighting, all driven by props. The viewer module is lazy-loaded on first use.',
+    'Declarative 3D model viewer for GLB/GLTF assets: orbit controls, AR, and environment lighting, all driven by props. The viewer module is lazy-loaded on first use.',
   props: {
     src: {
       type: 'string',
@@ -52,7 +52,7 @@ export const modelViewerEntry: WidgetManifestEntry = {
     shadowIntensity: {
       type: 'number',
       required: false,
-      description: 'Strength of the contact shadow under the model (0–1).',
+      description: 'Strength of the contact shadow under the model (0 to 1).',
     },
   },
   example: {

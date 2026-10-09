@@ -7,7 +7,7 @@ export const sourceCardEntry: WidgetManifestEntry = {
   props: {
     source: { type: 'string', required: true, description: 'Publisher name.' },
     title: { type: 'string', required: true, description: 'Headline text.' },
-    color: { type: 'string', required: false, description: 'Accent color (CSS) — used if favicon fails.' },
+    color: { type: 'string', required: false, description: 'Accent color (CSS), used if the favicon fails.' },
     favicon: { type: 'string', required: false, description: 'Favicon URL override.' },
     url: { type: 'string', required: false, description: 'Link URL.' },
   },

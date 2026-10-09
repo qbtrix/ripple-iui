@@ -7,12 +7,16 @@ export const ifEntry: WidgetManifestEntry = {
   props: {},
   nodeFields: {
     condition: { type: 'string', required: true, description: 'Expression evaluated for truthiness, e.g. "{state.isAdmin}".' },
+    else_children: { type: 'UINode[]', required: false, description: 'Rendered instead of `children` when `condition` is falsy.' },
   },
   example: {
     type: 'if',
     condition: '{state.isAdmin}',
     children: [
       { type: 'text', props: { text: 'Admin section' } },
+    ],
+    else_children: [
+      { type: 'text', props: { text: 'Ask an admin for access.' } },
     ],
   },
 };
