@@ -11,8 +11,26 @@ Clickable button with variants. The primary action trigger.
 - `variant`: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" (default: "default")
 - `size`: "default" | "sm" | "lg" | "icon" (default: "default")
 - `disabled`: boolean
+- `icon`: choice icon key, flow choice cards only (see below)
+- `description`: string, flow choice cards only: a one-line hint under the label
 
 **Events:** `on_click`
+
+**Choice cards (flow steps).** In a flow `select` step, buttons whose `on_click`
+emits `flow.next` or `flow.submit` with `value.selection` render as choice cards:
+a tile per option with an icon, the label and the `description`, in a 1 to 3
+column grid. Give every option an `icon` from this list (other names are ignored
+and the icon is guessed from the label): work, school, creative, gaming, everyday, travel, light, home, budget, mid, premium, power, food, veg, meat, fish, sweet, coffee, drinks, culture, outdoors, relax, shopping, morning, afternoon, evening, night, solo, couple, family, group, days, quick. Keep labels short (18 characters or
+less) and hints to one line. A click, Enter or Space advances the flow once;
+arrow keys only move the selection.
+
+```json
+{
+  "type": "button",
+  "props": { "label": "Under $800", "icon": "budget", "description": "Good value, fewer extras" },
+  "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "low", "label": "Under $800" } } }
+}
+```
 
 **Example — simple action:**
 ```json

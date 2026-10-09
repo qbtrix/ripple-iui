@@ -122,8 +122,8 @@ describe('editableTextProps (real widget catalog)', () => {
     expect(editableTextProps('heading')).toEqual(['text']);
   });
 
-  it('button exposes only label (variant/type are enums, not text candidates)', () => {
-    expect(editableTextProps('button')).toEqual(['label']);
+  it('button exposes label and its choice-card description (variant/type are enums)', () => {
+    expect(editableTextProps('button')).toEqual(['label', 'description']);
   });
 });
 

@@ -249,8 +249,34 @@ Interactive button.
 | `variant` | `'default' \| 'destructive' \| 'outline' \| 'secondary' \| 'ghost' \| 'link'` | `'default'` | Button style |
 | `size` | `'default' \| 'sm' \| 'lg' \| 'icon'` | `'default'` | Button size |
 | `disabled` | `boolean` | `false` | Disabled state |
+| `icon` | choice icon key | none | Flow choice cards only: the tile icon (keys below) |
+| `description` | `string` | none | Flow choice cards only: a one-line hint under the label |
 
 **Events:** `onclick`
+
+**Choice cards in a flow step.** When a flow `select` step's buttons each emit
+`flow.next` or `flow.submit` with `value.selection`, SelectLayout renders them as
+choice cards (OptionList `layout: 'cards'`): a tile per option with an icon, the
+label and the `description` hint, selected in the accent with a check. Each tile
+wraps a real radio input (checkbox when the step has `selection: 'multiple'`).
+Click, Enter or Space picks and advances the flow once; the arrow keys move the
+selection without advancing. The grid is container-query sized: one column,
+two from 480px, three when there are 3 or 6 short options. `icon` must be one of
+these keys, anything else is ignored: work, school, creative, gaming, everyday, travel, light, home, budget, mid, premium, power, food, veg, meat, fish, sweet, coffee, drinks, culture, outdoors, relax, shopping, morning, afternoon, evening, night, solo, couple, family, group, days, quick. Without a valid key the icon is
+guessed from the label, then the hint; no match means no icon. Set
+`display: { layout: 'list' }` on the step to keep the one-column rows.
+
+```json
+{
+  "flowId": "main_use", "intent": "select", "title": "What will you use it for most?",
+  "ui": { "type": "flex", "props": { "direction": "column" }, "children": [
+    { "type": "button", "props": { "label": "Work and study", "icon": "work", "description": "Docs, email, video calls" },
+      "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "work", "label": "Work and study" } } } },
+    { "type": "button", "props": { "label": "Gaming", "icon": "gaming", "description": "Recent games at good frame rates" },
+      "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "gaming", "label": "Gaming" } } } }
+  ] }
+}
+```
 
 ### `input`
 

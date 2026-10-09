@@ -7,7 +7,9 @@
   RAW-UI OPTION SET (issue-c fix): A flow `select` step whose raw `ui` tree
   contains buttons that each emit a flow.next/flow.submit with a `selection` payload
   is an "option set". extractFlowOptions() finds those buttons and promotes them into
-  OptionList cards. Selecting a card re-dispatches the button's EXACT original
+  OptionList choice cards (layout 'cards': icon from the button's CHOICE_ICONS `icon`
+  key or guessed from its label, `description` as the hint). `display.layout: 'list'`
+  on the step keeps the older one-column rows. Selecting a card re-dispatches the button's EXACT original
   on_click handler through the live EventDispatcher (same effect as pressing the pill
   button) — so the FlowRunner advance / chain_map branch works byte-for-byte
   identically. Non-option nodes in the tree (headings, labels) still render via
@@ -83,8 +85,11 @@
 	);
 
 	function handleOptionSelect(id: string) {
-		// Update local reflection.
-		selectedOptionId = id;
+		// Update local reflection (a toggle in multiple mode).
+		if (selectionMode === 'multiple') {
+			const arr = Array.isArray(selectedOptionId) ? selectedOptionId : [];
+			selectedOptionId = arr.includes(id) ? arr.filter((v) => v !== id) : [...arr, id];
+		} else selectedOptionId = id;
 
 		// Find the matching flow option and re-dispatch its on_click handler through
 		// the live EventDispatcher — same as if the user had clicked the pill button.
@@ -112,6 +117,8 @@
 		<OptionList
 			options={rawOptions.map((o) => ({ id: o.id, text: o.label, description: o.description, icon: o.icon }))}
 			selection={selectionMode}
+			layout={input.spec.display?.layout === 'list' ? 'list' : 'cards'}
+			label={input.spec.title}
 			selected={selectedOptionId}
 			onSelect={handleOptionSelect}
 		/>

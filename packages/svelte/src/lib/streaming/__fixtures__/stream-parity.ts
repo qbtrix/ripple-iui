@@ -17,7 +17,8 @@ import Ripple from '$lib/Ripple.svelte';
 import { mountStreamed } from './mount-streamed.js';
 
 // Generated ids differ per mount; data-ripple-streaming marks only the streamed root.
-const IGNORED = /\s(id|for|aria-controls|aria-labelledby|aria-describedby|aria-owns|data-ripple-streaming)="[^"]*"/g;
+// A radio group's name is a $props.id() too (c1, s2, ...), never a bind path.
+const IGNORED = /\s(id|for|aria-controls|aria-labelledby|aria-describedby|aria-owns|data-ripple-streaming)="[^"]*"|\sname="[cs]\d+"/g;
 
 export function domShape(root: Element): string {
 	return root.innerHTML.replace(/<!--[\s\S]*?-->/g, '').replace(IGNORED, '').replace(/\bill-c\d+-/g, 'ill-');
