@@ -11,8 +11,8 @@ type KeyLike = Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 's
 };
 
 const typing = (t: EventTarget | null) => {
-	const el = t as HTMLElement | null;
-	return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable === true);
+	const el = t as { tagName?: string; isContentEditable?: boolean } | null;
+	return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || !!el.isContentEditable);
 };
 
 export function shortcut(e: KeyLike): Shortcut | null {

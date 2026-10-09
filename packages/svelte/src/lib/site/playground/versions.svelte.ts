@@ -69,20 +69,20 @@ export class ReplayVersion implements Version {
 
 	constructor(of: Version, source: AsyncIterable<string>, signal: AbortSignal) {
 		this.title = of.title;
-		const self = this;
-		async function* tap() {
-			try {
-				for await (const piece of source) {
-					self.text += piece;
-					yield piece;
-				}
-			} finally {
-				if (!signal.aborted) {
-					self.spec = of.spec;
-					self.status = 'final';
-				}
+		this.store = streamSpec(this.#tap(of, source, signal), { signal, throttleMs: 40 });
+	}
+
+	async *#tap(of: Version, source: AsyncIterable<string>, signal: AbortSignal) {
+		try {
+			for await (const piece of source) {
+				this.text += piece;
+				yield piece;
+			}
+		} finally {
+			if (!signal.aborted) {
+				this.spec = of.spec;
+				this.status = 'final';
 			}
 		}
-		this.store = streamSpec(tap(), { signal, throttleMs: 40 });
 	}
 }
