@@ -5270,7 +5270,7 @@
                     title: 'Showcase',
                     subtitle: 'Every panel below is a Ripple spec rendered inside this page — which is also a spec.'
                   },
-                  class: 'flex-1 min-w-0'
+                  class: 'flex-1 min-w-64'
                 },
                 {
                   type: 'input',
@@ -5433,6 +5433,12 @@
     margin: 0 auto;
   }
   @media (max-width: 720px) {
+    /* Stack: sidebar above the panels. The flex widget writes
+       flex-direction:row inline, so only !important beats it; left as a row,
+       the full-width sidebar squeezes .showcase-main to ~0px. */
+    :global(.showcase-shell) {
+      flex-direction: column !important;
+    }
     :global(.showcase-aside) {
       position: static;
       height: auto;

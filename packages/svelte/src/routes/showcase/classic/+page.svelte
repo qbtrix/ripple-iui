@@ -1472,6 +1472,7 @@
             // ── Dashboard grid
             {
               type: 'grid',
+              class: 'classic-dash',
               props: { columns: 2, gap: '12px' },
               children: [
                 {
@@ -1579,5 +1580,23 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
+  }
+  /* Phones: one column. The grid widget writes its columns inline, so only
+     !important beats it; at two columns each pocket card is wider than its
+     track and pushes the page sideways. */
+  @media (max-width: 720px) {
+    .page {
+      padding-inline: 1rem;
+    }
+    :global(.classic-dash) {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    :global(.classic-dash > .col-span-2) {
+      grid-column: auto;
+    }
+    /* The pockets' own 3-5 column stat grids wrap instead of overflowing. */
+    :global(.classic-dash .rgrid) {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)) !important;
+    }
   }
 </style>

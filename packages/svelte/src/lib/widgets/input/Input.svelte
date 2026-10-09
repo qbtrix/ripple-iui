@@ -1,14 +1,11 @@
-<!-- Input.svelte
-  2026-09-17 (fix/port-gaps): status-coloured text moved onto the readable
-  text tokens (text-ripple-{error,success,warning,info}-text; red text that
-  read text-destructive now reads text-ripple-error-text, the same hue since
-  --ripple-error aliases --destructive). The raw tones are fill colours and
-  measured 1.7-3.3:1 as text in light mode. Fills and tints are unchanged. -->
+<!-- Input.svelte — text-like input widget (label, prefix/suffix, status text).
+  Status-coloured text uses the readable text tokens (text-ripple-*-text); the
+  raw tones are fill colours and fail contrast as text. The root is min-w-0 so
+  an input in a flex row shrinks instead of pushing its siblings out of the
+  row on a phone. With an `id`, it opts into the WidgetRegistry so the `invoke`
+  flow action can call `focus`. oninput/onchange emit `string | number`,
+  matching `value` (a type="number" input yields a number). -->
 <script lang="ts">
-  // Updated: 2026-04-21 — opts into the WidgetRegistry when `id` is set so
-  // the `invoke` flow action can call `focus` remotely.
-  // Updated: 2026-07-08 — oninput/onchange now emit `string | number` to match the
-  // `value` prop and readValue() (a type='number' input yields a number).
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
   import { tv } from 'tailwind-variants';
@@ -130,7 +127,7 @@
 </script>
 
 <div
-  class={cn('flex flex-col gap-1.5', className)}
+  class={cn('flex flex-col gap-1.5 min-w-0', className)}
   style={styleString}
   data-size={size}
   data-state={state}
