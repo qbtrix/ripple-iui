@@ -77,7 +77,9 @@ function preCheck(markup: string): string | null {
 	if (/<!DOCTYPE/i.test(markup)) return 'DOCTYPE';
 	if (/<!ENTITY/i.test(markup)) return 'ENTITY';
 	if (/<\?xml-stylesheet/i.test(markup)) return 'xml-stylesheet';
-	for (const m of markup.matchAll(/<!\[CDATA\[([\s\S]*?)(?:\]\]>|$)/g)) if (m[1].includes('<')) return 'CDATA with markup';
+	if (markup.includes('<![CDATA[')) return 'CDATA section';
+	// Only a leading XML declaration may use <? ... ?>; the server refuses every other processing instruction.
+	if (/<\?/.test(markup.replace(/^\uFEFF?\s*<\?xml\s[^?]*\?>/, ''))) return 'processing instruction';
 	for (const m of markup.matchAll(/&([^;\s&<]*);/g)) {
 		const name = m[1];
 		if (!ENTITIES.has(name) && !/^#\d+$/.test(name) && !/^#x[0-9a-f]+$/i.test(name)) return `entity &${name};`;
@@ -228,6 +230,12 @@ function hostileAttr(el: Element, a: Attr, ids: Set<string>): string | null {
 	if (a.namespaceURI === XMLNS_NS || a.name === 'xmlns') return null;
 	if (local.startsWith('on')) return `handler ${a.name}`;
 	if (local === 'style') return 'style attribute';
+	if (local === 'attributetype') return 'attributeType';
+	if (a.value.includes('\\')) return `backslash in ${a.name}`;
+	if (local === 'id' && !/^[A-Za-z0-9_-]+$/.test(a.value)) return `id "${a.value}"`;
+	if (local === 'begin' || local === 'end') {
+		for (const m of a.value.matchAll(SYNC_REF)) if (!ids.has(m[2])) return `${a.name} names missing #${m[2]}`;
+	}
 	if (local === 'href') {
 		if (!HREF_ELEMENTS.has(el.localName) || !refTo(HASH_REF, a.value, ids)) return `${a.name}="${a.value}" on <${el.localName}>`;
 	}
