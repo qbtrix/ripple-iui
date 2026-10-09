@@ -1,6 +1,6 @@
 <!--
   @file routes/docs/[...slug]/+page.svelte
-  @description One docs page: title, Copy page / Copy for your model, the body
+  @description One docs page: title, the Copy page split button, the body
     as HTML segments (marked output from our own src/docs markdown, rendered
     with {@html}) interleaved with live SpecExample blocks, then prev/next.
     Code-block Copy buttons come in the HTML and are wired here by delegation.
@@ -8,17 +8,9 @@
 -->
 <script lang="ts">
 	import SpecExample from '$lib/site/SpecExample.svelte';
-	import { forYourModel } from '$lib/site/docs/model.js';
+	import CopyPage from '$lib/site/docs/CopyPage.svelte';
 
 	let { data } = $props();
-
-	let copiedWhat = $state('');
-
-	async function copyText(text: string, what: string) {
-		await navigator.clipboard.writeText(text);
-		copiedWhat = what;
-		setTimeout(() => (copiedWhat = ''), 1500);
-	}
 
 	function onBodyClick(e: MouseEvent) {
 		const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-copy]');
@@ -40,14 +32,8 @@
 	<header class="head">
 		<h1>{data.meta.title}</h1>
 		<p class="lede">{data.meta.description}</p>
-		<div class="actions" data-pagefind-ignore>
-			<button type="button" onclick={() => copyText(data.markdown, 'page')}>
-				{copiedWhat === 'page' ? 'Copied' : 'Copy page'}
-			</button>
-			<button type="button" onclick={() => copyText(forYourModel(data.markdown), 'model')}>
-				{copiedWhat === 'model' ? 'Copied' : 'Copy for your model'}
-			</button>
-			<a href="/docs/{data.slug}.md">View as Markdown</a>
+		<div class="actions">
+			<CopyPage markdown={data.markdown} href="/docs/{data.slug}.md" />
 		</div>
 	</header>
 
@@ -73,7 +59,6 @@
 		</nav>
 	{/if}
 </article>
-<span class="sr-only" aria-live="polite">{copiedWhat ? 'Copied to clipboard' : ''}</span>
 
 <style>
 	.doc {
@@ -106,26 +91,6 @@
 		padding-bottom: 24px;
 		border-bottom: 1px solid var(--site-line);
 	}
-	.actions button,
-	.actions a {
-		padding: 6px 11px;
-		border: 1px solid var(--site-line);
-		border-radius: var(--radius-control);
-		background: transparent;
-		color: var(--site-soft);
-		font: 500 13px/1.2 var(--font-sans);
-		text-decoration: none;
-		cursor: pointer;
-		transition:
-			color 0.15s,
-			background 0.15s;
-	}
-	.actions button:hover,
-	.actions a:hover {
-		color: var(--site-ink);
-		background: var(--site-hover);
-	}
-	.actions :focus-visible,
 	.pager a:focus-visible,
 	.prose :global(:is(a, button):focus-visible) {
 		outline: 2px solid var(--ring);
@@ -280,13 +245,5 @@
 	.next {
 		margin-left: auto;
 		text-align: right;
-	}
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-		white-space: nowrap;
 	}
 </style>

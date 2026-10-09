@@ -11,6 +11,7 @@ import { cleanup, render } from '@testing-library/svelte';
 import SpecExample from '../SpecExample.svelte';
 import { manifestEntries, type WidgetManifestEntry } from '../../manifest/index.js';
 import {
+	anatomy,
 	EMPTY_EXAMPLES,
 	exampleSpec,
 	interactiveSpecs,
@@ -136,5 +137,28 @@ describe('widget reference builders', () => {
 		expect(sourceUrl('slider', files)).toMatch(/\/widgets\/input\/Slider\.svelte$/);
 		expect(sourceUrl('dup', files)).toMatch(/\/widgets$/);
 		expect(sourceUrl('todo-list', ['/src/lib/widgets/interactive/TodoList.svelte'])).toMatch(/TodoList\.svelte$/);
+	});
+
+	it('builds anatomy from node fields, structured props and the example children', () => {
+		const e = fixture('shell', 'composite', {
+			props: {
+				title: { type: 'string', required: false, description: 'Title.' },
+				sections: { type: 'Array<{ id: string; title?: string }>', required: false, description: 'Nav.' },
+				slot: { type: 'UISpec', required: false, description: 'A nested spec.' }
+			},
+			nodeFields: { items: { type: 'string', required: true, description: 'Items path.' } },
+			example: { type: 'shell', children: [{ type: 'section' }, { type: 'section' }, { type: 'input' }, 'stray'] }
+		});
+		expect(anatomy(e)).toEqual([
+			{ name: 'items', kind: 'node field', parts: [], many: false, description: 'Items path.' },
+			{ name: 'sections', kind: 'prop', parts: ['id', 'title?'], many: true, description: 'Nav.' },
+			{ name: 'slot', kind: 'prop', parts: [], many: false, description: 'A nested spec.' },
+			{ name: 'children', kind: 'children', parts: ['section', 'input'], many: true, description: 'Child nodes. The example nests these types.' }
+		]);
+		expect(anatomy(fixture('plain', 'composite', { example: { type: 'plain', children: 'not an array' } }))).toEqual([]);
+	});
+
+	it('gives every real composite widget an anatomy', () => {
+		for (const e of manifestEntries.filter((w) => w.category === 'composite')) expect(anatomy(e).length, e.type).toBeGreaterThan(0);
 	});
 });
