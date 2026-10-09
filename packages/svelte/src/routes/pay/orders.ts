@@ -10,7 +10,9 @@
 // rule (status, coordinates, route) parses to null and the caller treats it like
 // a failed poll; soft fields (a label, an event, the ETA) fall back instead.
 // The model never builds this spec: trackSpec() is fixed, and trackState()
-// fills its state, so a poll updates the card without remounting it.
+// fills its state, so a poll updates the card without remounting it. Times read
+// relative ("just now", "4 min ago") under an hour, else the clock time, as of
+// the poll that built the state.
 
 import { ORDER_ID } from '../live/checkout.js';
 
@@ -153,10 +155,15 @@ const TITLES: Record<TrackStatus, string> = {
 	'picked-up': 'Picked up'
 };
 
-const clock = (at: string) => {
+/** "just now" and "N min ago" under an hour (a future time, clock skew, reads as just now), else the clock time. */
+export function when(at: string, now = Date.now()): string {
 	const d = new Date(at);
-	return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-};
+	if (Number.isNaN(d.getTime())) return '';
+	const min = Math.floor((now - d.getTime()) / 60_000);
+	if (min < 1) return 'just now';
+	if (min < 60) return `${min} min ago`;
+	return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
 
 /** The fixed tracking spec: every prop reads the host-filled state below. */
 export function trackSpec() {
@@ -173,9 +180,9 @@ export function trackSpec() {
 }
 
 /** The tracking state order-status reads, from a validated Tracking. */
-export function trackState(orderId: string, t: Tracking, fulfilment: Order['fulfilment']) {
+export function trackState(orderId: string, t: Tracking, fulfilment: Order['fulfilment'], now = Date.now()) {
 	const steps = STEPS[fulfilment];
-	const reached = new Map(t.events.map((e) => [e.status, clock(e.at)]));
+	const reached = new Map(t.events.map((e) => [e.status, when(e.at, now)]));
 	const done = TRACK_DONE.includes(t.status);
 	return {
 		orderId: orderId.slice(-8).toUpperCase(),
@@ -187,6 +194,6 @@ export function trackState(orderId: string, t: Tracking, fulfilment: Order['fulf
 		destination: t.destination && { name: t.destination.label, lat: t.destination.lat, lng: t.destination.lng },
 		tracker: t.courier && { lat: t.courier.lat, lng: t.courier.lng, label: 'Courier' },
 		route: t.route,
-		events: [...t.events].reverse().map((e) => ({ time: clock(e.at), label: e.label }))
+		events: [...t.events].reverse().map((e) => ({ time: when(e.at, now), label: e.label }))
 	};
 }

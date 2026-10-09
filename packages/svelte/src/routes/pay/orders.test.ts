@@ -4,7 +4,7 @@
 // text; trackState maps the tracking onto order-status's real props.
 
 import { describe, expect, test, vi } from 'vitest';
-import { fetchOrder, fetchTracking, LABEL_MAX, parseOrder, parseTracking, trackSpec, trackState } from './orders.js';
+import { fetchOrder, fetchTracking, LABEL_MAX, parseOrder, parseTracking, trackSpec, trackState, when } from './orders.js';
 import { COURIER, DROP_OFF, ORDER_ID, orderBody, RESTAURANT, ROUTE, trackBody } from './fixtures.js';
 
 describe('parseOrder', () => {
@@ -123,5 +123,26 @@ describe('trackSpec / trackState', () => {
 		const pickup = trackState(ORDER_ID, parseTracking(trackBody('ready-for-pickup', { destination: null }))!, 'pickup');
 		expect(pickup.steps.map((x) => x.id)).toEqual(['confirmed', 'preparing', 'ready-for-pickup', 'picked-up']);
 		expect(pickup).toMatchObject({ destination: null, tracker: null });
+	});
+});
+
+describe('when (tracking times)', () => {
+	const at = '2026-10-09T18:01:00.000Z';
+	const t0 = Date.parse(at);
+	test('relative under an hour, the clock after, skew reads as just now', () => {
+		expect(when(at, t0 + 20_000)).toBe('just now');
+		expect(when(at, t0 - 5_000)).toBe('just now');
+		expect(when(at, t0 + 60_000)).toBe('1 min ago');
+		expect(when(at, t0 + 59 * 60_000)).toBe('59 min ago');
+		expect(when(at, t0 + 61 * 60_000)).toBe(new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
+		expect(when('not a date', t0)).toBe('');
+	});
+
+	test('trackState shows events seconds apart as relative times, not a repeated clock', () => {
+		const s = trackState(ORDER_ID, parseTracking(trackBody('preparing'))!, 'delivery', Date.parse('2026-10-09T18:03:30.000Z'));
+		expect(s.events.map((e) => e.time)).toEqual(['2 min ago', '2 min ago']);
+		const fresh = trackState(ORDER_ID, parseTracking(trackBody('preparing'))!, 'delivery', Date.parse('2026-10-09T18:01:30.000Z'));
+		expect(fresh.events.map((e) => e.time)).toEqual(['just now', 'just now']);
+		expect(fresh.steps.find((x) => x.id === 'confirmed')?.completedAt).toBe('just now');
 	});
 });
