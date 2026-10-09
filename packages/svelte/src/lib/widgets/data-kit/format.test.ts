@@ -93,9 +93,9 @@ describe('dates', () => {
 	});
 });
 
-describe('pairSpans', () => {
-	const half = (s: string) => s.startsWith('h');
+const half = (s: string) => s.startsWith('h');
 
+describe('pairSpans', () => {
 	it('pairs two consecutive half-eligible sections and spans the rest', () => {
 		expect(pairSpans(['h1', 'h2'], half)).toEqual(['half', 'half']);
 		expect(pairSpans(['h1', 'table', 'h2'], half)).toEqual(['full', 'full', 'full']);

@@ -22,9 +22,11 @@ import type { Status } from './types.js';
 
 export const STATUSES: readonly Status[] = ['good', 'warn', 'bad', 'info', 'neutral'];
 
+const isStatus = (v: unknown): v is Status => (STATUSES as readonly unknown[]).includes(v);
+
 /** Model data in, a known status out; anything unrecognised is neutral. */
 export function toStatus(v: unknown): Status {
-	return STATUSES.includes(v as Status) ? (v as Status) : 'neutral';
+	return isStatus(v) ? v : 'neutral';
 }
 
 /** Risk levels onto status. `critical` is `bad`; the widget adds the filled tile. */

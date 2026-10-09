@@ -49,10 +49,10 @@ describe('StatusPill', () => {
 	});
 });
 
-describe('PhotoTile', () => {
-	const img = (c: HTMLElement) => c.querySelector('img');
-	const tile = (c: HTMLElement) => c.querySelector('[data-state]')!;
+const img = (c: HTMLElement) => c.querySelector('img');
+const tile = (c: HTMLElement) => c.querySelector('[data-state]')!;
 
+describe('PhotoTile', () => {
 	it.each([
 		['missing', undefined],
 		['empty', ''],
