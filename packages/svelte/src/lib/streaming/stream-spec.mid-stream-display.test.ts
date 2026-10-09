@@ -108,8 +108,9 @@ describe('a string prop that ends inside an expression', () => {
 		it(`${c.widget}.${c.prop} never shows the source of ${JSON.stringify(c.open)}`, async () => {
 			const { store, push, container } = mount();
 			const props = c.widget === 'metric' ? `{"label":"Total","${c.prop}":"` : `{"${c.prop}":"`;
+			// Settles once the prop exists; the parser may hold back the open expression.
 			await feed(store, push, `${HEAD}{"type":"text","props":{"text":"before"}},{"type":"${c.widget}","props":${props}${c.open}`, () =>
-				expect((childrenOf(store)[1]?.props as Record<string, unknown> | undefined)?.[c.prop]).toBe(c.open)
+				expect((childrenOf(store)[1]?.props as Record<string, unknown> | undefined)?.[c.prop]).toBeTypeOf('string')
 			);
 			await vi.waitFor(() => expect(container.textContent).toContain('before'));
 
