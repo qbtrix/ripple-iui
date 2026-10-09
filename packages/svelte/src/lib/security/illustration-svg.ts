@@ -29,8 +29,13 @@
 //   rebuilt tree for the rebuild, which drops any href / url() / begin / end
 //   naming a missing id). Ids are `[A-Za-z_][A-Za-z0-9_-]*`; others are dropped.
 // - One `href` per element: two forms (`href` + `xlink:href`) are refused.
+// - checkIllustrationAnnotations: the policy check for the `annotations` prop.
+//   Refuses more than NOTE_CAPS.max entries, overlong or missing text, both or
+//   neither of target/at, a non-finite `at`, and a target id the rebuild does
+//   not keep. The widget drops what this refuses.
 import {
 	ILLUSTRATION_ANIMATABLE as ANIMATABLE,
+	ILLUSTRATION_ANNOTATION_CAPS as NOTE_CAPS,
 	ILLUSTRATION_ANIMATION_ATTRIBUTES as ANIM_ATTRS,
 	ILLUSTRATION_ANIMATION_ELEMENTS as ANIM_ELEMENTS,
 	ILLUSTRATION_ATTRIBUTES as ATTRS,
@@ -361,4 +366,54 @@ export function sanitizeIllustrationSvg(markup: string, doc: Document, idPrefix:
 /** True when the rebuilt art carries an animation element. */
 export function hasAnimation(svg: Element): boolean {
 	return [...ANIM_ELEMENTS].some((t) => svg.getElementsByTagNameNS(SVG_NS, t).length > 0);
+}
+
+const refuse = (reason: string): IllustrationCheck => ({ ok: false, reason });
+
+/** Ids the widget's rebuild keeps (unprefixed), or null when the svg does not rebuild. */
+function rebuiltIds(markup: unknown): Set<string> | null {
+	if (typeof markup !== 'string') return null;
+	const doc = new DOMParser().parseFromString(`<svg xmlns="${SVG_NS}"/>`, 'image/svg+xml');
+	const out = sanitizeIllustrationSvg(markup, doc, '');
+	return out && new Set([out, ...out.querySelectorAll('[id]')].map((el) => el.getAttribute('id') ?? ''));
+}
+
+/**
+ * The policy check for the `annotations` prop: at most NOTE_CAPS.max entries
+ * of `{ id, label, note, target? | at? }` with plain-text label and note under
+ * their caps, exactly one of `target` (an id the rebuilt svg keeps) or `at`
+ * (two finite viewBox numbers). Absent annotations pass.
+ */
+export function checkIllustrationAnnotations(props: { svg?: unknown; annotations?: unknown }): IllustrationCheck {
+	const list = props?.annotations;
+	if (list === undefined || list === null) return { ok: true };
+	if (!Array.isArray(list)) return refuse('annotations is not a list');
+	if (list.length > NOTE_CAPS.max) return refuse(`more than ${NOTE_CAPS.max} annotations`);
+	let ids: Set<string> | null | undefined;
+	const seen = new Set<string>();
+	for (const [i, a] of list.entries()) {
+		const at = `annotation ${i + 1}`;
+		if (!a || typeof a !== 'object' || Array.isArray(a)) return refuse(`${at} is not an object`);
+		const { id, label, note, target, at: point } = a as Record<string, unknown>;
+		if (typeof id !== 'string' || !id.trim()) return refuse(`${at}: no id`);
+		if (seen.has(id)) return refuse(`${at}: duplicate id "${id}"`);
+		seen.add(id);
+		if (typeof label !== 'string' || !label.trim()) return refuse(`${at}: no label`);
+		if (label.length > NOTE_CAPS.label) return refuse(`${at}: label over ${NOTE_CAPS.label} chars`);
+		if (typeof note !== 'string') return refuse(`${at}: no note`);
+		if (note.length > NOTE_CAPS.note) return refuse(`${at}: note over ${NOTE_CAPS.note} chars`);
+		if ((target === undefined) === (point === undefined)) return refuse(`${at}: needs exactly one of target or at`);
+		if (point !== undefined) {
+			if (!Array.isArray(point) || point.length !== 2 || !point.every((n) => typeof n === 'number' && Number.isFinite(n)))
+				return refuse(`${at}: at is not two finite numbers`);
+			continue;
+		}
+		if (typeof target !== 'string' || !target) return refuse(`${at}: target is not an id`);
+		if (ids === undefined) {
+			if (typeof DOMParser === 'undefined') return refuse('no DOMParser in this runtime (needs a browser or jsdom)');
+			ids = rebuiltIds(props.svg);
+		}
+		if (!ids?.has(target)) return refuse(`${at}: target "${target}" is not an id in the svg`);
+	}
+	return { ok: true };
 }

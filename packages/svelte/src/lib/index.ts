@@ -74,6 +74,7 @@ export {
 // The `illustration` widget's SVG policy check and rebuild, for host card policies.
 export {
   checkIllustrationSvg,
+  checkIllustrationAnnotations,
   sanitizeIllustrationSvg,
   type IllustrationCheck
 } from './security/illustration-svg.js';

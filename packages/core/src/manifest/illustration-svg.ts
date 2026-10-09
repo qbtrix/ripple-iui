@@ -86,3 +86,7 @@ export const ILLUSTRATION_CAPS = {
 
 /** `max_height` prop bounds, in px. */
 export const ILLUSTRATION_MAX_HEIGHT = { min: 80, max: 640, default: 320 } as const;
+
+/** `annotations` prop caps: entries, and plain-text label / note lengths. The
+ *  widget truncates past them; the policy layers refuse the card. */
+export const ILLUSTRATION_ANNOTATION_CAPS = { max: 8, label: 40, note: 280 } as const;
