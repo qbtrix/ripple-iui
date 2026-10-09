@@ -195,7 +195,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 					<dt>First widget on screen</dt>
 					<dd class="figure">{seconds(data.firstWidget.medianMs)} s</dd>
 					<dd class="method">
-						Median across {data.firstWidget.n} recorded {data.firstWidget.models.map((m) => MODEL_NAMES[m] ?? m).join(' and ')} streams, from the first byte to the first widget the partial spec can draw. The whole spec took a median {seconds(data.firstWidget.medianDoneMs)} s. The wait for the model's first token is not counted.
+						Median across {data.firstWidget.n} recorded {data.firstWidget.models.map((m) => modelName(m)).join(' and ')} streams, from the first byte to the first widget the partial spec can draw. The whole spec took a median {seconds(data.firstWidget.medianDoneMs)} s. The wait for the model's first token is not counted.
 						<a href="/live">Nine recordings of real model streams, scrubbable.</a>
 					</dd>
 				</div>
