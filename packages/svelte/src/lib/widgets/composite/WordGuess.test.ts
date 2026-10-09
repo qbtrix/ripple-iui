@@ -86,12 +86,12 @@ describe('word-guess: registry and bind contract', () => {
 	});
 });
 
-describe('word-guess: through Ripple', () => {
-	const spec = (answer = 'crane') => ({
-		state: { game: null },
-		ui: { type: 'word-guess', bind: '{state.game}', props: { answer, hint: 'A bird' }, on_complete: { action: 'emit', target: 'game-done' } }
-	});
+const spec = (answer = 'crane') => ({
+	state: { game: null },
+	ui: { type: 'word-guess', bind: '{state.game}', props: { answer, hint: 'A bird' }, on_complete: { action: 'emit', target: 'game-done' } }
+});
 
+describe('word-guess: through Ripple', () => {
 	it('writes value to state and sends on_complete once with { won, guesses }', async () => {
 		const onStateChange = vi.fn();
 		const onEvent = vi.fn();
