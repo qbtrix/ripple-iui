@@ -50,13 +50,12 @@ Ripple follows the `.dark` class on an ancestor, the same convention shadcn uses
 {
   "theme": {
     "colors": { "primary": "#3b82f6" },
-    "radius": "0.5rem",
-    "mode": "dark"
+    "radius": "0.5rem"
   }
 }
 ```
 
-`mode` takes `light`, `dark` or `system`. Colours accept hex, OKLCH or RGB strings.
+Colours accept hex, OKLCH or RGB strings. The theme is scoped to that render; light and dark still come from the `.dark` class. More in [Theming](/docs/guides/theming).
 
 ## Check it works
 

@@ -6,5 +6,8 @@
 // docs layout after these.
 export const sections = [
 	{ title: 'Getting started', dir: 'getting-started' },
-	{ title: 'Guides', dir: 'guides' }
+	{ title: 'Concepts', dir: 'concepts' },
+	{ title: 'Guides', dir: 'guides' },
+	{ title: 'API reference', dir: 'api' },
+	{ title: 'Architecture', dir: 'architecture' }
 ];

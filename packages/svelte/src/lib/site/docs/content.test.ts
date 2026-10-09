@@ -2,6 +2,8 @@
 // over fixtures and over the real src/docs pages.
 import { describe, expect, it } from 'vitest';
 import { buildNav, indexPages, llmsFullTxt, llmsSmallTxt, llmsTxt, pages, prevNext } from './content.js';
+import { renderDoc } from './markdown.js';
+import { orderedEntries } from './widgets.js';
 import { forYourModel, SLIM_MANIFEST_URL } from './model.js';
 
 const page = (title: string, order: number) =>
@@ -70,12 +72,31 @@ describe('llms files', () => {
 });
 
 describe('the real docs', () => {
-	it('has the getting-started and guides pages in order, all in llms.txt and llms-full.txt', () => {
+	it('has every section in nav order, all in llms.txt and llms-full.txt', () => {
 		expect(pages.map((p) => p.slug)).toEqual([
 			'getting-started/install',
 			'getting-started/render-a-spec',
 			'getting-started/stream-a-spec',
-			'guides/layout-gotchas'
+			'concepts/the-spec',
+			'concepts/state-and-expressions',
+			'concepts/actions-and-events',
+			'concepts/flow-actions',
+			'concepts/streaming',
+			'concepts/headless',
+			'guides/custom-widgets',
+			'guides/theming',
+			'guides/intents',
+			'guides/layout-gotchas',
+			'api/core',
+			'api/svelte',
+			'architecture/overview'
+		]);
+		expect(buildNav().map((s) => s.title)).toEqual([
+			'Getting started',
+			'Concepts',
+			'Guides',
+			'API reference',
+			'Architecture'
 		]);
 		const full = llmsFullTxt();
 		const index = llmsTxt();
@@ -83,5 +104,48 @@ describe('the real docs', () => {
 			expect(full).toContain(`# ${p.title}\n`);
 			expect(index).toContain(`/docs/${p.slug}.md`);
 		}
+	});
+});
+
+// Prose only: frontmatter and body with fenced blocks and inline code removed,
+// so code samples may use any characters.
+const prose = (raw: string) =>
+	raw
+		.replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[ \t]*\r?$/gm, '')
+		.replace(/`[^`\n]*`/g, '');
+
+describe('docs hygiene', () => {
+	const docSlugs = new Set(pages.map((p) => p.slug));
+	const widgetTypes = new Set(orderedEntries().map((e) => e.type));
+	const anchors = new Map(pages.map((p) => [p.slug, new Set(renderDoc(p.raw, p.file).headings.map((h) => h.id))]));
+
+	it('every sidebar entry is a real page', () => {
+		for (const s of buildNav()) for (const p of s.pages) expect(docSlugs.has(p.slug), p.slug).toBe(true);
+	});
+
+	it.each(pages)('$slug links only to /docs routes that exist', (p) => {
+		for (const [, target] of p.raw.matchAll(/\]\((\/docs[^)\s]*)\)/g)) {
+			const [path, hash] = target.replace(/\.md$/, '').split('#');
+			const slug = path.replace(/^\/docs\/?/, '');
+			const ok =
+				docSlugs.has(slug) || slug === 'widgets' || (slug.startsWith('widgets/') && widgetTypes.has(slug.slice(8)));
+			expect(ok, `${p.file}: ${target}`).toBe(true);
+			if (hash && docSlugs.has(slug)) expect(anchors.get(slug)?.has(hash), `${p.file}: ${target}`).toBe(true);
+		}
+	});
+
+	it.each(pages)('$slug points at no internal-only docs', (p) => {
+		expect(p.raw).not.toMatch(/docs\/(wiki|plans|design|kb|c4)\b|superpowers/);
+	});
+
+	it.each(pages)('$slug prose has no em or en dashes, emoji, or hype words', (p) => {
+		const text = prose(p.raw);
+		expect(text, p.file).not.toMatch(/[\u2013\u2014]/);
+		expect(text, p.file).not.toMatch(/\p{Extended_Pictographic}/u);
+		expect(text, p.file).not.toMatch(/\b(supercharge|unleash|seamless(ly)?|effortless(ly)?|magic(al)?|next-generation)\b/i);
+	});
+
+	it('the prose filter strips code but keeps text', () => {
+		expect(prose('a \u2014 b\n```js\nx \u2014 y\n```\n`c \u2014 d` e')).toBe('a \u2014 b\n\n e');
 	});
 });
