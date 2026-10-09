@@ -116,10 +116,12 @@ describe('menu-order — money math (mirrors the store)', () => {
 		expect(totalOf(lines, 'delivery', 3.99)).toBe(24.96);
 	});
 
-	it('needs a name and one way to reach the visitor, and an address for delivery', () => {
+	it('needs a name, an email and a phone, and an address for delivery', () => {
 		const empty = { name: '', email: '', phone: '', address: '' };
-		expect(Object.keys(contactErrors(empty, 'pickup')).sort()).toEqual(['email', 'name']);
-		expect(contactErrors({ ...empty, name: 'Ada', phone: '+1 555 0100' }, 'pickup')).toEqual({});
+		expect(Object.keys(contactErrors(empty, 'pickup')).sort()).toEqual(['email', 'name', 'phone']);
+		expect(Object.keys(contactErrors({ ...empty, name: 'Ada', phone: '+1 555 0100' }, 'pickup'))).toEqual(['email']);
+		expect(Object.keys(contactErrors({ ...empty, name: 'Ada', email: 'ada@example.com' }, 'pickup'))).toEqual(['phone']);
+		expect(contactErrors({ ...empty, name: 'Ada', email: 'ada@example.com', phone: '+1 555 0100' }, 'pickup')).toEqual({});
 		expect(contactErrors({ ...empty, name: 'Ada', email: 'ada@' }, 'pickup').email).toBeTruthy();
 		expect(contactErrors({ ...empty, name: 'Ada', phone: '12' }, 'pickup').phone).toBeTruthy();
 		expect(contactErrors({ ...empty, name: 'Ada', email: 'ada@example.com' }, 'delivery').address).toBeTruthy();
@@ -239,6 +241,9 @@ describe('menu-order — stages', () => {
 		await fireEvent.click(screen.getByLabelText(/Delivery/));
 		await fireEvent.input(screen.getByLabelText(/^Name/), { target: { value: 'Ada Park' } });
 		await fireEvent.input(screen.getByLabelText(/^Email/), { target: { value: 'ada@example.com' } });
+		await fireEvent.click(btn('Review order'));
+		expect(screen.getByText('Add a phone number so the kitchen can reach you.')).toBeTruthy();
+		await fireEvent.input(screen.getByLabelText(/^Phone/), { target: { value: '+1 555 0100' } });
 		await fireEvent.input(screen.getByLabelText(/^Delivery address/), { target: { value: '12 Pier Road' } });
 		await fireEvent.click(btn('Review order'));
 		expect(container.querySelector('[data-stage="review"]')).not.toBeNull();
@@ -247,7 +252,7 @@ describe('menu-order — stages', () => {
 		expect(oncheckout).toHaveBeenCalledWith({
 			lines: [{ product_id: 'shoestring-fries', name: 'Shoestring Fries', qty: 1, option_ids: [], unit_price: 3.49 }],
 			fulfilment: 'delivery',
-			customer: { name: 'Ada Park', email: 'ada@example.com', address: '12 Pier Road' },
+			customer: { name: 'Ada Park', email: 'ada@example.com', phone: '+1 555 0100', address: '12 Pier Road' },
 			total: 7.48
 		});
 	});

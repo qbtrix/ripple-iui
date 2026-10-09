@@ -36,7 +36,7 @@ export const menuOrderEntry: WidgetManifestEntry = {
     on_checkout: {
       type: 'EventAction | EventAction[]',
       required: false,
-      description: 'Server-wired. Fires with { lines, fulfilment, customer: { name, email?, phone?, address? }, total } when the visitor continues to payment.',
+      description: 'Server-wired. Fires with { lines, fulfilment, customer: { name, email, phone, address? }, total } when the visitor continues to payment. Name, email and phone are required, plus the address for delivery.',
     },
   },
   example: {

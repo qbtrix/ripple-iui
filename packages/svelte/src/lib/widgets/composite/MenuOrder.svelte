@@ -571,7 +571,6 @@
 						{@render field('phone', 'Phone', 'tel', 'tel', 30)}
 						{#if mode === 'delivery'}{@render field('address', 'Delivery address', 'text', 'street-address', 200, true)}{/if}
 					</div>
-					<p class="text-footnote text-ripple-muted-foreground">An email or a phone number is enough.</p>
 				</form>
 			{:else if view === 'review'}
 				{@render back('details', 'Details')}
