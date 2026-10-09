@@ -17,3 +17,5 @@ export { default as PipelineDashboard } from './PipelineDashboard.svelte';
 export { default as ProjectDashboard } from './ProjectDashboard.svelte';
 export { default as Itinerary } from './Itinerary.svelte';
 export { default as Booking } from './Booking.svelte';
+export { default as Recipe } from './Recipe.svelte';
+export { default as MealPlan } from './MealPlan.svelte';
