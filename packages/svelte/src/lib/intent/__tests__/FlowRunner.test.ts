@@ -28,19 +28,25 @@ import type { UniversalSpec } from '@ripple-ui/core';
 const ONBOARDING_CHAT_MESSAGE =
 	"I've finished onboarding — here are my choices, please set up my workspace.";
 
+// A choice card is a native radio named by its label span (aria-labelledby);
+// every other control is named by its text.
+const nameOf = (el: HTMLElement) => {
+	const by = el.getAttribute('aria-labelledby');
+	return (by ? el.ownerDocument.getElementById(by) : el)?.textContent?.trim();
+};
+
 function clickButton(container: HTMLElement, label: string) {
-	// Options now render through OptionList as role="radio"/"checkbox" cards, not
-	// plain buttons — so match any clickable control (button or selection option)
-	// whose trimmed text equals the label.
+	// Options render through OptionList as native radio/checkbox choice cards, not
+	// plain buttons, so match any clickable control by its accessible label.
 	const clickables = [
 		...within(container).queryAllByRole('button'),
 		...within(container).queryAllByRole('radio'),
 		...within(container).queryAllByRole('checkbox'),
 	];
-	const btn = clickables.find((b) => b.textContent?.trim() === label);
+	const btn = clickables.find((b) => nameOf(b) === label);
 	if (!btn)
 		throw new Error(
-			`control "${label}" not found; have: ${clickables.map((b) => b.textContent?.trim()).join(', ')}`,
+			`control "${label}" not found; have: ${clickables.map(nameOf).join(', ')}`,
 		);
 	return fireEvent.click(btn);
 }
@@ -231,5 +237,62 @@ describe('FlowRunner — non-flow events pass through to the host', () => {
 		const event = onEvent.mock.calls[0][0];
 		expect(event.name).toBe('analytics.ping');
 		expect(event.payload).toEqual({ ok: true });
+	});
+});
+
+describe('FlowRunner: choice cards on a select step', () => {
+	// The shape a model writes for a one-question step: plain option buttons
+	// that emit flow.submit with a selection, no icons (the recorded landing card).
+	const opt = (id: string, label: string) => ({
+		type: 'button',
+		props: { label },
+		on_click: { action: 'emit', target: 'flow.submit', value: { selection: { id, label } } }
+	});
+	const spec = {
+		flowId: 'trip_style',
+		intent: 'select',
+		title: 'What kind of trip?',
+		onComplete: { kind: 'chat', message: 'Plan a trip.' },
+		ui: { type: 'flex', props: { direction: 'row', gap: 8, wrap: true }, children: [opt('food', 'Food'), opt('culture', 'Culture'), opt('nature', 'Nature'), opt('x', 'Something else')] }
+	} as unknown as UniversalSpec;
+
+	it('renders the buttons as card tiles with guessed icons', () => {
+		const { container } = render(FlowRunner, { props: { spec } });
+		const group = within(container).getByRole('radiogroup', { name: 'What kind of trip?' });
+		expect(within(group).getAllByRole('radio')).toHaveLength(4);
+		const icon = (id: string) => container.querySelector(`[data-option-card="${id}"] [data-choice-icon]`)?.getAttribute('data-choice-icon');
+		expect([icon('food'), icon('culture'), icon('nature'), icon('x')]).toEqual(['food', 'culture', 'outdoors', undefined]);
+	});
+
+	it('a click advances exactly once with the selection', async () => {
+		const onComplete = vi.fn<(r: TerminalResult) => void>();
+		const { container } = render(FlowRunner, { props: { spec, onComplete } });
+		await fireEvent.click(within(container).getByRole('radio', { name: 'Culture' }));
+		await new Promise((r) => setTimeout(r, 0));
+		expect(onComplete).toHaveBeenCalledTimes(1);
+		expect(onComplete.mock.calls[0][0].payload['trip_style_selection']).toEqual({ id: 'culture', label: 'Culture' });
+	});
+
+	it('arrow keys do not advance; Enter does, once', async () => {
+		const onComplete = vi.fn<(r: TerminalResult) => void>();
+		const { container } = render(FlowRunner, { props: { spec, onComplete } });
+		const food = within(container).getByRole('radio', { name: 'Food' }) as HTMLInputElement;
+		const nature = within(container).getByRole('radio', { name: 'Nature' }) as HTMLInputElement;
+		await fireEvent.keyDown(food, { key: 'ArrowRight' });
+		nature.checked = true;
+		await fireEvent.change(nature);
+		await fireEvent.keyUp(nature, { key: 'ArrowRight' });
+		await new Promise((r) => setTimeout(r, 0));
+		expect(onComplete).not.toHaveBeenCalled();
+		await fireEvent.keyDown(nature, { key: 'Enter' });
+		await new Promise((r) => setTimeout(r, 0));
+		expect(onComplete).toHaveBeenCalledTimes(1);
+		expect(onComplete.mock.calls[0][0].payload['trip_style_selection']).toEqual({ id: 'nature', label: 'Nature' });
+	});
+
+	it('display.layout "list" keeps the one-column rows', () => {
+		const { container } = render(FlowRunner, { props: { spec: { ...spec, display: { layout: 'list' } } as UniversalSpec } });
+		expect(container.querySelector('[data-slot="option-cards"]')).toBeNull();
+		expect(within(container).getAllByRole('radio').some((r) => r.tagName === 'BUTTON')).toBe(true);
 	});
 });

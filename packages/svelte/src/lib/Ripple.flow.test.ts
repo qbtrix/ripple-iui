@@ -22,17 +22,23 @@ import Ripple from './Ripple.svelte';
 import { buildOnboardingWizard } from './intent/fixtures/onboarding-wizard.js';
 import type { TerminalResult } from './intent/chain-executor.svelte.js';
 
+// A choice card is a native radio named by its label span (aria-labelledby);
+// every other control is named by its text.
+const nameOf = (el: HTMLElement) => {
+	const by = el.getAttribute('aria-labelledby');
+	return (by ? el.ownerDocument.getElementById(by) : el)?.textContent?.trim();
+};
+
 function clickButton(container: HTMLElement, label: string) {
-	// Options render as `<button role="radio">` inside a radiogroup (the
-	// single-select a11y pattern), so their accessible role is "radio", not
-	// "button". Search both roles to find a labelled control to click.
+	// Options render as choice cards: native radios inside a radiogroup, so
+	// their role is "radio", not "button". Search both roles.
 	const q = within(container);
 	const candidates = [...q.queryAllByRole('button'), ...q.queryAllByRole('radio')];
-	const btn = candidates.find((b) => b.textContent?.trim() === label);
+	const btn = candidates.find((b) => nameOf(b) === label);
 	if (!btn) {
 		throw new Error(
 			`control "${label}" not found; have: ${candidates
-				.map((b) => b.textContent?.trim())
+				.map(nameOf)
 				.join(', ')}`
 		);
 	}
@@ -280,5 +286,27 @@ describe("a flow card seeds its steps from the card's own `state`", () => {
 		await clickButton(container, 'Book');
 		expect(onComplete).toHaveBeenCalledTimes(1);
 		expect(onComplete.mock.calls[0][0].payload.state).toEqual({ days: '5' });
+	});
+});
+
+describe('choice cards stream', () => {
+	it('a streamed flow select step renders the same cards as the whole spec', async () => {
+		const { expectStreamParity } = await import('./streaming/__fixtures__/stream-parity.js');
+		const opt = (id: string, label: string, description?: string) => ({
+			type: 'button',
+			props: { label, ...(description ? { description } : {}) },
+			on_click: { action: 'emit', target: 'flow.submit', value: { selection: { id, label } } }
+		});
+		const { whole } = await expectStreamParity({
+			ui: {
+				flowId: 'main_use',
+				intent: 'select',
+				title: 'What will you use it for most?',
+				onComplete: { kind: 'chat', message: 'Recommend a laptop.' },
+				ui: { type: 'flex', props: { direction: 'column', gap: '8px' }, children: [opt('work', 'Work and study', 'Docs, email, video calls'), opt('gaming', 'Gaming'), opt('everyday', 'Everyday browsing')] }
+			}
+		});
+		expect(whole.querySelectorAll('[data-option-card]')).toHaveLength(3);
+		expect(whole.querySelector('[data-option-card="gaming"] [data-choice-icon]')?.getAttribute('data-choice-icon')).toBe('gaming');
 	});
 });
