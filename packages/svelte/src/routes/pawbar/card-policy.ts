@@ -32,6 +32,11 @@
 //      HOST_EVENTS name or the widget's own default `follow-up` (the manifest
 //      example sets it), never free text such as `ask`. Its `props` must be an
 //      object, not an expression that state fills in.
+//   8. A prop the engine renders as a node (NODE_SLOTS, and the list that holds
+//      it) never holds a whole-string expression (`"{state.n}"`, `"{item}"`):
+//      that resolves to a raw object, so a node assembled in state at runtime
+//      would render unchecked. Literal nodes pass and are walked like any other.
+//      For the same reason no node's `props` is a string (`props_expression`).
 // Rules 4 and 5 read strings after one pass of HTML character-reference
 // decoding (`&lt;`, `&#60;`, `&#x3c;`), the form a markdown or HTML sink sees.
 // This walks the card only; /live's recorded replays never pass through it.
@@ -65,6 +70,23 @@ const NAMED: Record<string, string> = { lt: '<', gt: '>', amp: '&', quot: '"', a
 const MD_LINK = /\]\(\s*<?\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i;
 const BARE_LINK = /(https?:\/\/|\bwww\.)/i;
 const MAX_NODES = 50_000;
+/** core's SINGLE_EXPRESSION_REGEX (expression-resolver.ts), the strings resolveString returns raw. Keep identical. */
+const WHOLE_EXPRESSION = /^\{([^}]+)\}$/;
+/** Props a widget hands to NodeRenderer, by widget type. `x[]` is each element of list `x`, and the list itself. */
+const NODE_SLOTS = new Map<string, readonly string[]>(Object.entries({
+	'settings-list': ['items[].control'],
+	tabs: ['panels[]'],
+	split: ['start', 'end'],
+	'master-detail': ['detail'],
+	kanban: ['cardTemplate'],
+	'data-grid': ['columns[].formatter'],
+	'tree-table': ['columns[].formatter'],
+	'virtual-list': ['item'],
+	popover: ['content', 'trigger'],
+	'hover-card': ['content', 'trigger'],
+	tooltip: ['trigger'],
+	'context-menu': ['trigger']
+}));
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -104,6 +126,19 @@ function textRefusal(raw: string): string | null {
 	return null;
 }
 
+/** Whether a string along `path` in `props` (the list, an element, the slot) is a whole-string expression. */
+function slotExpression(props: Record<string, unknown>, path: string): boolean {
+	let values: unknown[] = [props];
+	for (const seg of path.split('.')) {
+		const list = seg.endsWith('[]');
+		const key = list ? seg.slice(0, -2) : seg;
+		values = values.flatMap((v) => (isRecord(v) ? [v[key]] : []));
+		if (list) values = values.flatMap((v) => (Array.isArray(v) ? v : [v]));
+		if (values.some((v) => typeof v === 'string' && WHOLE_EXPRESSION.test(v))) return true;
+	}
+	return false;
+}
+
 const typeNames = [...CHAT_WIDGET_TYPES];
 
 export function refuseCard(card: unknown, { partial = false } = {}): string | null {
@@ -136,6 +171,9 @@ export function refuseCard(card: unknown, { partial = false } = {}): string | nu
 			if (props !== undefined && !isRecord(props)) return 'follow_up_props';
 			if (props && 'event' in props && !(typeof props.event === 'string' && allowed(FOLLOW_UP_EVENTS, props.event, partial))) return 'follow_up_event';
 		}
+		const nodeProps = node.props;
+		if (typeof nodeProps === 'string') return 'props_expression';
+		if (typeof type === 'string' && isRecord(nodeProps) && NODE_SLOTS.get(type)?.some((path) => slotExpression(nodeProps, path))) return 'node_expression';
 		const pathTarget = typeof node.action === 'string' && allowed(PATH_TARGET_ACTIONS, node.action, partial);
 		for (const [k, v] of Object.entries(node)) {
 			if (k.toLowerCase() === 'action') {
