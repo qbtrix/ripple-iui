@@ -15,6 +15,11 @@
     - The JSON pane scrolls in a column-reverse box, so it opens at the caret
       with JavaScript off and stays pinned there as text arrives.
     - A fixture change resets the clock and remounts Ripple (fresh app state).
+    - Optional host hooks: `onEvent` goes to Ripple as-is (its return value is
+      the action result, so a spec's on_error runs); `panes` hides one or both
+      panes at every width, so a page can drive its own tabs; `autoplayFrom`
+      moves the clock when autoplay starts, so the markup can hold the
+      finished frame while the visit plays from the first byte.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -23,6 +28,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Ripple from '$lib/Ripple.svelte';
 	import type { StreamSpecStore } from '$lib/streaming/types.js';
+	import type { OnEventCallback } from '$lib/index.js';
 	import JsonLines from '../JsonLines.svelte';
 	import { createScrubModel, type Recording } from './scrub-model.js';
 
@@ -35,9 +41,15 @@
 		/** Figure caption, e.g. "fig. 1, bill splitter, 2,794 chars". */
 		caption?: string;
 		class?: string;
+		/** Host handler for the render's events; its result goes back to Ripple. */
+		onEvent?: OnEventCallback;
+		/** Which panes to show. Default both (stacked when narrow). */
+		panes?: 'both' | 'render' | 'spec' | 'none';
+		/** Where autoplay starts, as a fraction. Default: wherever `start` put the clock. */
+		autoplayFrom?: number;
 	}
 
-	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '' }: Props = $props();
+	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '', onEvent, panes = 'both', autoplayFrom }: Props = $props();
 
 	const SPEEDS = [0.5, 1, 2];
 	const model = $derived(createScrubModel(fixture));
@@ -76,7 +88,10 @@
 
 	onMount(() => {
 		if (matchMedia('(prefers-reduced-motion: reduce)').matches) ms = model.duration;
-		else if (autoplay) playing = true;
+		else if (autoplay) {
+			if (autoplayFrom != null) ms = Math.min(1, Math.max(0, autoplayFrom)) * model.duration;
+			playing = true;
+		}
 	});
 
 	function toggle() {
@@ -146,7 +161,7 @@
 </script>
 
 <figure class="scrub {className}" class:playing>
-	<div class="panes">
+	<div class="panes" data-show={panes}>
 		<!-- A scroll region must take focus to be keyboard-scrollable. -->
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<div class="json" role="region" aria-label="Spec received so far" tabindex="0">
@@ -154,7 +169,7 @@
 		</div>
 		<div class="render" data-pagefind-ignore="all">
 			{#key model}
-				<Ripple streaming={store} skeleton="card" />
+				<Ripple streaming={store} skeleton="card" {onEvent} />
 			{/key}
 		</div>
 	</div>
@@ -217,6 +232,21 @@
 		border-radius: var(--radius-card);
 		overflow: hidden;
 		background: var(--card);
+	}
+
+	.panes[data-show='none'],
+	.panes[data-show='render'] .json,
+	.panes[data-show='spec'] .render {
+		display: none;
+	}
+	/* One pane: it takes the whole box (these outrank the container query). */
+	.panes[data-show='render'],
+	.panes[data-show='spec'] {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.panes[data-show='spec'] .json {
+		height: var(--scrub-h);
+		border: 0;
 	}
 
 	/* column-reverse starts the scroll at the bottom: the caret is visible
