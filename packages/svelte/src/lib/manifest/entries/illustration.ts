@@ -15,7 +15,7 @@ export const illustrationEntry: WidgetManifestEntry = {
       type: 'string',
       required: true,
       description:
-        "SVG markup, root <svg viewBox='...'>. Put attributes in single quotes so the JSON needs no escaping. Under 24,000 chars, 400 elements, 40 animations; every dur 0.5s or more. Elements: svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set. Refs only as url(#id) and href='#id' (plain href, not xlink:href). No style attribute, no on* handlers.",
+        "SVG markup, root <svg viewBox='...'>. Put attributes in single quotes so the JSON needs no escaping. Under 24,000 chars, 400 elements, 40 animations, 40 use (never a use of a use); every dur 0.5s or more. Elements: svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set. Refs only as url(#id) and href='#id' (plain href, not xlink:href). No style attribute, no on* handlers.",
     },
     title: { type: 'string', required: true, description: 'Accessible name, e.g. "Sun rising over two hills".' },
     caption: { type: 'string', required: false, description: 'Optional line under the art.' },

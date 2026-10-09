@@ -158,7 +158,7 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 
 - Allowed elements: `svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set`. No filters, `<image>`, `<style>`, `<a>`, `<foreignObject>` or scripts.
 - References only as `url(#id)` and `href='#id'` on `use`/`mpath` (use plain `href`; `xlink:href` needs an `xmlns:xlink` declaration or the markup fails to parse). No `style` attribute, no `on*` handlers. Animations may only target presentation attributes (`fill`, `opacity`, `transform`, `cx`, `d`, ...).
-- Caps: 24,000 chars, 400 elements, depth 24, 40 animation elements, every `dur` at least 0.5s, `repeatCount` at most 1000 or `indefinite`. Past a cap, or while the markup is still streaming in, the widget shows a quiet placeholder at `max_height`.
+- Caps: 24,000 chars, 400 elements, depth 24, 40 animation elements, every `dur` at least 0.5s, `repeatCount` at most 1000 or `indefinite`, at most 40 `use` elements and no `use` pointing at another `use` or a group holding one. Past a cap, or while the markup is still streaming in, the widget shows a quiet placeholder at `max_height`.
 - Ids are prefixed per instance (and so are their `url(#..)`, `href` and `begin`/`end` refs), so two cards never collide.
 - Under `prefers-reduced-motion` the art starts paused; animated art gets a small pause/play button.
 - Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.

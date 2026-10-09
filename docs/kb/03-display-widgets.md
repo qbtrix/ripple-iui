@@ -63,7 +63,7 @@ A small animated SVG you draw for "show me a sun rising", an animated icon, a ti
 - Motion with `animate` / `animateTransform` / `animateMotion`, every `dur` 0.5s or more, `repeatCount` up to 1000 or `indefinite`. Animate only presentation attributes (`fill`, `stroke`, `opacity`, `transform`, `d`, `points`, `x`, `cx`, `r`, `width`, `offset`, ...)
 - References only as `url(#id)` and plain `href='#id'` on `use` / `mpath`
 - Never: `style`, `script`, `a`, `image`, `foreignObject`, filters, `on*` handlers, outside URLs, DOCTYPE or entities other than `&lt; &gt; &amp; &quot; &apos;`
-- Under 24,000 chars, 400 elements, 40 animations, nesting depth 24
+- Under 24,000 chars, 400 elements, 40 animations, 40 `use`, nesting depth 24. A `use` may point at a shape, group or symbol, never at another `use` or a group holding one
 
 **Example:**
 ```json
