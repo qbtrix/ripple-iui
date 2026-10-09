@@ -23,6 +23,8 @@
   - Each card is a button named "Card 3, face down" / "Card 3, perro" /
     "Card 3, perro, matched"; a roving tabindex makes the grid one tab stop
     and arrows move focus. Reduced motion turns the flip into a fade.
+  - The face-down back is CSS only (no svg): a test holds an unknown-icon
+    card to having no svg at all.
 -->
 <script module lang="ts">
 	import type { LucideIcon } from '@lucide/svelte';
@@ -427,7 +429,7 @@
 						>
 							<span class="mm-inner" aria-hidden="true">
 								<span class="mm-face mm-back rounded-ripple border border-ripple-accent/30">
-									<span class="mm-dot"></span>
+									<span class="mm-mark"></span>
 								</span>
 								<span
 									class={[
@@ -437,7 +439,9 @@
 								>
 									{@render faceView(c.face)}
 									{#if isMatched}
-										<span class="absolute top-1 right-1 text-ripple-success-text"><Check size={14} strokeWidth={2.25} /></span>
+										<span class="mm-badge absolute top-1.5 right-1.5 grid size-5 place-items-center rounded-full bg-ripple-success text-ripple-success-foreground">
+											<Check size={12} strokeWidth={3} />
+										</span>
 									{/if}
 								</span>
 							</span>
@@ -468,6 +472,12 @@
 		perspective: 900px;
 		cursor: pointer;
 	}
+	.mm-card {
+		transition: transform 160ms ease-out;
+	}
+	.mm-card[data-up='false']:hover {
+		transform: translateY(-2px);
+	}
 	.mm-card[data-matched='true'] {
 		cursor: default;
 	}
@@ -491,17 +501,33 @@
 		backface-visibility: hidden;
 		-webkit-backface-visibility: hidden;
 	}
+	/* The back: a fine accent dot grid over a soft diagonal wash, an inner border, a sparkle in the middle. */
 	.mm-back {
-		background: color-mix(in oklab, var(--ripple-accent) 14%, var(--ripple-surface));
+		background:
+			radial-gradient(color-mix(in oklab, var(--ripple-accent) 26%, transparent) 1px, transparent 1.6px) 0 0 / 9px 9px,
+			radial-gradient(circle, color-mix(in oklab, var(--ripple-accent) 22%, transparent), transparent 42%),
+			linear-gradient(150deg, color-mix(in oklab, var(--ripple-accent) 18%, var(--ripple-surface)), color-mix(in oklab, var(--ripple-accent) 7%, var(--ripple-surface)));
+		transition: box-shadow 160ms ease-out;
+	}
+	.mm-back::before {
+		content: '';
+		position: absolute;
+		inset: 5px;
+		border: 1px solid color-mix(in oklab, var(--ripple-accent) 28%, transparent);
+		border-radius: max(2px, calc(var(--ripple-radius) - 4px));
+		pointer-events: none;
 	}
 	.mm-card:hover .mm-back {
-		background: color-mix(in oklab, var(--ripple-accent) 20%, var(--ripple-surface));
+		box-shadow: 0 6px 16px -8px color-mix(in oklab, var(--ripple-accent) 55%, transparent);
 	}
-	.mm-dot {
-		width: 22%;
+	.mm-mark {
+		width: 26%;
 		aspect-ratio: 1;
-		border-radius: 999px;
-		border: 2px solid color-mix(in oklab, var(--ripple-accent) 45%, transparent);
+		background: color-mix(in oklab, var(--ripple-accent) 80%, transparent);
+		clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+	}
+	.mm-card[data-matched='true'] .mm-front {
+		box-shadow: 0 0 0 1px color-mix(in oklab, var(--ripple-success) 45%, transparent), 0 0 18px -2px color-mix(in oklab, var(--ripple-success) 50%, transparent);
 	}
 	.mm-front {
 		transform: rotateY(180deg);
@@ -557,6 +583,8 @@
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
+		.mm-card,
+		.mm-card[data-up='false']:hover,
 		.mm-inner,
 		.mm-card[data-up='true'] .mm-inner,
 		.mm-front {
