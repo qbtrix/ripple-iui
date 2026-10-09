@@ -1,0 +1,862 @@
+{
+ "id": "incident-rollback",
+ "title": "Roll back a bad deploy",
+ "prompt": "Checkout errors jumped about ten minutes ago. What changed, and can we roll back?",
+ "context": "You are the on-call assistant inside an engineering team's internal ops console. The person typing is the engineer on call. You already ran three tools; render their results, do not ask for them.\n\n- error_rate({\"service\":\"checkout\",\"window\":\"30m\"}) -> 5-minute buckets: 14:00 0.4%, 14:05 0.3%, 14:10 0.5%, 14:15 6.8%, 14:20 9.1%, 14:25 8.7%\n- deploys({\"service\":\"checkout\",\"since\":\"13:30\"}) -> [{\"id\":\"d-482\",\"at\":\"13:42\",\"by\":\"Mara\",\"summary\":\"Copy change on the receipt email\"},{\"id\":\"d-483\",\"at\":\"14:12\",\"by\":\"Jon\",\"summary\":\"Switch payment client to the v3 SDK\"}]\n- top_errors({\"service\":\"checkout\",\"since\":\"14:12\"}) -> [{\"message\":\"PaymentClient: unknown field intent_id\",\"count\":1840},{\"message\":\"Timeout calling tax service\",\"count\":12}]\n\nWhat to build: an agent turn for an incident. Show each tool call as a \"tool-call\" card (status \"success\", args, a one-line result). Show the error rate as a line chart and the current rate as a stat. Show the two deploys as a \"timeline\". Say in one sentence which deploy is the likely cause and why (errors start right after d-483 and name the payment client). Then one \"approval-gate\" to roll checkout back to d-482, risk \"medium\", with a short list of what changes. Bind its decision to state; approved shows the rollback steps with progress, denied suggests the next thing to check. Nothing rolls back until the gate is approved.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-09T18:38:07.377Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 26,
+   "text": "\"version"
+  },
+  {
+   "t": 58,
+   "text": "\":\"1.0\",\"ui"
+  },
+  {
+   "t": 91,
+   "text": "\":{\"type\":\"flex"
+  },
+  {
+   "t": 137,
+   "text": "\",\"props\":{\"direction\":"
+  },
+  {
+   "t": 157,
+   "text": "\"column\",\"gap\":\"12"
+  },
+  {
+   "t": 190,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 228,
+   "text": "\"type\":\"tool-call"
+  },
+  {
+   "t": 269,
+   "text": "\",\"props\":{\"name\":\""
+  },
+  {
+   "t": 292,
+   "text": "error_rate\",\"status\":\""
+  },
+  {
+   "t": 332,
+   "text": "success\",\"args\":{\"service\":"
+  },
+  {
+   "t": 372,
+   "text": "\"checkout\",\"window\":\""
+  },
+  {
+   "t": 390,
+   "text": "30m\"},\"result\":\""
+  },
+  {
+   "t": 427,
+   "text": "Error"
+  },
+  {
+   "t": 458,
+   "text": " rate went"
+  },
+  {
+   "t": 510,
+   "text": " from 0.5"
+  },
+  {
+   "t": 532,
+   "text": "% at 14:10 to"
+  },
+  {
+   "t": 574,
+   "text": " 6"
+  },
+  {
+   "t": 591,
+   "text": ".8% at 14:15"
+  },
+  {
+   "t": 625,
+   "text": " and 8.7% at"
+  },
+  {
+   "t": 659,
+   "text": " 14:25.\"}},{"
+  },
+  {
+   "t": 690,
+   "text": "\"type\":\"tool-call"
+  },
+  {
+   "t": 727,
+   "text": "\",\"props\":{\"name\":\""
+  },
+  {
+   "t": 776,
+   "text": "deploys\",\"status\":\"success"
+  },
+  {
+   "t": 794,
+   "text": "\",\"args\":{\"service\":\""
+  },
+  {
+   "t": 828,
+   "text": "checkout\",\"since\":\"13"
+  },
+  {
+   "t": 865,
+   "text": ":30\"},\"result\":\""
+  },
+  {
+   "t": 891,
+   "text": "2 deploys: d-"
+  },
+  {
+   "t": 925,
+   "text": "482 at 13:42 "
+  },
+  {
+   "t": 968,
+   "text": "(Mara)"
+  },
+  {
+   "t": 1025,
+   "text": " and d-483 at 14"
+  },
+  {
+   "t": 1297,
+   "text": ":12 (Jon)"
+  },
+  {
+   "t": 1297,
+   "text": ".\"}},{\"type\":\""
+  },
+  {
+   "t": 1297,
+   "text": "tool-call\",\"props\":{"
+  },
+  {
+   "t": 1297,
+   "text": "\"name\":\"top_errors"
+  },
+  {
+   "t": 1297,
+   "text": "\",\"status\":\"success\",\"args\":"
+  },
+  {
+   "t": 1297,
+   "text": "{\"service\":\"checkout"
+  },
+  {
+   "t": 1298,
+   "text": "\",\"since\":\"14:12\""
+  },
+  {
+   "t": 1298,
+   "text": "},\"result\":\"1,"
+  },
+  {
+   "t": 1298,
+   "text": "840 of"
+  },
+  {
+   "t": 1610,
+   "text": " 1,852 errors are"
+  },
+  {
+   "t": 1610,
+   "text": " \\"
+  },
+  {
+   "t": 1610,
+   "text": "\"PaymentClient:"
+  },
+  {
+   "t": 1610,
+   "text": " unknown field intent_id"
+  },
+  {
+   "t": 1610,
+   "text": "\\\""
+  },
+  {
+   "t": 1610,
+   "text": ".\"}},"
+  },
+  {
+   "t": 1610,
+   "text": "{\"type\":\"st"
+  },
+  {
+   "t": 1610,
+   "text": "at\",\"props\":{\"label\":"
+  },
+  {
+   "t": 1616,
+   "text": "\"Chec"
+  },
+  {
+   "t": 1700,
+   "text": "kout error rate now (%"
+  },
+  {
+   "t": 1700,
+   "text": ")\",\"value\":\""
+  },
+  {
+   "t": 1700,
+   "text": "{state"
+  },
+  {
+   "t": 1725,
+   "text": ".currentRate}\",\"format"
+  },
+  {
+   "t": 1767,
+   "text": "\":\"number\",\"size\":\"l"
+  },
+  {
+   "t": 1793,
+   "text": "g\"}},{\"type\":"
+  },
+  {
+   "t": 1826,
+   "text": "\"chart\",\"props\":{\""
+  },
+  {
+   "t": 1859,
+   "text": "type\":\"line\",\"title\":\""
+  },
+  {
+   "t": 1894,
+   "text": "Checkout error rate ("
+  },
+  {
+   "t": 1935,
+   "text": "%)"
+  },
+  {
+   "t": 1969,
+   "text": "\",\"height\":180"
+  },
+  {
+   "t": 1998,
+   "text": ",\"data\":[{\"label"
+  },
+  {
+   "t": 2037,
+   "text": "\":\"14:00\",\"value\":"
+  },
+  {
+   "t": 2059,
+   "text": "0.4},{\"label\":"
+  },
+  {
+   "t": 2107,
+   "text": "\"14:05\",\"value\":0"
+  },
+  {
+   "t": 2144,
+   "text": ".3},{\"label\":\""
+  },
+  {
+   "t": 2176,
+   "text": "14:10\",\"value\":0."
+  },
+  {
+   "t": 2224,
+   "text": "5},{\"label\":\"14"
+  },
+  {
+   "t": 2235,
+   "text": ":15\",\"value\":6.8"
+  },
+  {
+   "t": 2268,
+   "text": "},{\"label\":\"14:"
+  },
+  {
+   "t": 2303,
+   "text": "20\",\"value\":9.1},"
+  },
+  {
+   "t": 2347,
+   "text": "{\"label\":\"14:25"
+  },
+  {
+   "t": 2383,
+   "text": "\",\"value\":8.7}]"
+  },
+  {
+   "t": 2415,
+   "text": "}},{\"type\":\"tim"
+  },
+  {
+   "t": 2456,
+   "text": "eline\",\"props\":{\"density"
+  },
+  {
+   "t": 2475,
+   "text": "\":\"compact\",\"events\":["
+  },
+  {
+   "t": 2493,
+   "text": "{\"date\":\"13"
+  },
+  {
+   "t": 2536,
+   "text": ":42\",\"title\":\"d"
+  },
+  {
+   "t": 2564,
+   "text": "-482 by"
+  },
+  {
+   "t": 2601,
+   "text": " Mara\",\"detail\":\""
+  },
+  {
+   "t": 2637,
+   "text": "Copy change on the receip"
+  },
+  {
+   "t": 2661,
+   "text": "t email\",\"type\":\"success"
+  },
+  {
+   "t": 2692,
+   "text": "\"},{\"date\":\"14"
+  },
+  {
+   "t": 2728,
+   "text": ":12\",\"title\":\"d-"
+  },
+  {
+   "t": 2761,
+   "text": "483 by Jon\",\"det"
+  },
+  {
+   "t": 2803,
+   "text": "ail\":\"Switch payment"
+  },
+  {
+   "t": 2829,
+   "text": " client to the v3 SD"
+  },
+  {
+   "t": 2862,
+   "text": "K\",\"type\":\"warning\""
+  },
+  {
+   "t": 2900,
+   "text": "}]}},{\"type\":"
+  },
+  {
+   "t": 2929,
+   "text": "\"text\",\"props\":{\"text"
+  },
+  {
+   "t": 2959,
+   "text": "\":\"Most"
+  },
+  {
+   "t": 2996,
+   "text": " likely cause: d-483"
+  },
+  {
+   "t": 3031,
+   "text": "."
+  },
+  {
+   "t": 3067,
+   "text": " Errors j"
+  },
+  {
+   "t": 3099,
+   "text": "ump"
+  },
+  {
+   "t": 3132,
+   "text": " at"
+  },
+  {
+   "t": 3161,
+   "text": " 14:15, right after it"
+  },
+  {
+   "t": 3218,
+   "text": " sh"
+  },
+  {
+   "t": 3230,
+   "text": "ipped at 14:12,"
+  },
+  {
+   "t": 3258,
+   "text": " and alm"
+  },
+  {
+   "t": 3291,
+   "text": "ost all of them"
+  },
+  {
+   "t": 3327,
+   "text": " name the payment client ("
+  },
+  {
+   "t": 3360,
+   "text": "un"
+  },
+  {
+   "t": 3412,
+   "text": "known field intent_id)."
+  },
+  {
+   "t": 3425,
+   "text": "\",\"weight\":\"semibold"
+  },
+  {
+   "t": 3480,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 3494,
+   "text": "approval-gate\",\"props\":"
+  },
+  {
+   "t": 3527,
+   "text": "{\"title\":\"Roll"
+  },
+  {
+   "t": 3559,
+   "text": " chec"
+  },
+  {
+   "t": 3593,
+   "text": "kout back to d-482\",\""
+  },
+  {
+   "t": 3627,
+   "text": "summary\":\"N"
+  },
+  {
+   "t": 3659,
+   "text": "othing chang"
+  },
+  {
+   "t": 3696,
+   "text": "es until you"
+  },
+  {
+   "t": 3724,
+   "text": " approve.\",\"risk\":\""
+  },
+  {
+   "t": 3760,
+   "text": "medium\",\"actionId\":\""
+  },
+  {
+   "t": 3795,
+   "text": "r"
+  },
+  {
+   "t": 3826,
+   "text": "ollback-checkout-"
+  },
+  {
+   "t": 3885,
+   "text": "d-482\",\""
+  },
+  {
+   "t": 3891,
+   "text": "ask"
+  },
+  {
+   "t": 4063,
+   "text": "DenyReason\":false"
+  },
+  {
+   "t": 4063,
+   "text": ",\"di"
+  },
+  {
+   "t": 4063,
+   "text": "ff\":{\"title"
+  },
+  {
+   "t": 4063,
+   "text": "\":\"chec"
+  },
+  {
+   "t": 4076,
+   "text": "kout\",\"before\":\"version"
+  },
+  {
+   "t": 4093,
+   "text": ": d-483\\np"
+  },
+  {
+   "t": 4172,
+   "text": "ayment client: v3 S"
+  },
+  {
+   "t": 4188,
+   "text": "DK\\nreceipt"
+  },
+  {
+   "t": 4193,
+   "text": " email: new"
+  },
+  {
+   "t": 4231,
+   "text": " copy\",\"after\":\"version:"
+  },
+  {
+   "t": 4263,
+   "text": " d-482\\npayment client"
+  },
+  {
+   "t": 4293,
+   "text": ": previous SDK\\n"
+  },
+  {
+   "t": 4326,
+   "text": "receipt email: new cop"
+  },
+  {
+   "t": 4371,
+   "text": "y\"}},\"bind\":"
+  },
+  {
+   "t": 4392,
+   "text": "\"{state.decision}\""
+  },
+  {
+   "t": 4432,
+   "text": "},{\"type\":\"if\",\""
+  },
+  {
+   "t": 4461,
+   "text": "condition\":\"{state.dec"
+  },
+  {
+   "t": 4495,
+   "text": "ision == 'approved'}"
+  },
+  {
+   "t": 4526,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 4560,
+   "text": "\"card\",\"props\":{\"title"
+  },
+  {
+   "t": 4599,
+   "text": "\":\"Rollback steps"
+  },
+  {
+   "t": 4628,
+   "text": "\",\"description"
+  },
+  {
+   "t": 4660,
+   "text": "\":\"Tick each step as"
+  },
+  {
+   "t": 4699,
+   "text": " it finishes\",\""
+  },
+  {
+   "t": 4732,
+   "text": "density"
+  },
+  {
+   "t": 4762,
+   "text": "\":\"compact\"},\"children"
+  },
+  {
+   "t": 4796,
+   "text": "\":[{\"type\":\"prog"
+  },
+  {
+   "t": 4827,
+   "text": "ress\",\"props\":{\"value\":"
+  },
+  {
+   "t": 4862,
+   "text": "\"{state.doneCount"
+  },
+  {
+   "t": 4897,
+   "text": "}\",\"max\":\""
+  },
+  {
+   "t": 4931,
+   "text": "{state.steps.length}"
+  },
+  {
+   "t": 4961,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 4993,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 5029,
+   "text": "\"{state.doneCount"
+  },
+  {
+   "t": 5061,
+   "text": "} of {state.steps."
+  },
+  {
+   "t": 5095,
+   "text": "length} steps done\",\"size\":"
+  },
+  {
+   "t": 5127,
+   "text": "\"sm\"}},{\""
+  },
+  {
+   "t": 5160,
+   "text": "type\":\"each\",\"items"
+  },
+  {
+   "t": 5194,
+   "text": "\":\"{state.steps}"
+  },
+  {
+   "t": 5228,
+   "text": "\",\"children"
+  },
+  {
+   "t": 5262,
+   "text": "\":[{\"type\":\"chec"
+  },
+  {
+   "t": 5294,
+   "text": "kbox\",\"props\":{\""
+  },
+  {
+   "t": 5327,
+   "text": "label\":\"{item.label"
+  },
+  {
+   "t": 5360,
+   "text": "}\"},\"bind\":\""
+  },
+  {
+   "t": 5396,
+   "text": "ste"
+  },
+  {
+   "t": 5428,
+   "text": "ps.{index}.done\",\""
+  },
+  {
+   "t": 5471,
+   "text": "on_change\":{\"action"
+  },
+  {
+   "t": 5494,
+   "text": "\":\"set\",\"target\":\"do"
+  },
+  {
+   "t": 5528,
+   "text": "neCount\",\"value\":\"{"
+  },
+  {
+   "t": 5562,
+   "text": "state.steps.where('done"
+  },
+  {
+   "t": 5596,
+   "text": "', true).count()}\"}"
+  },
+  {
+   "t": 5629,
+   "text": "}]}]}]},"
+  },
+  {
+   "t": 5661,
+   "text": "{\"type\":\"if\",\"cond"
+  },
+  {
+   "t": 5695,
+   "text": "ition\":\"{state.decision"
+  },
+  {
+   "t": 5728,
+   "text": " == 'denied'}\",\""
+  },
+  {
+   "t": 5759,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 5799,
+   "text": "alert\",\"props\":{\"vari"
+  },
+  {
+   "t": 5828,
+   "text": "ant\":\"info\",\"title\":\""
+  },
+  {
+   "t": 5865,
+   "text": "Rollback denied\",\"description"
+  },
+  {
+   "t": 5895,
+   "text": "\":\"Next check: compare"
+  },
+  {
+   "t": 5967,
+   "text": " the v3 SDK request"
+  },
+  {
+   "t": 5967,
+   "text": " payload with what"
+  },
+  {
+   "t": 5995,
+   "text": " the payment service"
+  },
+  {
+   "t": 6033,
+   "text": " acc"
+  },
+  {
+   "t": 6079,
+   "text": "epts, since"
+  },
+  {
+   "t": 6097,
+   "text": " intent_id is r"
+  },
+  {
+   "t": 6129,
+   "text": "ejected as"
+  },
+  {
+   "t": 6162,
+   "text": " an unknown field. J"
+  },
+  {
+   "t": 6207,
+   "text": "on can confirm wh"
+  },
+  {
+   "t": 6227,
+   "text": "ether a"
+  },
+  {
+   "t": 6267,
+   "text": " config"
+  },
+  {
+   "t": 6291,
+   "text": " fl"
+  },
+  {
+   "t": 6327,
+   "text": "ag or a"
+  },
+  {
+   "t": 6366,
+   "text": " small"
+  },
+  {
+   "t": 6396,
+   "text": " fix-"
+  },
+  {
+   "t": 6446,
+   "text": "forward is"
+  },
+  {
+   "t": 6519,
+   "text": " qu"
+  },
+  {
+   "t": 6519,
+   "text": "icker.\"}}]}]"
+  },
+  {
+   "t": 6570,
+   "text": "},\"state\":{\"current"
+  },
+  {
+   "t": 6570,
+   "text": "Rate\":8.7,\""
+  },
+  {
+   "t": 6593,
+   "text": "decision\":\"pending\",\"do"
+  },
+  {
+   "t": 6630,
+   "text": "neCount\":0,\"ste"
+  },
+  {
+   "t": 6667,
+   "text": "ps\":[{\"label\":\""
+  },
+  {
+   "t": 6695,
+   "text": "Red"
+  },
+  {
+   "t": 6931,
+   "text": "eploy d"
+  },
+  {
+   "t": 6931,
+   "text": "-482 to chec"
+  },
+  {
+   "t": 6931,
+   "text": "kout\",\"done\":false},{"
+  },
+  {
+   "t": 6931,
+   "text": "\"label\":\"W"
+  },
+  {
+   "t": 6931,
+   "text": "ait for health checks to"
+  },
+  {
+   "t": 6933,
+   "text": " pass\",\"done\":false},{"
+  },
+  {
+   "t": 6936,
+   "text": "\"label\":\"Conf"
+  },
+  {
+   "t": 6979,
+   "text": "irm error rate is"
+  },
+  {
+   "t": 7013,
+   "text": " back under"
+  },
+  {
+   "t": 7122,
+   "text": " 1%\",\"done\":false}"
+  },
+  {
+   "t": 7122,
+   "text": "]}}"
+  }
+ ]
+}

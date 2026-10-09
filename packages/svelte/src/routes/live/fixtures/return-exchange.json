@@ -1,0 +1,750 @@
+{
+ "id": "return-exchange",
+ "title": "Swap a size",
+ "prompt": "The trail runners from my last order are too small. Can I swap them for a bigger size, or just get my money back?",
+ "context": "You are the help widget on the website of Fernhill Outfitters, a fictional online outdoor-gear shop, talking to a signed-in customer. You already looked up their latest order and the policy; do not ask for these values.\n\n- lookup_order({\"latest\":true}) -> {\"order\":\"5512\",\"delivered\":\"Sep 30\",\"daysSinceDelivery\":10,\"items\":[{\"name\":\"Trail running shoes\",\"size\":\"9\",\"price\":128},{\"name\":\"Merino hiking socks\",\"price\":18}]}\n- return_policy() -> {\"windowDays\":30,\"condition\":\"unworn outdoors\",\"exchangeShipping\":\"free both ways\",\"cardRefund\":\"5 to 7 business days\",\"storeCredit\":\"instant, plus 10% bonus\"}\n- stock({\"item\":\"Trail running shoes\"}) -> {\"sizes\":{\"8.5\":0,\"9.5\":3,\"10\":5,\"10.5\":1}}\n\nWhat to build: a return or exchange form for this order. The shoes are preselected. A segmented control chooses Exchange or Refund. Exchange shows a size choice from the sizes in stock only (show 8.5 as sold out or leave it out). Refund shows a choice of card refund or store credit, with the amount each gives (credit is 128 plus 10%). A short summary says what happens next and that the window closes in 20 days. A Submit button runs a flow: validate a size is picked for an exchange, then an \"emit\" action named \"return_request\" carrying the choices, then a toast. Keep it warm and short; this is a customer, not an agent operator.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-09T18:38:05.848Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 29,
+   "text": "\"version"
+  },
+  {
+   "t": 66,
+   "text": "\":\"1.0\",\"ui"
+  },
+  {
+   "t": 96,
+   "text": "\":{\"type\":\"card"
+  },
+  {
+   "t": 128,
+   "text": "\",\"props\":{\"title"
+  },
+  {
+   "t": 173,
+   "text": "\":\"Return or"
+  },
+  {
+   "t": 198,
+   "text": " exchange\",\"description\":\""
+  },
+  {
+   "t": 246,
+   "text": "Order 5512, delivered"
+  },
+  {
+   "t": 274,
+   "text": " Sep 30\"},\""
+  },
+  {
+   "t": 305,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 335,
+   "text": "flex\",\"props\":{\"dire"
+  },
+  {
+   "t": 362,
+   "text": "ction\":\"column\",\"gap\":"
+  },
+  {
+   "t": 398,
+   "text": "\"12px\"},\"children\":"
+  },
+  {
+   "t": 431,
+   "text": "[{\"type\":\"flex"
+  },
+  {
+   "t": 467,
+   "text": "\",\"props\":{\"g"
+  },
+  {
+   "t": 499,
+   "text": "ap\":\"8px\",\"align"
+  },
+  {
+   "t": 531,
+   "text": "\":\"center\",\"w"
+  },
+  {
+   "t": 564,
+   "text": "rap\":true},\"children\":"
+  },
+  {
+   "t": 597,
+   "text": "[{\"type\":\"chip"
+  },
+  {
+   "t": 630,
+   "text": "\",\"props\":{\"label"
+  },
+  {
+   "t": 666,
+   "text": "\":\"Trail running sho"
+  },
+  {
+   "t": 699,
+   "text": "es,"
+  },
+  {
+   "t": 731,
+   "text": " size 9\",\"variant\":\""
+  },
+  {
+   "t": 782,
+   "text": "primary\"}},{\"type"
+  },
+  {
+   "t": 800,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 876,
+   "text": "text\":\""
+  },
+  {
+   "t": 879,
+   "text": "S"
+  },
+  {
+   "t": 897,
+   "text": "orry they"
+  },
+  {
+   "t": 932,
+   "text": " run"
+  },
+  {
+   "t": 968,
+   "text": " small"
+  },
+  {
+   "t": 1001,
+   "text": ". Let's f"
+  },
+  {
+   "t": 1058,
+   "text": "ix it.\",\"size\":\"s"
+  },
+  {
+   "t": 1064,
+   "text": "m\"}}]},{\""
+  },
+  {
+   "t": 1099,
+   "text": "type\":\"segmented\",\"props"
+  },
+  {
+   "t": 1133,
+   "text": "\":{\"label\":\"What would"
+  },
+  {
+   "t": 1167,
+   "text": " you like?\",\"options\":[\""
+  },
+  {
+   "t": 1200,
+   "text": "Exchange\",\"Refund\""
+  },
+  {
+   "t": 1236,
+   "text": "]},\"bind\":\"{"
+  },
+  {
+   "t": 1265,
+   "text": "state.mode}\"},{"
+  },
+  {
+   "t": 1305,
+   "text": "\"type\":\"if\",\"condition"
+  },
+  {
+   "t": 1336,
+   "text": "\":\"{state.mode =="
+  },
+  {
+   "t": 1374,
+   "text": " "
+  },
+  {
+   "t": 1404,
+   "text": "'Exchange'}\",\""
+  },
+  {
+   "t": 1439,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 1467,
+   "text": "flex\",\"props\":{\"dire"
+  },
+  {
+   "t": 1500,
+   "text": "ction\":\"column\",\"gap\":"
+  },
+  {
+   "t": 1550,
+   "text": "\"8px\"},\"children\":"
+  },
+  {
+   "t": 1849,
+   "text": "[{\"type\":\"segm"
+  },
+  {
+   "t": 1849,
+   "text": "ented\",\"props\":{\"label\":"
+  },
+  {
+   "t": 1849,
+   "text": "\"Pick a"
+  },
+  {
+   "t": 1849,
+   "text": " bigger size\",\"options\":["
+  },
+  {
+   "t": 1849,
+   "text": "{\"value\":\"9.5"
+  },
+  {
+   "t": 1849,
+   "text": "\",\"label\":\"9.5\""
+  },
+  {
+   "t": 1849,
+   "text": "},{\"value\":\"10\",\""
+  },
+  {
+   "t": 1849,
+   "text": "label\":\"10\"},{\""
+  },
+  {
+   "t": 1849,
+   "text": "value\":\"10.5\",\"label"
+  },
+  {
+   "t": 2159,
+   "text": "\":\"10.5\"},{"
+  },
+  {
+   "t": 2159,
+   "text": "\"value\":\"8.5\",\""
+  },
+  {
+   "t": 2159,
+   "text": "label\":\"8.5 ("
+  },
+  {
+   "t": 2159,
+   "text": "sold out)\",\"disabled"
+  },
+  {
+   "t": 2159,
+   "text": "\":true}]},"
+  },
+  {
+   "t": 2159,
+   "text": "\"bind\":\""
+  },
+  {
+   "t": 2159,
+   "text": "{state.size}\"},{"
+  },
+  {
+   "t": 2159,
+   "text": "\"type\":\"text\",\"props\":"
+  },
+  {
+   "t": 2165,
+   "text": "{\"text\":\"Only s"
+  },
+  {
+   "t": 2249,
+   "text": "izes in stock are shown"
+  },
+  {
+   "t": 2250,
+   "text": ". Exchange shipping"
+  },
+  {
+   "t": 2250,
+   "text": " is free both ways.\",\"size"
+  },
+  {
+   "t": 2268,
+   "text": "\":\"sm\"}}]"
+  },
+  {
+   "t": 2317,
+   "text": "}]},{\"type\":\""
+  },
+  {
+   "t": 2338,
+   "text": "if\",\"condition\":\"{state"
+  },
+  {
+   "t": 2370,
+   "text": ".mode == 'Ref"
+  },
+  {
+   "t": 2406,
+   "text": "und'}\",\"children\":[{"
+  },
+  {
+   "t": 2439,
+   "text": "\"type\":\"flex\",\"props"
+  },
+  {
+   "t": 2484,
+   "text": "\":{\"direction\":\"column"
+  },
+  {
+   "t": 2517,
+   "text": "\",\"gap\":\"8"
+  },
+  {
+   "t": 2545,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 2584,
+   "text": "\"type\":\"radio-group"
+  },
+  {
+   "t": 2604,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 2649,
+   "text": "Get your money back as"
+  },
+  {
+   "t": 2687,
+   "text": "\",\"options\":[{\"value\":"
+  },
+  {
+   "t": 2759,
+   "text": "\"card\",\"label\":\"Card"
+  },
+  {
+   "t": 2760,
+   "text": " refund ("
+  },
+  {
+   "t": 2783,
+   "text": "5 to 7 business days"
+  },
+  {
+   "t": 2815,
+   "text": ")\"},{\"value\":\""
+  },
+  {
+   "t": 2860,
+   "text": "credit\",\"label\":\"Store"
+  },
+  {
+   "t": 2896,
+   "text": " credit (instant, +"
+  },
+  {
+   "t": 2922,
+   "text": "10% bonus)\"}"
+  },
+  {
+   "t": 2947,
+   "text": "]},\"bind\":\"{"
+  },
+  {
+   "t": 3004,
+   "text": "state.method}\"},{\""
+  },
+  {
+   "t": 3025,
+   "text": "type\":\"grid\",\"props"
+  },
+  {
+   "t": 3041,
+   "text": "\":{\"columns\":2,"
+  },
+  {
+   "t": 3076,
+   "text": "\"gap\":\"8px\""
+  },
+  {
+   "t": 3106,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 3147,
+   "text": "\":\"stat\",\"props\":{"
+  },
+  {
+   "t": 3185,
+   "text": "\"label\":\"To"
+  },
+  {
+   "t": 3205,
+   "text": " your"
+  },
+  {
+   "t": 3237,
+   "text": " card\",\"value\":\""
+  },
+  {
+   "t": 3270,
+   "text": "{state.price}\",\"format\":"
+  },
+  {
+   "t": 3308,
+   "text": "\"currency\",\"size\":\"s"
+  },
+  {
+   "t": 3351,
+   "text": "m\"}},{\"type\":"
+  },
+  {
+   "t": 3375,
+   "text": "\"stat\",\"props\":{\""
+  },
+  {
+   "t": 3410,
+   "text": "label\":\""
+  },
+  {
+   "t": 3441,
+   "text": "Store credit\",\"value\":\"{"
+  },
+  {
+   "t": 3472,
+   "text": "state.price * (1 +"
+  },
+  {
+   "t": 3504,
+   "text": " state.bonus / 100"
+  },
+  {
+   "t": 3538,
+   "text": ")}\",\"format\":\"currency"
+  },
+  {
+   "t": 3573,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 3614,
+   "text": "}]}]}]},{"
+  },
+  {
+   "t": 3648,
+   "text": "\"type\":\"separator\",\"props"
+  },
+  {
+   "t": 3681,
+   "text": "\":{}"
+  },
+  {
+   "t": 3709,
+   "text": "},{\"type\":\"if\",\""
+  },
+  {
+   "t": 3769,
+   "text": "condition\":\"{state.m"
+  },
+  {
+   "t": 3771,
+   "text": "ode == 'Exchange"
+  },
+  {
+   "t": 3805,
+   "text": "'}\",\"children\":[{\""
+  },
+  {
+   "t": 3840,
+   "text": "type\":\"text\",\"props\":{"
+  },
+  {
+   "t": 3873,
+   "text": "\"text\":\""
+  },
+  {
+   "t": 3906,
+   "text": "Next: we send"
+  },
+  {
+   "t": 3938,
+   "text": " your"
+  },
+  {
+   "t": 3975,
+   "text": " new size free"
+  },
+  {
+   "t": 4029,
+   "text": ","
+  },
+  {
+   "t": 4037,
+   "text": " and you send"
+  },
+  {
+   "t": 4076,
+   "text": " the"
+  },
+  {
+   "t": 4105,
+   "text": " old"
+  },
+  {
+   "t": 4140,
+   "text": " p"
+  },
+  {
+   "t": 4173,
+   "text": "air back free."
+  },
+  {
+   "t": 4208,
+   "text": " Sh"
+  },
+  {
+   "t": 4245,
+   "text": "oes must be unworn out"
+  },
+  {
+   "t": 4271,
+   "text": "doors.\",\"size\":\""
+  },
+  {
+   "t": 4305,
+   "text": "sm\"}}"
+  },
+  {
+   "t": 4343,
+   "text": "]},{\"type\":\"if"
+  },
+  {
+   "t": 4372,
+   "text": "\",\"condition\":\"{state."
+  },
+  {
+   "t": 4408,
+   "text": "mode == 'Refund"
+  },
+  {
+   "t": 4439,
+   "text": "'}\",\"children\":[{\""
+  },
+  {
+   "t": 4611,
+   "text": "type\":\"text\",\"props\":{"
+  },
+  {
+   "t": 4612,
+   "text": "\"text\":\"Next: send"
+  },
+  {
+   "t": 4612,
+   "text": " the"
+  },
+  {
+   "t": 4612,
+   "text": " shoes back un"
+  },
+  {
+   "t": 4620,
+   "text": "worn outdoors and"
+  },
+  {
+   "t": 4642,
+   "text": " we"
+  },
+  {
+   "t": 4679,
+   "text": " refund the"
+  },
+  {
+   "t": 4738,
+   "text": " method you chose."
+  },
+  {
+   "t": 4739,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 4781,
+   "text": "}]},{\"type\":\""
+  },
+  {
+   "t": 4805,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 4840,
+   "text": "\"Your return window closes in"
+  },
+  {
+   "t": 4874,
+   "text": " {state.windowDays -"
+  },
+  {
+   "t": 4905,
+   "text": " state.daysSince} days"
+  },
+  {
+   "t": 4941,
+   "text": ".\",\"size\":\"sm\",\""
+  },
+  {
+   "t": 4973,
+   "text": "weight\":\"semibold\""
+  },
+  {
+   "t": 5008,
+   "text": "}},{\"type\":\"button"
+  },
+  {
+   "t": 5040,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 5073,
+   "text": "Submit\"},\"on_"
+  },
+  {
+   "t": 5105,
+   "text": "click\":{\"action\":\"fl"
+  },
+  {
+   "t": 5148,
+   "text": "ow\",\"steps\":[{\""
+  },
+  {
+   "t": 5175,
+   "text": "action\":\"validate\",\"condition"
+  },
+  {
+   "t": 5207,
+   "text": "\":\"state.mode == "
+  },
+  {
+   "t": 5240,
+   "text": "'Refund' || state."
+  },
+  {
+   "t": 5272,
+   "text": "size != ''\",\"message\":\""
+  },
+  {
+   "t": 5309,
+   "text": "Please pick a size for"
+  },
+  {
+   "t": 5340,
+   "text": " your exchange."
+  },
+  {
+   "t": 5373,
+   "text": "\",\"variant\":\"warning\""
+  },
+  {
+   "t": 5408,
+   "text": "},{\"action\":\"emit"
+  },
+  {
+   "t": 5441,
+   "text": "\",\"target"
+  },
+  {
+   "t": 5474,
+   "text": "\":\"return_request\",\"value\":"
+  },
+  {
+   "t": 5507,
+   "text": "{\"order\":\"5"
+  },
+  {
+   "t": 5541,
+   "text": "512\",\"item\":\"Trail"
+  },
+  {
+   "t": 5575,
+   "text": " running shoes\",\"mode\":"
+  },
+  {
+   "t": 5606,
+   "text": "\"{state.mode}\",\""
+  },
+  {
+   "t": 5641,
+   "text": "size\":\"{state.size}"
+  },
+  {
+   "t": 5674,
+   "text": "\",\"method\":\"{state.method"
+  },
+  {
+   "t": 5706,
+   "text": "}\"}},{\"action\":"
+  },
+  {
+   "t": 5742,
+   "text": "\"toast\",\"message"
+  },
+  {
+   "t": 5776,
+   "text": "\":\"Request sent. We"
+  },
+  {
+   "t": 5807,
+   "text": "'ll email you the"
+  },
+  {
+   "t": 5841,
+   "text": " next steps.\",\"variant\":"
+  },
+  {
+   "t": 5874,
+   "text": "\"success\"}]}}]"
+  },
+  {
+   "t": 5908,
+   "text": "}]},"
+  },
+  {
+   "t": 5941,
+   "text": "\"state\":{\"mode\":"
+  },
+  {
+   "t": 5978,
+   "text": "\"Exchange\",\"size\":"
+  },
+  {
+   "t": 6015,
+   "text": "\"\",\"method\":\"card\",\"price"
+  },
+  {
+   "t": 6040,
+   "text": "\":128,\"bonus\":"
+  },
+  {
+   "t": 6075,
+   "text": "10,\"windowDays\":"
+  },
+  {
+   "t": 6107,
+   "text": "30,\"daysSince\":"
+  },
+  {
+   "t": 6148,
+   "text": "10}}"
+  }
+ ]
+}

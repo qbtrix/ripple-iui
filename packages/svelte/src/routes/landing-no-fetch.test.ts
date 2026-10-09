@@ -9,7 +9,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, expect, test, vi } from 'vitest';
 import Landing from './+page.svelte';
-import { scenarios } from './live/scenarios.js';
+import { AUDIENCES } from './live/scenarios.js';
 import { buildLandingData } from '$lib/site/landing/data.js';
 
 const data = buildLandingData({ releases: [], sizes: null });
@@ -23,12 +23,13 @@ test('the hero plays, swaps and scrubs every recording, and the spec editor re-r
 	const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('no network in this test'));
 	const view = render(Landing, { props: { data } });
 
-	// The bill splitter is fig. 1, at its midpoint.
-	expect(view.getByText('fig. 1, bill splitter, 2,794 chars, recorded from Claude Sonnet')).toBeTruthy();
+	// The refund approval is fig. 1, at its midpoint.
+	expect(view.getByText('fig. 1, refund approval, 3,730 chars, recorded from Claude Sonnet')).toBeTruthy();
 	const slider = () => view.getByRole('slider', { name: 'Stream position' });
 
 	const pills = view.getAllByRole('button', { pressed: false }).filter((b) => b.closest('[aria-label="Recorded streams"]'));
-	expect(pills).toHaveLength(scenarios.filter((s) => !s.needsStore).length - 1);
+	// One recording per audience.
+	expect(pills).toHaveLength(AUDIENCES.length - 1);
 	for (const pill of pills) {
 		await fireEvent.click(pill);
 		await waitFor(() => expect(pill.getAttribute('aria-pressed')).toBe('true'));

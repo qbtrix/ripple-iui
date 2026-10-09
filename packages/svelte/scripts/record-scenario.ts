@@ -1,7 +1,7 @@
 // scripts/record-scenario.ts — Record a real model stream as a /live replay fixture.
 //
 //   bun scripts/record-scenario.ts --id bill-splitter --title "Split the bill" \
-//     --prompt "Dinner for 4 came to ..." [--model sonnet] [--store <base-url>]
+//     --prompt "Dinner for 4 came to ..." [--model sonnet] [--store <base-url>] //     [--widgets approval-gate,tool-call] [--context scripts/scenario-context/<id>.md]
 //
 // --store (store-backed scenarios such as order-burger) fetches the test
 // store's real menu from <base-url>/api/menu and appends a STORE section to
@@ -30,6 +30,11 @@ import { validateCatalog } from '../../core/src/core/validate-catalog.ts';
 const MAX_GAP_MS = 400;
 // Widget categories offered to the model. The full manifest is ~250 KB; these
 // cover small interactive tools without the marketing/research/vertical sets.
+// --widgets adds named widgets from outside them (approval-gate, invoice-lines)
+// for a scenario that needs one, without paying for the whole category.
+// --context appends what the model already knows when it draws (an agent's
+// tool results, a shop's opening hours) as a SCENARIO CONTEXT section, and the
+// fixture keeps that text so the page can show what the model was given.
 const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'overlay', 'interactive']);
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -39,21 +44,30 @@ const { values: args } = parseArgs({
 		title: { type: 'string' },
 		prompt: { type: 'string' },
 		model: { type: 'string', default: 'sonnet' },
-		store: { type: 'string' }
+		store: { type: 'string' },
+		widgets: { type: 'string' },
+		context: { type: 'string' }
 	}
 });
 if (!args.id || !args.title || !args.prompt || !/^[a-z0-9-]+$/.test(args.id)) {
-	console.error('usage: bun scripts/record-scenario.ts --id <kebab-id> --title "<title>" --prompt "<text>" [--model sonnet]');
+	console.error('usage: bun scripts/record-scenario.ts --id <kebab-id> --title "<title>" --prompt "<text>" [--model sonnet] [--widgets a,b] [--context <file>]');
 	process.exit(2);
 }
 
+const context = args.context ? readFileSync(resolve(args.context), 'utf-8').trim() : '';
 const manifest = JSON.parse(readFileSync(resolve(here, '../static/manifest.json'), 'utf-8'));
 const allTypes: string[] = manifest.widgets.map((w: { type: string }) => w.type);
+const extra = new Set((args.widgets ?? '').split(',').map((t) => t.trim()).filter(Boolean));
+const missing = [...extra].filter((t) => !allTypes.includes(t));
+if (missing.length) {
+	console.error(`--widgets: not in the manifest: ${missing.join(', ')}`);
+	process.exit(2);
+}
 const reference = {
 	spec: manifest.spec,
 	actions: manifest.actions,
 	widgets: manifest.widgets
-		.filter((w: { category: string }) => CATEGORIES.has(w.category))
+		.filter((w: { category: string; type: string }) => CATEGORIES.has(w.category) || extra.has(w.type))
 		.map(({ pocket: _pocket, ...w }: Record<string, unknown>) => w)
 };
 
@@ -87,7 +101,10 @@ LAYOUT
 - The tool must also work in a card about 300px wide (phones). Use grid "columns" of 2 at most. A number-input needs about 140px, so give number inputs and sliders a full-width row or a 2-column grid. A flex row with more than two children sets "wrap": true.
 
 MANIFEST (spec envelope, action grammar, widgets)
-${JSON.stringify(reference)}${args.store ? await storeSection(args.store) : ''}`;
+${JSON.stringify(reference)}${args.store ? await storeSection(args.store) : ''}${context ? `
+
+SCENARIO CONTEXT (what you already know; it overrides the general rules above where they conflict)
+${context}` : ''}`;
 
 // The order demo's contract with the /live host. Keep in step with
 // src/routes/live/checkout.ts (the host validates and strips prices).
@@ -112,11 +129,14 @@ ${JSON.stringify(menu)}
 }
 
 const cwd = mkdtempSync(join(tmpdir(), 'ripple-record-'));
+// From a file, not argv: the prompt is past Windows' 32k command-line limit.
+const systemFile = join(cwd, 'system.txt');
+writeFileSync(systemFile, SYSTEM, 'utf-8');
 const cmd = [
 	'claude', '-p', args.prompt,
 	'--output-format', 'stream-json', '--include-partial-messages', '--verbose',
 	'--model', args.model!,
-	'--system-prompt', SYSTEM,
+	'--system-prompt-file', systemFile,
 	'--tools', '',
 	'--setting-sources', 'local',
 	'--strict-mcp-config',
@@ -196,6 +216,7 @@ const fixture = {
 	id: args.id,
 	title: args.title,
 	prompt: args.prompt,
+	...(context && { context }),
 	model: args.model,
 	recordedAt: new Date().toISOString(),
 	chunks

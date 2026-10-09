@@ -85,16 +85,17 @@
   }: Props = $props();
 
   // Default: collapsed on success, auto-expanded on error. pending/running
-  // expand so the user can watch the call. svelte-ignore: one-time seed.
+  // expand so the user can watch the call. The default follows the status
+  // (a streamed spec mounts the card before its status arrives) until the
+  // user toggles; from then on their choice wins.
   function defaultOpen(s: ToolStatus): boolean {
     return s !== 'success';
   }
-  // svelte-ignore state_referenced_locally
-  let internalOpen = $state(defaultOpen(status));
-  const isOpen = $derived(open !== undefined ? !!open : internalOpen);
+  let userOpen = $state<boolean | null>(null);
+  const isOpen = $derived(open !== undefined ? !!open : (userOpen ?? defaultOpen(status)));
 
   function toggle() {
-    if (open === undefined) internalOpen = !internalOpen;
+    if (open === undefined) userOpen = !isOpen;
   }
 
   const STATUS: Record<ToolStatus, { label: string; cls: string }> = {
