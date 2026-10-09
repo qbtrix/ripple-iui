@@ -1,8 +1,18 @@
 <!--
   @file Map.svelte
   @description Leaflet-backed map widget. Renders markers, paths (polylines),
-  polygons (geofences), live trackers (smoothly interpolated moving markers
-  with optional trails), and popups. Click events route through the ripple
+  polygons (geofences), live trackers (moving markers with optional trails),
+  and popups.
+
+  `bounds` fits at mount and refits only when its value changes.
+
+  Trackers glide: each position update starts a linear requestAnimationFrame
+  tween from the marker's current spot to the new one, lasting as long as the
+  gap since the previous update (clamped 0.3s to 5s, 3s before a gap is known),
+  so a host polling every few seconds gets continuous motion. The tracker icon
+  is built once; heading and color update in place so the pulse ring never
+  restarts. prefers-reduced-motion jumps instead. Frames are cancelled on
+  unmount and when a tracker disappears. Click events route through the ripple
   EventDispatcher so chat-spec authors can wire `chat.send` round-trips.
 
   Tile providers default to OpenStreetMap-derived presets (no API key). All
@@ -74,6 +84,8 @@
     minZoom?: number;
     maxZoom?: number;
     bounds?: [LatLng, LatLng];
+    /** Pixel padding around `bounds` when fitting. Default 0. */
+    boundsPadding?: number;
     tiles?: TilePreset;
     tileUrl?: string;
     tileAttribution?: string;
@@ -98,6 +110,7 @@
     minZoom,
     maxZoom,
     bounds,
+    boundsPadding = 0,
     tiles = 'carto-voyager',
     tileUrl,
     tileAttribution,
@@ -131,6 +144,19 @@
   let trackerTrailLayer: any = null;
   let trackerMarkers = new Map<string, any>();
   let trackerTrails = new Map<string, any>();
+  // Per-tracker tween state. A plain Map, not $state: drawTrackers runs inside
+  // an $effect and must not subscribe to it.
+  interface Motion {
+    to: LatLng;
+    lastAt: number;
+    raf: number;
+    iconKey: string;
+  }
+  let trackerMotion = new Map<string, Motion>();
+
+  const MOVE_MIN_MS = 300;
+  const MOVE_MAX_MS = 5000;
+  const MOVE_DEFAULT_MS = 3000;
 
   const TILE_PRESETS: Record<Exclude<TilePreset, 'custom'>, { url: string; attribution: string; maxZoom: number }> = {
     osm: {
@@ -190,6 +216,39 @@
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2]
     });
+  }
+
+  function prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  }
+
+  // Icon DOM is rebuilt only when this changes; heading and color are CSS vars
+  // patched in place, so a moving courier keeps its running pulse animation.
+  function trackerIconKey(t: Tracker): string {
+    return `${t.label ?? ''}|${t.icon ?? ''}`;
+  }
+
+  function moveTracker(m: any, mo: Motion, lat: number, lng: number) {
+    const now = Date.now();
+    const gap = mo.lastAt > 0 ? now - mo.lastAt : MOVE_DEFAULT_MS;
+    const duration = Math.min(MOVE_MAX_MS, Math.max(MOVE_MIN_MS, gap));
+    mo.lastAt = now;
+    mo.to = [lat, lng];
+    cancelAnimationFrame(mo.raf);
+    mo.raf = 0;
+    if (prefersReducedMotion()) {
+      m.setLatLng(mo.to);
+      return;
+    }
+    const cur = m.getLatLng();
+    const from: LatLng = [cur.lat, cur.lng];
+    const to = mo.to;
+    const step = () => {
+      const p = Math.min(1, (Date.now() - now) / duration);
+      m.setLatLng([from[0] + (to[0] - from[0]) * p, from[1] + (to[1] - from[1]) * p]);
+      mo.raf = p < 1 ? requestAnimationFrame(step) : 0;
+    };
+    mo.raf = requestAnimationFrame(step);
   }
 
   function makeTrackerIcon(L: any, t: Tracker) {
@@ -258,7 +317,7 @@
       L.tileLayer(src.url, { attribution: src.attribution, maxZoom: src.maxZoom }).addTo(map);
 
       if (bounds) {
-        map.fitBounds(bounds);
+        fitTo(bounds);
       } else {
         map.setView(center, zoom);
       }
@@ -287,7 +346,23 @@
         trackerTrails.clear();
       };
     })();
-    return () => cleanup();
+    return () => {
+      for (const mo of trackerMotion.values()) cancelAnimationFrame(mo.raf);
+      trackerMotion.clear();
+      cleanup();
+    };
+  });
+
+  // Bounds refit only when their value changes, so a parent that rebuilds the
+  // same rectangle never undoes the visitor's pan and zoom.
+  let fittedKey = '';
+  function fitTo(b: [LatLng, LatLng]) {
+    fittedKey = JSON.stringify(b);
+    mapInstance?.fitBounds(b, { padding: [boundsPadding, boundsPadding] });
+  }
+  $effect(() => {
+    const b = bounds; // read first: mapInstance is not reactive
+    if (mapInstance && b && JSON.stringify(b) !== fittedKey) fitTo(b);
   });
 
   // Reactive re-draws — run only after the map is mounted.
@@ -360,14 +435,25 @@
     for (const t of trackers) {
       seen.add(t.id);
       let m = trackerMarkers.get(t.id);
-      if (!m) {
+      const mo = trackerMotion.get(t.id);
+      if (!m || !mo) {
         m = LRef.marker([t.lat, t.lng], { icon: makeTrackerIcon(LRef, t), keyboard: false });
         trackerLayer.addLayer(m);
         trackerMarkers.set(t.id, m);
+        trackerMotion.set(t.id, { to: [t.lat, t.lng], lastAt: Date.now(), raf: 0, iconKey: trackerIconKey(t) });
       } else {
-        // Update position with smooth CSS-driven interpolation (transform transition).
-        m.setLatLng([t.lat, t.lng]);
-        m.setIcon(makeTrackerIcon(LRef, t));
+        const key = trackerIconKey(t);
+        if (key !== mo.iconKey) {
+          mo.iconKey = key;
+          m.setIcon(makeTrackerIcon(LRef, t));
+        } else {
+          const wrap = m.getElement?.()?.querySelector('.rmap-tracker-wrap') as HTMLElement | null | undefined;
+          wrap?.style.setProperty('--rmap-tracker-color', t.color ?? 'oklch(0.65 0.22 25)');
+          wrap?.style.setProperty('--rmap-tracker-rot', `${Number(t.heading) || 0}deg`);
+        }
+        // Same target again (the trackers array is rebuilt for unrelated prop
+        // changes): leave the tween and the gap clock alone.
+        if (mo.to[0] !== t.lat || mo.to[1] !== t.lng) moveTracker(m, mo, t.lat, t.lng);
       }
 
       if (t.trail && t.trail.length > 1) {
@@ -401,6 +487,8 @@
       if (!seen.has(tid)) {
         trackerLayer.removeLayer(m);
         trackerMarkers.delete(tid);
+        cancelAnimationFrame(trackerMotion.get(tid)?.raf ?? 0);
+        trackerMotion.delete(tid);
         const line = trackerTrails.get(tid);
         if (line) {
           trackerTrailLayer.removeLayer(line);
@@ -469,13 +557,11 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
   }
 
-  /* Trackers — pulsing arrow + smooth movement */
+  /* Trackers: pulsing arrow. Movement is a rAF tween in script; a CSS
+     transform transition here would lag every frame. */
   :global(.rmap-tracker) {
     background: transparent !important;
     border: 0 !important;
-  }
-  :global(.leaflet-marker-icon.rmap-tracker) {
-    transition: transform 0.6s linear;
   }
   :global(.rmap-tracker-wrap) {
     position: relative;
