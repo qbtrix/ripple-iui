@@ -3,18 +3,13 @@
 // stripped (headers here legitimately use dashes; visitors never see them).
 // A test file is skipped. Scenario titles feed the chips, so scenarios.ts is in.
 
-import { readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
 import { expect, test } from 'vitest';
 
-const routes = resolve(__dirname, '..');
-const files = [
-	join(routes, '+page.svelte'),
-	join(routes, 'live/scenarios.ts'),
-	...readdirSync(__dirname)
-		.filter((f) => /\.(svelte|ts)$/.test(f) && !f.includes('.test.'))
-		.map((f) => join(__dirname, f))
-];
+const SOURCES = import.meta.glob(['../+page.svelte', '../live/scenarios.ts', './*.svelte', './*.ts', '!./*.test.ts'], {
+	query: '?raw',
+	import: 'default',
+	eager: true
+}) as Record<string, string>;
 
 const visible = (src: string) =>
 	src
@@ -22,8 +17,12 @@ const visible = (src: string) =>
 		.replace(/\/\*[\s\S]*?\*\//g, '')
 		.replace(/(^|\s)\/\/.*$/gm, '$1');
 
-test.each(files)('%s has no dashes or "live model" in its strings', (file) => {
-	const text = visible(readFileSync(file, 'utf8'));
+test('the glob found the landing, the scenarios and the chat sources', () => {
+	expect(Object.keys(SOURCES)).toEqual(expect.arrayContaining(['../+page.svelte', '../live/scenarios.ts', './Chat.svelte', './session.svelte.ts']));
+});
+
+test.each(Object.keys(SOURCES))('%s has no dashes or "live model" in its strings', (file) => {
+	const text = visible(SOURCES[file]);
 	expect(text.match(/.*[\u2013\u2014].*/g) ?? []).toEqual([]);
 	expect(text.match(/.*live model.*/gi) ?? []).toEqual([]);
 });
