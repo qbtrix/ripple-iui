@@ -205,9 +205,9 @@
 						type: 'bar', data: values,
 						itemStyle: {
 							borderRadius: [3, 3, 0, 0],
-							// One series is one identity: every bar wears slot 1 unless
-							// the spec colours that bar itself.
-							color: (p: any) => colors[p.dataIndex] || palette[0],
+							// One series is one identity: every bar wears slot 1. A single
+							// spec colour is the series colour; a longer list colours bars.
+							color: (p: any) => colors.length === 1 ? colors[0] : colors[p.dataIndex] || palette[0],
 						},
 						barMaxWidth: 32,
 					}],

@@ -44,10 +44,11 @@
     showBreadcrumb = true,
     showLabels = true,
     tooltip = true,
-    colors
+    colors: rawColors
   }: Props = $props();
 
   const data = $derived(safeArray<Node>(rawData, { widget: 'treemap', key: 'data' }));
+  const colors = $derived(rawColors === undefined ? undefined : safeArray<string>(rawColors, { widget: 'treemap', key: 'colors' }));
 
   const styleString = $derived(
     style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined

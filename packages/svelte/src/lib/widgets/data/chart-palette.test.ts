@@ -59,6 +59,25 @@ describe('chart', () => {
 		]);
 	});
 
+	const bars = [{ label: 'a', value: 1 }, { label: 'b', value: 2 }, { label: 'c', value: 3 }];
+	async function barFills(colors?: string[]) {
+		render(Chart, { props: { type: 'bar', data: bars, colors } });
+		const fill = (await drawn()).series[0].itemStyle.color;
+		return [0, 1, 2].map((dataIndex) => fill({ dataIndex }));
+	}
+
+	test('a single-series bar chart is one colour', async () => {
+		expect(await barFills()).toEqual([CHART_PALETTE_LIGHT[0], CHART_PALETTE_LIGHT[0], CHART_PALETTE_LIGHT[0]]);
+	});
+
+	test('one spec colour on a single-series bar chart is the series colour', async () => {
+		expect(await barFills(['#123456'])).toEqual(['#123456', '#123456', '#123456']);
+	});
+
+	test('a spec colour list colours its bars; gaps stay on slot 1', async () => {
+		expect(await barFills(['', '#123456'])).toEqual([CHART_PALETTE_LIGHT[0], '#123456', CHART_PALETTE_LIGHT[0]]);
+	});
+
 	test('pie slices take the palette', async () => {
 		const data = [{ label: 'a', value: 1 }, { label: 'b', value: 2 }];
 		render(Chart, { props: { type: 'pie', data } });
