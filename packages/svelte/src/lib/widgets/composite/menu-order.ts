@@ -274,16 +274,18 @@ export function totalOf(lines: readonly CartLine[], mode: Fulfilment, fee: numbe
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Field → message for what blocks the review step. Empty object when ready. */
+/** Field → message for what blocks the review step: the store's checkout needs
+ *  name, email and phone, plus the address for delivery. Empty object when ready. */
 export function contactErrors(c: Contact, mode: Fulfilment): Partial<Record<keyof Contact, string>> {
 	const e: Partial<Record<keyof Contact, string>> = {};
 	const email = c.email.trim();
 	const phone = c.phone.trim();
 	if (!c.name.trim()) e.name = 'Add a name for the order.';
-	if (email && !EMAIL.test(email)) e.email = 'That email looks incomplete.';
-	if (phone && (!/^\+?[\d\s().-]+$/.test(phone) || phone.replace(/\D/g, '').length < 7))
+	if (!email) e.email = 'Add an email for the order confirmation.';
+	else if (!EMAIL.test(email)) e.email = 'That email looks incomplete.';
+	if (!phone) e.phone = 'Add a phone number so the kitchen can reach you.';
+	else if (!/^\+?[\d\s().-]+$/.test(phone) || phone.replace(/\D/g, '').length < 7)
 		e.phone = 'Use digits, spaces and an optional +.';
-	if (!email && !phone) e.email = 'Add an email or a phone number so the kitchen can reach you.';
 	if (mode === 'delivery' && !c.address.trim()) e.address = 'Add the delivery address.';
 	return e;
 }
