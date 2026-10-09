@@ -1,13 +1,14 @@
 // routes/pawbar/pawbar.test.ts — The landing chat's wire layer and store, no DOM rendering.
 // parseSSE (chunk boundaries, CRLF, comments, malformed frames), the legacy
-// fence splitter, the recorded-scenario re-cut, customer_ref storage, and the
-// ChatSession turn model across both card paths and every failure event.
+// fence splitter, the recorded-scenario re-cut, customer_ref storage, the
+// ChatSession turn model across both card paths and every failure event, and the
+// messages a card sends (ask, a finished flow).
 
 import { describe, expect, test, vi } from 'vitest';
-import type { RippleEvent } from '$lib/index.js';
+import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, ChatHttpError, ChatSession, customerRef, pawbarTransport, type Transport } from './session.svelte.js';
+import { BYOK_URL, CARD_MESSAGE_MAX, ChatHttpError, ChatSession, customerRef, flowMessage, pawbarTransport, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
@@ -370,3 +371,105 @@ describe('ChatSession', () => {
 	});
 });
 
+
+const asks = (s: ChatSession) => s.turns.filter((t) => t.role === 'user').map((t) => (t.parts[0]?.kind === 'text' ? t.parts[0].text : ''));
+const ask = (text: unknown): RippleEvent => ({ type: 'emit', name: 'ask', target: 'ask', payload: { text } });
+const chat = (message: string) => ({ action: { kind: 'chat' as const, message }, payload: { style_selection: { id: 'food', label: 'Food' }, style_formData: {}, details_formData: { city: 'Lisbon', days: 4 } } });
+
+describe('messages a card sends', () => {
+	/** A session whose first answer is one final card, and every later answer plain text. */
+	async function withCard(gate?: Promise<void>) {
+		const sent: string[] = [];
+		const session = new ChatSession(async function* (message, signal) {
+			sent.push(message);
+			if (sent.length > 1) {
+				await Promise.race([gate, new Promise((r) => signal.addEventListener('abort', r))]);
+				yield { event: 'chunk', data: { content: `Answer to ${message.split('\n')[0]}` } };
+				return;
+			}
+			yield { event: 'card.start', data: { card_id: 'c' } };
+			yield { event: 'card.final', data: { card_id: 'c', card: { ui: { type: 'button' } } } };
+		});
+		await session.send('first');
+		return { session, sent, card: cardOf(session) };
+	}
+
+	test('flowMessage puts each answer on its own line after the plain message', () => {
+		expect(flowMessage('Plan a trip for me.', chat('').payload)).toBe('Plan a trip for me.\nStyle: Food\nCity: Lisbon\nDays: 4');
+		expect(flowMessage('Pick one.', { use_selection: 'gaming', tags_formData: { picks: ['a', { label: 'B' }], blank: '  ', none: null } })).toBe('Pick one.\nUse: gaming\nPicks: a, B');
+		const many = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`f${i}`, 'y'.repeat(5000)]));
+		const long = flowMessage('x', { long_formData: many });
+		expect(long.length).toBe(CARD_MESSAGE_MAX);
+		expect(long.split('\n')[1]).toBe(`F0: ${'y'.repeat(200)}`);
+	});
+
+	test("a final card's ask is sent as the visitor's next message", async () => {
+		const { session, sent, card } = await withCard();
+		void session.hostEvent(card, ask('Tell me about the weekend menu.'));
+		await waitFor(() => expect(sent).toEqual(['first', 'Tell me about the weekend menu.']));
+		expect(asks(session)).toEqual(['first', 'Tell me about the weekend menu.']);
+		expect(card.sent).toBeNull();
+	});
+
+	test('a finished flow sends its chat message with the answers; other kinds are ignored', async () => {
+		const { session, sent, card } = await withCard();
+		const others: TerminalResult['action'][] = [{ kind: 'navigate', url: '/x' }, { kind: 'emit', event: 'checkout' }, { kind: 'invoke_tool', tool: 't' }, undefined];
+		for (const action of others) session.flowComplete(card, { action, payload: {} });
+		expect(sent).toEqual(['first']);
+		session.flowComplete(card, chat('Plan a trip for me.'));
+		await waitFor(() => expect(sent).toHaveLength(2));
+		expect(sent[1]).toBe('Plan a trip for me.\nStyle: Food\nCity: Lisbon\nDays: 4');
+		expect(asks(session)[1]).toBe(sent[1]);
+	});
+
+	test('inert until final; a malformed ask is ignored', async () => {
+		const { session, sent, card } = await withCard();
+		const streaming = new ChatSession(frames({ event: 'card.start', data: { card_id: 'c' } }, { event: 'card.delta', data: { card_id: 'c', text: '{"ui":' } }));
+		await streaming.send('x');
+		const open = cardOf(streaming);
+		open.status = 'streaming';
+		void streaming.hostEvent(open, ask('hi'));
+		streaming.flowComplete(open, chat('hi'));
+		for (const text of [42, '', '   ', 'x'.repeat(501)]) void session.hostEvent(card, ask(text));
+		void session.hostEvent(card, { type: 'emit', name: 'ask', payload: 'hi' });
+		await new Promise((r) => setTimeout(r, 20));
+		expect(sent).toEqual(['first']);
+		expect(asks(streaming)).toEqual(['x']);
+	});
+
+	test('one send per click: a handler list that asks twice sends the first', async () => {
+		const { session, sent, card } = await withCard();
+		void session.hostEvent(card, ask('one'));
+		void session.hostEvent(card, ask('two'));
+		await new Promise((r) => setTimeout(r, 20));
+		expect(sent).toEqual(['first', 'one']);
+		// A later click sends again.
+		void session.hostEvent(card, ask('three'));
+		await waitFor(() => expect(sent).toEqual(['first', 'one', 'three']));
+	});
+
+	test('while an answer is in flight, the newest card message waits and goes after it; Stop drops it', async () => {
+		let release!: () => void;
+		const gate = new Promise<void>((r) => (release = r));
+		const { session, sent, card } = await withCard(gate);
+		void session.send('second');
+		await waitFor(() => expect(session.busy).toBe(true));
+		session.flowComplete(card, chat('Plan a trip for me.'));
+		await new Promise((r) => setTimeout(r, 5));
+		void session.hostEvent(card, ask('Newest wins'));
+		await new Promise((r) => setTimeout(r, 5));
+		expect(sent).toEqual(['first', 'second']);
+		release();
+		await waitFor(() => expect(sent).toEqual(['first', 'second', 'Newest wins']));
+		await waitFor(() => expect(session.busy).toBe(false));
+
+		const stopped = await withCard(new Promise(() => {}));
+		void stopped.session.send('slow');
+		await waitFor(() => expect(stopped.session.busy).toBe(true));
+		void stopped.session.hostEvent(stopped.card, ask('queued'));
+		stopped.session.stop();
+		await waitFor(() => expect(stopped.session.busy).toBe(false));
+		await new Promise((r) => setTimeout(r, 20));
+		expect(stopped.sent).toEqual(['first', 'slow']);
+	});
+});

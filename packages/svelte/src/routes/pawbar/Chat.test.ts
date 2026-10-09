@@ -2,12 +2,14 @@
 // Taps a suggestion chip, streams a card over card.delta, and proves: the
 // half-built card already renders and its local state works, its host event
 // (emit) is inert while streaming, and after card.final the validated card is
-// interactive and its emit reaches the page.
+// interactive and its emit reaches the page. A flow card walks its steps with no
+// call to the chat, then its last step sends the answers as the visitor's message.
 
 import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 import Chat from './Chat.svelte';
 import { ChatSession } from './session.svelte.js';
+import { laptopFlowCard, tripFlowCard } from './flow-cards.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
 vi.setConfig({ testTimeout: 20_000 });
@@ -73,4 +75,58 @@ test('a rejected card leaves a short note instead of a broken card', async () =>
 	const view = render(Chat, { session });
 	await session.send('hi');
 	await waitFor(() => expect(view.getByText(/cut off before it finished/)).toBeTruthy());
+});
+
+test('a flow card runs its steps in the page, then sends the answers as the visitor', async () => {
+	const sent: string[] = [];
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+		if (sent.length > 1) {
+			yield { event: 'chunk', data: { content: 'Here are three that fit.' } };
+			return;
+		}
+		yield { event: 'card.start', data: { card_id: 'f' } };
+		yield { event: 'card.delta', data: { card_id: 'f', text: JSON.stringify(laptopFlowCard) } };
+		yield { event: 'card.final', data: { card_id: 'f', card: laptopFlowCard } };
+	});
+	const view = render(Chat, { session });
+	await session.send('Help me choose a laptop');
+	await waitFor(() => expect(view.getByText('Creative work')).toBeTruthy());
+	await fireEvent.click(view.getByText('Creative work'));
+	await waitFor(() => expect(view.getByText('Over $1,500')).toBeTruthy());
+	await fireEvent.click(view.getByText('Over $1,500'));
+	await waitFor(() => expect(view.getByText('Not really')).toBeTruthy());
+	expect(sent).toEqual(['Help me choose a laptop']);
+	await fireEvent.click(view.getByText('Not really'));
+	const message = 'Recommend a laptop for me from these answers.\nMain use: Creative work\nBudget: Over $1,500\nWeight matters: Not really';
+	await waitFor(() => expect(sent).toEqual(['Help me choose a laptop', message]));
+	await waitFor(() => expect(view.getByText('Here are three that fit.')).toBeTruthy());
+	const mine = [...view.container.querySelectorAll('.ask')].map((p) => p.textContent);
+	expect(mine).toEqual(['Help me choose a laptop', message]);
+});
+
+test('a form step holds the flow until its required fields are filled', async () => {
+	const sent: string[] = [];
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+		if (sent.length > 1) return;
+		yield { event: 'card.start', data: { card_id: 't' } };
+		yield { event: 'card.final', data: { card_id: 't', card: tripFlowCard } };
+	});
+	const view = render(Chat, { session });
+	await session.send('Help me plan a trip step by step');
+	await waitFor(() => expect(view.getByText('Food')).toBeTruthy());
+	await fireEvent.click(view.getByText('Food'));
+	const plan = await view.findByRole('button', { name: 'Plan my trip' });
+	await fireEvent.click(plan);
+	await waitFor(() => expect(view.getByRole('alert').textContent).toContain('City is required'));
+	const [city, days, budget] = view.container.querySelectorAll('.card input');
+	await fireEvent.input(city, { target: { value: 'Lisbon' } });
+	await fireEvent.input(days, { target: { value: '4' } });
+	await fireEvent.input(budget, { target: { value: '1500' } });
+	expect(sent).toHaveLength(1);
+	await fireEvent.click(plan);
+	await waitFor(() =>
+		expect(sent[1]).toBe('Plan a trip for me with these answers (budget in US dollars).\nTrip style: Food\nCity: Lisbon\nDays: 4\nBudget: 1500')
+	);
 });

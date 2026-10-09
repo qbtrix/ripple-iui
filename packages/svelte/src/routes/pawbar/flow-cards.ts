@@ -41,9 +41,9 @@ export const tripFlowCard = {
 			form_fields: [
 				{ id: 'city', label: 'City', required: true },
 				{ id: 'days', label: 'Days', required: true },
-				{ id: 'budget_usd', label: 'Budget', required: true }
+				{ id: 'budget', label: 'Budget', required: true }
 			],
-			onComplete: { kind: 'chat', message: 'Plan a trip for me with these answers.' },
+			onComplete: { kind: 'chat', message: 'Plan a trip for me with these answers (budget in US dollars).' },
 			ui: {
 				type: 'flex',
 				props: { direction: 'column', gap: '12px' },
@@ -57,7 +57,7 @@ export const tripFlowCard = {
 						on_click: {
 							action: 'emit',
 							target: 'flow.submit',
-							value: { formData: { city: '{state.city}', days: '{state.days}', budget_usd: '{state.budget}' } }
+							value: { formData: { city: '{state.city}', days: '{state.days}', budget: '{state.budget}' } }
 						}
 					}
 				]

@@ -18,16 +18,19 @@
 // may navigate to Stripe or this origin; `emit book` (booking's request) goes to
 // book.ts, and the answer is patched into the booking node's props (`notice`,
 // `confirmed`, fresh `days`) with a BookingReceipt under the card on 201. One
-// checkout or booking in flight per session. Any other host event, and every
-// host event without a StoreHost, is only recorded for display.
+// checkout or booking in flight per session. A final card's `emit ask` ({text})
+// and a finished flow (flowComplete: a `chat` onComplete, plus the visitor's
+// answers, see flowMessage) become the visitor's next message, sent now or right
+// after the answer in flight (one waits; one per click). Any other host event, and
+// every store event without a StoreHost, is only recorded for display.
 // Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
 
-import type { RippleEvent } from '$lib/index.js';
+import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 import { checkout, type OrderSummary } from '../live/checkout.js';
 import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
-import { refuseCard } from './card-policy.js';
+import { ASK_MAX, refuseCard } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
 export const BYOK_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
@@ -59,6 +62,39 @@ export function customerRef(storage: () => Pick<Storage, 'getItem' | 'setItem'> 
 function newRef(): string {
 	if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
 	return `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
+
+/** The most a card-sent message may be: the composer's own limit. */
+export const CARD_MESSAGE_MAX = 2000;
+const ANSWER_MAX = 200;
+
+/** `chosen_style_selection` -> "Chosen style"; `budget_usd` -> "Budget usd". */
+const label = (key: string) => {
+	const words = key.replace(/_(selection|formData)$/, '').replace(/[_-]+/g, ' ').trim();
+	return words.charAt(0).toUpperCase() + words.slice(1);
+};
+const answerText = (v: unknown): string => {
+	if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v).trim().slice(0, ANSWER_MAX);
+	if (Array.isArray(v)) return v.map(answerText).filter(Boolean).join(', ');
+	if (isRecord(v)) return answerText(v.label ?? v.title ?? v.name ?? v.id);
+	return '';
+};
+
+/**
+ * A finished flow's message: the card's plain `onComplete` text, then one line per
+ * answer the visitor gave (a step's pick, or each field it collected), capped at
+ * CARD_MESSAGE_MAX. The card can't template the answers in (no `{` in onComplete).
+ */
+export function flowMessage(message: string, payload: Record<string, unknown> = {}): string {
+	const lines: string[] = [];
+	for (const [key, value] of Object.entries(payload)) {
+		const fields = key.endsWith('_formData') && isRecord(value) ? Object.entries(value) : [[key, value] as const];
+		for (const [k, v] of fields) {
+			const said = answerText(v);
+			if (said) lines.push(`${label(k)}: ${said}`);
+		}
+	}
+	return [message.trim(), ...lines].join('\n').slice(0, CARD_MESSAGE_MAX);
 }
 
 export type Transport = (message: string, signal: AbortSignal) => AsyncIterable<SSEFrame>;
@@ -249,6 +285,10 @@ export class ChatSession {
 	#abort: AbortController | null = null;
 	/** A checkout or booking is on its way to the store. */
 	#hostBusy = false;
+	/** A card's message waiting for the answer in flight. */
+	#queued: string | null = null;
+	/** A card already sent a message in this task (one click). */
+	#said = false;
 
 	constructor(
 		private readonly transport: Transport,
@@ -300,9 +340,13 @@ export class ChatSession {
 			this.busy = false;
 			if (this.#abort === abort) this.#abort = null;
 		}
+		const next = this.#queued;
+		this.#queued = null;
+		if (next) await this.send(next);
 	}
 
 	stop() {
+		this.#queued = null;
 		this.#abort?.abort();
 	}
 
@@ -310,6 +354,11 @@ export class ChatSession {
 	hostEvent(card: Card, event: RippleEvent): Promise<void> | undefined {
 		if (card.status !== 'final') return undefined;
 		const name = event.type === 'emit' ? (event.name ?? event.target) : undefined;
+		if (name === 'ask') {
+			const p = event.payload;
+			if (isRecord(p) && typeof p.text === 'string' && p.text.length <= ASK_MAX) this.#say(p.text);
+			return undefined;
+		}
 		if (this.store && name === 'checkout') return this.#checkout(card, this.store, event.payload);
 		if (this.store && name === 'book') return this.#book(card, this.store, event.payload);
 		const e: Record<string, unknown> = { ...event };
@@ -317,6 +366,23 @@ export class ChatSession {
 		const detail = str(e.message) || str(e.event) || str(e.target) || str(e.url);
 		card.sent = detail ? `${kind}: ${detail}` : kind;
 		return undefined;
+	}
+
+	/** The `onComplete` for a card's <Ripple>: a finished flow's `chat` message goes out as the visitor's. */
+	flowComplete(card: Card, result: TerminalResult) {
+		const action = result.action;
+		if (card.status !== 'final' || action?.kind !== 'chat' || typeof action.message !== 'string') return;
+		this.#say(flowMessage(action.message, result.payload));
+	}
+
+	/** Sends a card's message now, or after the answer in flight (the newest one waits). One per click. */
+	#say(text: string) {
+		if (this.#said || !text.trim()) return;
+		this.#said = true;
+		// ponytail: "one click" is one task; a handler list runs in microtasks, so a timer clears it.
+		setTimeout(() => (this.#said = false));
+		if (this.busy) this.#queued = text;
+		else void this.send(text);
 	}
 
 	async #checkout(card: Card, store: StoreHost, cart: unknown) {

@@ -8,7 +8,10 @@
     remount, so the validated spec is what the visitor keeps using). Host
     events go to session.hostEvent, which ignores them until the card is final;
     a checkout's progress or failure shows as the card's note, and a confirmed
-    booking as a BookingReceipt under the card. A notice that offers a replay gets a button that plays the closest
+    booking as a BookingReceipt under the card. A finished flow card hands its
+    result to session.flowComplete; it and a card's `ask` arrive as the visitor's
+    next message, and each new visitor message scrolls into view, however it was
+    sent. A notice that offers a replay gets a button that plays the closest
     recorded answer into the same turn (session.replayRecorded).
 -->
 <script lang="ts">
@@ -31,12 +34,20 @@
 	async function ask(text: string) {
 		if (session.busy || !text.trim()) return;
 		draft = '';
-		const done = session.send(text);
-		await tick();
-		const mine = log?.children[log.children.length - 2];
-		mine?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-		await done;
+		await session.send(text);
 	}
+
+	// The newest visitor message scrolls to the top: typed, a chip, or sent by a card.
+	let shownAsk = 0;
+	$effect(() => {
+		const i = session.turns.findLastIndex((t) => t.role === 'user');
+		const id = session.turns[i]?.id;
+		if (!id || id === shownAsk) return;
+		shownAsk = id;
+		void tick().then(() =>
+			log?.children[i]?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+		);
+	});
 
 	function onKey(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
@@ -78,10 +89,10 @@
 	{:else}
 		<div class="card" data-status={card.status}>
 			{#if card.status === 'final' && card.spec}
-				<Ripple spec={card.spec} onEvent={(e) => session.hostEvent(card, e)} />
+				<Ripple spec={card.spec} onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 			{:else}
 				<span class="building" aria-live="polite">Building</span>
-				<Ripple streaming={card.store} skeleton="card" onEvent={(e) => session.hostEvent(card, e)} />
+				<Ripple streaming={card.store} skeleton="card" onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 			{/if}
 			{#if card.sent}<p class="sent" role="status">The card sent <code>{card.sent}</code> to this page.</p>{/if}
 			{#if card.note}<p class="host-note" data-kind={card.note.kind} role="status">{card.note.text}</p>{/if}
@@ -193,6 +204,7 @@
 		color: var(--primary-foreground);
 		line-height: 1.5;
 		overflow-wrap: anywhere;
+		white-space: pre-line;
 	}
 	.turn[data-role='assistant'] {
 		display: flex;
