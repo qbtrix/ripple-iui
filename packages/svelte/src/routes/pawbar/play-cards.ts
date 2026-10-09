@@ -1,5 +1,6 @@
 // routes/pawbar/play-cards.ts: Hand-written answers for the landing's newer chips
-// (memory match, guess the word, space trivia, habit tracker, how a heart pumps),
+// (memory match, guess the word, space trivia, tic-tac-toe, connect four, habit
+// tracker, focus timer, how a heart pumps),
 // so mock mode and the offline chat can answer them with no model. Each card is
 // the `{state, ui}` wire shape and must pass card-policy.ts (card-policy.test.ts
 // holds them to it). `playScenarios` wraps each card as a Scenario whose fixture
@@ -207,6 +208,47 @@ export const heartCard = {
 	}
 };
 
+export const ticTacToeCard = {
+	state: {},
+	ui: {
+		type: 'flex',
+		props: { direction: 'column', gap: '12px' },
+		children: [
+			{
+				type: 'board-game',
+				bind: '{state.ttt}',
+				props: { game: 'tic-tac-toe', title: 'Tic-tac-toe', player: 'X', first: 'player', difficulty: 'medium' }
+			},
+			again("{state.ttt.result == 'player'}", 'Play me on hard', 'I beat you at tic-tac-toe on medium. Play me again on hard.')
+		]
+	}
+};
+
+export const connectFourCard = {
+	state: {},
+	ui: {
+		type: 'flex',
+		props: { direction: 'column', gap: '12px' },
+		children: [
+			{
+				type: 'board-game',
+				bind: '{state.c4}',
+				props: { game: 'connect-four', title: 'Connect four, best of 3', player: 'red', first: 'player', difficulty: 'medium', best_of: 3 }
+			},
+			again('{state.c4.series.player >= 2 || state.c4.series.computer >= 2}', 'Play a harder series', 'That best of 3 is over. Play connect four against me again on hard, best of 5.')
+		]
+	}
+};
+
+export const focusTimerCard = {
+	state: {},
+	ui: {
+		type: 'focus-timer',
+		bind: '{state.focus}',
+		props: { title: 'Focus session', focus_min: 25, short_break_min: 5, long_break_min: 15, rounds_before_long: 4, goal_rounds: 6 }
+	}
+};
+
 const CHUNK = 64;
 const STEP_MS = 18;
 
@@ -221,6 +263,9 @@ export const playScenarios: Scenario[] = [
 	handWritten('memory-match', 'Memory match', 'Games', 'Play', 'Make me a memory match game pairing Spanish animal words with their emoji', memoryMatchCard),
 	handWritten('word-guess', 'Guess the word', 'Games', 'Play', 'Make me a 5-letter word guessing game about space, with a hint', wordGuessCard),
 	handWritten('space-trivia', 'Space trivia', 'Games', 'Play', 'Quiz me with 6 space trivia questions, and explain each answer', quizCard),
+	handWritten('tic-tac-toe', 'Tic-tac-toe', 'Games', 'Play', "Let's play tic-tac-toe against you, I'm X, medium difficulty", ticTacToeCard),
+	handWritten('connect-four', 'Connect four', 'Games', 'Play', 'Play connect four against me, best of 3', connectFourCard),
 	handWritten('habit-tracker', 'Habit tracker', 'Habits', 'Track', 'Track my habits this week: reading, running, water and sleep, each with a weekly target', habitCard),
+	handWritten('focus-timer', 'Focus timer', 'Habits', 'Track', 'Make me a pomodoro focus timer: 25 minutes focus, 5 minute breaks, 4 rounds, goal of 6 today', focusTimerCard),
 	handWritten('heart', 'How a heart pumps', 'Learning', 'Learn', 'How does the heart pump blood? Draw an animated picture with numbered notes on the chambers and valves.', heartCard)
 ];

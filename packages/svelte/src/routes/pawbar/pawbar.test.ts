@@ -131,7 +131,10 @@ describe('recorded scenarios', () => {
 		['Make me a memory match game pairing Spanish animal words with their emoji', 'memory-match'],
 		['Make me a 5-letter word guessing game about space, with a hint', 'word-guess'],
 		['Quiz me with 6 space trivia questions, and explain each answer', 'space-trivia'],
+		["Let's play tic-tac-toe against you, I'm X, medium difficulty", 'tic-tac-toe'],
+		['Play connect four against me, best of 3', 'connect-four'],
 		['Track my habits this week: reading, running, water and sleep, each with a weekly target', 'habit-tracker'],
+		['Make me a pomodoro focus timer: 25 minutes focus, 5 minute breaks, 4 rounds, goal of 6 today', 'focus-timer'],
 		['How does the heart pump blood? Draw an animated picture with numbered notes on the chambers and valves.', 'heart']
 	])('the chip "%s" routes to %s, past the mock\'s earlier routes', (prompt, id) => {
 		expect(pickScenario(prompt).id).toBe(id);

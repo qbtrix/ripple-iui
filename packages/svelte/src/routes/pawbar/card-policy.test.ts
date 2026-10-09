@@ -17,7 +17,7 @@
 import { describe, expect, test } from 'vitest';
 import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
 import { gearsCard, gearsSvg, laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
-import { habitCard, heartCard, heartSvg, memoryMatchCard, playScenarios, quizCard, wordGuessCard } from './play-cards.js';
+import { connectFourCard, focusTimerCard, habitCard, heartCard, heartSvg, memoryMatchCard, playScenarios, quizCard, ticTacToeCard, wordGuessCard } from './play-cards.js';
 import { checkIllustrationAnnotations, checkIllustrationSvg } from '$lib/security/illustration-svg.js';
 import { parsePartialSpec } from '$lib/streaming/json-parse.js';
 import { pickScenario } from './recorded.js';
@@ -811,6 +811,9 @@ describe('game on_complete', () => {
 		expect(refuseCard(game(ask({ text: 'Give me a harder round.' })), { partial: true })).toBe('ask_handler');
 		expect(refuseCard({ ui: { type: 'memory-match', props: { pairs: [] }, on_complete: ask() } })).toBe('ask_handler');
 		expect(refuseCard({ ui: { type: 'word-guess', props: { answer: 'comet' }, on_complete: ask() } })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'board-game', props: { game: 'tic-tac-toe' }, on_complete: ask() } })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'board-game', props: { game: 'connect-four', best_of: 3 }, on_complete: ask() } }, { partial: true })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'board-game', props: { game: 'connect-four' }, on_complete: { action: 'toast', target: 'Good game' } } })).toBeNull();
 	});
 });
 
@@ -819,7 +822,10 @@ describe('play cards', () => {
 		['memory match', memoryMatchCard],
 		['guess the word', wordGuessCard],
 		['space trivia', quizCard],
+		['tic-tac-toe', ticTacToeCard],
+		['connect four', connectFourCard],
 		['habit tracker', habitCard],
+		['focus timer', focusTimerCard],
 		['how a heart pumps', heartCard]
 	])('%s passes, at final and at every streamed prefix', (_name, card) => {
 		expect(refuseCard(card)).toBeNull();
@@ -827,6 +833,27 @@ describe('play cards', () => {
 		for (let i = 1; i < wire.length; i += 97) {
 			const { value } = parsePartialSpec(wire.slice(0, i));
 			if (value) expect(refuseCard(value, { partial: true }), wire.slice(0, i)).toBeNull();
+		}
+	});
+
+	test('every play scenario passes at each streamed chunk, as the chat receives it', () => {
+		for (const s of playScenarios) {
+			let wire = '';
+			for (const c of s.fixture.chunks) {
+				wire += c.text;
+				const { value } = parsePartialSpec(wire);
+				if (value) expect(refuseCard(value, { partial: true }), `${s.id}: ${wire}`).toBeNull();
+			}
+			expect(refuseCard(JSON.parse(wire)), s.id).toBeNull();
+		}
+	});
+
+	test('the board games use the canonical board-game type with game set, never an alias', () => {
+		for (const [card, name] of [[ticTacToeCard, 'tic-tac-toe'], [connectFourCard, 'connect-four']] as const) {
+			const game = card.ui.children[0];
+			expect(game.type).toBe('board-game');
+			expect(game.props).toHaveProperty('game', name);
+			expect(game).not.toHaveProperty('on_complete');
 		}
 	});
 
@@ -842,7 +869,7 @@ describe('play cards', () => {
 	});
 
 	test('every play scenario replays to its card', () => {
-		const cards = [memoryMatchCard, wordGuessCard, quizCard, habitCard, heartCard];
+		const cards = [memoryMatchCard, wordGuessCard, quizCard, ticTacToeCard, connectFourCard, habitCard, focusTimerCard, heartCard];
 		for (const [i, s] of playScenarios.entries()) {
 			expect(s.fixture.model).toBe('hand-written');
 			expect(JSON.parse(s.fixture.chunks.map((c) => c.text).join(''))).toEqual({ version: '1.0', ...cards[i] });
