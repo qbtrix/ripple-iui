@@ -76,6 +76,10 @@ Bind `cart` (`{ lines, fulfilment, total }`, never the customer's details) so an
 A real interval timer for "give me a 20-minute HIIT workout and walk me through it" (aliases `workout-timer`, `interval-timer`, `hiit-timer`). The model writes `exercises[]` `{ name, cue?, kind? }` with `kind` one of `cardio | strength | core | mobility | rest`, plus `workSec`, `restSec` and `rounds`; the widget builds the session (work, rest, work, ... across rounds) and does the timing.
 A ring counts the interval down in seconds (plain digits under reduced motion), the current exercise shows in large type with its cue and the next one below, and back, pause and next sit in one row. The header shows the total time; a bar per round tracks the whole session. A `rest`-kind exercise is a rest block with no automatic rest beside it; `restSec: 0` skips rests. Nothing starts until the visitor presses Start, and the timer pauses when the tab is hidden.
 Bind `workSec` (`bind: "{state.workSec}"`): the Work stepper writes it, and a change applies from the next interval, never to the one running. `restSec` has its own stepper. No events.
+### flashcard-deck
+A study deck for "make me Spanish flip cards and keep my score" (aliases `flashcards`, `study-deck`, `flip-cards`). The model writes `cards[]` `{ front, back, hint?, category? }` and optionally `shuffle: true`; the widget runs the flips, the marks and the score. Use it instead of an `each` over single `flashcard` widgets with hand-written counters.
+Progress dots, the card (tap to flip; a 3D turn, a cross-fade under reduced motion), "Show hint" when a card has one, then "Missed it" and "Got it". At the end of a pass a score screen shows cards known out of the deck, lists the missed cards with their answers, and offers "Practise missed", which re-deals only those, and Restart. `shuffle` is seeded from the cards, so every render deals the same order; each restart deals a new one.
+Bind `score` (`bind: "{state.score}"`): cards known since the last restart, written by the widget. `on_complete` fires at the end of every pass with `{ score, total }`.
 
 ### Dashboard variants
 
