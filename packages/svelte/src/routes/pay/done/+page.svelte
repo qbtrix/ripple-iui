@@ -3,21 +3,36 @@
   @description Where the store's payment page returns, in the tab the pay
     card's link opened: `?order=<id>` after paying, `?cancelled=1` after a
     cancel. Prerendered; in the browser it tells the chat tab through
-    BroadcastChannel('ripple-order') (done.ts announce), says what happened
-    with a link back to the landing, and tries to close itself, which the
-    browser allows only for some tabs. The chat confirms with the store itself.
+    BroadcastChannel('ripple-order') (done.ts announce) and says what happened.
+    If this tab still holds the saved order (resume.ts ORDER_KEY), the payment
+    opened in the chat's own tab (in-app browsers do this), so it goes back to
+    the chat, which resumes the card. Otherwise it tries to close itself, which
+    the browser allows only for some tabs. The chat confirms with the store itself.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { announce, type Outcome } from './done.js';
+	import { ORDER_KEY } from '../resume.js';
+
+	/** Whether this tab saved `order` before leaving for the payment page. */
+	function sameTab(order: string): boolean {
+		try {
+			return (sessionStorage.getItem(ORDER_KEY) ?? '').includes(JSON.stringify(order));
+		} catch {
+			return false;
+		}
+	}
 
 	let outcome = $state<Outcome | null>(null);
+	let returning = $state(false);
 
 	onMount(() => {
 		const r = announce(location.search);
 		outcome = r.outcome;
 		if (!r.order) return;
-		const t = setTimeout(() => window.close(), 1500);
+		const back = sameTab(r.order);
+		returning = back;
+		const t = setTimeout(() => (back ? location.replace('/') : window.close()), 1500);
 		return () => clearTimeout(t);
 	});
 </script>
@@ -32,7 +47,7 @@
 		{#if outcome === 'paid'}
 			<p class="mark" aria-hidden="true">✓</p>
 			<h1>Payment received.</h1>
-			<p>Your order is in the chat. You can close this tab.</p>
+			<p>{returning ? 'Taking you back to the chat.' : 'Your order is in the chat. You can close this tab.'}</p>
 		{:else if outcome === 'cancelled'}
 			<h1>Payment cancelled.</h1>
 			<p>Nothing was charged. The chat can start a new checkout.</p>
