@@ -3,1895 +3,1671 @@
  "title": "High-protein week",
  "prompt": "Create a high-protein meal plan for the week. Let me swap meals in and out, set how many people I'm cooking for, and keep a shopping list that updates with the plan.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T08:52:00.697Z",
+ "recordedAt": "2026-10-09T06:44:17.175Z",
  "chunks": [
   {
    "t": 0,
-   "text": "{"
+   "text": "{\"version\":\""
   },
   {
-   "t": 0,
-   "text": "\"version"
+   "t": 336,
+   "text": "1.0\",\"state\":{\""
   },
   {
-   "t": 0,
-   "text": "\":\"1."
+   "t": 337,
+   "text": "people\":2},\"ui\":"
   },
   {
-   "t": 1,
-   "text": "0\",\"state\":{\"people\":"
+   "t": 337,
+   "text": "{\"type\":\"meal-"
   },
   {
-   "t": 1,
-   "text": "2,\"goal\":120,"
+   "t": 338,
+   "text": "plan\",\"props\":{\"title"
   },
   {
-   "t": 1,
-   "text": "\"options\":[\"Chicken"
+   "t": 338,
+   "text": "\":\"High-protein week\",\""
   },
   {
-   "t": 1,
-   "text": " Stir-Fry\",\""
+   "t": 338,
+   "text": "subtitle\":\"7"
   },
   {
-   "t": 1,
-   "text": "Salmon & Quin"
+   "t": 339,
+   "text": " days of"
   },
   {
-   "t": 1,
-   "text": "oa\",\"Beef Ch"
+   "t": 340,
+   "text": " sim"
   },
   {
-   "t": 1,
-   "text": "ili\",\"Tofu Sc"
+   "t": 340,
+   "text": "ple, high-protein meals"
   },
   {
-   "t": 30,
-   "text": "ramble Bowl\",\""
+   "t": 340,
+   "text": "."
   },
   {
-   "t": 61,
-   "text": "Egg & Veg Fr"
+   "t": 368,
+   "text": " Swap any"
   },
   {
-   "t": 97,
-   "text": "ittata\",\"Turkey"
+   "t": 400,
+   "text": " meal and the"
   },
   {
-   "t": 128,
-   "text": " Meatballs\",\"Eating"
+   "t": 737,
+   "text": " shopping list foll"
   },
   {
-   "t": 163,
-   "text": " out\"],\"meals\":["
+   "t": 737,
+   "text": "ows.\",\"verdict\":{"
   },
   {
-   "t": 211,
-   "text": "{\"name\":\"Chic"
+   "t": 737,
+   "text": "\"text\":\"Aver"
   },
   {
-   "t": 231,
-   "text": "ken Stir-Fry"
+   "t": 737,
+   "text": "ages about"
   },
   {
-   "t": 280,
-   "text": "\",\"protein\":42,\"u"
+   "t": 738,
+   "text": " 140"
   },
   {
-   "t": 294,
-   "text": "ses\":2},{\"name\":"
+   "t": 738,
+   "text": " g"
   },
   {
-   "t": 328,
-   "text": "\"Salmon & Qu"
+   "t": 738,
+   "text": " protein per person"
   },
   {
-   "t": 361,
-   "text": "inoa\",\"protein\":38"
+   "t": 739,
+   "text": " a"
   },
   {
-   "t": 396,
-   "text": ",\"uses\":1},{"
+   "t": 739,
+   "text": " day; swap meals fre"
   },
   {
-   "t": 428,
-   "text": "\"name\":\"Beef"
+   "t": 739,
+   "text": "ely and set"
   },
   {
-   "t": 463,
-   "text": " Chili\",\"protein\":40,"
+   "t": 762,
+   "text": " how"
   },
   {
-   "t": 531,
-   "text": "\"uses\":1},{\""
+   "t": 798,
+   "text": " many you"
   },
   {
-   "t": 531,
-   "text": "name\":\"Tofu"
+   "t": 1089,
+   "text": " c"
   },
   {
-   "t": 620,
-   "text": " Scramble Bowl\",\""
+   "t": 1089,
+   "text": "ook for.\",\"status\":\"good"
   },
   {
-   "t": 621,
-   "text": "protein\":30,\"uses"
+   "t": 1089,
+   "text": "\"},\"people"
   },
   {
-   "t": 659,
-   "text": "\":1},{\"name\":\""
+   "t": 1091,
+   "text": "\":\""
   },
   {
-   "t": 669,
-   "text": "Egg & Veg"
+   "t": 1091,
+   "text": "{state.people}\",\"goal"
   },
   {
-   "t": 697,
-   "text": " Frittata\",\"protein\":32"
+   "t": 1091,
+   "text": "\":{\"prot"
   },
   {
-   "t": 733,
-   "text": ",\"uses\":1},{"
+   "t": 1091,
+   "text": "ein_g\":140,\"k"
   },
   {
-   "t": 770,
-   "text": "\"name\":\"Turkey"
+   "t": 1091,
+   "text": "cal\":2200},\"rec"
   },
   {
-   "t": 795,
-   "text": " Meatballs\",\"protein"
+   "t": 1098,
+   "text": "ipes\":[{\"id\":"
   },
   {
-   "t": 833,
-   "text": "\":41,\"uses\":1"
+   "t": 1133,
+   "text": "\"oats\",\"name\":\""
   },
   {
-   "t": 888,
-   "text": "}],\"plan\":[{"
+   "t": 1165,
+   "text": "Protein overnight oats\",\""
   },
   {
-   "t": 912,
-   "text": "\"day\":\"Mon\",\""
+   "t": 1198,
+   "text": "kind\":\"breakfast"
   },
   {
-   "t": 959,
-   "text": "meal\":\"Chicken"
+   "t": 1434,
+   "text": "\",\"serves\":1,\"min"
   },
   {
-   "t": 981,
-   "text": " Stir-Fry\""
+   "t": 1434,
+   "text": "utes\":5,\"kc"
   },
   {
-   "t": 996,
-   "text": "},{\"day\":\"T"
+   "t": 1434,
+   "text": "al\":480,\"protein_"
   },
   {
-   "t": 1031,
-   "text": "ue\",\"meal\":\"Sal"
+   "t": 1434,
+   "text": "g\":35,\"ingred"
   },
   {
-   "t": 1063,
-   "text": "mon & Quinoa"
+   "t": 1434,
+   "text": "ients\":[{\"name\":\""
   },
   {
-   "t": 1095,
-   "text": "\"},{\"day\":\""
+   "t": 1435,
+   "text": "rolled oats\",\"qty"
   },
   {
-   "t": 1131,
-   "text": "Wed\",\"meal\":\""
+   "t": 1435,
+   "text": "\":0.5,\"unit"
   },
   {
-   "t": 1162,
-   "text": "Beef Chili\"},{"
+   "t": 1470,
+   "text": "\":\"cup\",\"aisle"
   },
   {
-   "t": 1199,
-   "text": "\"day\":\"Thu\",\""
+   "t": 1500,
+   "text": "\":\"grains\"},{\""
   },
   {
-   "t": 1229,
-   "text": "meal\":\"Tofu"
+   "t": 1533,
+   "text": "name\":\"Greek yog"
   },
   {
-   "t": 1264,
-   "text": " Scramble Bowl"
+   "t": 1568,
+   "text": "urt\",\"qty\":0."
   },
   {
-   "t": 1299,
-   "text": "\"},{\"day\":\""
+   "t": 1601,
+   "text": "75,\"unit\":\"c"
   },
   {
-   "t": 1328,
-   "text": "Fri\",\"meal\":\""
+   "t": 1784,
+   "text": "up\",\"aisle\":\"d"
   },
   {
-   "t": 1363,
-   "text": "Turkey Meatballs"
+   "t": 1784,
+   "text": "airy\"},{\"name\":"
   },
   {
-   "t": 1399,
-   "text": "\"},{\"day\":\""
+   "t": 1784,
+   "text": "\"prot"
   },
   {
-   "t": 1432,
-   "text": "Sat\",\"meal\":\""
+   "t": 1784,
+   "text": "ein powder\",\"qty\":1"
   },
   {
-   "t": 1464,
-   "text": "Egg & Veg Fr"
+   "t": 1784,
+   "text": ",\"unit\":\"sco"
   },
   {
-   "t": 1499,
-   "text": "ittata\"},{\"day\":"
+   "t": 1802,
+   "text": "op\",\"aisle\":\"p"
   },
   {
-   "t": 1530,
-   "text": "\"Sun\",\"meal\":"
+   "t": 1834,
+   "text": "antry\"},{\"name\":"
   },
   {
-   "t": 1565,
-   "text": "\"Chicken Stir"
+   "t": 1869,
+   "text": "\"bl"
   },
   {
-   "t": 1597,
-   "text": "-Fry\"}],\""
+   "t": 1902,
+   "text": "ueberries\",\"qty\":0"
   },
   {
-   "t": 1630,
-   "text": "ingredients\":[{\""
+   "t": 1935,
+   "text": ".5,\"unit\":\""
   },
   {
-   "t": 1662,
-   "text": "name\":\"Chicken bre"
+   "t": 1968,
+   "text": "cup\",\"aisle\":\""
   },
   {
-   "t": 1699,
-   "text": "ast\",\"unit\":\"g\",\""
+   "t": 2002,
+   "text": "produce\"}]},{\""
   },
   {
-   "t": 1736,
-   "text": "got\":false,\"q0\":"
+   "t": 2184,
+   "text": "id\":\"eggs\",\"name"
   },
   {
-   "t": 1767,
-   "text": "150,\"q1\":0,"
+   "t": 2184,
+   "text": "\":\"Spinach egg"
   },
   {
-   "t": 1799,
-   "text": "\"q2\":0,\"q"
+   "t": 2184,
+   "text": " scramble\",\"kind\":\""
   },
   {
-   "t": 1830,
-   "text": "3\":0,\"q4\":"
+   "t": 2184,
+   "text": "breakfast\",\"serves\":"
   },
   {
-   "t": 1867,
-   "text": "0,\"q5\":0},"
+   "t": 2184,
+   "text": "1,\"minutes\":10"
   },
   {
-   "t": 1899,
-   "text": "{\"name\":\"Salm"
+   "t": 2202,
+   "text": ",\"kcal\":420,"
   },
   {
-   "t": 1932,
-   "text": "on fillet\",\"unit\":"
+   "t": 2236,
+   "text": "\"protein_g\":32,"
   },
   {
-   "t": 1964,
-   "text": "\"g\",\"got\":false,\""
+   "t": 2269,
+   "text": "\"ingredients\":[{"
   },
   {
-   "t": 1999,
-   "text": "q0\":0,\"q1"
+   "t": 2304,
+   "text": "\"name\":\"eggs\",\""
   },
   {
-   "t": 2029,
-   "text": "\":150,\"q2\":0"
+   "t": 2337,
+   "text": "qty\":4,\"ais"
   },
   {
-   "t": 2064,
-   "text": ",\"q3\":0,\""
+   "t": 2374,
+   "text": "le\":\"dairy\"},"
   },
   {
-   "t": 2102,
-   "text": "q4\":0,\"q5"
+   "t": 2404,
+   "text": "{\"name\":\"baby sp"
   },
   {
-   "t": 2131,
-   "text": "\":0},{\"name\":\""
+   "t": 2536,
+   "text": "inach\",\"qty\":2,"
   },
   {
-   "t": 2174,
-   "text": "Lean beef mince\",\""
+   "t": 2537,
+   "text": "\"unit\":\"cup\",\""
   },
   {
-   "t": 2196,
-   "text": "unit\":\"g\",\"got\":"
+   "t": 2537,
+   "text": "aisle\":\"produce\""
   },
   {
-   "t": 2230,
-   "text": "false,\"q0\":0,"
+   "t": 2537,
+   "text": "},{\"name\":\"fe"
   },
   {
-   "t": 2264,
-   "text": "\"q1\":0,\"q"
+   "t": 2572,
+   "text": "ta\",\"qty\":0"
   },
   {
-   "t": 2302,
-   "text": "2\":130,\"q3\":"
+   "t": 2606,
+   "text": ".25,\"unit\":\""
   },
   {
-   "t": 2333,
-   "text": "0,\"q4\":0,"
+   "t": 2637,
+   "text": "cup\",\"aisle\":\""
   },
   {
-   "t": 2364,
-   "text": "\"q5\":0},{\""
+   "t": 2671,
+   "text": "dairy\"}]},{"
   },
   {
-   "t": 2397,
-   "text": "name\":\"Turkey m"
+   "t": 2704,
+   "text": "\"id\":\"cottage\",\""
   },
   {
-   "t": 2430,
-   "text": "ince\",\"unit\":\"g\",\""
+   "t": 2738,
+   "text": "name\":\"Cottage c"
   },
   {
-   "t": 2462,
-   "text": "got\":false,\"q0\":"
+   "t": 2771,
+   "text": "heese power"
   },
   {
-   "t": 2499,
-   "text": "0,\"q1\":0,"
+   "t": 2805,
+   "text": " bowl\",\"kind\":\""
   },
   {
-   "t": 2530,
-   "text": "\"q2\":0,\"q"
+   "t": 2884,
+   "text": "breakfast\",\"serves\":"
   },
   {
-   "t": 2565,
-   "text": "3\":0,\"q4\":"
+   "t": 2884,
+   "text": "1,\"minutes\":5"
   },
   {
-   "t": 2604,
-   "text": "0,\"q5\":150},"
+   "t": 2903,
+   "text": ",\"kcal\":390"
   },
   {
-   "t": 2633,
-   "text": "{\"name\":\"Firm"
+   "t": 2938,
+   "text": ",\"protein_g\":34"
   },
   {
-   "t": 2662,
-   "text": " tofu\",\"unit\":\""
+   "t": 2973,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 2698,
-   "text": "g\",\"got\":false,\"q"
+   "t": 3004,
+   "text": "{\"name\":\"cottage"
   },
   {
-   "t": 2733,
-   "text": "0\":0,\"q1\":"
+   "t": 3038,
+   "text": " cheese\",\"qty\":1"
   },
   {
-   "t": 2764,
-   "text": "0,\"q2\":0,"
+   "t": 3070,
+   "text": ",\"un"
   },
   {
-   "t": 2799,
-   "text": "\"q3\":180,\"q"
+   "t": 3107,
+   "text": "it\":\"cup\",\"ais"
   },
   {
-   "t": 2831,
-   "text": "4\":0,\"q5\":"
+   "t": 3138,
+   "text": "le\":\"dairy\"},"
   },
   {
-   "t": 2864,
-   "text": "0},{\"name\":\""
+   "t": 3170,
+   "text": "{\"name\":\"pineap"
   },
   {
-   "t": 2899,
-   "text": "Eggs\",\"unit\":\""
+   "t": 3204,
+   "text": "ple ch"
   },
   {
-   "t": 2931,
-   "text": "eggs\",\"got\":false,"
+   "t": 3288,
+   "text": "unks\",\"qty\":0."
   },
   {
-   "t": 2967,
-   "text": "\"q0\":0,\"q"
+   "t": 3288,
+   "text": "5,\"unit\":\"c"
   },
   {
-   "t": 2998,
-   "text": "1\":0,\"q2\":"
+   "t": 3304,
+   "text": "up\",\"aisle\":\"produ"
   },
   {
-   "t": 3033,
-   "text": "0,\"q3\":0,"
+   "t": 3337,
+   "text": "ce\"},{\"name\":\""
   },
   {
-   "t": 3065,
-   "text": "\"q4\":4,\"q"
+   "t": 3371,
+   "text": "chia seeds\",\"qty"
   },
   {
-   "t": 3097,
-   "text": "5\":0},{\"name\":"
+   "t": 3404,
+   "text": "\":1,\"un"
   },
   {
-   "t": 3131,
-   "text": "\"Brown rice\",\"un"
+   "t": 3437,
+   "text": "it\":\"tbsp\",\""
   },
   {
-   "t": 3166,
-   "text": "it\":\"g\",\"got\":false"
+   "t": 3471,
+   "text": "aisle\":\"pantry"
   },
   {
-   "t": 3200,
-   "text": ",\"q0\":60,\""
+   "t": 3503,
+   "text": "\"}]},{\"id"
   },
   {
-   "t": 3230,
-   "text": "q1\":0,\"q2"
+   "t": 3540,
+   "text": "\":\"chicken-bow"
   },
   {
-   "t": 3266,
-   "text": "\":0,\"q3\":60"
+   "t": 3572,
+   "text": "l\",\"name\":\"Chic"
   },
   {
-   "t": 3300,
-   "text": ",\"q4\":0,\""
+   "t": 3604,
+   "text": "ken rice bowl\",\"k"
   },
   {
-   "t": 3331,
-   "text": "q5\":0},{\"name"
+   "t": 3686,
+   "text": "ind\":\"lunch\",\"ser"
   },
   {
-   "t": 3365,
-   "text": "\":\"Quinoa\",\""
+   "t": 3686,
+   "text": "ves\":2,\"minutes"
   },
   {
-   "t": 3399,
-   "text": "unit\":\"g\",\"got\":"
+   "t": 3706,
+   "text": "\":30"
   },
   {
-   "t": 3431,
-   "text": "false,\"q0\":0,"
+   "t": 3782,
+   "text": ",\"kcal\":640,"
   },
   {
-   "t": 3488,
-   "text": "\"q1\":60,\"q"
+   "t": 3782,
+   "text": "\"protein_g\":52,"
   },
   {
-   "t": 3506,
-   "text": "2\":0,\"q3\":"
+   "t": 3807,
+   "text": "\"ingredients\":[{"
   },
   {
-   "t": 3702,
-   "text": "0,\"q4\":0,"
+   "t": 3839,
+   "text": "\"name\":\"chicken bre"
   },
   {
-   "t": 3702,
-   "text": "\"q5\":0},{\""
+   "t": 3872,
+   "text": "ast\",\"qty\":500,\""
   },
   {
-   "t": 3703,
-   "text": "name\":\"Whole-w"
+   "t": 3905,
+   "text": "unit\":\"g\",\"ais"
   },
   {
-   "t": 3703,
-   "text": "heat pasta\",\"unit"
+   "t": 3939,
+   "text": "le\":\"protein\"},{"
   },
   {
-   "t": 3704,
-   "text": "\":\"g\",\"got\":false,"
+   "t": 3971,
+   "text": "\"name\":\"jasmine"
   },
   {
-   "t": 3824,
-   "text": "\"q0\":0,\"q"
+   "t": 4005,
+   "text": " rice\",\"qty\":1,"
   },
   {
-   "t": 3825,
-   "text": "1\":0,\"q2\":"
+   "t": 4039,
+   "text": "\"unit\":\"cup\",\""
   },
   {
-   "t": 3825,
-   "text": "0,\"q3\":0,"
+   "t": 4072,
+   "text": "aisle\":\"grains\""
   },
   {
-   "t": 3825,
-   "text": "\"q4\":0,\"q"
+   "t": 4105,
+   "text": "},{\"name\":\"brocc"
   },
   {
-   "t": 3832,
-   "text": "5\":80},{\"name\":"
+   "t": 4139,
+   "text": "oli\",\"qty\":2,"
   },
   {
-   "t": 3887,
-   "text": "\"Kidney beans\",\""
+   "t": 4174,
+   "text": "\"un"
   },
   {
-   "t": 3899,
-   "text": "unit\":\"g\",\"got\":"
+   "t": 4205,
+   "text": "it\":\"cup\",\"ais"
   },
   {
-   "t": 3932,
-   "text": "false,\"q0\":0,"
+   "t": 4241,
+   "text": "le\":\"produce\"},{"
   },
   {
-   "t": 3966,
-   "text": "\"q1\":0,\"q"
+   "t": 4272,
+   "text": "\"name\":\"soy sau"
   },
   {
-   "t": 4000,
-   "text": "2\":80,\"q3\":"
+   "t": 4305,
+   "text": "ce\",\"qty\":2"
   },
   {
-   "t": 4031,
-   "text": "0,\"q4\":0,"
+   "t": 4339,
+   "text": ",\"un"
   },
   {
-   "t": 4069,
-   "text": "\"q5\":0},{\""
+   "t": 4371,
+   "text": "it\":\"tbsp\",\""
   },
   {
-   "t": 4098,
-   "text": "name\":\"Broccoli"
+   "t": 4406,
+   "text": "aisle\":\"pantry"
   },
   {
-   "t": 4133,
-   "text": "\",\"unit\":\"g\",\"got"
+   "t": 4438,
+   "text": "\"}]},{\"id"
   },
   {
-   "t": 4165,
-   "text": "\":false,\"q0\":100"
+   "t": 4480,
+   "text": "\":\"tuna-wr"
   },
   {
-   "t": 4199,
-   "text": ",\"q1\":100,\""
+   "t": 4505,
+   "text": "ap\",\"name\":\"Tu"
   },
   {
-   "t": 4239,
-   "text": "q2\":0,\"q3"
+   "t": 4539,
+   "text": "na and white"
   },
   {
-   "t": 4267,
-   "text": "\":0,\"q4\":0"
+   "t": 4572,
+   "text": " bean wrap\",\"kind"
   },
   {
-   "t": 4304,
-   "text": ",\"q5\":0},{"
+   "t": 4619,
+   "text": "\":\"lunch\",\"serves"
   },
   {
-   "t": 4333,
-   "text": "\"name\":\"Spinach"
+   "t": 4639,
+   "text": "\":2,\"minutes\":"
   },
   {
-   "t": 4374,
-   "text": "\",\"unit\":\"g\",\"got"
+   "t": 4672,
+   "text": "10"
   },
   {
-   "t": 4411,
-   "text": "\":false,\"q0\":0"
+   "t": 4705,
+   "text": ",\"kcal\":540,"
   },
   {
-   "t": 4448,
-   "text": ",\"q1\":0,\""
+   "t": 4738,
+   "text": "\"protein_g\":44"
   },
   {
-   "t": 4466,
-   "text": "q2\":0,\"q3"
+   "t": 4774,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 4684,
-   "text": "\":60,\"q4\":80"
+   "t": 4806,
+   "text": "{\"name\":\"can"
   },
   {
-   "t": 4685,
-   "text": ",\"q5\":0},{"
+   "t": 4838,
+   "text": "ned tuna\",\"qty\":"
   },
   {
-   "t": 4685,
-   "text": "\"name\":\"Tomat"
+   "t": 4872,
+   "text": "2,\"un"
   },
   {
-   "t": 4685,
-   "text": "oes\",\"unit\":\"g"
+   "t": 4907,
+   "text": "it\":\"can\",\"aisle"
   },
   {
-   "t": 4686,
-   "text": "\",\"got\":false,\"q0"
+   "t": 4939,
+   "text": "\":\"pantry\"},{"
   },
   {
-   "t": 4686,
-   "text": "\":0,\"q1\":0"
+   "t": 4971,
+   "text": "\"name\":\"white be"
   },
   {
-   "t": 4699,
-   "text": ",\"q2\":200,\""
+   "t": 5005,
+   "text": "ans\",\"qty\":1,\""
   },
   {
-   "t": 4732,
-   "text": "q3\":0,\"q4"
+   "t": 5037,
+   "text": "unit\":\"can\",\"ais"
   },
   {
-   "t": 4766,
-   "text": "\":100,\"q5\":150"
+   "t": 5071,
+   "text": "le\":\"pantry\"},"
   },
   {
-   "t": 4800,
-   "text": "}]},\"ui\":{"
-  },
-  {
-   "t": 4833,
-   "text": "\"type\":\"card\",\"props\":"
-  },
-  {
-   "t": 4865,
-   "text": "{\"title\":\"High-"
-  },
-  {
-   "t": 4899,
-   "text": "Protein Week\",\""
-  },
-  {
-   "t": 4949,
-   "text": "description\":\"Pick a"
-  },
-  {
-   "t": 4972,
-   "text": " meal for"
-  },
-  {
-   "t": 5002,
-   "text": " each day."
-  },
-  {
-   "t": 5032,
-   "text": " The shopping list foll"
-  },
-  {
-   "t": 5069,
-   "text": "ows.\""
-  },
-  {
-   "t": 5102,
-   "text": "},\"children\":[{\"type"
+   "t": 5104,
+   "text": "{\"name\":\"whole-"
   },
   {
    "t": 5137,
-   "text": "\":\"flex\",\"props"
+   "text": "wheat w"
   },
   {
-   "t": 5169,
-   "text": "\":{\"direction\":\"column"
+   "t": 5171,
+   "text": "raps\",\"qty\":2,"
   },
   {
-   "t": 5200,
-   "text": "\",\"gap\":\"12px\""
+   "t": 5204,
+   "text": "\"aisle\":\"grains"
   },
   {
-   "t": 5234,
-   "text": "},\"children\":[{\"type"
+   "t": 5237,
+   "text": "\"},{\"name\":\"ar"
   },
   {
-   "t": 5266,
-   "text": "\":\"number-input\",\"props\":"
+   "t": 5270,
+   "text": "ugula\",\"qty\":2"
   },
   {
-   "t": 5300,
-   "text": "{\"label\":\"People coo"
+   "t": 5304,
+   "text": ",\"un"
   },
   {
-   "t": 5334,
-   "text": "king for"
+   "t": 5337,
+   "text": "it\":\"cup\",\"ais"
   },
   {
-   "t": 5367,
-   "text": "\",\"min\":1,\"max\":"
+   "t": 5370,
+   "text": "le\":\"produce\"}]"
   },
   {
-   "t": 5400,
-   "text": "12,"
+   "t": 5405,
+   "text": "},{\"id"
   },
   {
-   "t": 5433,
-   "text": "\"step\":1},\"bind"
+   "t": 5438,
+   "text": "\":\"turkey-salad"
   },
   {
-   "t": 5467,
-   "text": "\":\"{state.people}\""
+   "t": 5471,
+   "text": "\",\"name\":\"Turkey"
   },
   {
-   "t": 5558,
-   "text": "},{\"type\":\"slider"
+   "t": 5505,
+   "text": " and quinoa salad\",\""
   },
   {
-   "t": 5574,
-   "text": "\",\"props\":{\"label\":\""
+   "t": 5537,
+   "text": "kind\":\"lunch\",\""
   },
   {
-   "t": 5602,
-   "text": "Prot"
+   "t": 5572,
+   "text": "serves\":2,\"minut"
   },
   {
-   "t": 5603,
-   "text": "ein goal (g per person per"
+   "t": 5605,
+   "text": "es\":20"
   },
   {
-   "t": 5635,
-   "text": " day)\",\"min\":60,\""
+   "t": 5638,
+   "text": ",\"kcal\":560"
   },
   {
-   "t": 5666,
-   "text": "max\":200,\"step\":5"
+   "t": 5671,
+   "text": ",\"protein_g\":46"
   },
   {
-   "t": 5702,
-   "text": ",\"showValue\":true},"
+   "t": 5704,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 5734,
-   "text": "\"bind\":\"{state."
+   "t": 5737,
+   "text": "{\"name\":\"tur"
   },
   {
-   "t": 5766,
-   "text": "goal}\"},{\"type"
+   "t": 5773,
+   "text": "key bre"
   },
   {
-   "t": 5801,
-   "text": "\":\"stat\",\"props\":{"
+   "t": 5805,
+   "text": "ast sl"
   },
   {
-   "t": 5834,
-   "text": "\"label\":\"Prot"
+   "t": 5838,
+   "text": "ices\",\"qty\":300"
   },
   {
-   "t": 5874,
-   "text": "ein per person this"
+   "t": 5872,
+   "text": ",\"unit\":\"g\",\""
   },
   {
-   "t": 5909,
-   "text": " week ("
+   "t": 5905,
+   "text": "aisle\":\"protein\""
   },
   {
-   "t": 6008,
-   "text": "g)\",\"value\":\"{state"
+   "t": 5939,
+   "text": "},{\"name\":\"quin"
   },
   {
-   "t": 6029,
-   "text": ".meals[0].uses"
+   "t": 5972,
+   "text": "oa\",\"qty\":0."
   },
   {
-   "t": 6043,
-   "text": " * state.meals[0]."
+   "t": 6006,
+   "text": "75,\"unit\":\"c"
   },
   {
-   "t": 6043,
-   "text": "protein + state.meals["
+   "t": 6038,
+   "text": "up\",\"aisle\":\"gr"
   },
   {
-   "t": 6068,
-   "text": "1].uses * state.me"
+   "t": 6071,
+   "text": "ains\"},{\"name\":\""
   },
   {
-   "t": 6112,
-   "text": "als[1].protein + state"
+   "t": 6107,
+   "text": "cucumber\",\"qty\":"
   },
   {
-   "t": 6134,
-   "text": ".meals[2].uses"
+   "t": 6139,
+   "text": "1,\"a"
   },
   {
-   "t": 6166,
-   "text": " * state.meals[2]."
+   "t": 6171,
+   "text": "isle\":\"produce\"},"
   },
   {
-   "t": 6208,
-   "text": "protein + state.meals["
+   "t": 6204,
+   "text": "{\"name\":\"cherry"
   },
   {
-   "t": 6239,
-   "text": "3].uses * state.me"
+   "t": 6238,
+   "text": " tomatoes\",\"qty"
   },
   {
-   "t": 6266,
-   "text": "als[3].protein + state"
+   "t": 6271,
+   "text": "\":1,\"un"
   },
   {
-   "t": 6308,
-   "text": ".meals[4].uses"
+   "t": 6306,
+   "text": "it\":\"cup\",\"ais"
   },
   {
-   "t": 6334,
-   "text": " * state.meals[4]."
+   "t": 6338,
+   "text": "le\":\"produce\"}]"
   },
   {
-   "t": 6368,
-   "text": "protein + state.meals["
+   "t": 6371,
+   "text": "},{\"id\":\"salm"
   },
   {
    "t": 6405,
-   "text": "5].uses * state.me"
+   "text": "on\",\"name\":\"Salm"
   },
   {
-   "t": 6434,
-   "text": "als[5].protein}\",\""
+   "t": 6439,
+   "text": "on, quinoa and gre"
   },
   {
-   "t": 6466,
-   "text": "format\":\"number\""
+   "t": 6473,
+   "text": "ens\",\"kind\":\"din"
   },
   {
-   "t": 6500,
-   "text": "}"
+   "t": 6505,
+   "text": "ner\",\"serves\":2,\""
   },
   {
-   "t": 6568,
-   "text": "},{\"type\":\"progress"
+   "t": 6539,
+   "text": "minutes\":25"
   },
   {
-   "t": 6568,
-   "text": "\",\"props\":{\"value\":\""
+   "t": 6575,
+   "text": ",\"kcal\":690,"
   },
   {
-   "t": 6663,
-   "text": "{state.meals[0]."
+   "t": 6624,
+   "text": "\"protein_g\":48,"
+  },
+  {
+   "t": 6638,
+   "text": "\"ingredients\":[{"
+  },
+  {
+   "t": 6672,
+   "text": "\"name\":\"salmon f"
   },
   {
    "t": 6705,
-   "text": "uses * state.meals["
+   "text": "illet\",\"qty\":400,"
   },
   {
-   "t": 6706,
-   "text": "0].protein + state.me"
+   "t": 6739,
+   "text": "\"unit\":\"g\",\"a"
   },
   {
-   "t": 6707,
-   "text": "als[1].uses * state"
+   "t": 6773,
+   "text": "isle\":\"protein\"},"
   },
   {
-   "t": 6788,
-   "text": ".meals[1].protein"
+   "t": 6806,
+   "text": "{\"name\":\"quino"
   },
   {
-   "t": 6828,
-   "text": " + state.meals[2]."
+   "t": 6985,
+   "text": "a\",\"qty\":0.75"
   },
   {
-   "t": 6830,
-   "text": "uses * state.meals["
+   "t": 6985,
+   "text": ",\"unit\":\"cup"
   },
   {
-   "t": 6841,
-   "text": "2].protein + state.me"
+   "t": 6985,
+   "text": "\",\"aisle\":\"grains"
   },
   {
-   "t": 6871,
-   "text": "als[3].uses * state"
+   "t": 6986,
+   "text": "\"},{\"name\":\"green"
   },
   {
-   "t": 6901,
-   "text": ".meals[3].protein"
+   "t": 6986,
+   "text": " beans\",\"qty\":2"
   },
   {
-   "t": 6934,
-   "text": " + state.meals[4]."
+   "t": 7006,
+   "text": ",\"unit\":\"cup"
   },
   {
-   "t": 6968,
-   "text": "uses * state.meals["
+   "t": 7039,
+   "text": "\",\"aisle\":\"produce"
   },
   {
-   "t": 7001,
-   "text": "4].protein + state.me"
+   "t": 7073,
+   "text": "\"},{\"name\":\"l"
   },
   {
-   "t": 7034,
-   "text": "als[5].uses * state"
+   "t": 7105,
+   "text": "emon\",\"qty\":1,"
   },
   {
-   "t": 7087,
-   "text": ".meals[5].protein"
+   "t": 7139,
+   "text": "\"aisle\":\"produce"
   },
   {
-   "t": 7120,
-   "text": "}\",\"max\":\"{state."
+   "t": 7173,
+   "text": "\"}]},{\"id\":"
   },
   {
-   "t": 7141,
-   "text": "goal * state.plan."
+   "t": 7206,
+   "text": "\"chili\",\"name\":\""
   },
   {
-   "t": 7171,
-   "text": "length}\""
+   "t": 7241,
+   "text": "Turkey bean chili\",\""
   },
   {
-   "t": 7201,
-   "text": "}},{\"type\":\"text"
+   "t": 7274,
+   "text": "kind\":\"dinner\",\""
   },
   {
-   "t": 7236,
-   "text": "\",\"props\":{\"text\":\""
+   "t": 7306,
+   "text": "serves\":4,\"minut"
   },
   {
-   "t": 7275,
-   "text": "Dinner cov"
+   "t": 7339,
+   "text": "es\":40,\"kcal"
   },
   {
-   "t": 7301,
-   "text": "ers part"
+   "t": 7372,
+   "text": "\":560,\"protein_g"
   },
   {
-   "t": 7342,
-   "text": " of your"
+   "t": 7406,
+   "text": "\":46,\"ingredients"
   },
   {
-   "t": 7368,
-   "text": " goal. Weekly target"
+   "t": 7439,
+   "text": "\":[{\"name\":\""
   },
   {
-   "t": 7415,
-   "text": ": {state"
+   "t": 7472,
+   "text": "ground turkey\",\"qty\":"
   },
   {
-   "t": 7437,
-   "text": ".goal * state.plan"
+   "t": 7511,
+   "text": "500,\"unit\":\"g"
   },
   {
-   "t": 7467,
-   "text": ".length} g."
+   "t": 7544,
+   "text": "\",\"aisle\":\"protein"
   },
   {
-   "t": 7505,
-   "text": "\",\"size\":\"x"
+   "t": 7573,
+   "text": "\"},{\"name\":\"black"
   },
   {
-   "t": 7535,
-   "text": "s\"}},{\"type\":"
+   "t": 7607,
+   "text": " beans\",\"qty\":2,"
   },
   {
-   "t": 7568,
-   "text": "\"separator\",\""
+   "t": 7640,
+   "text": "\"unit\":\"can\",\"a"
   },
   {
-   "t": 7610,
-   "text": "props\":{}"
+   "t": 7673,
+   "text": "isle\":\"pantry\""
   },
   {
-   "t": 7635,
-   "text": "},{\"type\":\"heading"
-  },
-  {
-   "t": 7669,
-   "text": "\",\"props\":{\"text"
-  },
-  {
-   "t": 7702,
-   "text": "\":\"Weekly plan"
+   "t": 7710,
+   "text": "},{\"name\":\"cr"
   },
   {
    "t": 7739,
-   "text": "\",\"level\":4}},{\""
+   "text": "ushed tomatoes\",\""
   },
   {
-   "t": 7775,
-   "text": "type\":\"each\",\"items"
+   "t": 7773,
+   "text": "qty\":1,\"unit"
   },
   {
-   "t": 7802,
-   "text": "\":\"{state.plan}"
+   "t": 7812,
+   "text": "\":\"can\",\"aisle\":"
   },
   {
-   "t": 7836,
-   "text": "\",\"children"
+   "t": 7839,
+   "text": "\"pantry\"},{\""
   },
   {
-   "t": 7871,
-   "text": "\":[{\"type\":\"fl"
+   "t": 7873,
+   "text": "name\":\"onion\",\"qty"
   },
   {
-   "t": 7902,
-   "text": "ex\",\"props\":{\"direction"
+   "t": 7906,
+   "text": "\":1,\"aisle\":"
   },
   {
-   "t": 7935,
-   "text": "\":\"column\",\"gap\":\""
+   "t": 7939,
+   "text": "\"produce\"}]},{"
   },
   {
-   "t": 7974,
-   "text": "4px\"},\"children\":["
+   "t": 7973,
+   "text": "\"id\":\"ste"
   },
   {
-   "t": 8026,
-   "text": "{\"type\":\"flex\",\""
+   "t": 8006,
+   "text": "ak\",\"name\":\"Sir"
   },
   {
-   "t": 8058,
-   "text": "props\":{\"dire"
+   "t": 8039,
+   "text": "loin steak with"
   },
   {
-   "t": 8070,
-   "text": "ction\":\"row\",\"justify\":"
+   "t": 8072,
+   "text": " sweet potato"
   },
   {
-   "t": 8108,
-   "text": "\"between\"},\"children\":["
+   "t": 8105,
+   "text": "\",\"kind\":\"dinner"
   },
   {
-   "t": 8135,
-   "text": "{\"type\":\"text\",\"props"
+   "t": 8138,
+   "text": "\",\"serves\":2,\"min"
   },
   {
-   "t": 8168,
-   "text": "\":{\"text\":\"{item"
+   "t": 8172,
+   "text": "utes\":30,\"kc"
   },
   {
-   "t": 8206,
-   "text": ".day}\",\"weight\":\""
+   "t": 8205,
+   "text": "al\":680"
   },
   {
-   "t": 8235,
-   "text": "semibold\"}},{\""
+   "t": 8239,
+   "text": ",\"protein_g\":50"
   },
   {
-   "t": 8270,
-   "text": "type\":\"text\",\"props\":{"
+   "t": 8272,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 8302,
-   "text": "\"text\":\"{item.me"
+   "t": 8305,
+   "text": "{\"name\":\"sirlo"
   },
   {
-   "t": 8335,
-   "text": "al == state.meals[0"
+   "t": 8339,
+   "text": "in steak\",\"qty\":450"
   },
   {
-   "t": 8370,
-   "text": "].name ? state.meals"
+   "t": 8372,
+   "text": ",\"unit\":\"g\",\""
   },
   {
-   "t": 8404,
-   "text": "[0].protein : item."
+   "t": 8405,
+   "text": "aisle\":\"protein\""
   },
   {
-   "t": 8435,
-   "text": "meal == state.meals["
+   "t": 8438,
+   "text": "},{\"name\":\"swe"
   },
   {
-   "t": 8470,
-   "text": "1].name ? state.me"
+   "t": 8472,
+   "text": "et potato\",\"qty\":2"
   },
   {
-   "t": 8501,
-   "text": "als[1].protein : item"
+   "t": 8505,
+   "text": ",\"a"
   },
   {
-   "t": 8537,
-   "text": ".meal == state.meals"
+   "t": 8539,
+   "text": "isle\":\"produce\"},"
   },
   {
-   "t": 8573,
-   "text": "[2].name ? state."
+   "t": 8574,
+   "text": "{\"name\":\"asparag"
   },
   {
-   "t": 8605,
-   "text": "meals[2].protein :"
+   "t": 8607,
+   "text": "us\",\"qty\":1,\""
   },
   {
-   "t": 8638,
-   "text": " item.meal == state.me"
+   "t": 8640,
+   "text": "unit\":\"bunch\",\""
   },
   {
-   "t": 8669,
-   "text": "als[3].name ? state"
+   "t": 8672,
+   "text": "aisle\":\"produce\""
   },
   {
    "t": 8705,
-   "text": ".meals[3].protein"
+   "text": "}]},{\"id\":\""
   },
   {
-   "t": 8737,
-   "text": " : item.meal == state."
+   "t": 8739,
+   "text": "sh"
   },
   {
-   "t": 8771,
-   "text": "meals[4].name ?"
+   "t": 8773,
+   "text": "rimp\",\""
   },
   {
-   "t": 8801,
-   "text": " state.meals[4].prot"
+   "t": 8805,
+   "text": "name\":\"Gar"
   },
   {
-   "t": 8836,
-   "text": "ein : item.meal == state"
+   "t": 8839,
+   "text": "lic shrimp stir"
   },
   {
-   "t": 8868,
-   "text": ".meals[5].name "
+   "t": 8875,
+   "text": "-fry\",\"kind\":\""
   },
   {
-   "t": 8904,
-   "text": "? state.meals[5]."
+   "t": 8906,
+   "text": "dinner\",\"serves\":2"
   },
   {
-   "t": 8934,
-   "text": "protein : 0}"
+   "t": 8940,
+   "text": ",\"minutes\":20"
   },
   {
-   "t": 8970,
-   "text": " g protein\",\""
+   "t": 8973,
+   "text": ",\"kcal\":520"
   },
   {
    "t": 9007,
-   "text": "size\":\"x"
+   "text": ",\"protein_g\":42"
   },
   {
-   "t": 9037,
-   "text": "s\"}}]},{\""
+   "t": 9039,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 9074,
-   "text": "type\":\"select\",\"props\":{"
+   "t": 9073,
+   "text": "{\"name\":\"shrim"
   },
   {
-   "t": 9103,
-   "text": "\"options\":\"{state.options"
+   "t": 9106,
+   "text": "p\",\"qty\":450,\""
   },
   {
-   "t": 9141,
-   "text": "}\"},\"bind\":\""
+   "t": 9139,
+   "text": "unit\":\"g\",\"ais"
   },
   {
-   "t": 9171,
-   "text": "plan.{index}.me"
+   "t": 9172,
+   "text": "le\":\"protein\"},{"
   },
   {
    "t": 9206,
-   "text": "al\",\"on_change\":[{"
+   "text": "\"name\":\"bell pep"
   },
   {
-   "t": 9236,
-   "text": "\"action\":\"set\",\"target\":"
+   "t": 9240,
+   "text": "per\",\"qty\":2"
   },
   {
-   "t": 9269,
-   "text": "\"meals.0.uses"
+   "t": 9273,
+   "text": ",\"aisle\":\"produ"
   },
   {
-   "t": 9301,
-   "text": "\",\"value\":\"{state.pl"
+   "t": 9306,
+   "text": "ce\"},{\"name\":\""
   },
   {
-   "t": 9336,
-   "text": "an.where('meal', "
+   "t": 9340,
+   "text": "jasmine rice\",\"q"
   },
   {
-   "t": 9370,
-   "text": "'Chicken Stir"
+   "t": 9373,
+   "text": "ty\":0.75"
   },
   {
-   "t": 9403,
-   "text": "-Fry').count()}"
+   "t": 9406,
+   "text": ",\"unit\":\"cup"
   },
   {
-   "t": 9435,
-   "text": "\"},{\"action\":\"set"
+   "t": 9439,
+   "text": "\",\"aisle\":\"grains"
   },
   {
-   "t": 9790,
-   "text": "\",\"target\":\"meals.1"
+   "t": 9472,
+   "text": "\"},{\"name\":\"gar"
   },
   {
-   "t": 9790,
-   "text": ".uses\",\"value\":\"{"
+   "t": 9506,
+   "text": "lic\",\"qty\":3"
   },
   {
-   "t": 9791,
-   "text": "state.plan.where('me"
+   "t": 9540,
+   "text": ",\"un"
   },
   {
-   "t": 9791,
-   "text": "al', 'Salmon"
+   "t": 9573,
+   "text": "it\":\"clove\",\"ais"
   },
   {
-   "t": 9791,
-   "text": " & Quinoa').count"
+   "t": 9606,
+   "text": "le\":\"produ"
   },
   {
-   "t": 9792,
-   "text": "()}\"},{\"action\":"
+   "t": 9639,
+   "text": "ce\"}]},{\"id"
   },
   {
-   "t": 9792,
-   "text": "\"set\",\"target\":\"meals"
+   "t": 9673,
+   "text": "\":\"sh"
   },
   {
-   "t": 9792,
-   "text": ".2.uses\",\"value\":"
+   "t": 9706,
+   "text": "ake\",\"name\":\"Greek"
   },
   {
-   "t": 9889,
-   "text": "\"{state.plan.where"
+   "t": 9740,
+   "text": " yogurt and alm"
   },
   {
-   "t": 9889,
-   "text": "('meal', 'Be"
+   "t": 9772,
+   "text": "ond snack\",\"kind\":\""
   },
   {
-   "t": 9889,
-   "text": "ef Chili').count()}"
+   "t": 9833,
+   "text": "snack\",\"serves\":1,"
   },
   {
-   "t": 9890,
-   "text": "\"},{\"action\":\"set"
+   "t": 9838,
+   "text": "\"minutes\":2"
   },
   {
-   "t": 9890,
-   "text": "\",\"target\":\"meals.3"
+   "t": 9872,
+   "text": ",\"kcal\":250,"
   },
   {
-   "t": 9903,
-   "text": ".uses\",\"value\":\"{"
+   "t": 9906,
+   "text": "\"protein_g\":22"
   },
   {
-   "t": 9950,
-   "text": "state.plan.where('me"
+   "t": 9938,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 10071,
-   "text": "al', 'Tofu"
+   "t": 9972,
+   "text": "{\"name\":\"Greek"
   },
   {
-   "t": 10071,
-   "text": " Scramble Bowl"
+   "t": 10011,
+   "text": " yogurt\",\"qty\":"
   },
   {
-   "t": 10072,
-   "text": "').count()}\"},{\""
+   "t": 10040,
+   "text": "1"
   },
   {
-   "t": 10128,
-   "text": "action\":\"set\",\"target\":\""
+   "t": 10075,
+   "text": ",\"unit\":\"cup"
   },
   {
-   "t": 10128,
-   "text": "meals.4.uses\",\""
+   "t": 10106,
+   "text": "\",\"aisle\":\"dair"
   },
   {
-   "t": 10220,
-   "text": "value\":\"{state.plan"
+   "t": 10139,
+   "text": "y\"},{\"name\":\""
   },
   {
-   "t": 10220,
-   "text": ".where('meal', '"
+   "t": 10173,
+   "text": "almonds\",\"qty\":2"
   },
   {
-   "t": 10227,
-   "text": "Egg & Veg"
+   "t": 10205,
+   "text": ",\"unit\":\"t"
   },
   {
-   "t": 10285,
-   "text": " Frittata').count()}\""
+   "t": 10239,
+   "text": "bsp\",\"aisle\":"
   },
   {
-   "t": 10286,
-   "text": "},{\"action\":\"set\",\""
+   "t": 10273,
+   "text": "\"pantry\"}]},"
   },
   {
-   "t": 10358,
-   "text": "target\":\"meals.5."
+   "t": 10309,
+   "text": "{\"id\":\"edamame"
   },
   {
-   "t": 10360,
-   "text": "uses\",\"value\":\"{state"
+   "t": 10339,
+   "text": "\",\"name\":\"Edamame"
   },
   {
-   "t": 10371,
-   "text": ".plan.where('meal"
+   "t": 10373,
+   "text": " and j"
   },
   {
-   "t": 10404,
-   "text": "', 'Turkey"
+   "t": 10406,
+   "text": "erky\",\"kind\":\"sn"
   },
   {
-   "t": 10446,
-   "text": " Meatballs').count()}"
+   "t": 10439,
+   "text": "ack\",\"serves\":1,\""
   },
   {
-   "t": 10470,
-   "text": "\"}]}]}]"
+   "t": 10474,
+   "text": "minutes\":5,\"k"
   },
   {
-   "t": 10501,
-   "text": "},{\"type\":\"button\",\""
+   "t": 10506,
+   "text": "cal\":230"
   },
   {
-   "t": 10536,
-   "text": "props\":{\"label\":\""
+   "t": 10542,
+   "text": ",\"protein_g\":24"
   },
   {
-   "t": 10571,
-   "text": "Reset to su"
+   "t": 10575,
+   "text": ",\"ingredients\":["
   },
   {
-   "t": 10971,
-   "text": "ggested week\",\"variant\":\""
+   "t": 10607,
+   "text": "{\"name\":\"edamame"
   },
   {
-   "t": 10972,
-   "text": "outline\",\""
+   "t": 10640,
+   "text": "\",\"qty\":1,\"un"
   },
   {
-   "t": 10972,
-   "text": "size\":\"sm\"},\""
+   "t": 10672,
+   "text": "it\":\"cup\",\"ais"
   },
   {
-   "t": 10972,
-   "text": "on_click\":[{\"action"
+   "t": 10705,
+   "text": "le\":\"frozen\"},"
   },
   {
-   "t": 10973,
-   "text": "\":\"set\",\"target\":\"pl"
+   "t": 10739,
+   "text": "{\"name\":\"beef j"
   },
   {
-   "t": 10973,
-   "text": "an\",\"value\":[{\"day"
+   "t": 10772,
+   "text": "erky\",\"qty\":30"
   },
   {
-   "t": 10973,
-   "text": "\":\"Mon\",\"meal"
+   "t": 10806,
+   "text": ",\"unit\":\"g\",\""
+  },
+  {
+   "t": 10838,
+   "text": "aisle\":\"protein\""
+  },
+  {
+   "t": 10873,
+   "text": "}]}],"
+  },
+  {
+   "t": 10906,
+   "text": "\"days\":[{\"day\":"
+  },
+  {
+   "t": 10938,
+   "text": "\"Mon\",\"meals\":"
   },
   {
    "t": 10974,
-   "text": "\":\"Chicken St"
+   "text": "[{\"slot\":\"bre"
   },
   {
-   "t": 10974,
-   "text": "ir-Fry\"},{"
+   "t": 11006,
+   "text": "akfast\",\"recipe\":"
   },
   {
-   "t": 10974,
-   "text": "\"day\":\"Tue\",\""
+   "t": 11040,
+   "text": "\"oats\"},{\"sl"
   },
   {
-   "t": 10975,
-   "text": "meal\":\"Salmon"
+   "t": 11071,
+   "text": "ot\":\"lunch\",\"rec"
   },
   {
-   "t": 10975,
-   "text": " & Quinoa\"},"
+   "t": 11107,
+   "text": "ipe\":\"chicken-"
   },
   {
-   "t": 10975,
+   "t": 11138,
+   "text": "bowl\"},{\"sl"
+  },
+  {
+   "t": 11173,
+   "text": "ot\":\"dinner\",\"rec"
+  },
+  {
+   "t": 11207,
+   "text": "ipe\":\"salmon\""
+  },
+  {
+   "t": 11239,
+   "text": "},{\"slot\":\"sn"
+  },
+  {
+   "t": 11272,
+   "text": "ack\",\"recipe\":\"sh"
+  },
+  {
+   "t": 11306,
+   "text": "ake\"}]},{\"day"
+  },
+  {
+   "t": 11340,
+   "text": "\":\"Tue\",\"meals"
+  },
+  {
+   "t": 11372,
+   "text": "\":[{\"slot\":\""
+  },
+  {
+   "t": 11405,
+   "text": "breakfast\",\"recipe"
+  },
+  {
+   "t": 11439,
+   "text": "\":\"eggs\"},{"
+  },
+  {
+   "t": 11472,
+   "text": "\"slot\":\"lunch"
+  },
+  {
+   "t": 11506,
+   "text": "\",\"recipe\":\"t"
+  },
+  {
+   "t": 11539,
+   "text": "una-wrap\"},"
+  },
+  {
+   "t": 11573,
+   "text": "{\"slot\":\"din"
+  },
+  {
+   "t": 11611,
+   "text": "ner\",\"recipe\":\"ch"
+  },
+  {
+   "t": 11640,
+   "text": "ili\"},{\"slot\":"
+  },
+  {
+   "t": 11674,
+   "text": "\"snack\",\"recipe\":"
+  },
+  {
+   "t": 11707,
+   "text": "\"edamame\"}]},"
+  },
+  {
+   "t": 11740,
    "text": "{\"day\":\"Wed"
   },
   {
-   "t": 10988,
-   "text": "\",\"meal\":\"Beef"
+   "t": 11774,
+   "text": "\",\"meals\":[{\"sl"
   },
   {
-   "t": 11023,
-   "text": " Chili\"},{\"day"
+   "t": 11807,
+   "text": "ot\":\"breakfast\",\""
   },
   {
-   "t": 11075,
-   "text": "\":\"Thu\",\"meal"
+   "t": 11839,
+   "text": "recipe\":\"cottage"
   },
   {
-   "t": 11089,
-   "text": "\":\"Tofu Sc"
+   "t": 11873,
+   "text": "\"},{\"slot\":\""
   },
   {
-   "t": 11149,
-   "text": "ramble Bowl\"},"
+   "t": 11906,
+   "text": "lunch\",\"recipe\":"
   },
   {
-   "t": 11154,
-   "text": "{\"day\":\"Fri"
+   "t": 11941,
+   "text": "\"tur"
   },
   {
-   "t": 11197,
-   "text": "\",\"meal\":\"Turk"
+   "t": 11973,
+   "text": "key-salad\"},{"
   },
   {
-   "t": 11236,
-   "text": "ey Me"
+   "t": 12006,
+   "text": "\"slot\":\"dinner"
   },
   {
-   "t": 11258,
-   "text": "atballs\"},{\"day"
+   "t": 12040,
+   "text": "\",\"recipe\":\"steak"
   },
   {
-   "t": 11291,
-   "text": "\":\"Sat\",\"meal"
+   "t": 12072,
+   "text": "\"},{\"slot\":\""
   },
   {
-   "t": 11324,
-   "text": "\":\"Egg & Ve"
+   "t": 12105,
+   "text": "snack\",\"recipe\":\""
   },
   {
-   "t": 11360,
-   "text": "g Frittata\"},{"
+   "t": 12138,
+   "text": "shake\"}]},{\""
   },
   {
-   "t": 11396,
-   "text": "\"day\":\"Sun\",\""
+   "t": 12172,
+   "text": "day\":\"Thu\",\"me"
   },
   {
-   "t": 11421,
-   "text": "meal\":\"Chicken"
+   "t": 12207,
+   "text": "als\":[{\"slot\":"
   },
   {
-   "t": 11465,
-   "text": " Stir-Fry\""
+   "t": 12239,
+   "text": "\"breakfast\",\"recip"
   },
   {
-   "t": 11488,
-   "text": "}]},{\"action\":\""
+   "t": 12272,
+   "text": "e\":\"oats\"},{"
   },
   {
-   "t": 11521,
-   "text": "set\",\"target\":\"meals."
+   "t": 12308,
+   "text": "\"slot\":\"lunch"
   },
   {
-   "t": 11556,
-   "text": "0.uses\",\"value\":\""
+   "t": 12340,
+   "text": "\",\"recipe\":\"chic"
   },
   {
-   "t": 11588,
-   "text": "{state.plan.where('"
+   "t": 12373,
+   "text": "ken-bowl\"},{"
   },
   {
-   "t": 11621,
-   "text": "meal', 'Chic"
+   "t": 12406,
+   "text": "\"slot\":\"dinner"
   },
   {
-   "t": 11657,
-   "text": "ken Stir-Fry"
+   "t": 12440,
+   "text": "\",\"recipe\":\"sh"
   },
   {
-   "t": 11697,
-   "text": "').count()}\"},{\""
+   "t": 12479,
+   "text": "rimp\"},{\"sl"
   },
   {
-   "t": 11721,
-   "text": "action\":\"set\",\"target\":\""
+   "t": 12507,
+   "text": "ot\":\"snack\",\"recip"
   },
   {
-   "t": 11755,
-   "text": "meals.1.uses\",\""
+   "t": 12543,
+   "text": "e\":\"edamame\"}"
   },
   {
-   "t": 11788,
-   "text": "value\":\"{state.plan"
+   "t": 12571,
+   "text": "]},{\"day\":\""
   },
   {
-   "t": 11822,
-   "text": ".where('meal', '"
+   "t": 12608,
+   "text": "Fri\",\"meals\":[{"
   },
   {
-   "t": 11853,
-   "text": "Salmon & Quin"
+   "t": 12639,
+   "text": "\"slot\":\"breakf"
   },
   {
-   "t": 11891,
-   "text": "oa').count()}\"},"
+   "t": 12673,
+   "text": "ast\",\"recipe\":\"e"
   },
   {
-   "t": 11922,
-   "text": "{\"action\":\"set\",\"target"
+   "t": 12707,
+   "text": "ggs\"},{\"slot"
   },
   {
-   "t": 11956,
-   "text": "\":\"meals.2.u"
+   "t": 12741,
+   "text": "\":\"lunch\",\"recip"
   },
   {
-   "t": 11989,
-   "text": "ses\",\"value\":\"{state."
+   "t": 12773,
+   "text": "e\":\"tuna-w"
   },
   {
-   "t": 12021,
-   "text": "plan.where('meal',"
+   "t": 12809,
+   "text": "rap\"},{\"slot"
   },
   {
-   "t": 12055,
-   "text": " 'Beef Chili"
+   "t": 12840,
+   "text": "\":\"dinner\",\"recip"
   },
   {
-   "t": 12088,
-   "text": "').count()}\"},{\""
+   "t": 13107,
+   "text": "e\":\"chili\"},{"
   },
   {
-   "t": 12123,
-   "text": "action\":\"set\",\"target\":\""
+   "t": 13108,
+   "text": "\"slot\":\"snack\",\""
   },
   {
-   "t": 12156,
-   "text": "meals.3.uses\",\""
+   "t": 13108,
+   "text": "recipe\":\"shake\""
   },
   {
-   "t": 12190,
-   "text": "value\":\"{state.plan"
+   "t": 13108,
+   "text": "}]},{\"day\":\""
   },
   {
-   "t": 12224,
-   "text": ".where('meal', '"
+   "t": 13108,
+   "text": "Sat\",\"meals\":["
   },
   {
-   "t": 12256,
-   "text": "Tofu Scramble"
+   "t": 13108,
+   "text": "{\"slot\":\"break"
   },
   {
-   "t": 12289,
-   "text": " Bowl').count()}"
+   "t": 13108,
+   "text": "fast\",\"recipe\":\""
   },
   {
-   "t": 12323,
-   "text": "\"},{\"action\":\"set"
+   "t": 13108,
+   "text": "cottage\"},{\"sl"
   },
   {
-   "t": 12356,
-   "text": "\",\"target\":\"meals.4"
+   "t": 13141,
+   "text": "ot\":\"lunch\",\"rec"
   },
   {
-   "t": 12391,
-   "text": ".uses\",\"value\":\"{"
+   "t": 13179,
+   "text": "ipe\":\"turkey-"
   },
   {
-   "t": 12425,
-   "text": "state.plan.where('me"
+   "t": 13211,
+   "text": "salad\"},{\"slot"
   },
   {
-   "t": 12456,
-   "text": "al', 'Egg &"
+   "t": 13240,
+   "text": "\":\"dinner\",\"recip"
   },
   {
-   "t": 12489,
-   "text": " Veg Frittata')."
+   "t": 13273,
+   "text": "e\":\"salmon\"},"
   },
   {
-   "t": 12524,
-   "text": "count()}\"},{\"action"
+   "t": 13305,
+   "text": "{\"slot\":\"snack"
   },
   {
-   "t": 12558,
-   "text": "\":\"set\",\"target\":\"me"
+   "t": 13338,
+   "text": "\",\"recipe\":\"edam"
   },
   {
-   "t": 12612,
-   "text": "als.5.uses\",\"value"
+   "t": 13373,
+   "text": "ame\"}]},{\"day"
   },
   {
-   "t": 12695,
-   "text": "\":\"{state.plan."
+   "t": 13406,
+   "text": "\":\"Sun\",\"meals"
   },
   {
-   "t": 12696,
-   "text": "where('meal', '"
+   "t": 13438,
+   "text": "\":[{\"slot\":\""
   },
   {
-   "t": 12877,
-   "text": "Turkey Meatballs"
+   "t": 13473,
+   "text": "breakfast\",\"recipe"
   },
   {
-   "t": 12879,
-   "text": "').count()}\"},{\""
+   "t": 13506,
+   "text": "\":\"oats\"},{\""
   },
   {
-   "t": 12880,
-   "text": "action\":\"toast\",\"message\":"
+   "t": 13541,
+   "text": "slot\":\"lunch\",\""
   },
   {
-   "t": 12881,
-   "text": "\"Week reset\",\""
+   "t": 13572,
+   "text": "recipe\":\"chicken"
   },
   {
-   "t": 12881,
-   "text": "variant\":\"info"
+   "t": 13608,
+   "text": "-bowl\"},{\""
   },
   {
-   "t": 12882,
-   "text": "\"}]},{\"type\":"
+   "t": 13638,
+   "text": "slot\":\"dinner\",\""
   },
   {
-   "t": 12889,
-   "text": "\"separator\",\"props\":{}"
+   "t": 13672,
+   "text": "recipe\":\"steak\""
   },
   {
-   "t": 12925,
-   "text": "},{\"type\":\"heading"
+   "t": 13707,
+   "text": "},{\"slot\":\"sn"
   },
   {
-   "t": 12960,
-   "text": "\",\"props\":{\"text\":\""
+   "t": 13739,
+   "text": "ack\",\"recipe\":\"sh"
   },
   {
-   "t": 13007,
-   "text": "Meal men"
+   "t": 13773,
+   "text": "ake\"}]}]},"
   },
   {
-   "t": 13034,
-   "text": "u\",\"level\":4}},{"
+   "t": 13808,
+   "text": "\"bind\":\"{state"
   },
   {
-   "t": 13081,
-   "text": "\"type\":\"each\",\"items\":"
-  },
-  {
-   "t": 13140,
-   "text": "\"{state.meals}\",\""
-  },
-  {
-   "t": 13162,
-   "text": "children\":[{\"type\":\""
-  },
-  {
-   "t": 13162,
-   "text": "text\",\"props\":{\"text\":"
-  },
-  {
-   "t": 13193,
-   "text": "\"{item.name}"
-  },
-  {
-   "t": 13222,
-   "text": ": {item.protein} g"
-  },
-  {
-   "t": 13260,
-   "text": " prot"
-  },
-  {
-   "t": 13290,
-   "text": "ein, plan"
-  },
-  {
-   "t": 13324,
-   "text": "ned x"
-  },
-  {
-   "t": 13357,
-   "text": "{item.uses}\",\"size"
-  },
-  {
-   "t": 13390,
-   "text": "\":\"sm\"}}]"
-  },
-  {
-   "t": 13422,
-   "text": "},{\"type\":\"separator"
-  },
-  {
-   "t": 13459,
-   "text": "\",\"props\":{}},{\""
-  },
-  {
-   "t": 13489,
-   "text": "type\":\"heading\",\"props\":"
-  },
-  {
-   "t": 13585,
-   "text": "{\"text\":\"Shop"
-  },
-  {
-   "t": 13586,
-   "text": "ping list for"
-  },
-  {
-   "t": 13646,
-   "text": " {state.people} people\",\"level"
-  },
-  {
-   "t": 13646,
-   "text": "\":4}},{\"type\":"
-  },
-  {
-   "t": 13665,
-   "text": "\"each\",\"items\":\"{state"
-  },
-  {
-   "t": 13691,
-   "text": ".ingredients}\",\"children"
-  },
-  {
-   "t": 13724,
-   "text": "\":[{\"type\":\"if"
-  },
-  {
-   "t": 13756,
-   "text": "\",\"condition\":\"{state."
-  },
-  {
-   "t": 13789,
-   "text": "people * item.q0 *"
-  },
-  {
-   "t": 13822,
-   "text": " state.meals[0].u"
-  },
-  {
-   "t": 13865,
-   "text": "ses + state.people * item."
-  },
-  {
-   "t": 13890,
-   "text": "q1 * state.meals"
-  },
-  {
-   "t": 13922,
-   "text": "[1].uses + state."
-  },
-  {
-   "t": 13957,
-   "text": "people * item.q2 *"
-  },
-  {
-   "t": 13990,
-   "text": " state.meals[2].u"
-  },
-  {
-   "t": 14025,
-   "text": "ses + state.people * item."
-  },
-  {
-   "t": 14055,
-   "text": "q3 * state.meals"
-  },
-  {
-   "t": 14089,
-   "text": "[3].uses + state."
-  },
-  {
-   "t": 14122,
-   "text": "people * item.q4 *"
-  },
-  {
-   "t": 14154,
-   "text": " state.meals[4].u"
-  },
-  {
-   "t": 14191,
-   "text": "ses + state.people * item."
-  },
-  {
-   "t": 14222,
-   "text": "q5 * state.meals"
-  },
-  {
-   "t": 14256,
-   "text": "[5].uses > 0"
-  },
-  {
-   "t": 14294,
-   "text": "}\",\"children\":[{\"type"
-  },
-  {
-   "t": 14323,
-   "text": "\":\"flex\",\"props\":{"
-  },
-  {
-   "t": 14356,
-   "text": "\"direction\":\"row\",\"just"
-  },
-  {
-   "t": 14389,
-   "text": "ify\":\"between\",\"align\":\""
-  },
-  {
-   "t": 14422,
-   "text": "center\",\"wrap\":true},"
-  },
-  {
-   "t": 14459,
-   "text": "\"children\":[{\"type\":"
-  },
-  {
-   "t": 14488,
-   "text": "\"checkbox\",\"props\":"
-  },
-  {
-   "t": 14522,
-   "text": "{\"label\":\"{item."
-  },
-  {
-   "t": 14555,
-   "text": "name}\"},\"bind\":"
-  },
-  {
-   "t": 14594,
-   "text": "\"ingredients.{index"
-  },
-  {
-   "t": 14622,
-   "text": "}.got\"},{\"type"
-  },
-  {
-   "t": 14659,
-   "text": "\":\"text\",\"props\":{\""
-  },
-  {
-   "t": 14690,
-   "text": "text\":\"{state.people *"
-  },
-  {
-   "t": 14723,
-   "text": " item.q0 * state."
-  },
-  {
-   "t": 14756,
-   "text": "meals[0].uses +"
-  },
-  {
-   "t": 14796,
-   "text": " state.people * item.q1"
-  },
-  {
-   "t": 14824,
-   "text": " * state.meals[1"
-  },
-  {
-   "t": 14856,
-   "text": "].uses + state.people *"
-  },
-  {
-   "t": 14890,
-   "text": " item.q2 * state."
-  },
-  {
-   "t": 14924,
-   "text": "meals[2].uses +"
-  },
-  {
-   "t": 15031,
-   "text": " state.people * item.q3"
-  },
-  {
-   "t": 15032,
-   "text": " * state.meals[3"
-  },
-  {
-   "t": 15152,
-   "text": "].uses + state.people *"
-  },
-  {
-   "t": 15152,
-   "text": " item.q4 * state."
-  },
-  {
-   "t": 15153,
-   "text": "meals[4].uses +"
-  },
-  {
-   "t": 15210,
-   "text": " state.people * item.q5"
-  },
-  {
-   "t": 15210,
-   "text": " * state.meals[5"
-  },
-  {
-   "t": 15210,
-   "text": "].uses} {item.un"
-  },
-  {
-   "t": 15293,
-   "text": "it}\",\"we"
-  },
-  {
-   "t": 15293,
-   "text": "ight\":\"semibold\",\""
-  },
-  {
-   "t": 15294,
-   "text": "size\":\"sm\"}}"
-  },
-  {
-   "t": 15329,
-   "text": "]}]}]}]}"
-  },
-  {
-   "t": 15357,
-   "text": "]}}"
+   "t": 13863,
+   "text": ".people}\"}}"
   }
  ]
 }

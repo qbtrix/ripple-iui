@@ -3,987 +3,1023 @@
  "title": "Order a burger",
  "prompt": "Order dinner from Tasty Bites: two Classic Cheeseburgers and a Fresh Lemonade to start. Show me the burgers plus a couple of sides and drinks so I can change quantities, keep a running total, and let me pick pickup or delivery and check out.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T08:36:33.134Z",
+ "recordedAt": "2026-10-09T06:44:34.641Z",
  "chunks": [
   {
    "t": 0,
    "text": "{"
   },
   {
-   "t": 23,
-   "text": "\"version"
+   "t": 31,
+   "text": "\"version\":\"1.0\",\""
   },
   {
-   "t": 57,
-   "text": "\":\"1.0\",\"state\":"
+   "t": 64,
+   "text": "state\":{\"menu\":["
   },
   {
-   "t": 92,
-   "text": "{\"menu\":[{\""
+   "t": 105,
+   "text": "{\"id\":\"burger-"
   },
   {
-   "t": 125,
-   "text": "id\":\"burger-1\",\""
+   "t": 132,
+   "text": "1\",\"name\":\"Classic"
   },
   {
-   "t": 158,
-   "text": "name\":\"Classic C"
+   "t": 165,
+   "text": " Cheeseburger\",\""
   },
   {
-   "t": 191,
-   "text": "heeseburger\",\"price\":"
+   "t": 199,
+   "text": "price\":11.99,\"category"
   },
   {
-   "t": 225,
-   "text": "11.99,\"category\":\""
-  },
-  {
-   "t": 261,
-   "text": "Burgers\",\"qty\":"
-  },
-  {
-   "t": 296,
-   "text": "2,\"line\":23.98"
-  },
-  {
-   "t": 333,
-   "text": "},{\"id\":\"burger"
-  },
-  {
-   "t": 360,
-   "text": "-2\",\"name\":\"B"
-  },
-  {
-   "t": 392,
-   "text": "acon Deluxe\",\""
-  },
-  {
-   "t": 429,
-   "text": "price\":14.99,\"category"
-  },
-  {
-   "t": 457,
+   "t": 278,
    "text": "\":\"Burgers\",\"q"
   },
   {
-   "t": 491,
-   "text": "ty\":0,\"line\":0"
+   "t": 278,
+   "text": "ty\":2,\"line\":23"
   },
   {
-   "t": 528,
-   "text": "},{\"id\":\"burger"
+   "t": 299,
+   "text": ".98},{\"id\":\""
   },
   {
-   "t": 558,
-   "text": "-3\",\"name\":\"M"
+   "t": 332,
+   "text": "burger-2\",\"name\":\""
   },
   {
-   "t": 592,
-   "text": "ushroom Swiss\",\""
+   "t": 366,
+   "text": "Bacon Delux"
   },
   {
-   "t": 628,
+   "t": 399,
+   "text": "e\",\"price\":14.99,"
+  },
+  {
+   "t": 432,
+   "text": "\"category\":\"Burgers"
+  },
+  {
+   "t": 466,
+   "text": "\",\"qty\":0,\"line"
+  },
+  {
+   "t": 500,
+   "text": "\":0},{\"id\":\""
+  },
+  {
+   "t": 533,
+   "text": "burger-3\",\"name\":\""
+  },
+  {
+   "t": 566,
+   "text": "Mushroom Swi"
+  },
+  {
+   "t": 600,
+   "text": "ss\",\"price\":12.99,"
+  },
+  {
+   "t": 634,
+   "text": "\"category\":\"Burgers"
+  },
+  {
+   "t": 668,
+   "text": "\",\"qty\":0,\"line"
+  },
+  {
+   "t": 700,
+   "text": "\":0},{\"id\":\""
+  },
+  {
+   "t": 733,
+   "text": "burger-4\",\"name\":\""
+  },
+  {
+   "t": 767,
+   "text": "Veggie Burger\",\""
+  },
+  {
+   "t": 800,
    "text": "price\":12.99,\"category"
   },
   {
-   "t": 659,
+   "t": 834,
    "text": "\":\"Burgers\",\"q"
   },
   {
-   "t": 692,
+   "t": 867,
    "text": "ty\":0,\"line\":0"
   },
   {
-   "t": 726,
-   "text": "},{\"id\":\"burger"
-  },
-  {
-   "t": 759,
-   "text": "-4\",\"name\":\"Ve"
-  },
-  {
-   "t": 792,
-   "text": "ggie Burger\",\"price\":"
-  },
-  {
-   "t": 825,
-   "text": "12.99,\"category\":\""
-  },
-  {
-   "t": 862,
-   "text": "Burgers\",\"qty\":"
-  },
-  {
-   "t": 895,
-   "text": "0,\"line\":0},{"
-  },
-  {
-   "t": 925,
-   "text": "\"id\":\"app-1\",\""
-  },
-  {
-   "t": 961,
-   "text": "name\":\"Crispy"
-  },
-  {
-   "t": 995,
-   "text": " Spring Rolls\",\"price"
-  },
-  {
-   "t": 1027,
-   "text": "\":6.99,\"category\":"
-  },
-  {
-   "t": 1062,
-   "text": "\"Appetizers\",\"q"
-  },
-  {
-   "t": 1093,
-   "text": "ty\":0,\"line\":0"
-  },
-  {
-   "t": 1125,
+   "t": 901,
    "text": "},{\"id\":\"app-"
   },
   {
-   "t": 1166,
-   "text": "3\",\"name\":\"Chic"
+   "t": 934,
+   "text": "2\",\"name\":\"Garl"
   },
   {
-   "t": 1192,
-   "text": "ken Wings\",\"price\":10"
+   "t": 970,
+   "text": "ic Bread\",\"price\":4"
   },
   {
-   "t": 1231,
+   "t": 1002,
    "text": ".99,\"category\":\""
   },
   {
-   "t": 1275,
+   "t": 1034,
    "text": "Appetizers\",\"qty\":"
   },
   {
-   "t": 1310,
+   "t": 1069,
    "text": "0,\"line\":0},{"
   },
   {
-   "t": 1331,
-   "text": "\"id\":\"drink-1"
+   "t": 1102,
+   "text": "\"id\":\"app-3\",\""
   },
   {
-   "t": 1362,
-   "text": "\",\"name\":\"Fresh"
+   "t": 1135,
+   "text": "name\":\"Chicken"
   },
   {
-   "t": 1405,
-   "text": " Lemonade\",\"price\":"
+   "t": 1169,
+   "text": " Wings\",\"price\":10.99"
   },
   {
-   "t": 1429,
-   "text": "3.99,\"category\":\""
+   "t": 1202,
+   "text": ",\"category\":\"Appet"
   },
   {
-   "t": 1469,
-   "text": "Drinks\",\"qty\":"
+   "t": 1235,
+   "text": "izers\",\"qty\":0,"
   },
   {
-   "t": 1492,
-   "text": "1,\"line\":3.99"
+   "t": 1269,
+   "text": "\"line\":0},{\"id"
   },
   {
-   "t": 1526,
-   "text": "},{\"id\":\"drink"
+   "t": 1304,
+   "text": "\":\"drink-1\",\"name"
   },
   {
-   "t": 1563,
-   "text": "-2\",\"name\":\"I"
+   "t": 1336,
+   "text": "\":\"Fresh L"
   },
   {
-   "t": 1593,
-   "text": "ced Coffee\",\"price\":"
+   "t": 1369,
+   "text": "emonade\",\"price\":3."
   },
   {
-   "t": 1626,
-   "text": "4.49,\"category\":\""
+   "t": 1402,
+   "text": "99,\"category\":\"Dr"
   },
   {
-   "t": 1659,
-   "text": "Drinks\",\"qty\":"
+   "t": 1436,
+   "text": "inks\",\"qty\":1,"
   },
   {
-   "t": 1692,
-   "text": "0,\"line\":0},{"
+   "t": 1472,
+   "text": "\"line\":3.99},{"
   },
   {
-   "t": 1725,
-   "text": "\"id\":\"drink-3"
+   "t": 1503,
+   "text": "\"id\":\"drink-2"
   },
   {
-   "t": 1758,
-   "text": "\",\"name\":\"Mango"
+   "t": 1538,
+   "text": "\",\"name\":\"Iced"
   },
   {
-   "t": 1792,
-   "text": " Smoothie\",\"price\":5"
+   "t": 1571,
+   "text": " Coffee\",\"price\":4."
   },
   {
-   "t": 1827,
-   "text": ".99,\"category\":\""
+   "t": 1604,
+   "text": "49,\"category\":\"Dr"
   },
   {
-   "t": 1859,
-   "text": "Drinks\",\"qty\":0"
+   "t": 1642,
+   "text": "inks\",\"qty\":0,"
   },
   {
-   "t": 1893,
-   "text": ",\"line\":0}],\""
+   "t": 1671,
+   "text": "\"line\":0},{\"id"
   },
   {
-   "t": 1929,
-   "text": "total\":27.97,\"count"
+   "t": 1703,
+   "text": "\":\"drink-3\",\"name"
   },
   {
-   "t": 1959,
-   "text": "\":3,\"orderType\":"
+   "t": 1737,
+   "text": "\":\"Mango Smo"
   },
   {
-   "t": 1992,
-   "text": "\"pickup\",\"fee\":"
+   "t": 1771,
+   "text": "othie\",\"price\":5.99"
   },
   {
-   "t": 2027,
-   "text": "0,\"customer\":{\""
+   "t": 1804,
+   "text": ",\"category\":\"Drin"
   },
   {
-   "t": 2059,
-   "text": "name\":null,\"email\":null"
+   "t": 1837,
+   "text": "ks\",\"qty\":0,\""
   },
   {
-   "t": 2094,
-   "text": ",\"phone\":null,\""
+   "t": 1871,
+   "text": "line\":0}],\"total\":"
   },
   {
-   "t": 2125,
-   "text": "address\":null}},\"ui"
+   "t": 1904,
+   "text": "27.97,\"count\":3"
   },
   {
-   "t": 2167,
-   "text": "\":{\"type\":\"card"
+   "t": 1938,
+   "text": ",\"orderType\":\"p"
   },
   {
-   "t": 2191,
+   "t": 1971,
+   "text": "ickup\",\"fee\":0,"
+  },
+  {
+   "t": 2004,
+   "text": "\"customer\":{\"name\":"
+  },
+  {
+   "t": 2038,
+   "text": "null,\"email\":null,\""
+  },
+  {
+   "t": 2071,
+   "text": "phone\":null,\"address\":"
+  },
+  {
+   "t": 2105,
+   "text": "null}},\"ui\":{"
+  },
+  {
+   "t": 2138,
+   "text": "\"type\":\"card"
+  },
+  {
+   "t": 2204,
    "text": "\",\"props\":{\"title\":\""
   },
   {
-   "t": 2225,
+   "t": 2205,
    "text": "Tasty Bites\",\""
   },
   {
-   "t": 2292,
-   "text": "description\":\"Build"
+   "t": 2238,
+   "text": "description\":\"Bur"
   },
   {
-   "t": 2295,
-   "text": " your d"
+   "t": 2272,
+   "text": "gers, sides and drin"
   },
   {
-   "t": 2327,
-   "text": "inner order\"},\"children\":"
+   "t": 2305,
+   "text": "ks\"},\"children\":[{"
   },
   {
-   "t": 2359,
-   "text": "[{\"type\":\"flex"
+   "t": 2340,
+   "text": "\"type\":\"flex\",\"props"
   },
   {
-   "t": 2393,
-   "text": "\",\"props\":{\"direction\":"
+   "t": 2372,
+   "text": "\":{\"direction\":\"column"
   },
   {
-   "t": 2427,
-   "text": "\"column\",\"gap\":\"12"
+   "t": 2534,
+   "text": "\",\"gap\":\"12px\""
   },
   {
-   "t": 2459,
-   "text": "px\"},\"children\":[{"
-  },
-  {
-   "t": 2493,
-   "text": "\"type\":\"each\",\"items\":"
-  },
-  {
-   "t": 2526,
-   "text": "\"{state.menu}\",\""
-  },
-  {
-   "t": 2560,
-   "text": "children\":[{\"type\":\""
-  },
-  {
-   "t": 2593,
-   "text": "flex\",\"props\":{\"dire"
-  },
-  {
-   "t": 2644,
-   "text": "ction\":\"row\",\"justify\":"
-  },
-  {
-   "t": 2659,
-   "text": "\"between\",\"align\":\"center\",\""
-  },
-  {
-   "t": 2695,
-   "text": "gap\":\"12px\"},"
-  },
-  {
-   "t": 2726,
-   "text": "\"children\":[{\"type\":"
-  },
-  {
-   "t": 2759,
-   "text": "\"flex\",\"props\":{\""
-  },
-  {
-   "t": 2793,
-   "text": "direction\":\"column\",\"gap"
-  },
-  {
-   "t": 2827,
-   "text": "\":\"2px\"},\"children"
-  },
-  {
-   "t": 2859,
-   "text": "\":[{\"type\":\"text"
-  },
-  {
-   "t": 2894,
-   "text": "\",\"props\":{\"text\":\""
-  },
-  {
-   "t": 2927,
-   "text": "{item.name}\",\"weight"
-  },
-  {
-   "t": 2961,
-   "text": "\":\"medium\"}},{"
-  },
-  {
-   "t": 2993,
-   "text": "\"type\":\"text\",\"props\":"
-  },
-  {
-   "t": 3027,
-   "text": "{\"text\":\"{item."
-  },
-  {
-   "t": 3063,
-   "text": "category} · ${item.price"
-  },
-  {
-   "t": 3094,
-   "text": "}\",\"size\":\"s"
-  },
-  {
-   "t": 3126,
-   "text": "m\"}}]},{\""
-  },
-  {
-   "t": 3160,
-   "text": "type\":\"number-input\",\"b"
-  },
-  {
-   "t": 3194,
-   "text": "ind\":\"menu.{index"
-  },
-  {
-   "t": 3227,
-   "text": "}.qty\",\"props\":{"
-  },
-  {
-   "t": 3277,
-   "text": "\"min\":0,\"max\":"
-  },
-  {
-   "t": 3296,
-   "text": "20,"
-  },
-  {
-   "t": 3325,
-   "text": "\"step\":1},\"on_"
-  },
-  {
-   "t": 3360,
-   "text": "change\":[{\"action\":\""
-  },
-  {
-   "t": 3414,
-   "text": "set\",\"target\":\"menu."
-  },
-  {
-   "t": 3427,
-   "text": "{index}.line\",\"value\":"
-  },
-  {
-   "t": 3460,
-   "text": "\"{state.menu[index"
-  },
-  {
-   "t": 3525,
-   "text": "].price * state.menu["
-  },
-  {
-   "t": 3576,
-   "text": "index].qty}\"},{"
-  },
-  {
-   "t": 3577,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 3596,
-   "text": "\"total\",\"value\":\"{state"
-  },
-  {
-   "t": 3626,
-   "text": ".menu.sum('line"
-  },
-  {
-   "t": 3661,
-   "text": "')}\"},{\"action\":"
-  },
-  {
-   "t": 3694,
-   "text": "\"set\",\"target\":\"count\",\""
-  },
-  {
-   "t": 3726,
-   "text": "value\":\"{state.menu"
-  },
-  {
-   "t": 3760,
-   "text": ".sum('qty')}"
-  },
-  {
-   "t": 3793,
-   "text": "\"}]}]}]},"
-  },
-  {
-   "t": 3827,
-   "text": "{\"type\":\"separator\",\""
-  },
-  {
-   "t": 3860,
-   "text": "props\":{\"orientation\":"
-  },
-  {
-   "t": 3893,
-   "text": "\"horizontal\"}},"
-  },
-  {
-   "t": 3931,
-   "text": "{\"type\":\"seg"
-  },
-  {
-   "t": 3964,
-   "text": "mented\",\"b"
-  },
-  {
-   "t": 3996,
-   "text": "ind\":\"orderType\",\"props"
-  },
-  {
-   "t": 4030,
-   "text": "\":{\"label\":\"Order"
-  },
-  {
-   "t": 4060,
-   "text": " type\",\"options\":["
-  },
-  {
-   "t": 4093,
-   "text": "{\"value\":\"pickup"
-  },
-  {
-   "t": 4126,
-   "text": "\",\"label\":\"Pickup"
-  },
-  {
-   "t": 4160,
-   "text": "\"},{\"value\":\"del"
-  },
-  {
-   "t": 4193,
-   "text": "ivery\",\"label\":\"Del"
-  },
-  {
-   "t": 4226,
-   "text": "ivery\"}]},\"on"
-  },
-  {
-   "t": 4264,
-   "text": "_change\":{"
-  },
-  {
-   "t": 4297,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 4332,
-   "text": "\"fee\",\"value\":\"{"
-  },
-  {
-   "t": 4361,
-   "text": "state.orderType == '"
-  },
-  {
-   "t": 4394,
-   "text": "delivery' ? 3"
-  },
-  {
-   "t": 4428,
-   "text": ".99 : 0}\""
-  },
-  {
-   "t": 4461,
-   "text": "}},{\"type\":\"input"
-  },
-  {
-   "t": 4494,
-   "text": "\",\"bind\":\"customer."
-  },
-  {
-   "t": 4527,
-   "text": "name\",\"props\":{\"label\":"
-  },
-  {
-   "t": 4561,
-   "text": "\"Name\",\"placeholder"
-  },
-  {
-   "t": 4593,
-   "text": "\":\"Your name\"}},"
-  },
-  {
-   "t": 4626,
-   "text": "{\"type\":\"input\",\"b"
-  },
-  {
-   "t": 4660,
-   "text": "ind\":\"customer.email\",\""
-  },
-  {
-   "t": 4694,
-   "text": "props\":{\"label\":\""
-  },
-  {
-   "t": 4729,
-   "text": "Email\",\"type\":\"email\",\"plac"
-  },
-  {
-   "t": 4767,
-   "text": "eholder\":\"you@example"
-  },
-  {
-   "t": 4796,
-   "text": ".com\"}},{\"type"
-  },
-  {
-   "t": 4827,
-   "text": "\":\"input\",\"bind\":\""
-  },
-  {
-   "t": 4874,
-   "text": "customer.phone\",\"props\":"
-  },
-  {
-   "t": 4893,
-   "text": "{\"label\":\"Phone"
-  },
-  {
-   "t": 4925,
-   "text": "\",\"type\":\"tel\",\"plac"
-  },
-  {
-   "t": 4960,
-   "text": "eholder\":\""
-  },
-  {
-   "t": 4994,
-   "text": "Phone number\"}},{\""
-  },
-  {
-   "t": 5029,
-   "text": "type\":\"if\",\"condition\":"
-  },
-  {
-   "t": 5065,
-   "text": "\"{state.orderType =="
-  },
-  {
-   "t": 5094,
-   "text": " 'delivery'}\",\""
-  },
-  {
-   "t": 5127,
-   "text": "children\":[{\"type\":\""
-  },
-  {
-   "t": 5176,
-   "text": "input\",\"bind\":\"customer"
-  },
-  {
-   "t": 5195,
-   "text": ".address\",\"props\":{\"label"
-  },
-  {
-   "t": 5233,
-   "text": "\":\"Delivery address\",\""
-  },
-  {
-   "t": 5263,
-   "text": "placeholder\":\"Street"
-  },
-  {
-   "t": 5308,
-   "text": ", city"
-  },
-  {
-   "t": 5326,
-   "text": "\""
-  },
-  {
-   "t": 5362,
-   "text": "}}]},{\"type\":"
-  },
-  {
-   "t": 5392,
-   "text": "\"separator\",\"props"
-  },
-  {
-   "t": 5427,
-   "text": "\":{\"orientation\":\""
-  },
-  {
-   "t": 5472,
-   "text": "horizontal\"}},{"
-  },
-  {
-   "t": 5494,
-   "text": "\"type\":\"heading\",\"props"
-  },
-  {
-   "t": 5534,
-   "text": "\":{\"text\":\"Your"
-  },
-  {
-   "t": 5562,
-   "text": " order\",\"level\":4"
-  },
-  {
-   "t": 5594,
-   "text": "}},{\"type\":\"each"
-  },
-  {
-   "t": 5628,
-   "text": "\",\"items\":\"{state.men"
-  },
-  {
-   "t": 5660,
-   "text": "u}\",\"children\":[{\""
-  },
-  {
-   "t": 5695,
-   "text": "type\":\"if\",\"condition\":"
-  },
-  {
-   "t": 5729,
-   "text": "\"{item.qty > "
-  },
-  {
-   "t": 5770,
-   "text": "0}\",\"children\":[{\""
-  },
-  {
-   "t": 5795,
-   "text": "type\":\"flex\",\"props\":"
-  },
-  {
-   "t": 5826,
-   "text": "{\"direction\":\"row\",\""
-  },
-  {
-   "t": 5862,
-   "text": "justify\":\"between\""
-  },
-  {
-   "t": 5894,
+   "t": 2534,
    "text": "},\"children\":[{\"type"
   },
   {
-   "t": 5928,
-   "text": "\":\"text\",\"props\":{\""
+   "t": 2536,
+   "text": "\":\"each\",\"items\":\""
   },
   {
-   "t": 5962,
-   "text": "text\":\"{item.qty"
+   "t": 2536,
+   "text": "{state.menu}\",\"children"
   },
   {
-   "t": 5995,
-   "text": "} × {item.name}\""
+   "t": 2538,
+   "text": "\":[{\"type\":\"fl"
   },
   {
-   "t": 6029,
-   "text": "}},{\"type\":\"text"
+   "t": 2572,
+   "text": "ex\",\"props\":{\"direction"
   },
   {
-   "t": 6060,
-   "text": "\",\"props\":{\"text\":\""
+   "t": 2606,
+   "text": "\":\"row\",\"gap\":\""
   },
   {
-   "t": 6094,
-   "text": "${item.line}\"}}"
+   "t": 2639,
+   "text": "12px\",\"align\":\"center\",\""
   },
   {
-   "t": 6130,
-   "text": "]}]}]},{\""
+   "t": 2677,
+   "text": "justify\":\"between\",\"wr"
   },
   {
-   "t": 6161,
-   "text": "type\":\"grid\",\"props\":"
+   "t": 3020,
+   "text": "ap\":true},\"children\":["
   },
   {
-   "t": 6194,
-   "text": "{\"columns\":2,\""
+   "t": 3020,
+   "text": "{\"type\":\"flex\",\""
   },
   {
-   "t": 6228,
-   "text": "gap\":\"12"
+   "t": 3020,
+   "text": "props\":{\"direction\":\""
   },
   {
-   "t": 6263,
+   "t": 3020,
+   "text": "column\",\"gap\":\"2"
+  },
+  {
+   "t": 3020,
    "text": "px\"},\"children\":[{"
   },
   {
-   "t": 6299,
-   "text": "\"type\":\"stat\",\"props"
+   "t": 3020,
+   "text": "\"type\":\"text\",\"props\":"
   },
   {
-   "t": 6328,
-   "text": "\":{\"label\":\"Sub"
+   "t": 3020,
+   "text": "{\"text\":\"{item."
   },
   {
-   "t": 6362,
-   "text": "total\",\"value\":\"{"
+   "t": 3020,
+   "text": "name}\",\"weight\":\"sem"
   },
   {
-   "t": 6397,
-   "text": "state.total}\",\"format\":\""
+   "t": 3020,
+   "text": "ibold\"}},{\"type"
   },
   {
-   "t": 6429,
-   "text": "currency\"}},{\"type"
+   "t": 3020,
+   "text": "\":\"text\",\"props\":{\""
   },
   {
-   "t": 6463,
-   "text": "\":\"stat\",\"props\":{"
+   "t": 3090,
+   "text": "text\":\"{item.category}"
   },
   {
-   "t": 6495,
-   "text": "\"label\":\"Order total\",\""
+   "t": 3092,
+   "text": " · "
   },
   {
-   "t": 6530,
-   "text": "value\":\"{state.total +"
+   "t": 3122,
+   "text": "${item.price}\",\"size\":"
   },
   {
-   "t": 6569,
-   "text": " state.fee}\",\"format\":"
+   "t": 3158,
+   "text": "\"sm\""
   },
   {
-   "t": 6600,
-   "text": "\"currency\"}}]},"
+   "t": 3174,
+   "text": "}}]},{\"type\":"
   },
   {
-   "t": 6628,
-   "text": "{\"type\":\"text\",\"props"
+   "t": 3208,
+   "text": "\"number-input\",\"props\":{"
   },
   {
-   "t": 6660,
-   "text": "\":{\"text\":\"{state"
+   "t": 3240,
+   "text": "\"min\":0,\"max\":"
   },
   {
-   "t": 6696,
-   "text": ".count} items ·"
+   "t": 3273,
+   "text": "20,"
   },
   {
-   "t": 6727,
-   "text": " del"
+   "t": 3309,
+   "text": "\"step\":1},\"bind"
   },
   {
-   "t": 6759,
-   "text": "ivery fee "
+   "t": 3340,
+   "text": "\":\"menu.{index}"
   },
   {
-   "t": 6794,
-   "text": "${state.fee}\",\"size"
+   "t": 3373,
+   "text": ".qty\",\"on_change\":"
   },
   {
-   "t": 6826,
-   "text": "\":\"sm\"}},{"
+   "t": 3408,
+   "text": "[{\"action\":\"set\",\""
   },
   {
-   "t": 6868,
-   "text": "\"type\":\"button\",\"props\":"
+   "t": 3446,
+   "text": "target\":\"menu.{index"
   },
   {
-   "t": 6908,
-   "text": "{\"label\":\"Check"
+   "t": 3476,
+   "text": "}.line\",\"value\":\"{"
   },
   {
-   "t": 6930,
-   "text": "out\",\"variant\":\"default\",\""
+   "t": 3511,
+   "text": "state.menu[index].price"
   },
   {
-   "t": 6961,
-   "text": "size\":\"lg\"},\""
+   "t": 3542,
+   "text": " * state.menu[index]."
   },
   {
-   "t": 6993,
-   "text": "on_click\":{\"action\":"
+   "t": 3575,
+   "text": "qty}\"},{\"action"
   },
   {
-   "t": 7027,
-   "text": "\"flow\",\"steps\":["
+   "t": 3610,
+   "text": "\":\"set\",\"target\":\"total"
   },
   {
-   "t": 7064,
-   "text": "{\"action\":\"validate\",\""
+   "t": 3642,
+   "text": "\",\"value\":\"{state.men"
   },
   {
-   "t": 7094,
-   "text": "condition\":\"state.count >"
+   "t": 3676,
+   "text": "u.sum('line')}"
   },
   {
-   "t": 7127,
-   "text": " 0\",\"message\":\"Add"
+   "t": 3712,
+   "text": "\"},{\"action\":\"set"
   },
   {
-   "t": 7162,
-   "text": " at"
+   "t": 3742,
+   "text": "\",\"target\":\"count\",\"value\":"
   },
   {
-   "t": 7197,
-   "text": " least one item\",\"variant\":\""
+   "t": 3775,
+   "text": "\"{state.menu.s"
   },
   {
-   "t": 7235,
-   "text": "error\"},{\"action\":\""
+   "t": 3808,
+   "text": "um('qty')}\"}"
   },
   {
-   "t": 7267,
-   "text": "validate\",\"condition\":\"state"
+   "t": 3841,
+   "text": "]}]}"
   },
   {
-   "t": 7296,
-   "text": ".customer.name\",\"message\":"
+   "t": 3874,
+   "text": "]},{\"type\":\"separ"
   },
   {
-   "t": 7327,
-   "text": "\"Enter your name\",\"vari"
+   "t": 3908,
+   "text": "ator\",\""
   },
   {
-   "t": 7361,
-   "text": "ant\":\"error\"},{\""
+   "t": 3942,
+   "text": "props\":{\"orientation\":"
   },
   {
-   "t": 7403,
-   "text": "action\":\"validate\",\"condition"
+   "t": 3975,
+   "text": "\"horizontal\"}},"
   },
   {
-   "t": 7426,
-   "text": "\":\"state.customer.email"
+   "t": 4008,
+   "text": "{\"type\":\"segmented"
   },
   {
-   "t": 7462,
+   "t": 4044,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 4076,
+   "text": "Order type\",\"options\":["
+  },
+  {
+   "t": 4109,
+   "text": "{\"value\":\"pickup"
+  },
+  {
+   "t": 4142,
+   "text": "\",\"label\":\"Pickup"
+  },
+  {
+   "t": 4176,
+   "text": "\"},{\"value\":\"del"
+  },
+  {
+   "t": 4210,
+   "text": "ivery\",\"label\":\"Del"
+  },
+  {
+   "t": 4242,
+   "text": "ivery ("
+  },
+  {
+   "t": 4276,
+   "text": "+$"
+  },
+  {
+   "t": 4309,
+   "text": "3.99)\"}]},"
+  },
+  {
+   "t": 4342,
+   "text": "\"bind\":\"orderType"
+  },
+  {
+   "t": 4376,
+   "text": "\",\"on_change\":{\"action"
+  },
+  {
+   "t": 4409,
+   "text": "\":\"set\",\"target\":\"f"
+  },
+  {
+   "t": 4442,
+   "text": "ee\",\"value\":\"{state."
+  },
+  {
+   "t": 4475,
+   "text": "orderType == 'deliv"
+  },
+  {
+   "t": 4509,
+   "text": "ery' ? 3.99"
+  },
+  {
+   "t": 4543,
+   "text": " : 0}\"}},"
+  },
+  {
+   "t": 4576,
+   "text": "{\"type\":\"gr"
+  },
+  {
+   "t": 4609,
+   "text": "id\",\"props\":{\"columns"
+  },
+  {
+   "t": 4642,
+   "text": "\":\"rep"
+  },
+  {
+   "t": 4677,
+   "text": "eat(auto-fit"
+  },
+  {
+   "t": 4711,
+   "text": ", minmax(220"
+  },
+  {
+   "t": 4742,
+   "text": "px, 1fr))\",\""
+  },
+  {
+   "t": 4775,
+   "text": "gap\":\"12px\"},"
+  },
+  {
+   "t": 4808,
+   "text": "\"children\":[{\"type\":"
+  },
+  {
+   "t": 4842,
+   "text": "\"input\",\"props\":{\"label"
+  },
+  {
+   "t": 4875,
+   "text": "\":\"Name"
+  },
+  {
+   "t": 4914,
+   "text": "\",\"placeholder\":\""
+  },
+  {
+   "t": 4943,
+   "text": "Your name\"},\"bind\":"
+  },
+  {
+   "t": 4975,
+   "text": "\"customer.name\"},{"
+  },
+  {
+   "t": 5012,
+   "text": "\"type\":\"input\",\"props\":"
+  },
+  {
+   "t": 5043,
+   "text": "{\"label\":\"Email\",\""
+  },
+  {
+   "t": 5077,
+   "text": "type\":\"email\",\"placehol"
+  },
+  {
+   "t": 5113,
+   "text": "der\":\"you@example.com"
+  },
+  {
+   "t": 5142,
+   "text": "\"},\"bind\":\"custom"
+  },
+  {
+   "t": 5176,
+   "text": "er.email\"},{\"type"
+  },
+  {
+   "t": 5210,
+   "text": "\":\"input\",\"props\":{\""
+  },
+  {
+   "t": 5244,
+   "text": "label\":\"Phone\",\"type"
+  },
+  {
+   "t": 5277,
+   "text": "\":\"tel\",\"placehol"
+  },
+  {
+   "t": 5310,
+   "text": "der\":\""
+  },
+  {
+   "t": 5343,
+   "text": "Phone number\"},\"bind"
+  },
+  {
+   "t": 5376,
+   "text": "\":\"customer.phone\""
+  },
+  {
+   "t": 5409,
+   "text": "},"
+  },
+  {
+   "t": 5442,
+   "text": "{\"type\":\"if\",\"cond"
+  },
+  {
+   "t": 5478,
+   "text": "ition\":\"{state.order"
+  },
+  {
+   "t": 5513,
+   "text": "Type == 'delivery'"
+  },
+  {
+   "t": 5543,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 5579,
+   "text": "\":\"input\",\"props\":{\""
+  },
+  {
+   "t": 5660,
+   "text": "label\":\"Delivery address"
+  },
+  {
+   "t": 5660,
+   "text": "\",\"placeholder\":\""
+  },
+  {
+   "t": 5697,
+   "text": "Street, city"
+  },
+  {
+   "t": 5712,
+   "text": "\"},\"bind\":\"custom"
+  },
+  {
+   "t": 5777,
+   "text": "er.address\"}]}]"
+  },
+  {
+   "t": 5777,
+   "text": "},{\"type\":\"separator"
+  },
+  {
+   "t": 5809,
+   "text": "\",\"props\":{\"or"
+  },
+  {
+   "t": 5843,
+   "text": "ientation\":\"horizontal"
+  },
+  {
+   "t": 5877,
+   "text": "\"}},{\"type\":\""
+  },
+  {
+   "t": 5985,
+   "text": "heading\",\"props\":{\"text"
+  },
+  {
+   "t": 5985,
+   "text": "\":\"Your order\",\"level\":"
+  },
+  {
+   "t": 5985,
+   "text": "4}},{\"type\":\""
+  },
+  {
+   "t": 6024,
+   "text": "each\",\"items\":\"{state."
+  },
+  {
+   "t": 6043,
+   "text": "menu}\",\"children\":[{"
+  },
+  {
+   "t": 6110,
+   "text": "\"type\":\"if\",\"condition"
+  },
+  {
+   "t": 6110,
+   "text": "\":\"{item.qty >"
+  },
+  {
+   "t": 6146,
+   "text": " 0}\",\"children\":[{"
+  },
+  {
+   "t": 6176,
+   "text": "\"type\":\"flex\",\"props"
+  },
+  {
+   "t": 6210,
+   "text": "\":{\"direction\":\"row"
+  },
+  {
+   "t": 6243,
+   "text": "\",\"gap\":\"12"
+  },
+  {
+   "t": 6276,
+   "text": "px\",\"align\":\"center\",\"just"
+  },
+  {
+   "t": 6312,
+   "text": "ify\":\"between\",\"wrap"
+  },
+  {
+   "t": 6344,
+   "text": "\":true},\"children\":[{"
+  },
+  {
+   "t": 6410,
+   "text": "\"type\":\"text\",\"props\":"
+  },
+  {
+   "t": 6411,
+   "text": "{\"text\":\"{item."
+  },
+  {
+   "t": 6445,
+   "text": "qty} × {item.name"
+  },
+  {
+   "t": 6477,
+   "text": "}\"}},{\"type\":"
+  },
+  {
+   "t": 6512,
+   "text": "\"stat\",\"props\":{\""
+  },
+  {
+   "t": 6557,
+   "text": "value\":\"{item.line}"
+  },
+  {
+   "t": 6577,
+   "text": "\",\"format\":\"currency\",\"size"
+  },
+  {
+   "t": 6611,
+   "text": "\":\"sm\"}}]"
+  },
+  {
+   "t": 6644,
+   "text": "}]}]},{\"type"
+  },
+  {
+   "t": 6678,
+   "text": "\":\"grid\",\"props\":{"
+  },
+  {
+   "t": 6710,
+   "text": "\"columns\":\"repeat"
+  },
+  {
+   "t": 6744,
+   "text": "(auto-fit, min"
+  },
+  {
+   "t": 6777,
+   "text": "max(150px, 1"
+  },
+  {
+   "t": 6811,
+   "text": "fr))\",\"gap\":\""
+  },
+  {
+   "t": 6844,
+   "text": "12px\"},\"children\":["
+  },
+  {
+   "t": 6877,
+   "text": "{\"type\":\"stat\",\""
+  },
+  {
+   "t": 6913,
+   "text": "props\":{\"label\":\""
+  },
+  {
+   "t": 6943,
+   "text": "Subtotal\",\"value\":\""
+  },
+  {
+   "t": 6978,
+   "text": "{state.total}\",\"format\":"
+  },
+  {
+   "t": 7011,
+   "text": "\"currency\"}},{\""
+  },
+  {
+   "t": 7044,
+   "text": "type\":\"stat\",\"props\":"
+  },
+  {
+   "t": 7079,
+   "text": "{\"label\":\"Order total"
+  },
+  {
+   "t": 7113,
+   "text": "\",\"value\":\"{state.total"
+  },
+  {
+   "t": 7144,
+   "text": " + state.fee}\",\"format"
+  },
+  {
+   "t": 7177,
+   "text": "\":\"currency\""
+  },
+  {
+   "t": 7217,
+   "text": "}}]},{\"type\":"
+  },
+  {
+   "t": 7244,
+   "text": "\"button\",\"props\":{\"label"
+  },
+  {
+   "t": 7278,
+   "text": "\":\"Checkout\",\"size"
+  },
+  {
+   "t": 7311,
+   "text": "\":\"lg\"},\"on"
+  },
+  {
+   "t": 7349,
+   "text": "_click\":{\"action\":\""
+  },
+  {
+   "t": 7377,
+   "text": "flow\",\"steps\":[{"
+  },
+  {
+   "t": 7418,
+   "text": "\"action\":\"validate\",\"cond"
+  },
+  {
+   "t": 7445,
+   "text": "ition\":\"state.count > "
+  },
+  {
+   "t": 7478,
+   "text": "0\",\"message\":\"Add at"
+  },
+  {
+   "t": 7511,
+   "text": " least one item\",\""
+  },
+  {
+   "t": 7545,
+   "text": "variant\":\"error\"},{"
+  },
+  {
+   "t": 7578,
+   "text": "\"action\":\"validate\",\"cond"
+  },
+  {
+   "t": 7612,
+   "text": "ition\":\"state.customer."
+  },
+  {
+   "t": 7644,
+   "text": "name\",\"message\":\"Enter"
+  },
+  {
+   "t": 7678,
+   "text": " your name\",\"variant\":\"error"
+  },
+  {
+   "t": 7712,
+   "text": "\"},{\"action\":\"valid"
+  },
+  {
+   "t": 7745,
+   "text": "ate\",\"condition\":\"state."
+  },
+  {
+   "t": 7777,
+   "text": "customer.email\",\"message\":\""
+  },
+  {
+   "t": 7812,
+   "text": "Enter your email\",\"variant"
+  },
+  {
+   "t": 7844,
+   "text": "\":\"error\"},{\"action"
+  },
+  {
+   "t": 7878,
+   "text": "\":\"validate\",\"condition\":"
+  },
+  {
+   "t": 7911,
+   "text": "\"state.customer.phone"
+  },
+  {
+   "t": 7946,
    "text": "\",\"message\":\"Enter your"
   },
   {
-   "t": 7500,
-   "text": " email\",\"variant\":\"error\""
+   "t": 7979,
+   "text": " phone\",\"variant\":\"error"
   },
   {
-   "t": 7542,
-   "text": "},{\"action\":\"validate"
+   "t": 8012,
+   "text": "\"},{\"action\":\"api"
   },
   {
-   "t": 7562,
-   "text": "\",\"condition\":\"state.custom"
+   "t": 8045,
+   "text": "\",\"url\":\"/api/chec"
   },
   {
-   "t": 7594,
-   "text": "er.phone\",\"message\":\""
+   "t": 8079,
+   "text": "kout\",\"method\":\"POST"
   },
   {
-   "t": 7628,
-   "text": "Enter your phone\",\"vari"
+   "t": 8112,
+   "text": "\",\"body\":{\"items\":\""
   },
   {
-   "t": 7661,
-   "text": "ant\":\"error\"},{\""
+   "t": 8146,
+   "text": "{state.menu}\",\"custom"
   },
   {
-   "t": 7699,
-   "text": "action\":\"api\",\"url\":\""
+   "t": 8179,
+   "text": "er\":\"{state.customer"
   },
   {
-   "t": 7737,
-   "text": "/api/checkout\",\"method"
+   "t": 8212,
+   "text": "}\",\"orderType\":\"{"
   },
   {
-   "t": 7764,
-   "text": "\":\"POST\",\"body\":{"
+   "t": 8246,
+   "text": "state.orderType}\"},"
   },
   {
-   "t": 7799,
-   "text": "\"items\":\"{state.men"
+   "t": 8278,
+   "text": "\"on_error\":[{\""
   },
   {
-   "t": 7853,
-   "text": "u}\",\"customer\":\"{"
+   "t": 8311,
+   "text": "action\":\"toast\",\"message\":"
   },
   {
-   "t": 7861,
-   "text": "state.customer}\",\"order"
+   "t": 8347,
+   "text": "\"{state._flow_error"
   },
   {
-   "t": 7895,
-   "text": "Type\":\"{state.order"
+   "t": 8378,
+   "text": ".message}\",\"variant\":\""
   },
   {
-   "t": 7927,
-   "text": "Type}\"},\"on_error"
+   "t": 8411,
+   "text": "error\"}]}]}}"
   },
   {
-   "t": 7961,
-   "text": "\":[{\"action\":\"to"
-  },
-  {
-   "t": 7994,
-   "text": "ast\",\"message\":\"{state._"
-  },
-  {
-   "t": 8034,
-   "text": "flow_error.message}\",\""
-  },
-  {
-   "t": 8064,
-   "text": "variant\":\"error\"}]"
-  },
-  {
-   "t": 8094,
-   "text": "}]}}]}]"
-  },
-  {
-   "t": 8117,
-   "text": "}}"
+   "t": 8448,
+   "text": "]}]}}"
   }
  ]
 }
