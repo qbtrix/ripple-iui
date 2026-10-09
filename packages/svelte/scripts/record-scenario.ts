@@ -44,6 +44,7 @@ const DATA_WIDGETS = new Set([
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'quiz',
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'memory-match',
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'habit-tracker', 'flashcard-deck',
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'focus-timer', 'flashcard-deck',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
@@ -110,6 +111,7 @@ CARD SHAPE (pick this first)
   - a week of meals: meal-plan; one dish: recipe
   - an interval, circuit or HIIT workout: interval-workout
   - tracking habits or streaks through the week: habit-tracker
+  - a pomodoro or focus session with breaks and rounds: focus-timer
   - a study or flip-card deck: flashcard-deck
   - a word guessing game: word-guess
   - a trivia quiz or multiple-choice test: quiz

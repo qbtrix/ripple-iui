@@ -20,7 +20,7 @@ describe('composite consumer widgets — registry wiring', () => {
     const types = [
       'todo-list', 'todo', 'todos',
       'drawing-canvas', 'drawing', 'canvas', 'sketchpad',
-      'timer', 'countdown', 'pomodoro',
+      'timer', 'countdown',
       'flashcard', 'flip-card',
       'audio', 'audio-player',
       'video', 'video-player',
@@ -33,7 +33,9 @@ describe('composite consumer widgets — registry wiring', () => {
 
   it('aliases resolve to the same component as the canonical type', () => {
     expect(getWidget('todo')).toBe(getWidget('todo-list'));
-    expect(getWidget('pomodoro')).toBe(getWidget('timer'));
+    expect(getWidget('countdown')).toBe(getWidget('timer'));
+    // pomodoro belongs to focus-timer (cycles, breaks, rounds), not the single countdown.
+    expect(getWidget('pomodoro')).toBe(getWidget('focus-timer'));
     expect(getWidget('flip-card')).toBe(getWidget('flashcard'));
     expect(getWidget('audio-player')).toBe(getWidget('audio'));
     expect(getWidget('video-player')).toBe(getWidget('video'));
