@@ -35,7 +35,7 @@
   <h1 class="mb-1 text-xl font-semibold">Shell primitives</h1>
   <p class="mb-6 text-sm text-muted-foreground">ListRow, SectionHeader, PanelHeader, Kbd and Segmented badges from <code>./ui</code>.</p>
 
-  <div class="mb-6 flex items-center gap-4">
+  <div class="mb-6 flex flex-wrap items-center gap-4">
     <Segmented
       size="sm"
       value={size}
@@ -54,7 +54,7 @@
     <span class="text-sm text-muted-foreground">Search <Kbd keys={['⌘', 'K']} /></span>
   </div>
 
-  <div class="flex gap-6">
+  <div class="flex flex-wrap gap-6">
     <nav class="w-64 rounded-lg border border-border p-1.5" aria-label="Rooms">
       <SectionHeader label="Rooms" count={rooms.length} bind:open={roomsOpen} controls="demo-rooms">
         {#snippet action()}
