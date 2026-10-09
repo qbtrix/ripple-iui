@@ -13,8 +13,11 @@ import { pages } from '../docs/content.js';
 import { exampleSpec, interactiveSpecs, widgetCategories } from '../docs/widgets.js';
 import { scenarios } from '../../../routes/live/scenarios.js';
 
-/** Widgets shown live above the catalog list, in order. */
-export const MINI_TYPES = ['approval-gate', 'todo-list', 'data-grid', 'sankey'];
+/**
+ * Widgets shown live above the catalog list, in order. None of them pulls a
+ * heavy chunk on mount (the ECharts-backed ones add about 360 kB gzipped).
+ */
+export const MINI_TYPES = ['approval-gate', 'todo-list', 'data-grid', 'flashcard'];
 
 export interface CodeFile {
 	/** File name or label shown above the block, e.g. `src/app.css`. */

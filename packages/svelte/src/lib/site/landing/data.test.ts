@@ -55,7 +55,7 @@ test('median', () => {
 test('buildLandingData reads the manifest, the docs and the recordings', () => {
 	const d = buildLandingData({ releases: [], sizes: null });
 	expect(d.widgetCount).toBe(d.categories.reduce((n, c) => n + c.types.length, 0));
-	expect(d.minis.map((m) => m.type)).toEqual(['approval-gate', 'todo-list', 'data-grid', 'sankey']);
+	expect(d.minis.map((m) => m.type)).toEqual(['approval-gate', 'todo-list', 'data-grid', 'flashcard']);
 	expect(d.firstWidget?.n).toBe(9);
 	expect(d.firstWidget?.medianMs).toBeGreaterThan(0);
 	const [svelte, headless] = d.integration;

@@ -154,7 +154,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 		<div class="head">
 			<h2 id="catalog-title">{data.widgetCount} widgets a model can ask for</h2>
 			<p>
-				From a badge to a sankey diagram. Each one has a docs page with its props, events and an example spec, from the same
+				From a single badge to a searchable data grid. Each one has a docs page with its props, events and an example spec, from the same
 				manifest the model reads.
 			</p>
 		</div>
@@ -478,7 +478,7 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 		min-width: 0;
 	}
 	.mini-frame {
-		height: 380px;
+		height: 340px;
 		padding: 20px;
 		box-sizing: border-box;
 		border: 1px solid var(--site-line);
