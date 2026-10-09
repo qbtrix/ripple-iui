@@ -9,6 +9,7 @@
 -->
 <script lang="ts">
 	import type { CodeFile } from './data.js';
+	import { safeUrl } from '@ripple-ui/core';
 
 	interface Tab {
 		id: string;
@@ -81,7 +82,7 @@
 			</div>
 			<p class="docs">
 				From the docs:
-				{#each tab.docs as d, j (d.href)}{j ? ', ' : ''}<a href={d.href}>{d.title}</a>{/each}
+				{#each tab.docs as d, j (d.href)}{j ? ', ' : ''}<a href={safeUrl(d.href)}>{d.title}</a>{/each}
 			</p>
 		</div>
 	{/each}
