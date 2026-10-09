@@ -35,7 +35,8 @@
 //      engine resolves templates inside strings), no backslash in an attribute value,
 //      and passing checkIllustrationSvg. `title` is non-empty text, `caption` text or
 //      null, `max_height` a number in ILLUSTRATION_MAX_HEIGHT. All of it at final:
-//      while streaming, only the handler and `bind` rule applies.
+//      while streaming, only the handler and `bind` rule applies, and no `svg`
+//      string is checked (its props may stream before its `type`).
 // Rules 4 and 5 read strings after one pass of HTML character-reference decoding.
 // `partial` is for specs still streaming: a prefix of an allowed name is not
 // refused yet, flow verbs wait for the flow fields, and shapes are checked at final.
@@ -249,6 +250,8 @@ export function refuseCard(card: unknown, { partial = false } = {}): string | nu
 		if (seen > MAX_NODES) return 'too_large';
 		const [node, key, isNode, inState, ask, depth] = stack.pop()!;
 		if (typeof node === 'string') {
+			// A streaming `svg` may arrive before its node's `type`; rule 11 runs at final (the server skips it too).
+			if (partial && key === 'svg') continue;
 			if (HANDLER_KEY.test(key)) return 'handler_expression';
 			const why = URL_KEY.test(key) ? urlRefusal(node) : textRefusal(node);
 			if (why) return why;

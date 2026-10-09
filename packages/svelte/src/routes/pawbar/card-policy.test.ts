@@ -728,7 +728,7 @@ describe('illustration', () => {
 		expect(refuseCard(art({ svg: svg('<text>{state.x}</text>') }))).toBe('illustration:expression');
 	});
 
-	test('refuses a backslash in an attribute value (a CSS escape could spell url()', () => {
+	test('refuses a backslash in an attribute value (a CSS escape could spell url)', () => {
 		const markup = svg("<rect width='10' height='10' fill='\\75 rl(https://evil.example/x)'/>");
 		expect(refuseCard(art({ svg: markup }))).toBe('illustration:backslash');
 		expect(refuseCard(art({ svg: svg('<text>a \\ b</text>') }))).toBeNull();
@@ -749,5 +749,9 @@ describe('illustration', () => {
 		expect(refuseCard(half, { partial: true })).toBeNull();
 		expect(refuseCard({ ui: { type: 'illustration', props: { svg: gearsSvg.slice(0, 700), title: 'Ge', max_height: 2 } } }, { partial: true })).toBeNull();
 		expect(refuseCard(half)).not.toBeNull();
+		// props before type: the svg is not read as text mid-stream.
+		expect(refuseCard({ ui: { props: { svg: "<svg viewBox='0 0 10 10'><rec" } } }, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { props: { svg: "<svg viewBox='0 0 10 10'/>", title: 'x' }, type: 'illustration' } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'text', props: { svg: "<svg viewBox='0 0 10 10'/>" } } })).toBe('markup');
 	});
 });
