@@ -73,22 +73,23 @@
 	--paw-crimson: oklch(0.62 0.2 18);
 	--paw-crimson-hover: oklch(0.55 0.2 18);
 
-	--background: oklch(0.155 0.012 262);
+	/* PE's --feature-glass-tint, the warm grey every Paw OS pane shows. */
+	--background: #262621;
 	--foreground: oklch(0.95 0.005 260);
-	--card: oklch(0.195 0.014 262);
+	--card: oklch(1 0 0 / 6%);
 	--card-foreground: oklch(0.95 0.005 260);
-	--popover: oklch(0.2 0.014 262);
+	--popover: color-mix(in srgb, #262621 95%, transparent);
 	--popover-foreground: oklch(0.95 0.005 260);
-	--secondary: oklch(0.255 0.014 262);
+	--secondary: oklch(1 0 0 / 13%);
 	--secondary-foreground: oklch(0.95 0.005 260);
-	--muted: oklch(0.245 0.014 262);
+	--muted: oklch(1 0 0 / 5%);
 	--muted-foreground: oklch(0.75 0.015 260);
-	--accent: oklch(0.26 0.016 262);
+	--accent: oklch(1 0 0 / 10%);
 	--accent-foreground: oklch(0.95 0.005 260);
 	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 13%);
+	--input: oklch(1 0 0 / 8%);
 
-	--site-ground: oklch(0.14 0.012 262);
+	--site-ground: #262621;
 	--site-ink: oklch(0.95 0.005 260);
 	--site-soft: oklch(0.75 0.015 260);
 	--site-line: oklch(1 0 0 / 10%);
