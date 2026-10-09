@@ -165,6 +165,11 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'memory-match', 'memory-game', 'match-pairs',
   // habit-tracker binds { habits, ticks: { [habitId]: ISO days } }
   'habit-tracker', 'habits', 'streak-tracker',
+  // focus-timer binds its session ({ phase, remaining_s, running, rounds_done, task, log })
+  'focus-timer', 'pomodoro', 'pomodoro-timer',
+  // board-game binds the game ({ board, turn, result, series }), written by
+  // the widget on every move, Rematch and New series
+  'board-game', 'tic-tac-toe', 'connect-four',
 ]);
 
 const warnedTypes = new Set<string>();
