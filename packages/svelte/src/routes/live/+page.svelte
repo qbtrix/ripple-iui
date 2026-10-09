@@ -7,9 +7,10 @@
     is in the markup; onMount replays on top of it. `?s=<id>` preselects.
     No model is called at runtime. `onHostEvent` is the host's event handler:
     the order demo's checkout `api` event goes to checkout.ts, which posts to
-    the test store (PUBLIC_STORE_URL, build-time host config) and redirects to
-    its checkout; the store sends visitors back to `?order=<session>` or
-    `?cancelled=1`, which OrderReceipt renders.
+    the test store (PUBLIC_STORE_URL, build-time host config); the payment link
+    it returns shows as the same PayCard the landing chat uses (new-tab link,
+    polling, then tracking), so the page never navigates away. A link back to
+    `?order=<session>` or `?cancelled=1` still renders OrderReceipt.
 
   Look: the site's Paw OS skin (site.css tokens and fonts) under the shared
     top bar and footer from +layout.svelte; this page adds no chrome of its own.
@@ -23,8 +24,9 @@
 	import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 	import { replay } from './replay.js';
 	import { scenarios, type Scenario } from './scenarios.js';
-	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, readReturn, type OrderSummary } from './checkout.js';
+	import { checkout, isCheckoutEvent, readReturn, type Pay } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
+	import PayCard from '../pawbar/PayCard.svelte';
 
 	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
 
@@ -78,7 +80,9 @@
 	// does not handle itself (toast, emit, navigate, api, ...) lands here.
 	// The order demo's Checkout `api` event goes to the store via checkout.ts.
 	let checkoutNote = $state<{ busy: boolean; text: string } | null>(null);
-	let receipt = $state<{ order: string | null; mock: boolean; cancelled: boolean; summary: OrderSummary | null } | null>(null);
+	let receipt = $state<{ order: string | null; mock: boolean; cancelled: boolean } | null>(null);
+	let pay = $state.raw<Pay | null>(null);
+	let lastOrder: unknown = null;
 	let events = $state<{ id: number; text: string }[]>([]);
 	let toast = $state<{ id: number; message: string; variant: string } | null>(null);
 	let eventId = 0;
@@ -101,29 +105,17 @@
 		// One checkout at a time: a double click would open two store sessions.
 		if (checkoutNote?.busy) return { ok: false, error: { message: 'Checkout is already opening.' } };
 		checkoutNote = { busy: true, text: 'Opening the store checkout...' };
-		const result = await checkout(body, {
-			storeUrl: STORE_URL,
-			pageOrigin: location.origin,
-			navigate: (url) => location.assign(url),
-			remember: (summary) => {
-				try {
-					sessionStorage.setItem(ORDER_SUMMARY_KEY, JSON.stringify(summary));
-				} catch {
-					/* private mode: the receipt just skips the item list */
-				}
-			}
-		});
-		checkoutNote = result.ok ? { busy: true, text: 'Redirecting to checkout...' } : { busy: false, text: result.error?.message ?? 'Checkout failed.' };
+		const result = await checkout(body, { storeUrl: STORE_URL, pageOrigin: location.origin });
+		if (result.ok) {
+			pay = result.data;
+			lastOrder = body;
+			checkoutNote = null;
+		} else checkoutNote = { busy: false, text: result.error.message };
 		return result;
 	}
 
 	function dismissReceipt() {
 		receipt = null;
-		try {
-			sessionStorage.removeItem(ORDER_SUMMARY_KEY);
-		} catch {
-			/* ignore */
-		}
 		replaceState(`?s=${active.id}`, {});
 	}
 
@@ -135,17 +127,7 @@
 
 	onMount(() => {
 		const wanted = new URLSearchParams(location.search).get('s');
-		const back = readReturn(location.search);
-		if (back) {
-			let summary: OrderSummary | null = null;
-			try {
-				const saved = JSON.parse(sessionStorage.getItem(ORDER_SUMMARY_KEY) ?? 'null');
-				if (Array.isArray(saved?.lines)) summary = saved;
-			} catch {
-				/* no saved cart */
-			}
-			receipt = { ...back, summary };
-		}
+		receipt = readReturn(location.search);
 		const s = scenarios.find((x) => x.id === wanted) ?? scenarios[0];
 		if (window.matchMedia('(max-width: 720px)').matches) jsonOpen = false;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -157,8 +139,6 @@
 </script>
 
 <!-- Back from the store's checkout via bfcache: drop the stale "Redirecting..." note. -->
-<svelte:window onpageshow={(e) => e.persisted && (checkoutNote = null)} />
-
 <svelte:head>
 	<title>Live: watch a model build a UI with Ripple</title>
 	<meta
@@ -229,6 +209,9 @@
 						<div class="toast" data-variant={toast.variant} role="status">{toast.message}</div>
 					{/if}
 				</div>
+				{#if pay && active.needsStore}
+					{#key pay.sessionId}<PayCard {pay} storeUrl={STORE_URL} onretry={() => placeOrder(lastOrder)} />{/key}
+				{/if}
 				{#if checkoutNote && active.needsStore}
 					<p class="checkout-note" role={checkoutNote.busy ? 'status' : 'alert'} data-busy={checkoutNote.busy}>
 						{checkoutNote.text}

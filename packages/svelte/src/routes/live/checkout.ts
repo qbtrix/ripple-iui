@@ -18,17 +18,18 @@
 // wants name, email AND phone. The spec's URL is a marker; the store base is
 // host config (PUBLIC_STORE_URL), never part of the card.
 //
-// checkout() validates, POSTs `${storeUrl}/api/checkout`, and resolves to a
-// RippleEventResult. It navigates only to an allowlisted origin (Stripe
-// Checkout, or this page for the store's mock mode), https unless the host is
-// localhost, so a bad store response can't send visitors elsewhere.
-// readReturn() accepts only a session-id-shaped `?order=` so a crafted link
-// can't fake a receipt.
+// checkout() validates, POSTs `${storeUrl}/api/checkout`, and resolves to
+// {ok, data: Pay}: the payment url, the session id and the cart summary. It
+// never navigates: the caller shows a pay card (pawbar/PayCard.svelte) whose
+// link opens the url in a new tab. The url must pass isAllowedRedirect (Stripe
+// Checkout, the store's own origin for its mock pay page, or this page), https
+// unless the host is localhost, so a bad store response can't send visitors
+// elsewhere. readReturn() accepts only a session-id-shaped `?order=`
+// (ORDER_ID, shared with /pay/done) so a crafted link can't fake a receipt.
 
-import type { RippleEvent, RippleEventResult } from '$lib/index.js';
+import type { RippleEvent } from '$lib/index.js';
 
 export const CHECKOUT_PATH = '/api/checkout';
-export const ORDER_SUMMARY_KEY = 'ripple-live-order';
 
 export interface OrderLine {
 	id: string;
@@ -39,6 +40,15 @@ export interface OrderLine {
 export interface OrderSummary {
 	lines: { name: string; qty: number; price: number }[];
 	orderType: 'pickup' | 'delivery';
+	/** Display only: the card's own total, or the lines' sum. The store's total wins once it answers. */
+	total: number;
+}
+
+/** What a started checkout hands the pay card. */
+export interface Pay {
+	url: string;
+	sessionId: string;
+	summary: OrderSummary;
 }
 
 export function isCheckoutEvent(e: RippleEvent): boolean {
@@ -82,7 +92,7 @@ function cartLines(lines: unknown[]): Line[] | string {
 export function toStoreRequest(body: unknown):
 	| { request: Record<string, unknown>; summary: OrderSummary }
 	| { error: string } {
-	const b = (body ?? {}) as { items?: unknown; lines?: unknown; customer?: unknown; orderType?: unknown; fulfilment?: unknown };
+	const b = (body ?? {}) as { items?: unknown; lines?: unknown; customer?: unknown; orderType?: unknown; fulfilment?: unknown; total?: unknown };
 	const isCart = Array.isArray(b.lines);
 	if (!isCart && !Array.isArray(b.items)) return { error: 'The order has no items list.' };
 	const lines = isCart ? cartLines(b.lines as unknown[]) : legacyLines(b.items as unknown[]);
@@ -111,21 +121,22 @@ export function toStoreRequest(body: unknown):
 			orderType,
 			returnTo: 'ripple'
 		},
-		summary: { lines: lines.map(({ name, qty, price }) => ({ name, qty, price })), orderType }
+		summary: {
+			lines: lines.map(({ name, qty, price }) => ({ name, qty, price })),
+			orderType,
+			total: typeof b.total === 'number' && Number.isFinite(b.total) && b.total >= 0 ? b.total : lines.reduce((a, l) => a + l.price * l.qty, 0)
+		}
 	};
 }
 
 export interface CheckoutDeps {
 	storeUrl: string;
-	/** location.origin: the store's mock mode returns here. */
+	/** location.origin: an older store's mock mode returned here. */
 	pageOrigin: string;
 	fetch?: typeof fetch;
-	navigate: (url: string) => void;
-	/** Called with the cart summary just before navigating, so /live?order= can show it. */
-	remember?: (summary: OrderSummary) => void;
 }
 
-export async function checkout(body: unknown, deps: CheckoutDeps): Promise<RippleEventResult> {
+export async function checkout(body: unknown, deps: CheckoutDeps): Promise<{ ok: true; data: Pay } | Fail> {
 	const parsed = toStoreRequest(body);
 	if ('error' in parsed) return fail(parsed.error, 400);
 	let res: Response;
@@ -150,34 +161,48 @@ export async function checkout(body: unknown, deps: CheckoutDeps): Promise<Rippl
 	}
 
 	const url = typeof data?.url === 'string' ? data.url : '';
-	if (!isAllowedRedirect(url, deps.pageOrigin)) {
+	const sessionId = typeof data?.sessionId === 'string' ? data.sessionId : '';
+	if (!isAllowedRedirect(url, deps.pageOrigin, deps.storeUrl)) {
 		return fail("Couldn't start checkout: the store sent back a payment link this page won't follow.", res.status);
 	}
-	deps.remember?.(parsed.summary);
-	deps.navigate(url);
-	return { ok: true, data: { sessionId: data?.sessionId } };
+	if (!ORDER_ID.test(sessionId)) return fail("Couldn't start checkout: the store sent back no order to follow.", res.status);
+	return { ok: true, data: { url, sessionId, summary: parsed.summary } };
 }
 
 const STRIPE_CHECKOUT = 'https://checkout.stripe.com';
 const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
 
-export function isAllowedRedirect(url: string, pageOrigin: string): boolean {
+const originOf = (url: string) => {
+	try {
+		return new URL(url).origin;
+	} catch {
+		return null;
+	}
+};
+
+/** Stripe Checkout, the store's origin (its mock pay page) or this page; https unless localhost. */
+export function isAllowedRedirect(url: string, pageOrigin: string, storeUrl?: string): boolean {
 	let u: URL;
 	try {
 		u = new URL(url);
 	} catch {
 		return false;
 	}
-	if (u.origin !== STRIPE_CHECKOUT && u.origin !== pageOrigin) return false;
+	if (u.origin !== STRIPE_CHECKOUT && u.origin !== pageOrigin && u.origin !== (storeUrl && originOf(storeUrl))) return false;
 	return u.protocol === 'https:' || (u.protocol === 'http:' && LOCAL_HOSTS.includes(u.hostname));
 }
 
-const SESSION_ID = /^[A-Za-z0-9_]{1,255}$/;
+/** A checkout session id: Stripe `cs_test_...`, or the mock store's `mock_<uuid>`. */
+export const ORDER_ID = /^[A-Za-z0-9_-]{1,255}$/;
 
-/** The store's return to /live: `?order=<session>[&mock=true]` or `?cancelled=1`; null otherwise. */
+/**
+ * The store's return: `?order=<session>[&mock=true]` or `?cancelled=1` (with the
+ * order when the store sends it); null otherwise. A malformed order reads as none.
+ */
 export function readReturn(search: string): { order: string | null; mock: boolean; cancelled: boolean } | null {
 	const q = new URLSearchParams(search);
-	if (q.has('cancelled')) return { order: null, mock: false, cancelled: true };
-	const order = q.get('order');
-	return order && SESSION_ID.test(order) ? { order, mock: q.get('mock') === 'true', cancelled: false } : null;
+	const raw = q.get('order');
+	const order = raw && ORDER_ID.test(raw) ? raw : null;
+	if (q.has('cancelled')) return { order, mock: false, cancelled: true };
+	return order ? { order, mock: q.get('mock') === 'true', cancelled: false } : null;
 }

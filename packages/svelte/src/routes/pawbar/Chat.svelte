@@ -7,8 +7,9 @@
     <Ripple streaming> while it arrives and swaps to <Ripple spec> on final (a
     remount, so the validated spec is what the visitor keeps using). Host
     events go to session.hostEvent, which ignores them until the card is final;
-    a checkout's progress or failure shows as the card's note, and a confirmed
-    booking as a BookingReceipt under the card. A finished flow card hands its
+    a checkout's progress or failure shows as the card's note, an opened one as
+    a PayCard under the card (keyed by session, so a retry starts fresh), and a
+    confirmed booking as a BookingReceipt under the card. A finished flow card hands its
     result to session.flowComplete; it and a card's `ask` arrive as the visitor's
     next message, and each new visitor message scrolls into view, however it was
     sent. A notice that offers a replay gets a button that plays the closest
@@ -18,6 +19,7 @@
 	import { tick } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import BookingReceipt from './BookingReceipt.svelte';
+	import PayCard from './PayCard.svelte';
 	import type { Card, ChatSession } from './session.svelte.js';
 
 	interface Suggestion {
@@ -102,6 +104,11 @@
 			{#if card.note}<p class="host-note" data-kind={card.note.kind} role="status">{card.note.text}</p>{/if}
 		</div>
 		{#if card.receipt}<BookingReceipt {...card.receipt} />{/if}
+		{#if card.pay && session.store}
+			{#key card.pay.sessionId}
+				<PayCard pay={card.pay} storeUrl={session.store.storeUrl} fetch={session.store.fetch} onretry={() => session.retryCheckout(card)} />
+			{/key}
+		{/if}
 	{/if}
 {/snippet}
 

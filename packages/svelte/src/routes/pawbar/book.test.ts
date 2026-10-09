@@ -190,42 +190,64 @@ async function finalCard(card: unknown, store?: ConstructorParameters<typeof Cha
 const bookingNode = (card: Card) => (card.spec!.ui as { props: Record<string, unknown> }).props;
 
 describe('ChatSession host events', () => {
-	test('checkout from a final menu-order card posts the Cart, remembers it, then navigates', async () => {
+	test('checkout from a final menu-order card posts the Cart and puts the pay link on the card, never navigating', async () => {
 		const fetch = reply(200, { url: 'https://checkout.stripe.com/c/pay/cs_test_1', sessionId: 'cs_test_1' });
-		const navigate = vi.fn();
-		const remember = vi.fn();
-		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, navigate, remember, pageOrigin: 'https://ripple.example' });
+		const href = location.href;
+		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
 		await session.hostEvent(card, emit('checkout', cart));
 		const [url, init] = fetch.mock.calls[0] as [string, RequestInit];
 		expect(url).toBe(`${STORE}/api/checkout`);
 		expect(JSON.parse(init.body as string).items).toEqual([{ item: { id: 'burger-1' }, quantity: 1, options: ['size-large'] }]);
-		expect(remember).toHaveBeenCalledOnce();
-		expect(navigate).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test_1');
-		expect(card.note).toEqual({ kind: 'busy', text: 'Taking you to checkout...' });
+		expect(card.pay).toEqual({
+			url: 'https://checkout.stripe.com/c/pay/cs_test_1',
+			sessionId: 'cs_test_1',
+			summary: { lines: [{ name: 'Classic Cheeseburger', qty: 1, price: 13.49 }], orderType: 'pickup', total: 13.49 }
+		});
+		expect(card.note).toBeNull();
 		expect(card.sent).toBeNull();
+		expect(location.href).toBe(href);
 	});
 
-	test('a checkout the store refuses, or the host re-check stops, shows on the card and never navigates', async () => {
-		const navigate = vi.fn();
-		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch: reply(400, { message: 'Choose a size' }), navigate });
+	test('a pay link off the allowlist never reaches the card', async () => {
+		const fetch = reply(200, { url: 'https://evil.example/pay', sessionId: 'cs_test_1' });
+		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
+		await session.hostEvent(card, emit('checkout', cart));
+		expect(card.pay).toBeNull();
+		expect(card.note?.kind).toBe('error');
+	});
+
+	test('retryCheckout runs the same Cart through a new checkout', async () => {
+		const fetch = vi
+			.fn()
+			.mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_1', sessionId: 'cs_1' })))
+			.mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_2', sessionId: 'cs_2' })));
+		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
+		await session.hostEvent(card, emit('checkout', cart));
+		await session.retryCheckout(card);
+		expect(fetch.mock.calls[1][1].body).toBe(fetch.mock.calls[0][1].body);
+		expect(card.pay?.sessionId).toBe('cs_2');
+	});
+
+	test('a checkout the store refuses, or the host re-check stops, shows on the card with no pay link', async () => {
+		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch: reply(400, { message: 'Choose a size' }) });
 		await session.hostEvent(card, emit('checkout', cart));
 		expect(card.note).toEqual({ kind: 'error', text: 'The store rejected the order: Choose a size' });
 		await session.hostEvent(card, emit('checkout', { ...cart, lines: [{ ...cart.lines[0], qty: 21 }] }));
 		expect(card.note?.text).toContain('Up to 20');
-		expect(navigate).not.toHaveBeenCalled();
+		expect(card.pay).toBeNull();
 	});
 
 	test('one checkout or booking in flight at a time', async () => {
 		let release!: (r: Response) => void;
 		const fetch = vi.fn(() => new Promise<Response>((r) => (release = r)));
-		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, navigate: vi.fn(), pageOrigin: 'https://ripple.example' });
+		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
 		const first = session.hostEvent(card, emit('checkout', cart));
 		await session.hostEvent(card, emit('checkout', cart));
 		expect(card.note?.text).toContain('still on its way');
 		expect(fetch).toHaveBeenCalledOnce();
-		release(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_1' }), { status: 200 }));
+		release(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_1', sessionId: 'cs_1' }), { status: 200 }));
 		await first;
-		expect(card.note?.text).toBe('Taking you to checkout...');
+		expect(card.pay?.sessionId).toBe('cs_1');
 	});
 
 	test('host events stay inert while the card streams, and without a StoreHost', async () => {

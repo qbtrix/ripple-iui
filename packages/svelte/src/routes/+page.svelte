@@ -32,7 +32,6 @@
 	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { chatPrompts, scenarios } from './live/scenarios.js';
-	import { ORDER_SUMMARY_KEY } from './live/checkout.js';
 
 	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
 	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
@@ -52,17 +51,8 @@
 		(message, signal) =>
 			recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro });
 	// A chat card's `checkout` and `book` host events reach the test store
-	// (PUBLIC_STORE_URL, host config); the cart summary is saved for /live's receipt.
-	const store = {
-		storeUrl: STORE_URL,
-		remember: (summary: unknown) => {
-			try {
-				sessionStorage.setItem(ORDER_SUMMARY_KEY, JSON.stringify(summary));
-			} catch {
-				/* private mode: the receipt just skips the item list */
-			}
-		}
-	};
+	// (PUBLIC_STORE_URL, host config); a checkout's pay link and tracking stay in the chat.
+	const store = { storeUrl: STORE_URL };
 	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
 	// is unavailable. Offline build: the recordings answer directly.
 	const session = LIVE

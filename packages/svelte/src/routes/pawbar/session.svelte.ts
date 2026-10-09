@@ -14,8 +14,10 @@
 // fed through the same Card. Every partial spec and the final card pass
 // card-policy.ts first; a refused card is dropped like a rejected one. Host
 // events are inert until final. With a StoreHost (the landing passes one), a
-// final card's `emit checkout` (menu-order's Cart) goes to live/checkout.ts and
-// may navigate to Stripe or this origin; `emit book` (booking's request) goes to
+// final card's `emit checkout` (menu-order's Cart) goes to live/checkout.ts, and
+// the payment link it returns becomes the card's `pay` (a PayCard under the
+// card, which polls the order and turns into tracking; retryCheckout() starts
+// a new one after a cancel). The page never navigates. `emit book` (booking's request) goes to
 // book.ts, and the answer is patched into the booking node's props (`notice`,
 // `confirmed`, fresh `days`) with a BookingReceipt under the card on 201. One
 // checkout or booking in flight per session. A final card's `emit ask` ({text})
@@ -29,7 +31,7 @@
 
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
-import { checkout, type OrderSummary } from '../live/checkout.js';
+import { checkout, type Pay } from '../live/checkout.js';
 import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
 import { ASK_MAX, refuseCard, textRefusal } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
@@ -205,6 +207,10 @@ export class Card {
 	note = $state<{ kind: 'busy' | 'error'; text: string } | null>(null);
 	/** A booking the store confirmed from this card, for the receipt under it. */
 	receipt = $state<{ booking: Booked; durationMin?: number; place?: string } | null>(null);
+	/** A checkout the store opened from this card, for the pay card under it. */
+	pay = $state.raw<Pay | null>(null);
+	/** The Cart that opened it, so a cancelled payment can start a new checkout. */
+	cart: unknown = null;
 	readonly store: StreamSpecStore;
 	#push!: ReadableStreamDefaultController<string>;
 	#fed = '';
@@ -274,9 +280,6 @@ export interface StoreHost {
 	storeUrl: string;
 	fetch?: typeof fetch;
 	pageOrigin?: string;
-	navigate?: (url: string) => void;
-	/** Saves the cart summary before the redirect, so /live?order= can list it. */
-	remember?: (summary: OrderSummary) => void;
 }
 
 export type Part = { kind: 'text'; text: string } | { kind: 'card'; card: Card };
@@ -332,7 +335,7 @@ export class ChatSession {
 	constructor(
 		private readonly transport: Transport,
 		private readonly fallback?: Transport,
-		private readonly store?: StoreHost
+		readonly store?: StoreHost
 	) {}
 
 	async send(message: string) {
@@ -429,19 +432,21 @@ export class ChatSession {
 		this.#hostBusy = true;
 		card.note = { kind: 'busy', text: 'Opening the store checkout...' };
 		try {
-			const result = await checkout(cart, {
-				storeUrl: store.storeUrl,
-				fetch: store.fetch,
-				pageOrigin: store.pageOrigin ?? location.origin,
-				navigate: store.navigate ?? ((url) => location.assign(url)),
-				remember: store.remember
-			});
-			card.note = result.ok
-				? { kind: 'busy', text: 'Taking you to checkout...' }
-				: { kind: 'error', text: result.error?.message ?? 'Checkout did not start. Try again.' };
+			const result = await checkout(cart, { storeUrl: store.storeUrl, fetch: store.fetch, pageOrigin: store.pageOrigin ?? location.origin });
+			if (result.ok) {
+				card.pay = result.data;
+				card.cart = cart;
+				card.note = null;
+			} else card.note = { kind: 'error', text: result.error.message };
 		} finally {
 			this.#hostBusy = false;
 		}
+	}
+
+	/** After a cancelled payment: the same Cart through a new checkout. */
+	retryCheckout(card: Card) {
+		if (!this.store || card.cart == null) return undefined;
+		return this.#checkout(card, this.store, card.cart);
 	}
 
 	async #book(card: Card, store: StoreHost, payload: unknown) {
