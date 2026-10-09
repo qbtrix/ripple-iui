@@ -71,6 +71,12 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'workout-timer': { prop: 'workSec', event: 'onworksecchange' },
   'interval-timer': { prop: 'workSec', event: 'onworksecchange' },
   'hiit-timer': { prop: 'workSec', event: 'onworksecchange' },
+  // flashcard-deck binds its score (cards known since the last restart),
+  // written by the widget; the deal and the current card stay widget-side.
+  'flashcard-deck': { prop: 'score', event: 'onscorechange' },
+  flashcards: { prop: 'score', event: 'onscorechange' },
+  'study-deck': { prop: 'score', event: 'onscorechange' },
+  'flip-cards': { prop: 'score', event: 'onscorechange' },
 };
 
 /**
