@@ -74,7 +74,7 @@ That spec is a working form with two-way binding. You write no glue code for it.
 | Package | What it is |
 |---|---|
 | [`@ripple-ui/core`](packages/core) | The engine: schema, expressions, state, events, motion compilation, and a headless runtime that resolves a spec into a plain tree. **No framework dependency.** |
-| [`@ripple-ui/svelte`](packages/svelte) | The Svelte 5 renderer: 197 widgets, the visual editor, streaming, intents. Depends on core. |
+| [`@ripple-ui/svelte`](packages/svelte) | The Svelte 5 renderer: 198 widgets, the visual editor, streaming, intents. Depends on core. |
 
 Most people installing Ripple to build a UI want `@ripple-ui/svelte`; core
 comes with it. Reach for core directly when you want the engine without a
@@ -93,7 +93,7 @@ packages fall on it:
 
 ```
 @ripple-ui/core            @ripple-ui/svelte
-  schema                     widgets (197)
+  schema                     widgets (198)
   expressions                components
   state (StateStore)         Ripple.svelte
   event dispatcher           editor, intents, streaming

@@ -154,6 +154,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   // layout
   'master-detail', 'list-detail',
   'sidebar', 'nav',
+  // bill-split binds the bill as edited ({ subtotal, tip_percent, people })
+  'bill-split', 'split-bill', 'bill-splitter',
 ]);
 
 const warnedTypes = new Set<string>();

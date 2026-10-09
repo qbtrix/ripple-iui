@@ -18,7 +18,7 @@ import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions, Itinerary, Booking, GrowthProjection, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
+  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -288,6 +288,9 @@ const defaultRegistry: WidgetMap = {
   'growth-projection': GrowthProjection,
   'savings-projection': GrowthProjection,
   'compound-interest': GrowthProjection,
+  'bill-split': BillSplit,
+  'split-bill': BillSplit,
+  'bill-splitter': BillSplit,
   recipe: Recipe,
   'recipe-card': Recipe,
   'meal-plan': MealPlan,
@@ -474,7 +477,7 @@ export {
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
   AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
-  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard, Itinerary, GrowthProjection,
+  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard, Itinerary, GrowthProjection, BillSplit,
   ModelViewer, Embed, AudioPlayer, VideoPlayer,
   Reveal, Parallax,
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,

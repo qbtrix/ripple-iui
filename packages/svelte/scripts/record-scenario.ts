@@ -40,7 +40,7 @@ const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'ov
 // Plus these by name (whole composite + research categories would add ~100 KB):
 // the data widgets and the summary pieces the SYSTEM rules point at.
 const DATA_WIDGETS = new Set([
-	'itinerary', 'booking', 'menu-order', 'growth-projection', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck',
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
@@ -102,6 +102,7 @@ EXPRESSIONS (verified against the engine; follow exactly)
 CARD SHAPE (pick this first)
 - A data widget carries its own controls, totals, charts and progress. When one fits, the card is that widget: put the user's numbers and items in its props, the one-line takeaway in its "verdict" ({"text","status"}, at most 140 characters), and never duplicate its inputs or outputs with sliders, stats, progress bars or charts beside it.
   - savings, deposits, compound growth: growth-projection
+  - splitting a bill or a tip between people: bill-split
   - a trip or a day-by-day plan: itinerary
   - a week of meals: meal-plan; one dish: recipe
   - an interval, circuit or HIIT workout: interval-workout
@@ -111,7 +112,7 @@ CARD SHAPE (pick this first)
   - choosing between options: comparison-layout
 - A summary of one thing (a person, an account, an order) starts with entity-detail (title, status, kpis, meta) and puts its sections in its children; dated events go in a timeline, plain facts in a kv-table.
 - A drawing, animated icon or small scene: illustration, with "svg" written in single-quoted attributes (<svg viewBox='0 0 200 120'>) and every animation dur 0.5s or more.
-- A small tool no data widget covers (a calculator, a bill splitter, a checklist, an explainer) is built from primitives with the rules above.
+- A small tool no data widget covers (a calculator, a checklist, an explainer) is built from primitives with the rules above.
 
 LAYOUT
 - The card is about 720px wide on a desktop and must still read on a 360px phone. For a row of tiles give the grid "columns": "repeat(auto-fit, minmax(150px, 1fr))" so it wraps; otherwise at most 2 fixed grid columns. A number-input needs about 140px, so give number inputs and sliders a full-width row or a 2-column grid. A flex row with more than two children sets "wrap": true.

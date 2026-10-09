@@ -99,6 +99,18 @@ Savings growth from four numbers (aliases `savings-projection`, `compound-intere
 - Clamps negatives to 0, rate and inflation to 100%, years to 100, and lists what it changed.
 - Bind `deposit` (`bind: "{state.deposit}"`); a slider or box edit commits a number on release. Rate and years edits fire `on_ratechange` / `on_yearschange` with the new number (`{ action: "set", target: "rate", value: "{event}" }`).
 
+### bill-split
+
+Split a bill with tip (aliases `split-bill`, `bill-splitter`). Answers "dinner for 4 came to $186.40, help me split it with tip, and let me adjust who had drinks". The model writes the numbers and the people; the widget does the maths, so no hand-built sliders, `each` rows or `set` actions.
+
+- `subtotal` (the bill before tip and before tax), `tip_percent` (percent: `18` means 18%, default 18), `people[]` `{ id, name, extras? }` (2 to 12; `extras` is what that person had on top of the shared part, such as drinks, as an amount).
+- Optional `tax`: ON TOP of `subtotal`, shared in proportion to what each person had. Leave it out when the subtotal already includes tax. The tip is always a percent of `subtotal`, never of the tax.
+- Optional `tip_options` (chips, default `[15, 18, 20, 22]`), `extras_label` (default "Drinks"), `currency` (ISO 4217), `title`, `note`.
+- Maths: the shared part (subtotal minus everyone's extras) splits evenly; each person pays their share plus their extras, plus tax and tip in proportion to that amount. Everything is in integer cents and the leftover cents go to the first people, so the shares add up to the total exactly. Extras over the bill raise the bill to their sum and the widget says so.
+- Renders a verdict ("Everyone pays $60.00", or "Shares range from $48.79 to $62.96"), a card per person with the amount large, then a bill / tip / total row (a polite live region). Two columns of cards in a narrow card, up to four wide, never one card alone in the last row.
+- The visitor edits the bill amount, the tip (chips or a custom percent), each name and extras, and adds or removes people (2 to 12). A "Copy summary" button copies a plain-text summary; it needs no handler.
+- Bind `value` (`bind: "{state.bill}"`): `{ subtotal, tip_percent, people: [{ id, name, extras }] }`, written on every edit. A host re-sending the same spec keeps the edits; new numbers from the model replace them.
+
 ### recipe
 
 One dish you can cook from (alias `recipe-card`). Answers "give me a recipe for X".
