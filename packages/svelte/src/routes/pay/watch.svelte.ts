@@ -4,7 +4,8 @@
 // every POLL_MS. A `{type:'paid-check', order}` message on
 // BroadcastChannel('ripple-order') for this id (from /pay/done) only triggers
 // an immediate order poll: its content is never trusted. Polling stops on
-// cancelled, delivered or picked-up, after MAX_MS, or on stop() (the card is
+// cancelled, delivered, ready-for-pickup (where the store ends a pickup order)
+// or picked-up, after MAX_MS, or on stop() (the card is
 // gone). A failed or malformed poll backs off (POLL_MS doubling, capped at
 // BACKOFF_MAX_MS) and keeps the last good values. One request in flight; a ping
 // that lands during one polls again right after it.

@@ -42,8 +42,8 @@ export interface Tracking {
 
 const ORDER_STATUSES: readonly OrderStatus[] = ['pending', 'paid', 'cancelled'];
 const TRACK_STATUSES: readonly TrackStatus[] = ['confirmed', 'preparing', 'out-for-delivery', 'delivered', 'ready-for-pickup', 'picked-up'];
-/** Tracking is over: the poll stops. */
-export const TRACK_DONE: readonly TrackStatus[] = ['delivered', 'picked-up'];
+/** Tracking is over: the poll stops. The store's pickup orders end at ready-for-pickup. */
+export const TRACK_DONE: readonly TrackStatus[] = ['delivered', 'ready-for-pickup', 'picked-up'];
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T => typeof v === 'string' && (list as readonly string[]).includes(v);

@@ -7,7 +7,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import PayCard from './PayCard.svelte';
-import { ORDER_ID, orderBody, storeFetch, trackBody } from '../pay/fixtures.js';
+import { ORDER_ID, orderBody, RESTAURANT, storeFetch, trackBody } from '../pay/fixtures.js';
 import { POLL_MS } from '../pay/watch.svelte.js';
 
 const STORE = 'https://shop.example/test-store';
@@ -113,7 +113,7 @@ test('an HTML label from the store renders as text, never markup', async () => {
 	fetch = vi.fn(
 		storeFetch({
 			[`/api/orders/${ORDER_ID}`]: () => ({ body: orderBody('paid') }),
-			[`/api/orders/${ORDER_ID}/track`]: () => ({ body: trackBody('preparing', { restaurant: { lat: 40.7128, lng: -74.006, label } }) })
+			[`/api/orders/${ORDER_ID}/track`]: () => ({ body: trackBody('preparing', { restaurant: { ...RESTAURANT, label } }) })
 		})
 	);
 	const view = mount();

@@ -5,7 +5,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MAX_MS, OrderWatch, POLL_MS } from './watch.svelte.js';
-import { ORDER_ID, orderBody, storeFetch, trackBody } from './fixtures.js';
+import { COURIER, ORDER_ID, orderBody, storeFetch, trackBody } from './fixtures.js';
 
 const STORE = 'https://shop.example/test-store';
 const ORDER = `/api/orders/${ORDER_ID}`;
@@ -78,7 +78,7 @@ describe('OrderWatch', () => {
 		expect(w.tracking?.status).toBe('preparing');
 		trackStatus = 'out-for-delivery';
 		await tick(POLL_MS);
-		expect(w.tracking?.courier).toEqual({ lat: 40.7149, lng: -74.0043 });
+		expect(w.tracking?.courier).toEqual(COURIER);
 		trackStatus = 'delivered';
 		await tick(POLL_MS);
 		expect(w.phase).toBe('done');
@@ -86,6 +86,18 @@ describe('OrderWatch', () => {
 		await tick(POLL_MS * 10);
 		expect(fetch.mock.calls.length).toBe(n);
 		expect(chan.closed).toBe(true);
+	});
+
+	test('a pickup order stops at ready-for-pickup (the store never sends picked-up)', async () => {
+		orderStatus = 'paid';
+		trackStatus = 'ready-for-pickup';
+		const w = watch();
+		await tick(0);
+		await tick(1);
+		expect(w.phase).toBe('done');
+		const n = fetch.mock.calls.length;
+		await tick(POLL_MS * 5);
+		expect(fetch.mock.calls.length).toBe(n);
 	});
 
 	test('cancelled stops polling', async () => {

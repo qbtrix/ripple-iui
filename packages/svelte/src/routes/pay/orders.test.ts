@@ -5,7 +5,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 import { fetchOrder, fetchTracking, LABEL_MAX, parseOrder, parseTracking, trackSpec, trackState } from './orders.js';
-import { ORDER_ID, orderBody, ROUTE, trackBody } from './fixtures.js';
+import { COURIER, DROP_OFF, ORDER_ID, orderBody, RESTAURANT, ROUTE, trackBody } from './fixtures.js';
 
 describe('parseOrder', () => {
 	test('reads the contract shape', () => {
@@ -39,7 +39,7 @@ describe('parseOrder', () => {
 describe('parseTracking', () => {
 	test('reads the contract shape', () => {
 		const t = parseTracking(trackBody('out-for-delivery'));
-		expect(t).toMatchObject({ status: 'out-for-delivery', etaMinutes: 9, courier: { lat: 40.7149, lng: -74.0043 }, route: ROUTE });
+		expect(t).toMatchObject({ status: 'out-for-delivery', etaMinutes: 9, courier: COURIER, route: ROUTE });
 		expect(t?.events).toHaveLength(2);
 	});
 
@@ -111,13 +111,15 @@ describe('trackSpec / trackState', () => {
 			currentStep: 'out-for-delivery',
 			title: 'On the way',
 			eta: '9 min',
-			origin: { name: 'Tasty Bites Kitchen', lat: 40.7128, lng: -74.006 },
-			destination: { name: 'Drop-off', lat: 40.7183, lng: -74.0015 },
-			tracker: { lat: 40.7149, lng: -74.0043, label: 'Courier' },
+			origin: { name: 'Tasty Bites Kitchen', ...RESTAURANT },
+			destination: { name: 'Drop-off', ...DROP_OFF },
+			tracker: { ...COURIER, label: 'Courier' },
 			route: ROUTE
 		});
 		expect(s.steps.map((x) => x.id)).toEqual(['confirmed', 'preparing', 'out-for-delivery', 'delivered']);
 		expect(s.events.map((e) => e.label)).toEqual(['The kitchen started your order', 'Order confirmed']);
+		const delivered = trackState(ORDER_ID, parseTracking(trackBody('delivered'))!, 'delivery');
+		expect(delivered).toMatchObject({ eta: '', title: 'Delivered', tracker: { ...DROP_OFF, label: 'Courier' } });
 		const pickup = trackState(ORDER_ID, parseTracking(trackBody('ready-for-pickup', { destination: null }))!, 'pickup');
 		expect(pickup.steps.map((x) => x.id)).toEqual(['confirmed', 'preparing', 'ready-for-pickup', 'picked-up']);
 		expect(pickup).toMatchObject({ destination: null, tracker: null });
