@@ -45,6 +45,8 @@ const config = {
 		// (/showcase/x/y), where relative ./_app paths would resolve wrongly.
 		paths: { relative: false },
 		prerender: {
+			// The widget index fetches its card specs at runtime, which the crawler cannot follow.
+			entries: ['*', '/docs/widgets/examples.json'],
 			// Docs and llms files are generated from src/docs: an error there (a
 			// broken ```ripple block, a missing page) fails the build. Elsewhere a
 			// page that cannot prerender falls back to the SPA shell, so it warns.
