@@ -65,6 +65,12 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'menu-order': { prop: 'cart', event: 'oncartchange' },
   'food-menu': { prop: 'cart', event: 'oncartchange' },
   'order-menu': { prop: 'cart', event: 'oncartchange' },
+  // interval-workout binds its work seconds (the demo's "let me set the work
+  // interval"); restSec and the current step stay Svelte-side $bindables.
+  'interval-workout': { prop: 'workSec', event: 'onworksecchange' },
+  'workout-timer': { prop: 'workSec', event: 'onworksecchange' },
+  'interval-timer': { prop: 'workSec', event: 'onworksecchange' },
+  'hiit-timer': { prop: 'workSec', event: 'onworksecchange' },
 };
 
 /**

@@ -18,7 +18,7 @@ import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions, Itinerary, Booking,
+  AskUserQuestions, Itinerary, Booking, IntervalWorkout,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -284,6 +284,10 @@ const defaultRegistry: WidgetMap = {
   itinerary: Itinerary,
   'trip-plan': Itinerary,
   'travel-itinerary': Itinerary,
+  'interval-workout': IntervalWorkout,
+  'workout-timer': IntervalWorkout,
+  'interval-timer': IntervalWorkout,
+  'hiit-timer': IntervalWorkout,
   if: If,
   each: Each,
   'source-card': SourceCard,
@@ -463,7 +467,7 @@ export {
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions, Booking,
+  AskUserQuestions, Booking, IntervalWorkout,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
   LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
   // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
