@@ -1,6 +1,7 @@
 // site/docs/highlight.ts — HTML escaping and a tiny JSON tokenizer for docs
-// code blocks and the SpecExample spec view. Runs at build time (markdown) and
-// in the browser (SpecExample), so it is plain string work, no DOM. Token
+// code blocks, the SpecExample spec view and the scrub player's streaming JSON
+// (highlightJsonPrefix, for a line cut inside a string). Runs at build time
+// (markdown) and in the browser, so it is plain string work, no DOM. Token
 // classes (tok-key, tok-str, tok-num, tok-lit, tok-punct) are styled from the
 // --code-* tokens in routes/site.css. Output is always escaped: safe for {@html}.
 
@@ -26,4 +27,22 @@ export function highlightJson(src: string): string {
 		last = m.index + whole.length;
 	}
 	return out + escapeHtml(src.slice(last));
+}
+
+/**
+ * highlightJson for a line that may end inside a string (a stream cut
+ * mid-value). The open tail is one tok-str, so text inside it ("Split 4
+ * ways") never flashes as a number or punctuation before its quote closes.
+ */
+export function highlightJsonPrefix(src: string): string {
+	let open = -1;
+	let escaped = false;
+	for (let i = 0; i < src.length; i++) {
+		const c = src[i];
+		if (escaped) escaped = false;
+		else if (open >= 0 && c === '\\') escaped = true;
+		else if (c === '"') open = open < 0 ? i : -1;
+	}
+	if (open < 0) return highlightJson(src);
+	return highlightJson(src.slice(0, open)) + `<span class="tok-str">${escapeHtml(src.slice(open))}</span>`;
 }
