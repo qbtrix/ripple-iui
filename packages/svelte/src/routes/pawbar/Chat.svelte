@@ -24,6 +24,8 @@
 		id: string;
 		title: string;
 		prompt: string;
+		/** The answer walks the visitor through steps: the chip says so. */
+		steps?: boolean;
 	}
 
 	let { session, suggestions = [], note = '' }: { session: ChatSession; suggestions?: Suggestion[]; note?: string } = $props();
@@ -157,7 +159,7 @@
 		<ul class="chips" aria-label="Try one of these">
 			{#each suggestions as s (s.id)}
 				<li>
-					<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}</button>
+					<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
 				</li>
 			{/each}
 		</ul>
@@ -406,6 +408,16 @@
 		transition:
 			border-color 0.15s,
 			background 0.15s;
+	}
+	.chip-steps {
+		margin-left: 3px;
+		padding: 1px 7px;
+		border-radius: 999px;
+		background: color-mix(in oklch, var(--primary) 14%, transparent);
+		color: var(--primary-ink);
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.01em;
 	}
 	.chip:hover:not(:disabled) {
 		border-color: color-mix(in oklch, var(--primary) 60%, transparent);

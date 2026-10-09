@@ -130,3 +130,21 @@ test('a form step holds the flow until its required fields are filled', async ()
 		expect(sent[1]).toBe('Plan a trip for me with these answers (budget in US dollars).\nTrip style: Food\nCity: Lisbon\nDays: 4\nBudget: 1500')
 	);
 });
+
+test('a step-by-step chip says so, and sends its prompt', async () => {
+	const sent: string[] = [];
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, {
+		session,
+		suggestions: [
+			{ id: 'trip', title: 'Plan a trip with me', prompt: 'Help me plan a trip step by step', steps: true },
+			{ id: 'bill', title: 'Split the bill', prompt: 'Split it' }
+		]
+	});
+	expect(view.getByRole('button', { name: 'Split the bill' })).toBeTruthy();
+	await fireEvent.click(view.getByRole('button', { name: 'Plan a trip with me step by step' }));
+	await waitFor(() => expect(sent).toEqual(['Help me plan a trip step by step']));
+});
