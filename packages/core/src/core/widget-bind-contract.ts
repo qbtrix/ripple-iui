@@ -50,6 +50,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'exec-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
   'kpi-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
   'executive-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
+  // booking binds the request in progress (service, start, party, customer,
+  // notes); its stage and the host's notice stay widget-side.
+  booking: { prop: 'selection', event: 'onselectionchange' },
+  reservation: { prop: 'selection', event: 'onselectionchange' },
+  appointment: { prop: 'selection', event: 'onselectionchange' },
 };
 
 /**

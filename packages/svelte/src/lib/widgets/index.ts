@@ -18,7 +18,7 @@ import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions,
+  AskUserQuestions, Booking,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -262,6 +262,9 @@ const defaultRegistry: WidgetMap = {
   'order-status': OrderStatus,
   'shipment-tracker': OrderStatus,
   'order-tracking': OrderStatus,
+  booking: Booking,
+  reservation: Booking,
+  appointment: Booking,
   'exec-dashboard': ExecDashboard,
   'kpi-dashboard': ExecDashboard,
   'executive-dashboard': ExecDashboard,
@@ -454,7 +457,7 @@ export {
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
-  AskUserQuestions,
+  AskUserQuestions, Booking,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
   LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
   // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
