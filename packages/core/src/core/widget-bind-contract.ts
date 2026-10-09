@@ -60,6 +60,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   booking: { prop: 'selection', event: 'onselectionchange' },
   reservation: { prop: 'selection', event: 'onselectionchange' },
   appointment: { prop: 'selection', event: 'onselectionchange' },
+  // menu-order binds its cart ({ lines, fulfilment, total }, never the
+  // customer's details) so another node can show "2 items".
+  'menu-order': { prop: 'cart', event: 'oncartchange' },
+  'food-menu': { prop: 'cart', event: 'oncartchange' },
+  'order-menu': { prop: 'cart', event: 'oncartchange' },
 };
 
 /**
