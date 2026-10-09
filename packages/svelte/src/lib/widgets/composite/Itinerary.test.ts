@@ -10,14 +10,14 @@ import Ripple from '$lib/Ripple.svelte';
 import { expectStreamParity } from '$lib/streaming/__fixtures__/stream-parity.js';
 import { getWidget, hasWidget } from '../index.js';
 import { _resetBindContractWarnings, getBindContract, warnUnregisteredBindContract } from '@ripple-ui/core';
-import Itinerary, { budgetStatus, clockMinutes, duration, insertByTime } from './Itinerary.svelte';
+import Itinerary, { budgetStatus, clockMinutes, duration, insertByTime, type ItineraryDay } from './Itinerary.svelte';
 
 afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
 });
 
-const tokyo = () => [
+const tokyo = (): ItineraryDay[] => [
 	{
 		id: 'd1',
 		label: 'Day 1',
@@ -60,7 +60,7 @@ describe('itinerary: bound edits', () => {
 		});
 		return { initial, onStateChange };
 	};
-	const lastDays = (fn: ReturnType<typeof vi.fn>) => fn.mock.calls.at(-1)![1] as ReturnType<typeof tokyo>;
+	const lastDays = (fn: ReturnType<typeof vi.fn>) => fn.mock.calls.at(-1)![1] as ItineraryDay[];
 
 	it('ticking a stop writes a new days array with that stop done', async () => {
 		const { initial, onStateChange } = mountBound();
@@ -71,13 +71,13 @@ describe('itinerary: bound edits', () => {
 		expect(onStateChange).toHaveBeenLastCalledWith('days', expect.any(Array), expect.anything());
 		const next = lastDays(onStateChange);
 		expect(next).not.toBe(initial);
-		expect(next[0].stops[1]).toMatchObject({ id: 's2', done: true });
-		expect(next[0].stops[0]).not.toHaveProperty('done');
-		expect(initial[0].stops[1]).not.toHaveProperty('done');
+		expect(next[0].stops![1]).toMatchObject({ id: 's2', done: true });
+		expect(next[0].stops![0]).not.toHaveProperty('done');
+		expect(initial[0].stops![1]).not.toHaveProperty('done');
 		expect(screen.getByRole('checkbox', { name: 'Soba lunch' }).getAttribute('aria-checked')).toBe('true');
 
 		await fireEvent.click(screen.getByRole('checkbox', { name: 'Soba lunch' }));
-		expect(lastDays(onStateChange)[0].stops[1].done).toBe(false);
+		expect(lastDays(onStateChange)[0].stops![1].done).toBe(false);
 	});
 
 	it('adding a stop inserts it by time and writes it back', async () => {
@@ -88,9 +88,9 @@ describe('itinerary: bound edits', () => {
 		await fireEvent.input(screen.getByRole('spinbutton', { name: 'Cost in USD' }), { target: { value: '6' } });
 		await fireEvent.submit(screen.getByRole('form', { name: /Add a stop/ }));
 
-		const titles = lastDays(onStateChange)[0].stops.map((s) => s.title);
+		const titles = lastDays(onStateChange)[0].stops!.map((s) => s.title);
 		expect(titles).toEqual(['Senso-ji at dawn', 'Soba lunch', 'Coffee at Fuglen', 'Sumida river cruise']);
-		expect(lastDays(onStateChange)[0].stops[2]).toMatchObject({ time: '14:00', cost: 6, kind: 'activity' });
+		expect(lastDays(onStateChange)[0].stops![2]).toMatchObject({ time: '14:00', cost: 6, kind: 'activity' });
 		expect(screen.getByRole('checkbox', { name: 'Coffee at Fuglen' })).toBeTruthy();
 	});
 
@@ -105,7 +105,7 @@ describe('itinerary: bound edits', () => {
 		let got: unknown;
 		render(Itinerary, { props: { days: tokyo(), ondayschange: (d: unknown) => (got = d) } });
 		await fireEvent.click(screen.getByRole('checkbox', { name: 'Senso-ji at dawn' }));
-		expect((got as ReturnType<typeof tokyo>)[0].stops[0].done).toBe(true);
+		expect((got as ItineraryDay[])[0].stops![0].done).toBe(true);
 	});
 });
 
@@ -205,18 +205,18 @@ describe('itinerary: logic', () => {
 	});
 
 	it('survives duplicate ids and titles, and edits the right one', async () => {
-		let got: ReturnType<typeof tokyo> = [];
+		let got: ItineraryDay[] = [];
 		const days = [{ id: 'x', stops: [{ id: 'a', title: 'Ramen' }, { id: 'a', title: 'Ramen' }] }, { id: 'x', stops: [] }];
 		render(Itinerary, { props: { days, ondayschange: (d: unknown) => (got = d as typeof got) } });
 		const boxes = screen.getAllByRole('checkbox', { name: 'Ramen' });
 		expect(boxes).toHaveLength(2);
 		await fireEvent.click(boxes[1]);
-		expect(got[0].stops.map((s) => s.done)).toEqual([undefined, true]);
+		expect(got[0].stops!.map((s) => s.done)).toEqual([undefined, true]);
 	});
 
 	it('marks the first unticked stop as next and opens one day at a time', async () => {
 		const days = tokyo();
-		days[0].stops[0] = { ...days[0].stops[0], done: true } as (typeof days)[0]['stops'][0];
+		days[0].stops![0] = { ...days[0].stops![0], done: true };
 		const { container } = render(Itinerary, { props: { days } });
 		expect(container.querySelector('[data-next]')?.textContent).toContain('Soba lunch');
 
