@@ -1,7 +1,7 @@
 <!--
   @file routes/+layout.svelte
   @description The site chrome every route shares. A 56px sticky top bar (Paw
-    mark + "Ripple", the package version from package.json, Docs / Widgets /
+    mark + "Ripple", the package version (injected at build by vite.config.ts), Docs / Widgets /
     Live / Playground / Showcase, search, the GitHub link with its star count,
     the theme toggle) and a four-column footer (two columns below 640px). The
     star count is fetched once at build time in vite.config.ts and baked in as
@@ -26,7 +26,7 @@
 	import '$lib/styles.css';
 	import './site.css';
 	import Search from '$lib/site/docs/Search.svelte';
-	import { version } from '../../package.json';
+	const version: string = import.meta.env.PUBLIC_RIPPLE_VERSION;
 
 	let { children } = $props();
 
