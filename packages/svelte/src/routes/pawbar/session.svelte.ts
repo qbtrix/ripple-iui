@@ -30,12 +30,16 @@
 // sent exactly as the transcript shows it, now or right after the answer in
 // flight (one waits; one per click). Any other host event, and every store event
 // without a StoreHost, is only recorded for display.
+// Text the visitor TYPES does not go to the Paw Bar: handoff() opens Paw OS
+// (pawosHandoffUrl: the prompt rides in the fragment, never the query, capped at
+// HANDOFF_MAX) and leaves a host note with a fallback link. Chips, card asks and
+// flow submits still go through send(); Chat.svelte makes that split.
 // Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
 
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
-import { checkout, type Pay } from '../live/checkout.js';
+import { checkout, LOCAL_HOSTS, type Pay } from '../live/checkout.js';
 import { clearOrder, loadOrder, saveOrder, type Saved } from '../pay/resume.js';
 import type { Phase } from '../pay/watch.svelte.js';
 import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
@@ -43,6 +47,38 @@ import { ASK_MAX, refuseCard, textRefusal } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
 export const BYOK_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
+export const PAWOS_URL = 'https://os.pocketpaw.xyz';
+/** The most of a typed message that rides along to Paw OS, in characters. */
+export const HANDOFF_MAX = 500;
+export const HANDOFF_NOTE = 'Opened in Paw OS. Sign in there and your Ripple agent picks this up.';
+
+const httpsOrLocal = (raw: string): URL | null => {
+	try {
+		const u = new URL(raw);
+		return u.protocol === 'https:' || (u.protocol === 'http:' && LOCAL_HOSTS.includes(u.hostname)) ? u : null;
+	} catch {
+		return null;
+	}
+};
+
+/** The Paw OS base url: https (http only on localhost), else PAWOS_URL. */
+export function pawosBase(raw = ''): string {
+	const u = httpsOrLocal(raw);
+	return u ? `${u.origin}${u.pathname.replace(/\/+$/, '')}` : PAWOS_URL;
+}
+
+/** Typed text stays on the Paw Bar only for a localhost endpoint with PUBLIC_TYPED_LOCAL=1 (mock and dev). */
+export function typedStaysLocal(endpoint = '', flag = ''): boolean {
+	const u = flag === '1' ? httpsOrLocal(endpoint) : null;
+	return u != null && LOCAL_HOSTS.includes(u.hostname);
+}
+
+/** Paw OS with the prompt in the fragment (never sent to a server), cut to HANDOFF_MAX characters. */
+export function pawosHandoffUrl(text: string, base?: string): { url: string; trimmed: boolean } {
+	const chars = Array.from(text.trim()); // code points, so a cut never splits an emoji
+	const prompt = chars.slice(0, HANDOFF_MAX).join('').trim();
+	return { url: `${pawosBase(base)}/?ref=ripple#prompt=${encodeURIComponent(prompt)}`, trimmed: chars.length > HANDOFF_MAX };
+}
 export const CUSTOMER_REF_KEY = 'ripple.pawbar.customer_ref';
 const REF_PATTERN = /^[A-Za-z0-9_-]{8,128}$/;
 
@@ -293,11 +329,12 @@ export interface StoreHost {
 }
 
 export type Part = { kind: 'text'; text: string } | { kind: 'card'; card: Card };
-export type NoticeKind = 'limit' | 'busy' | 'error' | 'info' | 'stopped';
+export type NoticeKind = 'limit' | 'busy' | 'error' | 'info' | 'stopped' | 'handoff';
 export interface Notice {
 	kind: NoticeKind;
 	text: string;
-	link?: { href: string; label: string };
+	/** A handoff link opens in a new tab; `prominent` when the new tab may not have opened. */
+	link?: { href: string; label: string; prominent?: boolean };
 	/** The recorded answer can play in this turn instead: ChatSession.replayRecorded. */
 	replay?: boolean;
 }
@@ -356,6 +393,36 @@ export class ChatSession {
 		this.turns.push({ id: ++turnSeq, role: 'user', parts: [{ kind: 'text', text }], notice: null, pending: false });
 		this.turns.push({ id: ++turnSeq, role: 'assistant', parts: [], notice: null, pending: true });
 		await this.#run(this.turns[this.turns.length - 1], text, this.transport);
+	}
+
+	/**
+	 * Typed text: opens Paw OS in a new tab (call it from the send gesture, or the
+	 * popup is blocked) and notes it in the log. `window.open` with noopener returns
+	 * null even when the tab opened, so null shows the link prominently.
+	 */
+	handoff(message: string, base?: string, open: (url: string) => unknown = (u) => window.open(u, '_blank', 'noopener')) {
+		const text = message.trim();
+		if (!text) return;
+		const { url, trimmed } = pawosHandoffUrl(text, base);
+		let opened = false;
+		try {
+			opened = open(url) != null;
+		} catch {
+			/* treated as blocked */
+		}
+		const cut = trimmed ? ` Your message was long, so only the first ${HANDOFF_MAX} characters went along.` : '';
+		this.turns.push({ id: ++turnSeq, role: 'user', parts: [{ kind: 'text', text }], notice: null, pending: false });
+		this.turns.push({
+			id: ++turnSeq,
+			role: 'assistant',
+			parts: [],
+			pending: false,
+			notice: {
+				kind: 'handoff',
+				text: HANDOFF_NOTE + cut,
+				link: opened ? { href: url, label: 'Open it again' } : { href: url, label: 'No new tab? Continue in Paw OS', prominent: true }
+			}
+		});
 	}
 
 	/** Plays the recorded answer into a turn whose notice offered it, in place. */

@@ -10,7 +10,9 @@
     chat calls the Paw Bar API; without it the same chat replays the recorded
     answers locally and says so. Live, a card's `checkout` and `book` host events
     go to the test store (PUBLIC_STORE_URL) through the chat session, and a flow
-    card's last step or an `ask` sends the visitor's next message. Below: how it
+    card's last step or an `ask` sends the visitor's next message. Typed text
+    opens Paw OS instead (PUBLIC_PAWOS_URL), unless PUBLIC_TYPED_LOCAL=1 with a
+    localhost endpoint keeps it on the Paw Bar. Below: how it
     works (spec, engine, UI, with a live card), install and the streaming code
     sample, the recorded examples linking /live, and the bring-your-own-key link.
     Prerendered; the chat only runs in the browser.
@@ -29,7 +31,7 @@
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
-	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
+	import { BYOK_URL, ChatSession, pawbarTransport, pawosBase, typedStaysLocal, type Transport } from './pawbar/session.svelte.js';
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { chatPrompts, scenarios } from './live/scenarios.js';
 
@@ -38,6 +40,8 @@
 	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
 	const LIVE = Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
 	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
+	const PAWOS_URL = pawosBase(import.meta.env.PUBLIC_PAWOS_URL ?? '');
+	const TYPED_LOCAL = typedStaysLocal(ENDPOINT, import.meta.env.PUBLIC_TYPED_LOCAL ?? '');
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
@@ -155,6 +159,8 @@
 			<Chat
 				{session}
 				{suggestions}
+				pawosUrl={PAWOS_URL}
+				typedLocal={TYPED_LOCAL}
 				note={LIVE ? '' : 'The live model is off in this build. Each request replays the closest recorded answer.'}
 			/>
 		</div>

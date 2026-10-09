@@ -171,3 +171,85 @@ test('a step-by-step chip says so, and sends its prompt', async () => {
 	await fireEvent.click(view.getByRole('button', { name: 'Plan a trip with me step by step' }));
 	await waitFor(() => expect(sent).toEqual(['Help me plan a trip step by step']));
 });
+
+const typeAndSend = async (view: { getByRole: (role: string, o?: { name: string }) => HTMLElement }, text: string) => {
+	await fireEvent.input(view.getByRole('textbox'), { target: { value: text } });
+	await fireEvent.click(view.getByRole('button', { name: 'Send' }));
+};
+
+test('typed text opens Paw OS with the prompt in the fragment, never the Paw Bar', async () => {
+	const sent: string[] = [];
+	const open = vi.fn((_url: string) => ({}));
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+	});
+	const view = render(Chat, { session, open, pawosUrl: 'https://os.example.test' });
+	expect(view.getByRole('textbox').getAttribute('placeholder')).toContain('Paw OS');
+	expect(view.getByText(/type your own and continue in Paw OS/)).toBeTruthy();
+
+	await typeAndSend(view, 'Build me a habit tracker & more?');
+	expect(open).toHaveBeenCalledOnce();
+	const url = new URL(open.mock.calls[0][0]);
+	expect(url.origin).toBe('https://os.example.test');
+	expect(url.search).toBe('?ref=ripple');
+	expect(url.hash).toBe(`#prompt=${encodeURIComponent('Build me a habit tracker & more?')}`);
+	expect(url.search).not.toContain('habit');
+	expect(sent).toEqual([]);
+	expect(view.getByText('Build me a habit tracker & more?')).toBeTruthy();
+	expect(view.getByText(/Opened in Paw OS\. Sign in there and your Ripple agent picks this up\./)).toBeTruthy();
+	const again = view.getByRole('link', { name: 'Open it again' });
+	expect(again.getAttribute('target')).toBe('_blank');
+	expect(again.classList.contains('prominent')).toBe(false);
+});
+
+test('a long typed message is cut to 500 characters, and the note says so', async () => {
+	const open = vi.fn((_url: string) => ({}));
+	const view = render(Chat, { session: new ChatSession(async function* () {}), open });
+	await typeAndSend(view, 'a'.repeat(499) + '😀' + 'b'.repeat(50));
+	const url = new URL(open.mock.calls[0][0]);
+	expect(url.origin).toBe('https://os.pocketpaw.xyz');
+	expect(decodeURIComponent(url.hash.slice('#prompt='.length))).toBe('a'.repeat(499) + '😀');
+	expect(view.getByText(/only the first 500 characters went along/)).toBeTruthy();
+});
+
+test('a blocked popup shows the Paw OS link prominently', async () => {
+	const open = vi.fn(() => null);
+	const view = render(Chat, { session: new ChatSession(async function* () {}), open });
+	await typeAndSend(view, 'Make a packing list');
+	const link = view.getByRole('link', { name: /Continue in Paw OS/ });
+	expect(link.classList.contains('prominent')).toBe(true);
+	expect(link.getAttribute('href')).toBe(`https://os.pocketpaw.xyz/?ref=ripple#prompt=${encodeURIComponent('Make a packing list')}`);
+	expect(link.getAttribute('rel')).toContain('noopener');
+});
+
+test('a chip and a card ask still go to the Paw Bar, not Paw OS', async () => {
+	const sent: string[] = [];
+	const open = vi.fn();
+	const askCard = {
+		ui: { type: 'button', props: { label: 'More like this' }, on_click: { action: 'emit', target: 'ask', value: { text: 'Show me more' } } }
+	};
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+		if (sent.length > 1) return;
+		yield { event: 'card.start', data: { card_id: 'a' } };
+		yield { event: 'card.final', data: { card_id: 'a', card: askCard } };
+	});
+	const view = render(Chat, { session, open, suggestions: [{ id: 'x', title: 'Split the bill', prompt: 'Split it' }] });
+	await fireEvent.click(view.getByRole('button', { name: 'Split the bill' }));
+	await fireEvent.click(await view.findByRole('button', { name: 'More like this' }));
+	await waitFor(() => expect(sent).toEqual(['Split it', 'Show me more']));
+	expect(open).not.toHaveBeenCalled();
+});
+
+test('typedLocal keeps typed text on the Paw Bar (mock and dev)', async () => {
+	const sent: string[] = [];
+	const open = vi.fn();
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+	});
+	const view = render(Chat, { session, open, typedLocal: true });
+	expect(view.queryByText(/continue in Paw OS/)).toBeNull();
+	await typeAndSend(view, 'A tip splitter');
+	await waitFor(() => expect(sent).toEqual(['A tip splitter']));
+	expect(open).not.toHaveBeenCalled();
+});

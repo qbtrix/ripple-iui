@@ -8,7 +8,21 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, FLOW_MESSAGE_MAX, ChatHttpError, ChatSession, customerRef, flowMessage, pawbarTransport, type Transport } from './session.svelte.js';
+import {
+	BYOK_URL,
+	FLOW_MESSAGE_MAX,
+	HANDOFF_MAX,
+	PAWOS_URL,
+	ChatHttpError,
+	ChatSession,
+	customerRef,
+	flowMessage,
+	pawbarTransport,
+	pawosBase,
+	pawosHandoffUrl,
+	typedStaysLocal,
+	type Transport
+} from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
 import { refuseCard, textRefusal } from './card-policy.js';
 import { laptopFlowCard, tripFlowCard } from './flow-cards.js';
@@ -512,5 +526,32 @@ describe('messages a card sends', () => {
 		await waitFor(() => expect(stopped.session.busy).toBe(false));
 		await new Promise((r) => setTimeout(r, 20));
 		expect(stopped.sent).toEqual(['first', 'slow']);
+	});
+});
+
+describe('Paw OS handoff config', () => {
+	test('typed text stays local only for a localhost endpoint with PUBLIC_TYPED_LOCAL=1', () => {
+		expect(typedStaysLocal('http://localhost:5288', '1')).toBe(true);
+		expect(typedStaysLocal('http://127.0.0.1:5288', '1')).toBe(true);
+		expect(typedStaysLocal('http://localhost:5288', '')).toBe(false);
+		expect(typedStaysLocal('https://api.pocketpaw.xyz', '1')).toBe(false);
+		expect(typedStaysLocal('', '1')).toBe(false);
+	});
+
+	test('the Paw OS base is https, or http on localhost; anything else falls back', () => {
+		expect(pawosBase('https://os.example.test/')).toBe('https://os.example.test');
+		expect(pawosBase('http://localhost:5173')).toBe('http://localhost:5173');
+		expect(pawosBase('http://os.example.test')).toBe(PAWOS_URL);
+		expect(pawosBase('javascript:alert(1)')).toBe(PAWOS_URL);
+		expect(pawosBase('')).toBe(PAWOS_URL);
+	});
+
+	test('the prompt rides in the fragment, trimmed to HANDOFF_MAX', () => {
+		const { url, trimmed } = pawosHandoffUrl(`  ${'x'.repeat(HANDOFF_MAX + 10)}  `);
+		const u = new URL(url);
+		expect(u.search).toBe('?ref=ripple');
+		expect(decodeURIComponent(u.hash.slice('#prompt='.length))).toHaveLength(HANDOFF_MAX);
+		expect(trimmed).toBe(true);
+		expect(pawosHandoffUrl('short').trimmed).toBe(false);
 	});
 });

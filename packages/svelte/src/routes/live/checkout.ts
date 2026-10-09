@@ -170,7 +170,7 @@ export async function checkout(body: unknown, deps: CheckoutDeps): Promise<{ ok:
 }
 
 const STRIPE_CHECKOUT = 'https://checkout.stripe.com';
-const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
+export const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
 
 const originOf = (url: string) => {
 	try {
