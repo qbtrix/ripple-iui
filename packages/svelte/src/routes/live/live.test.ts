@@ -4,10 +4,11 @@
 // (c) the UI <Ripple> builds FROM THE STREAM is interactive once it finishes:
 //     a bound text/number input changes state and the derived text, and every
 //     button click changes state. Each check runs when the spec has that kind
-//     of control; a spec with neither fails, so render-only output fails (c).
+//     of control; a data widget bound to state counts as one (its per-scenario
+//     block drives it). A spec with none fails, so render-only output fails (c).
 // Per-scenario blocks below check that the numbers are right, not just moving.
 
-import { fireEvent, render } from '@testing-library/svelte';
+import { fireEvent, render, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, test, vi } from 'vitest';
 import Ripple from '$lib/Ripple.svelte';
@@ -63,8 +64,10 @@ describe.each(scenarios.map((s) => [s.id, s] as const))('scenario %s', (_id, sce
 	const hasButton = buttonLabels(finalSpec).size > 0;
 	const controls = ['input', 'number-input', 'slider', 'select', 'segmented', 'checkbox', 'switch', 'button'];
 
-	test('(c) the final spec has a bound control or a button to interact with', () => {
-		expect(specHas(finalSpec, (n) => controls.includes(n.type ?? '') && (n.type === 'button' || 'bind' in n))).toBe(true);
+	test('(c) the final spec has a bound control, a button, or a bound data widget to interact with', () => {
+		const interactive = (n: SpecNode) =>
+			(controls.includes(n.type ?? '') && (n.type === 'button' || 'bind' in n)) || (DATA_WIDGETS.includes(n.type ?? '') && 'bind' in n);
+		expect(specHas(finalSpec, interactive)).toBe(true);
 	});
 
 	test('fixture matches the contract', () => {
@@ -133,6 +136,10 @@ async function mountStreamed(fixture: ScenarioFixture) {
 	await tick();
 	return { store, container, onStateChange, onEvent };
 }
+
+// Data widgets carry their own controls (sliders, steppers, ticks, filters);
+// bound to state, they are as interactive as a bound input.
+const DATA_WIDGETS = ['growth-projection', 'itinerary', 'meal-plan', 'recipe', 'interval-workout', 'flashcard-deck', 'exec-dashboard', 'menu-order', 'booking'];
 
 type SpecNode = { type?: string; bind?: string; on_click?: unknown; props?: Record<string, unknown>; children?: unknown[] };
 
@@ -214,7 +221,7 @@ describe('bill-splitter numbers', () => {
 		const remove = [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Remove')!;
 		await fireEvent.click(remove);
 		await waitFor(() => check(4));
-		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
+		await fireEvent.click(container.querySelector('[role="switch"]')!);
 		await waitFor(() => check(4));
 	}
 
@@ -232,179 +239,149 @@ describe('bill-splitter numbers', () => {
 	});
 });
 
-// Per-scenario number checks. Labels come from the recorded fixtures; a
+// Per-scenario checks. Labels come from the recorded fixtures; a
 // re-recording may rename them. Expected values are worked out by hand.
-const money = (s: string) => Number(s.replace(/[$,]/g, ''));
-const moneyAfter = (container: HTMLElement, label: string) => {
-	const m = new RegExp(label + '\\s*(\\$[\\d,]+\\.\\d\\d)').exec(container.textContent ?? '');
-	expect(m, `no money after "${label}"`).not.toBeNull();
-	return money(m![1]);
-};
-async function typeInto(input: HTMLInputElement, value: string | number) {
-	input.value = String(value);
-	await fireEvent.input(input);
-	await fireEvent.change(input);
-	await fireEvent.blur(input);
-	await tick();
-}
 const scenario = (id: string) => scenarios.find((s) => s.id === id)!.fixture;
-/** Step the nth slider thumb with the keyboard, as a user would. */
-async function nudgeSlider(container: HTMLElement, nth: number, key: 'ArrowRight' | 'ArrowLeft', times = 1) {
-	const thumb = container.querySelectorAll<HTMLElement>('[role="slider"]')[nth];
-	for (let i = 0; i < times; i++) await fireEvent.keyDown(thumb, { key });
-	await tick();
-}
-/** Open a bits-ui select with the keyboard and pick an option by its text. */
-async function pickOption(trigger: Element, label: string) {
-	// jsdom has no scrollIntoView; bits-ui calls it on the highlighted option.
-	const proto = Element.prototype as { scrollIntoView?: () => void };
-	proto.scrollIntoView ??= () => {};
-	await fireEvent.keyDown(trigger, { key: 'Enter' });
-	const option = await waitFor(() => {
-		const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent?.trim() === label);
-		return o ?? Promise.reject(new Error(`no option ${label}`));
-	});
-	await fireEvent.pointerUp(option);
-	await fireEvent.click(option);
-	await tick();
-}
-
-describe('savings-calculator numbers', () => {
-	// $300/month at 5% a year, compounded monthly with month-end deposits, for
-	// 10 years: 300 * ((1 + 0.05/12)^120 - 1) / (0.05/12) = 46,584.68. The
-	// model's seeded schedule rounds to 46,585.60; the first edit recomputes it
-	// exactly. At $400/month it is 62,112.91.
-	test('after streaming, the balance follows the monthly deposit', async () => {
-		const { container } = await mountStreamed(scenario('savings-calculator'));
-		expect(Math.abs(moneyAfter(container, 'Balance after 10 years') - 46584.68)).toBeLessThan(1);
-		await typeInto(container.querySelector<HTMLInputElement>('input[inputmode="decimal"]')!, 400);
-		await waitFor(() => expect(moneyAfter(container, 'Balance after 10 years')).toBeCloseTo(62112.91, 1));
-		expect(moneyAfter(container, 'You deposit')).toBe(48000);
-	});
-
-	// Years is the second slider. 11 years of $300/month at 5%: 52,651.70.
-	test('after streaming, the years slider moves the balance and adds a year bar', async () => {
-		const { container } = await mountStreamed(scenario('savings-calculator'));
-		await nudgeSlider(container, 1, 'ArrowRight');
-		await waitFor(() => expect(moneyAfter(container, 'Balance after 11 years')).toBeCloseTo(52651.7, 1));
-		expect(text(container)).toContain('Y11');
-		expect(moneyAfter(container, 'You deposit')).toBe(39600);
-	});
-});
-
 const text = (container: HTMLElement) => container.textContent ?? '';
 const button = (container: HTMLElement, label: string) =>
 	[...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === label)!;
-const decimalInputs = (container: HTMLElement) => [...container.querySelectorAll<HTMLInputElement>('input[inputmode="decimal"]')];
+const slot = (container: HTMLElement, name: string) => container.querySelector(`[data-slot="${name}"]`)?.textContent?.replace(/\s+/g, ' ').trim();
+const lastWrite = (onStateChange: ReturnType<typeof vi.fn>, path: string) =>
+	onStateChange.mock.calls.filter(([p]) => p === path).at(-1)?.[1];
 
-describe('tokyo-trip numbers', () => {
-	// 18 stops with $250 of estimates; the budget is $600. The first stop is
-	// the $25-estimate airport train on day 1.
-	test('after streaming, ticks, spending, Remove and Add stop all update the totals', async () => {
-		const { container } = await mountStreamed(scenario('tokyo-trip'));
-		expect(text(container)).toContain('0 of 18 stops done');
-		expect(moneyAfter(container, 'Estimated total for all stops')).toBe(250);
-		await fireEvent.click(container.querySelector('[role="checkbox"]')!);
-		await waitFor(() => expect(text(container)).toContain('1 of 18 stops done'));
-		await typeInto(decimalInputs(container)[1], 25); // first stop's spend
-		await waitFor(() => expect(moneyAfter(container, 'Spent so far')).toBe(25));
-		expect(moneyAfter(container, 'Budget left')).toBe(575);
-		await fireEvent.click(button(container, 'Remove'));
-		await waitFor(() => expect(text(container)).toContain('0 of 17 stops done'));
-		expect(moneyAfter(container, 'Spent so far')).toBe(0);
-		expect(moneyAfter(container, 'Estimated total for all stops')).toBe(225);
-		await typeInto(container.querySelector<HTMLInputElement>('input[type="text"]:not([inputmode])')!, 'Bookshop browse');
-		await fireEvent.click(button(container, 'Add stop'));
-		await waitFor(() => expect(text(container)).toContain('0 of 18 stops done'));
-		expect(text(container)).toContain('Bookshop browse');
+// The data-widget demos below are one widget each; the widget does the maths,
+// so these check the recorded numbers come out right and the controls write
+// back to the spec's state.
+
+describe('savings-calculator (growth-projection)', () => {
+	// $300/month at 5% a year, compounded monthly with month-end deposits, for
+	// 10 years: 300 * ((1 + 0.05/12)^120 - 1) / (0.05/12) = 46,584.68.
+	// $400/month: 62,112.91. 11 years at $300: 52,651.70.
+	test('after streaming, the deposit and years sliders move the balance and write to state', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario('savings-calculator'));
+		const ui = within(container);
+		expect(slot(container, 'final')).toBe('$46,585');
+		expect(ui.getByText('Balance after 10 years')).toBeTruthy();
+
+		const deposit = ui.getByRole('slider', { name: 'Monthly deposit' });
+		await fireEvent.input(deposit, { target: { value: '400' } });
+		await fireEvent.change(deposit);
+		await waitFor(() => expect(slot(container, 'final')).toBe('$62,113'));
+		expect(lastWrite(onStateChange, 'deposit')).toBe(400);
+
+		await fireEvent.input(deposit, { target: { value: '300' } });
+		await fireEvent.change(deposit);
+		const years = ui.getByRole('slider', { name: 'Years' });
+		await fireEvent.input(years, { target: { value: '11' } });
+		await fireEvent.change(years);
+		await waitFor(() => expect(ui.getByText('Balance after 11 years')).toBeTruthy());
+		expect(slot(container, 'final')).toBe('$52,652');
+		await waitFor(() => expect(lastWrite(onStateChange, 'years')).toBe(11));
 	});
 });
 
-describe('sales-dashboard numbers', () => {
-	// 12 orders, $1,965: Jul 505, Aug 635, Sep 825. North is orders 1, 5 and 9:
-	// $120 + $150 + $300 = $570. The chart's redraw is checked in the browser
-	// (jsdom has no canvas); here the filter must move the stats and the table.
-	test('after streaming, the region filter narrows the totals and the table', async () => {
-		const { container } = await mountStreamed(scenario('sales-dashboard'));
-		expect(moneyAfter(container, 'Quarter revenue')).toBe(1965);
-		expect(moneyAfter(container, 'Avg order')).toBe(163.75);
-		const table = () => container.querySelector('table')?.textContent ?? '';
-		expect(table()).toContain('South');
-		await fireEvent.click(button(container, 'North'));
-		await waitFor(() => expect(moneyAfter(container, 'North revenue')).toBe(570));
-		expect(text(container)).toMatch(/North orders\s*3/);
-		expect(moneyAfter(container, 'North avg order')).toBe(190);
-		expect(table()).not.toContain('South');
-		expect(table()).toContain('North');
-		expect(moneyAfter(container, 'Quarter revenue')).toBe(1965);
+describe('tokyo-trip (itinerary)', () => {
+	// 31 stops: 97,900 yen of stop estimates plus two 940-yen train legs is
+	// 99,780 planned against a 200,000 budget.
+	test('after streaming, ticking and adding a stop write the days back to state', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario('tokyo-trip'));
+		const ui = within(container);
+		expect(slot(container, 'spend')).toContain('99,780');
+		expect(container.querySelector('[data-slot="spend"]')!.getAttribute('data-status')).toBe('good');
+
+		await fireEvent.click(ui.getByRole('checkbox', { name: 'Airport train into the city' }));
+		await waitFor(() => expect(ui.getByRole('checkbox', { name: 'Airport train into the city' }).getAttribute('aria-checked')).toBe('true'));
+		const ticked = lastWrite(onStateChange, 'days') as { stops: { title: string; done?: boolean }[] }[];
+		expect(ticked[0].stops.find((s) => s.title === 'Airport train into the city')?.done).toBe(true);
+
+		await fireEvent.click(ui.getByRole('button', { name: 'Add a stop' }));
+		await fireEvent.input(ui.getByRole('textbox', { name: 'Stop' }), { target: { value: 'Bookshop browse' } });
+		await fireEvent.submit(ui.getByRole('form', { name: /Add a stop/ }));
+		await waitFor(() => expect(ui.getByRole('checkbox', { name: 'Bookshop browse' })).toBeTruthy());
+		const added = lastWrite(onStateChange, 'days') as { stops: { title: string }[] }[];
+		expect(added.flatMap((d) => d.stops).map((s) => s.title)).toContain('Bookshop browse');
 	});
 });
 
-describe('flashcards scoring', () => {
-	const knew = (c: HTMLElement) => Number(/Knew it\s*(\d+)/.exec(text(c))![1]);
-	const review = (c: HTMLElement) => Number(/Needs review\s*(\d+)/.exec(text(c))![1]);
-	async function mark(c: HTMLElement, label: 'Got It' | 'Needs Review') {
-		await fireEvent.click(c.querySelector('.flashcard')!);
-		await fireEvent.click(await waitFor(() => button(c, label) ?? Promise.reject(new Error(`no ${label}`))));
-		await tick();
-	}
+describe('sales-dashboard (exec-dashboard rows)', () => {
+	// 15 orders, $1,498.78 (avg $99.92). North is 3 orders: $42.50 + $104.75 +
+	// $88.20 = $235.45 (avg $78.48). The chart redraw is checked in the browser
+	// (jsdom has no canvas); here the filter must move the KPIs and the table.
+	const kpi = (container: HTMLElement, label: string) =>
+		[...container.querySelectorAll('[data-slot="kpis"] > div')].find((el) => el.textContent?.includes(label))?.textContent ?? '';
 
-	// The flashcard widget's own Got It / Needs Review buttons fire the spec's
-	// on_correct / on_incorrect, which keep score and advance the deck.
-	test('after streaming, the card buttons score, advance, finish and restart the deck', async () => {
-		const { container } = await mountStreamed(scenario('flashcards'));
-		expect(text(container)).toContain('Card 1 of 8');
-		await mark(container, 'Got It');
-		await waitFor(() => expect(knew(container)).toBe(1));
-		expect(text(container)).toContain('Card 2 of 8');
-		expect(text(container)).toContain('Gracias');
-		await mark(container, 'Needs Review');
-		await waitFor(() => expect(review(container)).toBe(1));
-		for (let i = 3; i <= 8; i++) await mark(container, 'Got It');
-		await waitFor(() => expect(text(container)).toContain('You knew 7 of 8 cards. 1 to review.'));
-		await fireEvent.click(button(container, 'Study again'));
-		await waitFor(() => expect(text(container)).toContain('Card 1 of 8'));
-		expect(knew(container)).toBe(0);
-		expect(review(container)).toBe(0);
+	test('after streaming, the region filter narrows the KPIs and the table and writes the filter to state', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario('sales-dashboard'));
+		expect(kpi(container, 'Revenue')).toContain('$1,499');
+		expect(kpi(container, 'Orders')).toContain('15');
+		expect(slot(container, 'totals')).toContain('$1,498.78'); // the table pages at 10 rows
+
+		await fireEvent.click(within(container).getByRole('button', { name: 'North' }));
+		await waitFor(() => expect(kpi(container, 'Revenue')).toContain('$235'));
+		expect(kpi(container, 'Avg order')).toContain('$78');
+		expect(container.querySelectorAll('[data-slot="table"] tbody tr')).toHaveLength(3);
+		expect(slot(container, 'totals')).toContain('Total (North)');
+		expect(slot(container, 'totals')).toContain('$235.45');
+		expect(lastWrite(onStateChange, 'salesFilter')).toEqual({ region: 'North' });
 	});
 });
 
-describe('hiit-workout steps', () => {
-	// 20 minutes of 40 s work + 20 s rest is 20 intervals; 45 s work makes
-	// floor(1200 / 65) = 18.
-	test('after streaming, Next walks the circuit, stops at the last interval, and the work slider re-plans it', async () => {
-		const { container } = await mountStreamed(scenario('hiit-workout'));
-		expect(text(container)).toContain('Exercise 1 of 20');
-		await fireEvent.click(button(container, 'Next exercise'));
-		await waitFor(() => expect(text(container)).toContain('Exercise 2 of 20'));
-		expect(container.querySelector('h2')?.textContent).toBe('Bodyweight squats');
-		for (let i = 0; i < 25; i++) await fireEvent.click(button(container, 'Next exercise'));
-		await waitFor(() => expect(text(container)).toContain('Exercise 20 of 20'));
-		expect(button(container, 'Next exercise').disabled).toBe(true);
-		await nudgeSlider(container, 0, 'ArrowRight');
-		await waitFor(() => expect(text(container)).toContain('Exercise 1 of 18'));
+describe('flashcards (flashcard-deck)', () => {
+	// Ten cards. Knowing all but the second leaves 9 / 10 and one to practise.
+	test('after streaming, Got it / Missed it keep score in state and the missed card comes back', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario('flashcards'));
+		const ui = within(container);
+		expect(slot(container, 'front')).toBe('Hello');
+		await fireEvent.click(ui.getByRole('button', { name: 'Got it' }));
+		await waitFor(() => expect(lastWrite(onStateChange, 'score')).toBe(1));
+		expect(slot(container, 'front')).toBe('Good morning');
+		await fireEvent.click(ui.getByRole('button', { name: 'Missed it' }));
+		for (let i = 0; i < 8; i++) await fireEvent.click(ui.getByRole('button', { name: 'Got it' }));
+		await waitFor(() => expect(slot(container, 'total')).toBe('9 / 10'));
+		expect(lastWrite(onStateChange, 'score')).toBe(9);
+		expect(container.querySelector('[data-slot="missed"]')?.textContent).toContain('Good morning');
+
+		await fireEvent.click(ui.getByRole('button', { name: 'Practise missed (1)' }));
+		await waitFor(() => expect(slot(container, 'front')).toBe('Good morning'));
 	});
 });
 
-describe('meal-plan shopping list', () => {
-	// Chicken Stir-Fry is on Mon and Sun at 150 g of chicken per person;
-	// tomatoes come to 900 g for 2 people across the week.
-	test('after streaming, the shopping list scales with the number of people', async () => {
-		const { container } = await mountStreamed(scenario('meal-plan'));
-		expect(text(container)).toMatch(/Chicken breast\s*600 g/);
-		await typeInto(decimalInputs(container)[0], 3);
-		await waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*900 g/));
-		expect(text(container)).toMatch(/Tomatoes\s*1350 g/);
-		expect(text(container)).toContain('Shopping list for 3 people');
+describe('hiit-workout (interval-workout)', () => {
+	// 10 moves x 2 rounds of 40 s work, with a 20 s rest between intervals:
+	// 20 x 40 + 19 x 20 = 1,180 s = 19:40. At 45 s work: 1,280 s = 21:20.
+	test('after streaming, the plan totals 20 minutes and the work stepper re-plans it and writes workSec', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario('hiit-workout'));
+		const ui = within(container);
+		expect(slot(container, 'meta')).toContain('20 min');
+		expect(ui.getByText('19:40 left')).toBeTruthy();
+		expect(slot(container, 'current')).toBe('Jumping jacks');
+		await fireEvent.click(ui.getByRole('button', { name: 'More work time' }));
+		await waitFor(() => expect(lastWrite(onStateChange, 'workSec')).toBe(45));
+		await waitFor(() => expect(ui.getByText('21:20 left')).toBeTruthy());
+	});
+});
+
+describe('meal-plan (meal-plan)', () => {
+	const amount = (c: HTMLElement, key: string) => c.querySelector(`[data-item="${key}"] [data-slot="amount"]`)?.textContent?.trim();
+
+	// Salmon (400 g, serves 2) is on Mon and Sat; for 2 people that is 800 g,
+	// for 3 people 1,200 g. Turkey chili (500 g, serves 4) on Tue and Fri: 500 g.
+	test('after streaming, More people rescales the shopping list and writes people', async () => {
+		const { container, onStateChange } = await mountStreamed(scenario('meal-plan'));
+		expect(amount(container, 'salmon fillet|g')).toBe('800 g');
+		await fireEvent.click(within(container).getByRole('button', { name: 'More people' }));
+		await waitFor(() => expect(lastWrite(onStateChange, 'people')).toBe(3));
+		await waitFor(() => expect(amount(container, 'salmon fillet|g')).toBe('1,200 g'));
+		expect(amount(container, 'ground turkey|g')).toBe('750 g');
 	});
 
-	// Monday's Chicken Stir-Fry swapped for Beef Chili: chicken drops to one
-	// night (300 g for 2), beef mince goes to two nights (520 g).
+	// Monday's salmon dinner swapped for the chili: salmon drops to one night
+	// (400 g), ground turkey goes to three (750 g).
 	test('after streaming, swapping a day\'s dinner re-totals the shopping list', async () => {
 		const { container } = await mountStreamed(scenario('meal-plan'));
-		await pickOption(container.querySelector('[data-slot="select-trigger"]')!, 'Beef Chili');
-		await waitFor(() => expect(text(container)).toMatch(/Chicken breast\s*300 g/));
-		expect(text(container)).toMatch(/Lean beef mince\s*520 g/);
+		await fireEvent.change(within(container).getByRole('combobox', { name: 'Swap Mon Dinner' }), { target: { value: 'chili' } });
+		await waitFor(() => expect(amount(container, 'salmon fillet|g')).toBe('400 g'));
+		expect(amount(container, 'ground turkey|g')).toBe('750 g');
 	});
 });
 

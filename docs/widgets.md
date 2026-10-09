@@ -356,7 +356,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 
 | Widget | When to use |
 |--------|-------------|
-| `comparison-layout` | Side-by-side comparison of 2–6 items with hero cards, section-tab feature grid, Card/Table view toggle |
+| `comparison-layout` | "Which should I pick": 2–6 items, a `winner` best-pick card with its reason, `picks` tags, features by `kind` with the best cell marked per `better`, each price's difference from the winner, a per-item card or table view. Binds `chosen` (the item id); `on_choose` gets `{id, name, product_id?}` |
 | `entity-detail` | Record / profile / entity page — header, properties, tabs |
 | `form-layout` | Multi-section form with grouped fields, validation, and a submit/cancel action row |
 | `wizard-layout` | Multi-step setup or onboarding flow with stepper, per-step body, and Back/Next actions |
@@ -364,7 +364,16 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `report-layout` | Long-form report with sections, embedded data widgets, and callouts |
 | `invoice-layout` | Invoice / quote / receipt with line items, computed totals, and download actions |
 | `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline |
-| `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
+| `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
+| `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
+| `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (priced option groups), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
+| `growth-projection` | Savings growth from `initial`, monthly `deposit`, `rate` (% a year) and `years`: final balance, deposits-vs-growth chart, yearly table, optional `goal` and `inflation`, sliders to retune. Bind `deposit` |
+| `recipe` | One dish: photo or kind icon, meta chips, a servings stepper that rescales numeric `qty` (1.5 cups prints 1½), tickable `ingredients`, numbered `steps` with timers and tips, kcal and protein per serving. Bind `servings` |
+| `meal-plan` | A week from one `recipes` library: `days` of meals by slot (cards below 720px, a days-by-slots grid above), swap per meal, protein and calories per day against `goal`, a shopping list summed per ingredient and scaled to `people`, grouped by aisle. Opening a meal shows its recipe. Bind `people` |
+| `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
+| `flashcard-deck` | Study deck of `cards` (front, back, hint, category): flip, mark Got it or Missed it, progress dots, then a score screen listing missed cards with Practise missed (re-deals only those) and Restart. Binds `score`; emits `on_complete` with `{ score, total }` |
+| `exec-dashboard` | KPI dashboard from raw `rows` plus `measures` (sum, avg, count) and `dimensions`: it computes the KPIs with trends, a column chart along `x` (stacked by `split`), a breakdown and a filtered table with totals. A filter chip recomputes every number. Binds `filters`; `on_filter` gets `{key, value}`. Prebuilt `kpis`/`primaryChart`/`table` still work |
+| `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
 
@@ -442,8 +451,16 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `record-detail`, `entity-page` | `entity-detail` |
 | `quote-layout`, `receipt` | `invoice-layout` |
 | `shipment-tracker`, `order-tracking` | `order-status` |
+| `reservation`, `appointment` | `booking` |
+| `food-menu`, `order-menu` | `menu-order` |
+| `workout-timer`, `interval-timer`, `hiit-timer` | `interval-workout` |
+| `flashcards`, `study-deck`, `flip-cards` | `flashcard-deck` |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
+| `trip-plan`, `travel-itinerary` | `itinerary` |
+| `savings-projection`, `compound-interest` | `growth-projection` |
+| `recipe-card` | `recipe` |
+| `meal-planner`, `weekly-meal-plan` | `meal-plan` |
 | `report` | `report-layout` |
 | `frame`, `nested-spec` | `ripple-frame` |
 | `tour` | `coachmark` |

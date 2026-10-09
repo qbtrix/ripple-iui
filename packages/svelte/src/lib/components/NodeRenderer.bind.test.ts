@@ -182,6 +182,43 @@ test('order-status uses currentStep/onstepchange bind contract', () => {
   });
 });
 
+test('exec-dashboard bind drives the rows-mode filter and writes picks back', async () => {
+  // The bound field is `filters` ({ region: 'West' }): the choice that
+  // recomputes every number. Without a contract row the bind went to `value`,
+  // which exec-dashboard does not read.
+  const onStateChange = vi.fn();
+  render(Ripple, {
+    props: {
+      spec: {
+        state: { pick: { region: 'West' } },
+        ui: {
+          type: 'exec-dashboard',
+          bind: '{state.pick}',
+          props: {
+            rows: [
+              { region: 'North', amount: 70 },
+              { region: 'West', amount: 30 },
+            ],
+            measures: [{ key: 'amount', label: 'Revenue', format: 'money' }],
+            dimensions: [{ key: 'region', label: 'Region' }],
+          },
+        },
+      },
+      onStateChange,
+    },
+  });
+
+  expect(screen.getByRole('button', { name: 'West' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getAllByText('$30.00').length).toBeGreaterThan(0);
+
+  await userEvent.click(screen.getByRole('button', { name: 'North' }));
+
+  expect(onStateChange).toHaveBeenLastCalledWith('pick', { region: 'North' }, expect.objectContaining({ pick: { region: 'North' } }));
+  expect(screen.getByRole('button', { name: 'North' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getAllByText('$70.00').length).toBeGreaterThan(0);
+  expect(getBindContract('kpi-dashboard')).toEqual(getBindContract('exec-dashboard'));
+});
+
 test('warnUnregisteredBindContract fires once per unknown widget type', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

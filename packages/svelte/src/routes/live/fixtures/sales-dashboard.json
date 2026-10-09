@@ -3,855 +3,483 @@
  "title": "Quarterly sales",
  "prompt": "Show me last quarter's sales for a small online shop: the headline numbers, revenue by month on a chart, and a table of orders I can filter by region, with totals for the region I pick.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T09:35:43.313Z",
+ "recordedAt": "2026-10-09T06:44:07.483Z",
  "chunks": [
   {
    "t": 0,
-   "text": "{"
+   "text": "{\"version\":\""
   },
   {
-   "t": 26,
-   "text": "\"version"
+   "t": 349,
+   "text": "1.0\",\"state\":{\""
   },
   {
-   "t": 58,
-   "text": "\":\"1.0\",\"state\":"
+   "t": 349,
+   "text": "salesFilter\":{}"
   },
   {
-   "t": 93,
-   "text": "{\"region\":\"All\",\"or"
+   "t": 350,
+   "text": "},\"ui\":{\"type"
   },
   {
-   "t": 127,
-   "text": "ders\":[{\"id\":1"
+   "t": 350,
+   "text": "\":\"exec-dashbo"
   },
   {
-   "t": 163,
-   "text": ",\"month\":\"Jul"
+   "t": 350,
+   "text": "ard\",\"b"
   },
   {
-   "t": 219,
-   "text": "\",\"region\":\"North\",\"amount"
+   "t": 351,
+   "text": "ind\":\"salesFilter"
   },
   {
-   "t": 227,
-   "text": "\":120},{\"id\":2"
+   "t": 351,
+   "text": "\",\"props\":{\"title\":\""
   },
   {
-   "t": 260,
-   "text": ",\"month\":\"Jul"
+   "t": 352,
+   "text": "Q3 s"
   },
   {
-   "t": 293,
-   "text": "\",\"region\":\"South\",\"amount"
+   "t": 352,
+   "text": "ales\",\"subtitle\":\""
   },
   {
-   "t": 333,
-   "text": "\":85},{\"id\":3"
+   "t": 352,
+   "text": "Online orders, July to September"
   },
   {
-   "t": 361,
-   "text": ",\"month\":\"Jul"
+   "t": 374,
+   "text": " 2026\",\"verdict\":"
   },
   {
-   "t": 401,
-   "text": "\",\"region\":\"East\",\"amount"
+   "t": 412,
+   "text": "{\"text\":\"September"
   },
   {
-   "t": 427,
-   "text": "\":240},{\"id\":4"
+   "t": 748,
+   "text": " was the str"
   },
   {
-   "t": 461,
-   "text": ",\"month\":\"Jul"
+   "t": 748,
+   "text": "ongest month; East leads on"
   },
   {
-   "t": 495,
-   "text": "\",\"region\":\"West\",\"amount"
+   "t": 748,
+   "text": " revenue.\",\"status\":\""
   },
   {
-   "t": 553,
-   "text": "\":60},{\"id\":5"
+   "t": 748,
+   "text": "good\"},\"currency\":\""
   },
   {
-   "t": 560,
-   "text": ",\"month\":\"Aug"
+   "t": 748,
+   "text": "USD\",\"x\":\""
   },
   {
-   "t": 594,
-   "text": "\",\"region\":\"North\",\"amount"
+   "t": 748,
+   "text": "date\",\"split\":\"channel\",\""
   },
   {
-   "t": 628,
-   "text": "\":150},{\"id\":6"
+   "t": 749,
+   "text": "measures\":[{\"key\":"
   },
   {
-   "t": 665,
-   "text": ",\"month\":\"Aug"
+   "t": 749,
+   "text": "\"amount\",\"label\":\""
   },
   {
-   "t": 694,
-   "text": "\",\"region\":\"South\",\"amount"
+   "t": 749,
+   "text": "Revenue\",\"format\":\"money"
   },
   {
-   "t": 730,
-   "text": "\":210},{\"id\":7"
+   "t": 750,
+   "text": "\"},{\"label\":\""
   },
   {
-   "t": 762,
-   "text": ",\"month\":\"Aug"
+   "t": 775,
+   "text": "Orders\",\"agg\":\"count"
   },
   {
-   "t": 801,
-   "text": "\",\"region\":\"East\",\"amount"
+   "t": 808,
+   "text": "\"},{\"key\":\"am"
   },
   {
-   "t": 828,
-   "text": "\":95},{\"id\":8"
+   "t": 1102,
+   "text": "ount\",\"label\":\"Avg"
   },
   {
-   "t": 864,
-   "text": ",\"month\":\"Aug"
+   "t": 1102,
+   "text": " order\",\"format\":\"money\",\""
   },
   {
-   "t": 895,
-   "text": "\",\"region\":\"West\",\"amount"
+   "t": 1102,
+   "text": "agg\":\"avg\"},"
   },
   {
-   "t": 928,
-   "text": "\":180},{\"id\":9"
+   "t": 1103,
+   "text": "{\"key\":\"items\",\"label"
   },
   {
-   "t": 962,
-   "text": ",\"month\":\"Sep"
+   "t": 1103,
+   "text": "\":\"Items sold\"}"
   },
   {
-   "t": 995,
-   "text": "\",\"region\":\"North\",\"amount"
+   "t": 1104,
+   "text": "],\"dimensions\":["
   },
   {
-   "t": 1028,
-   "text": "\":300},{\"id\":10"
+   "t": 1104,
+   "text": "{\"key\":\"region\",\"label"
   },
   {
-   "t": 1065,
-   "text": ",\"month\":\"Sep"
+   "t": 1104,
+   "text": "\":\"Region\"}],\""
   },
   {
-   "t": 1101,
-   "text": "\",\"region\":\"South\",\"amount"
+   "t": 1111,
+   "text": "table\":{\"title\":\""
   },
   {
-   "t": 1133,
-   "text": "\":130},{\"id\":11"
+   "t": 1142,
+   "text": "Orders\"},\"rows\":"
   },
   {
-   "t": 1172,
-   "text": ",\"month\":\"Sep"
+   "t": 1179,
+   "text": "[{\"id\":\"1"
   },
   {
-   "t": 1198,
-   "text": "\",\"region\":\"East\",\"amount"
+   "t": 1208,
+   "text": "041\",\"date\":\"2026-"
   },
   {
-   "t": 1240,
-   "text": "\":175},{\"id\":12"
+   "t": 1446,
+   "text": "07-01\",\"region\":\"West"
   },
   {
-   "t": 1262,
-   "text": ",\"month\":\"Sep"
+   "t": 1446,
+   "text": "\",\"channel\":\"Market"
   },
   {
-   "t": 1296,
-   "text": "\",\"region\":\"West\",\"amount"
+   "t": 1447,
+   "text": "place\",\"items\":3,\""
   },
   {
-   "t": 1330,
-   "text": "\":220}],\"shown\":"
+   "t": 1447,
+   "text": "amount\":133.38},{"
   },
   {
-   "t": 1364,
-   "text": "[{\"id\":1,\""
+   "t": 1447,
+   "text": "\"id\":\"1046\",\"date"
   },
   {
-   "t": 1397,
-   "text": "month\":\"Jul\",\"region"
+   "t": 1447,
+   "text": "\":\"2026-07-09"
   },
   {
-   "t": 1430,
-   "text": "\":\"North\",\"amount\":120"
+   "t": 1447,
+   "text": "\",\"region\":\"East\",\"channel"
   },
   {
-   "t": 1544,
-   "text": "},{\"id\":2,\""
+   "t": 1492,
+   "text": "\":\"Web\",\"items\":2"
   },
   {
-   "t": 1556,
-   "text": "month\":\"Jul\",\"region"
+   "t": 1509,
+   "text": ",\"amount\":98.4"
   },
   {
-   "t": 1556,
-   "text": "\":\"South\",\"amount\":85"
+   "t": 1541,
+   "text": "},{\"id\":\"1050"
   },
   {
-   "t": 1566,
-   "text": "},{\"id\":3,\""
+   "t": 1577,
+   "text": "\",\"date\":\"2026-07"
   },
   {
-   "t": 1596,
-   "text": "month\":\"Jul\",\"region"
+   "t": 1607,
+   "text": "-18\",\"region\":\"North\",\""
   },
   {
-   "t": 1644,
-   "text": "\":\"East\",\"amount\":240"
+   "t": 1800,
+   "text": "channel\":\"Social\",\"items"
   },
   {
-   "t": 1663,
-   "text": "},{\"id\":4,\""
+   "t": 1800,
+   "text": "\":1,\"amount\":42"
   },
   {
-   "t": 1699,
-   "text": "month\":\"Jul\",\"region"
+   "t": 1800,
+   "text": ".5},{\"id\":\""
   },
   {
-   "t": 1731,
-   "text": "\":\"West\",\"amount\":60"
+   "t": 1800,
+   "text": "1055\",\"date\":\"2026"
   },
   {
-   "t": 1769,
-   "text": "},{\"id\":5,\""
+   "t": 1801,
+   "text": "-07-27\",\"region\":\""
   },
   {
-   "t": 1798,
-   "text": "month\":\"Aug\",\"region"
+   "t": 1808,
+   "text": "South\",\"channel\":\"Web"
   },
   {
-   "t": 1829,
-   "text": "\":\"North\",\"amount\":150"
+   "t": 1841,
+   "text": "\",\"items\":2,\"amount"
   },
   {
-   "t": 1863,
-   "text": "},{\"id\":6,\""
+   "t": 1874,
+   "text": "\":87.1},{\"id"
   },
   {
-   "t": 1904,
-   "text": "month\":\"Aug\",\"region"
+   "t": 1908,
+   "text": "\":\"1058"
   },
   {
-   "t": 1930,
-   "text": "\":\"South\",\"amount\":210"
+   "t": 1941,
+   "text": "\",\"date\":\"2026-07"
   },
   {
-   "t": 1964,
-   "text": "},{\"id\":7,\""
+   "t": 1976,
+   "text": "-30\",\"region\":\"East\",\""
   },
   {
-   "t": 2005,
-   "text": "month\":\"Aug\",\"region"
+   "t": 2009,
+   "text": "channel\":\"Web"
   },
   {
-   "t": 2030,
-   "text": "\":\"East\",\"amount\":95"
+   "t": 2145,
+   "text": "\",\"items\":1"
   },
   {
-   "t": 2068,
-   "text": "},{\"id\":8,\""
+   "t": 2145,
+   "text": ",\"amount\":54"
   },
   {
-   "t": 2098,
-   "text": "month\":\"Aug\",\"region"
+   "t": 2145,
+   "text": ".2},{\"id\":\""
   },
   {
-   "t": 2131,
-   "text": "\":\"West\",\"amount\":180"
+   "t": 2145,
+   "text": "1061\",\"date\":\"2026"
   },
   {
-   "t": 2165,
-   "text": "},{\"id\":9,\""
+   "t": 2175,
+   "text": "-08-04\",\"region\":\""
   },
   {
-   "t": 2198,
-   "text": "month\":\"Sep\",\"region"
+   "t": 2209,
+   "text": "East\",\"channel\":\"Web"
   },
   {
-   "t": 2231,
-   "text": "\":\"North\",\"amount\":300"
+   "t": 2243,
+   "text": "\",\"items\":3,\"amount"
   },
   {
-   "t": 2264,
-   "text": "},{\"id\":10,\""
+   "t": 2275,
+   "text": "\":151.2},{\"id"
   },
   {
-   "t": 2297,
-   "text": "month\":\"Sep\",\"region"
+   "t": 2308,
+   "text": "\":\"1066\",\"date\":\""
   },
   {
-   "t": 2332,
-   "text": "\":\"South\",\"amount\":130"
+   "t": 2345,
+   "text": "2026-08-12\",\"region"
   },
   {
-   "t": 2364,
-   "text": "},{\"id\":11,\""
+   "t": 2375,
+   "text": "\":\"West\",\"channel\":\""
   },
   {
-   "t": 2397,
-   "text": "month\":\"Sep\",\"region"
-  },
-  {
-   "t": 2432,
-   "text": "\":\"East\",\"amount\":175"
-  },
-  {
-   "t": 2465,
-   "text": "},{\"id\":12,\""
+   "t": 2409,
+   "text": "Social\",\"items\":1,\""
   },
   {
    "t": 2498,
-   "text": "month\":\"Sep\",\"region"
+   "text": "amount\":38.9},{"
   },
   {
-   "t": 2532,
-   "text": "\":\"West\",\"amount\":220"
+   "t": 2498,
+   "text": "\"id\":\"1070\",\"date"
   },
   {
-   "t": 2568,
-   "text": "}],\"totalReven"
+   "t": 2508,
+   "text": "\":\"2026-08-19"
   },
   {
-   "t": 2608,
-   "text": "ue\":1965,\"total"
+   "t": 2544,
+   "text": "\",\"region\":\"South\",\"channel"
   },
   {
-   "t": 2633,
-   "text": "Orders\":12,\"reg"
+   "t": 2576,
+   "text": "\":\"Marketplace\",\""
   },
   {
-   "t": 2666,
-   "text": "ionRevenue\":1965"
+   "t": 2609,
+   "text": "items\":2,\"amount\":"
   },
   {
-   "t": 2703,
-   "text": ",\"regionOrders\":"
+   "t": 2641,
+   "text": "76},{\"id\":\"1"
   },
   {
-   "t": 2733,
-   "text": "12,\"j"
+   "t": 2678,
+   "text": "074\",\"date\":\"2026-"
   },
   {
-   "t": 2768,
-   "text": "ul\":505,\"aug\":"
+   "t": 2708,
+   "text": "08-28\",\"region\":\"North"
   },
   {
-   "t": 2799,
-   "text": "635,\"sep\":825},"
+   "t": 2743,
+   "text": "\",\"channel\":\"Web\",\""
   },
   {
-   "t": 2832,
-   "text": "\"ui\":{\"type"
+   "t": 2775,
+   "text": "items\":2,\"amount\":"
   },
   {
-   "t": 2866,
-   "text": "\":\"card\",\"props\":{\""
+   "t": 2809,
+   "text": "104.75},{\"id\":"
   },
   {
-   "t": 2900,
-   "text": "title\":\"Last quarter"
+   "t": 2947,
+   "text": "\"1081\",\"date\":\"2"
   },
   {
-   "t": 2934,
-   "text": " sales\",\""
+   "t": 2947,
+   "text": "026-09-03\",\"region\":"
   },
   {
-   "t": 2967,
-   "text": "description\":\"Jul to"
+   "t": 2947,
+   "text": "\"East\",\"channel\":\""
   },
   {
-   "t": 2999,
-   "text": " Sep, small online shop\""
+   "t": 2947,
+   "text": "Web\",\"items\":4,\"am"
   },
   {
-   "t": 3031,
-   "text": "},\"children\":[{\"type"
+   "t": 2977,
+   "text": "ount\":212.6},{\""
   },
   {
-   "t": 3066,
-   "text": "\":\"flex\",\"props\":{"
+   "t": 3009,
+   "text": "id\":\"1086\",\"date\":"
   },
   {
-   "t": 3101,
-   "text": "\"direction\":\"column\",\"g"
+   "t": 3043,
+   "text": "\"2026-09-11\",\""
   },
   {
-   "t": 3137,
-   "text": "ap\":\"16"
+   "t": 3075,
+   "text": "region\":\"West\",\"channel\":"
   },
   {
-   "t": 3166,
-   "text": "px\"},\"children\":[{"
+   "t": 3108,
+   "text": "\"Web\",\"items\":2,"
   },
   {
-   "t": 3201,
-   "text": "\"type\":\"grid\",\"props"
+   "t": 3142,
+   "text": "\"amount\":95.3},"
   },
   {
-   "t": 3233,
-   "text": "\":{\"columns\":2,"
+   "t": 3174,
+   "text": "{\"id\":\"1090\",\""
   },
   {
-   "t": 3266,
-   "text": "\"gap\":\"12px\""
+   "t": 3208,
+   "text": "date\":\"2026-09-"
   },
   {
-   "t": 3299,
-   "text": "},\"children\":[{\"type"
+   "t": 3295,
+   "text": "17\",\"region\":\"East\",\"chann"
   },
   {
-   "t": 3333,
-   "text": "\":\"stat\",\"props\":{"
+   "t": 3295,
+   "text": "el\":\"Social\",\"items\":"
   },
   {
-   "t": 3372,
-   "text": "\"label\":\"Quarter"
+   "t": 3308,
+   "text": "1,\"amount\":49},"
   },
   {
-   "t": 3402,
-   "text": " revenue\",\"value\":\"{"
+   "t": 3341,
+   "text": "{\"id\":\"1095\",\""
   },
   {
-   "t": 3435,
-   "text": "state.totalRevenue"
+   "t": 3377,
+   "text": "date\":\"2026-09-"
   },
   {
-   "t": 3466,
-   "text": "}\",\"format\":\"currency\""
+   "t": 3408,
+   "text": "22\",\"region\":\"South\",\"chann"
   },
   {
-   "t": 3501,
-   "text": "}},{\"type\":\"st"
+   "t": 3442,
+   "text": "el\":\"Web\",\"items\":"
   },
   {
-   "t": 3534,
-   "text": "at\",\"props\":{\"label\":"
+   "t": 3476,
+   "text": "3,\"amount\":139."
   },
   {
-   "t": 3566,
-   "text": "\"Or"
+   "t": 3508,
+   "text": "45},{\"id\":\"1"
   },
   {
-   "t": 3603,
-   "text": "ders\",\"value\":\"{state."
+   "t": 3542,
+   "text": "099\",\"date\":\"2026-"
   },
   {
-   "t": 3655,
-   "text": "totalOrders}\",\"format"
+   "t": 3575,
+   "text": "09-29\",\"region\":\"North"
   },
   {
-   "t": 3670,
-   "text": "\":\"number\"}},{\""
+   "t": 3608,
+   "text": "\",\"channel\":\"Market"
   },
   {
-   "t": 3699,
-   "text": "type\":\"stat\",\"props\":"
+   "t": 4008,
+   "text": "place\",\"items\":2,\""
   },
   {
-   "t": 3734,
-   "text": "{\"label\":\"Avg"
+   "t": 4008,
+   "text": "amount\":88.2},"
   },
   {
-   "t": 3769,
-   "text": " order\",\"value\":\"{state."
+   "t": 4008,
+   "text": "{\"id\":\"1102"
   },
   {
-   "t": 3800,
-   "text": "totalRevenue / state"
+   "t": 4008,
+   "text": "\",\"date\":\"2026-09"
   },
   {
-   "t": 3833,
-   "text": ".totalOrders}\",\""
+   "t": 4008,
+   "text": "-30\",\"region\":\"West"
   },
   {
-   "t": 3871,
-   "text": "format\":\"currency\"}}"
+   "t": 4009,
+   "text": "\",\"channel\":\"Web\",\""
   },
   {
-   "t": 3900,
-   "text": "]},{\"type\":\"separ"
+   "t": 4009,
+   "text": "items\":3"
   },
   {
-   "t": 3933,
-   "text": "ator\",\""
+   "t": 4009,
+   "text": ",\"amount\":127"
   },
   {
-   "t": 3974,
-   "text": "props\":{\"orientation\":"
+   "t": 4009,
+   "text": ".8"
   },
   {
-   "t": 4010,
-   "text": "\"horizontal\"}},"
-  },
-  {
-   "t": 4035,
-   "text": "{\"type\":\"segmented"
-  },
-  {
-   "t": 4067,
-   "text": "\",\"props\":{\"label\":\""
-  },
-  {
-   "t": 4102,
-   "text": "Region\",\"options\":[\"All\",\""
-  },
-  {
-   "t": 4134,
-   "text": "North\",\"South\",\"East\",\"West\""
-  },
-  {
-   "t": 4168,
-   "text": "]},\"bind\":\"{"
-  },
-  {
-   "t": 4200,
-   "text": "state.region}\",\"on_change"
-  },
-  {
-   "t": 4234,
-   "text": "\":[{\"action"
-  },
-  {
-   "t": 4267,
-   "text": "\":\"set\",\"target"
-  },
-  {
-   "t": 4300,
-   "text": "\":\"shown\",\"value\":\""
-  },
-  {
-   "t": 4334,
-   "text": "{state.region == 'All"
-  },
-  {
-   "t": 4377,
-   "text": "' ? state.orders :"
-  },
-  {
-   "t": 4400,
-   "text": " state.orders.where('region"
-  },
-  {
-   "t": 4485,
-   "text": "', state.region)}\"},"
-  },
-  {
-   "t": 4485,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 4522,
-   "text": "\":\"regionRevenue"
-  },
-  {
-   "t": 4579,
-   "text": "\",\"value\":\"{state.sh"
-  },
-  {
-   "t": 4579,
-   "text": "own.sum('amount')"
-  },
-  {
-   "t": 4601,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 4635,
-   "text": "set\",\"target\":\"regionO"
-  },
-  {
-   "t": 4666,
-   "text": "rders\",\"value\":\"{state"
-  },
-  {
-   "t": 4700,
-   "text": ".shown.count()}\""
-  },
-  {
-   "t": 4733,
-   "text": "},{\"action\":\"set\",\""
-  },
-  {
-   "t": 4940,
-   "text": "target\":\"jul\",\"value\":"
-  },
-  {
-   "t": 4940,
-   "text": "\"{state.shown.where"
-  },
-  {
-   "t": 4941,
-   "text": "('month', 'Jul"
-  },
-  {
-   "t": 4941,
-   "text": "').sum('amount')}"
-  },
-  {
-   "t": 4942,
-   "text": "\"},{\"action\":\"set"
-  },
-  {
-   "t": 4943,
-   "text": "\",\"target\":\"aug\",\"value"
-  },
-  {
-   "t": 5139,
-   "text": "\":\"{state.shown."
-  },
-  {
-   "t": 5139,
-   "text": "where('month', 'A"
-  },
-  {
-   "t": 5139,
-   "text": "ug').sum('amount')"
-  },
-  {
-   "t": 5139,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 5158,
-   "text": "set\",\"target\":\"sep\",\""
-  },
-  {
-   "t": 5182,
-   "text": "value\":\"{state.shown"
-  },
-  {
-   "t": 5194,
-   "text": ".where('month', '"
-  },
-  {
-   "t": 5203,
-   "text": "Sep').sum('amount"
-  },
-  {
-   "t": 5238,
-   "text": "')}\"}]},{\""
-  },
-  {
-   "t": 5272,
-   "text": "type\":\"grid\",\"props\":"
-  },
-  {
-   "t": 5313,
-   "text": "{\"columns\":2,\""
-  },
-  {
-   "t": 5335,
-   "text": "gap\":\"12px\"},"
-  },
-  {
-   "t": 5371,
-   "text": "\"children\":[{\"type\":"
-  },
-  {
-   "t": 5407,
-   "text": "\"stat\",\"props\":{\""
-  },
-  {
-   "t": 5436,
-   "text": "label\":\"{state.region}"
-  },
-  {
-   "t": 5467,
-   "text": " revenue\",\"value\":\"{"
-  },
-  {
-   "t": 5501,
-   "text": "state.regionRevenue"
-  },
-  {
-   "t": 5535,
-   "text": "}\",\"format\":\"currency\""
-  },
-  {
-   "t": 5569,
-   "text": "}},{\"type\":\"st"
-  },
-  {
-   "t": 5602,
-   "text": "at\",\"props\":{\"label\":"
-  },
-  {
-   "t": 5635,
-   "text": "\"{state.region} orders"
-  },
-  {
-   "t": 5669,
-   "text": "\",\"value\":\"{state.reg"
-  },
-  {
-   "t": 5705,
-   "text": "ionOrders}\",\"format\":"
-  },
-  {
-   "t": 5735,
-   "text": "\"number\"}},{\"type"
-  },
-  {
-   "t": 5770,
-   "text": "\":\"stat\",\"props\":{"
-  },
-  {
-   "t": 5803,
-   "text": "\"label\":\"{state.region"
-  },
-  {
-   "t": 5837,
-   "text": "} avg order\",\"value\":\""
-  },
-  {
-   "t": 5872,
-   "text": "{state.regionReven"
-  },
-  {
-   "t": 5901,
-   "text": "ue / state.regionOr"
-  },
-  {
-   "t": 5934,
-   "text": "ders}\",\"format\":\"currency"
-  },
-  {
-   "t": 5973,
-   "text": "\"}}]},{\"type"
-  },
-  {
-   "t": 6005,
-   "text": "\":\"chart\",\"props\":{"
-  },
-  {
-   "t": 6037,
-   "text": "\"type\":\"bar\",\"title"
-  },
-  {
-   "t": 6072,
-   "text": "\":\"Revenue by month"
-  },
-  {
-   "t": 6103,
-   "text": "\",\"height\":200,\"data\":"
-  },
-  {
-   "t": 6136,
-   "text": "[{\"label\":\"J"
-  },
-  {
-   "t": 6170,
-   "text": "ul\",\"value\":\"{state."
-  },
-  {
-   "t": 6202,
-   "text": "jul}\"},{\"label"
-  },
-  {
-   "t": 6238,
-   "text": "\":\"Aug\",\"value\":"
-  },
-  {
-   "t": 6269,
-   "text": "\"{state.aug}\""
-  },
-  {
-   "t": 6303,
-   "text": "},{\"label\":\"S"
-  },
-  {
-   "t": 6339,
-   "text": "ep\",\"value\":\"{state."
-  },
-  {
-   "t": 6369,
-   "text": "sep}\"}]}},"
-  },
-  {
-   "t": 6402,
-   "text": "{\"type\":\"table\",\"props"
-  },
-  {
-   "t": 6436,
-   "text": "\":{\"columns\":[{"
-  },
-  {
-   "t": 6469,
-   "text": "\"header\":\""
-  },
-  {
-   "t": 6503,
-   "text": "Order\",\""
-  },
-  {
-   "t": 6537,
-   "text": "accessorKey\":\"id"
-  },
-  {
-   "t": 6569,
-   "text": "\",\"sortable\":true},{"
-  },
-  {
-   "t": 6602,
-   "text": "\"header\":\"Month\",\"acc"
-  },
-  {
-   "t": 6642,
-   "text": "essorKey\":\"month\""
-  },
-  {
-   "t": 6670,
-   "text": "},{\"header\":\"Region"
-  },
-  {
-   "t": 6703,
-   "text": "\",\"accessorKey\":\""
-  },
-  {
-   "t": 6742,
-   "text": "region\",\"sortable\":true},"
-  },
-  {
-   "t": 6769,
-   "text": "{\"header\":\"Amount"
-  },
-  {
-   "t": 6804,
-   "text": " "
-  },
-  {
-   "t": 6836,
-   "text": "($)\",\"accessorKey"
-  },
-  {
-   "t": 6869,
-   "text": "\":\"amount\",\"sortable"
-  },
-  {
-   "t": 6902,
-   "text": "\":true}],\"rows\":"
-  },
-  {
-   "t": 6936,
-   "text": "\"{state.shown}\",\""
-  },
-  {
-   "t": 6970,
-   "text": "variant\":\"compact\",\"p"
-  },
-  {
-   "t": 7004,
-   "text": "ageSize\":6"
-  },
-  {
-   "t": 7038,
-   "text": "}}]}]}}"
+   "t": 4009,
+   "text": "}]}}}"
   }
  ]
 }

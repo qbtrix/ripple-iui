@@ -116,6 +116,12 @@
     skipped: { label: 'Skipped', color: 'var(--muted-foreground)', bg: 'var(--muted)', icon: 'minus' }
   };
 
+  // A streamed `state` arrives a few characters at a time ("in-pro"), so an
+  // unknown value reads as pending instead of indexing STATE_META to undefined.
+  function stateOf(i: ChecklistItem): State {
+    return i.state && Object.hasOwn(STATE_META, i.state) ? i.state : 'pending';
+  }
+
   const computedProgress = $derived.by(() => {
     if (progress !== undefined) return progress;
     if (items.length === 0) return 0;
@@ -126,7 +132,7 @@
   const counts = $derived.by(() => {
     const out: Record<State, number> = { pending: 0, 'in-progress': 0, done: 0, blocked: 0, skipped: 0 };
     for (const i of items) {
-      const s = i.state ?? 'pending';
+      const s = stateOf(i);
       out[s] = (out[s] ?? 0) + 1;
     }
     return out;
@@ -141,7 +147,7 @@
       let key: string;
       let label: string;
       if (groupBy === 'state') {
-        const s = i.state ?? 'pending';
+        const s = stateOf(i);
         key = s;
         label = STATE_META[s].label;
       } else {
@@ -197,10 +203,13 @@
     // When the checklist is value-bound, NodeRenderer writes it back through
     // StateManager and the widget re-renders reactively.
     const nextState: State = goingDone ? 'done' : 'pending';
-    onchange?.(items.map((row) => (row.id === it.id ? { ...row, state: nextState } : row)));
+    // Match by identity: a model can leave ids out, and `undefined === undefined`
+    // would flip every id-less row.
+    onchange?.(items.map((row) => (row === it ? { ...row, state: nextState } : row)));
   }
-  function initials(name: string): string {
-    return name.split(/\s+/).filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join('');
+  function initials(name: string | undefined): string {
+    // `owner` streams in as `{}` before its name arrives.
+    return (name ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join('');
   }
 </script>
 
@@ -241,8 +250,9 @@
           <div class="rcheck-group-label">{g.label} <span class="rcheck-group-count">{g.items.length}</span></div>
         {/if}
         <ul class="rcheck-list">
-          {#each g.items as it (it.id)}
-            {@const s = it.state ?? 'pending'}
+          <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+          {#each g.items as it, idx (`${it.id}:${idx}`)}
+            {@const s = stateOf(it)}
             {@const meta = STATE_META[s]}
             {@const blocked = it.blockedBy && it.blockedBy.length > 0}
             <li class={cn('rcheck-item', `rcheck-item-${s}`, blocked && 'rcheck-item-blocked')}>

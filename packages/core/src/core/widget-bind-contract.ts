@@ -44,6 +44,61 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   approval: { prop: 'decision', event: 'ondecision' },
   'approve-card': { prop: 'decision', event: 'ondecision' },
   'human-gate': { prop: 'decision', event: 'ondecision' },
+  // exec-dashboard binds its rows-mode filter ({ region: 'West' }), the one
+  // choice that recomputes every number. One bind per node, so the date range,
+  // granularity and activity filter stay Svelte-side `$bindable`s. Its own
+  // event name, so a spec's `on_filter` (-> `onfilter`, the { key, value } host
+  // hook) can never replace the bind writer.
+  'exec-dashboard': { prop: 'filters', event: 'onfilterschange' },
+  'kpi-dashboard': { prop: 'filters', event: 'onfilterschange' },
+  'executive-dashboard': { prop: 'filters', event: 'onfilterschange' },
+  // itinerary binds its days: ticking or adding a stop emits a new days array.
+  // The open day stays a Svelte-side `$bindable` (one bind per node).
+  itinerary: { prop: 'days', event: 'ondayschange' },
+  'trip-plan': { prop: 'days', event: 'ondayschange' },
+  'travel-itinerary': { prop: 'days', event: 'ondayschange' },
+  // booking binds the request in progress (service, start, party, customer,
+  // notes); its stage and the host's notice stay widget-side.
+  booking: { prop: 'selection', event: 'onselectionchange' },
+  reservation: { prop: 'selection', event: 'onselectionchange' },
+  appointment: { prop: 'selection', event: 'onselectionchange' },
+  // menu-order binds its cart ({ lines, fulfilment, total }, never the
+  // customer's details) so another node can show "2 items".
+  'menu-order': { prop: 'cart', event: 'oncartchange' },
+  'food-menu': { prop: 'cart', event: 'oncartchange' },
+  'order-menu': { prop: 'cart', event: 'oncartchange' },
+  // comparison-layout binds the chosen item's id. Its own event name, so a
+  // spec's `on_choose` (→ `onchoose`, the {id, name} host hook) can never
+  // replace the bind writer.
+  'comparison-layout': { prop: 'chosen', event: 'onchosenchange' },
+  'comparison-cards': { prop: 'chosen', event: 'onchosenchange' },
+  compare: { prop: 'chosen', event: 'onchosenchange' },
+  // growth-projection binds its monthly deposit. `rate` and `years` stay
+  // Svelte-side `$bindable`s and also fire on_ratechange / on_yearschange.
+  'growth-projection': { prop: 'deposit', event: 'ondepositchange' },
+  'savings-projection': { prop: 'deposit', event: 'ondepositchange' },
+  'compound-interest': { prop: 'deposit', event: 'ondepositchange' },
+  // recipe binds the servings count it scales quantities to; ticked steps
+  // stay a Svelte-side `$bindable` (one bind per node).
+  recipe: { prop: 'servings', event: 'onservingschange' },
+  'recipe-card': { prop: 'servings', event: 'onservingschange' },
+  // meal-plan binds the people count; swapped `days` and ticked `got` stay
+  // Svelte-side `$bindable`s.
+  'meal-plan': { prop: 'people', event: 'onpeoplechange' },
+  'meal-planner': { prop: 'people', event: 'onpeoplechange' },
+  'weekly-meal-plan': { prop: 'people', event: 'onpeoplechange' },
+  // interval-workout binds its work seconds (the demo's "let me set the work
+  // interval"); restSec and the current step stay Svelte-side $bindables.
+  'interval-workout': { prop: 'workSec', event: 'onworksecchange' },
+  'workout-timer': { prop: 'workSec', event: 'onworksecchange' },
+  'interval-timer': { prop: 'workSec', event: 'onworksecchange' },
+  'hiit-timer': { prop: 'workSec', event: 'onworksecchange' },
+  // flashcard-deck binds its score (cards known since the last restart),
+  // written by the widget; the deal and the current card stay widget-side.
+  'flashcard-deck': { prop: 'score', event: 'onscorechange' },
+  flashcards: { prop: 'score', event: 'onscorechange' },
+  'study-deck': { prop: 'score', event: 'onscorechange' },
+  'flip-cards': { prop: 'score', event: 'onscorechange' },
 };
 
 /**

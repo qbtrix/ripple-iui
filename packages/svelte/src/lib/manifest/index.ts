@@ -93,6 +93,7 @@ import { eachEntry } from './entries/each.js';
 import { embedEntry } from './entries/embed.js';
 import { emptyStateEntry } from './entries/empty-state.js';
 import { entityDetailEntry } from './entries/entity-detail.js';
+import { bookingEntry } from './entries/booking.js';
 import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
 import { faqEntry } from './entries/faq.js';
@@ -123,6 +124,10 @@ import { imageEntry } from './entries/image.js';
 import { inputEntry } from './entries/input.js';
 import { invoiceLayoutEntry } from './entries/invoice-layout.js';
 import { invoiceLinesEntry } from './entries/invoice-lines.js';
+import { itineraryEntry } from './entries/itinerary.js';
+import { growthProjectionEntry } from './entries/growth-projection.js';
+import { intervalWorkoutEntry } from './entries/interval-workout.js';
+import { flashcardDeckEntry } from './entries/flashcard-deck.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -136,6 +141,7 @@ import { markdownEntry } from './entries/markdown.js';
 import { marketingHeroEntry } from './entries/marketing-hero.js';
 import { marqueeEntry } from './entries/marquee.js';
 import { masterDetailEntry } from './entries/master-detail.js';
+import { mealPlanEntry } from './entries/meal-plan.js';
 import { mentionEntry } from './entries/mention.js';
 import { metricEntry } from './entries/metric.js';
 import { modalEntry } from './entries/modal.js';
@@ -149,6 +155,7 @@ import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
 import { opsDashboardEntry } from './entries/ops-dashboard.js';
 import { orderStatusEntry } from './entries/order-status.js';
+import { menuOrderEntry } from './entries/menu-order.js';
 import { orgChartEntry } from './entries/org-chart.js';
 import { otpInputEntry } from './entries/otp-input.js';
 import { pageHeaderEntry } from './entries/page-header.js';
@@ -168,6 +175,7 @@ import { radioGroupEntry } from './entries/radio-group.js';
 import { rangeBarEntry } from './entries/range-bar.js';
 import { ratingEntry } from './entries/rating.js';
 import { reasoningTraceEntry } from './entries/reasoning-trace.js';
+import { recipeEntry } from './entries/recipe.js';
 import { reportLayoutEntry } from './entries/report-layout.js';
 import { revealEntry } from './entries/reveal.js';
 import { richTextEntry } from './entries/rich-text.js';
@@ -413,6 +421,8 @@ export const manifestEntries: WidgetManifestEntry[] = [
   inputEntry,
   invoiceLayoutEntry,
   invoiceLinesEntry,
+  itineraryEntry,
+  growthProjectionEntry,
   kanbanEntry,
   kbdEntry,
   kvTableEntry,
@@ -425,6 +435,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   marketingHeroEntry,
   marqueeEntry,
   masterDetailEntry,
+  mealPlanEntry,
   mentionEntry,
   metricEntry,
   modalEntry,
@@ -437,6 +448,10 @@ export const manifestEntries: WidgetManifestEntry[] = [
   numberInputEntry,
   opsDashboardEntry,
   orderStatusEntry,
+  bookingEntry,
+  menuOrderEntry,
+  intervalWorkoutEntry,
+  flashcardDeckEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
@@ -455,6 +470,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   radioGroupEntry,
   rangeBarEntry,
   ratingEntry,
+  recipeEntry,
   reportLayoutEntry,
   revealEntry,
   richTextEntry,

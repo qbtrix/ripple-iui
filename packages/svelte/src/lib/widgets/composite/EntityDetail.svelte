@@ -4,9 +4,12 @@
   KPI strip, action buttons, meta sidebar, and a content body via children.
   Used for any single-entity page — customer, order, ticket, project, employee,
   patient, asset, SKU. Most-reused enterprise layout in any business app.
-  Updated 2026-09-12: body gate is `hasChildren || children` with an optional
-  `children?.()` call, so a hand-written Svelte caller that passes children but no
-  `hasChildren` renders them. The spec renderer's `hasChildren` path is unchanged.
+  The body renders when `hasChildren || children`, so a hand-written Svelte
+  caller that passes children but no `hasChildren` still gets them.
+  The meta rail sits beside the content only when the widget's own box is at
+  least 640px wide (a container query, not the viewport): in a narrow card a
+  fixed 260px rail would squeeze the content until its children overlapped it,
+  so below that the rail stacks under the content.
 -->
 <script lang="ts">
   import { safeStyle, safeUrl } from '@ripple-ui/core';
@@ -281,6 +284,7 @@
 
 <style>
   .rentity {
+    container-type: inline-size;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -442,7 +446,7 @@
     gap: 16px;
     min-width: 0;
   }
-  @media (min-width: 900px) {
+  @container (min-width: 640px) {
     .rentity-body-with-rail {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 260px;

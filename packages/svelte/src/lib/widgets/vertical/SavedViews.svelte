@@ -50,7 +50,8 @@
   class={cn('flex items-center gap-1 border-b border-border', className)}
   style={styleString}
 >
-  {#each views as view (view.id)}
+  <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
+  {#each views as view, idx (`${view.id}:${idx}`)}
     {@const isActive = value === view.id}
     <button
       type="button"

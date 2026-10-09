@@ -1,11 +1,63 @@
 <!--
-  Dev-only showcase for ExecDashboard — NOT part of the published package.
-  Demonstrates the package contract: the consumer owns state (date range,
-  granularity, loading, error, etc.) and passes it in via $bindable props
-  and per-key data maps. The component is a pure renderer.
+  routes/showcase/exec-dashboard/+page.svelte — dev preview of exec-dashboard
+  (URL-only). Top: rows mode, the landing's "Quarterly sales" demo for
+  Fernleaf Ceramics (62 fictional orders, region filter bound to
+  `state.salesFilter` and echoed below) at 760px and in a 360px frame, then a
+  cafe's ten days by day with compare totals and no split (one series colour).
+  Drag a frame's corner to cross 360 / 560 / 720. Below: the KPI mode, where
+  this page owns the date range, granularity, loading and error state and
+  passes it in through bindable props and per-key data maps.
 -->
 <script lang="ts">
   import ExecDashboard from '$lib/widgets/composite/ExecDashboard.svelte';
+  import Ripple from '$lib/Ripple.svelte';
+  import { fernleafOrders, kilnDays, kilnPrevious } from './sales.js';
+
+  // ── Rows mode: the model writes rows, the widget computes the numbers ──
+  let salesFilter = $state<Record<string, string>>({});
+  const salesSpec = {
+    state: { salesFilter: {} },
+    ui: {
+      type: 'exec-dashboard',
+      bind: 'salesFilter',
+      props: {
+        title: 'Fernleaf Ceramics, Q3 sales',
+        subtitle: 'Online orders, July to September',
+        verdict: { text: 'Revenue grew every month; East leads and Web brings two thirds of it.', status: 'good' },
+        currency: 'USD',
+        x: 'date',
+        split: 'channel',
+        measures: [
+          { key: 'amount', label: 'Revenue', format: 'money' },
+          { label: 'Orders', agg: 'count' },
+          { key: 'amount', label: 'Avg order', format: 'money', agg: 'avg' },
+          { key: 'items', label: 'Items sold' }
+        ],
+        dimensions: [{ key: 'region', label: 'Region' }],
+        table: { title: 'Orders' },
+        rows: fernleafOrders
+      }
+    }
+  };
+  const kilnSpec = {
+    ui: {
+      type: 'exec-dashboard',
+      props: {
+        title: 'Kettle & Kiln, last ten days',
+        currency: 'USD',
+        x: 'date',
+        measures: [
+          { key: 'revenue', label: 'Takings', format: 'money' },
+          { key: 'covers', label: 'Covers' }
+        ],
+        dimensions: [{ key: 'location', label: 'Cafe' }],
+        compare: kilnPrevious,
+        compareLabel: 'vs previous 10 days',
+        table: { title: 'Days' },
+        rows: kilnDays
+      }
+    }
+  };
 
   // ── External state owned by THIS page (the "consumer") ────────────────
   let activeDateRange = $state('30d');
@@ -230,7 +282,25 @@
   }
 </script>
 
+<svelte:head><title>Ripple · Exec dashboard</title></svelte:head>
+
 <div class="page">
+  <section class="rows-demo">
+    <h1>exec-dashboard, rows mode</h1>
+    <p class="caption">"Show me last quarter's sales for a small online shop: the headline numbers, revenue by month on a chart, and a table of orders I can filter by region, with totals for the region I pick." Pick a region: every number recomputes.</p>
+    <div class="pane frame" style:width="calc(760px + 2rem)">
+      <Ripple spec={salesSpec} onStateChange={(_path, value) => (salesFilter = value as Record<string, string>)} />
+    </div>
+    <p class="caption">Bound <code>state.salesFilter</code> = <code>{JSON.stringify(salesFilter)}</code></p>
+
+    <h2>Same spec, 360px</h2>
+    <div class="pane frame" style:width="calc(360px + 2rem)"><Ripple spec={salesSpec} /></div>
+
+    <h2>A cafe by day, compare totals, one series, 560px</h2>
+    <div class="pane frame" style:width="calc(560px + 2rem)"><Ripple spec={kilnSpec} /></div>
+  </section>
+
+  <h2 class="legacy-title">KPI mode (prebuilt tiles)</h2>
   <header class="page-header">
     <div class="page-header-top">
       <div>
@@ -295,6 +365,16 @@
 </div>
 
 <style>
+  .rows-demo { margin-bottom: 48px; }
+  .rows-demo h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  .rows-demo h2, .legacy-title { margin: 28px 0 10px; font-size: 16px; font-weight: 600; }
+  .caption { margin: 0 0 12px; max-width: 760px; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; }
+  .pane {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--muted) 35%, var(--background));
+  }
+  .frame { max-width: 100%; resize: horizontal; overflow: auto; }
   .page {
     max-width: 1280px;
     margin: 0 auto;
