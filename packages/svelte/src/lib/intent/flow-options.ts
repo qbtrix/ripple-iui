@@ -3,18 +3,18 @@
  * @description Extracts selectable flow options from a flow `select` step's raw
  * `ui` widget tree, so a goal-pick step's bare buttons can be re-rendered as
  * polished OptionList cards (issue c) WITHOUT changing the spec contract.
- * @created 2026-06-07
- * @changes 2026-09-17: option field coercions route through asText (objects →
- * JSON, not "[object Object]") — oxlint no-base-to-string sweep.
  *
- * A flow `select` step today ships its choices as raw `button` nodes whose
- * `on_click` is an `emit` action targeting a flow verb (`flow.next` / `flow.submit`)
- * with a `value.selection`. This walker finds those buttons, returning one option
- * per button plus the original `on_click` handler so the caller can re-dispatch the
- * exact same event through the live EventDispatcher when the option is chosen. The
- * spec is never mutated; the buttons just render as OptionList instead of pills.
+ * A flow `select` step ships its choices as raw `button` nodes whose `on_click`
+ * is an `emit` action targeting a flow verb (`flow.next` / `flow.submit`) with a
+ * `value.selection`. extractFlowOptions() finds those buttons at any depth,
+ * returning one option per button plus the original `on_click` handler so the
+ * caller can re-dispatch the exact same event through the live EventDispatcher.
+ * pruneFlowOptions() returns a copy of the tree without those same buttons (at
+ * any depth), so the rest of the step renders above the cards and no choice
+ * shows twice. Both walkers share isFlowOption(), so what becomes a card is
+ * exactly what leaves the tree.
  *
- * PURE: reads the tree only. No state, no dispatch, no fetch.
+ * PURE: reads the tree only, never mutates it. No state, no dispatch, no fetch.
  */
 
 import type { UINode } from '@ripple-ui/core';
@@ -51,6 +51,10 @@ function isFlowSelectClick(onClick: unknown): boolean {
 	return !!value && 'selection' in value;
 }
 
+function isFlowOption(n: Record<string, unknown>): boolean {
+	return n.type === 'button' && isFlowSelectClick(n.on_click);
+}
+
 function labelOf(node: Record<string, unknown>): string {
 	const props = asRecord(node.props) ?? {};
 	return asText(props.label ?? props.text);
@@ -75,7 +79,7 @@ export function extractFlowOptions(root: UINode | undefined): FlowOption[] {
 		if (!n) return;
 
 		const onClick = (n as Record<string, unknown>).on_click;
-		if (n.type === 'button' && isFlowSelectClick(onClick)) {
+		if (isFlowOption(n)) {
 			const handler = onClick as Record<string, unknown>;
 			const sel = selectionOf(handler);
 			const label = labelOf(n);
@@ -97,4 +101,34 @@ export function extractFlowOptions(root: UINode | undefined): FlowOption[] {
 
 	visit(root);
 	return out;
+}
+
+/**
+ * A copy of `root` without its flow-option buttons, at any depth. With `all`
+ * (a step still streaming in) every button goes: one whose `on_click` has not
+ * arrived yet cannot be told apart from an option, and showing it as a plain
+ * button only to swap it for a card is the duplicate flash. A container whose
+ * children were all removed goes too; leaves (text, image) always stay. An
+ * untouched subtree keeps its original reference. Returns undefined when
+ * nothing is left.
+ */
+export function pruneFlowOptions(
+	root: UINode | undefined,
+	{ all = false }: { all?: boolean } = {}
+): UINode | undefined {
+	const drop = (n: Record<string, unknown>) => isFlowOption(n) || (all && n.type === 'button');
+
+	const prune = (node: unknown): unknown => {
+		const n = asRecord(node);
+		if (!n) return node;
+		if (drop(n)) return undefined;
+		const children = n.children;
+		if (!Array.isArray(children) || children.length === 0) return node;
+		const kept = children.map(prune).filter((c) => c !== undefined);
+		if (kept.length === 0) return undefined;
+		const same = kept.length === children.length && kept.every((c, i) => c === children[i]);
+		return same ? node : { ...n, children: kept };
+	};
+
+	return prune(root) as UINode | undefined;
 }
