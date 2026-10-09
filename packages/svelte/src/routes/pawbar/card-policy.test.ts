@@ -7,12 +7,14 @@
 // whole-string expression in a prop the engine renders as a node). Flow cards and
 // `ask` follow pocketpaw's card_spec.py rules. The recorded chat scenarios and the
 // mock's flow cards must all pass, and the widget allowlist must match the
-// vendored manifest.
+// vendored manifest. fixtures/trip-flow-card.json is a live model card (2026-10-09,
+// "Help me plan a trip step by step") that pocketpaw's card_spec.py accepted.
 
 import { describe, expect, test } from 'vitest';
 import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
 import { laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
+import liveTripCard from './fixtures/trip-flow-card.json';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
 
@@ -524,7 +526,7 @@ test('every recorded chat scenario passes; the store checkout demo does not', ()
 describe('flow cards', () => {
 
 	test("the mock's flow cards and the laptop answer pass, while streaming and at final", () => {
-		for (const card of [tripFlowCard, laptopFlowCard, laptopAnswerCard]) {
+		for (const card of [tripFlowCard, laptopFlowCard, laptopAnswerCard, liveTripCard]) {
 			expect(refuseCard(card)).toBeNull();
 			expect(refuseCard(card, { partial: true })).toBeNull();
 		}
