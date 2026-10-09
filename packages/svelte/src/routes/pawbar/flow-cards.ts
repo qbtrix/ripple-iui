@@ -6,7 +6,9 @@
 // step moves with `emit flow.next` / `flow.submit` from a click, so the steps run
 // in the browser with no model call between them. `flowId` comes first in each
 // step so a streaming card is detected as a flow early. `laptopAnswerCard` is
-// the mock's stand-in for the model's comparison answer (no recording has one).
+// the mock's stand-in for the model's comparison answer (no recording has one), and
+// `gearsCard` its answer to the bike gears chip: an animated `illustration` and a
+// short text.
 // Keep the trigger words of the mock's other routes (step by step, questions,
 // book, table, order, burger) out of the onComplete messages.
 
@@ -118,5 +120,49 @@ export const laptopAnswerCard = {
 				{ id: 'nimbus15', label: 'Most power' }
 			]
 		}
+	}
+};
+
+const gear = (cx: number, r: number, teeth: number, dur: string) => {
+	const tooth = ((2 * Math.PI * (r + 4)) / teeth / 2).toFixed(2);
+	return (
+		`<g><animateTransform attributeName='transform' type='rotate' from='0 ${cx} 70' to='360 ${cx} 70' dur='${dur}' repeatCount='indefinite'/>` +
+		`<circle cx='${cx}' cy='70' r='${r + 4}' fill='none' stroke='#475569' stroke-width='8' stroke-dasharray='${tooth} ${tooth}'/>` +
+		`<circle cx='${cx}' cy='70' r='${r - 2}' fill='#e2e8f0' stroke='#475569' stroke-width='3'/>` +
+		`<line x1='${cx}' y1='${72 - r}' x2='${cx}' y2='${68 + r}' stroke='#475569' stroke-width='4'/>` +
+		`<line x1='${cx + 2 - r}' y1='70' x2='${cx + r - 2}' y2='70' stroke='#475569' stroke-width='4'/>` +
+		`<circle cx='${cx}' cy='70' r='6' fill='#475569'/></g>`
+	);
+};
+
+/**
+ * The bike gears illustration: a 40-tooth chainring and a 20-tooth cog joined by a
+ * chain. Both turn the same way (a chain drive does), the cog twice as fast, and the
+ * chain's dashes move at the speed of both rims. Single-quoted attributes, no `{`,
+ * no backslash, no url().
+ */
+export const gearsSvg =
+	`<svg viewBox='0 0 260 150' xmlns='http://www.w3.org/2000/svg'><title>A chainring and a rear cog joined by a chain</title>` +
+	gear(70, 40, 20, '8s') +
+	gear(200, 20, 10, '4s') +
+	`<path d='M70 30 L200 50 A20 20 0 0 1 200 90 L70 110 A40 40 0 0 1 70 30 Z' fill='none' stroke='#1877F2' stroke-width='3' stroke-dasharray='6 4'>` +
+	`<animate attributeName='stroke-dashoffset' from='0' to='-40' dur='1.27s' repeatCount='indefinite'/></path>` +
+	`<text x='70' y='140' font-size='11' text-anchor='middle' fill='#475569'>Chainring, 40 teeth</text>` +
+	`<text x='200' y='140' font-size='11' text-anchor='middle' fill='#475569'>Cog, 20 teeth</text></svg>`;
+
+/** The mock's answer to "How bike gears work": the animated gears and a short explanation. */
+export const gearsCard = {
+	ui: {
+		type: 'flex',
+		props: { direction: 'column', gap: '12px' },
+		children: [
+			{ type: 'illustration', props: { svg: gearsSvg, title: 'How a bike chain drive turns', caption: 'One pedal turn spins the rear cog twice.', max_height: 240 } },
+			{
+				type: 'text',
+				props: {
+					text: 'Your pedals turn the front chainring, and the chain carries that motion to the rear cog on the wheel. With 40 teeth up front and 20 at the back, the cog turns twice for every pedal turn. Shift to a bigger rear cog and pedalling gets easier but each turn covers less ground; a smaller cog is harder to push and takes you further.'
+				}
+			}
+		]
 	}
 };

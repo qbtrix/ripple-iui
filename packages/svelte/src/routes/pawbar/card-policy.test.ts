@@ -9,10 +9,14 @@
 // mock's flow cards must all pass, and the widget allowlist must match the
 // vendored manifest. fixtures/trip-flow-card.json is a live model card (2026-10-09,
 // "Help me plan a trip step by step") that pocketpaw's card_spec.py accepted.
+// The `illustration` cases follow card_spec.py's _check_illustration and the
+// widget contract's hostile set and caps.
 
 import { describe, expect, test } from 'vitest';
 import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
-import { laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
+import { gearsCard, gearsSvg, laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
+import { checkIllustrationSvg } from '$lib/security/illustration-svg.js';
+import { pickScenario } from './recorded.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 import liveTripCard from './fixtures/trip-flow-card.json';
 import { scenarios } from '../live/scenarios.js';
@@ -671,5 +675,79 @@ describe('ask', () => {
 	test('while streaming, a value still arriving is not refused yet; a bad handler is', () => {
 		expect(refuseCard(button({ action: 'emit', target: 'ask' }), { partial: true })).toBeNull();
 		expect(refuseCard({ ui: { type: 'input', on_focus: ask() } }, { partial: true })).toBe('ask_handler');
+	});
+});
+
+describe('illustration', () => {
+	const svg = (body: string, root = "viewBox='0 0 100 100'") => `<svg ${root}><title>t</title>${body}</svg>`;
+	const art = (props: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({ ui: { type: 'illustration', props: { svg: svg("<circle cx='50' cy='50' r='20' fill='#1877F2'/>"), title: 'A dot', ...props }, ...extra } });
+
+	test('a good illustration card is accepted, nested or at the root', () => {
+		expect(refuseCard(art({ caption: 'A blue dot', max_height: 200 }))).toBeNull();
+		expect(refuseCard(art({ caption: null, max_height: null }))).toBeNull();
+		expect(refuseCard({ ui: { type: 'flex', children: [art({}).ui] } })).toBeNull();
+	});
+
+	test("the mock's bike gears card passes the checker and the policy, and its chip routes to it", () => {
+		expect(checkIllustrationSvg(gearsSvg)).toEqual({ ok: true });
+		expect(gearsSvg).not.toMatch(/[{\\]|url\(/);
+		expect(refuseCard(gearsCard)).toBeNull();
+		const explainer = scenarios.find((s) => s.id === 'explainer')!;
+		expect(explainer.prompt).toMatch(/\bbike\b/i);
+		expect(explainer.prompt).toMatch(/\bgears\b/i);
+		expect(pickScenario(explainer.prompt!).id).toBe('explainer');
+	});
+
+	test.each([
+		['a set rewriting href to javascript:', svg("<rect width='10' height='10'><set attributeName='href' to='javascript:alert(1)'/></rect>")],
+		['a script', svg('<script>alert(1)</script>')],
+		['a foreignObject', svg('<foreignObject><div>hi</div></foreignObject>')],
+		['an external url()', svg("<rect width='10' height='10' fill='url(https://evil.example/x#g)'/>")],
+		['a style attribute', svg("<rect width='10' height='10' style='fill:red'/>")],
+		['a DOCTYPE', `<!DOCTYPE svg>${svg('')}`],
+		['a 0.01s animation', svg("<rect width='10' height='10'><animate attributeName='opacity' from='0' to='1' dur='0.01s'/></rect>")],
+		['a nested use', svg("<defs><g id='a'><rect width='1' height='1'/></g><g id='b'><use href='#a'/></g></defs><use href='#b'/>")]
+	])('refuses %s with the checker reason', (_name, markup) => {
+		const check = checkIllustrationSvg(markup);
+		expect(check.ok).toBe(false);
+		expect(refuseCard(art({ svg: markup }))).toBe(`illustration:${(check as { reason: string }).reason}`);
+	});
+
+	test('refuses a missing or empty title, a non-text caption, an out-of-range height, and a missing svg', () => {
+		expect(refuseCard({ ui: { type: 'illustration', props: { svg: svg('') } } })).toBe('illustration:title');
+		expect(refuseCard(art({ title: '  ' }))).toBe('illustration:title');
+		expect(refuseCard(art({ caption: 3 }))).toBe('illustration:caption');
+		expect(refuseCard(art({ max_height: 2000 }))).toBe('illustration:max_height');
+		expect(refuseCard(art({ max_height: 40 }))).toBe('illustration:max_height');
+		expect(refuseCard(art({ max_height: '200' }))).toBe('illustration:max_height');
+		expect(refuseCard(art({ svg: undefined }))).toBe('illustration:svg');
+	});
+
+	test('refuses a { anywhere in svg: a whole-string expression or a template inside the markup', () => {
+		expect(refuseCard(art({ svg: '{state.art}' }))).toBe('illustration:expression');
+		expect(refuseCard(art({ svg: svg('<text>{state.x}</text>') }))).toBe('illustration:expression');
+	});
+
+	test('refuses a backslash in an attribute value (a CSS escape could spell url()', () => {
+		const markup = svg("<rect width='10' height='10' fill='\\75 rl(https://evil.example/x)'/>");
+		expect(refuseCard(art({ svg: markup }))).toBe('illustration:backslash');
+		expect(refuseCard(art({ svg: svg('<text>a \\ b</text>') }))).toBeNull();
+	});
+
+	test('refuses a handler or bind on it, final or streaming', () => {
+		expect(refuseCard(art({}, { on_click: { action: 'set', target: 'x', value: 1 } }))).toBe('illustration:handler');
+		expect(refuseCard(art({ on_click: { action: 'set', target: 'x', value: 1 } }))).toBe('illustration:handler');
+		expect(refuseCard(art({}, { bind: 'x' }), { partial: true })).toBe('illustration:handler');
+	});
+
+	test('title and caption are still plain text (rule 5)', () => {
+		expect(refuseCard(art({ caption: '<img src=x onerror=alert(1)>' }))).toBe('markup');
+	});
+
+	test('a half-streamed svg does not refuse the card early; the final card gets the full check', () => {
+		const half = { ui: { type: 'illustration', props: { svg: "<svg viewBox='0 0 10 10'><rect width='1' height='1' fill='url(#" } } };
+		expect(refuseCard(half, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'illustration', props: { svg: gearsSvg.slice(0, 700), title: 'Ge', max_height: 2 } } }, { partial: true })).toBeNull();
+		expect(refuseCard(half)).not.toBeNull();
 	});
 });

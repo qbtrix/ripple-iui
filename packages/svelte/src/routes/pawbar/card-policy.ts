@@ -30,11 +30,19 @@
 //  10. `emit ask` (value exactly `{text}`, plain, at most ASK_MAX) and `emit
 //      flow.submit` fire only under an ASK_HANDLERS key when that is the outermost
 //      handler key; never in state or from a node inside a handler.
+//  11. An `illustration` node takes no handler and no `bind`. Its `svg` skips rule 5
+//      and is held to the widget contract instead: a string with no `{` anywhere (the
+//      engine resolves templates inside strings), no backslash in an attribute value,
+//      and passing checkIllustrationSvg. `title` is non-empty text, `caption` text or
+//      null, `max_height` a number in ILLUSTRATION_MAX_HEIGHT. All of it at final:
+//      while streaming, only the handler and `bind` rule applies.
 // Rules 4 and 5 read strings after one pass of HTML character-reference decoding.
 // `partial` is for specs still streaming: a prefix of an allowed name is not
 // refused yet, flow verbs wait for the flow fields, and shapes are checked at final.
 // /live's recorded replays never pass through this.
 
+import { ILLUSTRATION_MAX_HEIGHT } from '@ripple-ui/core/manifest';
+import { checkIllustrationSvg } from '$lib/security/illustration-svg.js';
 import { getWidget } from '$lib/widgets/index.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 
@@ -156,6 +164,27 @@ function onCompleteRefusal(v: unknown, partial: boolean): string | null {
 	return v.kind === 'chat' && plainText(v.message) ? null : 'on_complete';
 }
 
+/** Whether any attribute value in the markup holds a backslash (a CSS escape could spell `url(`). */
+function backslashAttr(svg: string): boolean {
+	const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+	return [...doc.getElementsByTagName('*')].some((el) => [...el.attributes].some((a) => a.value.includes('\\')));
+}
+
+/** Rule 11 on an `illustration` node: why it is refused, or null. */
+function illustrationRefusal(node: Record<string, unknown>, props: Record<string, unknown>, partial: boolean): string | null {
+	if ('bind' in node || [...Object.keys(node), ...Object.keys(props)].some((k) => HANDLER_KEY.test(k))) return 'illustration:handler';
+	if (partial) return null;
+	const { svg, title, caption, max_height: height } = props;
+	if (typeof svg !== 'string') return 'illustration:svg';
+	if (typeof title !== 'string' || !title.trim()) return 'illustration:title';
+	if (caption != null && typeof caption !== 'string') return 'illustration:caption';
+	if (height != null && !(typeof height === 'number' && height >= ILLUSTRATION_MAX_HEIGHT.min && height <= ILLUSTRATION_MAX_HEIGHT.max)) return 'illustration:max_height';
+	if (svg.includes('{')) return 'illustration:expression';
+	const check = checkIllustrationSvg(svg);
+	if (!check.ok) return `illustration:${check.reason}`;
+	return backslashAttr(svg) ? 'illustration:backslash' : null;
+}
+
 function emitRefusal(node: Record<string, unknown>, flow: boolean, ask: boolean | null, partial: boolean): string | null {
 	const t = node.target;
 	if (typeof t !== 'string') return null;
@@ -248,6 +277,11 @@ export function refuseCard(card: unknown, { partial = false } = {}): string | nu
 		}
 		const nodeProps = node.props;
 		if (typeof nodeProps === 'string') return 'props_expression';
+		const illustration = widget && type === 'illustration';
+		if (illustration) {
+			const why = illustrationRefusal(node, isRecord(nodeProps) ? nodeProps : {}, partial);
+			if (why) return why;
+		}
 		if (typeof type === 'string' && isRecord(nodeProps) && NODE_SLOTS.get(type)?.some((path) => slotExpression(nodeProps, path))) return 'node_expression';
 		// An audit-log row's `action` is data (the server's _DATA_ACTION_ROWS); no widget dispatches `entries`.
 		if (node.action === 'emit' && !inState && !(ask === null && key === 'entries')) {
@@ -264,8 +298,10 @@ export function refuseCard(card: unknown, { partial = false } = {}): string | nu
 				if (inState) return 'state_action';
 				if (typeof v === 'string') continue;
 			}
+			// An illustration's svg is held to rule 11, not rule 5.
+			const value = illustration && k === 'props' && isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([pk]) => pk !== 'svg')) : v;
 			// A state action's target is checked as text (rule 5), not as a URL.
-			stack.push([v, pathTarget && k === 'target' ? 'path' : k, false, inState, askFrom(base, k), below]);
+			stack.push([value, pathTarget && k === 'target' ? 'path' : k, false, inState, askFrom(base, k), below]);
 		}
 	}
 	return null;

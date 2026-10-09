@@ -57,7 +57,7 @@ export const scenarios: Scenario[] = [
 	{ id: 'flashcards', title: 'Spanish flashcards', category: 'Learning', fixture: flashcards },
 	{ id: 'hiit-workout', title: '20-minute HIIT', category: 'Fitness', fixture: hiitWorkout },
 	{ id: 'meal-plan', title: 'High-protein week', category: 'Food', fixture: mealPlan },
-	{ id: 'explainer', title: 'How bike gears work', category: 'Learning', fixture: explainer }
+	{ id: 'explainer', title: 'How bike gears work', category: 'Learning', fixture: explainer, prompt: 'How do bike gears work? Draw me an animated picture of the chain drive and explain it in a few lines.' }
 ];
 
 export const chatPrompts: ChatPrompt[] = [
