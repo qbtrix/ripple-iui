@@ -181,7 +181,7 @@
   };
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Marketing pack" class="showcase">
   <header class="showcase-header">
     <h1>Marketing pack — a full landing page</h1>
     <p>

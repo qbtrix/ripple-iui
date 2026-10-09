@@ -1570,7 +1570,7 @@
   };
 </script>
 
-<div class="page">
+<div data-pagefind-body data-pagefind-meta="title:Classic pockets" class="page">
   <Ripple spec={pageSpec} onEvent={handleEvent} />
 </div>
 

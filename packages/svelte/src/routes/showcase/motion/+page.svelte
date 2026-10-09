@@ -207,7 +207,7 @@
   };
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Motion" class="showcase">
   <header class="showcase-header">
     <h1>Motion — the animation primitive</h1>
     <p>

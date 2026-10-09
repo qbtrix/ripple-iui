@@ -13,7 +13,7 @@
   }
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Button" class="showcase">
   <header class="showcase-header">
     <h1>Button — Visual QA</h1>
     <p>
