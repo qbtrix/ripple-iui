@@ -43,5 +43,7 @@ export async function mountStreamed(
 	scan();
 	observer.disconnect();
 	expect(store.error).toBeNull();
-	return { ...result, store, errors: [...seen] };
+	// Not the whole render result: its type names Ripple's Props, which the
+	// packaged .d.ts cannot reference.
+	return { container: result.container, errors: [...seen] };
 }
