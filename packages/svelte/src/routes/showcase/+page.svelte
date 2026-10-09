@@ -5354,16 +5354,18 @@
 <Ripple spec={showcaseSpec} state={initialOverride} {onStateChange} onEvent={handleEvent} />
 
 <style>
-  /* Sub-route strip under the site top bar: quiet pills in the site tokens.
-     On a phone it scrolls sideways inside itself instead of stacking rows. */
+  /* Sub-route strip under the site top bar: quiet 8px links in the site
+     tokens, on the site grid. On a phone it scrolls sideways inside itself
+     instead of stacking rows. */
   .subroute-nav {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    max-width: 1120px;
+    box-sizing: border-box;
+    max-width: var(--site-max);
     margin: 0 auto;
-    padding: 14px clamp(16px, 4vw, 32px) 0;
+    padding: 14px var(--site-gutter) 0;
   }
   .subroute-nav-label {
     font-size: 13px;
@@ -5377,9 +5379,12 @@
   }
   .subroute-nav a {
     flex: none;
-    padding: 5px 11px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 11px;
     border: 1px solid var(--site-line);
-    border-radius: 999px;
+    border-radius: var(--radius-chip);
     font-size: 13px;
     font-weight: 500;
     color: var(--site-soft);
@@ -5391,11 +5396,10 @@
   }
   .subroute-nav a:hover {
     color: var(--site-ink);
-    border-color: color-mix(in oklch, var(--primary) 55%, transparent);
-    background: color-mix(in oklch, var(--primary) 10%, transparent);
+    background: var(--site-hover);
   }
   .subroute-nav a:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
   @media (max-width: 720px) {
@@ -5404,6 +5408,9 @@
       overflow-x: auto;
       scrollbar-width: none;
       padding-bottom: 4px;
+    }
+    .subroute-nav a {
+      min-height: 44px;
     }
   }
 
