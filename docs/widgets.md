@@ -422,6 +422,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `meal-plan` | A week from one `recipes` library: `days` of meals by slot (cards below 720px, a days-by-slots grid above), swap per meal, protein and calories per day against `goal`, a shopping list summed per ingredient and scaled to `people`, grouped by aisle. Opening a meal shows its recipe. Bind `people` |
 | `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
 | `flashcard-deck` | Study deck of `cards` (front, back, hint, category): flip, mark Got it or Missed it, progress dots, then a score screen listing missed cards with Practise missed (re-deals only those) and Restart. Binds `score`; emits `on_complete` with `{ score, total }` |
+| `quiz` | Trivia game from `questions` (prompt, 2 to 5 `choices`, `answer` index, `why`, optional `image`; 3 to 12): one question at a time, a progress rail, big choice tiles (keys 1 to 5), instant right or wrong with the answer marked and `why` shown, a streak, an optional `seconds_per_question` countdown (waits for Start; a timeout is a miss), `shuffle_choices`. Ends with the score, a verdict band, a review of misses and Retry. Binds `value` `{ index, answers, score, done }`; emits `on_complete` once per run with `{ score, total }` |
 | `exec-dashboard` | KPI dashboard from raw `rows` plus `measures` (sum, avg, count) and `dimensions`: it computes the KPIs with trends, a column chart along `x` (stacked by `split`), a breakdown and a filtered table with totals. A filter chip recomputes every number. Binds `filters`; `on_filter` gets `{key, value}`. Prebuilt `kpis`/`primaryChart`/`table` still work |
 | `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
@@ -505,6 +506,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `food-menu`, `order-menu` | `menu-order` |
 | `workout-timer`, `interval-timer`, `hiit-timer` | `interval-workout` |
 | `flashcards`, `study-deck`, `flip-cards` | `flashcard-deck` |
+| `trivia`, `trivia-quiz` | `quiz` |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |

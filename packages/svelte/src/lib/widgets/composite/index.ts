@@ -24,3 +24,4 @@ export { default as Recipe } from './Recipe.svelte';
 export { default as MealPlan } from './MealPlan.svelte';
 export { default as IntervalWorkout } from './IntervalWorkout.svelte';
 export { default as FlashcardDeck } from './FlashcardDeck.svelte';
+export { default as Quiz } from './Quiz.svelte';

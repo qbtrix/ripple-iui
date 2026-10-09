@@ -129,6 +129,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   // interactive consumer widgets (value = full item array)
   'todo-list', 'todo', 'todos',
   'checklist-layout', 'checklist',
+  // quiz: value = { index, answers, score, done }
+  'quiz', 'trivia', 'trivia-quiz',
   // selectable data
   'tree', 'treeview', 'tree-table', 'treetable', 'nested-rows',
   'kanban', 'board',
