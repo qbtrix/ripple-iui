@@ -25,6 +25,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
+	import JsonLines from '$lib/site/JsonLines.svelte';
 	import Chat from './pawbar/Chat.svelte';
 	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
 	import { findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
@@ -77,17 +78,8 @@
 			]
 		}
 	};
-	const specSnippet = `{
-  "state": { "name": "Ada" },
-  "ui": { "type": "flex", "children": [
-    { "type": "heading",
-      "props": { "text": "Hello, {state.name}" } },
-    { "type": "input", "bind": "{state.name}" },
-    { "type": "button", "props": { "label": "Clear" },
-      "on_click": { "action": "set",
-                    "target": "name", "value": "" } }
-  ] }
-}`;
+	// Pretty-printed the way the spec peek shows a card (JsonLines).
+	const specSnippet = JSON.stringify({ state: demoSpec.state, ui: demoSpec.ui });
 
 	const codeSample = `<script>
   import { Ripple } from '@ripple-ui/svelte';
@@ -158,12 +150,12 @@
 		<h2 id="how-title">How it works</h2>
 		<ol class="steps">
 			<li class="step">
-				<h3><span class="n">1</span> The model writes a spec</h3>
+				<h3>The model writes a spec</h3>
 				<p>A tree of widgets, the starting state, and what each control does. Plain JSON, small enough to stream.</p>
-				<pre class="snippet" aria-label="Example spec"><code>{specSnippet}</code></pre>
+				<pre class="snippet" aria-label="Example spec"><JsonLines text={specSnippet} /></pre>
 			</li>
 			<li class="step">
-				<h3><span class="n">2</span> The engine runs it</h3>
+				<h3>The engine runs it</h3>
 				<p>
 					<code>@ripple-ui/core</code> holds the state, resolves <code>{'{state.name}'}</code> expressions, keeps
 					two-way binds in sync and dispatches events. It has no framework dependency.
@@ -175,7 +167,7 @@
 				</ul>
 			</li>
 			<li class="step">
-				<h3><span class="n">3</span> You get a working UI</h3>
+				<h3>You get a working UI</h3>
 				<p>That spec, rendered by <code>@ripple-ui/svelte</code>. Type in it.</p>
 				<div class="demo"><Ripple spec={demoSpec} /></div>
 			</li>
@@ -183,23 +175,30 @@
 	</section>
 
 	<section class="code" aria-labelledby="code-title">
-		<div class="code-copy">
-			<h2 id="code-title">Stream a spec in a dozen lines</h2>
-			<p>
-				<code>streamSpec</code> reads any stream or async iterable and parses the partial JSON as it lands. Hand
-				the store to <code>&lt;Ripple&gt;</code> and the interface fills in, then stays interactive when the stream
-				ends.
-			</p>
-			<div class="install">
-				<code><span aria-hidden="true">$</span> {INSTALL}</code>
-				<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
+		<div class="code-grid">
+			<div class="code-copy">
+				<h2 id="code-title">Stream a spec in a dozen lines</h2>
+				<p>
+					<code>streamSpec</code> reads any stream or async iterable and parses the partial JSON as it lands. Hand
+					the store to <code>&lt;Ripple&gt;</code> and the interface fills in, then stays interactive when the stream
+					ends.
+				</p>
 			</div>
-			<p class="small">
-				Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
-				<a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a>
-			</p>
+			<pre class="sample"><code>{codeSample}</code></pre>
 		</div>
-		<pre class="sample"><code>{codeSample}</code></pre>
+		<!-- The site's one Paw-blue band. -->
+		<div class="band">
+			<div class="band-inner">
+				<div class="install">
+					<code><span aria-hidden="true">$</span> {INSTALL}</code>
+					<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
+				</div>
+				<p class="small">
+					Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
+					<a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a>
+				</p>
+			</div>
+		</div>
 	</section>
 
 	<section class="examples" aria-labelledby="examples-title">
@@ -211,8 +210,7 @@
 			{#each scenarios as s (s.id)}
 				<li>
 					<a href="/live?s={s.id}" class="run">
-						<span class="run-cat">{s.category}</span>
-						<span class="run-title">{s.title}</span>
+						<span class="run-line"><span class="run-title">{s.title}</span><span class="run-cat">{s.category}</span></span>
 						<span class="run-prompt">{s.fixture.prompt}</span>
 					</a>
 				</li>
@@ -225,16 +223,19 @@
 		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
 		<div class="closer-actions">
 			<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
-			<a class="btn ghost" href={GITHUB_URL}>Read the source</a>
+			<a class="link" href={GITHUB_URL}>Read the source</a>
 		</div>
 	</section>
 </main>
 
 <style>
+	/* Sections sit on the site grid: --site-max wide, --site-gutter each side
+	   (16px on phones). overflow-x clip lets the blue band run full bleed. */
 	.landing {
 		position: relative;
 		isolation: isolate;
-		padding: 0 clamp(16px, 4vw, 32px);
+		padding: 0 var(--site-gutter);
+		overflow-x: clip;
 		font-size: 17px;
 		line-height: 1.6;
 	}
@@ -242,7 +243,7 @@
 		line-height: 1.65;
 	}
 	.landing > section {
-		max-width: 1120px;
+		max-width: var(--site-max);
 		margin-inline: auto;
 	}
 	h1,
@@ -270,7 +271,7 @@
 		font-size: 0.86em;
 		padding: 1px 5px;
 		border-radius: 5px;
-		background: color-mix(in oklch, var(--site-ink) 8%, transparent);
+		background: var(--site-hover);
 	}
 	a {
 		color: var(--primary-ink);
@@ -302,7 +303,7 @@
 		gap: 10px;
 		max-width: 100%;
 		margin: 0 0 36px;
-		padding: 4px 4px 4px 12px;
+		padding: 0 0 0 12px;
 		border: 1px solid var(--code-line);
 		border-radius: var(--radius-control);
 		background: var(--code-bg);
@@ -322,10 +323,10 @@
 	}
 	.get button {
 		flex: none;
-		min-height: 32px;
-		padding: 0 10px;
+		min-height: 44px;
+		padding: 0 12px;
 		border: 0;
-		border-radius: calc(var(--radius-control) - 2px);
+		border-radius: calc(var(--radius-control) - 1px);
 		background: transparent;
 		color: var(--site-soft);
 		font: inherit;
@@ -346,51 +347,65 @@
 		text-underline-offset: 3px;
 	}
 
-	/* How it works: a real three-step sequence, so it is numbered. */
+	/* How it works: spec, engine, UI joined by one 1px line (across the three
+	   columns from 768px, down the left edge below). Each step sits on it at
+	   a small open node; no numbers, the line gives the order. */
 	.how {
 		padding: 72px 0;
 		border-top: 1px solid var(--site-line);
 	}
 	.steps {
 		list-style: none;
-		margin: 36px 0 0;
-		padding: 0;
+		margin: 40px 0 0;
+		padding: 0 0 0 24px;
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-		gap: 36px 28px;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 40px;
+		border-left: 1px solid var(--site-line);
 	}
 	.step {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
 		min-width: 0;
 	}
+	.step::before {
+		content: '';
+		position: absolute;
+		top: 0.5em;
+		left: -29px;
+		width: 9px;
+		height: 9px;
+		box-sizing: border-box;
+		border: 1px solid var(--site-faint);
+		border-radius: 50%;
+		background: var(--site-ground);
+	}
+	@media (min-width: 768px) {
+		.steps {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 32px;
+			padding: 28px 0 0;
+			border-left: 0;
+			border-top: 1px solid var(--site-line);
+		}
+		.step::before {
+			top: -33px;
+			left: 0;
+		}
+	}
 	.step h3 {
-		display: flex;
-		align-items: center;
-		gap: 10px;
 		font-size: 1.2rem;
 		font-weight: 650;
 		letter-spacing: -0.015em;
-	}
-	.n {
-		display: grid;
-		place-items: center;
-		width: 26px;
-		height: 26px;
-		flex: none;
-		border-radius: var(--radius-control);
-		background: var(--site-pressed);
-		color: var(--site-ink);
-		font-family: var(--font-sans);
-		font-size: 13px;
-		font-weight: 600;
 	}
 	.step p {
 		margin: 0;
 		line-height: 1.6;
 		color: var(--site-soft);
 	}
+	/* The shared code style: code tokens, 12px radius, 1px line. */
 	.snippet,
 	.sample {
 		margin: 0;
@@ -399,9 +414,18 @@
 		border: 1px solid var(--code-line);
 		border-radius: var(--radius-card);
 		background: var(--code-bg);
-		font-size: 14px;
+		font-size: 13px;
 		line-height: 1.6;
 		color: var(--code-ink);
+	}
+	/* The full spec is ~40 lines; it scrolls inside so step 1 stays the
+	   height of its neighbours. */
+	.snippet {
+		max-height: 340px;
+		overflow-y: auto;
+		padding-inline: 14px;
+		font-size: 12.5px;
+		line-height: 1.55;
 	}
 	.facts {
 		margin: 4px 0 0;
@@ -412,21 +436,25 @@
 		line-height: 1.5;
 		color: var(--site-soft);
 	}
+	/* A rendered card: the one tinted shadow. */
 	.demo {
 		padding: 16px;
 		border: 1px solid var(--site-line);
-		border-radius: var(--radius-paw);
+		border-radius: var(--radius-card);
 		background: var(--card);
+		box-shadow: var(--shadow-card);
 	}
 
-	/* Install + streaming sample. */
+	/* Install + streaming sample, then the blue band. */
 	.code {
+		padding: 72px 0 0;
+		border-top: 1px solid var(--site-line);
+	}
+	.code-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
 		gap: 40px;
 		align-items: start;
-		padding: 72px 0;
-		border-top: 1px solid var(--site-line);
 	}
 	.code-copy {
 		display: flex;
@@ -438,44 +466,72 @@
 		line-height: 1.65;
 		color: var(--site-soft);
 	}
+	/* The one Paw-blue band on the site: full bleed, white ink only (no blue
+	   ink, no faded white). Every text on it is --site-on-primary on --primary. */
+	.band {
+		margin: 72px calc(50% - 50vw) 0;
+		background: var(--primary);
+		color: var(--site-on-primary);
+	}
+	.band-inner {
+		max-width: var(--site-max);
+		margin-inline: auto;
+		padding: 28px var(--site-gutter);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px 40px;
+	}
 	.install {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		gap: 12px;
-		padding: 8px 8px 8px 16px;
-		border: 1px solid var(--code-line);
-		border-radius: var(--radius-control);
-		background: var(--code-bg);
-		font-size: 14px;
+		min-width: 0;
+		max-width: 100%;
+		font-size: 15px;
 	}
 	.install code {
 		overflow-x: auto;
 		white-space: nowrap;
+		color: inherit;
 	}
 	.install code span {
-		color: var(--site-soft);
 		margin-right: 6px;
 	}
 	.install button {
 		flex: none;
-		padding: 6px 12px;
-		border: 1px solid var(--site-line);
+		min-height: 44px;
+		padding: 0 16px;
+		border: 1px solid var(--site-on-primary);
 		border-radius: var(--radius-control);
 		background: transparent;
-		color: var(--site-ink);
+		color: var(--site-on-primary);
 		font: inherit;
-		font-size: 13px;
+		font-family: var(--font-sans);
+		font-size: 14px;
+		font-weight: 600;
 		cursor: pointer;
 	}
+	.install button:hover {
+		background: color-mix(in oklch, var(--primary) 82%, black);
+	}
 	.small {
-		font-size: 13.5px;
+		margin: 0;
+		max-width: 52ch;
+		font-size: 15px;
+		line-height: 1.55;
+	}
+	.band a {
+		color: inherit;
+		font-weight: 600;
+		text-underline-offset: 3px;
 	}
 
-	/* Recorded runs. */
+	/* Recorded runs: a divided list; title and category on one line, the
+	   prompt under them in muted ink, two lines at most. */
 	.examples {
 		padding: 72px 0;
-		border-top: 1px solid var(--site-line);
 	}
 	.examples-head {
 		display: flex;
@@ -495,34 +551,42 @@
 		margin: 32px 0 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+		column-gap: 32px;
 		border-top: 1px solid var(--site-line);
 	}
 	.run {
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 4px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 		height: 100%;
 		box-sizing: border-box;
-		padding: 18px 16px 18px 0;
+		padding: 18px 0;
 		border-bottom: 1px solid var(--site-line);
 		color: var(--site-ink);
 		text-decoration: none;
+	}
+	.run-line {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
 	}
 	.run:hover .run-title {
 		color: var(--primary-ink);
 	}
 	.run:focus-visible {
-		outline: 2px solid var(--primary);
-		outline-offset: -2px;
-	}
-	.run-cat {
-		font-size: 13px;
-		color: var(--site-soft);
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
 	}
 	.run-title {
 		font-weight: 600;
 		transition: color 0.15s;
+	}
+	.run-cat {
+		flex: none;
+		font-size: 13px;
+		color: var(--site-soft);
 	}
 	.run-prompt {
 		font-size: 14px;
@@ -535,7 +599,7 @@
 		overflow: hidden;
 	}
 
-	/* Closer. */
+	/* Closer: one primary button, the secondary is a link. */
 	.closer {
 		padding: 80px 0 96px;
 		border-top: 1px solid var(--site-line);
@@ -548,7 +612,8 @@
 	.closer-actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 12px;
+		align-items: center;
+		gap: 12px 24px;
 	}
 	.btn {
 		display: inline-flex;
@@ -559,9 +624,7 @@
 		font-weight: 600;
 		font-size: 15px;
 		text-decoration: none;
-		transition:
-			background 0.15s,
-			border-color 0.15s;
+		transition: background 0.15s;
 	}
 	.btn.primary {
 		background: var(--primary);
@@ -570,24 +633,54 @@
 	.btn.primary:hover {
 		background: color-mix(in oklch, var(--primary) 88%, black);
 	}
-	.btn.ghost {
-		border: 1px solid var(--site-line);
-		color: var(--site-ink);
-	}
-	.btn.ghost:hover {
-		border-color: color-mix(in oklch, var(--site-ink) 35%, transparent);
+	.link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		font-weight: 600;
+		font-size: 15px;
+		text-underline-offset: 3px;
 	}
 	.btn:focus-visible,
+	.link:focus-visible,
 	.install button:focus-visible,
+	.band a:focus-visible,
 	.get button:focus-visible,
 	.byok a:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
+	.band :focus-visible {
+		outline-color: var(--site-on-primary);
+	}
 
 	@media (max-width: 860px) {
-		.code {
+		.code-grid {
 			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	/* Phones: a tighter hero, so the prerendered card's header and the top of
+	   its UI are in the first screen. */
+	@media (max-width: 639px) {
+		.landing {
+			padding-inline: 16px;
+		}
+		.band-inner {
+			padding-inline: 16px;
+		}
+		.hero {
+			padding: 24px 0 56px;
+		}
+		h1 {
+			font-size: 1.95rem;
+		}
+		.lede {
+			margin: 12px 0;
+			font-size: 16px;
+			line-height: 1.5;
+		}
+		.get {
+			margin-bottom: 20px;
 		}
 	}
 </style>
