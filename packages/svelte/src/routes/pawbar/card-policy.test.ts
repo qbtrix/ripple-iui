@@ -4,12 +4,14 @@
 // and CSS url(); and the flow-card review's handler bypasses (a whole-string
 // expression in a handler slot that runs an action object kept in state, and a
 // follow-up emitting a free-text event); and the node-slot review's bypass (a
-// whole-string expression in a prop the engine renders as a node). The recorded
-// chat scenarios must all pass, and the widget allowlist must match the vendored
-// manifest.
+// whole-string expression in a prop the engine renders as a node). Flow cards and
+// `ask` follow pocketpaw's card_spec.py rules. The recorded chat scenarios and the
+// mock's flow cards must all pass, and the widget allowlist must match the
+// vendored manifest.
 
 import { describe, expect, test } from 'vitest';
-import { HOST_EVENTS, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
+import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
+import { laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
@@ -18,6 +20,15 @@ const button = (on_click: unknown) => ({ ui: { type: 'button', props: { label: '
 const prop = (key: string, value: string, type = 'image') => ({ ui: { type, props: { [key]: value } } });
 const text = (value: string) => ({ ui: { type: 'text', props: { text: value } } });
 const set = (target: string, value: string) => ({ action: 'set', target, value });
+const wide = (n: number) => ({ type: 'flex', children: Array.from({ length: n }, () => ({ type: 'text', props: { text: 'x' } })) });
+const nested = (n: number): Record<string, unknown> => (n > 1 ? { type: 'flex', children: [nested(n - 1)] } : { type: 'text' });
+const go = (target: string, value: unknown = {}) => ({ action: 'emit', target, value });
+const optionButton = (target = 'flow.next') => ({ type: 'button', props: { label: 'Food' }, on_click: go(target, { selection: { id: 'food', label: 'Food' } }) });
+const step = (extra: Record<string, unknown> = {}, ui: unknown = { type: 'flex', children: [optionButton()] }) => ({ flowId: 's', title: 'Pick one', ui, ...extra });
+const done = { kind: 'chat', message: 'Plan a trip for me with these answers.' };
+const flowCard = (ui: Record<string, unknown>) => ({ ui });
+const twoSteps = (last: Record<string, unknown> = {}) => flowCard(step({ chain: step({ onComplete: done, ...last }, { type: 'button', props: { label: 'Finish' }, on_click: go('flow.submit') }) }));
+const ask = (value: unknown = { text: 'Tell me about the weekend menu.' }) => ({ action: 'emit', target: 'ask', value });
 
 describe('card shape', () => {
 	test('only version, ui and state at the top', () => {
@@ -258,13 +269,13 @@ describe('follow-up', () => {
 		expect(refuseCard({ ui: { type: 'text' }, state: { n: { type: 'follow-up', props: { event: 'ask' } } } })).toBe('follow_up_event');
 	});
 
-	test('the host events are checkout, add_to_cart and book', () => {
-		expect(HOST_EVENTS).toEqual(['checkout', 'add_to_cart', 'book']);
+	test('the host events are checkout, add_to_cart, book and ask; a follow-up never asks', () => {
+		expect(HOST_EVENTS).toEqual(['checkout', 'add_to_cart', 'book', 'ask']);
 		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'bo' } } }, { partial: true })).toBeNull();
 		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'booking' } } })).toBe('follow_up_event');
 	});
 
-	test.each([...HOST_EVENTS, 'follow-up'])('allows the event %s', (event) => {
+	test.each(['checkout', 'add_to_cart', 'book', 'follow-up'])('allows the event %s', (event) => {
 		expect(refuseCard({ ui: { type: 'follow-up', props: { placeholder: 'Ask follow-up', event } } })).toBeNull();
 	});
 
@@ -287,6 +298,10 @@ describe('widgets', () => {
 	test('refuses a renderable alias even outside children; ignores non-widget type fields', () => {
 		expect(refuseCard({ ui: { type: 'tabs', props: { items: [{ label: 'a', content: { type: 'iframe' } }] } } })).toBe('widget:iframe');
 		expect(refuseCard({ ui: { type: 'chart', props: { type: 'bar', data: [] } } })).toBeNull();
+	});
+
+	test("a node's own props.type is a prop, not a widget: an input's number, date or text", () => {
+		for (const type of ['number', 'date', 'text', 'email']) expect(refuseCard({ ui: { type: 'input', bind: 'x', props: { type } } })).toBeNull();
 	});
 
 	test('streaming: a widget name on its way to an allowed one is not refused yet', () => {
@@ -504,4 +519,155 @@ test('every recorded chat scenario passes; the store checkout demo does not', ()
 		const spec: unknown = JSON.parse(s.fixture.chunks.map((c) => c.text).join(''));
 		expect([s.id, refuseCard(spec)]).toEqual([s.id, s.needsStore ? 'action:api' : null]);
 	}
+});
+
+describe('flow cards', () => {
+
+	test("the mock's flow cards and the laptop answer pass, while streaming and at final", () => {
+		for (const card of [tripFlowCard, laptopFlowCard, laptopAnswerCard]) {
+			expect(refuseCard(card)).toBeNull();
+			expect(refuseCard(card, { partial: true })).toBeNull();
+		}
+	});
+
+	test('a step holds only step keys, has a ui node, and chain_map is an object of steps', () => {
+		expect(refuseCard(twoSteps())).toBeNull();
+		expect(refuseCard(flowCard(step({ chain_map: { food: step({ onComplete: done }), culture: step() } })))).toBeNull();
+		expect(refuseCard(flowCard(step({ state: {} })))).toBe('flow_key:state');
+		expect(refuseCard(flowCard(step({ type: 'flex' })))).toBe('flow_key:type');
+		expect(refuseCard(flowCard(step({ chain: { flowId: 'b', ui: { type: 'text' }, on_click: go('ask', { text: 'hi' }) } })))).toBe('flow_key:on_click');
+		expect(refuseCard(flowCard({ flowId: 'a', title: 'No ui' }))).toBe('flow_step');
+		expect(refuseCard(flowCard(step({ chain: 'next' })))).toBe('flow_step');
+		expect(refuseCard(flowCard(step({ chain_map: [step()] })))).toBe('flow_step');
+		expect(refuseCard(flowCard(step({ chain_map: { a: 'step' } })))).toBe('flow_step');
+	});
+
+	test('at most 8 steps, counting every chain and chain_map value', () => {
+		const chain = (n: number): Record<string, unknown> => step(n > 1 ? { chain: chain(n - 1) } : {});
+		expect(refuseCard(flowCard(chain(8)))).toBeNull();
+		expect(refuseCard(flowCard(chain(9)))).toBe('flow_steps');
+		const map = Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`o${i}`, step()]));
+		expect(refuseCard(flowCard(step({ chain_map: map })))).toBe('flow_steps');
+	});
+
+	test("every step's ui is walked by every node rule", () => {
+		const second = (ui: unknown) => flowCard(step({ chain: step({}, ui) }));
+		expect(refuseCard(second({ type: 'embed', props: {} }))).toBe('widget:embed');
+		expect(refuseCard(second({ type: 'button', on_click: { action: 'api', url: '/x' } }))).toBe('action:api');
+		expect(refuseCard(second({ type: 'image', props: { src: 'http://img.example/a.png' } }))).toBe('unsafe_url');
+		expect(refuseCard(second({ type: 'button', on_click: '{state.h}' }))).toBe('handler_expression');
+		expect(refuseCard(flowCard(step({ chain_map: { a: step({}, { type: 'iframe' }) } })))).toBe('widget:iframe');
+		expect(refuseCard(flowCard(step({ title: '<img src=x onerror=alert(1)>' })))).toBe('markup');
+		expect(refuseCard(flowCard(step({ form_fields: [{ id: 'a', label: 'javascript:alert(1)' }] })))).toBe('unsafe_url');
+	});
+
+	test('400 widget nodes shared across steps, 16 deep within each step', () => {
+		expect(refuseCard(flowCard(step({ chain: step({}, wide(199)) }, wide(199))))).toBeNull();
+		expect(refuseCard(flowCard(step({ chain: step({}, wide(200)) }, wide(199))))).toBe('too_many_nodes');
+		expect(refuseCard({ ui: wide(MAX_CARD_NODES) })).toBe('too_many_nodes');
+		expect(refuseCard(flowCard(step({ chain: step({}, nested(MAX_DEPTH)) }, nested(MAX_DEPTH))))).toBeNull();
+		expect(refuseCard(flowCard(step({ chain: step({}, nested(MAX_DEPTH + 1)) })))).toBe('too_deep');
+		expect(refuseCard({ ui: nested(MAX_DEPTH + 1) })).toBe('too_deep');
+	});
+
+	test('onComplete is only a plain chat message of at most 500 characters', () => {
+		expect(refuseCard(twoSteps({ onComplete: { kind: 'chat', message: 'x'.repeat(500) } }))).toBeNull();
+		for (const onComplete of [
+			{ kind: 'chat', message: 'x'.repeat(501) },
+			{ kind: 'chat', message: 'Plan {state.days} days' },
+			{ kind: 'chat' },
+			{ kind: 'chat', message: 'hi', then: { kind: 'navigate', url: '/x' } },
+			{ kind: 'navigate', url: 'https://evil.example' },
+			{ kind: 'emit', event: 'checkout' },
+			{ kind: 'invoke_tool', tool: 'x' },
+			{ kind: 'create_pocket', name: 'x' },
+			{ kind: 'call_binding', binding: 'x', path: '/x' },
+			'chat'
+		])
+			expect([onComplete, refuseCard(twoSteps({ onComplete }))]).toEqual([onComplete, 'on_complete']);
+	});
+
+	test('onComplete anywhere but on a step is refused', () => {
+		expect(refuseCard({ ui: { type: 'flex', children: [{ type: 'button', onComplete: done }] } })).toBe('on_complete');
+		expect(refuseCard(flowCard(step({}, { type: 'button', props: { onComplete: done } })))).toBe('on_complete');
+		expect(refuseCard({ ui: { type: 'text' }, state: { next: { onComplete: done } } })).toBe('on_complete');
+	});
+
+	test('flow.next, back, forward and submit only inside a flow card', () => {
+		for (const verb of ['flow.next', 'flow.back', 'flow.forward', 'flow.submit']) {
+			expect(refuseCard(button(go(verb)))).toBe('flow_event');
+			expect(refuseCard(flowCard(step({}, button(go(verb)).ui)))).toBeNull();
+		}
+	});
+
+	test('flow.submit fires only from an explicit visitor action', () => {
+		const submitUnder = (key: string, at: 'node' | 'props' = 'node') =>
+			flowCard(step({}, at === 'node' ? { type: 'input', bind: 'x', [key]: go('flow.submit') } : { type: 'wizard-layout', props: { [key]: go('flow.submit') } }));
+		for (const key of ['on_click', 'on_submit', 'on_select']) expect(refuseCard(submitUnder(key))).toBeNull();
+		for (const key of ['on_change', 'on_focus', 'on_input']) expect(refuseCard(submitUnder(key))).toBe('ask_handler');
+		for (const key of ['finishActions', 'nextActions']) expect(refuseCard(submitUnder(key, 'props'))).toBe('ask_handler');
+		// Inside a flow under on_click it still fires from the click.
+		expect(refuseCard(flowCard(step({}, button({ action: 'flow', steps: [{ action: 'set', target: 'a', value: 1 }, go('flow.submit')] }).ui)))).toBeNull();
+	});
+
+	test('while streaming, flow verbs wait for the flow fields and a half-written step is not refused yet', () => {
+		expect(refuseCard(button(go('flow.next')), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'flex', children: [optionButton()] }, chain: { flowId: 'b' } }), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'text' }, onComplete: { kind: 'ch' } }), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'text' }, onComplete: { kind: 'ch' } }))).toBe('on_complete');
+		expect(refuseCard(flowCard({ flowId: 'a', ti: 'x' }), { partial: true })).toBeNull();
+		expect(refuseCard(flowCard({ flowId: 'a', ui: { type: 'embed' } }), { partial: true })).toBe('widget:embed');
+	});
+});
+
+describe('ask', () => {
+
+	test('allowed from a click, a submit, a pick and a composite button list', () => {
+		expect(refuseCard(button(ask()))).toBeNull();
+		expect(refuseCard({ ui: { type: 'form', props: { fields: [] }, on_submit: ask() } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'select', on_select: [ask()] } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', actions: ask() }, { id: 'b', name: 'B' }] } } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'entity-detail', props: { actions: [{ id: 'more', label: 'More', actions: [ask()] }] } } })).toBeNull();
+		expect(refuseCard(button({ action: 'branch', condition: '{state.a}', then: [ask()] }))).toBeNull();
+	});
+
+	test.each([
+		['on_focus', { type: 'input', on_focus: ask() }],
+		['on_change', { type: 'input', on_change: [ask()] }],
+		['finishActions', { type: 'wizard-layout', props: { steps: [], finishActions: ask() } }],
+		['learn_more', { type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', learn_more: ask() }] } }],
+		['onRowClick', { type: 'table', props: { columns: [], rows: [], onRowClick: ask() } }],
+		['an actions list under on_focus', { type: 'input', on_focus: { action: 'flow', steps: [], actions: [ask()] } }],
+		['a node kept in a click handler value', { type: 'button', on_click: { action: 'set', target: 'n', value: { type: 'button', on_click: ask() } } }],
+		['an action kept in a plain prop', { type: 'text', props: { later: ask() } }]
+	])('refused under %s', (_, ui) => {
+		expect(refuseCard({ ui })).toBe('ask_handler');
+	});
+
+	test('never in state', () => {
+		expect(['state_action', 'ask_handler']).toContain(refuseCard({ ui: { type: 'text' }, state: { later: ask() } }));
+	});
+
+	test.each([
+		['no value', undefined],
+		['a string', 'hi'],
+		['an extra key', { text: 'hi', to: 'sales' }],
+		['a non-string text', { text: 42 }],
+		['an expression', { text: 'Tell me about {state.pick}' }],
+		['more than 500 characters', { text: 'x'.repeat(501) }],
+		['a different key', { message: 'hi' }]
+	])('refuses a value with %s', (_, value) => {
+		const handler = value === undefined ? { action: 'emit', target: 'ask' } : ask(value);
+		expect(refuseCard(button(handler))).toBe('ask_value');
+	});
+
+	test('the value still gets the text rules; 500 characters pass', () => {
+		expect(refuseCard(button(ask({ text: 'see https://evil.example' })))).toBe('markup');
+		expect(refuseCard(button(ask({ text: 'x'.repeat(500) })))).toBeNull();
+	});
+
+	test('while streaming, a value still arriving is not refused yet; a bad handler is', () => {
+		expect(refuseCard(button({ action: 'emit', target: 'ask' }), { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'input', on_focus: ask() } }, { partial: true })).toBe('ask_handler');
+	});
 });
