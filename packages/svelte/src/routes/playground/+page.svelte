@@ -69,7 +69,8 @@
 	let showChat = $state(true);
 	let showJson = $state(true);
 	let morePrompts = $state(false);
-	let chatW = $state(400);
+	/** Null until dragged: 400 from 1280, 360 below (CSS). */
+	let chatW = $state<number | null>(null);
 	let jsonW = $state(440);
 	let jsonH = $state<number | null>(null);
 	let sheet = $state<HTMLDialogElement>();
@@ -86,7 +87,9 @@
 	const scenarioOf = (v: Version | null): Scenario | undefined => (v ? pool.find((s) => s.title === v.title) : undefined);
 	const total = $derived.by(() => {
 		const s = !LIVE || shown instanceof ReplayVersion ? scenarioOf(shown) : undefined;
-		return s ? byteLength(cardChunks(s.fixture).map((c) => c.text).join('')) : null;
+		if (!s) return null;
+		const chunks = shown instanceof ReplayVersion ? s.fixture.chunks : cardChunks(s.fixture);
+		return byteLength(chunks.map((c) => c.text).join(''));
 	});
 
 	function startReplay() {
@@ -95,9 +98,9 @@
 		replaying?.abort.abort();
 		const abort = new AbortController();
 		const s = scenarioOf(v);
-		// A recording replays on its own timing; anything else in even slices.
+		// A recording replays its whole spec on its own timing; anything else in even slices.
 		const chunks = s
-			? cardChunks(s.fixture)
+			? s.fixture.chunks
 			: Array.from({ length: Math.ceil(JSON.stringify(v.spec).length / 64) }, (_, i) => ({ t: i * 30, text: JSON.stringify(v.spec).slice(i * 64, i * 64 + 64) }));
 		const fixture = { id: v.id, title: v.title, prompt: '', model: '', recordedAt: '', chunks };
 		replaying = { of: v.id, version: new ReplayVersion(v, replay(fixture, { speed: 1.5, signal: abort.signal }), abort.signal), abort };
@@ -124,8 +127,10 @@
 		if (!s || sheet?.open) return;
 		if (s === 'stop') {
 			if (session.busy) session.stop();
-			else if (replaying && !replaying.abort.signal.aborted) replaying.abort.abort();
-			else return;
+			else if (replaying?.version.status === 'streaming') {
+				replaying.abort.abort();
+				replaying = null;
+			} else return;
 		} else if (s === 'focus') chat?.focus();
 		else if (s === 'chat') {
 			if (!wide.current) return;
@@ -167,7 +172,7 @@
 		};
 	}
 
-	const chatGrip = grip(() => chatW, (n) => (chatW = n), () => 300, () => 560, 'x', 1);
+	const chatGrip = grip(() => chatW ?? (three.current ? 400 : 360), (n) => (chatW = n), () => 300, () => 560, 'x', 1);
 	const jsonGrip = grip(() => jsonW, (n) => (jsonW = n), () => 320, () => Math.max(320, (work?.clientWidth ?? 1200) - 480), 'x', -1);
 	const splitGrip = grip(
 		() => jsonH ?? Math.round((work?.clientHeight ?? 600) * 0.4),
@@ -222,7 +227,7 @@
 	class="pg"
 	data-chat={showChat || undefined}
 	data-json={showJson || undefined}
-	style:--chat-w="{chatW}px"
+	style:--chat-w={chatW == null ? null : `${chatW}px`}
 	style:--json-w="{jsonW}px"
 	style:--json-h={jsonH == null ? null : `${jsonH}px`}
 >
@@ -237,6 +242,9 @@
 			{#if shared}
 				<p class="shared-note">
 					Opened the spec from your link. It is in the preview{wide.current ? '' : ' below'}, and the chat works as usual.
+					{#if wide.current && current?.id !== 'shared'}
+						<button type="button" class="more inline" onclick={() => (pick = { id: 'shared', count: versions.length })}>Show it again</button>
+					{/if}
 				</p>
 				{#if !wide.current}
 					<div class="inline-preview">
@@ -285,7 +293,7 @@
 		role="separator"
 		aria-orientation="vertical"
 		aria-label="Resize the chat"
-		aria-valuenow={chatW}
+		aria-valuenow={chatW ?? (three.current ? 400 : 360)}
 		aria-valuemin={300}
 		aria-valuemax={560}
 		tabindex="0"
@@ -439,6 +447,12 @@
 		font-weight: 600;
 		cursor: pointer;
 	}
+	.more.inline {
+		min-height: 0;
+		margin: 0 0 0 4px;
+		padding: 0;
+		font-size: inherit;
+	}
 	.shared-note,
 	.url-error {
 		margin: 0;
@@ -492,7 +506,7 @@
 			border-bottom: 1px solid var(--site-line);
 		}
 		.pg[data-chat] {
-			grid-template-columns: var(--chat-w) 0 minmax(0, 1fr);
+			grid-template-columns: var(--chat-w, 360px) 0 minmax(0, 1fr);
 		}
 		.chat-col {
 			display: none;
@@ -552,6 +566,9 @@
 		}
 	}
 	@media (min-width: 1280px) {
+		.pg[data-chat] {
+			grid-template-columns: var(--chat-w, 400px) 0 minmax(0, 1fr);
+		}
 		.pg[data-json] .work {
 			grid-template-rows: minmax(0, 1fr);
 			grid-template-columns: minmax(480px, 1fr) 0 var(--json-w);
