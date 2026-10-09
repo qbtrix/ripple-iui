@@ -235,7 +235,8 @@
 	const yearLabel = (y: number) => (y === 0 ? 'Start' : `Year ${num(y, { digits: 1 })}`);
 
 	// Chart geometry: x in % of the horizon, y in % from the top.
-	const top = $derived(Math.max(final?.balance ?? 0, goalAmt ?? 0) * 1.08 || 1);
+	// 12% headroom holds the growth label above the line's end.
+	const top = $derived(Math.max(final?.balance ?? 0, goalAmt ?? 0) * 1.12 || 1);
 	const X = (year: number) => (year / span) * 100;
 	const Y = (v: number) => 100 - (v / top) * 100;
 	const line = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`).join('');
@@ -253,7 +254,8 @@
 		return out;
 	});
 	const goalY = $derived(goalAmt === undefined ? undefined : Y(goalAmt));
-	const tickLabels = $derived(yTicks.filter((t) => goalY === undefined || Math.abs(Y(t) - goalY) > 9));
+	// A label too near the top would ride into the legend; one near the goal line gives way to it.
+	const tickLabels = $derived(yTicks.filter((t) => Y(t) >= 10 && (goalY === undefined || Math.abs(Y(t) - goalY) > 9)));
 
 	const xTicks = $derived.by(() => {
 		const s = [1, 2, 5, 10, 20, 25, 50].find((s) => span / s <= 5) ?? 50;
@@ -268,14 +270,18 @@
 	});
 	const xLabel = (t: number) => (t === 0 ? 'Now' : t === span ? `${num(t, { digits: 1 })} ${t === 1 ? 'yr' : 'yrs'}` : num(t, { digits: 1 }));
 
-	/** Direct labels at the right end, only where the band is tall enough to hold one. */
+	/**
+	 * Direct labels at the right end: growth sits above the top line's end (the
+	 * band narrows to the left, so inside it the label would cross the line);
+	 * deposits sit inside their band when it is tall enough to hold one.
+	 */
 	const ends = $derived.by(() => {
 		if (!final) return [];
 		const dep = final.deposited;
 		const grow = final.balance - dep;
 		return [
-			...(dep / top >= 0.14 ? [{ key: 'dep', label: 'Deposits', value: dep, y: Y(dep / 2) }] : []),
-			...(grow / top >= 0.14 ? [{ key: 'grow', label: 'Growth', value: grow, y: Y(dep + grow / 2) }] : [])
+			...(dep / top >= 0.14 ? [{ key: 'dep', label: 'Deposits', value: dep, y: Y(dep / 2), above: false }] : []),
+			...(grow > 0 ? [{ key: 'grow', label: 'Growth', value: grow, y: Y(final.balance), above: true }] : [])
 		];
 	});
 
@@ -479,7 +485,12 @@
 						{/if}
 						{#if active === null}
 							{#each ends as e (e.key)}
-								<span class="pointer-events-none absolute right-1.5 -translate-y-1/2 text-footnote font-medium whitespace-nowrap" style:top="{e.y}%" aria-hidden="true" data-end={e.key}>
+								<span
+									class={['pointer-events-none absolute right-0 text-footnote font-medium whitespace-nowrap', e.above ? '-translate-y-full pb-1' : 'right-1.5 -translate-y-1/2']}
+									style:top="{e.y}%"
+									aria-hidden="true"
+									data-end={e.key}
+								>
 									{e.label} <span class="tabular-nums">{cash(e.value, true)}</span>
 								</span>
 							{/each}
