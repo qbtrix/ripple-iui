@@ -6,13 +6,14 @@
     filtering come from +page.server.ts (widget previews are the docs pages'
     own specs) and $lib/site/showcase/catalog.ts. The facet, category and query
     live in the URL (?f=widgets&c=data&q=chart): the page is prerendered, so
-    the URL is read on mount and written back with replaceState, never pushed.
+    the URL is read after each navigation and written back with replaceState,
+    never pushed. The cards stay out of the search index; each app, widget and
+    flow is indexed on its own page.
     Only the spotlight renders at load; cards mount their previews as they near
     the viewport (ShowcaseCard).
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { replaceState } from '$app/navigation';
+	import { afterNavigate, replaceState } from '$app/navigation';
 	import { Ripple } from '$lib/index.js';
 	import {
 		DEFAULT_FACET,
@@ -32,7 +33,9 @@
 	let { data } = $props();
 
 	let st = $state<ShowcaseState>({ f: DEFAULT_FACET, c: '', q: '' });
-	onMount(() => {
+	// Runs on first mount and on any later navigation to /showcase (the top-bar
+	// link from ?f=widgets keeps this component mounted); replaceState does not fire it.
+	afterNavigate(() => {
 		st = parseState(location.search);
 	});
 
@@ -95,7 +98,7 @@
 		</div>
 	</section>
 
-	<div class="controls">
+	<div class="controls" data-pagefind-ignore>
 		<div class="facets" role="group" aria-label="Show">
 			{#each FACETS as f (f.id)}
 				<button type="button" class="chip" aria-pressed={st.f === f.id} onclick={() => set({ f: f.id })}>
@@ -126,7 +129,7 @@
 		</div>
 	{/if}
 
-	<p class="status" aria-live="polite">
+	<p class="status" aria-live="polite" data-pagefind-ignore>
 		{#if shown.length}
 			{shown.length}
 			{NOUN[st.f][shown.length === 1 ? 0 : 1]}{st.c ? ` in ${catTitle[st.c] ?? st.c}` : ''}{st.q.trim() ? ` matching "${st.q.trim()}"` : ''}
@@ -136,7 +139,7 @@
 		{/if}
 	</p>
 
-	<div class="cards" class:roomy={st.f !== 'widgets'}>
+	<div class="cards" data-pagefind-ignore class:roomy={st.f !== 'widgets'}>
 		{#each shown as item (`${item.facet}:${item.id}`)}
 			<ShowcaseCard
 				{item}
