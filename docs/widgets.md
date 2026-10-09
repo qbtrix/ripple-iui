@@ -367,6 +367,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
 | `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
 | `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (priced option groups), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
+| `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
 | `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
@@ -447,6 +448,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `shipment-tracker`, `order-tracking` | `order-status` |
 | `reservation`, `appointment` | `booking` |
 | `food-menu`, `order-menu` | `menu-order` |
+| `workout-timer`, `interval-timer`, `hiit-timer` | `interval-workout` |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |
