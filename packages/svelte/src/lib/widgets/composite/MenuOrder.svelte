@@ -271,7 +271,7 @@
 	function arrow(e: KeyboardEvent, group: Group) {
 		const step = ARROWS[e.key];
 		const n = group.options.length;
-		if (!step || !n) return;
+		if (!step || !n || !(e.target instanceof HTMLInputElement)) return; // not from the Clear button
 		e.preventDefault();
 		const at = group.options.findIndex((o) => draftIds.includes(o.id));
 		const next = ((at < 0 ? (step > 0 ? -1 : 0) : at) + step + n) % n;
