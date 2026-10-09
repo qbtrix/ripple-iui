@@ -110,6 +110,7 @@ CARD SHAPE (pick this first)
   - sales, KPIs or a dashboard over records: exec-dashboard with "rows", "measures", "dimensions" (bind "filters")
   - choosing between options: comparison-layout
 - A summary of one thing (a person, an account, an order) starts with entity-detail (title, status, kpis, meta) and puts its sections in its children; dated events go in a timeline, plain facts in a kv-table.
+- A drawing, animated icon or small scene: illustration, with "svg" written in single-quoted attributes (<svg viewBox='0 0 200 120'>) and every animation dur 0.5s or more.
 - A small tool no data widget covers (a calculator, a bill splitter, a checklist, an explainer) is built from primitives with the rules above.
 
 LAYOUT
