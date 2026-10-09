@@ -1,4 +1,12 @@
+<!--
+  @file routes/showcase/button/+page.svelte
+  @description Button visual QA: every variant, size, icon slot, the loading state,
+    disabled, full width and link, and a Card footer. Uses the Button and Card
+    widgets directly.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
+-->
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import Button from '$lib/widgets/input/Button.svelte';
   import Card from '$lib/widgets/layout/Card.svelte';
   import { Plus, ArrowRight, Trash2, Check, Settings } from '@lucide/svelte';
@@ -13,9 +21,9 @@
   }
 </script>
 
+<ShowcasePage slug="button">
 <div class="showcase">
   <header class="showcase-header">
-    <h1>Button — Visual QA</h1>
     <p>
       All variants, sizes, icon slots, loading state, and in-Card composition for the rebuilt
       <code>Button</code> widget.
@@ -112,7 +120,7 @@
             onclick={handleLoadingClick}
           />
           <span class="text-xs text-muted-foreground">
-            {isLoading ? 'Saving…' : 'Idle — click the button'}
+            {isLoading ? 'Saving…' : 'Idle: click the button'}
           </span>
         </div>
       </div>
@@ -121,7 +129,7 @@
 
   <!-- Disabled — all variants ──────────────────────────────────── -->
   <section id="disabled" class="showcase-section">
-    <h2 class="showcase-section-title">Disabled — all variants</h2>
+    <h2 class="showcase-section-title">Disabled: all variants</h2>
     <div class="showcase-item">
       <div class="showcase-item-demo">
         <div class="flex flex-wrap items-center gap-3">
@@ -183,3 +191,4 @@
     </div>
   </section>
 </div>
+</ShowcasePage>

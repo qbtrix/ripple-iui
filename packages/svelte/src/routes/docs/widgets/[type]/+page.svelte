@@ -1,8 +1,8 @@
 <!--
   @file routes/docs/widgets/[type]/+page.svelte
   @description One generated widget reference page: type, category, description,
-    the manifest example live in a SpecExample (plus any interactive pocket
-    specs), then Props / Events / Node fields tables, each only when it has
+    the manifest example live in a SpecExample (or its first pocket when the
+    bare example renders nothing, see EMPTY_EXAMPLES), any other pockets, then Props / Events / Node fields tables, each only when it has
     rows. All copy comes from the manifest entry. Tables scroll inside their own
     box so a phone never scrolls sideways. Indexed by Pagefind (data-pagefind-body).
 -->

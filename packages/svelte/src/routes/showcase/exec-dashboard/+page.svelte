@@ -1,10 +1,13 @@
 <!--
-  Dev-only showcase for ExecDashboard — NOT part of the published package.
-  Demonstrates the package contract: the consumer owns state (date range,
-  granularity, loading, error, etc.) and passes it in via $bindable props
-  and per-key data maps. The component is a pure renderer.
+  @file routes/showcase/exec-dashboard/+page.svelte
+  @description ExecDashboard with the consumer owning its state: date range, granularity,
+    loading and error live on this page and pass in through bindable props and
+    per-key data maps. The component only renders.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import ExecDashboard from '$lib/widgets/composite/ExecDashboard.svelte';
 
   // ── External state owned by THIS page (the "consumer") ────────────────
@@ -230,14 +233,14 @@
   }
 </script>
 
+<ShowcasePage slug="exec-dashboard" wide>
 <div class="page">
   <header class="page-header">
     <div class="page-header-top">
       <div>
-        <h1>ExecDashboard — live state demo</h1>
         <p>
           Every switch below mutates state on <em>this page</em>. The dashboard component
-          receives it via bindable props and per-key data maps — proving the package contract
+          receives it via bindable props and per-key data maps: proving the package contract
           that all state and data come from outside.
         </p>
       </div>
@@ -267,14 +270,14 @@
       <div class="state-readout">
         <code>range={activeDateRange}</code>
         <code>gran={activeGranularity}</code>
-        <code>filter={activeActivityFilter ?? '—'}</code>
+        <code>filter={activeActivityFilter ?? 'none'}</code>
       </div>
     </div>
   </header>
 
   <ExecDashboard
     title="Q2 performance"
-    subtitle="Cross-team metrics — flip the range or granularity to see live data swap"
+    subtitle="Cross-team metrics: flip the range or granularity to see live data swap"
     dateRanges={['Today', '7d', '30d', '90d', 'QTD', 'YTD']}
     granularities={['Day', 'Week', 'Month']}
     bind:activeDateRange
@@ -293,6 +296,7 @@
     {activity}
   />
 </div>
+</ShowcasePage>
 
 <style>
   .page {
@@ -314,15 +318,6 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-  }
-  .page-header h1 {
-    margin: 0 0 4px;
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.25;
-  }
-  @media (min-width: 640px) {
-    .page-header h1 { font-size: 20px; }
   }
   .page-header p {
     margin: 0;

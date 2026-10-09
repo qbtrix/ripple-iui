@@ -1,15 +1,13 @@
 <!--
-  Created 2026-06-13 (feat/console-telemetry-widgets): Nerve Mission Control —
-  a nullframe-style instrument-panel bento rendered from ONE rippleSpec with the
-  console theme. Exercises the new console telemetry widgets (led-clock,
-  seismograph, glyph-grid, fill-grid, streak-bars) alongside reskinned existing
-  widgets (progress-ring, stat, status-dot, calendar-heatmap, audit-log). The
-  theme.colors block sets a near-black instrument palette with Nerve tri-color
-  semantics (green = healthy, blue = live, amber = your gate); the theme-applier
-  emits these as CSS vars onto the ripple-root so token-driven widgets flip with
-  zero per-widget CSS. Dev-only — NOT part of the published package.
+  @file routes/showcase/mission-control/+page.svelte
+  @description An instrument panel from one spec with its own near-black theme (theme.colors
+    becomes CSS vars on the ripple root), built from the console telemetry
+    widgets plus progress rings, stats and an audit log.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
@@ -384,9 +382,11 @@
   };
 </script>
 
+<ShowcasePage slug="mission-control" wide>
 <div class="mc-page">
   <Ripple spec={missionSpec} onEvent={handleEvent} />
 </div>
+</ShowcasePage>
 
 <style>
   /* The console paints its own near-black panel edge to edge; the site's top

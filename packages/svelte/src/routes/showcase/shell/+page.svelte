@@ -1,13 +1,13 @@
 <!--
-  src/routes/showcase/shell/+page.svelte
-  NEW 2026-09-25 (shell new-look slice 1). Demo of the app-shell primitives on
-  `./ui`: a sidebar built from SectionHeader + ListRow (active, unread dot and
-  count, muted, indent, hover actions, rename mode), a side panel with
-  PanelHeader, Kbd hints and Segmented option badges. Imports from
-  `$lib/ui/index.js` directly, the way a hand-written caller does. Dev route
-  only; SvelteKit routes are not packaged.
+  @file routes/showcase/shell/+page.svelte
+  @description Shell primitives from ./ui: a sidebar of SectionHeader and ListRow (active,
+    unread, muted, hover actions, rename), a side panel with PanelHeader, Kbd
+    hints and Segmented badges.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { ListRow, SectionHeader, PanelHeader, Kbd, Segmented } from '$lib/ui/index.js';
   import HashIcon from '@lucide/svelte/icons/hash';
   import PencilIcon from '@lucide/svelte/icons/pencil';
@@ -31,8 +31,8 @@
   let log = $state('');
 </script>
 
-<main class="p-4 text-foreground sm:p-8">
-  <h1 class="mb-1 text-xl font-semibold">Shell primitives</h1>
+<ShowcasePage slug="shell">
+<div class="text-foreground">
   <p class="mb-6 text-sm text-muted-foreground">ListRow, SectionHeader, PanelHeader, Kbd and Segmented badges from <code>./ui</code>.</p>
 
   <div class="mb-6 flex flex-wrap items-center gap-4">
@@ -120,4 +120,5 @@
   </div>
 
   <p class="mt-4 text-sm text-muted-foreground" aria-live="polite">{log}</p>
-</main>
+</div>
+</ShowcasePage>

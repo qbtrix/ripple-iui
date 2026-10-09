@@ -15,7 +15,7 @@ export const ledClockEntry: WidgetManifestEntry = {
     subTick: { type: 'boolean', required: false, description: 'Auto-tick the sub-readout 00..99 (the ms counter).' },
     label: { type: 'string', required: false, description: 'Caption below the matrix.' },
     accent: { type: 'string', required: false, description: 'Lit-dot color. Default the foreground token. Pass a CSS var or hex.' },
-    dot: { type: 'number', required: false, description: 'Dot diameter in px — drives overall size. Default 6.' },
+    dot: { type: 'number', required: false, description: 'Dot diameter in px; drives the overall size. Default 6.' },
   },
   example: {
     type: 'led-clock',

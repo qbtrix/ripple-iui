@@ -1,18 +1,17 @@
 <!--
-  Created: 2026-05-30 — RFC 12 marketing-widget showcase. Composes the 7
-  marketing widgets into one real landing page IN ORDER — navbar → hero + cta
-  → feature-grid → testimonial → logo-cloud → newsletter → footer — for a
-  plausible premium product ("Lumen", a solar-install studio). A `theme` is set
-  on the spec (brand colors + heading font + logo token) so the new
-  theme-applier is visibly emitting CSS vars onto the ripple-root. Rendered as
-  one declarative <Ripple {spec} onEvent={...} />, matching the sub-route
-  pattern. Entrances + the primary CTA carry motion per the motion-budget rule.
+  @file routes/showcase/marketing/+page.svelte
+  @description The marketing pack as one landing page for a fictional solar installer:
+    navbar, hero, features, testimonial, pricing, newsletter and footer in a
+    single themed <Ripple {spec}>.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
-  let lastSubmit = $state('—');
+  let lastSubmit = $state('none yet');
   function handleEvent(event: RippleEvent) {
     // The newsletter widget emits the entered email on submit. The `emit`
     // action carries its value in `payload` (target → `name`).
@@ -66,7 +65,7 @@
             eyebrow: 'RESIDENTIAL SOLAR, DONE RIGHT',
             title: 'Power your home with the sun by next season',
             subtitle:
-              'Lumen designs, permits, and installs rooftop solar in weeks — not months. Flat pricing, a 25-year workmanship warranty, and a dedicated project lead from quote to switch-on.',
+              'Lumen designs, permits, and installs rooftop solar in weeks, not months. Flat pricing, a 25-year workmanship warranty, and a dedicated project lead from quote to switch-on.',
             align: 'center',
           },
           class: 'px-6 py-20',
@@ -82,7 +81,7 @@
           type: 'cta',
           props: {
             headline: 'See your roof’s solar potential in 60 seconds',
-            subtext: 'Drop your address and we’ll estimate output, savings, and payback — no sales call required.',
+            subtext: 'Drop your address and we’ll estimate output, savings, and payback, with no sales call.',
             button: 'Estimate my savings',
             href: '#quote',
             align: 'center',
@@ -108,7 +107,7 @@
                   { title: 'Permits handled', description: 'We file every permit and schedule the inspections so you don’t chase paperwork.', icon: 'file-check' },
                   { title: 'Tier-1 panels', description: 'High-efficiency monocrystalline panels with a 25-year output warranty.', icon: 'sun' },
                   { title: 'Real-time app', description: 'Track production, savings, and CO₂ offset from your phone.', icon: 'smartphone' },
-                  { title: 'Battery-ready', description: 'Add storage now or later — every install is wired for backup power.', icon: 'battery-charging' },
+                  { title: 'Battery-ready', description: 'Add storage now or later; every install is wired for backup power.', icon: 'battery-charging' },
                   { title: 'Dedicated lead', description: 'One named project manager from first quote to switch-on.', icon: 'user-check' },
                 ],
               },
@@ -181,13 +180,13 @@
   };
 </script>
 
+<ShowcasePage slug="marketing">
 <div class="showcase">
   <header class="showcase-header">
-    <h1>Marketing pack — a full landing page</h1>
     <p>
       All seven marketing widgets composed in order as one real landing page,
       rendered from a single JSON spec. A <code>theme</code> is set on the spec
-      (brand color, heading font, logo) — the theme-applier emits CSS vars onto
+      (brand color, heading font, logo): the theme-applier emits CSS vars onto
       the ripple-root, so the navbar CTA, hero buttons, and CTA band all pick up
       the brand blue with no per-widget styling.
     </p>
@@ -199,6 +198,7 @@
     <Ripple spec={landingSpec} onEvent={handleEvent} />
   </div>
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -209,11 +209,6 @@
   }
   .showcase-header {
     margin-bottom: 1.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

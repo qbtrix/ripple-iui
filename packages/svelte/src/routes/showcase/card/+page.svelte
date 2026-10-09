@@ -1,11 +1,18 @@
+<!--
+  @file routes/showcase/card/+page.svelte
+  @description Card visual QA: every variant, density and snippet slot of the Card widget,
+    used directly.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
+-->
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import Card from '$lib/widgets/layout/Card.svelte';
   import Stat from '$lib/widgets/display/Stat.svelte';
 </script>
 
+<ShowcasePage slug="card">
 <div class="showcase">
   <header class="showcase-header">
-    <h1>Card — Visual QA</h1>
     <p>
       All variants, densities, and snippet slots for the rebuilt
       <code>Card</code> widget. Verify against treatment A (hairline) spec.
@@ -45,7 +52,7 @@
       <div class="showcase-item">
         <h3 class="showcase-item-title">outlined</h3>
         <div class="showcase-item-demo">
-          <Card variant="outlined" title="Outlined" description="border foreground/15 — hairline">
+          <Card variant="outlined" title="Outlined" description="border foreground/15: hairline">
             <p class="body-text">Hairline border, lightest treatment.</p>
           </Card>
         </div>
@@ -155,6 +162,7 @@
     </div>
   </section>
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -165,11 +173,6 @@
   }
   .showcase-header {
     margin-bottom: 2.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

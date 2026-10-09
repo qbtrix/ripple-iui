@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const soulStatusEntry: WidgetManifestEntry = {
   type: 'soul-status',
   category: 'display',
-  description: 'Agent soul state — avatar, name, energy, mood, status. Compact pill or expanded card.',
+  description: 'Agent soul state: avatar, name, energy, mood, status. Compact pill or expanded card.',
   props: {
     name: { type: 'string', required: false, description: 'Agent name.' },
     role: { type: 'string', required: false, description: 'Agent role.' },

@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const citationEntry: WidgetManifestEntry = {
   type: 'citation',
   category: 'research',
-  description: 'Citation pill — inline reference to a source with optional superscript number.',
+  description: 'Citation pill: an inline reference to a source with optional superscript number.',
   props: {
     source: { type: 'string', required: true, description: 'Publisher name.' },
     color: { type: 'string', required: false, description: 'Accent color.' },

@@ -1,11 +1,18 @@
+<!--
+  @file routes/showcase/stat/+page.svelte
+  @description Stat visual QA: values, currencies, deltas, trends and sparklines of the Stat
+    widget, used directly.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
+-->
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import Stat from '$lib/widgets/display/Stat.svelte';
   import Card from '$lib/widgets/layout/Card.svelte';
 </script>
 
+<ShowcasePage slug="stat">
 <div class="showcase">
   <header class="showcase-header">
-    <h1>Stat — Visual QA</h1>
     <p>
       All sizes, formats, direction semantics, alignment, and Card composition for the
       <code>Stat</code> widget.
@@ -58,13 +65,13 @@
         </div>
       </div>
       <div class="showcase-item">
-        <h3 class="showcase-item-title">currency — USD</h3>
+        <h3 class="showcase-item-title">currency: USD</h3>
         <div class="showcase-item-demo">
           <Stat label="Revenue" value={1234.5} format="currency" currency="USD" deltaPercent={2.8} direction="up-good" />
         </div>
       </div>
       <div class="showcase-item">
-        <h3 class="showcase-item-title">currency — INR</h3>
+        <h3 class="showcase-item-title">currency: INR</h3>
         <div class="showcase-item-demo">
           <Stat label="Revenue" value={1234.5} format="currency" currency="INR" locale="en-IN" deltaPercent={2.8} direction="up-good" />
         </div>
@@ -217,6 +224,7 @@
     </div>
   </section>
 </div>
+</ShowcasePage>
 
 <style>
   .showcase {
@@ -227,11 +235,6 @@
   }
   .showcase-header {
     margin-bottom: 2.5rem;
-  }
-  .showcase-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
   }
   .showcase-header p {
     font-size: 0.875rem;

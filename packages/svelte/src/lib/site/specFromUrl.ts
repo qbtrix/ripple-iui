@@ -1,5 +1,6 @@
 // lib/site/specFromUrl.ts — Reads a spec the playground was linked with.
-// `?spec=<url-encoded JSON>` or `?s=<base64url JSON>` (spec wins if both).
+// `?spec=<url-encoded JSON>` or `?s=<base64url JSON>` (spec wins if both);
+// specToUrl / playgroundHref build the `?s=` side for links into it.
 // The encoded value is size-capped BEFORE decoding, the result goes through
 // JSON.parse only (never eval) and must be an object with a `ui` or `intent`.
 // Returns null when the URL carries neither param, so the caller keeps its
@@ -40,4 +41,17 @@ export function specFromUrl(search: string): SpecFromUrl {
 		return { error: 'The linked JSON is not a Ripple spec (it needs a "ui" or an "intent").' };
 	}
 	return { text: JSON.stringify(spec, null, 2) };
+}
+
+/** The `?s=` value for a spec: UTF-8 JSON as unpadded base64url, the inverse of the reader above. */
+export function specToUrl(spec: unknown): string {
+	let bin = '';
+	for (const b of new TextEncoder().encode(JSON.stringify(spec))) bin += String.fromCharCode(b);
+	return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** A /playground link that opens this spec, or null when it is over SPEC_URL_MAX and the playground would refuse it. */
+export function playgroundHref(spec: unknown): string | null {
+	const s = specToUrl(spec);
+	return s.length > SPEC_URL_MAX ? null : `/playground?s=${s}`;
 }

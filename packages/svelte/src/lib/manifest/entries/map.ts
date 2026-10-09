@@ -7,7 +7,7 @@ export const mapEntry: WidgetManifestEntry = {
     'Leaflet-backed interactive map. Renders markers, polyline paths, polygon geofences, and live trackers (smoothly interpolated moving markers with optional trails). No API key needed for default tiles.',
   props: {
     center: { type: '[number, number]', required: false, description: 'Initial map center as [lat, lng]. Default [0, 0].' },
-    zoom: { type: 'number', required: false, description: 'Initial zoom level (0–20). Default 2.' },
+    zoom: { type: 'number', required: false, description: 'Initial zoom level (0 to 20). Default 2.' },
     minZoom: { type: 'number', required: false, description: 'Minimum allowed zoom.' },
     maxZoom: { type: 'number', required: false, description: 'Maximum allowed zoom.' },
     bounds: { type: '[[number, number], [number, number]]', required: false, description: 'Fit-to-bounds rectangle [[swLat, swLng], [neLat, neLng]]. Overrides center+zoom when supplied.' },
@@ -32,7 +32,7 @@ export const mapEntry: WidgetManifestEntry = {
     trackers: {
       type: 'Array<{ id: string; lat: number; lng: number; heading?: number; label?: string; color?: string; icon?: string; trail?: [number, number][]; follow?: boolean }>',
       required: false,
-      description: 'Live moving targets — vehicle, courier, ship, person. Position changes interpolate smoothly. `heading` rotates the directional arrow. `trail` draws recent positions. `follow: true` keeps the camera on the target.',
+      description: 'Live moving targets: vehicle, courier, ship, person. Position changes interpolate smoothly. `heading` rotates the directional arrow. `trail` draws recent positions. `follow: true` keeps the camera on the target.',
     },
     interactive: { type: 'boolean', required: false, description: 'Allow zoom/pan/scroll. Default true.' },
     showControls: { type: 'boolean', required: false, description: 'Show zoom +/− controls. Default true.' },

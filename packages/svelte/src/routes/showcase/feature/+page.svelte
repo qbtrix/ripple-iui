@@ -1,20 +1,14 @@
 <!--
-  src/routes/showcase/feature/+page.svelte
-  NEW 2026-09-26 (feature pages canon, F1). Demo of the feature-page pieces:
-  PageHeader (leading, actions, toolbar, both title sizes), Segmented option
-  counts, EmptyState (md, sm, error tone, icon snippet, actions), InlineAlert
-  (four tones, actions, dismiss) and the Label + Textarea primitives. Imports
-  from `$lib/ui/index.js` and `$lib/primitives/index.js` directly, the way a
-  hand-written caller does. Dev route only; SvelteKit routes are not packaged.
-
-  Updated 2026-09-27 (canon gaps 2): a "canon gaps 2" section at the bottom
-  demos Search mode="filter" with aria-label/autocomplete/spellcheck, an
-  InlineAlert with its role overridden, the success/warning Badge variants,
-  Segmented option `class` + `leading` dots, Dialog.Content `overlayClass`,
-  and PanelHeader `closeTitle`. The Meetings PageHeader shows `titleTrailing`
-  (a Beta tag beside the title).
+  @file routes/showcase/feature/+page.svelte
+  @description Feature page parts from ./ui and ./primitives: PageHeader (leading, actions,
+    toolbar, both title sizes), Segmented counts, EmptyState, InlineAlert and
+    the Label and Textarea primitives, imported the way a hand-written caller
+    would.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { PageHeader, EmptyState, InlineAlert, Segmented, Search, PanelHeader, Dialog } from '$lib/ui/index.js';
   import { Button, Label, Textarea, Badge } from '$lib/primitives/index.js';
   import BotIcon from '@lucide/svelte/icons/bot';
@@ -38,7 +32,8 @@
   };
 </script>
 
-<main class="space-y-10 p-4 text-foreground sm:p-8">
+<ShowcasePage slug="feature">
+<div class="space-y-10 text-foreground">
   <section class="space-y-3">
     <label class="flex items-center gap-2 text-sm text-muted-foreground">
       <input type="checkbox" bind:checked={dense} /> Dense tool page (size="sm")
@@ -153,4 +148,5 @@
   </section>
 
   <p class="text-sm text-muted-foreground" aria-live="polite">{log}</p>
-</main>
+</div>
+</ShowcasePage>

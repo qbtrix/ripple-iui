@@ -1,14 +1,14 @@
 <!--
-  src/routes/showcase/call/+page.svelte
-  NEW 2026-09-30 (call UI new look, slice 0). Demo of the call parts on `./ui`
-  in all three layouts (pill / bar / classic controls, glass / focus / classic
-  tiles): ControlButton + ControlBar with a CountBadge, ParticipantTile with a
-  menu holding the Slider, a FloatingDock inside a frame, IncomingCallCard with
-  the success Button, and a BottomSheet. Mock state only. Imports from
-  `$lib/ui/index.js` directly, the way a hand-written caller does. Dev route
-  only; SvelteKit routes are not packaged.
+  @file routes/showcase/call/+page.svelte
+  @description Call parts from ./ui in all three layouts: ControlButton and ControlBar with
+    a CountBadge, ParticipantTile with a Slider menu, FloatingDock,
+    IncomingCallCard and BottomSheet. Mock state only, imported the way a
+    hand-written caller would.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import {
     ControlButton,
     ControlBar,
@@ -47,8 +47,8 @@
   ];
 </script>
 
-<main class="p-4 text-foreground sm:p-8">
-  <h1 class="mb-1 text-xl font-semibold">Call parts</h1>
+<ShowcasePage slug="call">
+<div class="text-foreground">
   <p class="mb-6 text-sm text-muted-foreground">
     ControlButton, ControlBar, ParticipantTile, FloatingDock, IncomingCallCard, BottomSheet and Slider from <code>./ui</code>.
   </p>
@@ -158,4 +158,5 @@
   </div>
 
   <p class="mt-4 text-sm text-muted-foreground" aria-live="polite">{log}</p>
-</main>
+</div>
+</ShowcasePage>

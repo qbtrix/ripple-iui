@@ -1,11 +1,14 @@
 <!--
   @file site/docs/Search.svelte
-  @description The top bar's docs search: a button (and Cmd/Ctrl+K) that opens
-    a modal <dialog> over Pagefind. /pagefind/pagefind.js is written into
-    build/ by the post-build step in build:site and imported only on first
+  @description The top bar's site search: a button (and Cmd/Ctrl+K) that opens
+    a modal <dialog> over Pagefind. The index covers every page that marks a
+    data-pagefind-body (docs, widget reference, showcase); the root layout tags
+    each with a `kind` filter, and results are grouped Docs / Widgets / Showcase
+    in that order from one unfiltered search. /pagefind/pagefind.js is written
+    into build/ by the post-build step in build:site and imported only on first
     open, so nothing loads until someone searches; there is no index under
     `vite dev`, and the modal says so. Pagefind's excerpts are escaped text
-    with <mark> highlights, built from our own docs, so they render as HTML.
+    with <mark> highlights, built from our own pages, so they render as HTML.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -20,7 +23,9 @@
 		url: string;
 		excerpt: string;
 		meta: { title?: string };
+		filters: { kind?: string[] };
 	}
+	const KINDS = ['Docs', 'Widgets', 'Showcase'] as const;
 	interface Pagefind {
 		debouncedSearch(
 			q: string,
@@ -32,7 +37,7 @@
 	let dialog: HTMLDialogElement | undefined = $state();
 	let input: HTMLInputElement | undefined = $state();
 	let query = $state('');
-	let hits = $state.raw<Hit[]>([]);
+	let groups = $state.raw<{ kind: string; hits: Hit[] }[]>([]);
 	let status = $state<'idle' | 'loading' | 'unavailable'>('idle');
 	let shortcut = $state('Ctrl K');
 	let pagefind: Promise<Pagefind> | null = null;
@@ -54,18 +59,25 @@
 	}
 
 	async function search(q: string) {
-		if (!q.trim()) return void (hits = []);
+		if (!q.trim()) return void (groups = []);
 		status = 'loading';
 		try {
 			const res = await (await load()).debouncedSearch(q, {}, 120);
 			if (!res) return; // superseded by a newer keystroke
-			const data = await Promise.all(res.results.slice(0, 8).map((r) => r.data()));
+			// The top 24 by rank, at most 5 per kind, so one kind cannot crowd out the others.
+			const data = await Promise.all(res.results.slice(0, 24).map((r) => r.data()));
 			if (q !== query) return;
-			hits = data.map((d) => ({
-				url: d.url.replace(/\.html$/, '').replace(/\/index$/, '/'),
-				title: d.meta.title ?? d.url,
-				excerpt: d.excerpt
-			}));
+			groups = KINDS.map((kind) => ({
+				kind,
+				hits: data
+					.filter((d) => (d.filters.kind?.[0] ?? 'Docs') === kind)
+					.map((d) => ({
+						url: d.url.replace(/\.html$/, '').replace(/\/index$/, '/'),
+						title: d.meta.title ?? d.url,
+						excerpt: d.excerpt
+					}))
+					.slice(0, 5)
+			})).filter((g) => g.hits.length > 0);
 			status = 'idle';
 		} catch {
 			status = 'unavailable';
@@ -87,19 +99,19 @@
 	<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
 		><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg
 	>
-	<span class="label">Search docs</span>
+	<span class="label">Search</span>
 	<kbd aria-hidden="true">{shortcut}</kbd>
 </button>
 
-<dialog bind:this={dialog} class="modal" aria-label="Search docs" onclick={(e) => e.target === dialog && dialog.close()}>
+<dialog bind:this={dialog} class="modal" aria-label="Search" onclick={(e) => e.target === dialog && dialog.close()}>
 	<div class="panel">
 		<input
 			bind:this={input}
 			bind:value={query}
 			oninput={() => search(query)}
 			type="search"
-			placeholder="Search the docs"
-			aria-label="Search the docs"
+			placeholder="Search docs, widgets and showcase"
+			aria-label="Search docs, widgets and showcase"
 			aria-controls="search-results"
 			autocomplete="off"
 			spellcheck="false"
@@ -107,19 +119,24 @@
 		<div id="search-results" class="results" aria-live="polite">
 			{#if status === 'unavailable'}
 				<p class="note">Search runs on the built site. Run <code>bun run build:site</code> and preview it.</p>
-			{:else if query.trim() && hits.length === 0 && status === 'idle'}
-				<p class="note">Nothing in the docs matches "{query}".</p>
+			{:else if query.trim() && groups.length === 0 && status === 'idle'}
+				<p class="note">Nothing matches "{query}".</p>
 			{:else}
-				<ul>
-					{#each hits as hit (hit.url)}
-						<li>
-							<a href={safeUrl(hit.url)} onclick={() => dialog?.close()}>
-								<span class="title">{hit.title}</span>
-								<span class="excerpt">{@html hit.excerpt}</span>
-							</a>
-						</li>
-					{/each}
-				</ul>
+				{#each groups as group (group.kind)}
+					<section aria-labelledby="search-group-{group.kind}">
+						<h2 id="search-group-{group.kind}" class="group">{group.kind}</h2>
+						<ul>
+							{#each group.hits as hit (hit.url)}
+								<li>
+									<a href={safeUrl(hit.url)} onclick={() => dialog?.close()}>
+										<span class="title">{hit.title}</span>
+										<span class="excerpt">{@html hit.excerpt}</span>
+									</a>
+								</li>
+							{/each}
+						</ul>
+					</section>
+				{/each}
 			{/if}
 		</div>
 	</div>
@@ -215,8 +232,15 @@
 		margin: 0;
 		padding: 0;
 	}
-	ul:empty {
-		display: none;
+	.group {
+		margin: 0;
+		padding: 10px 12px 4px;
+		font: 600 12px var(--font-sans);
+		color: var(--site-soft);
+	}
+	section + section {
+		margin-top: 4px;
+		border-top: 1px solid var(--site-line);
 	}
 	.results a {
 		display: block;

@@ -1,20 +1,14 @@
 <!--
-  Created: 2026-06-24 — AI-native display tier showcase. Renders the 3 new
-  read-only widgets a generative-UI engine uses to show an agent's work:
-  stream-text (streaming vs done), tool-call (pending/running/success/error +
-  collapsed/expanded), reasoning-trace (collapsed summary vs expanded steps).
-  Each panel is one declarative <Ripple {spec} onEvent={...} />, matching the
-  card/stat/premium sub-route pattern. Display-only — no write-back.
-  Updated: 2026-06-24 — added the approval-gate organism (human-in-the-loop
-  approve/deny/diff-review): pending across each risk level, a gate composing a
-  diff + tool-call body, and pre-resolved approved/denied states. The last gate
-  is BOUND (decision persists via state) so the panel demos the full
-  click → state → onStateChange round-trip.
-  Updated: 2026-09-25 (chat new-look slice 1) — reasoning-trace gains a
-  collapsed streaming trace (header names the active step) and one with an
-  `error` step; the high-risk gate sets `askDenyReason`.
+  @file routes/showcase/ai/+page.svelte
+  @description The AI display tier: stream-text (streaming and done), tool-call states,
+    reasoning-trace (collapsed, expanded, streaming) and approval-gate (each
+    risk level, a diff body, resolved, and one bound to state so the decision
+    round-trips through onStateChange). Each panel is one <Ripple {spec}>.
+    Framed by ShowcasePage, which supplies the h1, the line and the search opt-in.
 -->
+
 <script lang="ts">
+  import ShowcasePage from '../ShowcasePage.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
@@ -43,7 +37,7 @@
         {
           type: 'stream-text',
           props: {
-            text: 'This message finished streaming — no caret, aria-busy is false.',
+            text: 'This message finished streaming: no caret, aria-busy is false.',
             streaming: true,
             done: true,
           },
@@ -174,7 +168,7 @@
           type: 'approval-gate',
           props: {
             title: 'Send the renewal email to 48 customers',
-            summary: 'Outbound to 48 recipients — cannot be unsent.',
+            summary: 'Outbound to 48 recipients: cannot be unsent.',
             risk: 'medium',
             actionId: 'act_med',
           },
@@ -183,7 +177,7 @@
           type: 'approval-gate',
           props: {
             title: 'Delete 3 inactive workspaces',
-            summary: 'Destructive — removes all data in those workspaces.',
+            summary: 'Destructive: removes all data in those workspaces.',
             risk: 'high',
             actionId: 'act_high',
             // Deny asks for an optional reason first.
@@ -261,7 +255,7 @@
       bind: '{state.gateDecision}',
       props: {
         title: 'Publish the new pricing page',
-        summary: 'Click Approve/Deny — the decision is written to state.gateDecision.',
+        summary: 'Click Approve/Deny: the decision is written to state.gateDecision.',
         risk: 'medium',
         actionId: 'act_publish',
       },
@@ -269,9 +263,9 @@
   };
 </script>
 
-<div class="mx-auto max-w-2xl space-y-10 p-8">
+<ShowcasePage slug="ai">
+<div class="mx-auto max-w-2xl space-y-10">
   <header class="space-y-1">
-    <h1 class="text-2xl font-semibold">AI-native display tier</h1>
     <p class="text-sm text-muted-foreground">
       Read-only widgets a generative-UI engine renders to show an agent's work.
     </p>
@@ -293,22 +287,23 @@
   </section>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — risk levels</h2>
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate: risk levels</h2>
     <Ripple spec={riskSpec} onEvent={handleEvent} />
   </section>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — diff + tool-call body</h2>
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate: diff + tool-call body</h2>
     <Ripple spec={richGateSpec} onEvent={handleEvent} />
   </section>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — resolved (approved / denied)</h2>
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate: resolved (approved / denied)</h2>
     <Ripple spec={resolvedSpec} onEvent={handleEvent} />
   </section>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate — bound (decision persists)</h2>
+    <h2 class="text-sm font-medium uppercase tracking-wide text-muted-foreground">approval-gate: bound (decision persists)</h2>
     <Ripple spec={boundGateSpec} onEvent={handleEvent} onStateChange={handleStateChange} />
   </section>
 </div>
+</ShowcasePage>

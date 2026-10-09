@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const articleMetaEntry: WidgetManifestEntry = {
   type: 'article-meta',
   category: 'display',
-  description: 'Article byline — author, avatar, publish date, read time.',
+  description: 'Article byline: author, avatar, publish date, read time.',
   props: {
     author: { type: 'string', required: false, description: 'Author name.' },
     avatar: { type: 'string', required: false, description: 'Author avatar URL.' },

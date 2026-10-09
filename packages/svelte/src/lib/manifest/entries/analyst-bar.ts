@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const analystBarEntry: WidgetManifestEntry = {
   type: 'analyst-bar',
   category: 'research',
-  description: 'Analyst recommendation bar — Buy/Hold/Sell distribution with consensus label and target price.',
+  description: 'Analyst recommendation bar: Buy/Hold/Sell distribution with consensus label and target price.',
   props: {
     buy: { type: 'number', required: true, description: 'Buy/Overweight ratings count.' },
     hold: { type: 'number', required: true, description: 'Hold ratings count.' },
