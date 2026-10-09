@@ -159,3 +159,115 @@ describe('illustration: streaming', () => {
 		expect(placeholder(streamed as HTMLElement)).toBeNull();
 	});
 });
+
+describe('illustration: text legibility', () => {
+	const DARK = 'background-color: rgb(10, 10, 10); color: rgb(250, 250, 250)';
+	const LIGHT = 'background-color: rgb(255, 255, 255); color: rgb(20, 20, 20)';
+	let wrap: HTMLDivElement;
+	let mqChange: (() => void) | undefined;
+
+	// jsdom has no layout: derive a box from the attributes.
+	function fakeBBox(this: Element) {
+		const n = (a: string) => Number(this.getAttribute(a) ?? 0);
+		const tag = this.localName;
+		if (tag === 'circle') return { x: n('cx') - n('r'), y: n('cy') - n('r'), width: 2 * n('r'), height: 2 * n('r') };
+		if (tag === 'rect') return { x: n('x'), y: n('y'), width: n('width'), height: n('height') };
+		if (tag === 'text') return { x: n('x'), y: n('y') - 10, width: 20, height: 12 };
+		return { x: 0, y: 0, width: 0, height: 0 };
+	}
+
+	beforeEach(() => {
+		wrap = document.createElement('div');
+		wrap.setAttribute('style', DARK);
+		document.body.append(wrap);
+		Object.assign(SVGElement.prototype, { getBBox: fakeBBox });
+		mqChange = undefined;
+		window.matchMedia = vi.fn(() => ({
+			matches: false,
+			addEventListener: (_: string, cb: () => void) => (mqChange = cb),
+			removeEventListener: () => {}
+		})) as unknown as typeof window.matchMedia;
+	});
+	afterEach(() => {
+		wrap.remove();
+		delete (SVGElement.prototype as { getBBox?: unknown }).getBBox;
+		document.documentElement.removeAttribute('data-theme');
+	});
+
+	const draw = async (body: string, style = DARK) => {
+		wrap.setAttribute('style', style);
+		const r = render(Illustration, { target: wrap, props: { svg: `<svg viewBox='0 0 200 100'>${body}</svg>`, title: 'Label' } });
+		await tick();
+		return r;
+	};
+	const fills = (c: HTMLElement) =>
+		[...c.querySelectorAll('[data-widget="illustration"] svg text, [data-widget="illustration"] svg tspan')].map((t) =>
+			t.getAttribute('fill')
+		);
+	const isLight = (f: string | null) => /^rgb\((2[0-5]\d), \1, \1\)$/.test(f ?? '');
+	const isDark = (f: string | null) => /^rgb\(([0-9]|1\d|2\d), \1, \1\)$/.test(f ?? '');
+
+	it('turns dark text on a dark card light', async () => {
+		const { container } = await draw(`<text x='10' y='20' fill='#1e3a8a'>Hi</text>`);
+		expect(isLight(fills(container)[0])).toBe(true);
+	});
+
+	it('turns light text on a light card dark', async () => {
+		const { container } = await draw(`<text x='10' y='20' fill='#eee'>Hi</text>`, LIGHT);
+		expect(isDark(fills(container)[0])).toBe(true);
+	});
+
+	it('fixes text with no fill (black) on a dark card, and inherited dark fills', async () => {
+		const { container } = await draw(`<text x='10' y='20'>A</text><g fill='#111'><text x='10' y='40'>B</text></g>`);
+		const [a, b] = fills(container);
+		expect(isLight(a)).toBe(true);
+		expect(isLight(b)).toBe(true);
+	});
+
+	it('leaves dark text on a light-filled circle under it alone', async () => {
+		const { container } = await draw(`<circle cx='20' cy='15' r='20' fill='#fde68a'/><text x='10' y='20' fill='#1e3a8a'>Sun</text>`);
+		expect(fills(container)[0]).toBe('#1e3a8a');
+	});
+
+	it('fixes text whose shape underneath is dark too, and ignores shapes painted after it', async () => {
+		const { container } = await draw(
+			`<rect x='0' y='0' width='200' height='100' fill='#fff'/><circle cx='20' cy='15' r='20' fill='#000'/><text x='10' y='20' fill='#222'>A</text><rect x='0' y='0' width='200' height='100' fill='#fff'/>`
+		);
+		expect(isLight(fills(container)[0])).toBe(true);
+	});
+
+	it('never touches currentColor, url(#g) or text that already passes', async () => {
+		const { container } = await draw(
+			`<defs><linearGradient id='g'><stop offset='0' stop-color='#000'/></linearGradient></defs><text x='1' y='20' fill='currentColor'>A</text><text x='1' y='40' fill='url(#g)'>B</text><text x='1' y='60' fill='#fbbf24'>C</text><text x='1' y='80' fill='none'>D</text>`
+		);
+		const [a, b, c, d] = fills(container);
+		expect(a).toBe('currentColor');
+		expect(b).toMatch(/^url\(#ill-.+-g\)$/);
+		expect(c).toBe('#fbbf24');
+		expect(d).toBe('none');
+	});
+
+	it('re-runs from the model colour when the theme changes', async () => {
+		const { container } = await draw(`<text x='10' y='20' fill='#1e3a8a'>Hi</text>`);
+		expect(isLight(fills(container)[0])).toBe(true);
+		// data-theme flip on <html>: the light card now suits the original navy.
+		wrap.setAttribute('style', LIGHT);
+		document.documentElement.setAttribute('data-theme', 'light');
+		await new Promise((r) => setTimeout(r, 0));
+		await tick();
+		expect(fills(container)[0]).toBe('#1e3a8a');
+		// prefers-color-scheme flip back to dark.
+		wrap.setAttribute('style', DARK);
+		mqChange?.();
+		await tick();
+		expect(isLight(fills(container)[0])).toBe(true);
+	});
+
+	it('re-runs when the svg prop changes', async () => {
+		const { container, rerender } = await draw(`<text x='10' y='20' fill='#fbbf24'>Hi</text>`);
+		expect(fills(container)[0]).toBe('#fbbf24');
+		await rerender({ svg: `<svg viewBox='0 0 200 100'><text x='10' y='20' fill='#000'>Hi</text></svg>`, title: 'Label' });
+		await tick();
+		expect(isLight(fills(container)[0])).toBe(true);
+	});
+});
