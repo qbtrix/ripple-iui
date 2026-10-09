@@ -51,13 +51,13 @@ export type IllustrationCheck = { ok: true } | { ok: false; reason: string };
 
 const HOSTILE = new Set([...ILLUSTRATION_HOSTILE_ELEMENTS].map((n) => n.toLowerCase()));
 const TEXT_PARENTS = new Set(['text', 'tspan', 'title', 'desc']);
-const ID = '[A-Za-z_][\\w-]*';
+const ID = '[A-Za-z0-9_-]+';
 const ID_RE = new RegExp(`^${ID}$`);
 const HASH_REF = new RegExp(`^#(${ID})$`);
 const URL_REF = new RegExp(`^url\\(#(${ID})\\)$`);
 const FONT_FAMILY = /^[A-Za-z0-9 ,'"-]*$/;
 // `<id>.<event>` in begin/end: the id part takes no dots (SMIL would need them escaped).
-const SYNC_REF = /(^|[\s;+(-])([A-Za-z_][\w-]*)\.(?=[A-Za-z])/g;
+const SYNC_REF = /(^|[\s;+(-])([A-Za-z0-9_-]+)\.(?=[A-Za-z])/g;
 const NUMBER = /\d*\.?\d+(?:e[-+]?\d+)?/gi;
 const NO_NUMBER_SCAN = new Set(['id', 'font-family', 'begin', 'end']);
 const LISTS = new Set(['values', 'keyTimes', 'keySplines']);
