@@ -367,6 +367,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
 | `booking` | Table or service booking in stages (what, when, details, review) on store `services` and `days`; pre-selects the slot nearest `preferred`, fires `on_book`, binds `selection` |
 | `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (priced option groups), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
+| `growth-projection` | Savings growth from `initial`, monthly `deposit`, `rate` (% a year) and `years`: final balance, deposits-vs-growth chart, yearly table, optional `goal` and `inflation`, sliders to retune. Bind `deposit` |
 | `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
@@ -450,6 +451,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |
+| `savings-projection`, `compound-interest` | `growth-projection` |
 | `report` | `report-layout` |
 | `frame`, `nested-spec` | `ripple-frame` |
 | `tour` | `coachmark` |

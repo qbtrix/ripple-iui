@@ -79,6 +79,16 @@ A menu the visitor orders from inside the card, in four stages: menu (category c
 The model writes `items[].product_id` (plus `name` so rows stream), `featured: { id, reason }` and `preset: [{ id, qty }]`. Server hydration fills `price`, `image`, `groups`, `currency`, `fee`, `fulfilment` and `checkout: true`, and wires `on_checkout`. Without `checkout: true`, or for an item without `product_id`, the menu is display only. Required groups start on their first option; a `many` group caps at `max`.
 Bind `cart` (`{ lines, fulfilment, total }`, never the customer's details) so another node can show "2 items". `on_checkout` fires with `{ lines: [{ product_id, name, qty, option_ids, unit_price }], fulfilment, customer: { name, email?, phone?, address? }, total }`. Quantities are 1 to 20 per line, at most 30 lines. The total is display only: the store reprices every line.
 
+### growth-projection
+
+Savings growth from four numbers (aliases `savings-projection`, `compound-interest`). Answers "save $300 a month at 5% for 10 years, show me how it grows". The model writes the inputs; the widget computes everything, so no hand-built schedule or `set` actions.
+
+- `initial` (starting balance, default 0), `deposit` (added at the end of every month; write `0` for a lump sum), `rate` (percent a year: `5` means 5%), `years` (fractions round to whole months), `compounding` (`monthly` default, or `yearly`, which credits a year's simple interest at year end).
+- Optional `goal` (a goal line and the year it is reached), `inflation` (percent; adds the final balance in today's money), `currency` (ISO 4217), `verdict`.
+- Renders the final balance and "you put in X; growth adds Y", a stacked area chart of deposits under growth (legend, end labels, crosshair readout by pointer or arrow keys), a yearly table behind a toggle, and sliders plus number boxes for deposit, rate and years.
+- Clamps negatives to 0, rate and inflation to 100%, years to 100, and lists what it changed.
+- Bind `deposit` (`bind: "{state.deposit}"`); a slider or box edit commits a number on release. Rate and years edits fire `on_ratechange` / `on_yearschange` with the new number (`{ action: "set", target: "rate", value: "{event}" }`).
+
 ### Dashboard variants
 
 `exec-dashboard`, `ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (KPIs + chart + table for exec, status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.

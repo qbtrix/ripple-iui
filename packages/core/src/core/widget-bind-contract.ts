@@ -71,6 +71,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'comparison-layout': { prop: 'chosen', event: 'onchosenchange' },
   'comparison-cards': { prop: 'chosen', event: 'onchosenchange' },
   compare: { prop: 'chosen', event: 'onchosenchange' },
+  // growth-projection binds its monthly deposit. `rate` and `years` stay
+  // Svelte-side `$bindable`s and also fire on_ratechange / on_yearschange.
+  'growth-projection': { prop: 'deposit', event: 'ondepositchange' },
+  'savings-projection': { prop: 'deposit', event: 'ondepositchange' },
+  'compound-interest': { prop: 'deposit', event: 'ondepositchange' },
 };
 
 /**
