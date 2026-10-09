@@ -116,9 +116,17 @@ A week of meals (aliases `meal-planner`, `weekly-meal-plan`). Answers "a high-pr
 - Shopping list: derived, never written. Every planned meal's ingredients, times `people / serves`, summed by name + unit, grouped by aisle, tickable.
 - Bind `people` (`bind: "{state.people}"`). Swaps and ticks stay in the widget (Svelte callers can `bind:days` and `bind:got`), and a host re-rendering the same spec does not undo them. A meal whose recipe has not arrived renders a skeleton row.
 
+### exec-dashboard
+A KPI dashboard the model fills with raw records, not tiles (aliases `kpi-dashboard`, `executive-dashboard`). Answers "show me last quarter's sales by month, filterable by region".
+- Rows mode: `rows[]` (e.g. orders `{ id, date: "2026-07-14", region, channel, amount }`), `measures[]` `{ key?, label, format: money | number | percent, agg: sum | avg | count, good?: up | down }` (one KPI each; the first also drives the chart and breakdown), `dimensions[]` `{ key, label }` (filter chip rows), `x` (the chart's column), `split` (stack the chart by a column), `compare[]` (last period's rows) with `compareLabel`, `currency`, `verdict`.
+- Everything is computed from the filtered rows: KPIs, trends (against `compare`, else the last x group against the one before), the chart, the breakdown (the first dimension not filtered) and the table totals. ISO dates group by day up to a 31-day span, else by month; other x values group as written.
+- Chart rules: one colour for one series; a `split` gives each value a fixed `--chart-N` slot from the unfiltered rows, so filtering never repaints, and past five values the rest fold into Other. Columns at most 24px wide on one axis, a readout per column on hover, focus or tap, and a Table view.
+- Bind `filters` (`{ region: "West" }`). `on_filter` fires with `{ key, value }` (null for All).
+- KPI mode (no `rows`): the prebuilt `kpis` (with `byKey`), `primaryChart`, `charts`, `activity` and `table` props work as before; `on_date_range_change` fires with the picked chip.
+
 ### Dashboard variants
 
-`exec-dashboard`, `ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (KPIs + chart + table for exec, status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.
+`ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.
 
 ## Specialized canvases
 

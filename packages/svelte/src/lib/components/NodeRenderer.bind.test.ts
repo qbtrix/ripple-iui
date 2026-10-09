@@ -182,23 +182,25 @@ test('order-status uses currentStep/onstepchange bind contract', () => {
   });
 });
 
-test('exec-dashboard bind drives the active date range and writes picks back', async () => {
-  // Without a contract row the bind went to `value`, which exec-dashboard does
-  // not read, so the manifest example's `bind: 'activeDateRange'` did nothing.
+test('exec-dashboard bind drives the rows-mode filter and writes picks back', async () => {
+  // The bound field is `filters` ({ region: 'West' }): the choice that
+  // recomputes every number. Without a contract row the bind went to `value`,
+  // which exec-dashboard does not read.
   const onStateChange = vi.fn();
   render(Ripple, {
     props: {
       spec: {
-        state: { range: '30d' },
+        state: { pick: { region: 'West' } },
         ui: {
           type: 'exec-dashboard',
-          bind: '{state.range}',
+          bind: '{state.pick}',
           props: {
-            dateRanges: ['7d', '30d', '90d'],
-            showRefresh: false,
-            kpis: [
-              { id: 'rev', label: 'Revenue', value: '$0', byKey: { '7d': { value: '$7k' }, '30d': { value: '$30k' } } },
+            rows: [
+              { region: 'North', amount: 70 },
+              { region: 'West', amount: 30 },
             ],
+            measures: [{ key: 'amount', label: 'Revenue', format: 'money' }],
+            dimensions: [{ key: 'region', label: 'Region' }],
           },
         },
       },
@@ -206,14 +208,14 @@ test('exec-dashboard bind drives the active date range and writes picks back', a
     },
   });
 
-  expect(screen.getByRole('tab', { name: '30d' }).getAttribute('aria-selected')).toBe('true');
-  expect(screen.getByText('$30k')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'West' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getAllByText('$30.00').length).toBeGreaterThan(0);
 
-  await userEvent.click(screen.getByRole('tab', { name: '7d' }));
+  await userEvent.click(screen.getByRole('button', { name: 'North' }));
 
-  expect(onStateChange).toHaveBeenLastCalledWith('range', '7d', expect.objectContaining({ range: '7d' }));
-  expect(screen.getByRole('tab', { name: '7d' }).getAttribute('aria-selected')).toBe('true');
-  expect(screen.getByText('$7k')).toBeTruthy();
+  expect(onStateChange).toHaveBeenLastCalledWith('pick', { region: 'North' }, expect.objectContaining({ pick: { region: 'North' } }));
+  expect(screen.getByRole('button', { name: 'North' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getAllByText('$70.00').length).toBeGreaterThan(0);
   expect(getBindContract('kpi-dashboard')).toEqual(getBindContract('exec-dashboard'));
 });
 
