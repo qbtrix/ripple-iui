@@ -5349,6 +5349,7 @@
   <a href="/showcase/card">Card</a>
   <a href="/showcase/stat">Stat</a>
   <a href="/showcase/flow">Flow actions</a>
+  <a href="/showcase/choice-cards">Choice cards</a>
   <a href="/showcase/spec">Spec</a>
   <a href="/showcase/button">Button</a>
   <a href="/showcase/exec-dashboard">Exec dashboard</a>
