@@ -2,9 +2,9 @@
 // The model writes a `kind` from a closed enum, never an icon name; the widget
 // looks it up here, and an unknown or missing kind renders CircleDot. Emoji in
 // model text stay text and never become icons. The one exception is
-// menu-order's OPTION_ICONS: an option or group may carry an `icon`, honoured
-// only when it is a key of that map; otherwise optionIconKey infers the key
-// from the option's name with a keyword scan.
+// menu-order's OPTION_ICONS and OptionList's CHOICE_ICONS: an option may carry
+// an `icon`, honoured only when it is a key of that map; otherwise a keyword
+// scan of the option's name infers the key (optionIconKey, choiceIconKey).
 //
 // One map per enum in the doc, each its own export so a widget's bundle carries
 // only the icons it imports. A widget with an enum not listed here
@@ -99,6 +99,25 @@ import BadgeCheck from '@lucide/svelte/icons/badge-check';
 import Ruler from '@lucide/svelte/icons/ruler';
 import Star from '@lucide/svelte/icons/star';
 import Headset from '@lucide/svelte/icons/headset';
+// flow choice cards
+import Briefcase from '@lucide/svelte/icons/briefcase';
+import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+import Palette from '@lucide/svelte/icons/palette';
+import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
+import Globe from '@lucide/svelte/icons/globe';
+import Feather from '@lucide/svelte/icons/feather';
+import House from '@lucide/svelte/icons/house';
+import Wallet from '@lucide/svelte/icons/wallet';
+import PiggyBank from '@lucide/svelte/icons/piggy-bank';
+import TreePalm from '@lucide/svelte/icons/tree-palm';
+import Martini from '@lucide/svelte/icons/martini';
+import Sunrise from '@lucide/svelte/icons/sunrise';
+import Sun from '@lucide/svelte/icons/sun';
+import Sunset from '@lucide/svelte/icons/sunset';
+import Heart from '@lucide/svelte/icons/heart';
+import Baby from '@lucide/svelte/icons/baby';
+import CalendarDays from '@lucide/svelte/icons/calendar-days';
+import Zap from '@lucide/svelte/icons/zap';
 
 export const FALLBACK_ICON: LucideIcon = CircleDot;
 
@@ -237,6 +256,102 @@ export function optionIconKey(name: unknown, explicit?: unknown): OptionIconKey 
 	if (typeof name !== 'string') return undefined;
 	const n = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 	return OPTION_WORDS.find(([re]) => re.test(n))?.[1];
+}
+
+/** OptionList card icons: the closed set a flow choice's `icon` may name. */
+export const CHOICE_ICONS = {
+	work: Briefcase,
+	school: GraduationCap,
+	creative: Palette,
+	gaming: Gamepad2,
+	everyday: Globe,
+	travel: Plane,
+	light: Feather,
+	home: House,
+	budget: Wallet,
+	mid: PiggyBank,
+	premium: Gem,
+	power: Cpu,
+	food: Utensils,
+	veg: LeafyGreen,
+	meat: Beef,
+	fish: Fish,
+	sweet: CakeSlice,
+	coffee: Coffee,
+	drinks: Martini,
+	culture: Landmark,
+	outdoors: Mountain,
+	relax: TreePalm,
+	shopping: ShoppingBag,
+	morning: Sunrise,
+	afternoon: Sun,
+	evening: Sunset,
+	night: Moon,
+	solo: User,
+	couple: Heart,
+	family: Baby,
+	group: Users,
+	days: CalendarDays,
+	quick: Zap
+} satisfies Record<string, LucideIcon>;
+
+export type ChoiceIconKey = keyof typeof CHOICE_ICONS;
+
+// First match wins: "Creative work" is creative before work, "Work and study"
+// is work before school, "Under $800" is budget before a price range reads as
+// mid, "3 nights" is days before night reads as time of day.
+const CHOICE_WORDS: ReadonlyArray<[RegExp, ChoiceIconKey]> = [
+	[/creativ|design|\bart\b|photo|video|music|editing/, 'creative'],
+	[/\bgam(e|es|ing|er|ers)\b|esport|console/, 'gaming'],
+	[/\bwork|office|business|\bjobs?\b|career|meeting|productiv/, 'work'],
+	[/school|stud(y|ies|ent)|\bclass|homework|college|universit|learn/, 'school'],
+	[/everyday|brows|general|casual|everything|streaming/, 'everyday'],
+	[/\blight|portab|carry|on the go|commut|compact/, 'light'],
+	[/desk|\bhome\b|stays|plugged/, 'home'],
+	[/travel|\btrips?\b|vacation|holiday|abroad|flight/, 'travel'],
+	[/\bunder\b|budget|cheap|afford|low[- ]cost|basic|value|less than/, 'budget'],
+	[/premium|luxur|high[- ]end|splurge|\bover\b|more than|no limit/, 'premium'],
+	[/\bmid|moderate|middle|average|sweet spot|\$[\d,.]+k?\s*(to|-|\u2013)\s*\$?\d/, 'mid'],
+	[/power|performance|fastest/, 'power'],
+	[/vegetarian|vegan|plant|\bveg|salad/, 'veg'],
+	[/\bmeat|steak|bbq|barbecue|burger|grill/, 'meat'],
+	[/fish|seafood|sushi/, 'fish'],
+	[/dessert|sweet|cake|bakery|pastr/, 'sweet'],
+	[/coffee|\bcafe|brunch|breakfast/, 'coffee'],
+	[/\bbars?\b|cocktail|wine|drinks|nightlife|\bparty\b(?! of)/, 'drinks'],
+	[/food|\beat|restaurant|cuisine|dining|market/, 'food'],
+	[/cultur|museum|histor|sightsee|landmark|old town|heritage/, 'culture'],
+	[/outdoor|nature|hik|mountain|camp|adventure|park/, 'outdoors'],
+	[/relax|chill|\bspa\b|beach|slow|unwind|leisure/, 'relax'],
+	[/shop|mall|boutique/, 'shopping'],
+	[/\bdays?\b|\bweeks?\b|weekend|\d+\s*nights?\b/, 'days'],
+	[/morning|\bearly|sunrise|\bam\b/, 'morning'],
+	[/afternoon|midday|noon|lunch/, 'afternoon'],
+	[/evening|sunset|dinner/, 'evening'],
+	[/night|\blate\b|midnight/, 'night'],
+	[/solo|just me|alone|myself|one person|\b1 (person|guest)/, 'solo'],
+	[/couple|partner|for two|\b2 (people|guests)|\bdate/, 'couple'],
+	[/famil|kids|children/, 'family'],
+	[/group|friends|\bteam|party of|\d+\+?\s*(people|guests|persons)/, 'group'],
+	[/quick|fast|express|minutes/, 'quick']
+];
+
+const isChoiceIconKey = (k: unknown): k is ChoiceIconKey => typeof k === 'string' && Object.hasOwn(CHOICE_ICONS, k);
+
+const guessChoice = (text: unknown): ChoiceIconKey | undefined => {
+	if (typeof text !== 'string') return undefined;
+	const n = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+	return CHOICE_WORDS.find(([re]) => re.test(n))?.[1];
+};
+
+/**
+ * The CHOICE_ICONS key for a flow choice: a valid `explicit` key first (any
+ * other name is ignored, never rendered), then a keyword in the label, then in
+ * the hint. Undefined when nothing matches: the card shows no icon.
+ */
+export function choiceIconKey(label: unknown, explicit?: unknown, hint?: unknown): ChoiceIconKey | undefined {
+	if (isChoiceIconKey(explicit)) return explicit;
+	return guessChoice(label) ?? guessChoice(hint);
 }
 
 /** booking service kind (§3.4) */
