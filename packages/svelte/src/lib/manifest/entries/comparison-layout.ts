@@ -1,7 +1,9 @@
 // manifest/entries/comparison-layout.ts — the concierge's view of
 // comparison-layout (design doc 2026-10-09 §3.2): items, features with `kind`
 // (never `type`), the winner with its reason, picks, and `chosen` as the one
-// bindable field. `on_choose` is node-level, under `events`.
+// bindable field. `on_choose` is node-level, under `events`. Per-item
+// `actions` (Choose) and `learn_more` stay EventAction-typed in `items`: the
+// server builds its handler checks from them (composite-actions.test.ts).
 import type { WidgetManifestEntry } from '../index.js';
 
 export const comparisonLayoutEntry: WidgetManifestEntry = {
@@ -19,9 +21,9 @@ export const comparisonLayoutEntry: WidgetManifestEntry = {
     },
     currency: { type: 'string', required: false, description: 'ISO 4217 code for numeric prices. Default "USD". Never put a symbol in the data.' },
     items: {
-      type: 'Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; [featureKey: string]: unknown }>',
+      type: 'Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; actions?: EventAction | EventAction[]; learn_more?: EventAction | EventAction[]; [featureKey: string]: unknown }>',
       required: true,
-      description: '2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image.',
+      description: '2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image. Per item, `actions` fires on Choose and `learn_more` on Learn more.',
     },
     features: {
       type: 'Array<{ key: string; label: string; section?: string; kind?: "text" | "number" | "boolean" | "rating" | "icon" | "price" | "color"; better?: "higher" | "lower"; unit?: string; icon?: "battery" | "weight" | "display" | "cpu" | "memory" | "storage" | "camera" | "speed" | "price" | "ports" | "wifi" | "keyboard" | "audio" | "security" | "warranty" | "size" | "rating" | "support"; highlight?: boolean }>',
