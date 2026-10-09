@@ -1,4 +1,4 @@
-// manifest/entries/board-game.ts — the LLM-facing entry for the board-game
+// manifest/entries/board-game.ts: the LLM-facing entry for the board-game
 // play widget (plan 2026-10-10, A3). The model picks the game and settings;
 // the widget runs the board, the computer opponent and the score. `value` is
 // the bound field (written by the widget); `on_complete` is the one event.

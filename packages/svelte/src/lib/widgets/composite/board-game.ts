@@ -1,4 +1,4 @@
-// widgets/composite/board-game.ts — the rules and the computer opponents of the
+// widgets/composite/board-game.ts: the rules and the computer opponents of the
 // `board-game` widget (plan 2026-10-10, A3): tic-tac-toe (3x3, three in a row)
 // and connect-four (7 columns by 6 rows, four in a row). Pure TypeScript, no
 // DOM, no Svelte; BoardGame.svelte renders it and board-game.test.ts proves it.

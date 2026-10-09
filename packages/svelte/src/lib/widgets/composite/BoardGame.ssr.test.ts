@@ -1,4 +1,4 @@
-// widgets/composite/BoardGame.ssr.test.ts — board-game renders through
+// widgets/composite/BoardGame.ssr.test.ts: board-game renders through
 // svelte/server (the showcase is prerendered): an empty, named board for both
 // games, and no computer move on the server even when the computer goes first.
 import { render } from 'svelte/server';

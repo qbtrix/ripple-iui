@@ -1,4 +1,4 @@
-// widgets/composite/board-game.test.ts — the pure rules and AIs behind the
+// widgets/composite/board-game.test.ts: the pure rules and AIs behind the
 // board-game widget: every tic-tac-toe line, connect-four in all four
 // directions, the full-board draw, medium's win and block, hard tic-tac-toe
 // never losing (against random play and against itself), and the move-time
@@ -37,6 +37,19 @@ function parse(rows: string[]): Board {
 	return rows.join('').split('').map((ch) => map[ch]);
 }
 
+const key = (l: number[]) => l.join(',');
+
+/** Median of 7 timed hard connect-four moves on `board`, in ms. */
+function time(board: Board) {
+	const runs: number[] = [];
+	for (let k = 0; k < 7; k++) {
+		const t = performance.now();
+		aiMove('connect-four', board, 'yellow', 'red', 'hard');
+		runs.push(performance.now() - t);
+	}
+	return runs.toSorted((a, b) => a - b)[3];
+}
+
 /** Plays a whole game; returns the winning mark or 'draw'. */
 function game(g: Game, a: { mark: string; diff: Difficulty | 'random' }, b: { mark: string; diff: Difficulty | 'random' }, rand: () => number) {
 	let board = emptyBoard(g);
@@ -64,7 +77,6 @@ describe('tic-tac-toe rules', () => {
 			[0, 4, 8],
 			[2, 4, 6]
 		];
-		const key = (l: number[]) => l.join(',');
 		expect(LINES['tic-tac-toe'].map(key).toSorted()).toEqual(expected.map(key).toSorted());
 		for (const line of expected) {
 			const board = emptyBoard('tic-tac-toe');
@@ -188,15 +200,6 @@ describe('hard connect-four', () => {
 
 	it(`stays under the 50ms budget at depth ${C4_DEPTH} (median of 7)`, () => {
 		const mid = parse(['.......', '.......', '...Y...', '..RRY..', '..YRRY.', '.RYYRR.']);
-		const time = (board: Board) => {
-			const runs: number[] = [];
-			for (let k = 0; k < 7; k++) {
-				const t = performance.now();
-				aiMove('connect-four', board, 'yellow', 'red', 'hard');
-				runs.push(performance.now() - t);
-			}
-			return runs.toSorted((a, b) => a - b)[3];
-		};
 		const opening = time(emptyBoard('connect-four'));
 		const midgame = time(mid);
 		console.info(`[board-game] hard connect-four depth ${C4_DEPTH}: opening ${opening.toFixed(1)}ms, mid-game ${midgame.toFixed(1)}ms`);

@@ -1,4 +1,4 @@
-// widgets/composite/BoardGame.test.ts — the board-game play widget: registry,
+// widgets/composite/BoardGame.test.ts: the board-game play widget: registry,
 // aliases and bind contract; a game through Ripple (click, the computer's
 // reply after it thinks, the bound value, one on_complete); connect-four drops,
 // ghost and glow; keyboard play; Rematch; a best-of series; a re-sent spec
@@ -13,7 +13,7 @@ import Ripple from '$lib/Ripple.svelte';
 import { expectStreamParity } from '$lib/streaming/__fixtures__/stream-parity.js';
 import { getWidget, hasWidget } from '../index.js';
 import { _resetBindContractWarnings, getBindContract, warnUnregisteredBindContract } from '@ripple-ui/core';
-import BoardGame, { seriesWinner } from './BoardGame.svelte';
+import BoardGame, { seriesWinner, type BoardGameValue } from './BoardGame.svelte';
 
 const motion = vi.hoisted(() => ({ reduce: false }));
 vi.mock('svelte/motion', async (orig) => ({
@@ -261,9 +261,9 @@ describe('board-game: Rematch and series', () => {
 	});
 
 	it('Rematch clears the board, keeps the score and writes value; New series resets it', async () => {
-		const values: { board: string[]; series: object; result: unknown }[] = [];
+		const values: BoardGameValue[] = [];
 		const done = vi.fn();
-		const { container } = render(BoardGame, { props: { game: 'tic-tac-toe', difficulty: 'easy', onchange: (v: never) => values.push(v), oncomplete: done } });
+		const { container } = render(BoardGame, { props: { game: 'tic-tac-toe', difficulty: 'easy', onchange: (v: BoardGameValue) => values.push(v), oncomplete: done } });
 		expect(screen.queryByRole('button', { name: 'Rematch' })).toBeNull();
 		await winTicTacToe(container);
 		await tick();

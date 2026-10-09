@@ -1,5 +1,5 @@
 <!--
-  widgets/composite/BoardGame.svelte — `board-game`: tic-tac-toe or
+  widgets/composite/BoardGame.svelte: `board-game`: tic-tac-toe or
   connect-four against a built-in computer opponent (plan 2026-10-10, A3). The
   model picks the game and the settings; the rules and the three computer
   levels live in ./board-game.ts (pure, no DOM).
@@ -243,7 +243,7 @@
 		e.preventDefault();
 		if (to < 0 || to >= n) return;
 		focusAt = to;
-		(boardEl?.querySelector(`[data-pos="${to}"]`) as HTMLElement | null)?.focus();
+		(boardEl?.querySelectorAll('[data-pos]')[to] as HTMLElement | undefined)?.focus();
 	}
 
 	const cellLabel = (i: number) => `Row ${Math.floor(i / 3) + 1}, column ${(i % 3) + 1}, ${cur.board[i] || 'empty'}`;
@@ -357,10 +357,10 @@
 									aria-hidden="true"
 								>
 									{#if cell === 'X'}
-										<path d="M27 27 73 73" pathLength="1" />
-										<path d="M73 27 27 73" pathLength="1" class="bg-second" />
+										<path d="M22 22 78 78" pathLength="1" />
+										<path d="M78 22 22 78" pathLength="1" class="bg-second" />
 									{:else}
-										<circle cx="50" cy="50" r="25" pathLength="1" transform="rotate(-90 50 50)" />
+										<circle cx="50" cy="50" r="29" pathLength="1" transform="rotate(-90 50 50)" />
 									{/if}
 								</svg>
 							{/if}
@@ -372,7 +372,8 @@
 						<path
 							d={winPath}
 							pathLength="1"
-							class={['bg-strike', cur.result === 'player' ? 'text-ripple-success' : 'text-ripple-error']}
+							class="bg-strike"
+							data-by={cur.result}
 						/>
 					</svg>
 				{/if}
@@ -450,8 +451,8 @@
 		background: color-mix(in oklab, var(--ripple-accent) 8%, transparent);
 	}
 	.bg-mark {
-		width: 82%;
-		height: 82%;
+		width: 88%;
+		height: 88%;
 		fill: none;
 		stroke: currentColor;
 		stroke-width: 9;
@@ -468,11 +469,14 @@
 	}
 	.bg-strike {
 		fill: none;
-		stroke: currentColor;
+		stroke: var(--ripple-error);
 		stroke-width: 8;
 		stroke-linecap: round;
 		animation-duration: 420ms;
 		animation-delay: 120ms;
+	}
+	.bg-strike[data-by='player'] {
+		stroke: var(--ripple-success);
 	}
 	@keyframes bg-draw {
 		from {
