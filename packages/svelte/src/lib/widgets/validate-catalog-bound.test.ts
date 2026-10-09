@@ -89,7 +89,7 @@ describe('validateCatalog', () => {
       }
     };
     const unknown = validateCatalog(spec as any);
-    expect(unknown.map((u) => u.type).sort()).toEqual(['mystery-a', 'mystery-b']);
+    expect(unknown.map((u) => u.type).sort((a, b) => a.localeCompare(b))).toEqual(['mystery-a', 'mystery-b']);
     expect(unknown.map((u) => u.path)).toContain('ui.children[1]');
     expect(unknown.map((u) => u.path)).toContain('ui.children[2].children[0]');
   });
