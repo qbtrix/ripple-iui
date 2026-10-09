@@ -194,8 +194,8 @@ describe('booking flow', () => {
 		// The nearest open slot to 19:00 is pre-selected and says why.
 		expect(btn('7:30 PM, closest to your ask').getAttribute('aria-pressed')).toBe('true');
 		// Full slots stay visible, disabled, and say Full in words.
-		const full = btn('7:00 PM, full') as HTMLButtonElement;
-		expect(full.disabled).toBe(true);
+		const full = btn('7:00 PM, full');
+		expect(full).toBeDisabled();
 		expect(full.textContent).toContain('Full');
 		expect(screen.getByText('Times are New York time.')).toBeTruthy();
 	});
@@ -206,9 +206,9 @@ describe('booking flow', () => {
 		expect(screen.queryByRole('button', { name: /Thu 22 Oct/ })).toBeNull();
 		await fireEvent.click(btn('Later week'));
 		expect(btn(/^Thu 22 Oct/).getAttribute('aria-pressed')).toBe('true');
-		expect((btn('Add your details') as HTMLButtonElement).disabled).toBe(true);
+		expect(btn('Add your details')).toBeDisabled();
 		await fireEvent.click(btn('6:00 PM'));
-		expect((btn('Add your details') as HTMLButtonElement).disabled).toBe(false);
+		expect(btn('Add your details')).toBeEnabled();
 	});
 
 	it('holds details until a name and a way to reach them are given', async () => {
@@ -248,12 +248,11 @@ describe('booking flow', () => {
 		await rerender({ notice: { kind: 'error', text: 'That time was just taken. Pick another.' } });
 		await tick();
 		expect(screen.getByRole('alert').textContent).toContain('just taken');
-		const gone = btn('7:30 PM, full') as HTMLButtonElement;
-		expect(gone.disabled).toBe(true);
+		expect(btn('7:30 PM, full')).toBeDisabled();
 		expect(btn('8:00 PM, closest to your ask').getAttribute('aria-pressed')).toBe('true');
 		// Details survive; the visitor goes straight back to review and books again.
 		await fireEvent.click(btn('Add your details'));
-		expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('Ana Ruiz');
+		expect(screen.getByLabelText('Name')).toHaveValue('Ana Ruiz');
 		await fireEvent.click(btn('Review'));
 		await fireEvent.click(btn('Book table'));
 		expect(onbook).toHaveBeenLastCalledWith(expect.objectContaining({ start: FRI('20:00') }));
@@ -265,7 +264,7 @@ describe('booking flow', () => {
 		await rerender({ notice: { kind: 'error', text: 'Too many tries. Wait a minute.', code: 'rate_limited' } });
 		await tick();
 		expect(screen.getByRole('alert').textContent).toContain('Too many tries');
-		expect((btn('Book table') as HTMLButtonElement).disabled).toBe(false);
+		expect(btn('Book table')).toBeEnabled();
 	});
 
 	it('keeps Book off without a host handler', async () => {
@@ -273,7 +272,7 @@ describe('booking flow', () => {
 		await fireEvent.click(btn('Choose a time'));
 		await fireEvent.click(btn('Add your details'));
 		await fireEvent.click(btn('Review'));
-		expect((btn('Book table') as HTMLButtonElement).disabled).toBe(true);
+		expect(btn('Book table')).toBeDisabled();
 	});
 
 	it('lists services with a choice when there are several', async () => {
@@ -284,12 +283,12 @@ describe('booking flow', () => {
 		];
 		render(Booking, { props: { services, days: DAYS } });
 		expect(screen.getByRole('heading', { name: 'Book an appointment' })).toBeTruthy();
-		expect((btn('Choose a time') as HTMLButtonElement).disabled).toBe(true);
-		expect((screen.getByRole('radio', { name: /Half-streamed/ }) as HTMLButtonElement).disabled).toBe(true);
+		expect(btn('Choose a time')).toBeDisabled();
+		expect(screen.getByRole('radio', { name: /Half-streamed/ })).toBeDisabled();
 		await fireEvent.click(screen.getByRole('radio', { name: /Colour/ }));
 		expect(screen.getByText('$140.00')).toBeTruthy();
 		expect(screen.queryByRole('group', { name: 'Guests' })).toBeNull();
-		expect((btn('Choose a time') as HTMLButtonElement).disabled).toBe(false);
+		expect(btn('Choose a time')).toBeEnabled();
 	});
 });
 

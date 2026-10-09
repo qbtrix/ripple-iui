@@ -17,6 +17,7 @@
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { safeUrl } from '@ripple-ui/core';
 	import { SvelteSet } from 'svelte/reactivity';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import Clock from '@lucide/svelte/icons/clock';
@@ -189,7 +190,7 @@
 		write({});
 	}
 
-	function next() {
+	function advance() {
 		if (at === DETAILS && Object.keys(errors).length) {
 			tried = true;
 			return;
@@ -223,8 +224,8 @@
 	const weekDays = $derived(dayList.slice(week * 7, week * 7 + 7));
 	const weeks = $derived(Math.ceil(dayList.length / 7));
 	function turnWeek(by: number) {
-		const days = dayList.slice((week + by) * 7, (week + by) * 7 + 7);
-		const open = days.find((d) => d.slots.some((s) => isOpen(s, taken))) ?? days[0];
+		const span = dayList.slice((week + by) * 7, (week + by) * 7 + 7);
+		const open = span.find((d) => d.slots.some((s) => isOpen(s, taken))) ?? span[0];
 		if (open) pickDay(open.date);
 	}
 
@@ -327,7 +328,7 @@
 									]}
 									onclick={() => write({ service_id: s.id, party: undefined })}
 								>
-									<PhotoTile src={s.image} alt={s.name} ratio="1:1" class="w-12 shrink-0" icon={kindIcon(SERVICE_ICONS, s.kind)} />
+									<PhotoTile src={safeUrl(s.image, { kind: 'resource' })} alt={s.name} ratio="1:1" class="w-12 shrink-0" icon={kindIcon(SERVICE_ICONS, s.kind)} />
 									<span class="min-w-0 flex-1">
 										<span class="block truncate text-body-emph">{s.name || ' '}</span>
 										<span class="block text-footnote text-ripple-muted-foreground">{minutes(s.duration_min)}</span>
@@ -340,7 +341,7 @@
 						</div>
 					{:else if service}
 						<div class="flex items-center gap-3 rounded-ripple border border-ripple-border bg-ripple-surface p-2">
-							<PhotoTile src={service.image} alt={service.name} ratio="1:1" class="w-12 shrink-0" icon={kindIcon(SERVICE_ICONS, service.kind)} />
+							<PhotoTile src={safeUrl(service.image, { kind: 'resource' })} alt={service.name} ratio="1:1" class="w-12 shrink-0" icon={kindIcon(SERVICE_ICONS, service.kind)} />
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-body-emph">{service.name}</p>
 								<p class="text-footnote text-ripple-muted-foreground">{minutes(service.duration_min)}</p>
@@ -486,7 +487,7 @@
 								<label for="{uid}-name" class="text-footnote text-ripple-muted-foreground">Name</label>
 								<input
 									id="{uid}-name"
-									class="h-11 rounded-md border border-ripple-border bg-ripple-input px-3 text-body text-ripple-input-foreground"
+									class="h-11 rounded-md border border-ripple-border bg-ripple-input px-3 text-body text-ripple-input-foreground focus-visible:outline-2 focus-visible:outline-ripple-ring aria-[invalid=true]:border-ripple-error"
 									autocomplete="name"
 									maxlength={LIMITS.name}
 									value={sel.customer?.name ?? ''}
@@ -501,7 +502,7 @@
 									<span class="text-footnote text-ripple-muted-foreground">Email</span>
 									<input
 										type="email"
-										class="h-11 rounded-md border border-ripple-border bg-ripple-input px-3 text-body text-ripple-input-foreground"
+										class="h-11 rounded-md border border-ripple-border bg-ripple-input px-3 text-body text-ripple-input-foreground focus-visible:outline-2 focus-visible:outline-ripple-ring aria-[invalid=true]:border-ripple-error"
 										autocomplete="email"
 										inputmode="email"
 										maxlength={LIMITS.email}
@@ -515,7 +516,7 @@
 									<span class="text-footnote text-ripple-muted-foreground">Phone</span>
 									<input
 										type="tel"
-										class="h-11 rounded-md border border-ripple-border bg-ripple-input px-3 text-body text-ripple-input-foreground"
+										class="h-11 rounded-md border border-ripple-border bg-ripple-input px-3 text-body text-ripple-input-foreground focus-visible:outline-2 focus-visible:outline-ripple-ring aria-[invalid=true]:border-ripple-error"
 										autocomplete="tel"
 										inputmode="tel"
 										maxlength={20}
@@ -539,7 +540,7 @@
 									<span class="tabular-nums">{sel.notes?.length ?? 0}/{LIMITS.notes}</span>
 								</span>
 								<textarea
-									class="min-h-20 rounded-md border border-ripple-border bg-ripple-input px-3 py-2 text-body text-ripple-input-foreground"
+									class="min-h-20 rounded-md border border-ripple-border bg-ripple-input px-3 py-2 text-body text-ripple-input-foreground focus-visible:outline-2 focus-visible:outline-ripple-ring"
 									maxlength={LIMITS.notes}
 									rows="3"
 									value={sel.notes ?? ''}
@@ -569,7 +570,7 @@
 			</div>
 		{/key}
 
-		<div class="sticky bottom-0 flex items-center gap-2 border-t border-ripple-border bg-ripple-surface pt-3 pb-1">
+		<div class="sticky bottom-0 flex items-center gap-2 rounded-ripple border border-ripple-border bg-ripple-surface py-1.5 pr-1.5 pl-3">
 			{#if at > WHAT}
 				<button type="button" class="h-11 shrink-0 rounded-md px-3 text-callout text-ripple-muted-foreground hover:bg-ripple-muted" onclick={() => go(at - 1)}>
 					Back
@@ -581,7 +582,7 @@
 				class="h-11 shrink-0 rounded-md bg-ripple-accent px-4 text-body-emph text-ripple-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
 				disabled={primaryOff}
 				aria-busy={busy || undefined}
-				onclick={() => (at === REVIEW ? book() : next())}
+				onclick={() => (at === REVIEW ? book() : advance())}
 			>
 				{primary}
 			</button>
