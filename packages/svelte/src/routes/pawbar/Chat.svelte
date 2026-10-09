@@ -260,7 +260,7 @@
 		padding: 14px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-paw);
-		background: color-mix(in oklch, var(--background) 82%, transparent);
+		background: var(--site-panel, color-mix(in oklch, var(--background) 82%, transparent));
 		min-width: 0;
 		/* A card can be wider than a phone: it scrolls inside itself, never clips. */
 		overflow-x: auto;

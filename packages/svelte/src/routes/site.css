@@ -76,7 +76,9 @@
 	/* PE's --feature-glass-tint, the warm grey every Paw OS pane shows. */
 	--background: #262621;
 	--foreground: oklch(0.95 0.005 260);
-	--card: oklch(1 0 0 / 6%);
+	/* Neutral panels: a translucent white over the warm pane grey read as brown. */
+	--card: #2c2d31;
+	--site-panel: #222326;
 	--card-foreground: oklch(0.95 0.005 260);
 	--popover: color-mix(in srgb, #262621 95%, transparent);
 	--popover-foreground: oklch(0.95 0.005 260);
