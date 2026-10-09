@@ -121,3 +121,24 @@ test('an HTML label from the store renders as text, never markup', async () => {
 	await vi.waitFor(() => expect(view.getAllByText(label).length).toBeGreaterThan(0));
 	expect(view.container.querySelector('img[onerror]')).toBeNull();
 });
+
+test('the card has a header with the store, priced lines, a spinner while pending, and one status line', async () => {
+	const view = render(PayCard, { pay, storeUrl: STORE, fetch: vi.fn(() => new Promise(() => {})) as never, channel: channel as never, store: 'Corner Noodle Bar' });
+	expect(view.getByText('Checkout')).toBeTruthy();
+	expect(view.getByText('Corner Noodle Bar')).toBeTruthy();
+	expect(view.getByText('1 × Classic Cheeseburger')).toBeTruthy();
+	expect(view.getAllByText('$13.49')).toHaveLength(2);
+	expect(view.getByRole('link').textContent).toBe('Pay $13.49');
+	expect(view.getByText('Opens a secure test checkout in a new tab.')).toBeTruthy();
+	expect(view.getAllByRole('status')).toHaveLength(1);
+	expect(view.container.querySelector('.state .spin')).toBeTruthy();
+});
+
+test('without a store name the header says Tasty Bites; expired explains itself', async () => {
+	const late = mount();
+	expect(late.getByText('Tasty Bites')).toBeTruthy();
+	await vi.advanceTimersByTimeAsync(16 * 60_000);
+	await vi.waitFor(() => expect(late.getByRole('status').textContent).toContain('Stopped checking after 15 minutes'));
+	expect(late.queryByRole('link', { name: /^Pay/ })).toBeNull();
+	expect(late.getByRole('status').classList.contains('stop')).toBe(true);
+});
