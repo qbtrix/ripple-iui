@@ -55,6 +55,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   itinerary: { prop: 'days', event: 'ondayschange' },
   'trip-plan': { prop: 'days', event: 'ondayschange' },
   'travel-itinerary': { prop: 'days', event: 'ondayschange' },
+  // booking binds the request in progress (service, start, party, customer,
+  // notes); its stage and the host's notice stay widget-side.
+  booking: { prop: 'selection', event: 'onselectionchange' },
+  reservation: { prop: 'selection', event: 'onselectionchange' },
+  appointment: { prop: 'selection', event: 'onselectionchange' },
 };
 
 /**

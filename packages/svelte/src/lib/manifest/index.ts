@@ -93,6 +93,7 @@ import { eachEntry } from './entries/each.js';
 import { embedEntry } from './entries/embed.js';
 import { emptyStateEntry } from './entries/empty-state.js';
 import { entityDetailEntry } from './entries/entity-detail.js';
+import { bookingEntry } from './entries/booking.js';
 import { execDashboardEntry } from './entries/exec-dashboard.js';
 import { errorStateEntry } from './entries/error-state.js';
 import { faqEntry } from './entries/faq.js';
@@ -439,6 +440,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   numberInputEntry,
   opsDashboardEntry,
   orderStatusEntry,
+  bookingEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
