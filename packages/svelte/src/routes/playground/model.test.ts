@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import { ChatSession } from '../pawbar/session.svelte.js';
 import { recordedEvents, recordedExchange } from '../pawbar/recorded.js';
 import { scenarios } from '../live/scenarios.js';
-import { countNodes, pickVersion, versionsOf } from '$lib/site/playground/versions.svelte.js';
+import { countNodes, currentVersion, pickVersion, versionsOf } from '$lib/site/playground/versions.svelte.js';
 import { atBottom, Tail } from '$lib/site/playground/tail.svelte.js';
 import { shortcut } from '$lib/site/playground/keys.js';
 import { shareLink } from '$lib/site/playground/share.js';
@@ -48,6 +48,14 @@ describe('versions', () => {
 		release();
 		await done;
 		expect(pickVersion(versionsOf(session.turns), null)?.status).toBe('final');
+	});
+
+	test('a pick holds until a card arrives after it, which takes the panes', () => {
+		const list = [{ id: 'a' }, { id: 'b' }];
+		const pick = { id: 'a', count: 2 };
+		expect(currentVersion(list, pick)?.id).toBe('a');
+		expect(currentVersion([...list, { id: 'c' }], pick)?.id).toBe('c');
+		expect(currentVersion(list, null)?.id).toBe('b');
 	});
 
 	test('countNodes walks children and else_children', () => {

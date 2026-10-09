@@ -1,8 +1,8 @@
 // lib/site/playground/versions.svelte.ts — The playground's version model.
 // Every card an answer produced is a version: the preview and JSON panes show
-// one at a time. `selected` null means "follow the newest", so a new answer
-// takes over the panes until the visitor picks an older chip; picking keeps
-// that one shown while a newer card streams. A Version is the shape the panes
+// one at a time. With no pick the newest is shown. A pick holds while the
+// list is no longer than when it was made (an older chip stays shown while
+// its newer sibling finishes), and a card that arrives after it takes over. A Version is the shape the panes
 // read; the chat's Card already has it, a shared link and a preview replay
 // build their own. Structural on purpose: lib/ must not import routes/.
 
@@ -28,6 +28,13 @@ export const versionsOf = (turns: readonly { parts: readonly PartLike[] }[]): Ve
 /** The selected version, or the newest when nothing (or something gone) is selected. */
 export const pickVersion = <V extends { id: string }>(list: readonly V[], selected: string | null): V | null =>
 	list.find((v) => v.id === selected) ?? list.at(-1) ?? null;
+
+/** A chip pick, remembered with how many versions existed when it was made. */
+export type Pick = { id: string; count: number } | null;
+
+/** The picked version until a newer one arrives after the pick; then the newest, so a new answer takes the panes. */
+export const currentVersion = <V extends { id: string }>(list: readonly V[], pick: Pick): V | null =>
+	pickVersion(list, pick && list.length <= pick.count ? pick.id : null);
 
 /** Widget nodes in a ui tree (children and else_children). */
 export function countNodes(node: unknown): number {
