@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-05T12:56:30.680Z",
+  "generatedAt": "2026-10-09T11:33:33.904Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -13,13 +13,9 @@
       "body",
       "content"
     ],
-    "description": "A Ripple spec is a JSON object with two top-level fields that matter for rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` (the StateManager seed — required when any node uses `bind` or reads `{state.*}`). The renderable tree field is named `ui` exactly — never `root`, `tree`, `view`, `body`, or `content`. Specs that use those aliases will not render.",
+    "description": "A Ripple spec is a JSON object with two top-level fields that matter for rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` (the StateManager seed — required when any node uses `bind` or reads `{state.*}`). The renderable tree field is named `ui` exactly — never `root`, `tree`, `view`, `body`, or `content`. Specs that use those aliases will not render. Write `ui` before `state` so the interface can draw while the rest of the spec streams in, and keep the seed `state` small.",
     "example": {
       "version": "1.0",
-      "state": {
-        "draft": "",
-        "items": []
-      },
       "ui": {
         "type": "flex",
         "props": {
@@ -35,6 +31,10 @@
             }
           }
         ]
+      },
+      "state": {
+        "draft": "",
+        "items": []
       }
     }
   },
