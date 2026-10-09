@@ -5,7 +5,9 @@
 // (svelte.config.js) is the backstop behind this.
 //   1. A card is `{ui, state?}` (plus the `version` the client adds).
 //   2. Every `action` is a local one (set, toggle, push, remove, open) or `emit`
-//      (inert on the landing). Four more add no reach and pass: `flow` and
+//      (the host acts only on HOST_EVENTS from a final card: `checkout` and
+//      `book` reach the store through session.svelte.ts, never the card). Four
+//      more add no reach and pass: `flow` and
 //      `branch` only sequence or choose steps, which are walked by these same
 //      rules; `validate` reads local state; `toast` only shows a message.
 //   3. Widget nodes (the ui root, every `children` element, and any object whose
@@ -46,7 +48,7 @@ const CARD_KEYS = ['version', 'ui', 'state'];
 /** Actions whose `target` the engine reads as a state path, modal id or event name. Never `navigate`. */
 export const PATH_TARGET_ACTIONS: readonly string[] = ['set', 'toggle', 'push', 'remove', 'open', 'emit', 'flow', 'branch', 'validate', 'toast'];
 /** Host events the landing knows. */
-export const HOST_EVENTS: readonly string[] = ['checkout', 'add_to_cart'];
+export const HOST_EVENTS: readonly string[] = ['checkout', 'add_to_cart', 'book'];
 /** What a `follow-up` may emit: a host event or its own default name. */
 const FOLLOW_UP_EVENTS = ['follow-up', ...HOST_EVENTS];
 /** Keys whose value a widget or NodeRenderer hands to the dispatcher. Case-exact, as the widgets read them. */

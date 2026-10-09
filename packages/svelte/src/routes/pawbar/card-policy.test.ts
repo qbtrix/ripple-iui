@@ -166,7 +166,7 @@ describe('handler slots and state', () => {
 });
 
 describe('follow-up', () => {
-	test.each(['ask', 'flow.submit', 'book', 'Checkout', 'checkout ', '{state.e}', 'tell me more'])('refuses the event %s', (event) => {
+	test.each(['ask', 'flow.submit', 'booking', 'Checkout', 'checkout ', '{state.e}', 'tell me more'])('refuses the event %s', (event) => {
 		expect(refuseCard({ ui: { type: 'follow-up', props: { event } } })).toBe('follow_up_event');
 	});
 
@@ -174,6 +174,12 @@ describe('follow-up', () => {
 		expect(refuseCard({ ui: { type: 'follow-up', props: { event: { name: 'ask' } } } })).toBe('follow_up_event');
 		expect(refuseCard({ ui: { type: 'follow-up', props: '{state.p}' }, state: { p: { event: 'ask' } } })).toBe('follow_up_props');
 		expect(refuseCard({ ui: { type: 'text' }, state: { n: { type: 'follow-up', props: { event: 'ask' } } } })).toBe('follow_up_event');
+	});
+
+	test('the host events are checkout, add_to_cart and book', () => {
+		expect(HOST_EVENTS).toEqual(['checkout', 'add_to_cart', 'book']);
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'bo' } } }, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'booking' } } })).toBe('follow_up_event');
 	});
 
 	test.each([...HOST_EVENTS, 'follow-up'])('allows the event %s', (event) => {
@@ -217,6 +223,48 @@ describe('widgets', () => {
 		const blocked = new Set(['embed', 'ripple-frame', 'richtext', 'rich-text', 'map', 'company-header']);
 		const expected = manifest.widgets.map((w) => w.type).filter((t) => !blocked.has(t));
 		expect([...CHAT_WIDGET_TYPES].toSorted()).toEqual(expected.toSorted());
+	});
+
+	// The shapes server hydration (and scripts/mock-pawbar.ts) sends: store data, one emit each.
+	const menuCard = (extra: Record<string, unknown> = {}) => ({
+		ui: {
+			type: 'menu-order',
+			props: {
+				title: 'Tasty Bites',
+				checkout: true,
+				items: [{ product_id: 'burger-1', name: 'Classic Cheeseburger', price: 11.99, image: 'https://store.example/test-store/img/burger-1.webp', groups: [] }],
+				...extra
+			},
+			on_checkout: { action: 'emit', target: 'checkout' }
+		}
+	});
+	const bookingCard = (on_book: unknown = { action: 'emit', target: 'book' }) => ({
+		ui: {
+			type: 'booking',
+			props: {
+				services: [{ id: 'table', name: 'Table reservation', kind: 'table', duration_min: 90, party: { min: 1, max: 8 } }],
+				days: [{ date: '2026-10-16', date_label: 'Fri 16 Oct', slots: [{ start: '2026-10-16T19:00:00-04:00', label: '7:00 PM', available: true }] }],
+				party: 4,
+				notice: { kind: 'error', text: 'That time was just taken. Pick another.', code: 'slot_taken', start: '2026-10-16T19:00:00-04:00' }
+			},
+			on_book
+		}
+	});
+
+	test('hydrated menu-order and booking cards pass, while streaming and at final', () => {
+		for (const card of [menuCard(), bookingCard()]) {
+			expect(refuseCard(card)).toBeNull();
+			expect(refuseCard(card, { partial: true })).toBeNull();
+		}
+	});
+
+	test('a menu-order or booking card keeps every refusal: network actions, handler expressions, http photos', () => {
+		expect(refuseCard(bookingCard({ action: 'api', url: '/api/bookings' }))).toBe('action:api');
+		expect(refuseCard(bookingCard([{ action: 'navigate', url: 'https://evil.example' }]))).toBe('action:navigate');
+		expect(refuseCard(bookingCard('{state.h}'))).toBe('handler_expression');
+		expect(refuseCard(menuCard({ items: [{ product_id: 'x', image: 'http://store.example/x.webp' }] }))).toBe('unsafe_url');
+		expect(refuseCard(menuCard({ items: [{ product_id: 'x', image: '{state.img}' }] }))).toBe('expression_url');
+		expect(refuseCard(menuCard({ featured: { id: 'x', reason: '<img src=x onerror=alert(1)>' } }))).toBe('markup');
 	});
 });
 
