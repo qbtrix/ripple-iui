@@ -18,8 +18,8 @@ import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
   WordGuess,
+  AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck, Quiz,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -308,6 +308,9 @@ const defaultRegistry: WidgetMap = {
   'word-guess': WordGuess,
   'guess-the-word': WordGuess,
   'word-game': WordGuess,
+  quiz: Quiz,
+  trivia: Quiz,
+  'trivia-quiz': Quiz,
   if: If,
   each: Each,
   'source-card': SourceCard,

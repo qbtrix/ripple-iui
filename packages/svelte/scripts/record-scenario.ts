@@ -41,6 +41,7 @@ const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'ov
 // the data widgets and the summary pieces the SYSTEM rules point at.
 const DATA_WIDGETS = new Set([
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'word-guess',
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'quiz',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
@@ -108,6 +109,7 @@ CARD SHAPE (pick this first)
   - an interval, circuit or HIIT workout: interval-workout
   - a study or flip-card deck: flashcard-deck
   - a word guessing game: word-guess
+  - a trivia quiz or multiple-choice test: quiz
   - a menu or food order: menu-order; a reservation or appointment: booking
   - sales, KPIs or a dashboard over records: exec-dashboard with "rows", "measures", "dimensions" (bind "filters")
   - choosing between options: comparison-layout

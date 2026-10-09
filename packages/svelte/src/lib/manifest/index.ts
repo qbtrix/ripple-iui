@@ -131,6 +131,7 @@ import { billSplitEntry } from './entries/bill-split.js';
 import { intervalWorkoutEntry } from './entries/interval-workout.js';
 import { flashcardDeckEntry } from './entries/flashcard-deck.js';
 import { wordGuessEntry } from './entries/word-guess.js';
+import { quizEntry } from './entries/quiz.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -458,6 +459,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   intervalWorkoutEntry,
   flashcardDeckEntry,
   wordGuessEntry,
+  quizEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
