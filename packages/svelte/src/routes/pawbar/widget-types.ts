@@ -37,5 +37,7 @@ export const CHAT_WIDGET_TYPES: ReadonlySet<string> = new Set([
 	'switch', 'table', 'tabs', 'terminal', 'testimonial', 'text',
 	'text-effect', 'textarea', 'ticker', 'time-picker', 'timeline', 'timer',
 	'toast', 'todo-list', 'tool-call', 'tooltip', 'tree', 'tree-table',
-	'treemap', 'trend', 'video', 'virtual-list', 'wizard-layout', 'workflow'
+	'treemap', 'trend', 'video', 'virtual-list', 'wizard-layout', 'workflow',
+	'bill-split', 'booking', 'flashcard-deck', 'growth-projection', 'illustration', 'interval-workout',
+	'itinerary', 'meal-plan', 'menu-order', 'quiz', 'recipe'
 ]);
