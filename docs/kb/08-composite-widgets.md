@@ -2,7 +2,7 @@
 
 Composite widgets are full-pane typed layouts. Emit ONE node and the whole pattern (header + body + actions) renders — don't rebuild these out of `flex` + `card` + inputs. Two flavors:
 
-1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, the dashboard variants) — pre-composed business surfaces.
+1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, `booking`, the dashboard variants) — pre-composed business surfaces.
 2. **Specialized canvases** (`terminal`, `workflow`, `c4`) — niche widgets for CLI output, flow diagrams, and architecture diagrams.
 
 Refer to `dist/manifest.json` (or `get_widget_spec` from an agent) for the exact prop schema of each — this page covers shape and intended use.
@@ -54,6 +54,14 @@ The widget computes totals from the line items — don't pre-sum and pass a numb
 Multi-step shipment status. Stepper for placed → confirmed → preparing → in-transit → out-for-delivery → delivered. Optional embedded `map` widget (composes the data-category `map` widget under the hood) when origin/destination/tracker are supplied. Optional event timeline beneath the map.
 
 Use for delivery tracking, courier dispatch, inbound logistics.
+
+### booking
+
+A table or service booking inside a chat card, in four stages: what (service, party size), when (a 7-day strip, then that day's slots), details (name, email or phone, notes), review. One main button per stage.
+
+The server fills `services`, `days` and `tz` from the store and attaches `on_book`; the model writes only `party` and `preferred` (`"Friday evening"` is `{ date: "2026-10-16", after: "18:00" }`), which pre-selects the open slot nearest the ask. Slot times and day labels come from the store's own strings, so the browser never parses a date. Full slots stay visible and disabled.
+
+Book fires `on_book` with `{ service_id, start, party?, customer: { name, email?, phone? }, notes? }`, validated on the client the way the host re-validates it. The host answers through props: `confirmed` shows the confirmation (booking reference, date, time, party) with no more actions; `notice` shows a message, and a slot-taken notice (`code: "slot_taken"`, with the slot's `start`) returns to the times with that slot marked Full. `bind` holds `selection`, the request in progress. Aliases: `reservation`, `appointment`.
 
 ### Dashboard variants
 
