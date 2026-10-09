@@ -44,12 +44,14 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   approval: { prop: 'decision', event: 'ondecision' },
   'approve-card': { prop: 'decision', event: 'ondecision' },
   'human-gate': { prop: 'decision', event: 'ondecision' },
-  // exec-dashboard binds its active date-range chip. One bind per node, so
-  // `activeGranularity` / `activeActivityFilter` stay Svelte-side `$bindable`s.
-  // The event prop really is camel-cased `ondateRangeChange`.
-  'exec-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
-  'kpi-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
-  'executive-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
+  // exec-dashboard binds its rows-mode filter ({ region: 'West' }), the one
+  // choice that recomputes every number. One bind per node, so the date range,
+  // granularity and activity filter stay Svelte-side `$bindable`s. Its own
+  // event name, so a spec's `on_filter` (-> `onfilter`, the { key, value } host
+  // hook) can never replace the bind writer.
+  'exec-dashboard': { prop: 'filters', event: 'onfilterschange' },
+  'kpi-dashboard': { prop: 'filters', event: 'onfilterschange' },
+  'executive-dashboard': { prop: 'filters', event: 'onfilterschange' },
   // itinerary binds its days: ticking or adding a stop emits a new days array.
   // The open day stays a Svelte-side `$bindable` (one bind per node).
   itinerary: { prop: 'days', event: 'ondayschange' },
