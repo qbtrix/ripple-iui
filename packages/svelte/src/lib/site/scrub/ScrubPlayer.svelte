@@ -147,7 +147,9 @@
 
 <figure class="scrub {className}" class:playing>
 	<div class="panes">
-		<div class="json" role="region" aria-label="Spec received so far" tabindex="-1">
+		<!-- A scroll region must take focus to be keyboard-scrollable. -->
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+		<div class="json" role="region" aria-label="Spec received so far" tabindex="0">
 			<pre><JsonLines {text} highlight caret /></pre>
 		</div>
 		<div class="render" data-pagefind-ignore="all">
@@ -227,6 +229,9 @@
 		background: var(--code-bg);
 		border-bottom: 1px solid var(--site-line);
 		outline: none;
+	}
+	.json:focus-visible {
+		box-shadow: inset 0 0 0 2px var(--ring);
 	}
 	.json pre {
 		margin: 0 0 auto;
