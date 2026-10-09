@@ -284,7 +284,7 @@
 		color: var(--site-soft);
 	}
 	.foot p {
-		margin: 0;
+		margin-block: 0;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px 10px;

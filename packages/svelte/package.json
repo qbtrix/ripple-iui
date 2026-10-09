@@ -84,7 +84,8 @@
     "LICENSE",
     "dist",
     "!dist/**/*.test.*",
-    "!dist/**/__fixtures__/**"
+    "!dist/**/__fixtures__/**",
+    "!dist/site/**"
   ],
   "scripts": {
     "dev": "vite dev",
