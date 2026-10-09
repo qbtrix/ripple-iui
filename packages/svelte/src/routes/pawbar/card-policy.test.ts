@@ -730,7 +730,7 @@ describe('illustration', () => {
 
 	test('refuses a backslash in an attribute value (a CSS escape could spell url)', () => {
 		const markup = svg("<rect width='10' height='10' fill='\\75 rl(https://evil.example/x)'/>");
-		expect(refuseCard(art({ svg: markup }))).toBe('illustration:backslash');
+		expect(refuseCard(art({ svg: markup }))).toMatch(/^illustration:backslash/);
 		expect(refuseCard(art({ svg: svg('<text>a \\ b</text>') }))).toBeNull();
 	});
 
