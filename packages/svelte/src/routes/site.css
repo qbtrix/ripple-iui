@@ -148,3 +148,28 @@ body {
 	color: var(--site-ink);
 	-webkit-font-smoothing: antialiased;
 }
+
+/* JSON syntax tokens (docs code blocks, SpecExample). Ink ladder only: blue
+   means interactive, and --site-faint fails AA for text. */
+:root,
+.dark {
+	--code-key: var(--site-ink);
+	--code-str: var(--site-soft);
+	--code-lit: var(--site-ink);
+	--code-punct: var(--site-soft);
+}
+.tok-key {
+	color: var(--code-key);
+	font-weight: 550;
+}
+.tok-str {
+	color: var(--code-str);
+}
+.tok-num,
+.tok-lit {
+	color: var(--code-lit);
+	font-style: italic;
+}
+.tok-punct {
+	color: var(--code-punct);
+}
