@@ -135,6 +135,7 @@ import { flashcardDeckEntry } from './entries/flashcard-deck.js';
 import { wordGuessEntry } from './entries/word-guess.js';
 import { quizEntry } from './entries/quiz.js';
 import { memoryMatchEntry } from './entries/memory-match.js';
+import { boardGameEntry } from './entries/board-game.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -466,6 +467,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   wordGuessEntry,
   quizEntry,
   memoryMatchEntry,
+  boardGameEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,

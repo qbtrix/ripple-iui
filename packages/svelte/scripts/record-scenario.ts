@@ -45,6 +45,7 @@ const DATA_WIDGETS = new Set([
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'memory-match',
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'habit-tracker', 'flashcard-deck',
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'focus-timer', 'flashcard-deck',
+	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck', 'board-game',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
@@ -116,6 +117,7 @@ CARD SHAPE (pick this first)
   - a word guessing game: word-guess
   - a trivia quiz or multiple-choice test: quiz
   - a memory or matching pairs game: memory-match
+  - tic-tac-toe or connect-four against the computer: board-game (set "game")
   - a menu or food order: menu-order; a reservation or appointment: booking
   - sales, KPIs or a dashboard over records: exec-dashboard with "rows", "measures", "dimensions" (bind "filters")
   - choosing between options: comparison-layout
