@@ -2,7 +2,7 @@
   @file routes/showcase/ShowcaseDetail.svelte
   @description The detail view shared by /showcase/w/<type> and
     /showcase/flows/<id>: a title block, then one live render with a toolbar
-    (Preview | Spec, Fill / 768 / 390 frame widths, Copy spec, Open in
+    (Preview | Spec (JsonLines, highlighted), Fill / 768 / 390 frame widths, Copy spec, Open in
     Playground through the ?s= encoder, Docs when the item is a widget). When
     an item has several specs (a widget's example plus its pockets) a row of
     variants picks one. The render is the page's only Ripple root and stays out
@@ -10,7 +10,7 @@
 -->
 <script lang="ts">
 	import { Ripple } from '$lib/index.js';
-	import { highlightJson } from '$lib/site/docs/highlight.js';
+	import JsonLines from '$lib/site/JsonLines.svelte';
 	import { playgroundHref } from '$lib/site/specFromUrl.js';
 
 	let {
@@ -103,7 +103,7 @@
 			</div>
 		</div>
 	{:else}
-		<pre class="spec"><code>{@html highlightJson(json)}</code></pre>
+		<pre class="spec"><JsonLines text={json} highlight /></pre>
 	{/if}
 </article>
 
