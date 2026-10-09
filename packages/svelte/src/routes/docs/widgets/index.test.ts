@@ -6,8 +6,9 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { manifestEntries } from '$lib/manifest/index.js';
-import { exampleSpec, widgetCategories } from '$lib/site/docs/widgets.js';
+import { exampleSpec, interactiveSpecs, widgetCategories } from '$lib/site/docs/widgets.js';
 import Page from './+page.svelte';
+import { GET } from './examples.json/+server.js';
 
 const observed = new Map<Element, (visible: boolean) => void>();
 const specs = Object.fromEntries(manifestEntries.map((e) => [e.type, exampleSpec(e)]));
@@ -87,5 +88,15 @@ describe('/docs/widgets index', () => {
 		render(Page, { data: data() });
 		await vi.waitFor(() => expect(screen.getByRole('button', { name: 'List' }).getAttribute('aria-pressed')).toBe('true'));
 		expect(document.querySelectorAll('.card')).toHaveLength(0);
+	});
+});
+
+describe('/docs/widgets/examples.json', () => {
+	it('has a spec for every widget: the example, or the interactive spec for an overlay that renders nothing at rest', async () => {
+		const body = (await GET().json()) as Record<string, unknown>;
+		expect(Object.keys(body).toSorted()).toEqual(manifestEntries.map((e) => e.type).toSorted());
+		const entry = (t: string) => manifestEntries.find((e) => e.type === t)!;
+		expect(body.button).toEqual(exampleSpec(entry('button')));
+		expect(body['command-palette']).toEqual(interactiveSpecs(entry('command-palette'))[0].spec);
 	});
 });
