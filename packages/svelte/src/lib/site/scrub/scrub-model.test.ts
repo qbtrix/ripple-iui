@@ -75,7 +75,7 @@ describe('stepping', () => {
 		while (fwd[fwd.length - 1] < m.total) fwd.push(m.step(fwd[fwd.length - 1], 1));
 		const back = [m.total];
 		while (back[back.length - 1] > 0) back.push(m.step(back[back.length - 1], -1));
-		expect(back.reverse()).toEqual(fwd);
+		expect(back.toReversed()).toEqual(fwd);
 		for (const c of fwd) expect(m.countAt(m.msFor(c))).toBe(c);
 		// The first chunk lands at t = 0 and still has its own step.
 		expect(fwd[1]).toBeGreaterThan(0);
