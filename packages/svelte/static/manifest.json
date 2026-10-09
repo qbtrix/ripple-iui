@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-05T12:56:30.680Z",
+  "generatedAt": "2026-10-09T06:36:29.936Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -3399,161 +3399,200 @@
     {
       "type": "comparison-layout",
       "category": "composite",
-      "description": "Side-by-side comparison of 2–6 items with hero cards, section-tab feature grid, and Card/Table view toggle. Per-item `actions` and `learn_more` accept ripple event handlers.",
+      "description": "Which to pick: items {id,name,price,image} compared on features {key,label,kind,better,unit}, a winner {id,reason} card, picks tags, best cells marked, price vs winner.",
       "props": {
         "title": {
           "type": "string",
           "required": false,
           "description": "Header title."
         },
-        "description": {
+        "subtitle": {
           "type": "string",
           "required": false,
-          "description": "Subheader description."
+          "description": "One line under the title."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars, e.g. \"Nimbus Pro 15 if you edit video; Aero 14 for battery.\""
+        },
+        "currency": {
+          "type": "string",
+          "required": false,
+          "description": "ISO 4217 code for numeric prices. Default \"USD\". Never put a symbol in the data."
         },
         "items": {
-          "type": "Array<{ id: string; title?: string; name?: string; subtitle?: string; chip?: string; image?: string; price?: string | number; actions?: EventAction | EventAction[]; learn_more?: EventAction | EventAction[]; [featureKey: string]: unknown }>",
+          "type": "Array<{ id: string; name: string; subtitle?: string; price?: number; image?: string; product_id?: string; rating?: number; [featureKey: string]: unknown }>",
           "required": true,
-          "description": "Items being compared. Extra keys become feature values; `actions` and `learn_more` carry per-item event handlers."
+          "description": "2 to 6 items. `price` is a number; feature values are keyed by feature `key`. With `product_id` the server fills name, price and image."
         },
         "features": {
-          "type": "Array<{ key: string; label: string; section?: string; type?: \"text\" | \"boolean\" | \"rating\" | \"image\" | \"color\"; icon?: string; highlight?: boolean }>",
+          "type": "Array<{ key: string; label: string; section?: string; kind?: \"text\" | \"number\" | \"boolean\" | \"rating\" | \"icon\" | \"price\" | \"color\"; better?: \"higher\" | \"lower\"; unit?: string; icon?: \"battery\" | \"weight\" | \"display\" | \"cpu\" | \"memory\" | \"storage\" | \"camera\" | \"speed\" | \"price\" | \"ports\" | \"wifi\" | \"keyboard\" | \"audio\" | \"security\" | \"warranty\" | \"size\" | \"rating\" | \"support\"; highlight?: boolean }>",
           "required": false,
-          "description": "Explicit feature definitions. If omitted, features are inferred from item keys (text/boolean only) and grouped under a single \"Features\" section. Use `section` to group features into tabs, `highlight: true` to surface a feature as a spec pill on the card, and `type` to control rendering."
+          "description": "Rows, grouped into section chips by `section`. `better` marks the best numeric cell. An `icon`-kind value is one of the `icon` words (or a list of them). `highlight` puts the row on the item card. Inferred from item keys when omitted."
+        },
+        "winner": {
+          "type": "{ id: string; reason: string; runner_up?: { id: string; reason: string } }",
+          "required": false,
+          "description": "The best pick, shown first with its reason, photo and price; every other price shows its difference from it."
+        },
+        "picks": {
+          "type": "Array<{ id: string; label: string }>",
+          "required": false,
+          "description": "At most 3 per-need tags on items, e.g. \"Best for travel\", \"Lightest\"."
+        },
+        "chosen": {
+          "type": "string",
+          "required": false,
+          "description": "The chosen item id. Use top-level `bind` to keep it in state (e.g. `bind: \"pick\"`)."
         },
         "primaryLabel": {
           "type": "string",
           "required": false,
-          "description": "Primary CTA label. Default \"Select\"."
-        },
-        "secondaryLabel": {
-          "type": "string",
-          "required": false,
-          "description": "Secondary \"Learn more\" label. Default \"Learn more\"."
-        },
-        "showPrimary": {
-          "type": "boolean",
-          "required": false,
-          "description": "Render the primary CTA. Default true."
-        },
-        "showSecondary": {
-          "type": "boolean",
-          "required": false,
-          "description": "Render the \"Learn more\" button. Default true."
+          "description": "Choose button label. Default \"Choose\"."
         },
         "defaultView": {
           "type": "\"card\" | \"table\"",
           "required": false,
-          "description": "Initial view mode for the detailed feature grid on mobile. Default \"card\". Desktop always shows the table."
+          "description": "Detailed view below 720px until the visitor picks one. Default \"card\"; wider always shows the table."
         },
         "showDiffToggle": {
           "type": "boolean",
           "required": false,
-          "description": "Show the \"differences only\" filter toggle. Default true."
+          "description": "Show the \"Differences only\" filter. Default true."
+        }
+      },
+      "events": {
+        "on_choose": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "Fires with { id, name, product_id? } when the visitor picks an item."
         }
       },
       "example": {
         "type": "comparison-layout",
+        "bind": "pick",
         "props": {
-          "title": "Observability platforms",
-          "description": "Compare Datadog, New Relic, and Grafana Cloud for production monitoring.",
-          "primaryLabel": "Choose plan",
+          "title": "Three laptops for a designer who travels",
+          "verdict": {
+            "text": "Aero 14 for battery and weight; Nimbus Pro 15 if you edit video.",
+            "status": "good"
+          },
+          "currency": "USD",
+          "winner": {
+            "id": "aero-14",
+            "reason": "Lightest of the three with the longest battery, and the lowest price.",
+            "runner_up": {
+              "id": "vertex-x13",
+              "reason": "Same battery and a better keyboard, for $200 more."
+            }
+          },
+          "picks": [
+            {
+              "id": "nimbus-pro-15",
+              "label": "Best for video"
+            },
+            {
+              "id": "vertex-x13",
+              "label": "Best keyboard"
+            }
+          ],
           "items": [
             {
-              "id": "datadog",
-              "title": "Datadog",
-              "subtitle": "Pro tier",
-              "price": "$15 / host / mo",
-              "image": "https://example.com/datadog.png",
-              "ingestion": "15-day retention",
-              "apm": true,
-              "rum": true,
-              "sso": true,
-              "rating": 4,
-              "actions": [
-                {
-                  "action": "emit",
-                  "target": "chat.send",
-                  "value": "Tell me more about choosing Datadog."
-                }
-              ],
-              "learn_more": [
-                {
-                  "action": "navigate",
-                  "url": "https://datadoghq.com/pricing"
-                }
+              "id": "aero-14",
+              "name": "Aero 14",
+              "subtitle": "14-inch ultralight",
+              "price": 1099,
+              "battery": 18,
+              "weight": 1.2,
+              "memory": 16,
+              "gpu": false,
+              "rating": 4.6,
+              "extras": [
+                "wifi",
+                "ports"
               ]
             },
             {
-              "id": "newrelic",
-              "title": "New Relic",
-              "subtitle": "Standard",
-              "price": "$0.30 / GB",
-              "image": "https://example.com/newrelic.png",
-              "ingestion": "8-day retention",
-              "apm": true,
-              "rum": true,
-              "sso": false,
-              "rating": 4,
-              "actions": [
-                {
-                  "action": "emit",
-                  "target": "chat.send",
-                  "value": "Tell me more about choosing New Relic."
-                }
+              "id": "nimbus-pro-15",
+              "name": "Nimbus Pro 15",
+              "subtitle": "15-inch creator",
+              "price": 1799,
+              "battery": 11,
+              "weight": 1.9,
+              "memory": 32,
+              "gpu": true,
+              "rating": 4.4,
+              "extras": [
+                "display",
+                "audio"
               ]
             },
             {
-              "id": "grafana",
-              "title": "Grafana Cloud",
-              "subtitle": "Pro",
-              "price": "$8 / user / mo",
-              "image": "https://example.com/grafana.png",
-              "ingestion": "13-month retention",
-              "apm": true,
-              "rum": false,
-              "sso": true,
-              "rating": 5,
-              "actions": [
-                {
-                  "action": "emit",
-                  "target": "chat.send",
-                  "value": "Tell me more about choosing Grafana Cloud."
-                }
+              "id": "vertex-x13",
+              "name": "Vertex X13",
+              "subtitle": "13-inch business",
+              "price": 1299,
+              "battery": 18,
+              "weight": 1.3,
+              "memory": 16,
+              "gpu": false,
+              "rating": 4.5,
+              "extras": [
+                "keyboard",
+                "security"
               ]
             }
           ],
           "features": [
             {
-              "key": "ingestion",
-              "label": "Log retention",
-              "section": "Data",
+              "key": "battery",
+              "label": "Battery",
+              "section": "Everyday",
+              "kind": "number",
+              "unit": "h",
+              "better": "higher",
+              "icon": "battery",
               "highlight": true
             },
             {
-              "key": "apm",
-              "label": "APM tracing",
-              "section": "Features",
-              "type": "boolean",
+              "key": "weight",
+              "label": "Weight",
+              "section": "Everyday",
+              "kind": "number",
+              "unit": "kg",
+              "better": "lower",
+              "icon": "weight",
               "highlight": true
             },
             {
-              "key": "rum",
-              "label": "Real-user monitoring",
-              "section": "Features",
-              "type": "boolean"
+              "key": "extras",
+              "label": "Stands out for",
+              "section": "Everyday",
+              "kind": "icon"
             },
             {
-              "key": "sso",
-              "label": "SSO / SAML",
-              "section": "Security",
-              "type": "boolean"
+              "key": "memory",
+              "label": "Memory",
+              "section": "Performance",
+              "kind": "number",
+              "unit": "GB",
+              "better": "higher",
+              "icon": "memory"
+            },
+            {
+              "key": "gpu",
+              "label": "Discrete GPU",
+              "section": "Performance",
+              "kind": "boolean"
             },
             {
               "key": "rating",
-              "label": "G2 score",
+              "label": "Owner rating",
               "section": "Reviews",
-              "type": "rating"
+              "kind": "rating",
+              "better": "higher",
+              "icon": "rating"
             }
           ]
         }
@@ -4785,8 +4824,58 @@
     {
       "type": "exec-dashboard",
       "category": "composite",
-      "description": "Executive dashboard: KPI strip with sparklines, primary chart, activity rail, and data-table footer. Date-range + granularity chips, density toggle, loading/error/empty states, clickable KPIs.",
+      "description": "KPI dashboard from raw rows: give rows, measures {key,label,format,agg}, dimensions {key,label}, x and split; it computes KPIs, trends, a chart, a breakdown and a filtered table with totals.",
       "props": {
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars, e.g. \"September was the best month; East leads on revenue.\""
+        },
+        "currency": {
+          "type": "string",
+          "required": false,
+          "description": "ISO 4217 code for money measures. Default \"USD\". Never put a symbol in the data."
+        },
+        "rows": {
+          "type": "Array<Record<string, string | number>>",
+          "required": false,
+          "description": "Rows mode: the raw records, one per order/event, e.g. { id, date: \"2026-07-14\", region, channel, amount }. Numbers as numbers. Every KPI, chart bar, breakdown and total is computed from these."
+        },
+        "measures": {
+          "type": "Array<{ key?: string; label: string; format?: \"money\" | \"number\" | \"percent\"; agg?: \"sum\" | \"avg\" | \"count\"; good?: \"up\" | \"down\" }>",
+          "required": false,
+          "description": "One KPI each, in order; the first also drives the chart and breakdown. `agg` defaults to sum (count needs no key). `percent` values are 0 to 100. `good` says which way is good (default up)."
+        },
+        "dimensions": {
+          "type": "Array<{ key: string; label: string }>",
+          "required": false,
+          "description": "Filter chip rows (e.g. region). A pick recomputes every number; the breakdown shows the first dimension not filtered."
+        },
+        "x": {
+          "type": "string",
+          "required": false,
+          "description": "The column the chart runs along. ISO dates group by day (span up to 31 days) or by month; other values group as written."
+        },
+        "split": {
+          "type": "string",
+          "required": false,
+          "description": "A column to stack the chart by (e.g. channel), one colour per value; past five values the rest fold into Other."
+        },
+        "compare": {
+          "type": "Array<Record<string, string | number>>",
+          "required": false,
+          "description": "The previous period's rows, for KPI trends. Without it, trends compare the last x group with the one before."
+        },
+        "compareLabel": {
+          "type": "string",
+          "required": false,
+          "description": "Trend wording when `compare` is given, e.g. \"vs Q2\". Default \"vs previous period\"."
+        },
+        "filters": {
+          "type": "Record<string, string>",
+          "required": false,
+          "description": "The active filter per dimension, e.g. { region: \"West\" }. Use top-level `bind` to keep it in state (e.g. `bind: \"salesFilter\"`)."
+        },
         "title": {
           "type": "string",
           "required": false,
@@ -4810,7 +4899,7 @@
         "activeDateRange": {
           "type": "string",
           "required": false,
-          "description": "Two-way bindable. Defaults to first item."
+          "description": "Active date-range chip. Defaults to the first item."
         },
         "granularities": {
           "type": "string[]",
@@ -4835,7 +4924,7 @@
         "showRefresh": {
           "type": "boolean",
           "required": false,
-          "description": "Show built-in refresh button. Default true."
+          "description": "KPI mode refresh button. Default true in KPI mode, false in rows mode."
         },
         "refreshActions": {
           "type": "EventAction | EventAction[]",
@@ -4898,1119 +4987,172 @@
           "description": "Secondary chart row (auto-fit grid). Each `data` may be keyed the same way as `primaryChart.data`."
         },
         "table": {
-          "type": "{ title?: string; columns: Array<{ key: string; label: string; align?: \"left\" | \"right\" | \"center\" }>; rows: Record<string, unknown>[] | Record<string, Record<string, unknown>[]> }",
+          "type": "{ title?: string; columns?: Array<{ key: string; label: string; align?: \"left\" | \"right\" | \"center\" }>; rows?: Record<string, unknown>[] | Record<string, Record<string, unknown>[]> }",
           "required": false,
-          "description": "Data table footer. `rows` may be a flat list or keyed by range/granularity. Horizontally scrolls on narrow screens."
+          "description": "Rows mode: `title` and optional `columns` for the filtered rows table. KPI mode: a table footer whose `rows` may be keyed by range/granularity."
+        }
+      },
+      "events": {
+        "on_filter": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "Rows mode. Fires with { key, value } when a filter chip is picked (value null for All)."
+        },
+        "on_date_range_change": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "KPI mode. Fires with the picked date-range chip, e.g. \"30d\"."
         }
       },
       "example": {
         "type": "exec-dashboard",
-        "bind": "activeDateRange",
+        "bind": "salesFilter",
         "props": {
-          "title": "Q2 performance",
-          "subtitle": "Cross-team metrics — flip the range or granularity to swap data",
-          "dateRanges": [
-            "Today",
-            "7d",
-            "30d",
-            "90d",
-            "QTD",
-            "YTD"
-          ],
-          "granularities": [
-            "Day",
-            "Week",
-            "Month"
-          ],
-          "lastUpdated": "2m ago",
-          "refreshActions": [
-            {
-              "action": "toast",
-              "message": "Refreshed",
-              "variant": "info"
-            }
-          ],
-          "actions": [
-            {
-              "id": "export",
-              "label": "Export",
-              "icon": "download",
-              "variant": "outline",
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Exporting…",
-                  "variant": "info"
-                }
-              ]
-            },
-            {
-              "id": "share",
-              "label": "Share",
-              "icon": "share-2",
-              "variant": "default",
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Share link copied",
-                  "variant": "success"
-                }
-              ]
-            }
-          ],
-          "kpis": [
-            {
-              "id": "mrr",
-              "label": "Revenue",
-              "icon": "dollar-sign",
-              "status": "success",
-              "target": "$3.0M",
-              "value": "$2.4M",
-              "delta": "+18%",
-              "trend": "up",
-              "compareLabel": "vs last month",
-              "progress": 80,
-              "sparkline": [
-                22,
-                25,
-                30,
-                28,
-                36,
-                40,
-                48
-              ],
-              "byKey": {
-                "Today": {
-                  "value": "$24k",
-                  "delta": "+9%",
-                  "sparkline": [
-                    3,
-                    4,
-                    3,
-                    5,
-                    4,
-                    6,
-                    7
-                  ],
-                  "progress": 8
-                },
-                "7d": {
-                  "value": "$182k",
-                  "delta": "+6%",
-                  "sparkline": [
-                    22,
-                    24,
-                    23,
-                    26,
-                    28,
-                    27,
-                    29
-                  ],
-                  "progress": 55
-                },
-                "30d": {
-                  "value": "$780k",
-                  "delta": "+11%",
-                  "sparkline": [
-                    60,
-                    65,
-                    72,
-                    70,
-                    78,
-                    84,
-                    90
-                  ],
-                  "progress": 68
-                },
-                "90d": {
-                  "value": "$2.4M",
-                  "delta": "+18%",
-                  "sparkline": [
-                    180,
-                    210,
-                    230,
-                    250,
-                    270,
-                    300,
-                    340
-                  ],
-                  "progress": 80
-                },
-                "QTD": {
-                  "value": "$2.4M",
-                  "delta": "+18%",
-                  "compareLabel": "vs last quarter",
-                  "progress": 80
-                },
-                "YTD": {
-                  "value": "$8.9M",
-                  "delta": "+22%",
-                  "compareLabel": "vs last year",
-                  "progress": 71
-                }
-              },
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Drill: Revenue",
-                  "variant": "info"
-                }
-              ]
-            },
-            {
-              "id": "arr",
-              "label": "ARR pacing",
-              "icon": "target",
-              "status": "success",
-              "value": "$11.4M",
-              "unit": "/ $14M",
-              "delta": "+22%",
-              "trend": "up",
-              "compareLabel": "vs plan",
-              "target": "$14M",
-              "progress": 81,
-              "sparkline": [
-                50,
-                58,
-                62,
-                68,
-                74,
-                80,
-                81
-              ]
-            },
-            {
-              "id": "cust",
-              "label": "New customers",
-              "icon": "users",
-              "value": 142,
-              "delta": "+12",
-              "trend": "up",
-              "compareLabel": "vs last month",
-              "sparkline": [
-                10,
-                12,
-                18,
-                16,
-                20,
-                22,
-                28
-              ],
-              "byKey": {
-                "Today": {
-                  "value": 6,
-                  "delta": "+1"
-                },
-                "7d": {
-                  "value": 24,
-                  "delta": "+4",
-                  "sparkline": [
-                    3,
-                    4,
-                    3,
-                    5,
-                    4,
-                    5,
-                    6
-                  ]
-                },
-                "30d": {
-                  "value": 142,
-                  "delta": "+12",
-                  "sparkline": [
-                    10,
-                    12,
-                    18,
-                    16,
-                    20,
-                    22,
-                    28
-                  ]
-                },
-                "90d": {
-                  "value": 412,
-                  "delta": "+38",
-                  "sparkline": [
-                    30,
-                    35,
-                    50,
-                    60,
-                    65,
-                    78,
-                    90
-                  ]
-                },
-                "YTD": {
-                  "value": 1284,
-                  "delta": "+182"
-                }
-              },
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Drill: customers",
-                  "variant": "info"
-                }
-              ]
-            },
-            {
-              "id": "churn",
-              "label": "Churn",
-              "icon": "trending-down",
-              "status": "warning",
-              "target": "1.5%",
-              "value": "2.1",
-              "unit": "%",
-              "delta": "-0.4pp",
-              "trend": "down",
-              "progress": 60,
-              "sparkline": [
-                3,
-                2.8,
-                2.6,
-                2.5,
-                2.4,
-                2.3,
-                2.1
-              ],
-              "byKey": {
-                "7d": {
-                  "value": "1.8",
-                  "delta": "-0.1pp",
-                  "progress": 75
-                },
-                "30d": {
-                  "value": "2.1",
-                  "delta": "-0.4pp",
-                  "progress": 60
-                },
-                "90d": {
-                  "value": "2.4",
-                  "delta": "-0.6pp",
-                  "progress": 50
-                },
-                "YTD": {
-                  "value": "2.7",
-                  "delta": "-1.1pp",
-                  "progress": 38
-                }
-              },
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Drill: Churn",
-                  "variant": "warning"
-                }
-              ]
-            },
-            {
-              "id": "sla",
-              "label": "SLA breaches",
-              "icon": "alert-octagon",
-              "status": "critical",
-              "value": 7,
-              "delta": "+3",
-              "trend": "up",
-              "compareLabel": "past 24h",
-              "byKey": {
-                "Today": {
-                  "value": 7,
-                  "compareLabel": "past 24h"
-                },
-                "7d": {
-                  "value": 18,
-                  "compareLabel": "past 7 days"
-                },
-                "30d": {
-                  "value": 47,
-                  "compareLabel": "past 30 days"
-                },
-                "90d": {
-                  "value": 132,
-                  "compareLabel": "past 90 days"
-                }
-              },
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Open SLA breach log",
-                  "variant": "error"
-                }
-              ]
-            },
-            {
-              "id": "nps",
-              "label": "NPS",
-              "icon": "smile",
-              "value": 64,
-              "delta": "+5",
-              "trend": "up",
-              "compareLabel": "vs last survey",
-              "sparkline": [
-                52,
-                54,
-                58,
-                60,
-                61,
-                63,
-                64
-              ]
-            }
-          ],
-          "primaryChart": {
-            "title": "Recurring revenue vs. plan",
-            "type": "area",
-            "data": {
-              "Day": [
-                {
-                  "label": "Mon",
-                  "series": {
-                    "Actual": 320,
-                    "Plan": 300
-                  }
-                },
-                {
-                  "label": "Tue",
-                  "series": {
-                    "Actual": 340,
-                    "Plan": 310
-                  }
-                },
-                {
-                  "label": "Wed",
-                  "series": {
-                    "Actual": 360,
-                    "Plan": 320
-                  }
-                },
-                {
-                  "label": "Thu",
-                  "series": {
-                    "Actual": 380,
-                    "Plan": 330
-                  }
-                },
-                {
-                  "label": "Fri",
-                  "series": {
-                    "Actual": 410,
-                    "Plan": 340
-                  }
-                },
-                {
-                  "label": "Sat",
-                  "series": {
-                    "Actual": 200,
-                    "Plan": 250
-                  }
-                },
-                {
-                  "label": "Sun",
-                  "series": {
-                    "Actual": 220,
-                    "Plan": 260
-                  }
-                }
-              ],
-              "Week": [
-                {
-                  "label": "W22",
-                  "series": {
-                    "Actual": 2080,
-                    "Plan": 2000
-                  }
-                },
-                {
-                  "label": "W23",
-                  "series": {
-                    "Actual": 2180,
-                    "Plan": 2050
-                  }
-                },
-                {
-                  "label": "W24",
-                  "series": {
-                    "Actual": 2240,
-                    "Plan": 2100
-                  }
-                },
-                {
-                  "label": "W25",
-                  "series": {
-                    "Actual": 2300,
-                    "Plan": 2150
-                  }
-                },
-                {
-                  "label": "W26",
-                  "series": {
-                    "Actual": 2380,
-                    "Plan": 2200
-                  }
-                },
-                {
-                  "label": "W27",
-                  "series": {
-                    "Actual": 2400,
-                    "Plan": 2250
-                  }
-                }
-              ],
-              "Month": [
-                {
-                  "label": "Jan",
-                  "series": {
-                    "Actual": 1450,
-                    "Plan": 1400
-                  }
-                },
-                {
-                  "label": "Feb",
-                  "series": {
-                    "Actual": 1620,
-                    "Plan": 1500
-                  }
-                },
-                {
-                  "label": "Mar",
-                  "series": {
-                    "Actual": 1810,
-                    "Plan": 1620
-                  }
-                },
-                {
-                  "label": "Apr",
-                  "series": {
-                    "Actual": 1980,
-                    "Plan": 1740
-                  }
-                },
-                {
-                  "label": "May",
-                  "series": {
-                    "Actual": 2200,
-                    "Plan": 1860
-                  }
-                },
-                {
-                  "label": "Jun",
-                  "series": {
-                    "Actual": 2400,
-                    "Plan": 2000
-                  }
-                }
-              ]
-            }
+          "title": "Fernleaf Ceramics, Q3 sales",
+          "subtitle": "Online orders, July to September",
+          "verdict": {
+            "text": "September was the best month; East leads on revenue.",
+            "status": "good"
           },
-          "activityTitle": "Recent activity",
-          "activity": [
+          "currency": "USD",
+          "x": "date",
+          "split": "channel",
+          "measures": [
             {
-              "id": "a1",
-              "time": "12m ago",
-              "label": "New deal closed: Globex ($120k)",
-              "actor": "Alice",
-              "severity": "success",
-              "icon": "trophy",
-              "category": "Sales",
-              "unread": true,
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Open Globex deal",
-                  "variant": "info"
-                }
-              ]
+              "key": "amount",
+              "label": "Revenue",
+              "format": "money"
             },
             {
-              "id": "a2",
-              "time": "38m ago",
-              "label": "Onboarding kicked off: Initech",
-              "actor": "Bob",
-              "severity": "info",
-              "category": "Customer success"
+              "label": "Orders",
+              "agg": "count"
             },
             {
-              "id": "a3",
-              "time": "1h ago",
-              "label": "New signup: Vandelay Industries (Mid-market)",
-              "actor": "Greta",
-              "severity": "info",
-              "icon": "user-plus",
-              "category": "Sales"
+              "key": "amount",
+              "label": "Avg order",
+              "format": "money",
+              "agg": "avg"
             },
             {
-              "id": "a4",
-              "time": "2h ago",
-              "label": "Churn risk flagged: Hooli",
-              "severity": "warning",
-              "icon": "alert-triangle",
-              "category": "Alerts",
-              "unread": true,
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Why is Hooli at risk?",
-                  "variant": "warning"
-                }
-              ]
-            },
-            {
-              "id": "a5",
-              "time": "3h ago",
-              "label": "SLA breach: payment-api p95 latency 820ms",
-              "severity": "destructive",
-              "icon": "alert-octagon",
-              "category": "Alerts",
-              "unread": true,
-              "actions": [
-                {
-                  "action": "toast",
-                  "message": "Open incident",
-                  "variant": "error"
-                }
-              ]
-            },
-            {
-              "id": "a6",
-              "time": "5h ago",
-              "label": "Expansion: Pied Piper upgraded to Enterprise (+$48k)",
-              "actor": "Sam",
-              "severity": "success",
-              "icon": "arrow-up-right",
-              "category": "Sales"
-            },
-            {
-              "id": "a7",
-              "time": "Yesterday",
-              "label": "Q1 board report published",
-              "actor": "Carol",
-              "severity": "info",
-              "icon": "file-text",
-              "category": "Reports"
-            },
-            {
-              "id": "a8",
-              "time": "2d ago",
-              "label": "Quarterly NPS survey completed (n=4,212)",
-              "actor": "Ops",
-              "severity": "info",
-              "icon": "smile",
-              "category": "Reports"
+              "key": "items",
+              "label": "Items sold"
             }
           ],
-          "charts": [
+          "dimensions": [
             {
-              "title": "Revenue by segment",
-              "type": "donut",
-              "data": {
-                "7d": [
-                  {
-                    "label": "Enterprise",
-                    "value": 55
-                  },
-                  {
-                    "label": "Mid-market",
-                    "value": 30
-                  },
-                  {
-                    "label": "SMB",
-                    "value": 15
-                  }
-                ],
-                "30d": [
-                  {
-                    "label": "Enterprise",
-                    "value": 58
-                  },
-                  {
-                    "label": "Mid-market",
-                    "value": 29
-                  },
-                  {
-                    "label": "SMB",
-                    "value": 13
-                  }
-                ],
-                "90d": [
-                  {
-                    "label": "Enterprise",
-                    "value": 60
-                  },
-                  {
-                    "label": "Mid-market",
-                    "value": 28
-                  },
-                  {
-                    "label": "SMB",
-                    "value": 12
-                  }
-                ],
-                "QTD": [
-                  {
-                    "label": "Enterprise",
-                    "value": 60
-                  },
-                  {
-                    "label": "Mid-market",
-                    "value": 28
-                  },
-                  {
-                    "label": "SMB",
-                    "value": 12
-                  }
-                ],
-                "YTD": [
-                  {
-                    "label": "Enterprise",
-                    "value": 63
-                  },
-                  {
-                    "label": "Mid-market",
-                    "value": 26
-                  },
-                  {
-                    "label": "SMB",
-                    "value": 11
-                  }
-                ]
-              }
-            },
-            {
-              "title": "Top regions",
-              "type": "bar",
-              "data": {
-                "7d": [
-                  {
-                    "label": "US",
-                    "value": 90
-                  },
-                  {
-                    "label": "EU",
-                    "value": 56
-                  },
-                  {
-                    "label": "APAC",
-                    "value": 36
-                  },
-                  {
-                    "label": "LATAM",
-                    "value": 14
-                  }
-                ],
-                "30d": [
-                  {
-                    "label": "US",
-                    "value": 410
-                  },
-                  {
-                    "label": "EU",
-                    "value": 240
-                  },
-                  {
-                    "label": "APAC",
-                    "value": 160
-                  },
-                  {
-                    "label": "LATAM",
-                    "value": 62
-                  }
-                ],
-                "90d": [
-                  {
-                    "label": "US",
-                    "value": 1200
-                  },
-                  {
-                    "label": "EU",
-                    "value": 720
-                  },
-                  {
-                    "label": "APAC",
-                    "value": 480
-                  },
-                  {
-                    "label": "LATAM",
-                    "value": 180
-                  }
-                ],
-                "QTD": [
-                  {
-                    "label": "US",
-                    "value": 1200
-                  },
-                  {
-                    "label": "EU",
-                    "value": 720
-                  },
-                  {
-                    "label": "APAC",
-                    "value": 480
-                  },
-                  {
-                    "label": "LATAM",
-                    "value": 180
-                  }
-                ],
-                "YTD": [
-                  {
-                    "label": "US",
-                    "value": 4400
-                  },
-                  {
-                    "label": "EU",
-                    "value": 2600
-                  },
-                  {
-                    "label": "APAC",
-                    "value": 1800
-                  },
-                  {
-                    "label": "LATAM",
-                    "value": 720
-                  }
-                ]
-              }
-            },
-            {
-              "title": "Pipeline conversion",
-              "type": "line",
-              "data": {
-                "Day": [
-                  {
-                    "label": "Mon",
-                    "value": 8
-                  },
-                  {
-                    "label": "Tue",
-                    "value": 9
-                  },
-                  {
-                    "label": "Wed",
-                    "value": 11
-                  },
-                  {
-                    "label": "Thu",
-                    "value": 10
-                  },
-                  {
-                    "label": "Fri",
-                    "value": 12
-                  },
-                  {
-                    "label": "Sat",
-                    "value": 7
-                  },
-                  {
-                    "label": "Sun",
-                    "value": 8
-                  }
-                ],
-                "Week": [
-                  {
-                    "label": "W22",
-                    "value": 9
-                  },
-                  {
-                    "label": "W23",
-                    "value": 10
-                  },
-                  {
-                    "label": "W24",
-                    "value": 11
-                  },
-                  {
-                    "label": "W25",
-                    "value": 12
-                  },
-                  {
-                    "label": "W26",
-                    "value": 13
-                  },
-                  {
-                    "label": "W27",
-                    "value": 14
-                  }
-                ],
-                "Month": [
-                  {
-                    "label": "Jan",
-                    "value": 7
-                  },
-                  {
-                    "label": "Feb",
-                    "value": 8
-                  },
-                  {
-                    "label": "Mar",
-                    "value": 9
-                  },
-                  {
-                    "label": "Apr",
-                    "value": 11
-                  },
-                  {
-                    "label": "May",
-                    "value": 12
-                  },
-                  {
-                    "label": "Jun",
-                    "value": 14
-                  }
-                ]
-              }
+              "key": "region",
+              "label": "Region"
             }
           ],
           "table": {
-            "title": "Top accounts",
-            "columns": [
-              {
-                "key": "name",
-                "label": "Account"
-              },
-              {
-                "key": "plan",
-                "label": "Plan"
-              },
-              {
-                "key": "owner",
-                "label": "Owner"
-              },
-              {
-                "key": "mrr",
-                "label": "MRR",
-                "align": "right"
-              },
-              {
-                "key": "delta",
-                "label": "Δ",
-                "align": "right"
-              },
-              {
-                "key": "health",
-                "label": "Health"
-              }
-            ],
-            "rows": {
-              "7d": [
-                {
-                  "name": "Globex",
-                  "plan": "Enterprise",
-                  "owner": "Alice",
-                  "mrr": "$24,000",
-                  "delta": "+8%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Initech",
-                  "plan": "Mid-market",
-                  "owner": "Bob",
-                  "mrr": "$8,400",
-                  "delta": "+2%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Pied Piper",
-                  "plan": "Mid-market",
-                  "owner": "Sam",
-                  "mrr": "$6,800",
-                  "delta": "+12%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Hooli",
-                  "plan": "Enterprise",
-                  "owner": "Dana",
-                  "mrr": "$19,600",
-                  "delta": "-3%",
-                  "health": "At risk"
-                }
-              ],
-              "30d": [
-                {
-                  "name": "Globex",
-                  "plan": "Enterprise",
-                  "owner": "Alice",
-                  "mrr": "$120,000",
-                  "delta": "+11%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Initech",
-                  "plan": "Mid-market",
-                  "owner": "Bob",
-                  "mrr": "$42,000",
-                  "delta": "+4%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Hooli",
-                  "plan": "Enterprise",
-                  "owner": "Dana",
-                  "mrr": "$98,000",
-                  "delta": "-6%",
-                  "health": "At risk"
-                },
-                {
-                  "name": "Pied Piper",
-                  "plan": "Mid-market",
-                  "owner": "Sam",
-                  "mrr": "$34,000",
-                  "delta": "+18%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Soylent",
-                  "plan": "SMB",
-                  "owner": "Pat",
-                  "mrr": "$6,400",
-                  "delta": "+2%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Vandelay",
-                  "plan": "Mid-market",
-                  "owner": "Greta",
-                  "mrr": "$11,200",
-                  "delta": "+22%",
-                  "health": "Healthy"
-                }
-              ],
-              "90d": [
-                {
-                  "name": "Globex",
-                  "plan": "Enterprise",
-                  "owner": "Alice",
-                  "mrr": "$360,000",
-                  "delta": "+18%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Initech",
-                  "plan": "Mid-market",
-                  "owner": "Bob",
-                  "mrr": "$126,000",
-                  "delta": "+9%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Hooli",
-                  "plan": "Enterprise",
-                  "owner": "Dana",
-                  "mrr": "$294,000",
-                  "delta": "-12%",
-                  "health": "At risk"
-                },
-                {
-                  "name": "Pied Piper",
-                  "plan": "Mid-market",
-                  "owner": "Sam",
-                  "mrr": "$84,000",
-                  "delta": "+24%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Soylent",
-                  "plan": "SMB",
-                  "owner": "Pat",
-                  "mrr": "$19,200",
-                  "delta": "+6%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Vandelay",
-                  "plan": "Mid-market",
-                  "owner": "Greta",
-                  "mrr": "$33,600",
-                  "delta": "+28%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Wonka Inc",
-                  "plan": "Enterprise",
-                  "owner": "Marco",
-                  "mrr": "$148,000",
-                  "delta": "+7%",
-                  "health": "Healthy"
-                }
-              ],
-              "QTD": [
-                {
-                  "name": "Globex",
-                  "plan": "Enterprise",
-                  "owner": "Alice",
-                  "mrr": "$360,000",
-                  "delta": "+18%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Hooli",
-                  "plan": "Enterprise",
-                  "owner": "Dana",
-                  "mrr": "$294,000",
-                  "delta": "-12%",
-                  "health": "At risk"
-                },
-                {
-                  "name": "Wonka Inc",
-                  "plan": "Enterprise",
-                  "owner": "Marco",
-                  "mrr": "$148,000",
-                  "delta": "+7%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Initech",
-                  "plan": "Mid-market",
-                  "owner": "Bob",
-                  "mrr": "$126,000",
-                  "delta": "+9%",
-                  "health": "Healthy"
-                }
-              ],
-              "YTD": [
-                {
-                  "name": "Globex",
-                  "plan": "Enterprise",
-                  "owner": "Alice",
-                  "mrr": "$1.4M",
-                  "delta": "+34%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Hooli",
-                  "plan": "Enterprise",
-                  "owner": "Dana",
-                  "mrr": "$1.1M",
-                  "delta": "-8%",
-                  "health": "At risk"
-                },
-                {
-                  "name": "Wonka Inc",
-                  "plan": "Enterprise",
-                  "owner": "Marco",
-                  "mrr": "$590k",
-                  "delta": "+19%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Initech",
-                  "plan": "Mid-market",
-                  "owner": "Bob",
-                  "mrr": "$510k",
-                  "delta": "+12%",
-                  "health": "Healthy"
-                },
-                {
-                  "name": "Pied Piper",
-                  "plan": "Mid-market",
-                  "owner": "Sam",
-                  "mrr": "$320k",
-                  "delta": "+44%",
-                  "health": "Healthy"
-                }
-              ]
+            "title": "Orders"
+          },
+          "rows": [
+            {
+              "id": "FL-1041",
+              "date": "2026-07-01",
+              "region": "West",
+              "channel": "Marketplace",
+              "items": 3,
+              "amount": 133.38
+            },
+            {
+              "id": "FL-1046",
+              "date": "2026-07-09",
+              "region": "East",
+              "channel": "Web",
+              "items": 2,
+              "amount": 98.4
+            },
+            {
+              "id": "FL-1050",
+              "date": "2026-07-18",
+              "region": "North",
+              "channel": "Social",
+              "items": 1,
+              "amount": 42.5
+            },
+            {
+              "id": "FL-1055",
+              "date": "2026-07-27",
+              "region": "South",
+              "channel": "Web",
+              "items": 2,
+              "amount": 87.1
+            },
+            {
+              "id": "FL-1061",
+              "date": "2026-08-04",
+              "region": "East",
+              "channel": "Web",
+              "items": 3,
+              "amount": 151.2
+            },
+            {
+              "id": "FL-1066",
+              "date": "2026-08-12",
+              "region": "West",
+              "channel": "Social",
+              "items": 1,
+              "amount": 38.9
+            },
+            {
+              "id": "FL-1070",
+              "date": "2026-08-19",
+              "region": "South",
+              "channel": "Marketplace",
+              "items": 2,
+              "amount": 76
+            },
+            {
+              "id": "FL-1074",
+              "date": "2026-08-28",
+              "region": "North",
+              "channel": "Web",
+              "items": 2,
+              "amount": 104.75
+            },
+            {
+              "id": "FL-1081",
+              "date": "2026-09-03",
+              "region": "East",
+              "channel": "Web",
+              "items": 4,
+              "amount": 212.6
+            },
+            {
+              "id": "FL-1086",
+              "date": "2026-09-11",
+              "region": "West",
+              "channel": "Web",
+              "items": 2,
+              "amount": 95.3
+            },
+            {
+              "id": "FL-1090",
+              "date": "2026-09-17",
+              "region": "East",
+              "channel": "Social",
+              "items": 1,
+              "amount": 49
+            },
+            {
+              "id": "FL-1095",
+              "date": "2026-09-22",
+              "region": "South",
+              "channel": "Web",
+              "items": 3,
+              "amount": 139.45
+            },
+            {
+              "id": "FL-1099",
+              "date": "2026-09-29",
+              "region": "North",
+              "channel": "Marketplace",
+              "items": 2,
+              "amount": 88.2
             }
-          }
+          ]
         }
       }
     },
@@ -7871,6 +7013,250 @@
       }
     },
     {
+      "type": "itinerary",
+      "category": "composite",
+      "description": "Trip plan by day: days[{label, when, theme, stay, stops[{time, title, kind, place, cost, minutes, must, done}]}], route[], legs[], packing[], budget. Bind days to tick and add stops.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Trip name, e.g. \"5 days in Tokyo\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the title (dates, travellers)."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars. Omit it and the spend line leads."
+        },
+        "currency": {
+          "type": "string",
+          "required": false,
+          "description": "ISO 4217 code for every cost. Default \"USD\". Never put a symbol in the numbers."
+        },
+        "budget": {
+          "type": "number",
+          "required": false,
+          "description": "Trip budget. Planned spend (stop and leg costs) is shown against it: warning past 90%, alert when over."
+        },
+        "route": {
+          "type": "string[]",
+          "required": false,
+          "description": "Cities in order, drawn as a route strip. Derived from legs when omitted."
+        },
+        "days": {
+          "type": "Array<{ id?: string; label: string; when?: string; theme?: string; stay?: string; stops: Array<{ id?: string; time?: string; title: string; kind: \"sight\" | \"food\" | \"stay\" | \"transit\" | \"activity\" | \"shop\" | \"nature\" | \"nightlife\" | \"flight\"; place?: string; cost?: number; minutes?: number; must?: boolean; done?: boolean; image?: string }> }>",
+          "required": true,
+          "description": "The days. `when` is a display label (\"Fri 16 Oct\"); `time` shows as written (\"08:30\"). `must` tags a must-see. Two-way bind with `bind: \"{state.days}\"` so ticking a stop or adding one persists."
+        },
+        "open": {
+          "type": "number",
+          "required": false,
+          "description": "Index of the expanded day. Default 0; set it to today for \"what is next today\"."
+        },
+        "legs": {
+          "type": "Array<{ id?: string; from: string; to: string; kind: \"flight\" | \"train\" | \"bus\" | \"car\" | \"ferry\" | \"walk\"; ref?: string; minutes?: number; cost?: number }>",
+          "required": false,
+          "description": "Transport between cities. `ref` is the train, flight or line name."
+        },
+        "packing": {
+          "type": "Array<{ id?: string; group: string; items: string[] }>",
+          "required": false,
+          "description": "Packing list by group."
+        }
+      },
+      "example": {
+        "type": "itinerary",
+        "bind": "{state.days}",
+        "props": {
+          "title": "Weekend in Lisbon",
+          "subtitle": "2 days · 2 travellers",
+          "currency": "USD",
+          "budget": 400,
+          "route": [
+            "Lisbon",
+            "Sintra",
+            "Lisbon"
+          ],
+          "legs": [
+            {
+              "from": "Lisbon",
+              "to": "Sintra",
+              "kind": "train",
+              "ref": "Rossio line",
+              "minutes": 40,
+              "cost": 5
+            },
+            {
+              "from": "Sintra",
+              "to": "Lisbon",
+              "kind": "train",
+              "ref": "Rossio line",
+              "minutes": 40,
+              "cost": 5
+            }
+          ],
+          "days": [
+            {
+              "label": "Day 1",
+              "when": "Sat 17 Oct",
+              "theme": "Alfama and the river",
+              "stay": "Casa Azulejo, Alfama",
+              "stops": [
+                {
+                  "time": "09:30",
+                  "title": "Miradouro da Graça",
+                  "kind": "sight",
+                  "place": "Graça",
+                  "minutes": 45,
+                  "cost": 0
+                },
+                {
+                  "time": "11:00",
+                  "title": "Tram 28 to Baixa",
+                  "kind": "transit",
+                  "minutes": 30,
+                  "cost": 3
+                },
+                {
+                  "time": "13:00",
+                  "title": "Grilled sardines at Taberna Rio",
+                  "kind": "food",
+                  "place": "Baixa",
+                  "cost": 28,
+                  "must": true
+                }
+              ]
+            },
+            {
+              "label": "Day 2",
+              "when": "Sun 18 Oct",
+              "theme": "Sintra palaces",
+              "stops": [
+                {
+                  "time": "10:00",
+                  "title": "Pena Palace",
+                  "kind": "sight",
+                  "place": "Sintra",
+                  "minutes": 120,
+                  "cost": 20,
+                  "must": true
+                },
+                {
+                  "time": "14:00",
+                  "title": "Moorish Castle walk",
+                  "kind": "nature",
+                  "minutes": 90,
+                  "cost": 12
+                }
+              ]
+            }
+          ],
+          "packing": [
+            {
+              "group": "Essentials",
+              "items": [
+                "Walking shoes",
+                "Light jacket",
+                "Travel adapter"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "growth-projection",
+      "category": "composite",
+      "staticSafe": true,
+      "description": "Savings growth from 4 numbers: initial, deposit (a month), rate (% a year), years. Widget computes chart, yearly table, totals; sliders retune. Bind deposit.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "e.g. \"Savings growth\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the title."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars. Omit it and the final balance leads."
+        },
+        "currency": {
+          "type": "string",
+          "required": false,
+          "description": "ISO 4217 code. Default \"USD\". Never put a symbol in the numbers."
+        },
+        "initial": {
+          "type": "number",
+          "required": false,
+          "description": "Starting balance. Default 0. For a lump sum with no deposits, set this and deposit: 0."
+        },
+        "deposit": {
+          "type": "number",
+          "required": true,
+          "description": "Added at the end of every month. Write 0 for none. Two-way bind with `bind: \"{state.deposit}\"`."
+        },
+        "rate": {
+          "type": "number",
+          "required": true,
+          "description": "Interest in percent a year: 5 means 5%, never 0.05. Capped at 100."
+        },
+        "years": {
+          "type": "number",
+          "required": true,
+          "description": "How long. Fractions round to whole months. Capped at 100."
+        },
+        "compounding": {
+          "type": "\"monthly\" | \"yearly\"",
+          "required": false,
+          "description": "Default \"monthly\". \"yearly\" credits interest once a year."
+        },
+        "goal": {
+          "type": "number",
+          "required": false,
+          "description": "Target balance: draws a goal line and says the year it is reached."
+        },
+        "inflation": {
+          "type": "number",
+          "required": false,
+          "description": "Percent a year; adds the final balance in today's money."
+        }
+      },
+      "events": {
+        "on_ratechange": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fires with the new rate after the user changes it, e.g. { action: \"set\", target: \"rate\", value: \"{event}\" }."
+        },
+        "on_yearschange": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fires with the new years after the user changes them."
+        }
+      },
+      "example": {
+        "type": "growth-projection",
+        "bind": "{state.deposit}",
+        "props": {
+          "title": "Savings growth",
+          "currency": "USD",
+          "initial": 0,
+          "rate": 5,
+          "years": 10,
+          "compounding": "monthly",
+          "goal": 50000
+        }
+      }
+    },
+    {
       "type": "kanban",
       "category": "data",
       "description": "Drag-and-drop kanban board. Cards group into columns by `columnKey`. Bind to receive reordered cards.",
@@ -8775,6 +8161,207 @@
             }
           },
           "bind": "state.selectedId"
+        }
+      }
+    },
+    {
+      "type": "meal-plan",
+      "category": "composite",
+      "description": "Week of meals: recipes[{id, name, kind, serves, kcal, protein_g, ingredients}] once, days[{day, meals[{slot, recipe: id}]}], goal. Swaps meals, derives the shopping list. Bind people.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Plan name, e.g. \"High-protein week\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the title."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars."
+        },
+        "people": {
+          "type": "number",
+          "required": true,
+          "description": "People cooked for; scales the shopping list by people / serves. Two-way bind with `bind: \"{state.people}\"`."
+        },
+        "goal": {
+          "type": "{ kcal?: number; protein_g?: number }",
+          "required": false,
+          "description": "Per person per day. Each day and the weekly average are shown against it."
+        },
+        "recipes": {
+          "type": "Array<{ id: string; name: string; kind?: \"breakfast\" | \"lunch\" | \"dinner\" | \"snack\"; serves: number; minutes?: number; kcal?: number; protein_g?: number; tags?: string[]; ingredients: Array<{ name: string; qty?: number; unit?: string; note?: string; aisle?: \"produce\" | \"protein\" | \"dairy\" | \"grains\" | \"pantry\" | \"frozen\" | \"other\" }>; steps?: Array<{ text: string; minutes?: number; tip?: string }> }>",
+          "required": true,
+          "description": "The library, each recipe written ONCE. kcal and protein_g are PER SERVING; qty is a number with a separate unit. Include extra recipes per kind so meals can be swapped."
+        },
+        "days": {
+          "type": "Array<{ id?: string; day: string; meals: Array<{ id?: string; slot: \"breakfast\" | \"lunch\" | \"dinner\" | \"snack\"; recipe: string }> }>",
+          "required": true,
+          "description": "`day` is a display label (\"Mon\"). `recipe` is a recipe id from `recipes`. Swapping a meal writes a new days array."
+        }
+      },
+      "example": {
+        "type": "meal-plan",
+        "bind": "{state.people}",
+        "props": {
+          "title": "High-protein week",
+          "people": 2,
+          "goal": {
+            "protein_g": 130,
+            "kcal": 2100
+          },
+          "recipes": [
+            {
+              "id": "oats",
+              "name": "Protein overnight oats",
+              "kind": "breakfast",
+              "serves": 1,
+              "kcal": 480,
+              "protein_g": 35,
+              "ingredients": [
+                {
+                  "name": "rolled oats",
+                  "qty": 0.5,
+                  "unit": "cup",
+                  "aisle": "grains"
+                },
+                {
+                  "name": "Greek yogurt",
+                  "qty": 0.75,
+                  "unit": "cup",
+                  "aisle": "dairy"
+                }
+              ]
+            },
+            {
+              "id": "eggs",
+              "name": "Spinach egg scramble",
+              "kind": "breakfast",
+              "serves": 1,
+              "kcal": 420,
+              "protein_g": 32,
+              "ingredients": [
+                {
+                  "name": "eggs",
+                  "qty": 4,
+                  "aisle": "dairy"
+                },
+                {
+                  "name": "baby spinach",
+                  "qty": 2,
+                  "unit": "cup",
+                  "aisle": "produce"
+                }
+              ]
+            },
+            {
+              "id": "chicken-bowl",
+              "name": "Chicken rice bowl",
+              "kind": "lunch",
+              "serves": 2,
+              "kcal": 640,
+              "protein_g": 52,
+              "ingredients": [
+                {
+                  "name": "chicken breast",
+                  "qty": 500,
+                  "unit": "g",
+                  "aisle": "protein"
+                },
+                {
+                  "name": "jasmine rice",
+                  "qty": 1,
+                  "unit": "cup",
+                  "aisle": "grains"
+                }
+              ]
+            },
+            {
+              "id": "salmon",
+              "name": "Salmon, quinoa and greens",
+              "kind": "dinner",
+              "serves": 2,
+              "kcal": 690,
+              "protein_g": 48,
+              "ingredients": [
+                {
+                  "name": "salmon fillet",
+                  "qty": 400,
+                  "unit": "g",
+                  "aisle": "protein"
+                },
+                {
+                  "name": "quinoa",
+                  "qty": 0.75,
+                  "unit": "cup",
+                  "aisle": "grains"
+                }
+              ]
+            },
+            {
+              "id": "chili",
+              "name": "Turkey bean chili",
+              "kind": "dinner",
+              "serves": 4,
+              "kcal": 560,
+              "protein_g": 46,
+              "ingredients": [
+                {
+                  "name": "ground turkey",
+                  "qty": 500,
+                  "unit": "g",
+                  "aisle": "protein"
+                },
+                {
+                  "name": "black beans",
+                  "qty": 2,
+                  "unit": "can",
+                  "aisle": "pantry"
+                }
+              ]
+            }
+          ],
+          "days": [
+            {
+              "day": "Mon",
+              "meals": [
+                {
+                  "slot": "breakfast",
+                  "recipe": "oats"
+                },
+                {
+                  "slot": "lunch",
+                  "recipe": "chicken-bowl"
+                },
+                {
+                  "slot": "dinner",
+                  "recipe": "salmon"
+                }
+              ]
+            },
+            {
+              "day": "Tue",
+              "meals": [
+                {
+                  "slot": "breakfast",
+                  "recipe": "eggs"
+                },
+                {
+                  "slot": "lunch",
+                  "recipe": "chicken-bowl"
+                },
+                {
+                  "slot": "dinner",
+                  "recipe": "chili"
+                }
+              ]
+            }
+          ]
         }
       }
     },
@@ -10229,6 +9816,516 @@
               "label": "Report issue",
               "icon": "alert-triangle",
               "variant": "ghost"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "booking",
+      "category": "composite",
+      "description": "Booking in stages: what, when, details, review. Server fills `services` and `days` (date_label, slots); model sets `party` and `preferred` {date, after}. Fires on_book.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Heading. Defaults to \"Book a table\" for a table service, else \"Book an appointment\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "The place, e.g. \"Juniper & Ash, Dupont\"."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "One sentence shown first, at most 140 chars."
+        },
+        "currency": {
+          "type": "string",
+          "required": false,
+          "description": "ISO 4217 code for service prices. Default \"USD\"."
+        },
+        "services": {
+          "type": "Array<{ id: string; name: string; kind?: \"table\" | \"hair\" | \"beauty\" | \"health\" | \"class\" | \"other\"; duration_min: number; price?: number; image?: string; party?: { min: number; max: number } }>",
+          "required": false,
+          "description": "Server-filled from the store. A service with `party` asks for a party size within those bounds."
+        },
+        "days": {
+          "type": "Array<{ date: string; date_label: string; slots: Array<{ start: string; label: string; available: boolean }> }>",
+          "required": false,
+          "description": "Server-filled: days (YYYY-MM-DD, label \"Fri 16 Oct\") with slots (ISO start with the store offset, label \"7:00 PM\"). Unavailable slots show as Full."
+        },
+        "tz": {
+          "type": "string",
+          "required": false,
+          "description": "Server-filled store timezone, e.g. \"America/New_York\". Shown as \"Times are New York time.\""
+        },
+        "party": {
+          "type": "number",
+          "required": false,
+          "description": "Model: the party size the visitor asked for. Clamped to the service bounds."
+        },
+        "preferred": {
+          "type": "{ date?: string; after?: string }",
+          "required": false,
+          "description": "Model: the visitor's ask, e.g. \"Friday evening\" is { date: \"2026-10-16\", after: \"18:00\" }. Pre-selects the nearest open slot."
+        },
+        "notice": {
+          "type": "{ kind: \"error\" | \"info\"; text: string; code?: \"slot_taken\"; start?: string }",
+          "required": false,
+          "description": "Host: the answer to a booking. code \"slot_taken\" (with the slot's start) returns to the times with it marked Full."
+        },
+        "confirmed": {
+          "type": "{ booking_id: string; label: string; date_label: string; service_name: string; party?: number }",
+          "required": false,
+          "description": "Host: the confirmed booking. Shows the confirmation and no more actions."
+        },
+        "selection": {
+          "type": "{ service_id?: string; start?: string; party?: number; customer?: { name?: string; email?: string; phone?: string }; notes?: string }",
+          "required": false,
+          "description": "Bindable: the request in progress."
+        }
+      },
+      "events": {
+        "on_book": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Host-attached, never model-written. Fired with { service_id, start, party?, customer: { name, email?, phone? }, notes? }."
+        }
+      },
+      "example": {
+        "type": "booking",
+        "props": {
+          "subtitle": "Juniper & Ash, Dupont",
+          "tz": "America/New_York",
+          "party": 4,
+          "preferred": {
+            "date": "2026-10-16",
+            "after": "19:00"
+          },
+          "services": [
+            {
+              "id": "table",
+              "name": "Dinner table",
+              "kind": "table",
+              "duration_min": 90,
+              "party": {
+                "min": 1,
+                "max": 8
+              }
+            }
+          ],
+          "days": [
+            {
+              "date": "2026-10-15",
+              "date_label": "Thu 15 Oct",
+              "slots": [
+                {
+                  "start": "2026-10-15T17:30:00-04:00",
+                  "label": "5:30 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-15T18:00:00-04:00",
+                  "label": "6:00 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-15T18:30:00-04:00",
+                  "label": "6:30 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-15T19:00:00-04:00",
+                  "label": "7:00 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-15T19:30:00-04:00",
+                  "label": "7:30 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-15T20:00:00-04:00",
+                  "label": "8:00 PM",
+                  "available": true
+                }
+              ]
+            },
+            {
+              "date": "2026-10-16",
+              "date_label": "Fri 16 Oct",
+              "slots": [
+                {
+                  "start": "2026-10-16T17:30:00-04:00",
+                  "label": "5:30 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-16T18:00:00-04:00",
+                  "label": "6:00 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-16T18:30:00-04:00",
+                  "label": "6:30 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-16T19:00:00-04:00",
+                  "label": "7:00 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-16T19:30:00-04:00",
+                  "label": "7:30 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-16T20:00:00-04:00",
+                  "label": "8:00 PM",
+                  "available": true
+                }
+              ]
+            },
+            {
+              "date": "2026-10-17",
+              "date_label": "Sat 17 Oct",
+              "slots": [
+                {
+                  "start": "2026-10-17T17:30:00-04:00",
+                  "label": "5:30 PM",
+                  "available": true
+                },
+                {
+                  "start": "2026-10-17T18:00:00-04:00",
+                  "label": "6:00 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-17T18:30:00-04:00",
+                  "label": "6:30 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-17T19:00:00-04:00",
+                  "label": "7:00 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-17T19:30:00-04:00",
+                  "label": "7:30 PM",
+                  "available": false
+                },
+                {
+                  "start": "2026-10-17T20:00:00-04:00",
+                  "label": "8:00 PM",
+                  "available": false
+                }
+              ]
+            }
+          ]
+        },
+        "bind": "{state.booking}"
+      }
+    },
+    {
+      "type": "menu-order",
+      "category": "composite",
+      "staticSafe": false,
+      "description": "Order from a menu in stages: browse, customise, details, review. items[] of {product_id, name, price, groups?}; featured {id, reason}; preset [{id, qty}]. Binds cart; emits on_checkout.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Restaurant or menu name."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the title (hours, area)."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "One sentence shown first, at most 140 chars."
+        },
+        "currency": {
+          "type": "string",
+          "required": false,
+          "description": "ISO 4217 code. Default USD. Never a symbol."
+        },
+        "items": {
+          "type": "Array<{ id?: string; product_id?: string; name?: string; description?: string; price?: number; image?: string; category?: string; tags?: string[]; kind?: \"main\" | \"side\" | \"drink\" | \"dessert\" | \"product\"; featured?: boolean; groups?: Array<{ id: string; name: string; choose: \"one\" | \"many\"; required?: boolean; max?: number; options: Array<{ id: string; name: string; price_delta?: number }> }> }>",
+          "required": true,
+          "description": "Menu items. Write product_id (and name for streaming); the server fills price, image and groups. Items without product_id are display only. Rows use kind, never type."
+        },
+        "featured": {
+          "type": "{ id: string; reason?: string }",
+          "required": false,
+          "description": "The pick for this visitor, by id or product_id, with a short reason."
+        },
+        "preset": {
+          "type": "Array<{ id: string; qty: number }>",
+          "required": false,
+          "description": "Pre-fills quantities (\"two burgers\")."
+        },
+        "fulfilment": {
+          "type": "Array<\"pickup\" | \"delivery\">",
+          "required": false,
+          "description": "Server-filled. Default [\"pickup\"]."
+        },
+        "fee": {
+          "type": "{ delivery?: number }",
+          "required": false,
+          "description": "Server-filled delivery fee."
+        },
+        "checkout": {
+          "type": "boolean",
+          "required": false,
+          "description": "Server-filled. Ordering controls show only when true. Default false (display only)."
+        },
+        "cart": {
+          "type": "{ lines: Array<{ product_id: string; name: string; qty: number; option_ids: string[]; unit_price: number }>; fulfilment?: \"pickup\" | \"delivery\"; total?: number }",
+          "required": false,
+          "description": "Bindable. The lines so far (qty 1 to 20, at most 30 lines), never the customer. Totals are display only; the store reprices."
+        }
+      },
+      "events": {
+        "on_checkout": {
+          "type": "EventAction | EventAction[]",
+          "required": false,
+          "description": "Server-wired. Fires with { lines, fulfilment, customer: { name, email?, phone?, address? }, total } when the visitor continues to payment."
+        }
+      },
+      "example": {
+        "type": "menu-order",
+        "props": {
+          "title": "Copper Griddle",
+          "currency": "USD",
+          "featured": {
+            "id": "mushroom-swiss",
+            "reason": "Vegetarian and under $13."
+          },
+          "items": [
+            {
+              "product_id": "smash-burger",
+              "name": "Double Smash Burger",
+              "kind": "main",
+              "category": "Burgers"
+            },
+            {
+              "product_id": "mushroom-swiss",
+              "name": "Mushroom Swiss",
+              "kind": "main",
+              "category": "Burgers"
+            },
+            {
+              "product_id": "shoestring-fries",
+              "name": "Shoestring Fries",
+              "kind": "side",
+              "category": "Sides"
+            },
+            {
+              "product_id": "malted-shake",
+              "name": "Malted Vanilla Shake",
+              "kind": "dessert",
+              "category": "Shakes"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "interval-workout",
+      "category": "composite",
+      "description": "Interval workout timer: exercises[{name, cue, kind}], workSec, restSec, rounds. Counts down work and rest in seconds, one exercise at a time. Bind workSec.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Workout name, e.g. \"20-minute home HIIT\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the title (level, equipment)."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars. Omit it and the total time leads."
+        },
+        "exercises": {
+          "type": "Array<{ id?: string; name: string; cue?: string; kind?: \"cardio\" | \"strength\" | \"core\" | \"mobility\" | \"rest\" }>",
+          "required": true,
+          "description": "In order, one round. `cue` is a one-line form tip. A \"rest\" kind is a rest block (restSec long) with no extra rest beside it."
+        },
+        "workSec": {
+          "type": "number",
+          "required": true,
+          "description": "Seconds of work per exercise (5 to 600). Two-way bind with `bind: \"{state.workSec}\"`; a change applies from the next interval."
+        },
+        "restSec": {
+          "type": "number",
+          "required": true,
+          "description": "Seconds of rest between exercises (0 to 300; 0 skips rests)."
+        },
+        "rounds": {
+          "type": "number",
+          "required": false,
+          "description": "Times through the list. Default 1. Total time = rounds × exercises × workSec plus the rests."
+        }
+      },
+      "example": {
+        "type": "interval-workout",
+        "bind": "{state.workSec}",
+        "props": {
+          "title": "20-minute home HIIT",
+          "subtitle": "No equipment · 2 rounds",
+          "verdict": {
+            "text": "Ten moves, twice through; drop push-ups to your knees if form slips.",
+            "status": "info"
+          },
+          "workSec": 40,
+          "restSec": 20,
+          "rounds": 2,
+          "exercises": [
+            {
+              "name": "Jumping jacks",
+              "cue": "Land softly and keep a steady rhythm.",
+              "kind": "cardio"
+            },
+            {
+              "name": "Bodyweight squats",
+              "cue": "Chest up, hips back, drive through the heels.",
+              "kind": "strength"
+            },
+            {
+              "name": "Mountain climbers",
+              "cue": "Hands under shoulders, knees fast.",
+              "kind": "core"
+            },
+            {
+              "name": "Push-ups",
+              "cue": "Straight line from head to heels.",
+              "kind": "strength"
+            },
+            {
+              "name": "High knees",
+              "cue": "Knees to hip height, stay on the balls of your feet.",
+              "kind": "cardio"
+            },
+            {
+              "name": "Reverse lunges",
+              "cue": "Step back and alternate legs.",
+              "kind": "strength"
+            },
+            {
+              "name": "Plank shoulder taps",
+              "cue": "Feet wide, hips still.",
+              "kind": "core"
+            },
+            {
+              "name": "Skater hops",
+              "cue": "Leap side to side and land on one foot.",
+              "kind": "cardio"
+            },
+            {
+              "name": "Glute bridges",
+              "cue": "Squeeze at the top for a beat.",
+              "kind": "strength"
+            },
+            {
+              "name": "Burpees",
+              "cue": "Squat, jump back, jump in, jump up.",
+              "kind": "cardio"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "flashcard-deck",
+      "category": "composite",
+      "description": "Study deck: cards[{front, back, hint, category}]. Flip each card, mark Got it or Missed it, then a score screen with Practise missed. Bind score; on_complete {score, total}.",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": false,
+          "description": "Deck name, e.g. \"Beginner Spanish\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the title."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars. Usually omitted for a deck."
+        },
+        "cards": {
+          "type": "Array<{ id?: string; front: string; back: string; hint?: string; category?: string }>",
+          "required": true,
+          "description": "The cards. `front` is the prompt, `back` the answer, `hint` an optional nudge shown on request, `category` a small topic label."
+        },
+        "shuffle": {
+          "type": "boolean",
+          "required": false,
+          "description": "Deal in shuffled order (a new order on every restart). Default false."
+        },
+        "score": {
+          "type": "number",
+          "required": false,
+          "description": "Cards known since the last restart, written by the widget. Bind with `bind: \"{state.score}\"` to show it elsewhere."
+        }
+      },
+      "events": {
+        "on_complete": {
+          "type": "EventAction",
+          "required": false,
+          "description": "Fired at the end of every pass with { score, total }."
+        }
+      },
+      "example": {
+        "type": "flashcard-deck",
+        "bind": "{state.score}",
+        "props": {
+          "title": "Beginner Spanish",
+          "subtitle": "Flip, then mark whether you knew it",
+          "cards": [
+            {
+              "front": "Hello",
+              "back": "Hola",
+              "category": "Greetings"
+            },
+            {
+              "front": "Thank you",
+              "back": "Gracias",
+              "category": "Greetings"
+            },
+            {
+              "front": "Please",
+              "back": "Por favor",
+              "category": "Greetings"
+            },
+            {
+              "front": "Water",
+              "back": "Agua",
+              "hint": "Sounds like \"aqua\"",
+              "category": "Food and drink"
+            },
+            {
+              "front": "Friend",
+              "back": "Amigo / Amiga",
+              "category": "People"
+            },
+            {
+              "front": "Where is the bathroom?",
+              "back": "¿Dónde está el baño?",
+              "category": "Travel"
             }
           ]
         }
@@ -11941,6 +12038,159 @@
                   "variant": "success"
                 }
               ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "recipe",
+      "category": "composite",
+      "description": "One dish: name, serves, minutes, kcal + protein_g per serving, ingredients[{name, qty (number), unit, note}], steps[{text, minutes, tip}]. Bind servings to scale every qty.",
+      "props": {
+        "name": {
+          "type": "string",
+          "required": true,
+          "description": "Dish name, e.g. \"Lemon ricotta pasta\"."
+        },
+        "subtitle": {
+          "type": "string",
+          "required": false,
+          "description": "One line under the name (cuisine, the hook)."
+        },
+        "verdict": {
+          "type": "{ text: string; status?: \"good\" | \"warn\" | \"bad\" | \"info\" | \"neutral\" }",
+          "required": false,
+          "description": "The answer up front, at most 140 chars."
+        },
+        "kind": {
+          "type": "\"breakfast\" | \"lunch\" | \"dinner\" | \"snack\"",
+          "required": false,
+          "description": "Meal kind; picks the icon when there is no photo."
+        },
+        "image": {
+          "type": "string",
+          "required": false,
+          "description": "Photo URL from the host only; never invent one. Without it a kind icon shows."
+        },
+        "minutes": {
+          "type": "number",
+          "required": false,
+          "description": "Total time. Summed from step minutes when omitted."
+        },
+        "serves": {
+          "type": "number",
+          "required": true,
+          "description": "Servings the quantities are written for. Scaling multiplies qty by servings / serves."
+        },
+        "kcal": {
+          "type": "number",
+          "required": false,
+          "description": "Calories PER SERVING."
+        },
+        "protein_g": {
+          "type": "number",
+          "required": false,
+          "description": "Protein grams PER SERVING."
+        },
+        "tags": {
+          "type": "string[]",
+          "required": false,
+          "description": "Up to 4 short tags (\"vegetarian\", \"one pot\")."
+        },
+        "difficulty": {
+          "type": "\"easy\" | \"medium\" | \"hard\"",
+          "required": false,
+          "description": "Shown as a chip."
+        },
+        "ingredients": {
+          "type": "Array<{ id?: string; name: string; qty?: number; unit?: string; note?: string; aisle?: \"produce\" | \"protein\" | \"dairy\" | \"grains\" | \"pantry\" | \"frozen\" | \"other\" }>",
+          "required": true,
+          "description": "qty is a NUMBER (1.5, not \"1 1/2\"); the widget prints 1½. unit is separate (\"cup\", \"g\", \"tbsp\"); omit it for counted items (\"2\" eggs). note: \"finely grated\"."
+        },
+        "steps": {
+          "type": "Array<{ id?: string; text: string; minutes?: number; tip?: string }>",
+          "required": false,
+          "description": "In order. minutes shows a timer chip; tip shows under the step."
+        },
+        "goal": {
+          "type": "{ kcal?: number; protein_g?: number }",
+          "required": false,
+          "description": "Daily goal per person; the protein per serving is shown as a share of it."
+        },
+        "servings": {
+          "type": "number",
+          "required": false,
+          "description": "Servings to cook; defaults to serves. Two-way bind with `bind: \"{state.servings}\"`."
+        }
+      },
+      "example": {
+        "type": "recipe",
+        "bind": "{state.servings}",
+        "props": {
+          "name": "Lemon ricotta pasta",
+          "subtitle": "Bright, creamy, on the table in 25 minutes",
+          "kind": "dinner",
+          "serves": 4,
+          "minutes": 25,
+          "kcal": 610,
+          "protein_g": 27,
+          "difficulty": "easy",
+          "tags": [
+            "vegetarian",
+            "weeknight"
+          ],
+          "ingredients": [
+            {
+              "name": "rigatoni",
+              "qty": 400,
+              "unit": "g",
+              "aisle": "grains"
+            },
+            {
+              "name": "whole-milk ricotta",
+              "qty": 1.5,
+              "unit": "cup",
+              "aisle": "dairy"
+            },
+            {
+              "name": "lemon",
+              "qty": 1,
+              "note": "zest and juice",
+              "aisle": "produce"
+            },
+            {
+              "name": "parmesan",
+              "qty": 0.75,
+              "unit": "cup",
+              "note": "finely grated",
+              "aisle": "dairy"
+            },
+            {
+              "name": "baby spinach",
+              "qty": 3,
+              "unit": "cup",
+              "aisle": "produce"
+            },
+            {
+              "name": "black pepper",
+              "unit": "to taste",
+              "aisle": "pantry"
+            }
+          ],
+          "steps": [
+            {
+              "text": "Boil the rigatoni in well-salted water until just al dente.",
+              "minutes": 11,
+              "tip": "Save a mug of the pasta water before draining."
+            },
+            {
+              "text": "Whisk the ricotta, lemon zest and juice, parmesan and plenty of pepper in a large bowl.",
+              "minutes": 3
+            },
+            {
+              "text": "Toss the hot pasta and spinach into the bowl, loosening with pasta water until glossy.",
+              "minutes": 2
             }
           ]
         }

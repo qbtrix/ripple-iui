@@ -3,919 +3,307 @@
  "title": "20-minute HIIT",
  "prompt": "Give me a 20-minute HIIT workout I can do at home. Walk me through it one exercise at a time, show how far along I am, and let me set how long each work interval is.",
  "model": "sonnet",
- "recordedAt": "2026-10-08T09:35:44.320Z",
+ "recordedAt": "2026-10-09T06:44:06.993Z",
  "chunks": [
   {
    "t": 0,
-   "text": "{"
+   "text": "{\"version\":\"1."
   },
   {
-   "t": 24,
-   "text": "\"version"
+   "t": 273,
+   "text": "0\",\"state\":{\"workS"
   },
   {
-   "t": 65,
-   "text": "\":\"1"
-  },
-  {
-   "t": 95,
-   "text": ".0\",\"state\":{\"tot"
-  },
-  {
-   "t": 138,
-   "text": "alMin\":20,\"work"
-  },
-  {
-   "t": 161,
-   "text": "Sec\":40,\"restS"
+   "t": 273,
+   "text": "ec\":40},\"ui\":"
   },
   {
    "t": 274,
-   "text": "ec\":20,\"int"
+   "text": "{\"type\":\"interval-"
+  },
+  {
+   "t": 274,
+   "text": "workout\",\"props\":{\"title"
+  },
+  {
+   "t": 274,
+   "text": "\":\"20-minute home H"
   },
   {
    "t": 275,
-   "text": "ervals\":20,\"step\":"
+   "text": "IIT\",\"subtitle"
   },
   {
-   "t": 275,
-   "text": "0,\"exercises\":["
+   "t": 276,
+   "text": "\":\"No equipment · "
   },
   {
-   "t": 291,
-   "text": "{\"name\":\"Jum"
+   "t": 277,
+   "text": "10 moves · 2 "
   },
   {
-   "t": 326,
-   "text": "ping jacks\",\"cue\":"
+   "t": 289,
+   "text": "rounds\",\"verdict\":"
   },
   {
-   "t": 359,
-   "text": "\"Land soft"
+   "t": 323,
+   "text": "{\"text\":\"Ten"
   },
   {
-   "t": 749,
-   "text": "ly and"
+   "t": 356,
+   "text": " moves, twice through."
   },
   {
-   "t": 749,
-   "text": " keep a"
+   "t": 423,
+   "text": " Drop push-ups to your"
   },
   {
-   "t": 750,
-   "text": " steady r"
+   "t": 600,
+   "text": " knees if your"
   },
   {
-   "t": 750,
-   "text": "hythm.\"},{\"name"
+   "t": 600,
+   "text": " form slips.\",\"status\":\""
   },
   {
-   "t": 750,
-   "text": "\":\"Bodyweight"
+   "t": 600,
+   "text": "info\"},\"workSec\":"
   },
   {
-   "t": 750,
-   "text": " squats\",\"cue\":\""
+   "t": 600,
+   "text": "\"{state"
   },
   {
-   "t": 750,
-   "text": "Chest up"
+   "t": 600,
+   "text": ".workSec}\",\"restS"
   },
   {
-   "t": 751,
-   "text": ", push"
+   "t": 625,
+   "text": "ec\":20,\"rounds"
   },
   {
-   "t": 751,
-   "text": " hips back"
+   "t": 655,
+   "text": "\":2,\"exercises\":"
   },
   {
-   "t": 751,
-   "text": ", drive"
+   "t": 688,
+   "text": "[{\"name\":\"J"
   },
   {
-   "t": 751,
-   "text": " through he"
+   "t": 722,
+   "text": "umping jacks\",\"cue"
   },
   {
-   "t": 773,
-   "text": "els.\"},{\"name\":\""
+   "t": 756,
+   "text": "\":\"Land softly and ke"
   },
   {
-   "t": 837,
-   "text": "Mountain climbers\",\""
+   "t": 791,
+   "text": "ep a steady rhythm"
   },
   {
-   "t": 837,
-   "text": "cue\":\"Hands under"
+   "t": 822,
+   "text": ".\",\"kind\":\"card"
   },
   {
-   "t": 864,
-   "text": " shoulders, drive kn"
+   "t": 949,
+   "text": "io\"},{\"name\":\""
   },
   {
-   "t": 892,
-   "text": "ees fast.\"},{\"name"
+   "t": 949,
+   "text": "Bodyweight squats"
   },
   {
-   "t": 926,
-   "text": "\":\"Push-ups\",\""
+   "t": 949,
+   "text": "\",\"cue\":\"Chest"
   },
   {
-   "t": 967,
-   "text": "cue\":\"Dr"
+   "t": 957,
+   "text": " up, hips back, drive"
   },
   {
-   "t": 993,
-   "text": "op to"
+   "t": 989,
+   "text": " through the heels.\",\"kind"
   },
   {
    "t": 1024,
-   "text": " your knees if need"
+   "text": "\":\"strength\"},{\""
   },
   {
-   "t": 1058,
-   "text": "ed. Keep your"
+   "t": 1057,
+   "text": "name\":\"Mountain clim"
   },
   {
-   "t": 1092,
-   "text": " core t"
+   "t": 1090,
+   "text": "bers\",\"cue\":\""
   },
   {
-   "t": 1124,
-   "text": "ight.\"},{\"name\":\""
+   "t": 1123,
+   "text": "Hands under shoulders,"
   },
   {
-   "t": 1158,
-   "text": "High knees\",\"cue\":\""
+   "t": 1156,
+   "text": " dr"
   },
   {
-   "t": 1191,
-   "text": "Run"
+   "t": 1190,
+   "text": "ive the"
   },
   {
-   "t": 1303,
-   "text": " in"
+   "t": 1223,
+   "text": " knees fast.\",\"kind"
   },
   {
-   "t": 1315,
-   "text": " place and"
+   "t": 1299,
+   "text": "\":\"core\"},{\"name"
   },
   {
-   "t": 1315,
-   "text": " lift knees to h"
+   "t": 1300,
+   "text": "\":\"Push-ups\",\""
   },
   {
-   "t": 1325,
-   "text": "ip height.\"},{\"name\":"
+   "t": 1323,
+   "text": "cue\":\"Straight line"
   },
   {
-   "t": 1360,
-   "text": "\"Reverse lunges"
+   "t": 1356,
+   "text": " from head to heels.\",\"k"
   },
   {
-   "t": 1403,
-   "text": "\",\"cue\":\"Step"
+   "t": 1390,
+   "text": "ind\":\"strength\"},{"
   },
   {
-   "t": 1425,
-   "text": " back"
+   "t": 1424,
+   "text": "\"name\":\"High knees\",\""
   },
   {
-   "t": 1458,
-   "text": ", dr"
+   "t": 1457,
+   "text": "cue\":\"Knees to"
   },
   {
-   "t": 1490,
-   "text": "op the"
+   "t": 1489,
+   "text": " hip height, stay on the"
   },
   {
-   "t": 1525,
-   "text": " knee, and"
+   "t": 1522,
+   "text": " balls of your feet.\",\""
   },
   {
-   "t": 1557,
-   "text": " alternate legs.\"},{"
+   "t": 1556,
+   "text": "kind\":\"cardio\""
   },
   {
    "t": 1590,
-   "text": "\"name\":\"Burpees"
+   "text": "},{\"name\":\"Re"
   },
   {
-   "t": 1624,
-   "text": "\",\"cue\":\"Squ"
+   "t": 1627,
+   "text": "verse lunges\",\"cue"
   },
   {
-   "t": 1657,
-   "text": "at,"
+   "t": 1703,
+   "text": "\":\"Step back and altern"
   },
   {
-   "t": 1691,
-   "text": " j"
+   "t": 1703,
+   "text": "ate legs.\",\"kind\":"
   },
   {
-   "t": 1724,
-   "text": "ump back"
+   "t": 1743,
+   "text": "\"strength\"},{\"name"
   },
   {
-   "t": 1759,
-   "text": ", j"
+   "t": 1756,
+   "text": "\":\"Plank shoul"
   },
   {
    "t": 1790,
-   "text": "ump in"
+   "text": "der taps\",\"cue\":\""
   },
   {
-   "t": 1825,
-   "text": ", and jump up.\"},{"
+   "t": 1824,
+   "text": "Feet wide, ke"
   },
   {
    "t": 1857,
-   "text": "\"name\":\"Plank sh"
+   "text": "ep your"
   },
   {
-   "t": 1893,
-   "text": "oulder taps\",\"cue"
+   "t": 1890,
+   "text": " hips still.\",\"kind\":"
   },
   {
-   "t": 1924,
-   "text": "\":\"Fe"
+   "t": 1926,
+   "text": "\"core\"},{\"name\":"
   },
   {
-   "t": 1958,
-   "text": "et wide and hips still"
+   "t": 1957,
+   "text": "\"Skater hops\",\"c"
   },
   {
-   "t": 1993,
-   "text": " as"
+   "t": 1990,
+   "text": "ue\":\"Leap side to"
   },
   {
    "t": 2023,
-   "text": " you tap each"
+   "text": " side and land on one foot."
   },
   {
-   "t": 2059,
-   "text": " shoulder.\"}]},"
+   "t": 2057,
+   "text": "\",\"kind\":\"cardio"
   },
   {
-   "t": 2091,
-   "text": "\"ui\":{\"type"
+   "t": 2095,
+   "text": "\"},{\"name\":\""
   },
   {
-   "t": 2124,
-   "text": "\":\"card\",\"props\":{\""
+   "t": 2123,
+   "text": "Glute bridges\",\"cue"
   },
   {
-   "t": 2159,
-   "text": "title\":\"Home HII"
+   "t": 2157,
+   "text": "\":\"Squeeze at"
   },
   {
    "t": 2191,
-   "text": "T\",\"description\":\"Step"
+   "text": " the top for a beat.\",\""
   },
   {
    "t": 2224,
-   "text": " through one exercise at a time"
+   "text": "kind\":\"strength\"},"
   },
   {
-   "t": 2257,
-   "text": "\""
+   "t": 2256,
+   "text": "{\"name\":\"Burp"
   },
   {
-   "t": 2291,
-   "text": "},\"children\":[{\"type"
+   "t": 2290,
+   "text": "ees\",\"cue\":\"Squ"
   },
   {
-   "t": 2328,
-   "text": "\":\"flex\",\"props\":{"
+   "t": 2322,
+   "text": "at, jump back, jump"
   },
   {
-   "t": 2359,
-   "text": "\"direction\":\"column\",\"g"
+   "t": 2357,
+   "text": " in, jump up.\",\"k"
   },
   {
-   "t": 2393,
-   "text": "ap\":\"14"
+   "t": 2391,
+   "text": "ind\":\"cardio\"}"
   },
   {
-   "t": 2425,
-   "text": "px\"},\"children\":[{"
+   "t": 2426,
+   "text": "]},\"bind\":\"{"
   },
   {
-   "t": 2459,
-   "text": "\"type\":\"text\",\"props\":"
+   "t": 2505,
+   "text": "state.workSec}\"}"
   },
   {
-   "t": 2492,
-   "text": "{\"text\":\"Ex"
-  },
-  {
-   "t": 2527,
-   "text": "ercise {state.step + "
-  },
-  {
-   "t": 2573,
-   "text": "1} of {state.interv"
-  },
-  {
-   "t": 2591,
-   "text": "als}\",\"weight\":\"sem"
-  },
-  {
-   "t": 2627,
-   "text": "ibold\"}},{\"type"
-  },
-  {
-   "t": 2671,
-   "text": "\":\"progress\",\"props\":{"
-  },
-  {
-   "t": 2693,
-   "text": "\"value"
-  },
-  {
-   "t": 2727,
-   "text": "\":\"{(state.step +"
-  },
-  {
-   "t": 2758,
-   "text": " 1) / state.interv"
-  },
-  {
-   "t": 2793,
-   "text": "als * 100}\",\"max\":"
-  },
-  {
-   "t": 2826,
-   "text": "100}"
-  },
-  {
-   "t": 2859,
-   "text": "},{\"type\":\"each\",\""
-  },
-  {
-   "t": 2896,
-   "text": "items\":\"{state.exerc"
-  },
-  {
-   "t": 2926,
-   "text": "ises}\",\"children\":[{\""
-  },
-  {
-   "t": 2960,
-   "text": "type\":\"if\",\"condition\":"
-  },
-  {
-   "t": 2992,
-   "text": "\"{index == state.step %"
-  },
-  {
-   "t": 3030,
-   "text": " state.exercises.length}"
-  },
-  {
-   "t": 3059,
-   "text": "\",\"children\":[{\"type\":"
-  },
-  {
-   "t": 3092,
-   "text": "\"flex\",\"props\":{\""
-  },
-  {
-   "t": 3141,
-   "text": "direction\":\"column\",\"gap"
-  },
-  {
-   "t": 3174,
-   "text": "\":\"6"
-  },
-  {
-   "t": 3208,
-   "text": "px\"},\"children\":[{"
-  },
-  {
-   "t": 3242,
-   "text": "\"type\":\"heading\",\"props"
-  },
-  {
-   "t": 3277,
-   "text": "\":{\"text\":\"{item"
-  },
-  {
-   "t": 3318,
-   "text": ".name}\",\"level\":2}"
-  },
-  {
-   "t": 3336,
-   "text": "},{\"type\":\"text\",\""
-  },
-  {
-   "t": 3360,
-   "text": "props\":{\"text\":\"{"
-  },
-  {
-   "t": 3396,
-   "text": "item.cue}\",\"size\":"
-  },
-  {
-   "t": 3448,
-   "text": "\"sm\"}}]}"
-  },
-  {
-   "t": 3466,
-   "text": "]}]},{\"type\":"
-  },
-  {
-   "t": 3493,
-   "text": "\"grid\",\"props\":{\""
-  },
-  {
-   "t": 3528,
-   "text": "columns\":2,\"gap"
-  },
-  {
-   "t": 3559,
-   "text": "\":\"12"
-  },
-  {
-   "t": 3599,
-   "text": "px\"},\"children\":[{"
-  },
-  {
-   "t": 3630,
-   "text": "\"type\":\"stat\",\"props"
-  },
-  {
-   "t": 3669,
-   "text": "\":{\"label\":\"Work"
-  },
-  {
-   "t": 3705,
-   "text": " (sec)\",\"value\":\""
-  },
-  {
-   "t": 3733,
-   "text": "{state.workSec}\",\""
-  },
-  {
-   "t": 3760,
-   "text": "format\":\"number\""
-  },
-  {
-   "t": 3795,
-   "text": "}},{\"type\":\"st"
-  },
-  {
-   "t": 3835,
-   "text": "at\",\"props\":{\"label\":"
-  },
-  {
-   "t": 3861,
-   "text": "\"Rest (sec)"
-  },
-  {
-   "t": 3899,
-   "text": "\",\"value\":\"{state.rest"
-  },
-  {
-   "t": 3927,
-   "text": "Sec}\",\"format\":\"number"
-  },
-  {
-   "t": 3959,
-   "text": "\"}}]},{\"type"
-  },
-  {
-   "t": 3993,
-   "text": "\":\"if\",\"condition\":\""
-  },
-  {
-   "t": 4028,
-   "text": "{state.step + 1 "
-  },
-  {
-   "t": 4061,
-   "text": ">= state.intervals}"
-  },
-  {
-   "t": 4097,
-   "text": "\",\"children\":[{\"type\":"
-  },
-  {
-   "t": 4133,
-   "text": "\"alert\",\"props\":{\""
-  },
-  {
-   "t": 4159,
-   "text": "title\":\"Last exercise"
-  },
-  {
-   "t": 4244,
-   "text": "\",\"description\":\"Give it ever"
-  },
-  {
-   "t": 4244,
-   "text": "ything, then you"
-  },
-  {
-   "t": 4281,
-   "text": " are done.\",\"variant\":\""
-  },
-  {
-   "t": 4339,
-   "text": "success\"}}"
-  },
-  {
-   "t": 4339,
-   "text": "]},{\"type\":\"fl"
-  },
-  {
-   "t": 4360,
-   "text": "ex\",\"props\":{\"direction"
-  },
-  {
-   "t": 4394,
-   "text": "\":\"row\",\"gap\":\""
-  },
-  {
-   "t": 4425,
-   "text": "8px\",\"wrap\":true"
-  },
-  {
-   "t": 4462,
-   "text": "},\"children\":[{\"type"
-  },
-  {
-   "t": 4492,
-   "text": "\":\"button\",\"props\":{\""
-  },
-  {
-   "t": 4700,
-   "text": "label\":\"Back\",\"variant"
-  },
-  {
-   "t": 4700,
-   "text": "\":\"outline\",\"disabled"
-  },
-  {
-   "t": 4700,
-   "text": "\":\"{state.step == "
-  },
-  {
-   "t": 4701,
-   "text": "0}\"},\"on_click"
-  },
-  {
-   "t": 4701,
-   "text": "\":{\"action\":\"set\",\""
-  },
-  {
-   "t": 4701,
-   "text": "target\":\"step\",\"value\":\""
-  },
-  {
-   "t": 4903,
-   "text": "{state.step - 1}"
-  },
-  {
-   "t": 4903,
-   "text": "\"}},{\"type\":\""
-  },
-  {
-   "t": 4903,
-   "text": "button\",\"props\":{\"label\":"
-  },
-  {
-   "t": 4903,
-   "text": "\"Next ex"
-  },
-  {
-   "t": 4917,
-   "text": "ercise\",\"disabled\":\""
-  },
-  {
-   "t": 4941,
-   "text": "{state.step + 1 "
-  },
-  {
-   "t": 4957,
-   "text": ">= state.intervals}"
-  },
-  {
-   "t": 5009,
-   "text": "\"},\"on_click\":{"
-  },
-  {
-   "t": 5009,
-   "text": "\"action\":\"set\",\"target\":"
-  },
-  {
-   "t": 5033,
-   "text": "\"step\",\"value\":\"{state"
-  },
-  {
-   "t": 5072,
-   "text": ".step + 1}\"}"
-  },
-  {
-   "t": 5095,
-   "text": "},{\"type\":\"button\",\""
-  },
-  {
-   "t": 5131,
-   "text": "props\":{\"label\":\""
-  },
-  {
-   "t": 5165,
-   "text": "Restart\",\"variant\":\""
-  },
-  {
-   "t": 5195,
-   "text": "ghost\"},\"on_click"
-  },
-  {
-   "t": 5226,
-   "text": "\":["
-  },
-  {
-   "t": 5261,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 5296,
-   "text": "\":\"step\",\"value\":0},"
-  },
-  {
-   "t": 5330,
-   "text": "{\"action\":\"toast\",\""
-  },
-  {
-   "t": 5364,
-   "text": "message\":\"Back"
-  },
-  {
-   "t": 5394,
-   "text": " to ex"
-  },
-  {
-   "t": 5428,
-   "text": "ercise 1\",\"variant\":"
-  },
-  {
-   "t": 5464,
-   "text": "\"info\"}]}]},"
-  },
-  {
-   "t": 5494,
-   "text": "{\"type\":\"separator\",\""
-  },
-  {
-   "t": 5529,
-   "text": "props\":{}"
-  },
-  {
-   "t": 5562,
-   "text": "},{\"type\":\"slider"
-  },
-  {
-   "t": 5595,
-   "text": "\",\"props\":{\"label\":\""
-  },
-  {
-   "t": 5629,
-   "text": "Work inter"
-  },
-  {
-   "t": 5662,
-   "text": "val (sec)\",\"min\":"
-  },
-  {
-   "t": 5693,
-   "text": "10,\"max\":90,\""
-  },
-  {
-   "t": 5728,
-   "text": "step\":5,\"showValue"
-  },
-  {
-   "t": 5764,
-   "text": "\":true},\"bind\":\""
-  },
-  {
-   "t": 5796,
-   "text": "{state.workSec}\",\""
-  },
-  {
-   "t": 5831,
-   "text": "on_change\":[{\"action"
-  },
-  {
-   "t": 5863,
-   "text": "\":\"set\",\"target\":\"int"
-  },
-  {
-   "t": 5895,
-   "text": "ervals\",\"value\":\"{("
-  },
-  {
-   "t": 5929,
-   "text": "state.totalMin * "
-  },
-  {
-   "t": 5961,
-   "text": "60 - (state.total"
-  },
-  {
-   "t": 5998,
-   "text": "Min * 60) % ("
-  },
-  {
-   "t": 6031,
-   "text": "state.workSec + state."
-  },
-  {
-   "t": 6062,
-   "text": "restSec)) / (state"
-  },
-  {
-   "t": 6100,
-   "text": ".workSec + state.rest"
-  },
-  {
-   "t": 6128,
-   "text": "Sec)}\"},{\""
-  },
-  {
-   "t": 6162,
-   "text": "action\":\"set\",\"target\":\""
-  },
-  {
-   "t": 6196,
-   "text": "step\",\"value\":0}]},"
-  },
-  {
-   "t": 6231,
-   "text": "{\"type\":\"slider\",\""
-  },
-  {
-   "t": 6262,
-   "text": "props\":{\"label\":\""
-  },
-  {
-   "t": 6296,
-   "text": "Rest interval (sec)"
-  },
-  {
-   "t": 6328,
-   "text": "\",\"min\":5,\"max\":"
-  },
-  {
-   "t": 6362,
-   "text": "60,\"step\":5,\""
-  },
-  {
-   "t": 6395,
-   "text": "showValue\":true},\"b"
-  },
-  {
-   "t": 6429,
-   "text": "ind\":\"{state.restS"
-  },
-  {
-   "t": 6462,
-   "text": "ec}\",\"on_change\":["
-  },
-  {
-   "t": 6495,
-   "text": "{\"action\":\"set\",\"target"
-  },
-  {
-   "t": 6529,
-   "text": "\":\"intervals\",\"value\":"
-  },
-  {
-   "t": 6563,
-   "text": "\"{(state.totalM"
-  },
-  {
-   "t": 6595,
-   "text": "in * 60 - (state"
-  },
-  {
-   "t": 6630,
-   "text": ".totalMin * 60"
-  },
-  {
-   "t": 6661,
-   "text": ") % (state.work"
-  },
-  {
-   "t": 6696,
-   "text": "Sec + state.restSec"
-  },
-  {
-   "t": 6729,
-   "text": ")) / (state.workS"
-  },
-  {
-   "t": 6763,
-   "text": "ec + state.restSec)"
-  },
-  {
-   "t": 6797,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 6834,
-   "text": "set\",\"target\":\"step\",\"value"
-  },
-  {
-   "t": 6868,
-   "text": "\":0}]},{\"type"
-  },
-  {
-   "t": 6895,
-   "text": "\":\"slider\",\"props\":{"
-  },
-  {
-   "t": 6932,
-   "text": "\"label\":\"Total workout"
-  },
-  {
-   "t": 6964,
-   "text": " (min"
-  },
-  {
-   "t": 6997,
-   "text": ")\",\"min\":5,\"max"
-  },
-  {
-   "t": 7029,
-   "text": "\":40,\"step\":5,"
-  },
-  {
-   "t": 7064,
-   "text": "\"showValue\":true},\""
-  },
-  {
-   "t": 7099,
-   "text": "bind\":\"{state.tot"
-  },
-  {
-   "t": 7128,
-   "text": "alMin}\",\"on_change"
-  },
-  {
-   "t": 7164,
-   "text": "\":[{\"action\":\"set"
-  },
-  {
-   "t": 7195,
-   "text": "\",\"target\":\"intervals\",\""
-  },
-  {
-   "t": 7230,
-   "text": "value\":\"{(state.tot"
-  },
-  {
-   "t": 7263,
-   "text": "alMin * 60 -"
-  },
-  {
-   "t": 7338,
-   "text": " (state.totalMin *"
-  },
-  {
-   "t": 7338,
-   "text": " 60) % (state.work"
-  },
-  {
-   "t": 7420,
-   "text": "Sec + state.restSec"
-  },
-  {
-   "t": 7420,
-   "text": ")) / (state.workS"
-  },
-  {
-   "t": 7429,
-   "text": "ec + state.restSec)"
-  },
-  {
-   "t": 7466,
-   "text": "}\"},{\"action\":\""
-  },
-  {
-   "t": 7496,
-   "text": "set\",\"target\":\"step\",\"value"
-  },
-  {
-   "t": 7529,
-   "text": "\":0}]}]}]"
-  },
-  {
-   "t": 7582,
-   "text": "}}"
+   "t": 2508,
+   "text": "}"
   }
  ]
 }
