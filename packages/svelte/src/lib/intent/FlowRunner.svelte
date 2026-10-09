@@ -1,95 +1,30 @@
 <!--
-  FlowRunner.svelte — Chain Flow host (RFC 13 M1).
-  Created 2026-05-31.
-  Updated 2026-06-17 (fix/flow-required-validation) — required-field gate. The
-  executor now refuses to advance past a step whose required form fields are
-  empty (returns null AND sets hasValidationErrors). Two changes here: (1)
-  flow.submit no longer treats EVERY null advance as "terminal reached" — it
-  only fires the terminal (markSubmitted + onComplete) when the advance was a
-  genuine end-of-chain, NOT when it was blocked by validation; a blocked submit
-  stays on the step exactly like a blocked next. (2) when the executor reports
-  validation errors we render an inline, accessible error summary inside the
-  step card listing each missing field, so the user sees what's missing instead
-  of a Continue click that silently does nothing.
-  Updated 2026-06-15 (Chain Flow v2 §3.3, D2 — write-terminal success gating):
-  fireTerminal no longer always shows the success view before handing off to the
-  host. For WRITE-kind terminals (invoke_tool / call_binding / create_pocket) it
-  now AWAITS onComplete and only calls markSubmitted() once the host write
-  resolves — on rejection it stays un-submitted so the still-rendered terminal
-  step + submit button are the retry, and the host's error toast is the feedback.
-  No more false "✓ all set" before the write lands. chat / navigate / emit are
-  unchanged (no failure mode → instant feedback, fire-and-forget). The onComplete
-  prop type widened to `=> void | Promise<void>`. Additive + backward-compatible:
-  every pre-v2 flow has a non-write terminal and keeps the exact prior behavior.
-  Updated 2026-06-09 — silenced two state_referenced_locally warnings on `spec`
-  (the executor seed and the seededFor sentinel). Both are intentional one-time
-  seeds backed by the explicit re-seed $effect; seededFor is reassigned so it
-  can't be $derived. svelte-ignore per recipe, no behavior change.
-  Updated 2026-06-07 — intent→layout slice: each step now renders inside a polished
-  card with a ChainProgress chrome and a ~180ms step transition, instead of a bare
-  widget tree. The executor logic, the flow.next/back/forward/submit interception,
-  the terminal onComplete hand-off, and the flowHosted recursion guard are ALL
-  unchanged — only the per-step CHROME is new. The step's tree still renders via
-  the inner `<Ripple flowHosted>` (which routes through IntentRenderer now), so the
-  step's flow-verb buttons keep driving the executor. ChainProgress reads
-  completed/current/total derived purely from the executor's history + estimated
-  total (no new engine state).
-  Updated 2026-06-08 (design polish): the card chrome now follows a single
-  4/8/12/16/24px spacing scale. Card padding 24px, body gap 16px, header gap 4px,
-  title/desc tracking tightened, a hairline divider above the back-nav, and the
-  back control restyled as a quiet ghost button (8px radius, 12px inset). The
-  success view keeps the centered layout on the same scale. Behavior unchanged —
-  CSS only.
-  Updated 2026-06-08 (step-content rhythm): the card gap only reaches the card's
-  OWN direct children (header / Ripple / nav); the rendered step's blocks live a
-  level deeper inside `.ripple-root`, and a bare Container renders them flush —
-  the source of the "content too cramped" complaint. We now impose a 16px
-  baseline gap on adjacent siblings of the step's `.ripple-root` AND of any bare
-  `[data-ripple-container]` inside it. Zero-specificity (`:where()`) so a spec's
-  own spacing wins, and containers that already drive layout via flex/grid/gap-*
-  are excluded to avoid double-spacing. FLOW-CARD scoped only. CSS only.
-  Updated 2026-06-07 (Wave 3 fixes):
-    (a) DOUBLE HEADING: showHeader now detects whether the step's ui tree leads with
-        a heading node; when it does the flow-runner__header is suppressed so only
-        one heading renders per step.
-    (b) CHAINPROGRESS ALWAYS VISIBLE: showProgress now includes a check for whether
-        the root spec is multi-step (has chain/chain_map), so the dots render even
-        at step 1 when total is unknown.
-    (c) BARE PILL BUTTONS: select steps now route through IntentRenderer → SelectLayout
-        → OptionList (via DESIGNED_INTENTS expansion in Ripple.svelte). FlowRunner
-        itself is untouched for this — the routing change is in Ripple + SelectLayout.
-  Updated 2026-05-31 — RECURSION GUARD: the per-step inner `<Ripple>` now mounts
-  with `flowHosted={true}`. Now that the base `<Ripple>` auto-detects chain specs
-  (PR #49 every-surface fix), a non-terminal step still carries its onward
-  `chain`/`chain_map`, so without this flag the inner Ripple would re-detect the
-  step as a flow and nest a SECOND FlowRunner — infinite recursion / hang. The
-  flag makes the inner Ripple skip detection and render just that step's tree.
+  FlowRunner.svelte: the Chain Flow host (RFC 13). Drives a ChainExecutor over a
+  nested `chain`/`chain_map` UniversalSpec tree and renders the current step in a
+  card (ChainProgress, short fly transition, Back button, inline required-field
+  errors, a success view after a terminal submit), entirely client-side.
 
-  Drives a `ChainExecutor` over a nested `chain`/`chain_map` `UniversalSpec`
-  tree and renders the current step with the standard `<Ripple>` renderer, so a
-  multi-step flow runs ENTIRELY CLIENT-SIDE with zero round-trips. This is the
-  "renders in a Pocket first" deliverable for M1 — no chat dependency, no inline
-  wiring (that is M2), no commerce.
-
-  How a step talks to the runner: a step's UI uses the standard `emit` action
-  with the flow verb as its `target`, e.g.
-    { action: 'emit', target: 'flow.next',
-      value: { selection: {...}, formData: {...} } }
-  The dispatcher turns that into a `{ type:'emit', name:'flow.next', payload }`
-  RippleEvent, which this runner intercepts by its `name`. The verbs are
-  deliberately unambiguous and do NOT collide with the action VM's `flow` verb
-  (which sequences actions *within* a step — see ChainExecutor's class note):
-    - `flow.next`    payload { selection?, formData?, idField? } -> advance(...)
-    - `flow.back`                                                -> back()
-    - `flow.forward`                                             -> forward()
-    - `flow.submit`  payload { selection?, formData?, idField? } -> advance, then
-        if the step was terminal, fire the step's `onComplete` FlowAction.
-  Any other event (including plain emits) is forwarded to the host `onEvent`.
-
-  Cross-step pre-fill: the runner exposes the executor's accumulated `context`
-  via the `ui-flow-context` Svelte context, which NodeRenderer layers onto the
-  `state` scope. A later step pre-fills from an earlier one with
-  `{state.<flowId>_selection.field}` — a scope addition, not a new engine.
+  - Flow verbs: a step emits `{ action:'emit', target:'flow.next' | 'flow.back' |
+    'flow.forward' | 'flow.submit', value:{ selection?, formData?, idField? } }`.
+    They are intercepted here by event `name`; every other event goes to the host
+    `onEvent`. A submit blocked by validation stays on the step; a submit at a
+    genuine terminal fires `onComplete` with the step's FlowAction and payload.
+  - Write terminals (invoke_tool / call_binding / create_pocket) await
+    `onComplete` and show success only once it resolves; chat / navigate / emit
+    show success at once.
+  - State: given a `store` (Ripple passes its own, seeded from the card's
+    `state`), every step's inner Ripple shares it through 'ui-flow-state', so a
+    value bound in one step is read in the next, and the terminal payload gets
+    `state`: the current value of every plain `bind` path on the walked steps.
+    Without a store (a direct mount) each step gets a fresh store seeded from the
+    `state` prop, and the payload carries no `state`.
+  - Each step mounts a fresh inner `<Ripple flowHosted>` ({#key stepKey}), so a
+    previous step's handlers never stay live. `flowHosted` is the recursion guard:
+    a non-terminal step still carries its chain fields and would otherwise nest a
+    second FlowRunner.
+  - Cross-step pre-fill: the executor's accumulated context is exposed as
+    'ui-flow-context', which NodeRenderer layers onto the `state` scope, so a
+    later step reads `{state.<flowId>_selection.field}`.
 -->
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
@@ -98,6 +33,7 @@
 	import ChainProgress from './ChainProgress.svelte';
 	import { ChainExecutor, type TerminalResult } from './chain-executor.svelte.js';
 	import { type UniversalSpec, type OnEventCallback, type RippleEvent } from '@ripple-ui/core';
+	import type { StateManager } from '../core/state-manager.svelte.js';
 
 	interface Props {
 		/** The root flow spec — the whole nested chain/chain_map tree. */
@@ -115,12 +51,19 @@
 		onComplete?: (result: TerminalResult) => void | Promise<void>;
 		/** Forwarded non-flow events from the rendered step's `<Ripple>`. */
 		onEvent?: OnEventCallback;
-		/** Optional initial state passed through to each step's `<Ripple>`. */
+		/** Initial state for each step's `<Ripple>` when no `store` is given. */
 		state?: Record<string, unknown>;
+		/** One store every step shares, so bound values carry across steps. */
+		store?: StateManager;
 		class?: string;
 	}
 
-	let { spec, onComplete, onEvent, state, class: className = '' }: Props = $props();
+	let { spec, onComplete, onEvent, state: stepState, store, class: className = '' }: Props = $props();
+
+	// Always set, so a flow nested under another flow's step never picks up the
+	// outer flow's store by accident.
+	// svelte-ignore state_referenced_locally
+	setContext('ui-flow-state', store);
 
 	// One executor per root spec. Re-seed if the root spec identity changes.
 	// Both reads below are intentional one-time seeds: the $effect right after
@@ -247,6 +190,32 @@
 	// / emit have no failure mode, so they keep the instant feedback.
 	const WRITE_TERMINAL_KINDS = new Set(['invoke_tool', 'call_binding', 'create_pocket']);
 
+	/** Every plain `bind` path in a step's ui tree (loop-templated binds skipped). */
+	function collectBinds(node: unknown, out: Set<string>, seen: WeakSet<object>): void {
+		if (!node || typeof node !== 'object' || seen.has(node)) return;
+		seen.add(node);
+		const bind = (node as { bind?: unknown }).bind;
+		if (typeof bind === 'string') {
+			const path = bind.replace(/^\{|\}$/g, '').trim().replace(/^state\./, '');
+			if (path && !path.includes('{')) out.add(path);
+		}
+		for (const child of Object.values(node)) collectBinds(child, out, seen);
+	}
+
+	/** The shared store's value for every path the walked steps bound, as plain data. */
+	function boundState(): Record<string, unknown> | null {
+		if (!store) return null;
+		const paths = new Set<string>();
+		const seen = new WeakSet<object>();
+		for (const entry of executor.history) collectBinds(entry.spec.ui, paths, seen);
+		const out: Record<string, unknown> = {};
+		for (const path of paths) {
+			const value = store.get(path);
+			if (value !== undefined) out[path] = $state.snapshot(value);
+		}
+		return Object.keys(out).length > 0 ? out : null;
+	}
+
 	function fireTerminal(): void {
 		const terminal = executor.terminalAction();
 		// No declared action (plain emit/no-op flow): nothing to await — mark done.
@@ -254,6 +223,8 @@
 			executor.markSubmitted();
 			return;
 		}
+		const bound = boundState();
+		if (bound) terminal.payload.state = bound;
 		const kind = (terminal.action as { kind?: string } | undefined)?.kind;
 		if (kind && WRITE_TERMINAL_KINDS.has(kind)) {
 			// D2: gate the success view on the host write resolving. On failure stay
@@ -362,7 +333,12 @@
 					{/if}
 				</div>
 			{/if}
-			<Ripple spec={currentSpec} {state} onEvent={handleEvent} flowHosted={true} />
+			<Ripple
+				spec={currentSpec}
+				state={store ? undefined : stepState}
+				onEvent={handleEvent}
+				flowHosted={true}
+			/>
 			{#if hasValidationErrors}
 				<!-- Inline validation summary: the executor blocked the advance because
 				     one or more required fields are empty. Surfaced here (not silently

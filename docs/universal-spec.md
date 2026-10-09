@@ -151,7 +151,9 @@ A multi-step decision flow is materialized **up front as one nested spec** — t
 - `chain` — the linear next step, a **nested `UniversalSpec`** (not a string id).
 - `chain_map` — a branch map from the selected item's `id` to the next `UniversalSpec`. Resolved **before** `chain`, so a branch wins over the linear step when the selection matches.
 - `flowId` — a stable step id that namespaces this step's accumulated data (e.g. `<flowId>_selection`, `<flowId>_formData`), so later steps can read earlier answers.
-- `onComplete` — a `FlowAction` fired when `advance` reaches a step with no `chain`/`chain_map` left (the terminal step).
+- `onComplete` — a `FlowAction` fired when `advance` reaches a step with no `chain`/`chain_map` left (the terminal step). The host gets it with a payload of every step's `<flowId>_selection` / `<flowId>_formData`, plus `state`: the current value of each plain `bind` path on the steps walked.
+
+A flow card's top-level `state` seeds its steps the same way it seeds a plain spec, and all steps share one store, so a value bound in one step is readable as `{state.key}` in the next. A step's own `state` only fills keys that are not set yet.
 
 Linear next step:
 
