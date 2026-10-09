@@ -310,3 +310,95 @@ describe('choice cards stream', () => {
 		expect(whole.querySelector('[data-option-card="gaming"] [data-choice-icon]')?.getAttribute('data-choice-icon')).toBe('gaming');
 	});
 });
+
+describe('choice cards: option buttons render once', () => {
+	// The step a model wrote for a story card: the option buttons sit one level
+	// down, in a row flex under the step's column flex, next to the story text.
+	const opt = (id: string, label: string, description: string) => ({
+		type: 'button',
+		props: { label, description },
+		on_click: { action: 'emit', target: 'flow.next', value: { selection: { id, label } } }
+	});
+	const STORY = 'RB-7 wakes in a rain-soaked junkyard.';
+	const nestedCard = () => ({
+		ui: {
+			flowId: 'robot_start',
+			intent: 'select',
+			title: 'Where does RB-7 go?',
+			ui: {
+				type: 'flex',
+				props: { direction: 'column', gap: 12 },
+				children: [
+					{ type: 'text', props: { text: STORY } },
+					{
+						type: 'flex',
+						props: { direction: 'row', gap: 8, wrap: true },
+						children: [opt('light', 'Follow the light', 'Toward the old tower'), opt('hum', 'Follow the hum', 'Toward the factory')]
+					}
+				]
+			},
+			chain_map: {
+				light: { flowId: 'robot_tower', intent: 'info', title: 'The old tower', onComplete: { kind: 'chat', message: 'tower' }, ui: { type: 'text', props: { text: 'Tower.' } } },
+				hum: { flowId: 'robot_factory', intent: 'info', title: 'The factory', onComplete: { kind: 'chat', message: 'factory' }, ui: { type: 'text', props: { text: 'Factory.' } } }
+			}
+		}
+	});
+	const LABELS = ['Follow the light', 'Follow the hum'];
+	const controlsNamed = (container: HTMLElement, label: string) => {
+		const q = within(container);
+		return [...q.queryAllByRole('button'), ...q.queryAllByRole('radio')].filter((b) => nameOf(b) === label);
+	};
+
+	it('a nested option button shows as one choice card, not a card and a button', () => {
+		const { container } = render(Ripple, { props: { spec: nestedCard() } });
+		for (const label of LABELS) {
+			expect(controlsNamed(container, label)).toHaveLength(1);
+			expect(controlsNamed(container, label)[0].getAttribute('type')).toBe('radio');
+		}
+		expect(container.textContent).toContain(STORY);
+		// The row flex held only option buttons, so nothing of it is left to render.
+		expect(container.querySelectorAll('[data-option-card]')).toHaveLength(2);
+	});
+
+	it('a button that is not an option stays a plain button', () => {
+		const spec = nestedCard();
+		const row = spec.ui.ui.children[1] as { children: unknown[] };
+		row.children.push({ type: 'button', props: { label: 'Learn more' }, on_click: { action: 'emit', target: 'story.help' } });
+		const { container } = render(Ripple, { props: { spec } });
+		expect(controlsNamed(container, 'Learn more')).toHaveLength(1);
+		expect(controlsNamed(container, 'Learn more')[0].tagName).toBe('BUTTON');
+		for (const label of LABELS) expect(controlsNamed(container, label)).toHaveLength(1);
+	});
+
+	it('top-level option buttons still render once, next to a heading', () => {
+		const spec = nestedCard();
+		const row = spec.ui.ui.children[1] as { children: unknown[] };
+		(spec.ui.ui as { children: unknown[] }).children = [{ type: 'text', props: { text: STORY } }, ...row.children];
+		const { container } = render(Ripple, { props: { spec } });
+		for (const label of LABELS) expect(controlsNamed(container, label)).toHaveLength(1);
+		expect(container.textContent).toContain(STORY);
+	});
+
+	it('does not mutate the spec it was given', () => {
+		const spec = nestedCard();
+		const before = JSON.stringify(spec);
+		render(Ripple, { props: { spec } });
+		expect(JSON.stringify(spec)).toBe(before);
+	});
+
+	it('a streamed step never shows an option as a plain button', async () => {
+		const { mountStreamed } = await import('./streaming/__fixtures__/mount-streamed.js');
+		const flashed = new Set<string>();
+		const seen = new MutationObserver(() => {
+			for (const b of document.querySelectorAll('button')) {
+				const text = b.textContent?.trim() ?? '';
+				if (LABELS.some((l) => l.startsWith(text) && text.length > 0) && !b.closest('[data-option-card]')) flashed.add(text);
+			}
+		});
+		seen.observe(document.body, { subtree: true, childList: true, characterData: true });
+		const { container } = await mountStreamed(nestedCard(), { chunkSize: 8 });
+		seen.disconnect();
+		expect([...flashed]).toEqual([]);
+		for (const label of LABELS) expect(controlsNamed(container, label)).toHaveLength(1);
+	});
+});
