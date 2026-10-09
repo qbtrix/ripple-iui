@@ -37,9 +37,12 @@ export { themeToCssVars, themeToStyleString } from '@ripple-ui/core';
 // stays free of any renderer dependency. Callers see no difference.
 export {
   validateCatalog,
+  specIssues,
+  type SpecIssue,
   type UnknownNode,
   type ValidateCatalogOptions
 } from './widgets/validate-catalog-bound.js';
+export { formatSpecIssues } from '@ripple-ui/core';
 export { newNodeId, isValidNodeId, ensureNodeIds } from '@ripple-ui/core';
 export {
   findById,

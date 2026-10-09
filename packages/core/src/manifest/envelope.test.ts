@@ -30,3 +30,26 @@ describe('spec envelope key order', () => {
 		expect(specEnvelope.description).toMatch(/`ui`[^.]*\b(first|before)\b/i);
 	});
 });
+
+// Same looseness: these pin that the spec-size guidance exists and names the
+// real mechanisms (`each`, `sources`, `api`), not its exact wording.
+describe('spec envelope size guidance', () => {
+	const d = specEnvelope.description;
+
+	it('tells the model to omit props that equal their default', () => {
+		expect(d).toMatch(/\bprops?\b[^.]*\bdefault\b/i);
+	});
+
+	it('tells the model to render repeated rows with one `each` over state', () => {
+		expect(d).toMatch(/`each`/);
+		expect(d).toMatch(/\{state\.\w+\}/);
+	});
+
+	it('tells the model to fetch bulk data through the host, naming `sources` and `api`', () => {
+		expect(d).toMatch(/bulk data[^.]*`sources`[^.]*`api`/i);
+	});
+
+	it('the slim manifest carries the same guidance', () => {
+		expect(buildSlimManifest({ widgets: SLIM_WIDGETS }).spec.description).toBe(d);
+	});
+});

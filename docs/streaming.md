@@ -47,6 +47,7 @@ wrapper that yields chunks.
 |---|---|---|
 | `throttleMs` | `50` | Minimum ms between parse attempts. Tied to perception, not frame rate. Text arriving inside the window gets one parse when it closes, so a pausing stream still shows everything received. |
 | `maxBufferBytes` | `2_000_000` | Safety cap. Stream is cancelled with an `overflow` error if the buffer grows past this. |
+| `warnAtBytes` | `100_000` | Dev-only. The first time the buffer grows past this, `console.warn` fires once for that stream, naming the size and pointing at host data (`sources` or an `api` action) instead of inline records. Every frame re-parses the whole buffer, so a large spec paints slowly. Measured like `maxBufferBytes`. `0` or `Infinity` turns it off; production builds (esm-env `DEV` false) never warn. |
 | `allow` | `OBJ \| ARR \| STR` | `partial-json` flags. Whatever the flags, a value for an enum-like key (`type`, `intent`, `version`, `action`, `variant`) stays out of the tree while the buffer ends inside it. |
 | `signal` | — | AbortSignal for caller-driven cancellation. |
 | `onUpdate` | — | Called once per new emission with the new spec. |

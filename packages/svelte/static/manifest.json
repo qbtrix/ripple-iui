@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-09T11:33:33.904Z",
+  "generatedAt": "2026-10-09T13:26:15.111Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -13,7 +13,7 @@
       "body",
       "content"
     ],
-    "description": "A Ripple spec is a JSON object with two top-level fields that matter for rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` (the StateManager seed — required when any node uses `bind` or reads `{state.*}`). The renderable tree field is named `ui` exactly — never `root`, `tree`, `view`, `body`, or `content`. Specs that use those aliases will not render. Write `ui` before `state` so the interface can draw while the rest of the spec streams in, and keep the seed `state` small.",
+    "description": "A Ripple spec is a JSON object with two top-level fields that matter for rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` (the StateManager seed — required when any node uses `bind` or reads `{state.*}`). The renderable tree field is named `ui` exactly — never `root`, `tree`, `view`, `body`, or `content`. Specs that use those aliases will not render. Write `ui` before `state` so the interface can draw while the rest of the spec streams in, and keep the seed `state` small. Leave out any prop whose value equals the default its widget documents. For repeated rows or cards, keep the records as an array in `state` and render them with one `each` node (`\"items\": \"{state.rows}\"`) instead of writing a node per record. Bulk data (more than a few dozen records) should come from the host, through a `sources` binding or an `api` action where the host offers one, not be typed into the spec.",
     "example": {
       "version": "1.0",
       "ui": {
