@@ -10,6 +10,7 @@ export { default as ChecklistLayout } from './ChecklistLayout.svelte';
 export { default as ReportLayout } from './ReportLayout.svelte';
 export { default as InvoiceLayout } from './InvoiceLayout.svelte';
 export { default as OrderStatus } from './OrderStatus.svelte';
+export { default as MenuOrder } from './MenuOrder.svelte';
 export { default as ExecDashboard } from './ExecDashboard.svelte';
 export { default as OpsDashboard } from './OpsDashboard.svelte';
 export { default as AnalyticsDashboard } from './AnalyticsDashboard.svelte';

@@ -16,7 +16,7 @@ import { Table, Chart, VirtualList, Tree, Kanban, DataGrid, Sparkline, Gauge, Fu
 import { If, Each } from './control/index.js';
 import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
-  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
+  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   AskUserQuestions,
 } from './composite/index.js';
@@ -262,6 +262,9 @@ const defaultRegistry: WidgetMap = {
   'order-status': OrderStatus,
   'shipment-tracker': OrderStatus,
   'order-tracking': OrderStatus,
+  'menu-order': MenuOrder,
+  'food-menu': MenuOrder,
+  'order-menu': MenuOrder,
   'exec-dashboard': ExecDashboard,
   'kpi-dashboard': ExecDashboard,
   'executive-dashboard': ExecDashboard,
@@ -447,7 +450,7 @@ export {
   BulkActionBar, SavedViews, PeoplePicker, PermissionMatrix, OrgChart, InvoiceLines,
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
   AvatarGroup, ComparisonLayout,
-  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
+  EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   ModelViewer, Embed, AudioPlayer, VideoPlayer,
   Reveal, Parallax,

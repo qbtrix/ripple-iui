@@ -50,6 +50,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'exec-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
   'kpi-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
   'executive-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
+  // menu-order binds its cart ({ lines, fulfilment, total }, never the
+  // customer's details) so another node can show "2 items".
+  'menu-order': { prop: 'cart', event: 'oncartchange' },
+  'food-menu': { prop: 'cart', event: 'oncartchange' },
+  'order-menu': { prop: 'cart', event: 'oncartchange' },
 };
 
 /**

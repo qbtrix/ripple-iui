@@ -149,6 +149,7 @@ import { notificationCenterEntry } from './entries/notification-center.js';
 import { numberInputEntry } from './entries/number-input.js';
 import { opsDashboardEntry } from './entries/ops-dashboard.js';
 import { orderStatusEntry } from './entries/order-status.js';
+import { menuOrderEntry } from './entries/menu-order.js';
 import { orgChartEntry } from './entries/org-chart.js';
 import { otpInputEntry } from './entries/otp-input.js';
 import { pageHeaderEntry } from './entries/page-header.js';
@@ -437,6 +438,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   numberInputEntry,
   opsDashboardEntry,
   orderStatusEntry,
+  menuOrderEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,
