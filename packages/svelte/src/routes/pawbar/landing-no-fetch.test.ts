@@ -17,13 +17,16 @@ test('a chip tap and a typed prompt never call fetch without the opt-in flag', a
 	const view = render(Landing);
 	const send = () => view.getByRole('button', { name: 'Send' });
 
+	// The prerendered bill splitter exchange is already there.
+	expect(view.getAllByText('Replaying a recorded answer that matches.')).toHaveLength(1);
+
 	await fireEvent.click(view.getByRole('button', { name: 'Watch savings grow' }));
-	await waitFor(() => expect(view.getAllByText(/recorded answer|No recording matches/)).toHaveLength(1));
+	await waitFor(() => expect(view.getAllByText('Replaying a recorded answer that matches.')).toHaveLength(2));
 	await waitFor(() => expect(view.queryByRole('button', { name: 'Stop' })).toBeNull());
 
 	await fireEvent.input(view.getByLabelText('Describe the tool you want'), { target: { value: 'something no recording covers' } });
 	await fireEvent.click(send());
-	await waitFor(() => expect(view.getAllByText(/recorded answer|No recording matches/)).toHaveLength(2));
+	await waitFor(() => expect(view.getByText('No recording matches that yet, so here is the bill splitter.')).toBeTruthy());
 	await waitFor(() => expect(view.queryByRole('button', { name: 'Stop' })).toBeNull());
 
 	const urls = fetchSpy.mock.calls.map(([input]) => String(input instanceof Request ? input.url : input));

@@ -1,14 +1,16 @@
 <!--
   @file routes/+page.svelte
   @description Ripple's landing, chat-first. The hero IS a chat: a visitor types
-    a request or taps one of the nine recorded scenarios, the answer streams in
-    and its card renders through <Ripple> while it arrives. With the Paw Bar
-    config set at build time (PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY,
-    defined in vite.config.ts like PUBLIC_STORE_URL) the chat calls the Paw Bar
-    API, but only when PUBLIC_PAWBAR_LIVE=1 (pawbar-env.ts); otherwise the same
-    chat replays the recorded answers locally and says so. Below: how it works (spec, engine, UI, with a live card), install and
+    a request or taps one of the recorded scenarios, the answer streams in and
+    its card renders through <Ripple> while it arrives. The chat opens on one
+    finished recorded exchange (the bill splitter, seeded synchronously so it is
+    in the prerendered HTML and hydrates without a re-render), so the fold shows
+    a working card before any tap and with JavaScript off. The chat calls the
+    Paw Bar API only when PUBLIC_PAWBAR_LIVE=1 (lib/site/pawbar-env.ts, read in
+    vite.config.ts); otherwise it replays the recorded answers locally and says
+    so. Below: how it works (spec, engine, UI, with a live card), install and
     the streaming code sample, the recorded examples linking /live, and the
-    bring-your-own-key link. Prerendered; the chat only runs in the browser.
+    bring-your-own-key link.
 
   Creative Direction Declaration
     Scene: a developer at night, comparing generative UI tools with a terminal
@@ -25,7 +27,7 @@
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
 	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
-	import { findScenario, pickScenario, recordedEvents } from './pawbar/recorded.js';
+	import { findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
 	import { scenarios } from './live/scenarios.js';
 
 	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
@@ -53,6 +55,8 @@
 	const session = LIVE
 		? new ChatSession(pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send, recorded)
 		: new ChatSession(recorded);
+	const bill = chatScenarios.find((s) => s.id === 'bill-splitter');
+	if (bill) session.seed(bill.fixture.prompt, recordedExchange(bill, intro(bill.fixture.prompt)));
 	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
@@ -101,12 +105,12 @@
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
 
-	let copied = $state(false);
-	async function copyInstall() {
+	let copied = $state<'hero' | 'code' | null>(null);
+	async function copyInstall(where: 'hero' | 'code') {
 		try {
 			await navigator.clipboard.writeText(INSTALL);
-			copied = true;
-			setTimeout(() => (copied = false), 1600);
+			copied = where;
+			setTimeout(() => (copied = null), 1600);
 		} catch {
 			/* clipboard blocked: the command is on screen to copy by hand */
 		}
@@ -127,16 +131,20 @@
 	<section class="hero" aria-labelledby="hero-title">
 		<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
 		<p class="lede">
-			Ripple is the open-source generative UI engine from Paw OS by PocketPaw. A model writes a small JSON spec,
-			and Ripple turns it into a working interface as the spec streams in. Ask for something below.
+			Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
+			working interface as the spec streams in. Ask for something below.
 		</p>
-		<div class="chat-frame">
-			<Chat
-				{session}
-				{suggestions}
-				note={LIVE ? '' : 'This demo replays recorded model answers. Each request plays the closest match.'}
-			/>
-		</div>
+		<p class="get">
+			<code><span aria-hidden="true">$</span> {INSTALL}</code>
+			<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
+				{copied === 'hero' ? 'Copied' : 'Copy'}
+			</button>
+		</p>
+		<Chat
+			{session}
+			{suggestions}
+			note={LIVE ? '' : 'This demo replays recorded model answers. Each request plays the closest match.'}
+		/>
 		<p class="byok">
 			{#if LIVE}
 				The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
@@ -184,7 +192,7 @@
 			</p>
 			<div class="install">
 				<code><span aria-hidden="true">$</span> {INSTALL}</code>
-				<button type="button" onclick={copyInstall} aria-label="Copy install command">{copied ? 'Copied' : 'Copy'}</button>
+				<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
 			</div>
 			<p class="small">
 				Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
@@ -270,7 +278,7 @@
 
 	/* Hero: the chat. */
 	.hero {
-		max-width: 800px !important;
+		max-width: 880px !important;
 		padding: clamp(48px, 9vw, 104px) 0 72px;
 	}
 	h1 {
@@ -282,15 +290,51 @@
 		margin-top: 0.12em;
 	}
 	.lede {
-		margin: 22px 0 32px;
+		margin: 22px 0 18px;
 		max-width: 62ch;
 		color: var(--site-soft);
 		text-wrap: pretty;
 	}
-	.chat-frame {
-		padding: clamp(14px, 2.4vw, 22px);
-		border: 1px solid var(--site-line);
-		border-radius: var(--radius-card);
+	/* The install line, as a quiet mono chip. */
+	.get {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		max-width: 100%;
+		margin: 0 0 36px;
+		padding: 4px 4px 4px 12px;
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-control);
+		background: var(--code-bg);
+		font-size: 14px;
+	}
+	.get code {
+		overflow-x: auto;
+		white-space: nowrap;
+		padding: 0;
+		background: none;
+		font-size: inherit;
+		color: var(--code-ink);
+	}
+	.get code span {
+		color: var(--site-soft);
+		margin-right: 6px;
+	}
+	.get button {
+		flex: none;
+		min-height: 32px;
+		padding: 0 10px;
+		border: 0;
+		border-radius: calc(var(--radius-control) - 2px);
+		background: transparent;
+		color: var(--site-soft);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+	}
+	.get button:hover {
+		background: var(--site-hover);
+		color: var(--site-ink);
 	}
 	.byok {
 		margin: 14px 2px 0;
@@ -535,6 +579,7 @@
 	}
 	.btn:focus-visible,
 	.install button:focus-visible,
+	.get button:focus-visible,
 	.byok a:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
@@ -543,11 +588,6 @@
 	@media (max-width: 860px) {
 		.code {
 			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-	@media (max-width: 420px) {
-		.chat-frame {
-			padding: 8px;
 		}
 	}
 </style>
