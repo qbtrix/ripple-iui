@@ -1,605 +1,713 @@
 <!--
   @file ComparisonLayout.svelte
-  @description Side-by-side product/option comparison with horizontal hero cards,
-  section-tab feature grid, and Card/Table view toggle. Ported from OCEAN's
-  ComparisonLayout and adapted to ripple conventions:
-    - Standard {id, class, style} props
-    - EventHandler-driven actions (primary + "Learn more") with onselect/onlearnmore fallbacks
-    - Auto-feature inference when `features` is not supplied
-    - Direct lucide icon imports for fixed glyphs; ripple's Icon for user-supplied icon names
-    - `defaultView` is followed until the visitor picks a view: a streamed spec
-      can deliver it after the widget has mounted
+  @description "Which should I pick": 2 to 6 items side by side (design doc
+  2026-10-09 §3.2), on the data kit and the ripple tokens.
+  Order: title, the verdict line, the best-pick card (`winner`, with its
+  reason, photo, price and runner-up), the other items as compact cards (photo,
+  price with its difference from the winner, `picks` tags, spec pills), then
+  the detailed comparison: section chips, a differences-only filter, and per
+  item cards below 720px of container width or a table with a sticky label
+  column at 720px+. A feature with `better` marks its best numeric cell (ties
+  mark all; non-finite values skip).
+  Choose is state only: it sets the bindable `chosen` id (bind contract
+  `chosen` / `onchosenchange`) and calls `onchoose({id, name, product_id?})`,
+  the hook a spec's `on_choose` reaches. Legacy item `actions` and `onselect`
+  still fire. No network from here.
+  Backward compatible: feature `type` is read when `kind` is missing, `title`
+  stands in for `name`, `description` for `subtitle`, a string price renders
+  as written, a feature `icon` outside FEATURE_ICONS renders by Lucide name,
+  and `defaultView` is followed until the visitor picks a view (a streamed
+  spec can deliver it after mount).
+  Streaming: every list keys by `${id ?? ''}:${index}`, everything is
+  $derived, and the winner card appears only once its id matches an item.
 -->
 <script lang="ts">
-  import { safeUrl, safeStyle } from '@ripple-ui/core';
-  import { getContext } from 'svelte';
-  import { cn } from '$lib/utils.js';
-  import CheckIcon from '@lucide/svelte/icons/check';
-  import XIcon from '@lucide/svelte/icons/x';
-  import StarIcon from '@lucide/svelte/icons/star';
-  import PackageIcon from '@lucide/svelte/icons/package';
-  import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
-  import TableIcon from '@lucide/svelte/icons/table';
-  import Icon from '$lib/widgets/display/Icon.svelte';
-  import type { EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
-  import type { EventDispatcher } from '@ripple-ui/core';
-  import type { StateManager } from '$lib/core/state-manager.svelte.js';
+	import { safeStyle, safeUrl } from '@ripple-ui/core';
+	import type { EventDispatcher, EventHandler, EventHandlerOrArray } from '@ripple-ui/core';
+	import { getContext } from 'svelte';
+	import CheckIcon from '@lucide/svelte/icons/check';
+	import StarIcon from '@lucide/svelte/icons/star';
+	import AwardIcon from '@lucide/svelte/icons/award';
+	import PackageIcon from '@lucide/svelte/icons/package';
+	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
+	import TableIcon from '@lucide/svelte/icons/table';
+	import Icon from '$lib/widgets/display/Icon.svelte';
+	import PhotoTile from '$lib/widgets/data-kit/PhotoTile.svelte';
+	import VerdictLine from '$lib/widgets/data-kit/VerdictLine.svelte';
+	import { finite, money, num, plain } from '$lib/widgets/data-kit/format.js';
+	import { FEATURE_ICONS, kindIcon } from '$lib/widgets/data-kit/icons.js';
+	import { rise } from '$lib/widgets/data-kit/motion.js';
+	import type { Verdict } from '$lib/widgets/data-kit/types.js';
+	import type { StateManager } from '$lib/core/state-manager.svelte.js';
 
-  type FeatureType = 'text' | 'boolean' | 'rating' | 'image' | 'color' | 'icon';
+	type FeatureKind = 'text' | 'number' | 'boolean' | 'rating' | 'icon' | 'price' | 'color' | 'image';
 
-  interface CompareFeature {
-    key: string;
-    label: string;
-    section?: string;
-    type?: FeatureType;
-    icon?: string;
-    highlight?: boolean;
-  }
+	interface CompareFeature {
+		key: string;
+		label?: string;
+		section?: string;
+		kind?: FeatureKind;
+		/** Legacy name of `kind`; read only when `kind` is missing. */
+		type?: FeatureKind;
+		better?: 'higher' | 'lower';
+		unit?: string;
+		/** A FEATURE_ICONS kind (legacy: any Lucide name). */
+		icon?: string;
+		highlight?: boolean;
+	}
 
-  interface CompareItem {
-    id: string;
-    title?: string;
-    name?: string;
-    subtitle?: string;
-    chip?: string;
-    image?: string;
-    price?: string | number;
-    actions?: EventHandlerOrArray;
-    learn_more?: EventHandlerOrArray;
-    [key: string]: unknown;
-  }
+	interface CompareItem {
+		id: string;
+		name?: string;
+		title?: string;
+		subtitle?: string;
+		chip?: string;
+		image?: string;
+		price?: string | number;
+		product_id?: string;
+		rating?: number;
+		actions?: EventHandlerOrArray;
+		learn_more?: EventHandlerOrArray;
+		[key: string]: unknown;
+	}
 
-  interface Props {
-    id?: string;
-    class?: string;
-    style?: Record<string, string>;
-    title?: string;
-    description?: string;
-    items?: CompareItem[];
-    features?: CompareFeature[];
-    primaryLabel?: string;
-    secondaryLabel?: string;
-    showPrimary?: boolean;
-    showSecondary?: boolean;
-    /** View mode for the detailed feature grid until the visitor picks one. */
-    defaultView?: 'card' | 'table';
-    /** Show the "differences only" toggle. */
-    showDiffToggle?: boolean;
-    onselect?: (id: string) => void;
-    onlearnmore?: (id: string) => void;
-  }
+	interface Winner {
+		id: string;
+		reason?: string;
+		runner_up?: { id: string; reason?: string };
+	}
 
-  let {
-    id,
-    class: className,
-    style,
-    title,
-    description,
-    items = [],
-    features,
-    primaryLabel = 'Select',
-    secondaryLabel = 'Learn more',
-    showPrimary = true,
-    showSecondary = true,
-    defaultView = 'card',
-    showDiffToggle = true,
-    onselect,
-    onlearnmore
-  }: Props = $props();
+	interface Props {
+		id?: string;
+		class?: string;
+		style?: Record<string, string> | string;
+		title?: string;
+		subtitle?: string;
+		/** Legacy name of `subtitle`. */
+		description?: string;
+		verdict?: Verdict;
+		/** ISO 4217, for numeric prices. */
+		currency?: string;
+		items?: CompareItem[];
+		features?: CompareFeature[];
+		winner?: Winner;
+		/** At most 3 tags, e.g. "Best value", "Lightest". */
+		picks?: Array<{ id: string; label: string }>;
+		/** The chosen item's id. Bindable. */
+		chosen?: string;
+		primaryLabel?: string;
+		secondaryLabel?: string;
+		showPrimary?: boolean;
+		showSecondary?: boolean;
+		/** View mode for the detailed grid below 720px until the visitor picks one. */
+		defaultView?: 'card' | 'table';
+		showDiffToggle?: boolean;
+		onchoose?: (detail: { id: string; name: string; product_id?: string }) => void;
+		onchosenchange?: (id: string) => void;
+		onselect?: (id: string) => void;
+		onlearnmore?: (id: string) => void;
+	}
 
-  const styleString = $derived(
-    style ? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';') : undefined
-  );
+	let {
+		id,
+		class: className,
+		style,
+		title,
+		subtitle,
+		description,
+		verdict,
+		currency = 'USD',
+		items = [],
+		features,
+		winner,
+		picks,
+		chosen = $bindable(),
+		primaryLabel = 'Choose',
+		secondaryLabel = 'Learn more',
+		showPrimary = true,
+		showSecondary = true,
+		defaultView = 'card',
+		showDiffToggle = true,
+		onchoose,
+		onchosenchange,
+		onselect,
+		onlearnmore
+	}: Props = $props();
 
-  // The visitor's pick wins; until then follow `defaultView`, which a streamed
-  // spec can deliver (or finish writing) after mount.
-  let pickedView = $state<'card' | 'table' | null>(null);
-  const viewMode = $derived(pickedView ?? (defaultView === 'table' ? 'table' : 'card'));
-  let showDiffOnly = $state(false);
-  let activeSection = $state<string | null>(null);
+	const KINDS = new Set<FeatureKind>(['text', 'number', 'boolean', 'rating', 'icon', 'price', 'color', 'image']);
+	const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+	const missing = (v: unknown) => v === undefined || v === null || v === '';
+	const humanize = (s: string) => s.replace(/[_-]+/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 
-  const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
-  const stateManager = getContext<StateManager | undefined>('ui-state');
+	const styleString = $derived(
+		typeof style === 'string'
+			? style
+			: isObj(style)
+				? Object.entries(style).map(([k, v]) => `${k}:${v}`).join(';')
+				: undefined
+	);
+	const heading = $derived(plain(title));
+	const sub = $derived(plain(subtitle ?? description));
 
-  const safeItems = $derived(Array.isArray(items) ? items : []);
+	const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
+	const stateManager = getContext<StateManager | undefined>('ui-state');
 
-  /** Effective feature list — explicit `features` if provided, else inferred from item keys. */
-  const allFeatures = $derived.by<CompareFeature[]>(() => {
-    if (features && features.length > 0) return features;
-    if (safeItems.length === 0) return [];
+	const list = $derived((Array.isArray(items) ? items.filter(isObj) : []) as CompareItem[]);
 
-    const excluded = new Set([
-      'id', 'title', 'name', 'subtitle', 'chip', 'image', 'description',
-      'price', 'actions', 'learn_more', 'url', 'href', 'icon'
-    ]);
-    const keys = new Set<string>();
-    for (const item of safeItems) {
-      for (const k of Object.keys(item)) if (!excluded.has(k)) keys.add(k);
-    }
-    return Array.from(keys).map((key) => {
-      const firstVal = safeItems.find((i) => i[key] !== null && i[key] !== undefined)?.[key];
-      const type: FeatureType = typeof firstVal === 'boolean' ? 'boolean' : 'text';
-      return {
-        key,
-        label: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        section: 'Features',
-        type
-      };
-    });
-  });
+	const nameOf = (item: CompareItem) => plain(item.name ?? item.title);
+	const itemId = (item: CompareItem) => (typeof item.id === 'string' ? item.id : '');
 
-  const sectionNames = $derived.by(() => {
-    const names = new Set<string>();
-    for (const f of allFeatures) names.add(f.section || 'Features');
-    return Array.from(names);
-  });
+	function priceText(item: CompareItem): string {
+		if (finite(item.price) !== undefined) return money(item.price, currency);
+		return typeof item.price === 'string' ? plain(item.price) : '';
+	}
 
-  $effect(() => {
-    if (sectionNames.length > 0 && (activeSection === null || !sectionNames.includes(activeSection))) {
-      activeSection = sectionNames[0];
-    }
-  });
+	// The winner card waits until its id matches an item that has arrived.
+	const winnerItem = $derived(
+		isObj(winner) && typeof winner.id === 'string' && winner.id ? list.find((i) => i.id === winner.id) : undefined
+	);
+	const runnerUp = $derived.by(() => {
+		const r = isObj(winner) ? winner.runner_up : undefined;
+		if (!winnerItem || !isObj(r) || typeof r.id !== 'string') return undefined;
+		const item = list.find((i) => i.id === r.id && i !== winnerItem);
+		return item ? { item, reason: plain(r.reason) } : undefined;
+	});
+	const others = $derived(winnerItem ? list.filter((i) => i !== winnerItem) : list);
 
-  const activeSectionFeatures = $derived.by(() => {
-    if (!activeSection) return allFeatures.slice(0, 6);
-    return allFeatures.filter((f) => (f.section || 'Features') === activeSection);
-  });
+	const pickLabels = $derived.by(() => {
+		const out = new Map<string, string[]>();
+		const src = Array.isArray(picks) ? picks.filter(isObj).slice(0, 3) : [];
+		for (const p of src) {
+			const label = plain(p.label);
+			if (typeof p.id === 'string' && label) out.set(p.id, [...(out.get(p.id) ?? []), label]);
+		}
+		return out;
+	});
 
-  const highlightFeatures = $derived.by(() => {
-    const marked = allFeatures.filter((f) => f.highlight);
-    return marked.length > 0 ? marked.slice(0, 5) : allFeatures.slice(0, 5);
-  });
+	/** "+$700.00 vs Aero 14" under each non-winner price; numbers only. */
+	function priceDelta(item: CompareItem): string {
+		if (!winnerItem || item === winnerItem) return '';
+		const a = finite(item.price);
+		const b = finite(winnerItem.price);
+		if (a === undefined || b === undefined) return '';
+		const w = nameOf(winnerItem) || 'the best pick';
+		return a === b ? `Same price as ${w}` : `${money(a - b, currency, { sign: true })} vs ${w}`;
+	}
 
-  function isDifferent(feature: CompareFeature): boolean {
-    if (safeItems.length < 2) return true;
-    const first = JSON.stringify(safeItems[0][feature.key]);
-    return safeItems.some((item) => JSON.stringify(item[feature.key]) !== first);
-  }
+	// ── features ────────────────────────────────────────────────────────────
+	const NOT_FEATURES = new Set([
+		'id', 'title', 'name', 'subtitle', 'chip', 'image', 'description', 'price', 'product_id',
+		'kind', 'actions', 'learn_more', 'url', 'href', 'icon'
+	]);
 
-  function dispatchOrFallback(
-    handler: EventHandlerOrArray | undefined,
-    fallback: ((id: string) => void) | undefined,
-    item: CompareItem
-  ) {
-    if (handler && eventDispatcher) {
-      const handlers = Array.isArray(handler) ? handler : [handler];
-      const ctx = { state: stateManager?.state ?? {}, item };
-      void eventDispatcher.dispatch(handlers as EventHandler[], ctx, item);
-      return;
-    }
-    fallback?.(item.id);
-  }
+	/** Explicit `features` when any are usable, else inferred from item keys. */
+	const allFeatures = $derived.by<CompareFeature[]>(() => {
+		const given = Array.isArray(features)
+			? (features.filter((f) => isObj(f) && typeof f.key === 'string' && f.key) as CompareFeature[])
+			: [];
+		if (given.length > 0) return given;
+		const keys = new Set<string>();
+		for (const item of list) for (const k of Object.keys(item)) if (!NOT_FEATURES.has(k)) keys.add(k);
+		return [...keys].map((key) => {
+			const first = list.find((i) => !missing(i[key]))?.[key];
+			const kind: FeatureKind =
+				key === 'rating' ? 'rating' : typeof first === 'boolean' ? 'boolean' : typeof first === 'number' ? 'number' : 'text';
+			return { key, label: humanize(key), section: 'Features', kind };
+		});
+	});
 
-  function handlePrimary(item: CompareItem) {
-    dispatchOrFallback(item.actions, onselect, item);
-  }
+	const kindOf = (f: CompareFeature): FeatureKind => {
+		const k = f.kind ?? f.type;
+		return k && KINDS.has(k) ? k : 'text';
+	};
+	const labelOf = (f: CompareFeature) => plain(f.label) || humanize(f.key);
+	const sectionOf = (f: CompareFeature) => plain(f.section) || 'Features';
 
-  function handleSecondary(item: CompareItem) {
-    dispatchOrFallback(item.learn_more, onlearnmore, item);
-  }
+	const sectionNames = $derived([...new Set(allFeatures.map(sectionOf))]);
+	let pickedSection = $state<string | null>(null);
+	const activeSection = $derived(
+		pickedSection !== null && sectionNames.includes(pickedSection) ? pickedSection : (sectionNames[0] ?? null)
+	);
 
-  function hasPrimary(item: CompareItem): boolean {
-    return showPrimary && (item.actions !== undefined || onselect !== undefined);
-  }
+	// The visitor's pick wins; until then follow `defaultView`.
+	let pickedView = $state<'card' | 'table' | null>(null);
+	const viewMode = $derived(pickedView ?? (defaultView === 'table' ? 'table' : 'card'));
+	let showDiffOnly = $state(false);
 
-  function hasSecondary(item: CompareItem): boolean {
-    return showSecondary && (item.learn_more !== undefined || onlearnmore !== undefined);
-  }
+	function isDifferent(f: CompareFeature): boolean {
+		if (list.length < 2) return true;
+		const first = JSON.stringify(list[0][f.key]);
+		return list.some((item) => JSON.stringify(item[f.key]) !== first);
+	}
+
+	const shownFeatures = $derived(
+		allFeatures.filter((f) => sectionOf(f) === activeSection && (!showDiffOnly || isDifferent(f)))
+	);
+
+	const highlightFeatures = $derived.by(() => {
+		const marked = allFeatures.filter((f) => f.highlight === true);
+		return (marked.length > 0 ? marked : allFeatures).slice(0, 3);
+	});
+
+	/** Feature key → indexes (into `list`) of its best cells. */
+	const best = $derived.by(() => {
+		const out = new Map<string, Set<number>>();
+		for (const f of allFeatures) {
+			if (f.better !== 'higher' && f.better !== 'lower') continue;
+			const vals = list.map((i) => finite(i[f.key]));
+			const nums = vals.filter((v): v is number => v !== undefined);
+			if (nums.length < 2) continue;
+			const top = f.better === 'higher' ? Math.max(...nums) : Math.min(...nums);
+			// Every value equal: nothing stands out, so nothing is marked.
+			if (nums.every((v) => v === top)) continue;
+			out.set(f.key, new Set(vals.flatMap((v, i) => (v === top ? [i] : []))));
+		}
+		return out;
+	});
+	const isBest = (f: CompareFeature, idx: number) => best.get(f.key)?.has(idx) ?? false;
+
+	const NO = /^(no|false|n|none|0)$/i;
+	const yes = (v: unknown) => !!v && !NO.test(String(v).trim());
+	const CSS_COLOR = /^(#|rgb|hsl|oklch|oklab|lab|lch|color\()/i;
+	const kinds = (v: unknown): string[] =>
+		(Array.isArray(v) ? v : [v]).filter((k): k is string => typeof k === 'string' && k.trim() !== '');
+
+	/** One value as plain text (spec pills, and the text cells). */
+	function textOf(f: CompareFeature, v: unknown): string {
+		if (missing(v)) return '—';
+		const unit = plain(f.unit);
+		switch (kindOf(f)) {
+			case 'boolean':
+				return yes(v) ? 'Yes' : 'No';
+			case 'price':
+				return finite(v) !== undefined ? money(v, currency) : plain(v);
+			case 'number':
+				return `${num(v)}${unit && finite(v) !== undefined ? ` ${unit}` : ''}`;
+			case 'rating':
+				return finite(v) !== undefined ? `${num(v, { digits: 1 })} / 5` : 'n/a';
+			case 'icon':
+				return kinds(v).map(humanize).join(', ');
+			default:
+				return `${plain(v)}${unit && finite(v) !== undefined ? ` ${unit}` : ''}`;
+		}
+	}
+
+	// ── actions ─────────────────────────────────────────────────────────────
+	function dispatchOrFallback(
+		handler: EventHandlerOrArray | undefined,
+		fallback: ((id: string) => void) | undefined,
+		item: CompareItem
+	) {
+		if (handler && eventDispatcher) {
+			const handlers = Array.isArray(handler) ? handler : [handler];
+			const ctx = { state: stateManager?.state ?? {}, item };
+			void eventDispatcher.dispatch(handlers as EventHandler[], ctx, item);
+			return;
+		}
+		fallback?.(itemId(item));
+	}
+
+	function choose(item: CompareItem) {
+		const cid = itemId(item);
+		if (cid) {
+			chosen = cid;
+			onchosenchange?.(cid);
+			// The hook. Choose is state only today; a spec's `on_choose` arrives
+			// here as `onchoose`. FL-2 turns it into an `ask` ("I'll take the
+			// Nimbus Pro 15"), or `add_to_cart` when the item has a product_id.
+			const pid = typeof item.product_id === 'string' && item.product_id ? item.product_id : undefined;
+			onchoose?.({ id: cid, name: nameOf(item), ...(pid && { product_id: pid }) });
+		}
+		dispatchOrFallback(item.actions, onselect, item);
+	}
+
+	/** A product_id the server has not filled yet: nothing to choose until it has a name. */
+	const pending = (item: CompareItem) => !nameOf(item) && typeof item.product_id === 'string' && item.product_id !== '';
+	const isChosen = (item: CompareItem) => !!chosen && itemId(item) === chosen;
+	const hasSecondary = (item: CompareItem) =>
+		showSecondary && (item.learn_more !== undefined || onlearnmore !== undefined);
+
+	// Item grid columns by count; 3 stays one column until it fits three.
+	const COLS: Record<number, string> = {
+		2: '@min-[560px]:grid-cols-2',
+		3: '@min-[720px]:grid-cols-3',
+		4: '@min-[560px]:grid-cols-2 @min-[720px]:grid-cols-4'
+	};
+	const VIEWS = [['card', 'Cards'], ['table', 'Table']] as const;
+	const colsFor = (n: number) => (n <= 1 ? '' : (COLS[n] ?? '@min-[560px]:grid-cols-2 @min-[720px]:grid-cols-3'));
 </script>
 
-<div {id} class={cn('w-full', className)} style={styleString}>
-  {#if title || description}
-    <div class="mb-5 sm:mb-7">
-      {#if title}
-        <h2 class="text-balance text-lg font-semibold tracking-tight sm:text-xl md:text-2xl">
-          {title}
-        </h2>
-      {/if}
-      {#if description}
-        <p class="mt-1 text-pretty text-sm text-muted-foreground sm:mt-1.5 sm:text-[15px]">
-          {description}
-        </p>
-      {/if}
-    </div>
-  {/if}
+{#snippet itemName(item: CompareItem, cls: string, tag: 'h3' | 'span' = 'h3')}
+	{@const name = nameOf(item)}
+	{#if name}
+		<svelte:element this={tag} class={['block min-w-0 truncate', cls]}>{name}</svelte:element>
+	{:else if pending(item)}
+		<!-- A product_id the server has not hydrated yet: a placeholder, not a blank. -->
+		<svelte:element this={tag} class="block min-w-0" data-slot="name-pending">
+			<span class="block h-3.5 w-24 max-w-full rounded bg-ripple-muted" aria-hidden="true"></span>
+			<span class="sr-only">Loading product</span>
+		</svelte:element>
+	{/if}
+{/snippet}
 
-  <!-- Horizontal product cards -->
-  <div class="space-y-2.5 sm:space-y-3">
-    <!-- Keyed by id AND position: a streamed item can lack its id, or carry a half-written one equal to a finished id, and a duplicate key throws. -->
-    {#each safeItems as item, idx (`${item.id}:${idx}`)}
-      <div class="group relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm ring-1 ring-transparent transition-all duration-300 hover:border-border hover:shadow-md hover:ring-primary/10">
-        <div class="flex flex-row items-stretch">
-          <!-- Image -->
-          <div class="relative flex w-20 shrink-0 items-center justify-center bg-gradient-to-br from-muted/40 via-muted/20 to-transparent p-2.5 xs:w-24 xs:p-3 sm:w-36 sm:p-5 md:w-44 lg:w-52">
-            {#if item.image}
-              <img
-                src={safeUrl(item.image, { kind: 'resource' })}
-                alt={item.title ?? item.name ?? ''}
-                class="h-16 w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] xs:h-20 sm:h-24 md:h-28"
-              />
-            {:else}
-              <div class="flex aspect-square h-16 items-center justify-center rounded-lg bg-muted/30 xs:h-20 sm:h-24 md:h-28">
-                <PackageIcon size={28} class="text-muted-foreground/30" />
-              </div>
-            {/if}
-          </div>
+{#snippet tags(item: CompareItem)}
+	{@const labels = pickLabels.get(itemId(item)) ?? []}
+	{#if labels.length > 0}
+		<div class="flex flex-wrap gap-1">
+			{#each labels as label, i (`${label}:${i}`)}
+				<span class="rounded-md border border-ripple-accent/40 px-1.5 py-0.5 text-footnote font-medium" data-slot="pick">{label}</span>
+			{/each}
+		</div>
+	{/if}
+{/snippet}
 
-          <!-- Content -->
-          <div class="flex min-w-0 flex-1 flex-col p-3 sm:p-5">
-            <div class="mb-2 flex flex-col gap-1 sm:mb-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-              <div class="min-w-0 flex-1">
-                <h3 class="truncate text-sm leading-snug font-semibold tracking-tight sm:text-base md:text-lg">
-                  {item.title ?? item.name ?? ''}
-                </h3>
-                {#if item.subtitle || item.chip}
-                  <p class="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
-                    {item.subtitle ?? item.chip}
-                  </p>
-                {/if}
-              </div>
-              {#if item.price !== undefined && item.price !== null && item.price !== ''}
-                <div class="shrink-0 text-sm font-semibold tabular-nums text-foreground sm:text-base md:text-lg">
-                  {item.price}
-                </div>
-              {/if}
-            </div>
+{#snippet chooseButton(item: CompareItem, primary: boolean)}
+	{@const on = isChosen(item)}
+	<button
+		type="button"
+		aria-pressed={on}
+		data-slot="choose"
+		class={[
+			'inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-callout font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ripple-ring focus-visible:outline-none',
+			primary || on
+				? 'bg-ripple-accent text-ripple-accent-foreground hover:bg-ripple-accent/90'
+				: 'border border-ripple-border text-ripple-surface-foreground hover:bg-ripple-muted'
+		]}
+		onclick={() => choose(item)}
+	>
+		{#if on}<CheckIcon size={14} strokeWidth={2} aria-hidden="true" />Chosen{:else}{primaryLabel}{/if}
+	</button>
+{/snippet}
 
-            <!-- Spec pills -->
-            {#if highlightFeatures.length > 0}
-              <div class="mb-2.5 flex flex-wrap gap-1.5 sm:mb-3.5 sm:gap-2">
-                {#each highlightFeatures.slice(0, 3) as feature}
-                  {@const val = item[feature.key]}
-                  {#if val !== null && val !== undefined && val !== ''}
-                    <div class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] leading-none sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs">
-                      {#if feature.icon}
-                        <Icon name={feature.icon} size={12} class="text-muted-foreground" />
-                      {:else if feature.type === 'boolean'}
-                        {#if val}
-                          <CheckIcon size={12} class="text-emerald-500" />
-                        {:else}
-                          <XIcon size={12} class="text-muted-foreground/40" />
-                        {/if}
-                      {/if}
-                      <span class="text-muted-foreground">{feature.label}:</span>
-                      <span class="font-medium text-foreground/90">
-                        {#if feature.type === 'boolean'}
-                          {val ? 'Yes' : 'No'}
-                        {:else}
-                          {val}
-                        {/if}
-                      </span>
-                    </div>
-                  {/if}
-                {/each}
-              </div>
-            {/if}
+{#snippet actions(item: CompareItem, primary: boolean)}
+	{@const canChoose = showPrimary && !pending(item)}
+	{#if canChoose || hasSecondary(item)}
+		<div class="mt-auto flex flex-wrap items-center gap-1.5">
+			{#if canChoose}{@render chooseButton(item, primary)}{/if}
+			{#if hasSecondary(item)}
+				<button
+					type="button"
+					class="inline-flex h-8 items-center rounded-md px-2.5 text-callout font-medium text-ripple-muted-foreground transition-colors hover:bg-ripple-muted hover:text-ripple-surface-foreground focus-visible:ring-2 focus-visible:ring-ripple-ring focus-visible:outline-none"
+					onclick={() => dispatchOrFallback(item.learn_more, onlearnmore, item)}
+				>
+					{secondaryLabel}
+				</button>
+			{/if}
+		</div>
+	{/if}
+{/snippet}
 
-            <!-- Actions -->
-            {#if hasPrimary(item) || hasSecondary(item)}
-              <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-1 sm:gap-2">
-                {#if hasPrimary(item)}
-                  <button
-                    type="button"
-                    class="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:h-9 sm:px-4 sm:text-sm"
-                    onclick={() => handlePrimary(item)}
-                  >
-                    {primaryLabel}
-                  </button>
-                {/if}
-                {#if hasSecondary(item)}
-                  <button
-                    type="button"
-                    class="inline-flex h-8 items-center rounded-md px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5 hover:underline sm:h-9 sm:px-3 sm:text-sm"
-                    onclick={() => handleSecondary(item)}
-                  >
-                    {secondaryLabel}
-                  </button>
-                {/if}
-              </div>
-            {/if}
-          </div>
-        </div>
-      </div>
-    {/each}
-  </div>
+{#snippet featureIcon(f: CompareFeature)}
+	{#if typeof f.icon === 'string' && Object.hasOwn(FEATURE_ICONS, f.icon)}
+		{@const I = kindIcon(FEATURE_ICONS, f.icon)}
+		<I size={14} strokeWidth={1.75} aria-hidden="true" class="shrink-0" />
+	{:else if typeof f.icon === 'string' && f.icon}
+		<Icon name={f.icon} size={14} class="shrink-0" />
+	{/if}
+{/snippet}
 
-  <!-- Detailed comparison -->
-  {#if sectionNames.length > 0 && safeItems.length > 0}
-    <div class="mt-7 border-t border-border/70 pt-5 sm:mt-9 sm:pt-7">
-      <!-- Toolbar -->
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-5 sm:gap-3">
-        <div class="inline-flex rounded-lg border border-border/70 bg-muted/30 p-0.5 lg:hidden">
-          <button
-            type="button"
-            aria-pressed={viewMode === 'card'}
-            class={cn(
-              'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
-              viewMode === 'card'
-                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            onclick={() => (pickedView = 'card')}
-          >
-            <LayoutGridIcon size={14} />
-            <span class="hidden xs:inline">Cards</span>
-          </button>
-          <button
-            type="button"
-            aria-pressed={viewMode === 'table'}
-            class={cn(
-              'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
-              viewMode === 'table'
-                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            onclick={() => (pickedView = 'table')}
-          >
-            <TableIcon size={14} />
-            <span class="hidden xs:inline">Table</span>
-          </button>
-        </div>
+{#snippet cell(f: CompareFeature, item: CompareItem, idx: number)}
+	{@const v = item[f.key]}
+	{@const k = kindOf(f)}
+	{@const top = isBest(f, idx)}
+	<span class={['inline-flex items-center gap-1.5 tabular-nums', top && 'font-semibold']} data-best={top || undefined}>
+		{#if top}
+			<span class="size-1.5 shrink-0 rounded-full bg-ripple-success" aria-hidden="true"></span>
+			<span class="sr-only">Best:</span>
+		{/if}
+		{#if missing(v)}
+			<span class="text-ripple-muted-foreground">—</span>
+		{:else if k === 'boolean'}
+			{#if yes(v)}
+				<span class="inline-flex items-center gap-1 text-ripple-success-text"><CheckIcon size={14} strokeWidth={2} aria-hidden="true" />Yes</span>
+			{:else}
+				<span class="text-ripple-muted-foreground">No</span>
+			{/if}
+		{:else if k === 'rating'}
+			{@const n = finite(v)}
+			{#if n === undefined}
+				n/a
+			{:else}
+				<span class="inline-flex" aria-hidden="true">
+					{#each [0, 1, 2, 3, 4] as s (s)}
+						<StarIcon size={12} strokeWidth={1.75} class={s < Math.round(n) ? 'fill-ripple-accent text-ripple-accent' : 'text-ripple-muted-foreground/40'} />
+					{/each}
+				</span>
+				<span>{num(n, { digits: 1 })}<span class="sr-only"> out of 5</span></span>
+			{/if}
+		{:else if k === 'color'}
+			{@const c = plain(v)}
+			<span class="size-3.5 shrink-0 rounded-full border border-ripple-border" style={safeStyle(`background-color: ${c}`)}></span>
+			<span class={CSS_COLOR.test(c) ? 'sr-only' : ''}>{c}</span>
+		{:else if k === 'icon'}
+			<span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+				{#each kinds(v) as kind, i (`${kind}:${i}`)}
+					{@const I = kindIcon(FEATURE_ICONS, kind)}
+					<span class="inline-flex items-center gap-1"><I size={16} strokeWidth={1.75} aria-hidden="true" />{humanize(kind)}</span>
+				{/each}
+			</span>
+		{:else if k === 'image'}
+			<PhotoTile src={safeUrl(v, { kind: 'resource' })} alt={labelOf(f)} class="w-8" iconSize={14} />
+		{:else}
+			{textOf(f, v)}
+		{/if}
+	</span>
+{/snippet}
 
-        {#if showDiffToggle && safeItems.length > 1}
-          <label class="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground select-none transition-colors hover:text-foreground sm:gap-2 sm:text-sm">
-            <input
-              type="checkbox"
-              bind:checked={showDiffOnly}
-              class="h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary/30 sm:h-4 sm:w-4"
-            />
-            <span class="hidden xs:inline">Show differences only</span>
-            <span class="xs:hidden">Diff only</span>
-          </label>
-        {/if}
-      </div>
+<div {id} class={['@container w-full text-ripple-surface-foreground', className]} style={styleString}>
+	<div class="flex flex-col gap-4">
+		{#if heading || sub}
+			<header class="min-w-0">
+				{#if heading}<h2 class="text-title-3 font-semibold text-balance">{heading}</h2>{/if}
+				{#if sub}<p class="mt-0.5 text-callout text-pretty text-ripple-muted-foreground">{sub}</p>{/if}
+			</header>
+		{/if}
 
-      <!-- Section tabs -->
-      {#if sectionNames.length > 1}
-        <div class="cmp-tabs-scroll -mx-3 mb-4 flex overflow-x-auto px-3 sm:mx-0 sm:mb-6 sm:justify-center sm:px-0">
-          <div class="inline-flex gap-0.5 rounded-full border border-border/60 bg-muted/40 p-1 sm:gap-1">
-            {#each sectionNames as section}
-              <button
-                type="button"
-                aria-pressed={activeSection === section}
-                class={cn(
-                  'rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200 sm:px-4 sm:py-1.5 sm:text-sm',
-                  activeSection === section
-                    ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                onclick={() => (activeSection = section)}
-              >
-                {section}
-              </button>
-            {/each}
-          </div>
-        </div>
-      {/if}
+		<VerdictLine {verdict} />
 
-      <!-- Card view (mobile) -->
-      <div class={cn(viewMode === 'table' ? 'hidden' : 'lg:hidden')}>
-        <div class="space-y-2.5 sm:space-y-3">
-          {#each safeItems as item, idx (`${item.id}:${idx}`)}
-            <div class="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
-              <div class="flex items-center gap-2.5 border-b border-border/70 bg-muted/30 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
-                {#if item.image}
-                  <img
-                    src={safeUrl(item.image, { kind: 'resource' })}
-                    alt={item.title ?? item.name ?? ''}
-                    class="h-8 w-8 shrink-0 rounded-lg object-contain sm:h-10 sm:w-10"
-                  />
-                {:else}
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40 sm:h-10 sm:w-10">
-                    <PackageIcon size={16} class="text-muted-foreground/50" />
-                  </div>
-                {/if}
-                <div class="min-w-0 flex-1">
-                  <h4 class="truncate text-sm font-semibold tracking-tight sm:text-base">
-                    {item.title ?? item.name ?? ''}
-                  </h4>
-                  {#if item.price !== undefined && item.price !== null && item.price !== ''}
-                    <p class="truncate text-xs tabular-nums text-muted-foreground sm:text-sm">{item.price}</p>
-                  {/if}
-                </div>
-              </div>
-              <div class="divide-y divide-border/60">
-                {#each activeSectionFeatures as feature}
-                  {#if !showDiffOnly || isDifferent(feature)}
-                    <div class="flex items-center justify-between gap-3 px-3 py-2 text-xs transition-colors hover:bg-muted/20 sm:px-4 sm:py-2.5 sm:text-sm">
-                      <span class="min-w-0 flex-1 truncate text-muted-foreground">{feature.label}</span>
-                      <span class="shrink-0 text-right font-medium">
-                        {#if feature.type === 'boolean'}
-                          {#if item[feature.key]}
-                            <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                              <CheckIcon size={14} />
-                              Yes
-                            </span>
-                          {:else}
-                            <span class="text-muted-foreground/50">No</span>
-                          {/if}
-                        {:else if feature.type === 'rating'}
-                          <span class="inline-flex gap-0.5">
-                            {#each Array(5) as _, i}
-                              <StarIcon
-                                size={12}
-                                class={i < Number(item[feature.key])
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'text-muted-foreground/20'}
-                              />
-                            {/each}
-                          </span>
-                        {:else if feature.type === 'color'}
-                          <span
-                            class="inline-block h-5 w-5 rounded-full border border-border shadow-sm align-middle"
-                            style={safeStyle(`background-color: ${item[feature.key]}`)}
-                          ></span>
-                        {:else if feature.type === 'image' && item[feature.key]}
-                          <img src={safeUrl(item[feature.key] as string, { kind: 'resource' })} alt={feature.label} class="inline-block h-6 w-auto object-contain" />
-                        {:else}
-                          {item[feature.key] ?? '—'}
-                        {/if}
-                      </span>
-                    </div>
-                  {/if}
-                {/each}
-              </div>
-            </div>
-          {/each}
-        </div>
-      </div>
+		{#if winnerItem}
+			{@const w = winnerItem}
+			{@const reason = plain(winner?.reason)}
+			<section
+				aria-label="Best pick"
+				data-slot="winner"
+				class={[
+					'flex flex-col gap-3 rounded-ripple border p-3 @min-[560px]:p-4',
+					isChosen(w) ? 'border-ripple-accent bg-ripple-accent/8' : 'border-ripple-accent/50 bg-ripple-surface'
+				]}
+			>
+				<!-- Photo | details; the actions sit under the photo below 560px, under the details from 560px. -->
+				<div class="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+					<PhotoTile src={safeUrl(w.image, { kind: 'resource' })} alt={nameOf(w)} icon={PackageIcon} class="w-14 self-start @min-[560px]:row-span-2 @min-[720px]:w-[72px]" />
+					<div class="flex min-w-0 flex-col gap-1">
+						<p class="flex items-center gap-1 text-caption-1 font-medium tracking-[0.04em] text-ripple-muted-foreground uppercase">
+							<AwardIcon size={12} strokeWidth={2} aria-hidden="true" class="text-ripple-accent" />Best pick
+						</p>
+						<div class="flex items-start justify-between gap-2">
+							<div class="min-w-0">
+								{@render itemName(w, 'text-headline')}
+								{#if w.subtitle || w.chip}
+									<p class="truncate text-footnote text-ripple-muted-foreground">{plain(w.subtitle ?? w.chip)}</p>
+								{/if}
+							</div>
+							{#if priceText(w)}
+								<p class="shrink-0 text-headline tabular-nums" data-slot="price">{priceText(w)}</p>
+							{/if}
+						</div>
+						{#if reason}<p class="text-callout text-pretty" data-slot="reason">{reason}</p>{/if}
+						{@render tags(w)}
+					</div>
+					{#if showPrimary || hasSecondary(w)}
+						<div class="col-span-2 @min-[560px]:col-span-1 @min-[560px]:col-start-2">{@render actions(w, true)}</div>
+					{/if}
+				</div>
+				{#if runnerUp}
+					<p class="border-t border-ripple-border pt-2 text-footnote text-ripple-muted-foreground" data-slot="runner-up">
+						<span class="font-medium text-ripple-surface-foreground">Runner-up: {nameOf(runnerUp.item)}</span>{#if runnerUp.reason}. {runnerUp.reason}{/if}
+					</p>
+				{/if}
+			</section>
+		{/if}
 
-      <!-- Table view (desktop default; opt-in on mobile) -->
-      <div class={cn(viewMode === 'card' ? 'hidden lg:block' : 'block')}>
-        <div class="cmp-scroll">
-          <div class="cmp-inner overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
-            <!-- Header -->
-            <div
-              class="cmp-grid sticky top-0 z-10 border-b border-border/70 bg-muted/40 backdrop-blur-md supports-[backdrop-filter]:bg-muted/30"
-              style={safeStyle(`--cmp-cols: ${safeItems.length};`)}
-            >
-              <div class="p-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:p-3 sm:text-xs">
-                {activeSection ?? ''}
-              </div>
-              {#each safeItems as item, idx (`${item.id}:${idx}`)}
-                <div class="flex flex-col items-center justify-center gap-1 border-l border-border/70 p-2 text-center sm:p-3">
-                  {#if item.image}
-                    <img
-                      src={safeUrl(item.image, { kind: 'resource' })}
-                      alt={item.title ?? item.name ?? ''}
-                      class="hidden h-6 w-6 rounded object-contain sm:block sm:h-8 sm:w-8"
-                    />
-                  {/if}
-                  <span class="truncate text-xs font-semibold tracking-tight sm:text-sm">
-                    {item.title ?? item.name ?? ''}
-                  </span>
-                </div>
-              {/each}
-            </div>
+		{#if others.length > 0}
+			<ul class={['grid grid-cols-1 gap-2', colsFor(others.length)]} aria-label={winnerItem ? 'Other options' : 'Options'}>
+				{#each others as item, i (`${item.id ?? ''}:${i}`)}
+					{@const delta = priceDelta(item)}
+					<li
+						in:rise={{ index: i }}
+						data-slot="item"
+						class={[
+							'flex min-w-0 flex-col gap-2 rounded-ripple border p-3',
+							isChosen(item) ? 'border-ripple-accent bg-ripple-accent/8' : 'border-ripple-border bg-ripple-surface'
+						]}
+					>
+						<div class="flex gap-3">
+							<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} alt={nameOf(item)} icon={PackageIcon} class="w-14 shrink-0 self-start" />
+							<div class="min-w-0 flex-1">
+								{@render itemName(item, 'text-headline')}
+								{#if item.subtitle || item.chip}
+									<p class="truncate text-footnote text-ripple-muted-foreground">{plain(item.subtitle ?? item.chip)}</p>
+								{/if}
+								{#if priceText(item)}
+									<p class="mt-0.5 text-callout font-medium tabular-nums" data-slot="price">{priceText(item)}</p>
+								{/if}
+								{#if delta}
+									<p class="text-footnote tabular-nums text-ripple-muted-foreground" data-slot="delta">{delta}</p>
+								{/if}
+							</div>
+						</div>
+						{@render tags(item)}
+						{#if highlightFeatures.length > 0}
+							<div class="flex flex-wrap gap-1">
+								{#each highlightFeatures as f, fi (`${f.key}:${fi}`)}
+									{#if !missing(item[f.key])}
+										<span class="inline-flex max-w-full items-center gap-1 rounded-md bg-ripple-muted px-1.5 py-0.5 text-footnote">
+											{@render featureIcon(f)}
+											<span class="text-ripple-muted-foreground">{labelOf(f)}</span>
+											<span class="truncate font-medium tabular-nums">{textOf(f, item[f.key])}</span>
+										</span>
+									{/if}
+								{/each}
+							</div>
+						{/if}
+						{@render actions(item, false)}
+					</li>
+				{/each}
+			</ul>
+		{/if}
 
-            <!-- Rows -->
-            {#each activeSectionFeatures as feature, rowIdx}
-              {#if !showDiffOnly || isDifferent(feature)}
-                <div
-                  class={cn(
-                    'cmp-grid border-b border-border/60 transition-colors last:border-0 hover:bg-muted/20',
-                    rowIdx % 2 === 1 && 'bg-muted/10'
-                  )}
-                  style={safeStyle(`--cmp-cols: ${safeItems.length};`)}
-                >
-                  <div class="flex items-center gap-1.5 p-2 text-xs text-muted-foreground sm:gap-2 sm:p-3 sm:text-sm">
-                    {#if feature.icon}
-                      <Icon name={feature.icon} size={12} class="hidden shrink-0 sm:block" />
-                    {/if}
-                    <span class="cmp-clamp-2">{feature.label}</span>
-                  </div>
-                  {#each safeItems as item, idx (`${item.id}:${idx}`)}
-                    <div class="flex items-center justify-center border-l border-border/60 p-2 text-center sm:p-3">
-                      {#if feature.type === 'boolean'}
-                        {#if item[feature.key]}
-                          <CheckIcon size={16} class="text-emerald-500" />
-                        {:else}
-                          <span class="text-muted-foreground/30">—</span>
-                        {/if}
-                      {:else if feature.type === 'image' && item[feature.key]}
-                        <img src={safeUrl(item[feature.key] as string, { kind: 'resource' })} alt={feature.label} class="h-6 w-auto object-contain sm:h-8" />
-                      {:else if feature.type === 'color'}
-                        <div
-                          class="h-4 w-4 rounded-full border border-border shadow-sm sm:h-5 sm:w-5"
-                          style={safeStyle(`background-color: ${item[feature.key]}`)}
-                        ></div>
-                      {:else if feature.type === 'rating'}
-                        <div class="flex gap-0.5">
-                          {#each Array(5) as _, i}
-                            <StarIcon
-                              size={10}
-                              class={i < Number(item[feature.key])
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'text-muted-foreground/20'}
-                            />
-                          {/each}
-                        </div>
-                      {:else}
-                        <span class="cmp-clamp-2 text-xs font-medium tabular-nums sm:text-sm">
-                          {item[feature.key] ?? '—'}
-                        </span>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-            {/each}
-          </div>
-        </div>
-      </div>
-    </div>
-  {/if}
+		{#if sectionNames.length > 0 && list.length > 0}
+			<section class="flex flex-col gap-3 border-t border-ripple-border pt-4" aria-label="Detailed comparison">
+				<div class="flex items-center gap-2">
+					<div role="group" aria-label="View" class="inline-flex rounded-md bg-ripple-muted p-0.5 @min-[720px]:hidden">
+						{#each VIEWS as [mode, label] (mode)}
+							<button
+								type="button"
+								aria-pressed={viewMode === mode}
+								class={[
+									'flex items-center gap-1.5 rounded px-2.5 py-1 text-callout font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ripple-ring focus-visible:outline-none',
+									viewMode === mode
+										? 'bg-ripple-surface text-ripple-surface-foreground'
+										: 'text-ripple-muted-foreground hover:text-ripple-surface-foreground'
+								]}
+								onclick={() => (pickedView = mode)}
+							>
+								{#if mode === 'card'}<LayoutGridIcon size={14} aria-hidden="true" />{:else}<TableIcon size={14} aria-hidden="true" />{/if}
+								{label}
+							</button>
+						{/each}
+					</div>
+					{#if showDiffToggle && list.length > 1}
+						<label class="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 text-callout text-ripple-muted-foreground select-none hover:text-ripple-surface-foreground">
+							<input type="checkbox" bind:checked={showDiffOnly} class="size-3.5 accent-ripple-accent" />
+							Differences only
+						</label>
+					{/if}
+				</div>
+
+				{#if sectionNames.length > 1}
+					<div class="cmp-chips -mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5" role="group" aria-label="Sections">
+						{#each sectionNames as section, si (`${section}:${si}`)}
+							<button
+								type="button"
+								aria-pressed={activeSection === section}
+								class={[
+									'shrink-0 rounded-md px-2.5 py-1 text-callout font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ripple-ring focus-visible:outline-none',
+									activeSection === section
+										? 'bg-ripple-accent/12 text-ripple-surface-foreground ring-1 ring-ripple-accent/50'
+										: 'bg-ripple-muted text-ripple-muted-foreground hover:text-ripple-surface-foreground'
+								]}
+								onclick={() => (pickedSection = section)}
+							>
+								{section}
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				{#if shownFeatures.length === 0}
+					<p class="text-callout text-ripple-muted-foreground">These options match on everything in {activeSection}.</p>
+				{:else}
+					<!-- Per-item cards: below 720px, unless the visitor picked the table. -->
+					<div class={viewMode === 'table' ? 'hidden' : '@min-[720px]:hidden'} data-view="card">
+						<div class={['grid grid-cols-1 gap-2', list.length % 2 === 0 && '@min-[560px]:grid-cols-2']}>
+							{#each list as item, idx (`${item.id ?? ''}:${idx}`)}
+								<article class="min-w-0 overflow-hidden rounded-ripple border border-ripple-border bg-ripple-surface">
+									<header class="flex items-center gap-2.5 border-b border-ripple-border px-3 py-2">
+										<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} alt={nameOf(item)} icon={PackageIcon} iconSize={14} class="w-8 shrink-0" />
+										<div class="min-w-0 flex-1">
+											{@render itemName(item, 'text-body-emph')}
+											{#if priceText(item)}<p class="truncate text-footnote tabular-nums text-ripple-muted-foreground">{priceText(item)}</p>{/if}
+										</div>
+										{#if item === winnerItem}<AwardIcon size={14} strokeWidth={2} class="shrink-0 text-ripple-accent" aria-label="Best pick" />{/if}
+									</header>
+									<dl class="divide-y divide-ripple-border">
+										{#each shownFeatures as f, fi (`${f.key}:${fi}`)}
+											<div class="flex items-center justify-between gap-3 px-3 py-2 text-callout">
+												<dt class="flex min-w-0 items-center gap-1.5 text-ripple-muted-foreground">
+													{@render featureIcon(f)}<span class="truncate">{labelOf(f)}</span>
+												</dt>
+												<dd class="shrink-0 text-right">{@render cell(f, item, idx)}</dd>
+											</div>
+										{/each}
+									</dl>
+								</article>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Table: always at 720px+; below that when picked. -->
+					<div class={viewMode === 'card' ? 'hidden @min-[720px]:block' : ''} data-view="table">
+						<div class="cmp-scroll overflow-x-auto rounded-ripple border border-ripple-border bg-ripple-surface">
+							<table class="w-full min-w-[420px] border-collapse text-callout">
+								<caption class="sr-only">{activeSection}</caption>
+								<thead>
+									<tr>
+										<th scope="col" class="cmp-sticky px-3 py-2 text-left align-bottom text-caption-1 font-medium tracking-[0.04em] text-ripple-muted-foreground uppercase">
+											{activeSection ?? ''}
+										</th>
+										{#each list as item, idx (`${item.id ?? ''}:${idx}`)}
+											<th
+												scope="col"
+												class={['border-l border-ripple-border px-3 py-2 text-center align-bottom font-normal', item === winnerItem && 'border-t-2 border-t-ripple-accent']}
+											>
+												<div class="flex flex-col items-center gap-1">
+													<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} alt="" icon={PackageIcon} iconSize={14} class="w-8" />
+													{@render itemName(item, 'text-body-emph', 'span')}
+													{#if priceText(item)}<span class="text-footnote tabular-nums text-ripple-muted-foreground">{priceText(item)}</span>{/if}
+													{#if item === winnerItem}
+														<span class="inline-flex items-center gap-1 text-footnote font-medium"><AwardIcon size={12} strokeWidth={2} aria-hidden="true" class="text-ripple-accent" />Best pick</span>
+													{/if}
+												</div>
+											</th>
+										{/each}
+									</tr>
+								</thead>
+								<tbody>
+									{#each shownFeatures as f, fi (`${f.key}:${fi}`)}
+										<tr class="border-t border-ripple-border">
+											<th scope="row" class="cmp-sticky px-3 py-2 text-left font-normal text-ripple-muted-foreground">
+												<span class="flex items-center gap-1.5">{@render featureIcon(f)}<span class="cmp-clamp-2">{labelOf(f)}</span></span>
+											</th>
+											{#each list as item, idx (`${item.id ?? ''}:${idx}`)}
+												<td class="border-l border-ripple-border px-3 py-2 text-center">{@render cell(f, item, idx)}</td>
+											{/each}
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				{/if}
+			</section>
+		{/if}
+	</div>
 </div>
 
 <style>
-  .cmp-tabs-scroll {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .cmp-tabs-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .cmp-scroll {
-    overflow-x: auto;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pan-y;
-    margin-left: -0.75rem;
-    margin-right: -0.75rem;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent) transparent;
-  }
-  @media (min-width: 640px) {
-    .cmp-scroll {
-      margin-left: 0;
-      margin-right: 0;
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
-  .cmp-scroll::-webkit-scrollbar {
-    height: 6px;
-  }
-  .cmp-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .cmp-scroll::-webkit-scrollbar-thumb {
-    background-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
-    border-radius: 3px;
-  }
-
-  .cmp-inner {
-    min-width: max(100%, 420px);
-  }
-  @media (min-width: 640px) {
-    .cmp-inner {
-      min-width: 100%;
-    }
-  }
-
-  /* Comparison table grid — label column shrinks on phones, expands on larger screens */
-  .cmp-grid {
-    display: grid;
-    grid-template-columns: minmax(88px, 120px) repeat(var(--cmp-cols, 1), minmax(88px, 1fr));
-  }
-  @media (min-width: 640px) {
-    .cmp-grid {
-      grid-template-columns: minmax(120px, 160px) repeat(var(--cmp-cols, 1), minmax(110px, 1fr));
-    }
-  }
-
-  .cmp-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+	.cmp-chips {
+		scrollbar-width: none;
+	}
+	.cmp-chips::-webkit-scrollbar {
+		display: none;
+	}
+	.cmp-scroll {
+		scrollbar-width: thin;
+	}
+	/* The label column stays put while the item columns scroll under it. */
+	.cmp-sticky {
+		position: sticky;
+		left: 0;
+		z-index: 1;
+		min-width: 7rem;
+		max-width: 11rem;
+		background: var(--ripple-surface);
+	}
+	.cmp-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
 </style>

@@ -22,7 +22,8 @@ export {
 	MENU_ICONS,
 	SERVICE_ICONS,
 	EXERCISE_ICONS,
-	RECORD_ICONS
+	RECORD_ICONS,
+	FEATURE_ICONS
 } from './icons.js';
 export { pairSpans, MAX_HALF_ROWS } from './pair.js';
 export { rise, slide } from './motion.js';

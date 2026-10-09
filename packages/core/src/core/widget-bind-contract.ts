@@ -65,6 +65,12 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   'menu-order': { prop: 'cart', event: 'oncartchange' },
   'food-menu': { prop: 'cart', event: 'oncartchange' },
   'order-menu': { prop: 'cart', event: 'oncartchange' },
+  // comparison-layout binds the chosen item's id. Its own event name, so a
+  // spec's `on_choose` (→ `onchoose`, the {id, name} host hook) can never
+  // replace the bind writer.
+  'comparison-layout': { prop: 'chosen', event: 'onchosenchange' },
+  'comparison-cards': { prop: 'chosen', event: 'onchosenchange' },
+  compare: { prop: 'chosen', event: 'onchosenchange' },
 };
 
 /**

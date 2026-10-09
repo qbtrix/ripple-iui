@@ -4,9 +4,9 @@
 // model text stay text and never become icons.
 //
 // One map per enum in the doc, each its own export so a widget's bundle carries
-// only the icons it imports. A widget with an enum not listed here (comparison
-// FeatureKind, record-summary RowKind) adds its map here, so the vocabulary
-// stays one set. Sizes: 16px in rows, 20px in tiles, stroke 1.75 (ICON).
+// only the icons it imports. A widget with an enum not listed here
+// (record-summary RowKind) adds its map here, so the vocabulary stays one set.
+// Sizes: 16px in rows, 20px in tiles, stroke 1.75 (ICON).
 import type { LucideIcon } from '@lucide/svelte';
 import CircleDot from '@lucide/svelte/icons/circle-dot';
 // stops
@@ -58,6 +58,25 @@ import User from '@lucide/svelte/icons/user';
 import Building2 from '@lucide/svelte/icons/building-2';
 import FileText from '@lucide/svelte/icons/file-text';
 import Gem from '@lucide/svelte/icons/gem';
+// comparison features
+import BatteryFull from '@lucide/svelte/icons/battery-full';
+import Weight from '@lucide/svelte/icons/weight';
+import Monitor from '@lucide/svelte/icons/monitor';
+import Cpu from '@lucide/svelte/icons/cpu';
+import MemoryStick from '@lucide/svelte/icons/memory-stick';
+import HardDrive from '@lucide/svelte/icons/hard-drive';
+import Camera from '@lucide/svelte/icons/camera';
+import Gauge from '@lucide/svelte/icons/gauge';
+import Tag from '@lucide/svelte/icons/tag';
+import Usb from '@lucide/svelte/icons/usb';
+import Wifi from '@lucide/svelte/icons/wifi';
+import Keyboard from '@lucide/svelte/icons/keyboard';
+import Speaker from '@lucide/svelte/icons/speaker';
+import ShieldCheck from '@lucide/svelte/icons/shield-check';
+import BadgeCheck from '@lucide/svelte/icons/badge-check';
+import Ruler from '@lucide/svelte/icons/ruler';
+import Star from '@lucide/svelte/icons/star';
+import Headset from '@lucide/svelte/icons/headset';
 
 export const FALLBACK_ICON: LucideIcon = CircleDot;
 
@@ -146,6 +165,28 @@ export const RECORD_ICONS = {
 	asset: Gem
 } satisfies Record<string, LucideIcon>;
 
+/** comparison-layout FeatureKind (§3.2): a feature row's icon, and the value of an `icon`-kind cell */
+export const FEATURE_ICONS = {
+	battery: BatteryFull,
+	weight: Weight,
+	display: Monitor,
+	cpu: Cpu,
+	memory: MemoryStick,
+	storage: HardDrive,
+	camera: Camera,
+	speed: Gauge,
+	price: Tag,
+	ports: Usb,
+	wifi: Wifi,
+	keyboard: Keyboard,
+	audio: Speaker,
+	security: ShieldCheck,
+	warranty: BadgeCheck,
+	size: Ruler,
+	rating: Star,
+	support: Headset
+} satisfies Record<string, LucideIcon>;
+
 export type StopKind = keyof typeof STOP_ICONS;
 export type LegKind = keyof typeof LEG_ICONS;
 export type MealKind = keyof typeof MEAL_ICONS;
@@ -154,3 +195,4 @@ export type MenuKind = keyof typeof MENU_ICONS;
 export type ServiceKind = keyof typeof SERVICE_ICONS;
 export type ExerciseKind = keyof typeof EXERCISE_ICONS;
 export type RecordKind = keyof typeof RECORD_ICONS;
+export type FeatureKind = keyof typeof FEATURE_ICONS;

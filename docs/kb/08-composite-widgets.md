@@ -11,9 +11,15 @@ Refer to `dist/manifest.json` (or `get_widget_spec` from an agent) for the exact
 
 ### comparison-layout
 
-Side-by-side comparison of 2–6 items with hero cards, a section-tab feature grid, and a Card/Table view toggle. Per-item `actions` and `learn_more` accept event handlers, so each row can fire a chat.send / navigate / api action.
+Answers "which should I pick" for 2–6 items. Top to bottom: the `verdict` line, a best-pick card for `winner: {id, reason, runner_up?}` (photo, name, reason, price, Choose), the other items as compact cards (photo, price and its difference from the winner, up to 3 `picks` tags such as "Best for travel", and the `highlight` features as pills), then the detailed comparison: section chips, a "Differences only" filter, and per-item cards below 720px of width or a table with a sticky label column at 720px and wider.
 
-Use when the user asks "compare X vs Y" or "what's the difference between …" — NOT when they need a feature matrix (that's `comparison-table`).
+- Features carry `kind`: `text`, `number`, `boolean`, `rating`, `icon`, `price`, `color`. A `type` on a feature still works for old specs, but write `kind`. An `icon`-kind value is a word from the feature icon set (`battery`, `weight`, `display`, `cpu`, `memory`, `storage`, `camera`, `speed`, `price`, `ports`, `wifi`, `keyboard`, `audio`, `security`, `warranty`, `size`, `rating`, `support`) or a list of them; the same words name a feature's `icon`.
+- `better: "higher" | "lower"` on a feature marks its best numeric cell with a dot and bold (ties mark all; non-numbers skip; a row where every value is equal marks nothing).
+- `price` is a number in `currency` (ISO 4217, default USD); a string price shows as written and gets no difference line.
+- An item with `product_id` and no `name` shows a placeholder until the server fills it.
+- Choose sets `chosen` (bind it: `bind: "pick"`) and fires `on_choose` with `{id, name, product_id?}`. It makes no network call itself. Legacy per-item `actions` and `learn_more` handlers still fire.
+
+Use when the user asks "compare X vs Y", "which should I get" or "what's the difference between …", NOT when they need a plain feature matrix (that's `comparison-table`).
 
 ### entity-detail
 
