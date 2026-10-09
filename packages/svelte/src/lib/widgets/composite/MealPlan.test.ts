@@ -11,7 +11,8 @@ import { expectStreamParity } from '$lib/streaming/__fixtures__/stream-parity.js
 import { getWidget, hasWidget } from '../index.js';
 import { _resetBindContractWarnings, getBindContract, warnUnregisteredBindContract } from '@ripple-ui/core';
 import MealPlan from './MealPlan.svelte';
-import { dayTotals, goalCheck, holds, nextEdit, readLibrary, shoppingList, swapMeal, type PlanDay, type RecipeData } from './recipe.js';
+import { holds, nextEdit } from '../data-kit/edit.js';
+import { dayTotals, goalCheck, readLibrary, shoppingList, swapMeal, type PlanDay, type RecipeData } from './recipe.js';
 
 afterEach(() => {
 	cleanup();

@@ -42,20 +42,18 @@
 	import ShoppingBasket from '@lucide/svelte/icons/shopping-basket';
 	import Timer from '@lucide/svelte/icons/timer';
 	import X from '@lucide/svelte/icons/x';
-	import { MEAL_ICONS, PhotoTile, SectionCard, StatChip, VerdictLine, finite, kindIcon, plain, sum } from '../data-kit/index.js';
+	import { MEAL_ICONS, PhotoTile, SectionCard, StatChip, VerdictLine, finite, holds, kindIcon, nextEdit, plain, sum } from '../data-kit/index.js';
+	import type { Edit } from '../data-kit/edit.js';
 	import type { Verdict } from '../data-kit/types.js';
 	import { duration } from './Itinerary.svelte';
 	import {
-		holds,
 		list,
-		nextEdit,
 		positive,
 		qtyLabel,
 		readIngredients,
 		readSteps,
 		scaleFactor,
 		slotLabel,
-		type Edit,
 		type Goal,
 		type Ingredient,
 		type RecipeStep,
@@ -144,7 +142,7 @@
 
 	const rows = $derived(readIngredients(ingredients));
 	const stepRows = $derived(readSteps(steps));
-	// A step tick is an Edit (recipe.ts), so a host re-sending `done` from the
+	// A step tick is an Edit (data-kit/edit.ts), so a host re-sending `done` from the
 	// spec does not untick it.
 	let doneEdit = $state.raw<Edit<number[]> | null>(null);
 	const doneSet = $derived(new Set((holds(doneEdit, done) ? doneEdit.value : list(done)).filter((n) => typeof n === 'number')));

@@ -1,7 +1,8 @@
 // widgets/composite/GrowthProjection.test.ts — the growth-projection data
 // widget: its math against closed-form references (monthly and yearly
 // compounding, rate 0, lump sum, partial year), clamping, registry and bind
-// wiring, a bound slider edit writing a number back to state, the rate event,
+// wiring, a bound slider edit writing a number back to state, rate and years
+// edits surviving a re-sent spec (and yielding to a new one), the rate event,
 // streamed parity, junk props, and what the reader sees (hero, goal, table).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
@@ -135,6 +136,42 @@ describe('growth-projection: edits', () => {
 		expect(finalText(container)).toBe(`$${Math.round(monthlyFV(0, 500, 5, 10)).toLocaleString('en-US')}`);
 		await fireEvent.change(slider);
 		expect(onStateChange).toHaveBeenLastCalledWith('deposit', 500, expect.anything());
+	});
+
+	const slide = async (name: string, value: string) => {
+		const s = screen.getByRole('slider', { name });
+		await fireEvent.input(s, { target: { value } });
+		await fireEvent.change(s);
+	};
+	const cashOf = (v: number) => `$${Math.round(v).toLocaleString('en-US')}`;
+	const boundSpec = (rate: number, years: number) => ({
+		state: { deposit: 300 },
+		ui: { type: 'growth-projection', bind: '{state.deposit}', props: { rate, years } }
+	});
+
+	it('rate and years edits survive a bound deposit change that re-sends the spec', async () => {
+		const { container } = render(Ripple, { props: { spec: boundSpec(5, 10) } });
+		await slide('Interest rate', '7');
+		await slide('Years', '20');
+		expect(finalText(container)).toBe(cashOf(monthlyFV(0, 300, 7, 20)));
+
+		await slide('Monthly deposit', '500');
+		expect(screen.getByText('Balance after 20 years')).toBeTruthy();
+		expect((screen.getByRole('slider', { name: 'Interest rate' }) as HTMLInputElement).value).toBe('7');
+		expect(finalText(container)).toBe(cashOf(monthlyFV(0, 500, 7, 20)));
+	});
+
+	it('a re-sent copy of the same spec keeps the edits; a new spec from the model replaces them', async () => {
+		const { container, rerender } = render(Ripple, { props: { spec: boundSpec(5, 10) } });
+		await slide('Interest rate', '7');
+		await slide('Years', '20');
+
+		await rerender({ spec: boundSpec(5, 10) });
+		expect(finalText(container)).toBe(cashOf(monthlyFV(0, 300, 7, 20)));
+
+		await rerender({ spec: boundSpec(4, 15) });
+		expect(screen.getByText('Balance after 15 years')).toBeTruthy();
+		expect(finalText(container)).toBe(cashOf(monthlyFV(0, 300, 4, 15)));
 	});
 
 	it('a typed rate over 100 commits as 100 and fires on_ratechange with the number', async () => {

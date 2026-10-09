@@ -29,7 +29,8 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
 	import { safeArray } from '$lib/utils/safe-props.js';
-	import { AISLE_ICONS, MEAL_ICONS, SectionCard, StatChip, StatusPill, VerdictLine, STATUS_CLASS, kindIcon, num, plain, rise } from '../data-kit/index.js';
+	import { AISLE_ICONS, MEAL_ICONS, SectionCard, StatChip, StatusPill, VerdictLine, STATUS_CLASS, holds, kindIcon, nextEdit, num, plain, rise } from '../data-kit/index.js';
+	import type { Edit } from '../data-kit/edit.js';
 	import type { Verdict } from '../data-kit/types.js';
 	import Recipe, { stepper } from './Recipe.svelte';
 	import {
@@ -38,9 +39,7 @@
 		dayTotals,
 		findRecipe,
 		goalCheck,
-		holds,
 		list,
-		nextEdit,
 		positive,
 		qtyLabel,
 		readLibrary,
@@ -48,7 +47,6 @@
 		shoppingList,
 		slotLabel,
 		swapMeal,
-		type Edit,
 		type Goal,
 		type PlanDay,
 		type RecipeData
@@ -107,7 +105,7 @@
 	const count = $derived(Math.max(1, Math.min(Math.round(positive(people) ?? 1), MAX_PEOPLE)));
 	const lib = $derived(readLibrary(safeArray<unknown>(recipes, { widget: 'meal-plan', key: 'recipes' })));
 	const incomingDays = $derived(safeArray<unknown>(days, { widget: 'meal-plan', key: 'days' }));
-	// Swaps and ticks are Edits (recipe.ts): a host that re-renders the same
+	// Swaps and ticks are Edits (data-kit/edit.ts): a host that re-renders the same
 	// spec (say on a people change) re-sends the original days, which must not
 	// undo a swap. Plain $state.raw: nothing inside them is mutated.
 	let daysEdit = $state.raw<Edit<unknown[]> | null>(null);

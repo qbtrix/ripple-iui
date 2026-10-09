@@ -62,6 +62,17 @@ describe('itinerary: bound edits', () => {
 	};
 	const lastDays = (fn: ReturnType<typeof vi.fn>) => fn.mock.calls.at(-1)![1] as ItineraryDay[];
 
+	it.each([
+		['without', { budget: 500 }],
+		['with', { budget: 500, open: 0 }]
+	])('the open day survives a tick that re-sends the spec %s `open` in it', async (_, props) => {
+		const { container } = render(Ripple, { props: { spec: { state: { days: tokyo() }, ui: { type: 'itinerary', bind: '{state.days}', props } } } });
+		await fireEvent.click(container.querySelectorAll('[aria-expanded]')[1]);
+		await fireEvent.click(screen.getByRole('checkbox', { name: 'Meiji shrine' }));
+		expect(container.querySelectorAll('[aria-expanded]')[1].getAttribute('aria-expanded')).toBe('true');
+		expect(screen.getByRole('checkbox', { name: 'Meiji shrine' }).getAttribute('aria-checked')).toBe('true');
+	});
+
 	it('ticking a stop writes a new days array with that stop done', async () => {
 		const { initial, onStateChange } = mountBound();
 		const box = screen.getByRole('checkbox', { name: 'Soba lunch' });
