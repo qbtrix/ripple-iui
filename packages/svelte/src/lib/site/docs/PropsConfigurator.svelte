@@ -41,9 +41,11 @@
 		values = { ...values, [name]: value };
 	}
 
-	/** Literal unions short enough to show every option at once get a segmented control. */
+	/** Literal unions whose labels fit the panel's width in full get a segmented control; the rest a select. */
 	const segmented = (c: ConfigurableProp) =>
-		c.control.kind === 'enum' && c.control.options.length <= 4 && c.control.options.every((o) => String(o).length <= 8);
+		c.control.kind === 'enum' &&
+		c.control.options.length <= 4 &&
+		c.control.options.reduce<number>((n, o) => n + String(o).length, 0) <= 16;
 
 	function pick(c: ConfigurableProp, raw: string) {
 		if (c.control.kind !== 'enum') return;
