@@ -128,7 +128,8 @@
 		// Back from the store: keep the finished order form, don't replay over it.
 		select(scenarios.find((x) => x.id === wanted) ?? scenarios[0], !back);
 		// A deep link to a later run: bring its row into the phone strip.
-		tick().then(() => list?.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+		// Phones only: on a wide page it would scroll the page itself.
+		if (narrow.current) tick().then(() => list?.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
 	});
 </script>
 
