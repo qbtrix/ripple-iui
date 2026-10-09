@@ -3,8 +3,25 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { pawbarEnv } from './src/lib/site/pawbar-env.js';
 
-export default defineConfig(({ mode }) => {
+// The top bar's GitHub star count, fetched once per production build so the
+// site never calls GitHub at runtime (CSP and the no-third-party rule). Any
+// failure (offline, rate limit, slow) yields '' and the bar shows no number;
+// it never fails the build. GITHUB_STARS_URL overrides the endpoint (point it
+// at a dead port to prove the offline build).
+async function githubStars(url = 'https://api.github.com/repos/qbtrix/ripple-iui'): Promise<string> {
+	try {
+		const res = await fetch(url, { signal: AbortSignal.timeout(3000), headers: { accept: 'application/vnd.github+json' } });
+		const n = res.ok ? (await res.json()).stargazers_count : undefined;
+		if (typeof n !== 'number') return '';
+		return n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n);
+	} catch {
+		return '';
+	}
+}
+
+export default defineConfig(async ({ command, mode }) => {
 	const env = loadEnv(mode, '.', 'PUBLIC_');
+	const stars = command === 'build' ? await githubStars(loadEnv(mode, '.', 'GITHUB_STARS_').GITHUB_STARS_URL || undefined) : '';
 	// Throws on a production build with Paw Bar vars set but no PUBLIC_PAWBAR_LIVE=1.
 	const pawbar = pawbarEnv(env, mode);
 	return {
@@ -20,7 +37,8 @@ export default defineConfig(({ mode }) => {
 			'import.meta.env.PUBLIC_PAWBAR_LIVE': JSON.stringify(pawbar.live ? '1' : ''),
 			'import.meta.env.PUBLIC_PAWBAR_ENDPOINT': JSON.stringify(pawbar.endpoint),
 			'import.meta.env.PUBLIC_PAWBAR_WIDGET_ID': JSON.stringify(pawbar.widgetId),
-			'import.meta.env.PUBLIC_PAWBAR_SITE_KEY': JSON.stringify(pawbar.siteKey)
+			'import.meta.env.PUBLIC_PAWBAR_SITE_KEY': JSON.stringify(pawbar.siteKey),
+			'import.meta.env.PUBLIC_GITHUB_STARS': JSON.stringify(stars)
 		}
 	};
 });
