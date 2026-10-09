@@ -139,7 +139,7 @@
 	const kindWord = $derived(typeof kind === 'string' ? slotLabel(plain(kind)) : '');
 
 	const base = $derived(positive(serves));
-	const count = $derived(Math.min(Math.round(positive(servings) ?? base ?? 1), MAX));
+	const count = $derived(Math.max(1, Math.min(Math.round(positive(servings) ?? base ?? 1), MAX)));
 	const factor = $derived(scaleFactor(count, base));
 
 	const rows = $derived(readIngredients(ingredients));

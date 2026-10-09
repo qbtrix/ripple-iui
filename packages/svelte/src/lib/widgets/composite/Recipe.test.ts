@@ -86,6 +86,11 @@ describe('recipe: bound servings', () => {
 		expect(qtys(container)).toEqual(['2 slices']);
 		expect(screen.queryByRole('button', { name: 'More servings' })).toBeNull();
 	});
+
+	it('a fractional servings count never rounds to zero', () => {
+		const { container } = render(Recipe, { props: { name: 'Soup', serves: 2, servings: 0.4, ingredients: [{ name: 'stock', qty: 2, unit: 'cups' }] } });
+		expect(qtys(container)).toEqual(['1 cup']);
+	});
 });
 
 describe('recipe: ticks', () => {

@@ -104,7 +104,7 @@
 
 	const heading = $derived(plain(title));
 	const sub = $derived(plain(subtitle));
-	const count = $derived(Math.min(Math.round(positive(people) ?? 1), MAX_PEOPLE));
+	const count = $derived(Math.max(1, Math.min(Math.round(positive(people) ?? 1), MAX_PEOPLE)));
 	const lib = $derived(readLibrary(safeArray<unknown>(recipes, { widget: 'meal-plan', key: 'recipes' })));
 	const incomingDays = $derived(safeArray<unknown>(days, { widget: 'meal-plan', key: 'days' }));
 	// Swaps and ticks are Edits (recipe.ts): a host that re-renders the same
