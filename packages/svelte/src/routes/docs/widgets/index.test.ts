@@ -41,6 +41,7 @@ afterEach(() => {
 const data = () => ({ categories: widgetCategories() }) as never;
 const stageOf = (type: string) =>
 	[...document.querySelectorAll('.card')].find((c) => c.querySelector('code')?.textContent === type)!.querySelector('.stage')!;
+const entry = (t: string) => manifestEntries.find((e) => e.type === t)!;
 const live = () => document.querySelectorAll('.card .ripple-root').length;
 
 describe('/docs/widgets index', () => {
@@ -95,7 +96,6 @@ describe('/docs/widgets/examples.json', () => {
 	it('has a spec for every widget: the example, or the interactive spec for an overlay that renders nothing at rest', async () => {
 		const body = (await GET().json()) as Record<string, unknown>;
 		expect(Object.keys(body).toSorted()).toEqual(manifestEntries.map((e) => e.type).toSorted());
-		const entry = (t: string) => manifestEntries.find((e) => e.type === t)!;
 		expect(body.button).toEqual(exampleSpec(entry('button')));
 		expect(body['command-palette']).toEqual(interactiveSpecs(entry('command-palette'))[0].spec);
 	});

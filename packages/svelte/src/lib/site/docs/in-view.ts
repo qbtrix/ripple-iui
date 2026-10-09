@@ -7,7 +7,10 @@ import type { Attachment } from 'svelte/attachments';
 /** Calls `onChange(true)` as the element nears the viewport and `onChange(false)` as it leaves; with `once`, stops after the first true. */
 export function inView(onChange: (visible: boolean) => void, { margin = '200px', once = false } = {}): Attachment {
 	return (el) => {
-		if (typeof IntersectionObserver === 'undefined') return void onChange(true);
+		if (typeof IntersectionObserver === 'undefined') {
+			onChange(true);
+			return () => {};
+		}
 		const io = new IntersectionObserver(
 			(entries) => {
 				const visible = entries.some((e) => e.isIntersecting);
