@@ -1,4 +1,4 @@
-// manifest/entries/word-guess.ts — the LLM-facing entry for the word-guess
+// manifest/entries/word-guess.ts: the LLM-facing entry for the word-guess
 // data widget: a daily-word style guessing game. The model writes the answer
 // (and optionally a hint); the widget runs the board, the scoring, the
 // on-screen keyboard and the share grid. `value` is the bound field (written

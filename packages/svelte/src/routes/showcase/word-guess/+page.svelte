@@ -1,5 +1,5 @@
 <!--
-  routes/showcase/word-guess/+page.svelte — dev preview of the word-guess data
+  routes/showcase/word-guess/+page.svelte: dev preview of the word-guess data
   widget for screenshots and visual QA: a five-letter game with a hint at full
   width (bound value and on_complete in the readout), a seven-letter game in a
   360px frame (drag the corner), a four-letter game with three guesses, and the

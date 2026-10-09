@@ -1,5 +1,5 @@
 <!--
-  widgets/composite/WordGuess.svelte — `word-guess`: a daily-word style
+  widgets/composite/WordGuess.svelte, `word-guess`: a daily-word style
   guessing game. The model writes a 4 to 7 letter `answer`; the visitor types
   (physical keyboard on the focused board, or the on-screen keys), gets
   per-letter feedback, may reveal the `hint`, and ends on a win or lose

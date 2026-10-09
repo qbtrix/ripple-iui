@@ -1,4 +1,4 @@
-// widgets/composite/WordGuess.test.ts — the word-guess data widget: the
+// widgets/composite/WordGuess.test.ts: the word-guess data widget: the
 // scoring table (duplicate letters included), registry and bind-contract
 // wiring, value and on_complete through Ripple, physical and on-screen
 // keyboard input, win, lose, hint, answer validation, re-send and answer

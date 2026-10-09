@@ -1,4 +1,4 @@
-// widgets/composite/WordGuess.ssr.test.ts — word-guess renders through
+// widgets/composite/WordGuess.ssr.test.ts: word-guess renders through
 // svelte/server (the showcase is prerendered): the empty board sized to the
 // answer, the keyboard, the hint button, and the friendly error for a bad answer.
 import { render } from 'svelte/server';
