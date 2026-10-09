@@ -190,7 +190,7 @@ describe('ChatSession', () => {
 		expect(cardOf(cut)?.reason).toBe('truncated');
 		const server = new ChatSession((_m, signal) => recordedEvents(bill, { mode: 'truncate', speed: Infinity, signal }));
 		await server.send('x');
-		expect(cardOf(server)?.reason).toBe('truncated');
+		expect(cardOf(server)?.reason).toBe('server:truncated');
 	});
 
 	test('an unavailable live answer offers the recorded one and plays it in the same turn', async () => {
