@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const statEntry: WidgetManifestEntry = {
   type: 'stat',
   category: 'display',
-  description: 'Labeled metric with delta, direction, and sentiment colors. Richer than `metric` — supports formatting.',
+  description: 'Labeled metric with delta, direction, and sentiment colors. Richer than `metric`: supports formatting.',
   props: {
     label: { type: 'string', required: false, description: 'Stat label.' },
     value: { type: 'number | string', required: true, description: 'Main value.' },

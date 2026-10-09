@@ -17,4 +17,20 @@ export const eachEntry: WidgetManifestEntry = {
       { type: 'text', props: { text: '{item.name}' } },
     ],
   },
+  pocket: {
+    state: { users: [{ name: 'Ada Lovelace' }, { name: 'Grace Hopper' }, { name: 'Alan Turing' }] },
+    ui: {
+      type: 'flex',
+      props: { direction: 'column', gap: '8px' },
+      children: [
+        {
+          type: 'each',
+          items: '{state.users}',
+          children: [
+            { type: 'text', props: { text: '{item.name}' } },
+          ],
+        },
+      ],
+    },
+  },
 };

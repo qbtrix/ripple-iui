@@ -87,6 +87,21 @@ export function interactiveSpecs(e: WidgetManifestEntry): NamedSpec[] {
 	}));
 }
 
+/**
+ * Widgets whose bare example renders nothing: `each` reads state a lone node
+ * cannot carry, and the overlays are shown closed (manifest tests pin
+ * example.type, and an open one would cover the page on load). widgets.test.ts
+ * fails if one of these starts rendering or another one stops.
+ */
+export const EMPTY_EXAMPLES = new Set(['each', 'coachmark', 'command-palette', 'confirm-dialog', 'modal', 'sheet']);
+
+/** What a widget page previews: the example, or the first pocket when the example renders empty (then not repeated below). */
+export function pageSpecs(e: WidgetManifestEntry): { example: Record<string, unknown>; interactive: NamedSpec[] } {
+	const interactive = interactiveSpecs(e);
+	if (!EMPTY_EXAMPLES.has(e.type) || !interactive.length) return { example: exampleSpec(e), interactive };
+	return { example: interactive[0].spec, interactive: interactive.slice(1) };
+}
+
 export const rows = (r?: Record<string, WidgetPropSpec>): PropRow[] =>
 	Object.entries(r ?? {}).map(([name, spec]) => ({ name, ...spec }));
 

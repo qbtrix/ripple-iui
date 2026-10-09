@@ -11,7 +11,7 @@ export const orderStatusEntry: WidgetManifestEntry = {
     status: { type: '"placed" | "confirmed" | "preparing" | "in-transit" | "out-for-delivery" | "delivered" | "failed" | "cancelled"', required: false, description: 'Default-pipeline status. Used to compute the active stepper position when `steps` is not supplied.' },
     steps: { type: 'Array<{ id: string; label: string; description?: string; completedAt?: string; current?: boolean; failed?: boolean }>', required: false, description: 'Custom step list. Overrides the default placed→delivered pipeline.' },
     currentStep: { type: 'string', required: false, description: 'Active step id when using a custom `steps` list.' },
-    eta: { type: 'string', required: false, description: 'ETA string (e.g. "Today, 4 – 6 PM").' },
+    eta: { type: 'string', required: false, description: 'ETA string (e.g. "Today, 4 to 6 PM").' },
     tracking: { type: '{ carrier: string; number: string; url?: string }', required: false, description: 'Carrier and tracking number; renders as a link if `url` is provided.' },
     origin: { type: '{ name?: string; address?: string; lat?: number; lng?: number }', required: false, description: 'Origin place. lat/lng are used to plot a marker on the map.' },
     destination: { type: '{ name?: string; address?: string; lat?: number; lng?: number }', required: false, description: 'Destination place. lat/lng are used to plot a marker on the map.' },
