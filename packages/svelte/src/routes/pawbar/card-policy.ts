@@ -119,7 +119,8 @@ function urlRefusal(raw: string): string | null {
 	return null;
 }
 
-function textRefusal(raw: string): string | null {
+/** Rule 5 on one string: why it is not plain text, or null. The landing also runs a flow's answers through it. */
+export function textRefusal(raw: string): string | null {
 	const value = decodeEntities(raw);
 	const u = asUrl(value);
 	if (SCRIPT_URL.test(u) || DATA_URL.test(u)) return 'unsafe_url';

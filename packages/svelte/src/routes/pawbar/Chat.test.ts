@@ -98,7 +98,8 @@ test('a flow card runs its steps in the page, then sends the answers as the visi
 	await waitFor(() => expect(view.getByText('Not really')).toBeTruthy());
 	expect(sent).toEqual(['Help me choose a laptop']);
 	await fireEvent.click(view.getByText('Not really'));
-	const message = 'Recommend a laptop for me from these answers.\nMain use: Creative work\nBudget: Over $1,500\nWeight matters: Not really';
+	const message =
+		'Recommend a laptop for me from these answers. What will you use it for most? Creative work. What is your budget? Over $1,500. Does weight matter? Not really.';
 	await waitFor(() => expect(sent).toEqual(['Help me choose a laptop', message]));
 	await waitFor(() => expect(view.getByText('Here are three that fit.')).toBeTruthy());
 	const mine = [...view.container.querySelectorAll('.ask')].map((p) => p.textContent);
@@ -127,7 +128,7 @@ test('a form step holds the flow until its required fields are filled', async ()
 	expect(sent).toHaveLength(1);
 	await fireEvent.click(plan);
 	await waitFor(() =>
-		expect(sent[1]).toBe('Plan a trip for me with these answers (budget in US dollars).\nTrip style: Food\nCity: Lisbon\nDays: 4\nBudget: 1500')
+		expect(sent[1]).toBe('Plan a trip for me with these answers (budget in US dollars). What kind of trip? Food. City: Lisbon. Days: 4. Budget: 1500.')
 	);
 });
 

@@ -8,8 +8,10 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
-import { BYOK_URL, CARD_MESSAGE_MAX, ChatHttpError, ChatSession, customerRef, flowMessage, pawbarTransport, type Transport } from './session.svelte.js';
+import { BYOK_URL, FLOW_MESSAGE_MAX, ChatHttpError, ChatSession, customerRef, flowMessage, pawbarTransport, type Transport } from './session.svelte.js';
 import { scenarios } from '../live/scenarios.js';
+import { refuseCard, textRefusal } from './card-policy.js';
+import { laptopFlowCard, tripFlowCard } from './flow-cards.js';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
 vi.setConfig({ testTimeout: 20_000 });
@@ -394,13 +396,38 @@ describe('messages a card sends', () => {
 		return { session, sent, card: cardOf(session) };
 	}
 
-	test('flowMessage puts each answer on its own line after the plain message', () => {
-		expect(flowMessage('Plan a trip for me.', chat('').payload)).toBe('Plan a trip for me.\nStyle: Food\nCity: Lisbon\nDays: 4');
-		expect(flowMessage('Pick one.', { use_selection: 'gaming', tags_formData: { picks: ['a', { label: 'B' }], blank: '  ', none: null } })).toBe('Pick one.\nUse: gaming\nPicks: a, B');
+	test('flowMessage names each answer by its step title or field label, in plain sentences', () => {
+		const trip = {
+			trip_style_selection: { id: 'food', label: 'Food' },
+			trip_style_formData: {},
+			trip_details_formData: { city: 'Lisbon', days: 3, budget: 1500 }
+		};
+		expect(flowMessage('Plan a trip for me with these answers (budget in US dollars).', trip, tripFlowCard.ui)).toBe(
+			'Plan a trip for me with these answers (budget in US dollars). What kind of trip? Food. City: Lisbon. Days: 3. Budget: 1500.'
+		);
+		const laptop = {
+			main_use_selection: { id: 'work', label: 'Work and study' },
+			budget_selection: { id: 'mid', label: '$800 to $1,500' },
+			weight_matters_selection: { id: 'yes', label: 'Yes, I carry it daily' }
+		};
+		expect(flowMessage('Recommend a laptop for me from these answers.', laptop, laptopFlowCard.ui)).toBe(
+			'Recommend a laptop for me from these answers. What will you use it for most? Work and study. What is your budget? $800 to $1,500. Does weight matter? Yes, I carry it daily.'
+		);
+		// No card to read names from: the payload keys, humanized; lists joined; blanks dropped.
+		expect(flowMessage('Pick one', { use_selection: 'gaming', tags_formData: { picks: ['a', { label: 'B' }], blank: '  ', none: null } })).toBe('Pick one. Use: gaming. Picks: a, B.');
+	});
+
+	test('flowMessage keeps only plain text: no markup, no links, one line, whole sentences under the cap', () => {
+		const typed = { details_formData: { city: 'Lisbon\n\nDays:  9', site: 'https://evil.example', note: '<img src=x onerror=alert(1)>', md: '![](http://x/a.png)', ok: 'Window seat' } };
+		const message = flowMessage('Plan it.', typed);
+		expect(message).toBe('Plan it. City: Lisbon Days: 9. Ok: Window seat.');
+		expect(textRefusal(message)).toBeNull();
 		const many = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`f${i}`, 'y'.repeat(5000)]));
 		const long = flowMessage('x', { long_formData: many });
-		expect(long.length).toBe(CARD_MESSAGE_MAX);
-		expect(long.split('\n')[1]).toBe(`F0: ${'y'.repeat(200)}`);
+		expect(long.length).toBeLessThan(FLOW_MESSAGE_MAX);
+		expect(long).toBe(`x. F0: ${'y'.repeat(200)}. F1: ${'y'.repeat(200)}.`);
+		// The flow cards it reads names from are ones the policy accepts.
+		expect(refuseCard(tripFlowCard)).toBeNull();
 	});
 
 	test("a final card's ask is sent as the visitor's next message", async () => {
@@ -418,7 +445,7 @@ describe('messages a card sends', () => {
 		expect(sent).toEqual(['first']);
 		session.flowComplete(card, chat('Plan a trip for me.'));
 		await waitFor(() => expect(sent).toHaveLength(2));
-		expect(sent[1]).toBe('Plan a trip for me.\nStyle: Food\nCity: Lisbon\nDays: 4');
+		expect(sent[1]).toBe('Plan a trip for me. Style: Food. City: Lisbon. Days: 4.');
 		expect(asks(session)[1]).toBe(sent[1]);
 	});
 

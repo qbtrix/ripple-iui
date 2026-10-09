@@ -20,9 +20,10 @@
 // `confirmed`, fresh `days`) with a BookingReceipt under the card on 201. One
 // checkout or booking in flight per session. A final card's `emit ask` ({text})
 // and a finished flow (flowComplete: a `chat` onComplete, plus the visitor's
-// answers, see flowMessage) become the visitor's next message, sent now or right
-// after the answer in flight (one waits; one per click). Any other host event, and
-// every store event without a StoreHost, is only recorded for display.
+// answers as plain sentences, see flowMessage) become the visitor's next message,
+// sent exactly as the transcript shows it, now or right after the answer in
+// flight (one waits; one per click). Any other host event, and every store event
+// without a StoreHost, is only recorded for display.
 // Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
 
@@ -30,7 +31,7 @@ import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 import { checkout, type OrderSummary } from '../live/checkout.js';
 import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
-import { ASK_MAX, refuseCard } from './card-policy.js';
+import { ASK_MAX, refuseCard, textRefusal } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
 export const BYOK_URL = 'https://os.pocketpaw.xyz/?ref=ripple';
@@ -64,37 +65,63 @@ function newRef(): string {
 	return `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
 }
 
-/** The most a card-sent message may be: the composer's own limit. */
-export const CARD_MESSAGE_MAX = 2000;
+/** The most a finished flow's message may be. */
+export const FLOW_MESSAGE_MAX = 600;
 const ANSWER_MAX = 200;
 
-/** `chosen_style_selection` -> "Chosen style"; `budget_usd` -> "Budget usd". */
-const label = (key: string) => {
-	const words = key.replace(/_(selection|formData)$/, '').replace(/[_-]+/g, ' ').trim();
+/** `chosen_style` -> "Chosen style". */
+const humanize = (key: string) => {
+	const words = key.replace(/[_-]+/g, ' ').trim();
 	return words.charAt(0).toUpperCase() + words.slice(1);
 };
+const oneLine = (v: string) => v.replace(/\s+/g, ' ').trim();
+const sentence = (v: string) => (/[.!?]$/.test(v) ? v : `${v}.`);
 const answerText = (v: unknown): string => {
-	if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v).trim().slice(0, ANSWER_MAX);
+	if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return oneLine(String(v)).slice(0, ANSWER_MAX);
 	if (Array.isArray(v)) return v.map(answerText).filter(Boolean).join(', ');
 	if (isRecord(v)) return answerText(v.label ?? v.title ?? v.name ?? v.id);
 	return '';
 };
 
-/**
- * A finished flow's message: the card's plain `onComplete` text, then one line per
- * answer the visitor gave (a step's pick, or each field it collected), capped at
- * CARD_MESSAGE_MAX. The card can't template the answers in (no `{` in onComplete).
- */
-export function flowMessage(message: string, payload: Record<string, unknown> = {}): string {
-	const lines: string[] = [];
-	for (const [key, value] of Object.entries(payload)) {
-		const fields = key.endsWith('_formData') && isRecord(value) ? Object.entries(value) : [[key, value] as const];
-		for (const [k, v] of fields) {
-			const said = answerText(v);
-			if (said) lines.push(`${label(k)}: ${said}`);
-		}
+/** Step titles by step key (flowId, id) and field labels by field id, read off a flow card's steps. */
+function flowNames(root: unknown) {
+	const steps = new Map<string, string>();
+	const fields = new Map<string, string>();
+	const todo = [root];
+	for (let n = 0; todo.length && n < 64; n++) {
+		const step = todo.pop();
+		if (!isRecord(step)) continue;
+		const title = typeof step.title === 'string' ? oneLine(step.title) : '';
+		for (const k of [step.flowId, step.id]) if (typeof k === 'string' && title) steps.set(k, title);
+		for (const f of Array.isArray(step.form_fields) ? step.form_fields : [])
+			if (isRecord(f) && typeof f.id === 'string' && typeof f.label === 'string') fields.set(f.id, oneLine(f.label));
+		todo.push(step.chain, ...(isRecord(step.chain_map) ? Object.values(step.chain_map) : []));
 	}
-	return [message.trim(), ...lines].join('\n').slice(0, CARD_MESSAGE_MAX);
+	return { steps, fields };
+}
+
+/**
+ * A finished flow's message: the card's plain `onComplete` text, then one short
+ * sentence per answer the visitor gave, named by the step's title (a pick) or the
+ * field's label (a form value), e.g. "Plan a trip for me. What kind of trip? Food.
+ * City: Lisbon. Days: 3." The card can't template the answers in (no `{` in
+ * onComplete). An answer that fails the card policy's text rule (markup, a link)
+ * is left out, and whole sentences stop before FLOW_MESSAGE_MAX.
+ */
+export function flowMessage(message: string, payload: Record<string, unknown> = {}, root?: unknown): string {
+	const names = flowNames(root);
+	let out = sentence(oneLine(message));
+	const add = (name: string, value: unknown) => {
+		const said = answerText(value);
+		const clause = said && sentence(name.endsWith('?') ? `${name} ${said}` : `${name}: ${said}`);
+		if (clause && !textRefusal(clause) && out.length + clause.length < FLOW_MESSAGE_MAX) out += ` ${clause}`;
+	};
+	for (const [key, value] of Object.entries(payload)) {
+		const step = key.replace(/_(selection|formData)$/, '');
+		if (key.endsWith('_formData') && isRecord(value)) for (const [f, v] of Object.entries(value)) add(names.fields.get(f) ?? humanize(f), v);
+		else add(names.steps.get(step) ?? humanize(step), value);
+	}
+	return out;
 }
 
 export type Transport = (message: string, signal: AbortSignal) => AsyncIterable<SSEFrame>;
@@ -372,7 +399,7 @@ export class ChatSession {
 	flowComplete(card: Card, result: TerminalResult) {
 		const action = result.action;
 		if (card.status !== 'final' || action?.kind !== 'chat' || typeof action.message !== 'string') return;
-		this.#say(flowMessage(action.message, result.payload));
+		this.#say(flowMessage(action.message, result.payload, card.spec?.ui));
 	}
 
 	/** Sends a card's message now, or after the answer in flight (the newest one waits). One per click. */
