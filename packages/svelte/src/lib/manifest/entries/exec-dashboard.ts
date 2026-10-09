@@ -51,7 +51,7 @@ export const execDashboardEntry: WidgetManifestEntry = {
     activeGranularity: { type: 'string', required: false, description: 'Two-way bindable.' },
     activityFilters: { type: 'string[]', required: false, description: 'Activity-rail filter pills (first item is treated as "all"). If omitted but items have `category`, filters are auto-derived.' },
     activeActivityFilter: { type: 'string', required: false, description: 'Two-way bindable.' },
-    showRefresh: { type: 'boolean', required: false, description: 'Show built-in refresh button. Default true.' },
+    showRefresh: { type: 'boolean', required: false, description: 'KPI mode refresh button. Default true in KPI mode, false in rows mode.' },
     refreshActions: { type: 'EventAction | EventAction[]', required: false, description: 'Actions dispatched when refresh is clicked.' },
     lastUpdated: { type: 'string', required: false, description: 'Human-readable timestamp shown near the refresh button (e.g. "2m ago"). Pulses while `loading`.' },
     loading: { type: 'boolean', required: false, description: 'When true and there is no existing content, renders animated skeletons. When content is present, only the refresh icon spins.' },
