@@ -26,6 +26,7 @@
 	import { replaceState } from '$app/navigation';
 	import type { RippleEvent } from '$lib/index.js';
 	import ScrubPlayer from '$lib/site/scrub/ScrubPlayer.svelte';
+	import { modelName } from '$lib/site/scrub/model-name.js';
 	import { scenarios, type Scenario } from './scenarios.js';
 	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, readReturn, type OrderSummary } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
@@ -198,7 +199,7 @@
 			<div class="about">
 				<p class="prompt"><span class="who">Prompt</span>{active.fixture.prompt}</p>
 				<p class="facts">
-					recorded from {active.fixture.model} on {active.fixture.recordedAt.slice(0, 10)}, {chars(active)} chars, {secs(active)}
+					recorded from {modelName(active.fixture.model)} on {active.fixture.recordedAt.slice(0, 10)}, {chars(active)} chars, {secs(active)}
 				</p>
 			</div>
 		</section>

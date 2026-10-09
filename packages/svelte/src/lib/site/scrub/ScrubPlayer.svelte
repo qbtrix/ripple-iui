@@ -13,11 +13,16 @@
     - Keys (Space, arrows, Home/End) are bound on the slider only: the render
       pane holds live inputs that need the same keys.
     - The JSON pane scrolls in a column-reverse box, so it opens at the caret
-      with JavaScript off and stays pinned there as text arrives.
+      with JavaScript off and stays pinned there as text arrives. It indents
+      1ch per level, so a deep spec keeps its text near the left edge.
+    - Narrow (container under 760px): the render comes first and the spec
+      folds under it in a <details>, open in the prerender. Wide: spec left,
+      render right, the summary hidden while open.
     - A fixture change resets the clock and remounts Ripple (fresh app state).
     - Optional host hooks: `onEvent` goes to Ripple as-is (its return value is
-      the action result, so a spec's on_error runs); `panes` hides one or both
-      panes at every width, so a page can drive its own tabs; `autoplayFrom`
+      the action result, so a spec's on_error runs); `panes` ('render',
+      'spec' or 'none') overrides the fold and the split at every width, so
+      a page can drive its own tabs, and 'both' (default) keeps them; `autoplayFrom`
       moves the clock when autoplay starts, so the markup can hold the
       finished frame while the visit plays from the first byte;
       `holdSkeleton` keeps the skeleton up mid-stream until the spec has a
@@ -137,7 +142,8 @@
 		// which cancels the pointer and kills the scrub.
 		e.preventDefault();
 		track?.setPointerCapture(e.pointerId);
-		track?.focus();
+		// Keys work after a drag, without a keyboard focus ring on a mouse grab.
+		track?.focus({ focusVisible: false } as FocusOptions);
 		resume = playing;
 		playing = false;
 		dragging = true;
@@ -171,16 +177,23 @@
 
 <figure class="scrub {className}" class:playing>
 	<div class="panes" data-show={panes}>
-		<!-- A scroll region must take focus to be keyboard-scrollable. -->
-		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-		<div class="json" role="region" aria-label="Spec received so far" tabindex="0">
-			<pre><JsonLines {text} highlight caret /></pre>
-		</div>
 		<div class="render" data-pagefind-ignore="all">
 			{#key model}
 				<Ripple streaming={store} skeleton="card" {onEvent} />
 			{/key}
 		</div>
+		<!-- Set only on a pane change, so a reader's fold survives; the Spec tab reopens it. -->
+		<details class="spec" open={panes !== 'render'}>
+			<summary>
+				<span>Spec so far</span>
+				<span class="summary-bytes">{num(model.bytes(count))} B</span>
+			</summary>
+			<!-- A scroll region must take focus to be keyboard-scrollable. -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+			<div class="json" role="region" aria-label="Spec received so far" tabindex="0">
+				<pre><JsonLines {text} highlight caret indent={1} /></pre>
+			</div>
+		</details>
 	</div>
 
 	<div class="controls">
@@ -234,6 +247,9 @@
 		color: var(--site-ink);
 	}
 
+	/* Narrow: the render on top, the spec under it in a <details> the reader
+	   can fold away (open in the prerender, so JS-off shows both). Wide: the
+	   spec on the left, the render on the right, the summary hidden. */
 	.panes {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
@@ -243,19 +259,77 @@
 		background: var(--card);
 	}
 
-	.panes[data-show='none'],
-	.panes[data-show='render'] .json,
-	.panes[data-show='spec'] .render {
+	.spec {
+		border-top: 1px solid var(--site-line);
+		background: var(--code-bg);
+	}
+	summary {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 0 16px;
+		font: 12px/1 var(--font-mono);
+		color: var(--site-soft);
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+	summary::-webkit-details-marker {
 		display: none;
 	}
-	/* One pane: it takes the whole box (these outrank the container query). */
+	/* A chevron in CSS: points right when folded, down when open. */
+	summary::before {
+		content: '';
+		width: 6px;
+		height: 6px;
+		margin-right: 2px;
+		border: solid currentColor;
+		border-width: 0 1.5px 1.5px 0;
+		transform: rotate(-45deg);
+		transition: transform var(--dur-mount) var(--ease-out-quart);
+	}
+	.spec[open] summary::before {
+		transform: rotate(45deg);
+	}
+	.summary-bytes {
+		margin-left: auto;
+		font-variant-numeric: tabular-nums;
+	}
+	summary:hover {
+		color: var(--site-ink);
+	}
+	summary:focus-visible {
+		outline: none;
+		box-shadow: inset 0 0 0 2px var(--ring);
+	}
+	.spec[open] summary {
+		border-bottom: 1px solid var(--site-line);
+	}
+
+	/* `panes` (a page's own tabs) wins at every width; 'both' keeps the
+	   narrow fold and the wide split. A single pane takes the whole box, and
+	   the Spec tab shows the JSON without the fold's summary. These outrank
+	   the container query below. */
+	.panes[data-show='none'],
+	.panes[data-show='render'] .spec,
+	.panes[data-show='spec'] .render,
+	.panes[data-show='spec'] summary {
+		display: none;
+	}
 	.panes[data-show='render'],
 	.panes[data-show='spec'] {
 		grid-template-columns: minmax(0, 1fr);
 	}
+	.panes[data-show='render'] .render,
+	.panes[data-show='spec'] .spec {
+		grid-area: auto;
+	}
+	.panes[data-show='spec'] .spec {
+		border: 0;
+	}
 	.panes[data-show='spec'] .json {
 		height: var(--scrub-h);
-		border: 0;
 	}
 
 	/* column-reverse starts the scroll at the bottom: the caret is visible
@@ -265,8 +339,6 @@
 		flex-direction: column-reverse;
 		height: calc(var(--scrub-h) * 0.5);
 		overflow: auto;
-		background: var(--code-bg);
-		border-bottom: 1px solid var(--site-line);
 		outline: none;
 	}
 	.json:focus-visible {
@@ -274,7 +346,7 @@
 	}
 	.json pre {
 		margin: 0 0 auto;
-		padding: 16px 18px;
+		padding: 16px;
 		font: 12.5px/1.6 var(--font-mono);
 		color: var(--code-ink);
 	}
@@ -290,10 +362,20 @@
 		.panes {
 			grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
 		}
+		.spec {
+			grid-area: 1 / 1;
+			border-top: 0;
+			border-right: 1px solid var(--site-line);
+		}
+		.render {
+			grid-area: 1 / 2;
+		}
+		/* Folded on a phone, then widened: the summary stays to reopen it. */
+		.spec[open] summary {
+			display: none;
+		}
 		.json {
 			height: var(--scrub-h);
-			border-bottom: 0;
-			border-right: 1px solid var(--site-line);
 		}
 	}
 

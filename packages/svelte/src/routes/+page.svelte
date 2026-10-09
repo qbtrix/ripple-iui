@@ -1,64 +1,60 @@
 <!--
   @file routes/+page.svelte
-  @description Ripple's landing, chat-first. The hero IS a chat: a visitor types
-    a request or taps one of the recorded scenarios, the answer streams in and
-    its card renders through <Ripple> while it arrives. The chat opens on one
-    finished recorded exchange (the bill splitter, seeded synchronously so it is
-    in the prerendered HTML and hydrates without a re-render), so the fold shows
-    a working card before any tap and with JavaScript off. The chat calls the
-    Paw Bar API only when PUBLIC_PAWBAR_LIVE=1 (lib/site/pawbar-env.ts, read in
-    vite.config.ts); otherwise it replays the recorded answers locally and says
-    so. Below: how it works (spec, engine, UI, with a live card), install and
-    the streaming code sample, the recorded examples linking /live, and the
-    bring-your-own-key link.
+  @description Ripple's landing. The hero is a figure: a recorded model stream
+    on the shared ScrubPlayer (lib/site/scrub), the spec JSON beside the real
+    <Ripple> render of that prefix. It prerenders the bill splitter at its
+    midpoint (half the JSON, half a working app), so the fold is complete with
+    JavaScript off; after hydration it plays forward, and the visitor can drag
+    it anywhere. Pills swap in the other recordings (remounting the player, so
+    each starts from zero and plays). The order demo is not among them: its
+    checkout needs /live's store wiring. The page makes no network call of its
+    own (routes/landing-no-fetch.test.ts). Below the hero: how it works, the
+    streaming code sample and install band, the recorded runs linking /live,
+    and the Paw OS closer.
 
   Creative Direction Declaration
-    Scene: a developer at night, comparing generative UI tools with a terminal
-      open beside the browser. The theme follows the OS; a flat blue-black or
+    Scene: a developer comparing generative UI tools with a terminal open
+      beside the browser. The theme follows the OS; a flat blue-black or
       near-white ground, 1px lines for depth, no glow and no glass below the bar.
-    Strategy: restrained neutrals + Paw blue as the single voice, and only on
-      what is interactive or live. Type: Bricolage display, Inter body,
-      JetBrains Mono for code (identity, copied from Paw OS).
-    Trap avoided: a feature-grid SaaS page. The first screen is the product
-      working, not a description of it.
+    Strategy: restrained neutrals + Paw blue as the single voice, and in the
+      hero only on the scrub head, the caret and the primary link. Type:
+      Bricolage display, Inter body, JetBrains Mono for code and the figure
+      caption (a technical paper's "fig. 1").
+    Trap avoided: a chat box or a typed-out prompt as the hero. The first
+      screen is a model's output you can scrub, not a description of it.
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Ripple } from '$lib/index.js';
 	import JsonLines from '$lib/site/JsonLines.svelte';
-	import Chat from './pawbar/Chat.svelte';
-	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
-	import { findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
+	import ScrubPlayer from '$lib/site/scrub/ScrubPlayer.svelte';
+	import { modelName } from '$lib/site/scrub/model-name.js';
+	import { BYOK_URL } from './pawbar/session.svelte.js';
 	import { scenarios } from './live/scenarios.js';
-
-	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
-	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
-	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
-	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
-	const LIVE = import.meta.env.PUBLIC_PAWBAR_LIVE === '1' && Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
 
-	// The order demo needs the test store's checkout (an `api` action), which the
-	// chat's card policy refuses; it stays on /live and in the runs list below.
-	const chatScenarios = scenarios.filter((s) => !s.needsStore);
-	// The intro says what is replaying: a matching recording, or (when no
-	// recording overlaps the request) the bill splitter, said plainly.
-	const intro = (message: string) =>
-		findScenario(message, chatScenarios)
-			? 'Replaying a recorded answer that matches.'
-			: 'No recording matches that yet, so here is the bill splitter.';
-	const recorded: Transport = (message, signal) =>
-		recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro: intro(message) });
-	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
-	// is unavailable. Default build: the recordings answer directly.
-	const session = LIVE
-		? new ChatSession(pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send, recorded)
-		: new ChatSession(recorded);
-	const bill = chatScenarios.find((s) => s.id === 'bill-splitter');
-	if (bill) session.seed(bill.fixture.prompt, recordedExchange(bill, intro(bill.fixture.prompt)));
-	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));
+	// The bill splitter is fig. 1. The order demo stays on /live: its checkout
+	// posts to /api/checkout unless /live's store handler catches it.
+	const figures = [
+		...scenarios.filter((s) => s.id === 'bill-splitter'),
+		...scenarios.filter((s) => s.id !== 'bill-splitter' && !s.needsStore)
+	];
+
+	let figureId = $state(figures[0].id);
+	let swapped = $state(false);
+	const figure = $derived(figures.find((s) => s.id === figureId) ?? figures[0]);
+	const caption = $derived.by(() => {
+		const n = figures.indexOf(figure) + 1;
+		const chars = figure.fixture.chunks.reduce((sum, c) => sum + c.text.length, 0).toLocaleString('en-US');
+		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${modelName(figure.fixture.model)}`;
+	});
+
+	function show(id: string) {
+		if (id === figureId) return;
+		figureId = id;
+		swapped = true;
+	}
 
 	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
@@ -108,11 +104,10 @@
 		}
 	}
 
-	onMount(() => () => session.stop());
 </script>
 
 <svelte:head>
-	<title>Ripple: ask for a tool, watch it build</title>
+	<title>Ripple: half a spec is already half an app</title>
 	<meta
 		name="description"
 		content="Ripple is the open-source generative UI engine from Paw OS by PocketPaw. A model writes a small JSON spec and Ripple renders it as a working interface while the spec streams in."
@@ -121,29 +116,34 @@
 
 <main class="landing">
 	<section class="hero" aria-labelledby="hero-title">
-		<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
-		<p class="lede">
-			Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
-			working interface as the spec streams in. Ask for something below.
-		</p>
-		<p class="get">
-			<code><span aria-hidden="true">$</span> {INSTALL}</code>
-			<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
-				{copied === 'hero' ? 'Copied' : 'Copy'}
-			</button>
-		</p>
-		<Chat
-			{session}
-			{suggestions}
-			note={LIVE ? '' : 'This demo replays recorded model answers. Each request plays the closest match.'}
-		/>
-		<p class="byok">
-			{#if LIVE}
-				The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
-			{:else}
-				Want answers to your own requests? <a href={BYOK_URL}>Build your own in PocketPaw</a>
-			{/if}
-		</p>
+		<div class="hero-head">
+			<h1 id="hero-title">Half a spec is already half an app.</h1>
+			<p class="lede">
+				Ripple is an open-source engine that renders a model's JSON spec as a real, working interface while the
+				spec is still streaming.
+			</p>
+		</div>
+
+		{#key figure.id}
+			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay holdSkeleton {caption} />
+		{/key}
+
+		<div class="figures" role="group" aria-label="Recorded streams">
+			{#each figures as s (s.id)}
+				<button type="button" aria-pressed={s.id === figureId} onclick={() => show(s.id)}>{s.title}</button>
+			{/each}
+		</div>
+
+		<div class="next">
+			<p class="get">
+				<code><span aria-hidden="true">$</span> {INSTALL}</code>
+				<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
+					{copied === 'hero' ? 'Copied' : 'Copy'}
+				</button>
+			</p>
+			<a class="go primary" href="/playground">Playground</a>
+			<a class="go" href="/docs">Read the docs</a>
+		</div>
 	</section>
 
 	<section class="how" aria-labelledby="how-title">
@@ -219,7 +219,7 @@
 	</section>
 
 	<section class="closer" aria-labelledby="closer-title">
-		<h2 id="closer-title">Keep asking in Paw OS</h2>
+		<h2 id="closer-title">Ask for your own tools in Paw OS</h2>
 		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
 		<div class="closer-actions">
 			<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
@@ -229,8 +229,9 @@
 </main>
 
 <style>
-	/* Sections sit on the site grid: --site-max wide, --site-gutter each side
-	   (16px on phones). overflow-x clip lets the blue band run full bleed. */
+	/* Sections sit on the site grid, edge-aligned with the top bar's content
+	   (--site-max less a gutter each side; 16px gutters on phones).
+	   overflow-x clip lets the blue band run full bleed. */
 	.landing {
 		position: relative;
 		isolation: isolate;
@@ -243,7 +244,7 @@
 		line-height: 1.65;
 	}
 	.landing > section {
-		max-width: var(--site-max);
+		max-width: calc(var(--site-max) - 2 * var(--site-gutter));
 		margin-inline: auto;
 	}
 	h1,
@@ -277,24 +278,77 @@
 		color: var(--primary-ink);
 	}
 
-	/* Hero: the chat. */
+	/* Hero: headline and lede on one row (lede bottom-aligned at the right),
+	   then the figure at full width. At 1440x900 the headline, both panes and
+	   the scrub track sit above the fold. */
 	.hero {
-		max-width: 880px !important;
-		padding: clamp(48px, 9vw, 104px) 0 72px;
+		padding: clamp(40px, 5vw, 64px) 0 72px;
+	}
+	.hero-head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px;
+		margin-bottom: 36px;
+	}
+	@media (min-width: 1024px) {
+		.hero-head {
+			grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+			align-items: end;
+			gap: 48px;
+		}
 	}
 	h1 {
-		font-size: clamp(2.2rem, 4.2vw, 3.4rem);
-		line-height: 1.04;
-	}
-	h1 span {
-		display: block;
-		margin-top: 0.12em;
+		font-size: clamp(2.2rem, 5vw, 4.25rem);
+		line-height: 1;
+		letter-spacing: -0.035em;
+		color: var(--site-ink);
 	}
 	.lede {
-		margin: 22px 0 18px;
-		max-width: 62ch;
+		margin: 0;
+		max-width: 46ch;
 		color: var(--site-soft);
 		text-wrap: pretty;
+	}
+	@media (min-width: 1024px) {
+		.lede {
+			padding-bottom: 0.3em;
+		}
+	}
+
+	/* The recordings: quiet pills, the playing one filled. */
+	.figures {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 20px;
+	}
+	.figures button {
+		min-height: 32px;
+		padding: 0 12px;
+		border: 1px solid var(--site-line);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--site-soft);
+		font: 13px/1 var(--font-sans);
+		cursor: pointer;
+	}
+	.figures button:hover {
+		background: var(--site-hover);
+		color: var(--site-ink);
+	}
+	.figures button[aria-pressed='true'] {
+		background: var(--site-pressed);
+		border-color: transparent;
+		color: var(--site-ink);
+	}
+
+	/* Install, then two plain links: Playground in the accent, docs in ink. */
+	.next {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px 28px;
+		margin-top: 36px;
 	}
 	/* The install line, as a quiet mono chip. */
 	.get {
@@ -302,7 +356,7 @@
 		align-items: center;
 		gap: 10px;
 		max-width: 100%;
-		margin: 0 0 36px;
+		margin: 0;
 		padding: 0 0 0 12px;
 		border: 1px solid var(--code-line);
 		border-radius: var(--radius-control);
@@ -337,14 +391,23 @@
 		background: var(--site-hover);
 		color: var(--site-ink);
 	}
-	.byok {
-		margin: 14px 0 0;
-		font-size: 13.5px;
-		color: var(--site-soft);
-	}
-	.byok a {
+	.go {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
 		font-weight: 600;
-		text-underline-offset: 3px;
+		font-size: 15px;
+		color: var(--site-ink);
+		text-decoration-line: underline;
+		text-underline-offset: 5px;
+		text-decoration-thickness: 1px;
+		text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+	}
+	.go:hover {
+		text-decoration-color: currentColor;
+	}
+	.go.primary {
+		color: var(--primary-ink);
 	}
 
 	/* How it works: spec, engine, UI joined by one 1px line (across the three
@@ -644,7 +707,8 @@
 	.btn:focus-visible,
 	.link:focus-visible,
 	.get button:focus-visible,
-	.byok a:focus-visible {
+	.go:focus-visible,
+	.figures button:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
@@ -660,8 +724,7 @@
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
-	/* Phones: a tighter hero, so the prerendered card's header and the top of
-	   its UI are in the first screen. */
+	/* Phones: a tighter hero, so the top of the player is in the first screen. */
 	@media (max-width: 639px) {
 		.landing {
 			padding-inline: 16px;
@@ -672,16 +735,17 @@
 		.hero {
 			padding: 24px 0 56px;
 		}
+		.hero-head {
+			gap: 12px;
+			margin-bottom: 24px;
+		}
 		h1 {
-			font-size: 1.95rem;
+			font-size: 2.1rem;
+			line-height: 1.04;
 		}
 		.lede {
-			margin: 12px 0;
 			font-size: 16px;
 			line-height: 1.5;
-		}
-		.get {
-			margin-bottom: 20px;
 		}
 	}
 </style>

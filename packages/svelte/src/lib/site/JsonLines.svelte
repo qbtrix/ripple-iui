@@ -5,6 +5,9 @@
     indent: a wrapped line continues 2ch right of where it began, so deep
     nesting stays readable in a narrow pane and never runs off its edge. The
     indent is padding, not spaces, so the wrap knows where each line starts.
+    `indent` sets the width of one nesting level in ch (default 2, the spaces
+    prettyPrefix writes); a narrow pane passes 1 so deep specs keep their text
+    near the left edge instead of behind an empty gutter.
     Opt-ins: `highlight` wraps tokens in the site's tok-* classes (a finished
     line never changes, so it never re-tokenises; only the last line can, and
     an open string there stays one tok-str); `caret` puts a `.json-caret` span
@@ -15,7 +18,12 @@
 	import { prettyPrefix } from './prettyPrefix.js';
 	import { highlightJson, highlightJsonPrefix } from './docs/highlight.js';
 
-	let { text, highlight = false, caret = false }: { text: string; highlight?: boolean; caret?: boolean } = $props();
+	let {
+		text,
+		highlight = false,
+		caret = false,
+		indent = 2
+	}: { text: string; highlight?: boolean; caret?: boolean; indent?: number } = $props();
 
 	type Line = { raw: string; indent: number; body: string; html: string };
 	// A streaming text only grows at the end, so most lines are unchanged from
@@ -35,12 +43,13 @@
 	});
 </script>
 
-<code class="json-lines">{#each lines as line, i}<span class="ln" style:--i={line.indent}>{#if highlight}{@html line.html}{:else}{line.body}{/if}{#if caret && i === lines.length - 1}<span class="json-caret" aria-hidden="true"></span>{/if}</span>{/each}</code>
+<code class="json-lines" style:--tab={indent}>{#each lines as line, i}<span class="ln" style:--i={line.indent}>{#if highlight}{@html line.html}{:else}{line.body}{/if}{#if caret && i === lines.length - 1}<span class="json-caret" aria-hidden="true"></span>{/if}</span>{/each}</code>
 
 <style>
 	.ln {
 		display: block;
-		padding-left: calc((var(--i) + 2) * 1ch);
+		/* --i counts prettyPrefix's spaces, two per level. */
+		padding-left: calc((var(--i) / 2 * var(--tab) + 2) * 1ch);
 		text-indent: -2ch;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
