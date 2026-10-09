@@ -365,6 +365,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `invoice-layout` | Invoice / quote / receipt with line items, computed totals, and download actions |
 | `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline |
 | `itinerary` | Day-by-day trip plan: route strip, planned spend vs `budget`, collapsible days with a time rail of `stops` (tick one, add one), transport `legs` and `packing`. Bind `days` |
+| `growth-projection` | Savings growth from `initial`, monthly `deposit`, `rate` (% a year) and `years`: final balance, deposits-vs-growth chart, yearly table, optional `goal` and `inflation`, sliders to retune. Bind `deposit` |
 | `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
@@ -446,6 +447,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |
+| `savings-projection`, `compound-interest` | `growth-projection` |
 | `report` | `report-layout` |
 | `frame`, `nested-spec` | `ripple-frame` |
 | `tour` | `coachmark` |
