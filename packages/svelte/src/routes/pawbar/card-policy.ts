@@ -23,6 +23,15 @@
 //      markup or markdown image/link (`![`, `<img`, `<a`, `<svg`, `<details`,
 //      `](https:`, any tag with an on*= handler), and no bare http(s) or www.
 //      link. Markdown widgets render any string they get.
+//   6. A handler slot (HANDLER_KEY: `on_*`, `actions`, `*Actions`, `learn_more`,
+//      `onRowClick`, the keys widgets pass to the dispatcher) never holds a
+//      string, directly or in a list. Props resolve before a composite
+//      dispatches them, so `"{state.x}"` there would run an action object kept in
+//      state. And `state` holds no action object at all (any `action` key).
+//   7. `follow-up` builds its own `emit` from `props.event`, so that must be a
+//      HOST_EVENTS name or the widget's own default `follow-up` (the manifest
+//      example sets it), never free text such as `ask`. Its `props` must be an
+//      object, not an expression that state fills in.
 // Rules 4 and 5 read strings after one pass of HTML character-reference
 // decoding (`&lt;`, `&#60;`, `&#x3c;`), the form a markdown or HTML sink sees.
 // This walks the card only; /live's recorded replays never pass through it.
@@ -36,6 +45,12 @@ export const ALLOWED_ACTIONS = ['set', 'toggle', 'push', 'remove', 'open', 'emit
 const CARD_KEYS = ['version', 'ui', 'state'];
 /** Actions whose `target` the engine reads as a state path, modal id or event name. Never `navigate`. */
 export const PATH_TARGET_ACTIONS: readonly string[] = ['set', 'toggle', 'push', 'remove', 'open', 'emit', 'flow', 'branch', 'validate', 'toast'];
+/** Host events the landing knows. */
+export const HOST_EVENTS: readonly string[] = ['checkout', 'add_to_cart'];
+/** What a `follow-up` may emit: a host event or its own default name. */
+const FOLLOW_UP_EVENTS = ['follow-up', ...HOST_EVENTS];
+/** Keys whose value a widget or NodeRenderer hands to the dispatcher. Case-exact, as the widgets read them. */
+const HANDLER_KEY = /^on_|^(actions|[a-z]+Actions|learn_more|onRowClick)$/;
 const URL_KEY = /(href|url|uri|src|srcset|link|image|img|avatar|icon|favicon|poster|cover|background|action|target)$/i;
 const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 const SCRIPT_URL = /^(javascript|vbscript):/i;
@@ -93,21 +108,22 @@ const typeNames = [...CHAT_WIDGET_TYPES];
 
 export function refuseCard(card: unknown, { partial = false } = {}): string | null {
 	if (!isRecord(card)) return 'invalid';
-	const stack: [value: unknown, key: string, isNode: boolean][] = [];
+	const stack: [value: unknown, key: string, isNode: boolean, inState: boolean][] = [];
 	for (const [key, value] of Object.entries(card)) {
 		if (!allowed(CARD_KEYS, key, partial)) return `key:${key}`;
-		stack.push([value, key, key === 'ui']);
+		stack.push([value, key, key === 'ui', key === 'state']);
 	}
 	for (let seen = 0; stack.length; seen++) {
 		if (seen > MAX_NODES) return 'too_large';
-		const [node, key, isNode] = stack.pop()!;
+		const [node, key, isNode, inState] = stack.pop()!;
 		if (typeof node === 'string') {
+			if (HANDLER_KEY.test(key)) return 'handler_expression';
 			const why = URL_KEY.test(key) ? urlRefusal(node) : textRefusal(node);
 			if (why) return why;
 			continue;
 		}
 		if (Array.isArray(node)) {
-			for (const item of node) stack.push([item, key, key === 'children']);
+			for (const item of node) stack.push([item, key, key === 'children', inState]);
 			continue;
 		}
 		if (!isRecord(node)) continue;
@@ -115,14 +131,20 @@ export function refuseCard(card: unknown, { partial = false } = {}): string | nu
 		if (typeof type === 'string' && (isNode || getWidget(type)) && !CHAT_WIDGET_TYPES.has(type)) {
 			if (!(partial && isNode && typeNames.some((t) => t.startsWith(type)))) return `widget:${type}`;
 		}
+		if (type === 'follow-up') {
+			const { props } = node;
+			if (props !== undefined && !isRecord(props)) return 'follow_up_props';
+			if (props && 'event' in props && !(typeof props.event === 'string' && allowed(FOLLOW_UP_EVENTS, props.event, partial))) return 'follow_up_event';
+		}
 		const pathTarget = typeof node.action === 'string' && allowed(PATH_TARGET_ACTIONS, node.action, partial);
 		for (const [k, v] of Object.entries(node)) {
-			if (k.toLowerCase() === 'action' && typeof v === 'string') {
-				if (!allowed(ALLOWED_ACTIONS, v, partial)) return `action:${v}`;
-				continue;
+			if (k.toLowerCase() === 'action') {
+				if (typeof v === 'string' && !allowed(ALLOWED_ACTIONS, v, partial)) return `action:${v}`;
+				if (inState) return 'state_action';
+				if (typeof v === 'string') continue;
 			}
 			// A state action's target is checked as text (rule 5), not as a URL.
-			stack.push([v, pathTarget && k === 'target' ? 'path' : k, false]);
+			stack.push([v, pathTarget && k === 'target' ? 'path' : k, false, inState]);
 		}
 	}
 	return null;

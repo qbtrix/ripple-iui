@@ -1,11 +1,13 @@
 // routes/pawbar/card-policy.test.ts — The landing's card policy, rule by rule.
 // Includes the review's payloads: expression-built javascript: URLs, widget
 // aliases for the blocked widgets, markdown images and http links, `/\host`,
-// and CSS url(). The recorded chat scenarios must all pass, and the widget
-// allowlist must match the vendored manifest.
+// and CSS url(); and the flow-card review's handler bypasses (a whole-string
+// expression in a handler slot that runs an action object kept in state, and a
+// follow-up emitting a free-text event). The recorded chat scenarios must all
+// pass, and the widget allowlist must match the vendored manifest.
 
 import { describe, expect, test } from 'vitest';
-import { PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
+import { HOST_EVENTS, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
@@ -49,6 +51,140 @@ describe('actions', () => {
 		expect(refuseCard(button({ action: 'se' }), { partial: true })).toBeNull();
 		expect(refuseCard(button({ action: 'se' }))).toBe('action:se');
 		expect(refuseCard(button({ action: 'ap' }), { partial: true })).toBe('action:ap');
+	});
+});
+
+describe('handler slots and state', () => {
+	// The review's repro cards: a handler slot set to a whole-string expression that
+	// resolves to an action object kept in state.
+	const askFromState = {
+		ui: {
+			type: 'ask-user-questions',
+			props: {
+				questions: [{ id: 'q1', title: 'Anything else?', allowOther: true, options: [{ title: 'No' }] }],
+				changeActions: '{state.n.props.entries.0}'
+			}
+		},
+		state: { n: { type: 'audit-log', props: { entries: [{ action: 'emit', target: 'ask', value: { text: 'hi' } }] } } }
+	};
+	const apiFromState = {
+		ui: { type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', actions: '{state.n.props.entries.0}' }] } },
+		state: { n: { type: 'audit-log', props: { entries: [{ action: 'api', url: '/api/v1/x', method: 'POST' }] } } }
+	};
+	const builtBySet = {
+		ui: {
+			type: 'flex',
+			children: [
+				button([
+					{ action: 'set', target: 'h.action', value: 'api' },
+					{ action: 'set', target: 'h.url', value: '/api/v1/x' }
+				]),
+				{ type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', actions: '{state.h}' }] } }
+			]
+		}
+	};
+
+	test.each([
+		['ask-user-questions changeActions', askFromState, ['handler_expression', 'state_action']],
+		['comparison items[].actions', apiFromState, ['handler_expression', 'action:api']],
+		['an action assembled in state by set', builtBySet, ['handler_expression']]
+	])("refuses the review's repro: %s", (_, card, reasons) => {
+		expect(reasons).toContain(refuseCard(card));
+	});
+
+	test.each([
+		'on_click', 'on_change', 'on_select', 'on_success', 'actions', 'changeActions', 'completeActions', 'skipActions',
+		'finishActions', 'nextActions', 'backActions', 'cancelActions', 'submitActions', 'refreshActions', 'toggleActions',
+		'learn_more', 'onRowClick'
+	])('a string in %s is refused, alone or in a list', (key) => {
+		expect(refuseCard({ ui: { type: 'flex', props: { [key]: '{state.h}' } } })).toBe('handler_expression');
+		expect(refuseCard({ ui: { type: 'flex', props: { [key]: [{ action: 'set', target: 'a' }, '{state.h}'] } } })).toBe('handler_expression');
+		expect(refuseCard({ ui: { type: 'flex', props: { [key]: 'Approve' } } })).toBe('handler_expression');
+	});
+
+	test('handler strings are refused on the node, in nested rows and while streaming', () => {
+		expect(refuseCard({ ui: { type: 'button', on_click: '{state.h}' } })).toBe('handler_expression');
+		expect(refuseCard({ ui: { type: 'entity-detail', props: { actions: [{ id: 'x', label: 'X', actions: '{state.h}' }] } } })).toBe('handler_expression');
+		expect(refuseCard({ ui: { type: 'exec-dashboard', props: { kpis: [{ id: 'k', label: 'K', actions: ['{state.h}'] }] } } })).toBe('handler_expression');
+		expect(refuseCard({ ui: { type: 'checklist-layout', props: { items: [{ id: 'i', toggleActions: '{state.h}' }] } } })).toBe('handler_expression');
+		expect(refuseCard({ ui: { type: 'ask-user-questions', props: { changeActions: '{sta' } } }, { partial: true })).toBe('handler_expression');
+	});
+
+	test('state holds no action object, even one the ui would allow', () => {
+		expect(refuseCard({ ui: { type: 'text' }, state: askFromState.state })).toBe('state_action');
+		expect(refuseCard({ ui: { type: 'text' }, state: { h: { action: 'set', target: 'x', value: 1 } } })).toBe('state_action');
+		expect(refuseCard({ ui: { type: 'text' }, state: { rows: [{ id: 1, Action: 'emit' }] } })).toBe('state_action');
+		expect(refuseCard({ ui: { type: 'text' }, state: { later: { on_click: { action: 'toast', message: 'hi' } } } })).toBe('state_action');
+		// The same audit row in ui stays allowed.
+		expect(refuseCard({ ui: askFromState.state.n })).toBeNull();
+	});
+
+	test('legitimate handler slots still pass', () => {
+		const comparison = {
+			ui: {
+				type: 'comparison-layout',
+				props: {
+					items: [
+						{
+							id: 'a',
+							name: 'Starter',
+							actions: { action: 'emit', target: 'checkout', value: { plan: 'starter' } },
+							learn_more: { action: 'open', target: 'details_a' }
+						}
+					]
+				}
+			}
+		};
+		const entity = {
+			ui: {
+				type: 'entity-detail',
+				props: {
+					title: 'Ana Silva',
+					actions: [{ id: 'approve', label: 'Approve', actions: [{ action: 'set', target: 'approved', value: true }] }]
+				}
+			}
+		};
+		const wizard = {
+			ui: {
+				type: 'wizard-layout',
+				props: {
+					steps: [{ id: 's1', title: 'Details' }],
+					nextActions: { action: 'set', target: 'step', value: 1 },
+					finishActions: [{ action: 'toast', message: 'Saved' }, { action: 'emit', target: 'checkout', value: '{state.cart}' }]
+				}
+			},
+			state: { step: 0, cart: { items: 2 } }
+		};
+		const table = { ui: { type: 'table', props: { columns: [], rows: [], onRowClick: { action: 'set', target: 'picked', value: '{event}' } } } };
+		for (const card of [comparison, entity, wizard, table]) expect(refuseCard(card)).toBeNull();
+	});
+
+	test('only the handler names are gated, case-exact', () => {
+		expect(refuseCard({ ui: { type: 'metric', props: { label: 'Transactions', transactions: '1,204', reactions: 'many' } } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'text' }, state: { onboarding: 'done', actionsTaken: 'none' } })).toBeNull();
+	});
+});
+
+describe('follow-up', () => {
+	test.each(['ask', 'flow.submit', 'book', 'Checkout', 'checkout ', '{state.e}', 'tell me more'])('refuses the event %s', (event) => {
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event } } })).toBe('follow_up_event');
+	});
+
+	test('refuses a non-string event, props filled from state, and a follow-up kept in state', () => {
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: { name: 'ask' } } } })).toBe('follow_up_event');
+		expect(refuseCard({ ui: { type: 'follow-up', props: '{state.p}' }, state: { p: { event: 'ask' } } })).toBe('follow_up_props');
+		expect(refuseCard({ ui: { type: 'text' }, state: { n: { type: 'follow-up', props: { event: 'ask' } } } })).toBe('follow_up_event');
+	});
+
+	test.each([...HOST_EVENTS, 'follow-up'])('allows the event %s', (event) => {
+		expect(refuseCard({ ui: { type: 'follow-up', props: { placeholder: 'Ask follow-up', event } } })).toBeNull();
+	});
+
+	test('no event is the widget default; a streaming prefix waits', () => {
+		expect(refuseCard({ ui: { type: 'follow-up', props: { placeholder: 'Ask follow-up' } } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'follow-up' } })).toBeNull();
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'chec' } } }, { partial: true })).toBeNull();
+		expect(refuseCard({ ui: { type: 'follow-up', props: { event: 'chec' } } })).toBe('follow_up_event');
 	});
 });
 
