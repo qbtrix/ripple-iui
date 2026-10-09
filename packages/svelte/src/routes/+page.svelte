@@ -6,7 +6,8 @@
     config set at build time (PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY,
     defined in vite.config.ts like PUBLIC_STORE_URL) the chat calls the Paw Bar
     API; without it the same chat replays the recorded answers locally and says
-    so. Below: how it works (spec, engine, UI, with a live card), install and
+    so. Live, a card's `checkout` and `book` host events go to the test store
+    (PUBLIC_STORE_URL) through the chat session. Below: how it works (spec, engine, UI, with a live card), install and
     the streaming code sample, the recorded examples linking /live, and the
     bring-your-own-key link. Prerendered; the chat only runs in the browser.
 
@@ -27,11 +28,13 @@
 	import { BYOK_URL, ChatSession, pawbarTransport, type Transport } from './pawbar/session.svelte.js';
 	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { scenarios } from './live/scenarios.js';
+	import { ORDER_SUMMARY_KEY } from './live/checkout.js';
 
 	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
 	const WIDGET_ID: string = import.meta.env.PUBLIC_PAWBAR_WIDGET_ID ?? '';
 	const SITE_KEY: string = import.meta.env.PUBLIC_PAWBAR_SITE_KEY ?? '';
 	const LIVE = Boolean(ENDPOINT && WIDGET_ID && SITE_KEY);
+	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
@@ -43,12 +46,25 @@
 		(intro: string): Transport =>
 		(message, signal) =>
 			recordedEvents(pickScenario(message, chatScenarios), { speed: 1.5, signal, intro });
+	// A chat card's `checkout` and `book` host events reach the test store
+	// (PUBLIC_STORE_URL, host config); the cart summary is saved for /live's receipt.
+	const store = {
+		storeUrl: STORE_URL,
+		remember: (summary: unknown) => {
+			try {
+				sessionStorage.setItem(ORDER_SUMMARY_KEY, JSON.stringify(summary));
+			} catch {
+				/* private mode: the receipt just skips the item list */
+			}
+		}
+	};
 	// Live: the Paw Bar API, with the recordings as the in-place fallback when it
 	// is unavailable. Offline build: the recordings answer directly.
 	const session = LIVE
 		? new ChatSession(
 				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
-				recorded('Here is a recorded answer that fits, on its original timing.')
+				recorded('Here is a recorded answer that fits, on its original timing.'),
+				store
 			)
 		: new ChatSession(recorded('The live model is not connected on this build, so here is a recorded answer that fits.'));
 	const suggestions = chatScenarios.map((s) => ({ id: s.id, title: s.title, prompt: s.fixture.prompt }));

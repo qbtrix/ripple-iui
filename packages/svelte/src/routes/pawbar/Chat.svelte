@@ -6,13 +6,15 @@
     nodes; model text never goes through {@html}. A card renders through
     <Ripple streaming> while it arrives and swaps to <Ripple spec> on final (a
     remount, so the validated spec is what the visitor keeps using). Host
-    events go to session.hostEvent, which ignores them until the card is final.
-    A notice that offers a replay gets a button that plays the closest
+    events go to session.hostEvent, which ignores them until the card is final;
+    a checkout's progress or failure shows as the card's note, and a confirmed
+    booking as a BookingReceipt under the card. A notice that offers a replay gets a button that plays the closest
     recorded answer into the same turn (session.replayRecorded).
 -->
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Ripple } from '$lib/index.js';
+	import BookingReceipt from './BookingReceipt.svelte';
 	import type { Card, ChatSession } from './session.svelte.js';
 
 	interface Suggestion {
@@ -82,7 +84,9 @@
 				<Ripple streaming={card.store} skeleton="card" onEvent={(e) => session.hostEvent(card, e)} />
 			{/if}
 			{#if card.sent}<p class="sent" role="status">The card sent <code>{card.sent}</code> to this page.</p>{/if}
+			{#if card.note}<p class="host-note" data-kind={card.note.kind} role="status">{card.note.text}</p>{/if}
 		</div>
+		{#if card.receipt}<BookingReceipt {...card.receipt} />{/if}
 	{/if}
 {/snippet}
 
@@ -259,6 +263,16 @@
 		margin: 0;
 		font-size: 13px;
 		color: var(--site-soft);
+	}
+	.host-note {
+		margin: 0;
+		font-size: 14px;
+		color: var(--site-ink);
+	}
+	.host-note[data-kind='error'] {
+		padding: 8px 12px;
+		border-radius: 10px;
+		background: color-mix(in oklch, var(--paw-crimson) 14%, transparent);
 	}
 	.notice {
 		margin: 0;

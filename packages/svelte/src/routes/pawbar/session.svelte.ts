@@ -13,13 +13,20 @@
 // legacy ```pawbar-card fence in chunk text is re-split on every chunk and
 // fed through the same Card. Every partial spec and the final card pass
 // card-policy.ts first; a refused card is dropped like a rejected one. Host
-// events are inert until final, and even then only recorded for display: the
-// landing has no store, so no host event makes a network call or navigates.
+// events are inert until final. With a StoreHost (the landing passes one), a
+// final card's `emit checkout` (menu-order's Cart) goes to live/checkout.ts and
+// may navigate to Stripe or this origin; `emit book` (booking's request) goes to
+// book.ts, and the answer is patched into the booking node's props (`notice`,
+// `confirmed`, fresh `days`) with a BookingReceipt under the card on 201. One
+// checkout or booking in flight per session. Any other host event, and every
+// host event without a StoreHost, is only recorded for display.
 // Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
 
 import type { RippleEvent } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
+import { checkout, type OrderSummary } from '../live/checkout.js';
+import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
 import { refuseCard } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
 
@@ -119,6 +126,10 @@ export class Card {
 	reason = $state<string | null>(null);
 	/** The last host event this card sent, once it is final. */
 	sent = $state<string | null>(null);
+	/** The host's line about a checkout from this card (progress or the reason it stopped). */
+	note = $state<{ kind: 'busy' | 'error'; text: string } | null>(null);
+	/** A booking the store confirmed from this card, for the receipt under it. */
+	receipt = $state<{ booking: Booked; durationMin?: number; place?: string } | null>(null);
 	readonly store: StreamSpecStore;
 	#push!: ReadableStreamDefaultController<string>;
 	#fed = '';
@@ -183,6 +194,16 @@ export class Card {
 	}
 }
 
+/** Where host events from a final card reach the store. Location defaults are read at call time. */
+export interface StoreHost {
+	storeUrl: string;
+	fetch?: typeof fetch;
+	pageOrigin?: string;
+	navigate?: (url: string) => void;
+	/** Saves the cart summary before the redirect, so /live?order= can list it. */
+	remember?: (summary: OrderSummary) => void;
+}
+
 export type Part = { kind: 'text'; text: string } | { kind: 'card'; card: Card };
 export type NoticeKind = 'limit' | 'busy' | 'error' | 'info' | 'stopped';
 export interface Notice {
@@ -226,10 +247,13 @@ export class ChatSession {
 	turns = $state<Turn[]>([]);
 	busy = $state(false);
 	#abort: AbortController | null = null;
+	/** A checkout or booking is on its way to the store. */
+	#hostBusy = false;
 
 	constructor(
 		private readonly transport: Transport,
-		private readonly fallback?: Transport
+		private readonly fallback?: Transport,
+		private readonly store?: StoreHost
 	) {}
 
 	async send(message: string) {
@@ -283,13 +307,64 @@ export class ChatSession {
 	}
 
 	/** The `onEvent` handler for a card's <Ripple>. Inert until the card is final. */
-	hostEvent(card: Card, event: RippleEvent): undefined {
+	hostEvent(card: Card, event: RippleEvent): Promise<void> | undefined {
 		if (card.status !== 'final') return undefined;
+		const name = event.type === 'emit' ? (event.name ?? event.target) : undefined;
+		if (this.store && name === 'checkout') return this.#checkout(card, this.store, event.payload);
+		if (this.store && name === 'book') return this.#book(card, this.store, event.payload);
 		const e: Record<string, unknown> = { ...event };
 		const kind = str(e.action, str(e.type, 'event'));
 		const detail = str(e.message) || str(e.event) || str(e.target) || str(e.url);
 		card.sent = detail ? `${kind}: ${detail}` : kind;
 		return undefined;
+	}
+
+	async #checkout(card: Card, store: StoreHost, cart: unknown) {
+		if (this.#hostBusy) return void (card.note = { kind: 'error', text: 'Another order or booking is still on its way. Try again in a moment.' });
+		this.#hostBusy = true;
+		card.note = { kind: 'busy', text: 'Opening the store checkout...' };
+		try {
+			const result = await checkout(cart, {
+				storeUrl: store.storeUrl,
+				fetch: store.fetch,
+				pageOrigin: store.pageOrigin ?? location.origin,
+				navigate: store.navigate ?? ((url) => location.assign(url)),
+				remember: store.remember
+			});
+			card.note = result.ok
+				? { kind: 'busy', text: 'Taking you to checkout...' }
+				: { kind: 'error', text: result.error?.message ?? 'Checkout did not start. Try again.' };
+		} finally {
+			this.#hostBusy = false;
+		}
+	}
+
+	async #book(card: Card, store: StoreHost, payload: unknown) {
+		const request = toBookingRequest(payload);
+		const serviceId = 'error' in request ? String((payload as { service_id?: unknown })?.service_id ?? '') : request.service_id;
+		const answer = (patch: Record<string, unknown>) => {
+			const next = card.spec && patchBooking(card.spec, serviceId, patch);
+			if (next) card.spec = next;
+		};
+		if ('error' in request) return answer({ notice: { kind: 'error', text: request.error } });
+		if (this.#hostBusy) return answer({ notice: { kind: 'info', text: 'Another order or booking is still on its way. Try again in a moment.' } });
+		this.#hostBusy = true;
+		try {
+			const deps = { storeUrl: store.storeUrl, fetch: store.fetch };
+			const result = await book(request, deps);
+			const props = bookingProps(card.spec, serviceId);
+			if (result.ok) {
+				const services = Array.isArray(props?.services) ? (props.services as { id?: unknown; duration_min?: unknown }[]) : [];
+				const minutes = services.find((s) => s?.id === serviceId)?.duration_min;
+				const place = [props?.subtitle, props?.title].find((v) => typeof v === 'string' && v.trim());
+				card.receipt = { booking: result.booking, durationMin: typeof minutes === 'number' ? minutes : undefined, place: place as string | undefined };
+				return answer({ confirmed: { ...result.booking } });
+			}
+			const days = result.reload && Array.isArray(props?.days) ? await reloadDays(props.days, serviceId, request.party, deps) : null;
+			answer({ notice: { ...result.notice }, ...(days ? { days } : {}) });
+		} finally {
+			this.#hostBusy = false;
+		}
 	}
 
 	/** Applies one frame; returns true when the turn is over. */
