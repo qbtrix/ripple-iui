@@ -1,22 +1,18 @@
-# Ripple UI Documentation
+# Ripple documentation
 
-Welcome to the **@ripple-ui/svelte** documentation. Ripple is a Svelte 5 component library that renders interactive UIs from declarative JSON specifications — designed for AI-generated interfaces.
+The documentation lives on the site: https://ripple.pocketpaw.xyz/docs. Its
+source is the markdown under [`packages/svelte/src/docs/`](../packages/svelte/src/docs).
 
-## Table of Contents
+- Getting started: [Install](https://ripple.pocketpaw.xyz/docs/getting-started/install), [Render a spec](https://ripple.pocketpaw.xyz/docs/getting-started/render-a-spec), [Stream a spec](https://ripple.pocketpaw.xyz/docs/getting-started/stream-a-spec)
+- Concepts: [The spec](https://ripple.pocketpaw.xyz/docs/concepts/the-spec), [State and expressions](https://ripple.pocketpaw.xyz/docs/concepts/state-and-expressions), [Actions and events](https://ripple.pocketpaw.xyz/docs/concepts/actions-and-events), [Flow actions](https://ripple.pocketpaw.xyz/docs/concepts/flow-actions), [Streaming](https://ripple.pocketpaw.xyz/docs/concepts/streaming), [Headless runtime](https://ripple.pocketpaw.xyz/docs/concepts/headless)
+- Widgets: [every widget](https://ripple.pocketpaw.xyz/docs/widgets), generated from the manifest
+- Guides: [Custom widgets](https://ripple.pocketpaw.xyz/docs/guides/custom-widgets), [Theming](https://ripple.pocketpaw.xyz/docs/guides/theming), [Intents](https://ripple.pocketpaw.xyz/docs/guides/intents), [Layout gotchas](https://ripple.pocketpaw.xyz/docs/guides/layout-gotchas)
+- API reference: [@ripple-ui/core](https://ripple.pocketpaw.xyz/docs/api/core), [@ripple-ui/svelte](https://ripple.pocketpaw.xyz/docs/api/svelte)
+- Architecture: [How Ripple works](https://ripple.pocketpaw.xyz/docs/architecture/overview)
+- For agents: [llms.txt](https://ripple.pocketpaw.xyz/llms.txt), [llms-full.txt](https://ripple.pocketpaw.xyz/llms-full.txt), [manifest.json](https://ripple.pocketpaw.xyz/manifest.json)
 
-1. [Getting Started](./getting-started.md) — Installation, basic usage, and your first spec
-2. [Architecture](./architecture.md) — How Ripple works under the hood
-3. [UISpec Reference (v1.0)](./ui-spec.md) — Low-level widget tree specification
-4. [UniversalSpec Reference (v2.0)](./universal-spec.md) — High-level intent-based specification
-5. [Widgets](./widgets.md) — Reference for the 150+ built-in widgets (layout, display, input, data, overlay, composite, research, vertical, control)
-6. [Expressions](./expressions.md) — Binding syntax, operators, and template strings
-7. [State Management](./state-management.md) — Reactive state with dot-notation paths
-8. [Event Handling](./event-handling.md) — Actions, chaining, and the event system
-9. [Intent System](./intent-system.md) — Layout engine, pattern detection, and chaining
-10. [Theming](./theming.md) — Color tokens, dark mode, and theme overrides
-11. [Custom Widgets](./custom-widgets.md) — Extending Ripple with your own widgets
-12. [API Reference](./api-reference.md) — All exports, types, and functions
-13. [Headless Runtime](./headless.md) — The spec engine with no renderer: resolve specs to plain trees, in Node, a Worker, a test, or another framework
-14. [Discover Cards](./discover.md) — The `./discover` subpath: server-renderable catalogue cards (tile, row, art, detail media) and their pure helpers
+Repo-only notes that stay here: [Discover cards](./discover.md), [Publishing](./publishing.md), [Monorepo layout](./monorepo.md).
 
-> **Manifest as source of truth.** Every widget's prop schema and runnable example is shipped in `dist/manifest.json` (also served at `/manifest.json` in dev). When the docs and the manifest disagree, the manifest is canonical — it's generated from the same TypeScript declarations the runtime consumes.
+> **The manifest is the source of truth** for widget props. Every widget's prop
+> schema and example ships in `dist/manifest.json`; when a page and the
+> manifest disagree, the manifest wins.

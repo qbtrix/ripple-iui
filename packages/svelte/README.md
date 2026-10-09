@@ -297,20 +297,18 @@ The dev server serves the widget manifest at `http://localhost:5174/manifest.jso
 
 ## Documentation
 
-Full documentation in [`docs/`](https://github.com/qbtrix/ripple-iui/blob/main/docs/):
+Full documentation at [ripple.pocketpaw.xyz/docs](https://ripple.pocketpaw.xyz/docs):
 
-- [Getting Started](https://github.com/qbtrix/ripple-iui/blob/main/docs/getting-started.md)
-- [Architecture](https://github.com/qbtrix/ripple-iui/blob/main/docs/architecture.md)
-- [UISpec Reference](https://github.com/qbtrix/ripple-iui/blob/main/docs/ui-spec.md)
-- [UniversalSpec Reference](https://github.com/qbtrix/ripple-iui/blob/main/docs/universal-spec.md)
-- [Widgets](https://github.com/qbtrix/ripple-iui/blob/main/docs/widgets.md)
-- [Expressions](https://github.com/qbtrix/ripple-iui/blob/main/docs/expressions.md)
-- [State Management](https://github.com/qbtrix/ripple-iui/blob/main/docs/state-management.md)
-- [Event Handling](https://github.com/qbtrix/ripple-iui/blob/main/docs/event-handling.md)
-- [Intent System](https://github.com/qbtrix/ripple-iui/blob/main/docs/intent-system.md)
-- [Theming](https://github.com/qbtrix/ripple-iui/blob/main/docs/theming.md)
-- [Custom Widgets](https://github.com/qbtrix/ripple-iui/blob/main/docs/custom-widgets.md)
-- [API Reference](https://github.com/qbtrix/ripple-iui/blob/main/docs/api-reference.md)
+- [Install](https://ripple.pocketpaw.xyz/docs/getting-started/install), [Render a spec](https://ripple.pocketpaw.xyz/docs/getting-started/render-a-spec), [Stream a spec](https://ripple.pocketpaw.xyz/docs/getting-started/stream-a-spec)
+- [The spec](https://ripple.pocketpaw.xyz/docs/concepts/the-spec)
+- [State and expressions](https://ripple.pocketpaw.xyz/docs/concepts/state-and-expressions)
+- [Actions and events](https://ripple.pocketpaw.xyz/docs/concepts/actions-and-events), [Flow actions](https://ripple.pocketpaw.xyz/docs/concepts/flow-actions)
+- [Streaming](https://ripple.pocketpaw.xyz/docs/concepts/streaming)
+- [Headless runtime](https://ripple.pocketpaw.xyz/docs/concepts/headless)
+- [Widgets](https://ripple.pocketpaw.xyz/docs/widgets)
+- [Custom widgets](https://ripple.pocketpaw.xyz/docs/guides/custom-widgets), [Theming](https://ripple.pocketpaw.xyz/docs/guides/theming), [Intents](https://ripple.pocketpaw.xyz/docs/guides/intents)
+- API reference: [@ripple-ui/svelte](https://ripple.pocketpaw.xyz/docs/api/svelte), [@ripple-ui/core](https://ripple.pocketpaw.xyz/docs/api/core)
+- [How Ripple works](https://ripple.pocketpaw.xyz/docs/architecture/overview)
 
 ## License
 
