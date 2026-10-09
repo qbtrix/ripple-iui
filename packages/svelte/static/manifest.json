@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-09T12:56:34.151Z",
+  "generatedAt": "2026-10-09T16:39:11.956Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -7754,7 +7754,12 @@
         "bounds": {
           "type": "[[number, number], [number, number]]",
           "required": false,
-          "description": "Fit-to-bounds rectangle [[swLat, swLng], [neLat, neLng]]. Overrides center+zoom when supplied."
+          "description": "Fit-to-bounds rectangle [[swLat, swLng], [neLat, neLng]]. Overrides center+zoom when supplied. Refits only when the rectangle changes."
+        },
+        "boundsPadding": {
+          "type": "number",
+          "required": false,
+          "description": "Pixel padding around `bounds` when fitting. Default 0."
         },
         "tiles": {
           "type": "\"osm\" | \"carto-voyager\" | \"carto-light\" | \"carto-dark\" | \"osm-hot\" | \"custom\"",
@@ -9715,9 +9720,9 @@
           "description": "Order / shipment / job number shown in the eyebrow."
         },
         "status": {
-          "type": "\"placed\" | \"confirmed\" | \"preparing\" | \"in-transit\" | \"out-for-delivery\" | \"delivered\" | \"failed\" | \"cancelled\"",
+          "type": "\"placed\" | \"confirmed\" | \"preparing\" | \"in-transit\" | \"out-for-delivery\" | \"delivered\" | \"ready-for-pickup\" | \"picked-up\" | \"failed\" | \"cancelled\"",
           "required": false,
-          "description": "Default-pipeline status. Used to compute the active stepper position when `steps` is not supplied."
+          "description": "Default-pipeline status. Sets the active stepper position. \"ready-for-pickup\" and \"picked-up\" switch the default steps to the pickup pipeline (placed, confirmed, preparing, ready for pickup, picked up). When status is the last step it renders done with a check, not active."
         },
         "steps": {
           "type": "Array<{ id: string; label: string; description?: string; completedAt?: string; current?: boolean; failed?: boolean }>",
@@ -9752,7 +9757,7 @@
         "tracker": {
           "type": "{ lat: number; lng: number; heading?: number; label?: string; color?: string }",
           "required": false,
-          "description": "Live courier position. Heading rotates the directional arrow."
+          "description": "Live courier position. Heading rotates the directional arrow. Each new position glides linearly from the old one over the time since the previous update (0.3s to 5s), so polling hosts get continuous motion; reduced motion jumps."
         },
         "route": {
           "type": "[number, number][]",

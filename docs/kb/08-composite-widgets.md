@@ -57,7 +57,9 @@ The widget computes totals from the line items — don't pre-sum and pass a numb
 
 ### order-status
 
-Multi-step shipment status. Stepper for placed → confirmed → preparing → in-transit → out-for-delivery → delivered. Optional embedded `map` widget (composes the data-category `map` widget under the hood) when origin/destination/tracker are supplied. Optional event timeline beneath the map.
+Multi-step shipment status. Stepper for placed → confirmed → preparing → in-transit → out-for-delivery → delivered. Status `ready-for-pickup` or `picked-up` switches to the pickup pipeline (placed → confirmed → preparing → ready-for-pickup → picked-up). When `status` is the last step (or the last step has `completedAt`) it shows done with a check, and the heading uses its label. Optional embedded `map` widget (composes the data-category `map` widget under the hood) when origin/destination/tracker are supplied. Optional event timeline beneath the map.
+
+Live tracking: the host updates `tracker` (for example through state every few seconds). The courier glides linearly from its previous spot over the measured gap between updates (clamped 0.3s to 5s, 3s for the first), and its pulse ring keeps running. With prefers-reduced-motion it jumps.
 
 Use for delivery tracking, courier dispatch, inbound logistics.
 
