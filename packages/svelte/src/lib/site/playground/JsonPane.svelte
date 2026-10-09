@@ -1,9 +1,9 @@
 <!--
   @file lib/site/playground/JsonPane.svelte
   @description The playground's JSON spec pane for one version. The text is
-    JsonLines with token colours (prefix-stable: a line is tokenised once, when
-    it appears), line numbers from a CSS counter (never copied), a caret after
-    the last token while streaming, and a short tint on each newly arrived
+    JsonLines with its `highlight` token colours (prefix-stable: a finished
+    line is tokenised once) and its `caret` while streaming, line numbers from
+    a CSS counter (never copied), and a short tint on each newly arrived
     line. It follows the tail through Tail: scroll up and it stops, and a Live
     button brings it back. The header says size, line count and status; Copy
     takes the whole spec, Share copies a ?s= link (lib/site/specFromUrl reads
@@ -99,7 +99,7 @@
 				tabindex="0"
 				aria-label="JSON spec text"
 				bind:this={pre}
-				onscroll={() => pre && tail.onScroll(pre)}><JsonLines {text} tokens /></pre>
+				onscroll={() => pre && tail.onScroll(pre)}><JsonLines {text} highlight caret={streaming} /></pre>
 			{#if streaming && !tail.following}
 				<button type="button" class="live" onclick={() => pre && tail.resume(pre)}>
 					<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 3v9m-4-4 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -242,9 +242,8 @@
 		font-variant-numeric: tabular-nums;
 		user-select: none;
 	}
-	/* The caret sits after the last token while the spec streams. */
-	.code[data-streaming] :global(.ln:last-child)::after {
-		content: '';
+	/* JsonLines' caret, after the last token while the spec streams. */
+	.code :global(.json-caret) {
 		display: inline-block;
 		width: 7px;
 		height: 1.15em;
@@ -299,7 +298,7 @@
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.code[data-streaming] :global(.ln),
-		.code[data-streaming] :global(.ln:last-child)::after,
+		.code :global(.json-caret),
 		.title[data-streaming]::before {
 			animation: none;
 		}
