@@ -235,7 +235,7 @@ if (result.success) render(result.data);
 else console.error(result.error.issues);
 ```
 
-The schema checks the shape of the spec, not whether each `type` is a real widget. For that, use `validateCatalog` from `@ripple-ui/svelte`, which returns every node whose `type` isn't a registered widget. See the [@ripple-ui/svelte reference](/docs/api/svelte#validatecatalog).
+The schema checks the shape of the spec, not whether each `type` is a real widget. For that, use `validateCatalog` from `@ripple-ui/svelte`, which returns every node whose `type` isn't a registered widget. See [Catalog and validation](/docs/concepts/catalog-and-validation).
 
 ## Editing a spec in place
 
