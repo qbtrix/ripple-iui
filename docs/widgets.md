@@ -364,6 +364,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `report-layout` | Long-form report with sections, embedded data widgets, and callouts |
 | `invoice-layout` | Invoice / quote / receipt with line items, computed totals, and download actions |
 | `order-status` | Multi-step shipment tracking with stepper, ETA, embedded `map` widget when geo data is supplied, and event timeline |
+| `menu-order` | Order from a menu inside a chat card: browse (featured pick, photo cards), customise (priced option groups), details, review. Binds `cart`; emits `on_checkout` with the cart. Ordering shows only when the server sets `checkout: true` |
 | `exec-dashboard` / `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
 For prop tables and runnable examples, see [`dist/manifest.json`](../dist/manifest.json) or call `get_widget_spec` from your agent.
@@ -442,6 +443,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `record-detail`, `entity-page` | `entity-detail` |
 | `quote-layout`, `receipt` | `invoice-layout` |
 | `shipment-tracker`, `order-tracking` | `order-status` |
+| `food-menu`, `order-menu` | `menu-order` |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `report` | `report-layout` |

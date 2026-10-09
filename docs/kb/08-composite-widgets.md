@@ -55,6 +55,14 @@ Multi-step shipment status. Stepper for placed → confirmed → preparing → i
 
 Use for delivery tracking, courier dispatch, inbound logistics.
 
+### menu-order
+
+A menu the visitor orders from inside the card, in four stages: menu (category chips, a featured pick, photo cards with steppers), customise (option groups with each choice's price change; a required group blocks "Add" and says why), details (pickup or delivery, name, email or phone, address for delivery) and review (lines, options, fee, total). One primary button per stage sits in a sticky bar with the running total.
+
+The model writes `items[].product_id` (plus `name` so rows stream), `featured: { id, reason }` and `preset: [{ id, qty }]`. Server hydration fills `price`, `image`, `groups`, `currency`, `fee`, `fulfilment` and `checkout: true`, and wires `on_checkout`. Without `checkout: true`, or for an item without `product_id`, the menu is display only. Required groups start on their first option; a `many` group caps at `max`.
+
+Bind `cart` (`{ lines, fulfilment, total }`, never the customer's details) so another node can show "2 items". `on_checkout` fires with `{ lines: [{ product_id, name, qty, option_ids, unit_price }], fulfilment, customer: { name, email?, phone?, address? }, total }`. Quantities are 1 to 20 per line, at most 30 lines. The total is display only: the store reprices every line.
+
 ### Dashboard variants
 
 `exec-dashboard`, `ops-dashboard`, `analytics-dashboard`, `pipeline-dashboard`, `project-dashboard` are pre-composed dashboard surfaces. Each picks an opinionated layout for that domain (KPIs + chart + table for exec, status + alerts + load for ops, funnel + retention + cohorts for analytics, etc.). Refer to the manifest for each.
