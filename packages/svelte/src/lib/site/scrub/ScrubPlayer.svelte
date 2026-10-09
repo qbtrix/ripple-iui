@@ -109,6 +109,9 @@
 
 	function onpointerdown(e: PointerEvent) {
 		if (e.button !== 0) return;
+		// No text selection: a press on selected text starts a native drag,
+		// which cancels the pointer and kills the scrub.
+		e.preventDefault();
 		track?.setPointerCapture(e.pointerId);
 		track?.focus();
 		resume = playing;
@@ -325,6 +328,7 @@
 		height: 36px;
 		cursor: pointer;
 		touch-action: none;
+		user-select: none;
 		border-radius: var(--radius-control);
 		outline: none;
 	}
