@@ -2,11 +2,22 @@
   widgets/composite/MenuOrder.svelte — `menu-order`: order from a menu inside a
   chat card (design doc 2026-10-09 §3.3, §4). One node, four stages: menu
   (category chips, the featured pick, photo cards with steppers), customise
-  (option groups with each choice's price change; a required group blocks
-  "Add" and says why), details (pickup or delivery, name, contact) and review
+  (option tiles, details below), details (pickup or delivery, name, contact) and review
   (lines, options, fee, total). One primary button per stage, in a sticky bar
   that carries the running total. Customise joins the stage rail only once an
   item with options is in play, so no skipped stage shows as done.
+
+  Customise: the item's photo, or a tinted tile with its kind icon and name;
+  a live line of what is chosen and the running price; then one card per
+  option group. Every option is a tile with an icon inferred from its name
+  (data-kit OPTION_ICONS / optionIconKey; an unknown name takes its group's
+  icon, an `icon` outside the map is ignored), its price change as a pill and a
+  check. Two or three short single choices sit in one segmented row (Size);
+  other groups are a tile grid, two columns from 560px. Tiles wrap real radio
+  and checkbox inputs, so labels, `disabled` and forms behave natively; arrow
+  keys on a radio group move and select (handled here, so every browser and
+  jsdom agree). A capped group shows "n of max" with dots and says when the
+  cap is reached; a required group blocks "Add" and says why.
 
   Data rules: the model writes product ids, `featured` and `preset`; the
   server's hydration fills prices, photos, option groups, `fulfilment`, `fee`
@@ -32,12 +43,27 @@
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import Store from '@lucide/svelte/icons/store';
 	import Bike from '@lucide/svelte/icons/bike';
-	import { PhotoTile, SectionCard, StageRail, VerdictLine, MENU_ICONS, kindIcon, money, plain, rise, slide } from '../data-kit/index.js';
+	import Check from '@lucide/svelte/icons/check';
+	import {
+		PhotoTile,
+		SectionCard,
+		StageRail,
+		VerdictLine,
+		MENU_ICONS,
+		OPTION_ICONS,
+		kindIcon,
+		optionIconKey,
+		money,
+		plain,
+		rise,
+		slide
+	} from '../data-kit/index.js';
 	import type { Verdict } from '../data-kit/types.js';
 	import {
 		MAX_LINES,
 		MAX_QTY,
 		buildCart,
+		chosenNames,
 		cleanIds,
 		clearGroup,
 		contactErrors,
@@ -56,7 +82,7 @@
 		unitPrice,
 		unmet
 	} from './menu-order.js';
-	import type { Cart, CartDraft, CartLine, Contact, Fulfilment, Group, Item, MenuItem } from './menu-order.js';
+	import type { Cart, CartDraft, CartLine, Contact, Fulfilment, Group, Item, MenuItem, Option } from './menu-order.js';
 
 	interface Props {
 		title?: string;
@@ -142,12 +168,7 @@
 	const total = $derived(totalOf(lines, mode, feeAmount));
 	const full = $derived(lines.length >= MAX_LINES);
 	const qtyOf = (item: Item) => lines.reduce((n, l) => (l.product_id === item.product_id ? n + l.qty : n), 0);
-	const optionNames = (line: CartLine) =>
-		(itemOf(line.product_id)?.groups ?? [])
-			.flatMap((g) => g.options)
-			.filter((o) => line.option_ids.includes(o.id))
-			.map((o) => o.name)
-			.join(', ');
+	const optionNames = (line: CartLine) => chosenNames(itemOf(line.product_id)?.groups ?? [], line.option_ids).join(', ');
 
 	function commit(raw: unknown, nextMode: Fulfilment = mode) {
 		const next = toLines(raw, menu);
@@ -188,6 +209,15 @@
 	const draftIds = $derived(draftItem && draft ? cleanIds(draftItem.groups, draft.ids) : []);
 	const blocker = $derived(draftItem ? unmet(draftItem.groups, draftIds) : undefined);
 	const draftUnit = $derived(draftItem ? unitPrice(draftItem, draftIds) : undefined);
+	const draftTotal = $derived(draftUnit === undefined ? undefined : draftUnit * (draft?.qty ?? 1));
+	const draftNames = $derived(draftItem ? chosenNames(draftItem.groups, draftIds) : []);
+
+	// Option icons: the option's own name, else its group's, else CircleDot.
+	const groupIcon = (g: Group) => kindIcon(OPTION_ICONS, optionIconKey(g.name, g.icon));
+	const optionIcon = (g: Group, o: Option) => kindIcon(OPTION_ICONS, optionIconKey(o.name, o.icon) ?? optionIconKey(g.name, g.icon));
+	// Two or three short single choices read as one segmented row (Size).
+	const segmented = (g: Group) => g.choose === 'one' && g.options.length >= 2 && g.options.length <= 3 && g.options.every((o) => o.name.length <= 16);
+	const ARROWS: Record<string, 1 | -1> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 	const draftIsNew = $derived(
 		!!draft && !draft.edit && !lines.some((l) => lineKey(l) === lineKey({ product_id: draft!.pid, option_ids: draftIds }))
 	);
@@ -235,6 +265,18 @@
 
 	function choose(group: Group, optionId: string) {
 		if (draft && draftItem) draft.ids = toggleOption(draftItem.groups, draftIds, group, optionId);
+	}
+
+	/** Arrow keys on a radio group: select the next/previous tile (wrapping) and focus it. */
+	function arrow(e: KeyboardEvent, group: Group) {
+		const step = ARROWS[e.key];
+		const n = group.options.length;
+		if (!step || !n) return;
+		e.preventDefault();
+		const at = group.options.findIndex((o) => draftIds.includes(o.id));
+		const next = ((at < 0 ? (step > 0 ? -1 : 0) : at) + step + n) % n;
+		choose(group, group.options[next].id);
+		(e.currentTarget as HTMLElement).querySelectorAll('input')[next]?.focus();
 	}
 
 	function clear(group: Group) {
@@ -461,48 +503,84 @@
 				{/if}
 			{:else if view === 'customise' && draftItem && draft}
 				{@const item = draftItem}
+				{@const KindIcon = kindIcon(MENU_ICONS, item.kind)}
 				{@render back(draft.edit ? 'review' : 'menu', draft.edit ? 'Review' : 'Menu')}
-				<div class="flex flex-col gap-3 @min-[720px]:grid @min-[720px]:grid-cols-[2fr_3fr] @min-[720px]:items-start">
-					<div class={['flex gap-3', photos && '@min-[720px]:flex-col']}>
-						{#if photos}
-							<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={28} class="w-24 shrink-0 self-start @min-[720px]:w-full" />
+				<div class="flex flex-col gap-3 @min-[720px]:grid @min-[720px]:grid-cols-[1fr_2fr] @min-[720px]:items-start">
+					<div class="flex gap-3 @min-[720px]:sticky @min-[720px]:top-2 @min-[720px]:flex-col">
+						{#if safeUrl(item.image, { kind: 'resource' })}
+							<PhotoTile src={safeUrl(item.image, { kind: 'resource' })} ratio="4:3" icon={KindIcon} iconSize={28} class="w-24 shrink-0 self-start @min-[720px]:w-full" />
 						{:else}
-							<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-14 shrink-0 self-start" />
+							<div
+								class="grid aspect-square w-16 shrink-0 content-center justify-items-center gap-2 self-start rounded-ripple bg-ripple-accent/8 text-ripple-accent ring-1 ring-ripple-accent/15 ring-inset @min-[720px]:aspect-[4/3] @min-[720px]:w-full"
+								aria-hidden="true"
+								data-fallback
+							>
+								<KindIcon class="size-7 @min-[720px]:size-12" strokeWidth={1.5} />
+								<span class="hidden max-w-full truncate px-3 text-headline text-ripple-surface-foreground @min-[720px]:block">{item.name}</span>
+							</div>
 						{/if}
-						<div class="flex min-w-0 flex-col gap-1">
+						<div class="flex min-w-0 flex-1 flex-col gap-1">
 							<h3 class="text-title-3 font-semibold text-pretty">{item.name}</h3>
 							{#if item.description}<p class="text-callout text-ripple-muted-foreground">{item.description}</p>{/if}
-							<p class="text-callout text-ripple-muted-foreground tabular-nums">Base price {fmt(item.price)}</p>
+							<div class="mt-1 flex items-baseline gap-2 border-t border-ripple-border pt-2">
+								<p class="min-w-0 flex-1 text-callout text-pretty" data-chosen>
+									{draftNames.length ? draftNames.join(' · ') : 'As it comes'}
+								</p>
+								{#key draftTotal}
+									<span class="shrink-0 text-headline tabular-nums" in:rise>{fmt(draftTotal)}</span>
+								{/key}
+							</div>
 						</div>
 					</div>
 					<div class="flex min-w-0 flex-col gap-2">
 						{#each item.groups as g, gi (`${g.key}:${gi}`)}
 							{@const chosen = g.options.filter((o) => draftIds.includes(o.id)).length}
+							{@const capped = g.choose === 'many' && g.max < g.options.length}
+							{@const atMax = capped && chosen >= g.max}
+							{@const GroupIcon = groupIcon(g)}
+							{@const seg = segmented(g)}
 							<div
 								class="rounded-ripple border border-ripple-border bg-ripple-surface p-3"
 								role={g.choose === 'one' ? 'radiogroup' : 'group'}
 								aria-labelledby="{uid}-g{gi}"
+								onkeydown={g.choose === 'one' ? (e) => arrow(e, g) : undefined}
 							>
-								<div class="mb-1.5 flex min-h-5 items-center gap-2">
-									<h4 id="{uid}-g{gi}" class="truncate text-caption-1 font-medium tracking-[0.04em] text-ripple-muted-foreground uppercase">
-										{g.name || 'Options'}
-									</h4>
-									<span class="ml-auto shrink-0 text-footnote text-ripple-muted-foreground tabular-nums">
-										{g.required ? 'Required' : 'Optional'}{g.choose === 'many' ? ` · ${chosen} of ${g.max}` : ''}
+								<div class="mb-2.5 flex min-h-6 items-center gap-2">
+									<span class="grid size-6 shrink-0 place-items-center rounded-md bg-ripple-muted text-ripple-muted-foreground" aria-hidden="true">
+										<GroupIcon size={14} strokeWidth={1.75} />
+									</span>
+									<h4 id="{uid}-g{gi}" class="min-w-0 truncate text-body-emph">{g.name || 'Options'}</h4>
+									<span
+										class={[
+											'ml-auto inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full px-2 text-footnote tabular-nums',
+											atMax ? 'bg-ripple-accent/15 text-ripple-surface-foreground' : 'bg-ripple-muted text-ripple-muted-foreground'
+										]}
+									>
+										<span>{g.required ? 'Required' : 'Optional'}{g.choose === 'many' ? ` · ${chosen} of ${g.max}` : ''}</span>
+										{#if capped && g.max <= 6}
+											<span class="flex gap-0.5" aria-hidden="true">
+												{#each { length: g.max }, d (d)}
+													<span class={['size-1.5 rounded-full transition-colors', d < chosen ? 'bg-ripple-accent' : 'bg-ripple-muted-foreground/35']}></span>
+												{/each}
+											</span>
+										{/if}
 									</span>
 									{#if !g.required && g.choose === 'one' && chosen > 0}
 										<button type="button" class={[QUIET, '-my-1 h-6']} onclick={() => clear(g)}>Clear</button>
 									{/if}
 								</div>
-								<ul class="flex flex-col">
+								<ul class={['grid gap-1.5', seg ? ['grid-cols-2', 'grid-cols-3'][g.options.length - 2] : '@min-[560px]:grid-cols-2']}>
 									{#each g.options as o, oi (`${o.id}:${oi}`)}
 										{@const on = draftIds.includes(o.id)}
-										{@const off = g.choose === 'many' && !on && chosen >= g.max}
-										<li>
+										{@const off = g.choose === 'many' && !on && atMax}
+										{@const OptIcon = optionIcon(g, o)}
+										<li class="min-w-0">
 											<label
 												class={[
-													'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-body transition-colors',
-													on ? 'bg-ripple-accent/8' : 'hover:bg-ripple-muted',
+													'relative flex h-full rounded-ripple border transition-[background-color,border-color,box-shadow] duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ripple-ring',
+													seg ? 'flex-col items-center gap-1 px-2 pt-3 pb-2.5 text-center' : 'items-center gap-2.5 p-2 pr-2.5',
+													on ? 'border-ripple-accent bg-ripple-accent/8 ring-1 ring-ripple-accent' : 'border-ripple-border',
+													!on && !off && 'hover:border-ripple-accent/50 hover:bg-ripple-muted/50',
 													off ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
 												]}
 											>
@@ -512,15 +590,49 @@
 													value={o.id}
 													checked={on}
 													disabled={off}
-													class="size-4 shrink-0 accent-[var(--ripple-accent)]"
+													class="sr-only"
 													onchange={() => choose(g, o.id)}
 												/>
-												<span class="min-w-0 flex-1">{o.name}</span>
-												{#if o.delta}<span class="shrink-0 text-callout text-ripple-muted-foreground tabular-nums">{money(o.delta, cur, { sign: true })}</span>{/if}
+												<span
+													class={[
+														'grid shrink-0 place-items-center rounded-md transition-colors',
+														seg ? 'size-9' : 'size-8',
+														on ? 'bg-ripple-accent text-ripple-accent-foreground' : 'bg-ripple-muted text-ripple-muted-foreground'
+													]}
+													aria-hidden="true"
+												>
+													<OptIcon size={seg ? 18 : 16} strokeWidth={1.75} />
+												</span>
+												<span class={['min-w-0 text-body leading-tight', seg ? 'font-medium' : 'flex-1']}>{o.name}</span>
+												{#if o.delta}
+													<span
+														class={[
+															'shrink-0 rounded-full px-1.5 py-px text-footnote tabular-nums',
+															on ? 'bg-ripple-accent/15 text-ripple-surface-foreground' : 'bg-ripple-muted text-ripple-muted-foreground'
+														]}>{money(o.delta, cur, { sign: true })}</span
+													>
+												{/if}
+												<span
+													class={[
+														'grid size-[18px] shrink-0 place-items-center border transition-colors',
+														g.choose === 'one' ? 'rounded-full' : 'rounded-[5px]',
+														seg && 'absolute top-1.5 right-1.5 size-4',
+														on ? 'border-ripple-accent bg-ripple-accent text-ripple-accent-foreground' : 'border-ripple-border bg-ripple-surface',
+														seg && !on && 'opacity-0'
+													]}
+													aria-hidden="true"
+												>
+													{#if on}<Check size={seg ? 11 : 12} strokeWidth={3} />{/if}
+												</span>
 											</label>
 										</li>
 									{/each}
 								</ul>
+								{#if atMax}
+									<p class="mt-2 text-footnote text-ripple-muted-foreground" role="status">
+										You've picked the max of {g.max}. Untick one to swap it.
+									</p>
+								{/if}
 							</div>
 						{/each}
 						<div class="flex items-center justify-between gap-2 rounded-ripple border border-ripple-border bg-ripple-surface px-3 py-2">
@@ -639,7 +751,7 @@
 				<button type="button" class={PRIMARY} onclick={() => go('details')}>Checkout</button>
 			{:else if view === 'customise'}
 				<button type="button" class={PRIMARY} disabled={!!blocker || (draftIsNew && full)} onclick={saveDraft}>
-					{draft?.edit ? 'Update' : 'Add'} · {fmt(draftUnit === undefined ? undefined : draftUnit * (draft?.qty ?? 1))}
+					{draft?.edit ? 'Update' : 'Add'} · {fmt(draftTotal)}
 				</button>
 			{:else if view === 'details'}
 				<button type="submit" form="{uid}-details" class={PRIMARY}>Review order</button>

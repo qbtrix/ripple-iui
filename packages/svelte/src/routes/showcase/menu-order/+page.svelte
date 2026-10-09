@@ -2,13 +2,17 @@
   routes/showcase/menu-order/+page.svelte — dev preview of the menu-order
   widget for screenshots and visual QA: a fictional burger restaurant at a
   wide (760px) and a narrow (360px) frame, both orderable, plus a display-only
-  card (no `checkout`, as a model-only card renders before hydration). Photos
+  card (no `checkout`, as a model-only card renders before hydration). A
+  fourth section opens the customise step on load (a client-only click on
+  "Choose options", wide and 360px) to show the option tiles, inferred icons,
+  the chosen line and the no-photo tile. Photos
   are empty on purpose, so the icon fallback is what you see. The wide frame
   scrolls like a transcript so the total bar sticks. The emitted
   checkout cart and the bound cart print under the wide frame. URL-only (not
   linked from the showcase index); fictional data only, the site is public.
 -->
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import MenuOrder from '$lib/widgets/composite/MenuOrder.svelte';
 	import type { Cart, CartDraft, MenuItem } from '$lib/widgets/composite/menu-order.js';
 
@@ -97,6 +101,12 @@
 	let cart = $state<CartDraft>();
 	let checkedOut = $state<Cart>();
 	let narrowCart = $state<CartDraft>();
+
+	// Visual QA only: open the customise frames on the burger with the most options.
+	let custom = $state<HTMLElement>();
+	onMount(() => {
+		for (const b of custom?.querySelectorAll<HTMLButtonElement>('button[aria-label="Choose options for Griddle Classic"]') ?? []) b.click();
+	});
 </script>
 
 <svelte:head><title>Ripple · menu-order</title></svelte:head>
@@ -134,6 +144,17 @@
 				<h3>on_checkout payload</h3>
 				<pre>{checkedOut ? JSON.stringify(checkedOut, null, 2) : '(continue to payment to see it)'}</pre>
 			</div>
+		</div>
+	</section>
+
+	<section class="showcase-section" bind:this={custom}>
+		<h2 class="showcase-section-title">Customise step, opened</h2>
+		<p class="section-caption">Griddle Classic opened on load: a segmented size row, extras as a tile grid with a 3-pick cap, sauces as tiles, icons inferred from the option names, and the tinted tile a dish without a photo gets.</p>
+		<div class="pane frame" style:width="760px">
+			<MenuOrder title="Copper Griddle" currency="USD" {items} fulfilment={['pickup', 'delivery']} fee={{ delivery: 3.99 }} checkout />
+		</div>
+		<div class="pane frame" style:width="360px">
+			<MenuOrder title="Copper Griddle" {items} checkout />
 		</div>
 	</section>
 
