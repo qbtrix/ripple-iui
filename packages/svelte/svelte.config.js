@@ -12,8 +12,9 @@ import { loadEnv } from 'vite';
 // prerendered page (mode 'hash' adds the hash of its own inline bootstrap). No
 // 'unsafe-inline' script: a javascript: URL a card might smuggle in cannot run.
 // Styles keep 'unsafe-inline' because Svelte and the widgets set style
-// attributes and transitions inject <style>. connect-src lists the Paw Bar API
-// and /live's test store, read at build time like vite.config.ts does; dev adds
+// attributes and transitions inject <style>. connect-src lists /live's test
+// store and, only when PUBLIC_PAWBAR_LIVE=1, the Paw Bar API, read at build time
+// like vite.config.ts does (which also fails a build with a half-set env); dev adds
 // localhost for the mock and Vite's HMR socket. img-src allows the two image
 // hosts the showcase uses (its news feed's favicon service stays blocked).
 // 'unsafe-hashes' plus one hash admits exactly the `this.__e=event` attribute
@@ -30,7 +31,7 @@ const originOf = (url) => {
 };
 const connectSrc = [
 	'self',
-	originOf(env.PUBLIC_PAWBAR_ENDPOINT),
+	env.PUBLIC_PAWBAR_LIVE === '1' ? originOf(env.PUBLIC_PAWBAR_ENDPOINT) : null,
 	originOf(env.PUBLIC_STORE_URL || 'https://lab.pocketpaw.xyz/test-store'),
 	...(dev ? ['http://localhost:*', 'ws://localhost:*'] : [])
 ].filter((v) => v != null);
