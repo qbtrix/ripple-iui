@@ -22,7 +22,7 @@ export const CHAT_WIDGET_TYPES: ReadonlySet<string> = new Set([
 	'hero', 'highlight', 'hover-card', 'icon', 'if', 'illustration', 'image', 'input', 'interval-workout',
 	'invoice-layout', 'invoice-lines', 'itinerary', 'kanban', 'kbd', 'kv-table', 'led-clock',
 	'link-preview', 'loading', 'location-picker', 'logo-cloud', 'markdown', 'marketing-hero',
-	'marquee', 'master-detail', 'meal-plan', 'mention', 'menu-order', 'metric', 'modal',
+	'marquee', 'master-detail', 'meal-plan', 'memory-match', 'mention', 'menu-order', 'metric', 'modal',
 	'model-viewer', 'multi-select', 'navbar', 'news-card', 'newsletter', 'notification-center',
 	'number-input', 'ops-dashboard', 'order-status', 'org-chart', 'otp-input', 'page-header',
 	'parallax', 'people-picker', 'permission-matrix', 'pipeline-dashboard', 'popover',
