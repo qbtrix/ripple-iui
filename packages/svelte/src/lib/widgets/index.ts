@@ -19,6 +19,7 @@ import {
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus, MenuOrder,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
   AskUserQuestions, Itinerary, Booking, GrowthProjection, BillSplit, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
+  WordGuess,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -304,6 +305,9 @@ const defaultRegistry: WidgetMap = {
   flashcards: FlashcardDeck,
   'study-deck': FlashcardDeck,
   'flip-cards': FlashcardDeck,
+  'word-guess': WordGuess,
+  'guess-the-word': WordGuess,
+  'word-game': WordGuess,
   if: If,
   each: Each,
   'source-card': SourceCard,
@@ -484,6 +488,7 @@ export {
   Marquee, BorderBeam, Shimmer, AnimatedBeam, Aurora, Spotlight, BentoGrid, TextEffect,
   TodoList, DrawingCanvas, Timer, Flashcard,
   AskUserQuestions, Booking, Recipe, MealPlan, IntervalWorkout, FlashcardDeck,
+  WordGuess,
   // Console telemetry pack (feat/console-telemetry-widgets, 2026-06-13)
   LedClock, GlyphGrid, FillGrid, StreakBars, Seismograph,
   // AI-native display tier (feat/ai-native-widgets, 2026-06-24)
