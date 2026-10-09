@@ -161,6 +161,7 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 - Caps: 24,000 chars, 400 elements, depth 24, 40 animation elements, every `dur` at least 0.5s, `repeatCount` at most 1000 or `indefinite`, at most 40 `use` elements and no `use` pointing at another `use` or a group holding one. Past a cap, or while the markup is still streaming in, the widget shows a quiet placeholder at `max_height`.
 - Ids are prefixed per instance (and so are their `url(#..)`, `href` and `begin`/`end` refs), so two cards never collide.
 - Under `prefers-reduced-motion` the art starts paused; animated art gets a small pause/play button.
+- Text is kept readable. Write label text with `fill='currentColor'`: it is the card's text colour, so it reads in light and dark. Any other `text`/`tspan` fill (or none, which SVG draws black) that falls under 3:1 contrast against what it sits on, a solid shape under it or else the card, is swapped for the card's text or background colour, whichever reads better. It runs again when the theme changes. `url(#..)` fills and `currentColor` are never changed.
 - Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.
 
 ```json
