@@ -18,7 +18,7 @@ import {
   Terminal, RippleFrame, AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
   ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard,
-  AskUserQuestions, Itinerary,
+  AskUserQuestions, Itinerary, GrowthProjection,
 } from './composite/index.js';
 import { ConfirmDialog, Alert, DropdownMenu, Toast, Tooltip, Popover, HoverCard, CommandPalette, ContextMenu, NotificationCenter, ErrorState, Coachmark } from './overlay/index.js';
 import {
@@ -278,6 +278,9 @@ const defaultRegistry: WidgetMap = {
   itinerary: Itinerary,
   'trip-plan': Itinerary,
   'travel-itinerary': Itinerary,
+  'growth-projection': GrowthProjection,
+  'savings-projection': GrowthProjection,
+  'compound-interest': GrowthProjection,
   if: If,
   each: Each,
   'source-card': SourceCard,
@@ -451,7 +454,7 @@ export {
   Icon, Loading, Chip, Kbd, StatusDot, Trend, Copy, Code,
   AvatarGroup, ComparisonLayout,
   EntityDetail, FormLayout, WizardLayout, ChecklistLayout, ReportLayout, InvoiceLayout, OrderStatus,
-  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard, Itinerary,
+  ExecDashboard, OpsDashboard, AnalyticsDashboard, PipelineDashboard, ProjectDashboard, Itinerary, GrowthProjection,
   ModelViewer, Embed, AudioPlayer, VideoPlayer,
   Reveal, Parallax,
   Navbar, Footer, Cta, Testimonial, FeatureGrid, Newsletter, LogoCloud, Faq, MarketingHero,

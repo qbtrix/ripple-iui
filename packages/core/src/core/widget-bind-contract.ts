@@ -55,6 +55,11 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   itinerary: { prop: 'days', event: 'ondayschange' },
   'trip-plan': { prop: 'days', event: 'ondayschange' },
   'travel-itinerary': { prop: 'days', event: 'ondayschange' },
+  // growth-projection binds its monthly deposit. `rate` and `years` stay
+  // Svelte-side `$bindable`s and also fire on_ratechange / on_yearschange.
+  'growth-projection': { prop: 'deposit', event: 'ondepositchange' },
+  'savings-projection': { prop: 'deposit', event: 'ondepositchange' },
+  'compound-interest': { prop: 'deposit', event: 'ondepositchange' },
 };
 
 /**

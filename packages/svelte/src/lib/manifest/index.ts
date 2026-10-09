@@ -124,6 +124,7 @@ import { inputEntry } from './entries/input.js';
 import { invoiceLayoutEntry } from './entries/invoice-layout.js';
 import { invoiceLinesEntry } from './entries/invoice-lines.js';
 import { itineraryEntry } from './entries/itinerary.js';
+import { growthProjectionEntry } from './entries/growth-projection.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -415,6 +416,7 @@ export const manifestEntries: WidgetManifestEntry[] = [
   invoiceLayoutEntry,
   invoiceLinesEntry,
   itineraryEntry,
+  growthProjectionEntry,
   kanbanEntry,
   kbdEntry,
   kvTableEntry,
