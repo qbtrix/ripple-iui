@@ -1,13 +1,16 @@
 <!--
   @file routes/docs/widgets/[type]/+page.svelte
   @description One generated widget reference page: type, category, description,
-    the Copy page split button, then the example in a props configurator (or a
-    plain SpecExample when no prop can be modelled or the example's root is not
-    this widget), one row of live previews per variant-like prop, an Anatomy
-    outline for composite widgets, any interactive pocket specs, and the Props /
-    Events / Node fields tables, each only when it has rows. All copy comes from
-    the manifest entry. Tables scroll inside their own box so a phone never
-    scrolls sideways. Indexed by Pagefind (data-pagefind-body).
+    the Copy page split button, then the Example: a props configurator over the
+    spec the page previews (the manifest example, or its first pocket when the
+    bare example renders nothing, see EMPTY_EXAMPLES; the controls then edit the
+    widget's node inside the pocket), or a plain SpecExample when no prop can be
+    modelled or the widget's node is not in that spec. Then one row of live
+    previews per variant-like prop, an Anatomy outline for composite widgets, the
+    other pocket specs, and the Props / Events / Node fields tables, each only
+    when it has rows. All copy comes from the manifest entry. Tables scroll inside
+    their own box so a phone never scrolls sideways. Indexed by Pagefind
+    (data-pagefind-body).
 -->
 <script lang="ts">
 	import SpecExample from '$lib/site/SpecExample.svelte';
@@ -20,7 +23,7 @@
 
 	// Categories whose widgets are page or panel sized and need the full column to read.
 	const WIDE = new Set(['composite', 'data', 'layout', 'marketing', 'research', 'vertical']);
-	const configurable = $derived(data.rootIsWidget && configurableProps(data.props).length > 0);
+	const configurable = $derived(data.target !== null && configurableProps(data.props).length > 0);
 </script>
 
 <svelte:head>
@@ -69,7 +72,7 @@
 
 	<h2 id="example">Example</h2>
 	{#if configurable}
-		<PropsConfigurator spec={data.example} rows={data.props} wide={WIDE.has(data.category.id)} />
+		<PropsConfigurator spec={data.example} rows={data.props} path={data.target ?? []} wide={WIDE.has(data.category.id)} />
 	{:else}
 		<SpecExample spec={data.example} />
 	{/if}

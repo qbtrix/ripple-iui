@@ -10,8 +10,8 @@ import CopyPage from './CopyPage.svelte';
 import { forYourModel } from './model.js';
 import PropsConfigurator from './PropsConfigurator.svelte';
 import VariantRow from './VariantRow.svelte';
-import { configurableProps } from './props.js';
-import { exampleSpec, rows } from './widgets.js';
+import { configurableProps, findNode, nodeAt } from './props.js';
+import { exampleSpec, pageSpecs, rows } from './widgets.js';
 
 const entry = (type: string) => manifestEntries.find((e) => e.type === type)!;
 const specText = () => JSON.parse(document.querySelector('pre.spec')?.textContent ?? 'null') as { ui: { props?: Record<string, unknown> } };
@@ -60,6 +60,18 @@ describe('PropsConfigurator', () => {
 		render(PropsConfigurator, { spec: { version: '1.0', ui: { type: 'text', props: { text: 'Hi' } } }, rows: odd });
 		expect(document.querySelectorAll('.controls .row')).toHaveLength(0);
 		expect(document.querySelector('.stage')?.textContent).toContain('Hi');
+	});
+
+	it('configures the widget inside a pocket when the page previews one', async () => {
+		const modal = entry('modal');
+		const spec = pageSpecs(modal).example;
+		const path = findNode(spec, 'modal')!;
+		expect(path.length).toBeGreaterThan(0);
+		render(PropsConfigurator, { spec, rows: rows(modal.props), path });
+		await fireEvent.input(screen.getByLabelText('title'), { target: { value: 'Renamed' } });
+		const out = JSON.parse(document.querySelector('pre.spec')?.textContent ?? 'null') as typeof spec;
+		expect(nodeAt(out, path)?.props).toMatchObject({ title: 'Renamed' });
+		expect(nodeAt(out, [])?.type).toBe((spec.ui as { type: string }).type);
 	});
 
 	it('every manifest prop table yields controls without throwing', () => {

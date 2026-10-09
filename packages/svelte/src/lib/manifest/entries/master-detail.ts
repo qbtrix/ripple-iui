@@ -6,7 +6,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const masterDetailEntry: WidgetManifestEntry = {
   type: 'master-detail',
   category: 'layout',
-  description: 'List left, detail right; selected item flows into the detail spec. Master items support only valueKey/labelKey/descriptionKey/badgeKey — for bespoke list cards, hand-roll a grid.',
+  description: 'List left, detail right; selected item flows into the detail spec. Master items support only valueKey/labelKey/descriptionKey/badgeKey. For bespoke list cards, hand-roll a grid.',
   props: {
     items: { type: 'Array<Record<string, unknown>>', required: true, description: 'Items shown in master list.' },
     value: { type: 'string | number | null', required: false, description: 'Currently selected item value.' },

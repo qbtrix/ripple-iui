@@ -13,7 +13,7 @@ export const streamTextEntry: WidgetManifestEntry = {
     streaming: { type: 'boolean', required: false, description: 'Show the blinking caret + aria-busy. True while the agent is producing.' },
     markdown: { type: 'boolean', required: false, description: 'Render the revealed text as markdown (reuses the Markdown widget). Default false.' },
     speed: { type: 'number', required: false, description: 'Typewriter speed in chars/sec. When set, the string types itself in. Omit for verbatim render.' },
-    done: { type: 'boolean', required: false, description: 'Streaming finished — clears busy/caret even if streaming was left true.' },
+    done: { type: 'boolean', required: false, description: 'Streaming finished. Clears busy/caret even if streaming was left true.' },
     size: { type: 'string', required: false, description: "Font size: 'sm' | 'md' | 'lg'. Default 'md'." },
   },
   example: {

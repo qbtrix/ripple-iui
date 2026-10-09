@@ -100,18 +100,55 @@ export function configurableProps(rows: { name: string; type: string; descriptio
 	});
 }
 
-/** The example spec with its root node's props replaced in place (key order kept); undefined and '' values are dropped. */
-export function applyProps(spec: Spec, values: Record<string, unknown>): Spec {
-	const node = (spec.ui ?? {}) as Node;
+/** A node with its props replaced in place (key order kept); undefined and '' values are dropped. */
+function withValues(node: Node, values: Record<string, unknown>): Node {
 	const props = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined && v !== ''));
 	const has = Object.keys(props).length > 0;
-	const ui: Node = {};
+	const out: Node = {};
 	for (const [k, v] of Object.entries(node)) {
-		if (k !== 'props') ui[k] = v;
-		else if (has) ui.props = props;
+		if (k !== 'props') out[k] = v;
+		else if (has) out.props = props;
 	}
-	if (has && !('props' in node)) ui.props = props;
-	return { ...spec, ui };
+	if (has && !('props' in node)) out.props = props;
+	return out;
+}
+
+/**
+ * The spec with the props of one node replaced: the root by default, or the
+ * node at `path` (child indexes from the root, as `findNode` returns), so a
+ * page that previews a pocket can still configure the widget inside it.
+ */
+export function applyProps(spec: Spec, values: Record<string, unknown>, path: number[] = []): Spec {
+	const swap = (node: Node, rest: number[]): Node => {
+		if (!rest.length) return withValues(node, values);
+		const kids = Array.isArray(node.children) ? [...(node.children as Node[])] : [];
+		kids[rest[0]] = swap(kids[rest[0]] ?? {}, rest.slice(1));
+		return { ...node, children: kids };
+	};
+	return { ...spec, ui: swap((spec.ui ?? {}) as Node, path) };
+}
+
+/** The node at `path` in a spec's ui tree. */
+export function nodeAt(spec: Spec, path: number[]): Node | undefined {
+	let node = spec.ui as Node | undefined;
+	for (const i of path) node = Array.isArray(node?.children) ? (node.children[i] as Node | undefined) : undefined;
+	return node;
+}
+
+/** Child-index path to the first node of `type` in a spec's ui tree (depth first), or null. */
+export function findNode(spec: Spec, type: string): number[] | null {
+	const walk = (node: unknown): number[] | null => {
+		if (!node || typeof node !== 'object') return null;
+		const n = node as Node;
+		if (n.type === type) return [];
+		if (!Array.isArray(n.children)) return null;
+		for (const [i, kid] of n.children.entries()) {
+			const p = walk(kid);
+			if (p) return [i, ...p];
+		}
+		return null;
+	};
+	return walk(spec.ui);
 }
 
 /** Prop names that read as a visual variant axis. */

@@ -4,7 +4,7 @@
 // every manifest prop type, so a new odd type can never make it throw.
 import { describe, expect, it } from 'vitest';
 import { manifestEntries } from '../../manifest/index.js';
-import { applyProps, configurableProps, objectFields, parsePropType, splitTop, variantAxes, withProp } from './props.js';
+import { applyProps, configurableProps, findNode, nodeAt, objectFields, parsePropType, splitTop, variantAxes, withProp } from './props.js';
 
 describe('parsePropType', () => {
 	it.each([
@@ -135,6 +135,29 @@ describe('applyProps', () => {
 		const before = structuredClone(spec);
 		applyProps(spec, { label: 'x' });
 		expect(spec).toEqual(before);
+	});
+});
+
+describe('findNode and a path', () => {
+	const pocket = {
+		version: '1.0',
+		state: { open: false },
+		ui: { type: 'flex', children: [{ type: 'button', props: { label: 'Open' } }, { type: 'modal', props: { title: 'Hi' }, children: [] }] }
+	};
+
+	it('finds the first node of a type depth first, or null', () => {
+		expect(findNode(pocket, 'flex')).toEqual([]);
+		expect(findNode(pocket, 'modal')).toEqual([1]);
+		expect(findNode(pocket, 'sheet')).toBeNull();
+		expect(findNode({ ui: 'not a node' }, 'x')).toBeNull();
+	});
+
+	it('applies props to the node at the path and leaves the rest of the spec alone', () => {
+		const out = applyProps(pocket, { title: 'Bye', size: 'lg' }, [1]);
+		expect(nodeAt(out, [1])).toEqual({ type: 'modal', props: { title: 'Bye', size: 'lg' }, children: [] });
+		expect(nodeAt(out, [0])).toBe(pocket.ui.children[0]);
+		expect(out.state).toBe(pocket.state);
+		expect(pocket.ui.children[1].props).toEqual({ title: 'Hi' });
 	});
 });
 

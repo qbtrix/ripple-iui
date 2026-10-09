@@ -6,7 +6,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { manifestEntries } from '$lib/manifest/index.js';
-import { exampleSpec, interactiveSpecs, widgetCategories } from '$lib/site/docs/widgets.js';
+import { exampleSpec, interactiveSpecs, pageSpecs, widgetCategories } from '$lib/site/docs/widgets.js';
 import Page from './+page.svelte';
 import { GET } from './examples.json/+server.js';
 
@@ -93,10 +93,11 @@ describe('/docs/widgets index', () => {
 });
 
 describe('/docs/widgets/examples.json', () => {
-	it('has a spec for every widget: the example, or the interactive spec for an overlay that renders nothing at rest', async () => {
+	it('has a spec for every widget: what its page previews, so an empty bare example becomes its first pocket', async () => {
 		const body = (await GET().json()) as Record<string, unknown>;
 		expect(Object.keys(body).toSorted()).toEqual(manifestEntries.map((e) => e.type).toSorted());
 		expect(body.button).toEqual(exampleSpec(entry('button')));
 		expect(body['command-palette']).toEqual(interactiveSpecs(entry('command-palette'))[0].spec);
+		for (const e of manifestEntries) expect(body[e.type], e.type).toEqual(pageSpecs(e).example);
 	});
 });

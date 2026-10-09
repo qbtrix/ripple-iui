@@ -3,8 +3,9 @@
   @description The props configurator on a /docs/widgets page: the widget's
     example rendered live beside one control per prop the props table can model
     (text, number, switch, a segmented choice or a select for literal unions),
-    and below them the resulting spec, copyable. Starts from the example's own
-    props; Reset goes back to them. Props whose type the parser cannot model are
+    and below them the resulting spec, copyable. Starts from the props of the
+    widget's node in the spec the page previews (the root, or the node at
+    `path` inside a pocket); Reset goes back to them. Props whose type the parser cannot model are
     not offered (see props.ts), so an odd type never reaches a control. The
     values are a writable $derived, so they reset when the page moves to another
     widget. Page-sized widgets (`wide`) get the full width, with the controls
@@ -13,25 +14,28 @@
 <script lang="ts">
 	import { Ripple } from '$lib/index.js';
 	import { highlightJson } from './highlight.js';
-	import { applyProps, configurableProps, type ConfigurableProp } from './props.js';
+	import { applyProps, configurableProps, nodeAt, type ConfigurableProp } from './props.js';
 
 	let {
 		spec,
 		rows,
+		path = [],
 		wide = false
 	}: {
 		spec: Record<string, unknown> & { ui?: unknown };
 		rows: { name: string; type: string; description: string }[];
+		/** Where the widget sits in `spec.ui` (child indexes); the root unless the page previews a pocket. */
+		path?: number[];
 		/** Page-sized widgets: the render takes the full width and the controls flow below it. */
 		wide?: boolean;
 	} = $props();
 
 	const uid = $props.id();
 	const controls = $derived(configurableProps(rows));
-	const exampleProps = $derived({ ...(spec.ui as { props?: Record<string, unknown> } | undefined)?.props });
+	const exampleProps = $derived({ ...nodeAt(spec, path)?.props });
 
 	let values = $derived<Record<string, unknown>>({ ...exampleProps });
-	const result = $derived(applyProps(spec, values));
+	const result = $derived(applyProps(spec, values, path));
 	const json = $derived(JSON.stringify(result, null, 2));
 	const changed = $derived(JSON.stringify(values) !== JSON.stringify(exampleProps));
 

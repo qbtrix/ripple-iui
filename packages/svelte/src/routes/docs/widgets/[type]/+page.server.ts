@@ -2,12 +2,11 @@
 // manifest stays on the server; the page gets only its own entry's data.
 import { error } from '@sveltejs/kit';
 import { manifestEntries } from '$lib/manifest/index.js';
-import { variantAxes } from '$lib/site/docs/props.js';
+import { findNode, variantAxes } from '$lib/site/docs/props.js';
 import {
 	anatomy,
 	categoryTitle,
-	exampleSpec,
-	interactiveSpecs,
+	pageSpecs,
 	rows,
 	sourceUrl,
 	widgetCategories,
@@ -27,10 +26,11 @@ export const load: PageServerLoad = ({ params }) => {
 	const props = rows(e.props);
 	const events = rows(e.events);
 	const nodeFields = rows(e.nodeFields);
-	const interactive = interactiveSpecs(e);
-	// Controls and variant previews edit the example's root node, so only when that node is this widget.
-	const rootIsWidget = e.example.type === e.type;
-	const axes = rootIsWidget ? variantAxes(props) : [];
+	// The page previews the example, or the first pocket for a widget whose bare example renders empty.
+	const { example, interactive } = pageSpecs(e);
+	// The configurator edits the widget's node wherever it sits in that spec; variant rows only when it is the root.
+	const target = findNode(example, e.type);
+	const axes = target?.length === 0 ? variantAxes(props) : [];
 	const parts = e.category === 'composite' ? anatomy(e) : [];
 	const headings = [
 		{ id: 'example', text: 'Example', depth: 2 },
@@ -48,9 +48,9 @@ export const load: PageServerLoad = ({ params }) => {
 		category: { id: e.category, title: categoryTitle(e.category) },
 		siblings: category.widgets.map((w) => w.type),
 		staticSafe: e.staticSafe === true,
-		example: exampleSpec(e),
+		example,
 		interactive,
-		rootIsWidget,
+		target,
 		axes,
 		anatomy: parts,
 		props,
