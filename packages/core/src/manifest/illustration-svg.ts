@@ -74,7 +74,14 @@ export const ILLUSTRATION_CAPS = {
 	maxRepeatCount: 1000,
 	/** `use` elements. A `use` may also never point at a `use` or at a subtree
 	 *  holding one (no nested use, no self-reference), so fan-out stays bounded. */
-	maxUse: 40
+	maxUse: 40,
+	/** Largest magnitude of any number in a kept attribute value (`id`,
+	 *  `font-family`, `begin`, `end` and `#hex` / `#id` tokens are not scanned). */
+	maxNumber: 1_000_000,
+	/** Entries (`;`-separated, non-empty) in a `values`, `keyTimes` or `keySplines` list. */
+	maxListEntries: 200,
+	/** Characters in a `d` (or animateMotion `path`) value. */
+	maxPathChars: 8_000
 } as const;
 
 /** `max_height` prop bounds, in px. */

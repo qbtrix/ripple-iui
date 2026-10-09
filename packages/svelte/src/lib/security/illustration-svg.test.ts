@@ -102,7 +102,7 @@ const GOOD = `<svg viewBox='0 0 200 120'>
 	<g><polygon points='0,0 10,4 0,8' fill='#335'><animateMotion dur='4s' repeatCount='3' rotate='auto'><mpath href='#route'/></animateMotion></polygon></g>
 	<use href='#sun' x='5' opacity='0.2'/>
 	<text x='10' y='20' font-family='Inter, sans-serif' font-size='10'>Good <tspan fill='#c00'>morning</tspan></text>
-	<rect class='extra' filter='url(#blur)' width='1' height='1'/>
+	<rect class='extra' filter='url(#sky)' width='1' height='1'/>
 </g>
 </svg>`;
 
