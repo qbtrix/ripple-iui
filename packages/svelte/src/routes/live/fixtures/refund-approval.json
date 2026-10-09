@@ -1,0 +1,954 @@
+{
+ "id": "refund-approval",
+ "title": "Approve a refund",
+ "prompt": "A customer wants a $240 refund on order 4821 because it arrived three days late. Show me what you checked, and let me approve or deny it before you issue anything.",
+ "context": "You are the support agent for Fernhill Outfitters, an online outdoor-gear shop. The person typing is a support lead. You have already run three tools; their results are below. Do not ask for these values and do not say you cannot look them up: render them.\n\nTool results:\n- lookup_order({\"order\":\"4821\"}) -> {\"order\":\"4821\",\"customer\":\"Dana Reyes\",\"items\":[{\"name\":\"Trail running shoes\",\"qty\":1,\"price\":128},{\"name\":\"Rain shell jacket\",\"qty\":1,\"price\":112}],\"shipping\":14,\"total\":254,\"promised\":\"Oct 2\",\"delivered\":\"Oct 5\",\"daysLate\":3,\"priorRefunds\":0}\n- carrier_status({\"tracking\":\"FX-77120\"}) -> {\"status\":\"delivered\",\"delayReason\":\"weather hold at hub\",\"confirmedLate\":true}\n- refund_policy({\"reason\":\"late_delivery\"}) -> {\"rule\":\"Late by 1 to 4 days: refund shipping plus up to 15% of the item total as credit. Full refunds for lateness need a lead's approval.\",\"maxWithoutApproval\":50}\n\nWhat to build: an agent turn, not a calculator. Show each tool call as a \"tool-call\" card (status \"success\", its args and a short result) so the lead sees what you checked. Then a proposal: the policy-backed amount (shipping 14 plus 15% of 240 = 50, so 50 total) against the requested 240, and let the lead adjust the amount. Then one \"approval-gate\" for issuing the refund, with a risk that follows the amount (above 50 is \"high\"). Bind the gate's decision to state (\"bind\": \"{state.decision}\") and show what happens next under it: approved shows the amount being issued, denied shows a short reply the lead can send the customer. Nothing is issued until the gate is approved.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-09T18:36:56.129Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 0,
+   "text": "\"version"
+  },
+  {
+   "t": 29,
+   "text": "\":\"1"
+  },
+  {
+   "t": 93,
+   "text": ".0\",\"ui\":{\""
+  },
+  {
+   "t": 103,
+   "text": "type\":\"flex\",\"props\":"
+  },
+  {
+   "t": 135,
+   "text": "{\"direction\":\"column\",\""
+  },
+  {
+   "t": 165,
+   "text": "gap\":\"12px\"},"
+  },
+  {
+   "t": 202,
+   "text": "\"children\":[{\"type\":"
+  },
+  {
+   "t": 229,
+   "text": "\"heading\",\"props\":{\""
+  },
+  {
+   "t": 263,
+   "text": "text\":\"Refund request:"
+  },
+  {
+   "t": 300,
+   "text": " order 4821\",\"level\":3"
+  },
+  {
+   "t": 334,
+   "text": "}},{\"type\":\"text"
+  },
+  {
+   "t": 379,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 508,
+   "text": "Here"
+  },
+  {
+   "t": 509,
+   "text": " is what I checked before"
+  },
+  {
+   "t": 509,
+   "text": " pro"
+  },
+  {
+   "t": 509,
+   "text": "posing anything.\",\"size\":"
+  },
+  {
+   "t": 532,
+   "text": "\"sm\"}},{\""
+  },
+  {
+   "t": 564,
+   "text": "type\":\"tool-call\",\""
+  },
+  {
+   "t": 596,
+   "text": "props\":{\"name\":\"l"
+  },
+  {
+   "t": 631,
+   "text": "ookup_order\",\"status\":\""
+  },
+  {
+   "t": 664,
+   "text": "success\",\"args\":{\"order\":"
+  },
+  {
+   "t": 709,
+   "text": "\"4821\"},\"result\":"
+  },
+  {
+   "t": 730,
+   "text": "\"Dana Reyes"
+  },
+  {
+   "t": 761,
+   "text": "."
+  },
+  {
+   "t": 800,
+   "text": " Sh"
+  },
+  {
+   "t": 835,
+   "text": "oes 128"
+  },
+  {
+   "t": 867,
+   "text": " + jacket 112 "
+  },
+  {
+   "t": 897,
+   "text": "= 240 items, "
+  },
+  {
+   "t": 930,
+   "text": "14 shipping, "
+  },
+  {
+   "t": 964,
+   "text": "254 total. Promised"
+  },
+  {
+   "t": 999,
+   "text": " Oct 2, delivered"
+  },
+  {
+   "t": 1035,
+   "text": " Oct 5 "
+  },
+  {
+   "t": 1065,
+   "text": "(3 days late). No pr"
+  },
+  {
+   "t": 1097,
+   "text": "ior refunds.\"}},"
+  },
+  {
+   "t": 1132,
+   "text": "{\"type\":\"tool-"
+  },
+  {
+   "t": 1164,
+   "text": "call\",\"props\":{\"name\":"
+  },
+  {
+   "t": 1197,
+   "text": "\"carrier_status\",\"status"
+  },
+  {
+   "t": 1233,
+   "text": "\":\"success\",\"args\":{\""
+  },
+  {
+   "t": 1269,
+   "text": "tracking\":\"FX-"
+  },
+  {
+   "t": 1300,
+   "text": "77120\"},\"result\":\""
+  },
+  {
+   "t": 1332,
+   "text": "Delivered. Weather"
+  },
+  {
+   "t": 1363,
+   "text": " hold at hub. L"
+  },
+  {
+   "t": 1398,
+   "text": "ateness confirmed by"
+  },
+  {
+   "t": 1433,
+   "text": " car"
+  },
+  {
+   "t": 1464,
+   "text": "rier.\"}},{\"type"
+  },
+  {
+   "t": 1498,
+   "text": "\":\"tool-call\",\"props"
+  },
+  {
+   "t": 1535,
+   "text": "\":{\"name\":\"refund"
+  },
+  {
+   "t": 1570,
+   "text": "_policy\",\"status\":\"success"
+  },
+  {
+   "t": 1598,
+   "text": "\",\"args\":{\"reason\":"
+  },
+  {
+   "t": 1632,
+   "text": "\"late_delivery\"},"
+  },
+  {
+   "t": 1672,
+   "text": "\"result\":\"Late by "
+  },
+  {
+   "t": 1714,
+   "text": "1 to 4 days:"
+  },
+  {
+   "t": 1735,
+   "text": " refund shipping plus up"
+  },
+  {
+   "t": 1779,
+   "text": " to 15% of item"
+  },
+  {
+   "t": 1804,
+   "text": " total as credit. Full ref"
+  },
+  {
+   "t": 1830,
+   "text": "unds for"
+  },
+  {
+   "t": 1864,
+   "text": " lateness need a lead's"
+  },
+  {
+   "t": 1899,
+   "text": " approval. Limit without"
+  },
+  {
+   "t": 1930,
+   "text": " approval: 50.\"}},"
+  },
+  {
+   "t": 1964,
+   "text": "{\"type\":\"separator\",\""
+  },
+  {
+   "t": 1998,
+   "text": "props\":{}"
+  },
+  {
+   "t": 2030,
+   "text": "},{\"type\":\"he"
+  },
+  {
+   "t": 2064,
+   "text": "ading\",\"props\":{\"text\":"
+  },
+  {
+   "t": 2098,
+   "text": "\"Proposal\",\"level\":"
+  },
+  {
+   "t": 2131,
+   "text": "4}"
+  },
+  {
+   "t": 2164,
+   "text": "},{\"type\":\"grid"
+  },
+  {
+   "t": 2201,
+   "text": "\",\"props\":{\"columns\":"
+  },
+  {
+   "t": 2229,
+   "text": "2,\"gap\":\"12"
+  },
+  {
+   "t": 2265,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 2299,
+   "text": "\"type\":\"stat\",\"props"
+  },
+  {
+   "t": 2334,
+   "text": "\":{\"label\":\"Custom"
+  },
+  {
+   "t": 2364,
+   "text": "er as"
+  },
+  {
+   "t": 2398,
+   "text": "ked"
+  },
+  {
+   "t": 2433,
+   "text": " for\",\"value\":\""
+  },
+  {
+   "t": 2468,
+   "text": "{state.requested}\",\"format"
+  },
+  {
+   "t": 2499,
+   "text": "\":\"currency\""
+  },
+  {
+   "t": 2535,
+   "text": "}},{\"type\":\"st"
+  },
+  {
+   "t": 2567,
+   "text": "at\",\"props\":{\"label\":"
+  },
+  {
+   "t": 2608,
+   "text": "\"Policy am"
+  },
+  {
+   "t": 2633,
+   "text": "ount\",\"value\":\"{state."
+  },
+  {
+   "t": 2663,
+   "text": "shipping + state.item"
+  },
+  {
+   "t": 2699,
+   "text": "Total * state.credit"
+  },
+  {
+   "t": 2742,
+   "text": "Percent / 100}\",\""
+  },
+  {
+   "t": 2765,
+   "text": "format\":\"currency\"}}"
+  },
+  {
+   "t": 2799,
+   "text": "]},{\"type\":\"text"
+  },
+  {
+   "t": 2831,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 2872,
+   "text": "Policy: shipping {"
+  },
+  {
+   "t": 2904,
+   "text": "state.shipping} plus"
+  },
+  {
+   "t": 2954,
+   "text": " {"
+  },
+  {
+   "t": 2963,
+   "text": "state.creditPercent}"
+  },
+  {
+   "t": 3012,
+   "text": "% of {"
+  },
+  {
+   "t": 3059,
+   "text": "state.itemTotal}"
+  },
+  {
+   "t": 3076,
+   "text": " item total.\",\"size\":\"s"
+  },
+  {
+   "t": 3109,
+   "text": "m\"}},{\"type\":"
+  },
+  {
+   "t": 3135,
+   "text": "\"number-input\",\"props\":{"
+  },
+  {
+   "t": 3254,
+   "text": "\"label\":\"Refund am"
+  },
+  {
+   "t": 3254,
+   "text": "ount to issue ("
+  },
+  {
+   "t": 3254,
+   "text": "USD)\",\"min\":0,"
+  },
+  {
+   "t": 3279,
+   "text": "\"max\":254"
+  },
+  {
+   "t": 3297,
+   "text": ",\"step\":1},\"b"
+  },
+  {
+   "t": 3330,
+   "text": "ind\":\"{state.amount"
+  },
+  {
+   "t": 3367,
+   "text": "}\""
+  },
+  {
+   "t": 3400,
+   "text": "},{\"type\":\"fl"
+  },
+  {
+   "t": 3437,
+   "text": "ex\",\"props\":{\"g"
+  },
+  {
+   "t": 3471,
+   "text": "ap\":\"8px\",\"wr"
+  },
+  {
+   "t": 3499,
+   "text": "ap\":true},\"children\":["
+  },
+  {
+   "t": 3532,
+   "text": "{\"type\":\"button\",\"props"
+  },
+  {
+   "t": 3564,
+   "text": "\":{\"label\":\"Use"
+  },
+  {
+   "t": 3599,
+   "text": " policy amount\",\"variant\":"
+  },
+  {
+   "t": 3639,
+   "text": "\"outline\",\"size\":\"s"
+  },
+  {
+   "t": 3674,
+   "text": "m\"},\"on_click\":"
+  },
+  {
+   "t": 3698,
+   "text": "{\"action\":\"set\",\"target"
+  },
+  {
+   "t": 3732,
+   "text": "\":\"amount\",\"value\":\""
+  },
+  {
+   "t": 3768,
+   "text": "{state.shipping + state"
+  },
+  {
+   "t": 3799,
+   "text": ".itemTotal * state"
+  },
+  {
+   "t": 3838,
+   "text": ".creditPercent / "
+  },
+  {
+   "t": 3871,
+   "text": "100}\"}},{\"type"
+  },
+  {
+   "t": 3898,
+   "text": "\":\"button\",\"props\":{\""
+  },
+  {
+   "t": 3933,
+   "text": "label\":\"Use requested am"
+  },
+  {
+   "t": 3967,
+   "text": "ount\",\"variant\":\"outline"
+  },
+  {
+   "t": 4004,
+   "text": "\",\"size\":\"sm\"},"
+  },
+  {
+   "t": 4032,
+   "text": "\"on_click\":{\"action"
+  },
+  {
+   "t": 4067,
+   "text": "\":\"set\",\"target\":\"am"
+  },
+  {
+   "t": 4101,
+   "text": "ount\",\"value\":\"{state."
+  },
+  {
+   "t": 4131,
+   "text": "requested}\"}}]},"
+  },
+  {
+   "t": 4168,
+   "text": "{\"type\":\"appro"
+  },
+  {
+   "t": 4199,
+   "text": "val-gate\",\"props\":{"
+  },
+  {
+   "t": 4232,
+   "text": "\"title\":\"Issue ref"
+  },
+  {
+   "t": 4271,
+   "text": "und of {state.amount}"
+  },
+  {
+   "t": 4298,
+   "text": " USD to Dana Re"
+  },
+  {
+   "t": 4334,
+   "text": "yes\",\"summary\":\""
+  },
+  {
+   "t": 4366,
+   "text": "Order 4821,"
+  },
+  {
+   "t": 4406,
+   "text": " late"
+  },
+  {
+   "t": 4432,
+   "text": " delivery. Nothing"
+  },
+  {
+   "t": 4468,
+   "text": " is issued until you"
+  },
+  {
+   "t": 4522,
+   "text": " approve.\",\"risk\":\""
+  },
+  {
+   "t": 4533,
+   "text": "{state.amount > state."
+  },
+  {
+   "t": 4567,
+   "text": "maxWithoutAppro"
+  },
+  {
+   "t": 4600,
+   "text": "val ? 'high' :"
+  },
+  {
+   "t": 4632,
+   "text": " 'low'}\",\"action"
+  },
+  {
+   "t": 4674,
+   "text": "Id\":\"ref"
+  },
+  {
+   "t": 4710,
+   "text": "und-"
+  },
+  {
+   "t": 4743,
+   "text": "4821\"},\"bind\":"
+  },
+  {
+   "t": 4764,
+   "text": "\"{state.decision}\""
+  },
+  {
+   "t": 4799,
+   "text": "},{\"type\":\"if\",\""
+  },
+  {
+   "t": 4840,
+   "text": "condition\":\"{state.dec"
+  },
+  {
+   "t": 4868,
+   "text": "ision == 'approved'}"
+  },
+  {
+   "t": 4899,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 4932,
+   "text": "\"alert\",\"props\":{\""
+  },
+  {
+   "t": 4966,
+   "text": "title\":\"Iss"
+  },
+  {
+   "t": 4999,
+   "text": "uing ref"
+  },
+  {
+   "t": 5033,
+   "text": "und\",\"description\":\"Iss"
+  },
+  {
+   "t": 5073,
+   "text": "uing {state.amount}"
+  },
+  {
+   "t": 5100,
+   "text": " USD to Dana Re"
+  },
+  {
+   "t": 5135,
+   "text": "yes for"
+  },
+  {
+   "t": 5166,
+   "text": " order 4821.\",\"variant"
+  },
+  {
+   "t": 5199,
+   "text": "\":\"success\"}}]},"
+  },
+  {
+   "t": 5232,
+   "text": "{\"type\":\"if\",\"cond"
+  },
+  {
+   "t": 5267,
+   "text": "ition\":\"{state.decision"
+  },
+  {
+   "t": 5302,
+   "text": " == 'denied'}\",\""
+  },
+  {
+   "t": 5334,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 5365,
+   "text": "flex\",\"props"
+  },
+  {
+   "t": 5401,
+   "text": "\":{\"direction\":\"column"
+  },
+  {
+   "t": 5440,
+   "text": "\",\"gap\":\"8"
+  },
+  {
+   "t": 5465,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 5512,
+   "text": "\"type\":\"alert\",\"props"
+  },
+  {
+   "t": 5532,
+   "text": "\":{\"title\":\"Not"
+  },
+  {
+   "t": 5593,
+   "text": " issued\",\"description\":\"No"
+  },
+  {
+   "t": 5605,
+   "text": " refund was s"
+  },
+  {
+   "t": 5633,
+   "text": "ent."
+  },
+  {
+   "t": 5667,
+   "text": " Here"
+  },
+  {
+   "t": 5701,
+   "text": " is a reply you can send"
+  },
+  {
+   "t": 5731,
+   "text": " Dana.\",\"variant\":\""
+  },
+  {
+   "t": 5766,
+   "text": "warning\"}},{\"type"
+  },
+  {
+   "t": 5799,
+   "text": "\":\"text"
+  },
+  {
+   "t": 5834,
+   "text": "area\",\"props\":{\"label"
+  },
+  {
+   "t": 5866,
+   "text": "\":\"Re"
+  },
+  {
+   "t": 5899,
+   "text": "ply to custom"
+  },
+  {
+   "t": 5948,
+   "text": "er\",\"rows\":5"
+  },
+  {
+   "t": 5973,
+   "text": "},\"bind\":\"{state"
+  },
+  {
+   "t": 5999,
+   "text": ".reply}\"},"
+  },
+  {
+   "t": 6037,
+   "text": "{\"type\":\"button\",\"props"
+  },
+  {
+   "t": 6065,
+   "text": "\":{\"label\":\"Cop"
+  },
+  {
+   "t": 6099,
+   "text": "y to"
+  },
+  {
+   "t": 6499,
+   "text": " send"
+  },
+  {
+   "t": 6499,
+   "text": "\",\"size"
+  },
+  {
+   "t": 6499,
+   "text": "\":\"sm\"},\"on"
+  },
+  {
+   "t": 6499,
+   "text": "_click\":{\"action\":\""
+  },
+  {
+   "t": 6499,
+   "text": "toast\",\"message\":\"Re"
+  },
+  {
+   "t": 6499,
+   "text": "ply "
+  },
+  {
+   "t": 6499,
+   "text": "ready to"
+  },
+  {
+   "t": 6499,
+   "text": " send\",\"variant\":\"info\""
+  },
+  {
+   "t": 6499,
+   "text": "}}]}]},{\""
+  },
+  {
+   "t": 6499,
+   "text": "type\":\"if"
+  },
+  {
+   "t": 6499,
+   "text": "\",\"condition\":\"{state."
+  },
+  {
+   "t": 6499,
+   "text": "decision != 'pending'"
+  },
+  {
+   "t": 6515,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 6550,
+   "text": "\":\"button\",\"props\":{\""
+  },
+  {
+   "t": 6584,
+   "text": "label\":\"Reset decision"
+  },
+  {
+   "t": 6619,
+   "text": "\",\"variant\":\"ghost"
+  },
+  {
+   "t": 6650,
+   "text": "\",\"size\":\"sm\"},"
+  },
+  {
+   "t": 6695,
+   "text": "\"on_click\":{\"action"
+  },
+  {
+   "t": 6839,
+   "text": "\":\"set\",\"target\":\"dec"
+  },
+  {
+   "t": 6839,
+   "text": "ision\",\"value\":\"pending\""
+  },
+  {
+   "t": 6929,
+   "text": "}}]}]},\""
+  },
+  {
+   "t": 6929,
+   "text": "state\":{\"requested\":240"
+  },
+  {
+   "t": 6929,
+   "text": ",\"shipping\":14,"
+  },
+  {
+   "t": 6929,
+   "text": "\"itemTotal\":240"
+  },
+  {
+   "t": 6931,
+   "text": ",\"creditPercent\":"
+  },
+  {
+   "t": 6948,
+   "text": "15,\"maxWitho"
+  },
+  {
+   "t": 6988,
+   "text": "utApproval\":50,\""
+  },
+  {
+   "t": 7018,
+   "text": "amount\":50,\"decision"
+  },
+  {
+   "t": 7064,
+   "text": "\":\"pending\",\"reply\":"
+  },
+  {
+   "t": 7086,
+   "text": "\"Hi Dana,"
+  },
+  {
+   "t": 7123,
+   "text": " thanks for your pat"
+  },
+  {
+   "t": 7154,
+   "text": "ience. Order"
+  },
+  {
+   "t": 7189,
+   "text": " 4821 arrived "
+  },
+  {
+   "t": 7217,
+   "text": "3 days late because"
+  },
+  {
+   "t": 7261,
+   "text": " of a weather hold at the"
+  },
+  {
+   "t": 7284,
+   "text": " carrier h"
+  },
+  {
+   "t": 7318,
+   "text": "ub,"
+  },
+  {
+   "t": 7366,
+   "text": " and we are sorry."
+  },
+  {
+   "t": 7394,
+   "text": " Under"
+  },
+  {
+   "t": 7422,
+   "text": " our late"
+  },
+  {
+   "t": 7455,
+   "text": " del"
+  },
+  {
+   "t": 7486,
+   "text": "ivery policy we can refund"
+  },
+  {
+   "t": 7520,
+   "text": " your "
+  },
+  {
+   "t": 7551,
+   "text": "14 shipping plus "
+  },
+  {
+   "t": 7588,
+   "text": "15% of the item total as store"
+  },
+  {
+   "t": 7617,
+   "text": " credit, "
+  },
+  {
+   "t": 7649,
+   "text": "50 in"
+  },
+  {
+   "t": 7683,
+   "text": " all"
+  },
+  {
+   "t": 7716,
+   "text": ". Let"
+  },
+  {
+   "t": 7751,
+   "text": " us know if you have"
+  },
+  {
+   "t": 7787,
+   "text": " any questions.\"}}"
+  }
+ ]
+}

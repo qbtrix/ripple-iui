@@ -3,6 +3,7 @@
 
 import { describe, expect, test } from 'vitest';
 import { buildLandingData, docFence, firstWidgetMs, median, parseRelease } from './data.js';
+import { scenarios } from '../../../routes/live/scenarios.js';
 
 const repo = 'https://github.com/x/y';
 
@@ -56,7 +57,7 @@ test('buildLandingData reads the manifest, the docs and the recordings', () => {
 	const d = buildLandingData({ releases: [], sizes: null });
 	expect(d.widgetCount).toBe(d.categories.reduce((n, c) => n + c.types.length, 0));
 	expect(d.minis.map((m) => m.type)).toEqual(['approval-gate', 'todo-list', 'data-grid', 'flashcard']);
-	expect(d.firstWidget?.n).toBe(9);
+	expect(d.firstWidget?.n).toBe(scenarios.length);
 	expect(d.firstWidget?.medianMs).toBeGreaterThan(0);
 	const [svelte, headless] = d.integration;
 	expect(svelte.files.map((f) => f.name)).toEqual(['Terminal', 'src/app.css', 'src/routes/api/ui/+server.ts', 'src/routes/+page.svelte']);

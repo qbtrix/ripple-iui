@@ -1,0 +1,970 @@
+{
+ "id": "book-appointment",
+ "title": "Book a haircut",
+ "prompt": "Book me a haircut with Sam next week, after 5pm if possible.",
+ "context": "You are the booking assistant on the website of Juniper & Pine, a fictional neighbourhood barbershop. You already fetched the services and next week's open slots after 5 pm; do not ask for them.\r\n\r\n- services() -> [{\"name\":\"Haircut\",\"minutes\":45,\"price\":38},{\"name\":\"Haircut and beard\",\"minutes\":60,\"price\":52},{\"name\":\"Beard trim\",\"minutes\":20,\"price\":20}]\r\n- open_slots({\"week\":\"next\",\"after\":\"17:00\"}) -> [{\"day\":\"Mon 13\",\"time\":\"5:15 pm\",\"barber\":\"Sam\"},{\"day\":\"Mon 13\",\"time\":\"6:00 pm\",\"barber\":\"Priya\"},{\"day\":\"Wed 15\",\"time\":\"5:30 pm\",\"barber\":\"Sam\"},{\"day\":\"Wed 15\",\"time\":\"6:15 pm\",\"barber\":\"Sam\"},{\"day\":\"Wed 15\",\"time\":\"6:45 pm\",\"barber\":\"Priya\"},{\"day\":\"Thu 16\",\"time\":\"5:00 pm\",\"barber\":\"Priya\"},{\"day\":\"Fri 17\",\"time\":\"5:45 pm\",\"barber\":\"Sam\"}]\r\n\r\nWhat to build: a booking card. Pick the service (show minutes and price). Pick the barber: Sam (preselected, as asked), Priya or anyone. The slot list shows only the chosen barber's slots (all of them for anyone); each slot is a button that sets the chosen slot, and the chosen one looks selected. Name and phone inputs. A summary line with service, barber, day, time and price, which also greets the customer by the name they type (\"See you then, Ana\"). A Book button runs a flow: validate a slot, a name and a phone, then an \"emit\" action named \"booking\" carrying the choices, then a toast confirming the time.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-09T18:42:54.599Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 0,
+   "text": "\"version"
+  },
+  {
+   "t": 53,
+   "text": "\":\"1.0\",\"ui"
+  },
+  {
+   "t": 78,
+   "text": "\":{\"type\":\"card\",\""
+  },
+  {
+   "t": 104,
+   "text": "props\":{\"title\":\""
+  },
+  {
+   "t": 133,
+   "text": "Book at"
+  },
+  {
+   "t": 167,
+   "text": " Juniper & Pine"
+  },
+  {
+   "t": 200,
+   "text": "\",\"description\":\"Next week,"
+  },
+  {
+   "t": 235,
+   "text": " after 5 pm\"},"
+  },
+  {
+   "t": 270,
+   "text": "\"children\":[{\"type\":"
+  },
+  {
+   "t": 300,
+   "text": "\"flex\",\"props\":{\""
+  },
+  {
+   "t": 336,
+   "text": "direction\":\"column\",\"gap"
+  },
+  {
+   "t": 365,
+   "text": "\":\"12px\"},\"children"
+  },
+  {
+   "t": 400,
+   "text": "\":[{\"type\":\"text"
+  },
+  {
+   "t": 436,
+   "text": "\",\"props\":{\"text\":\""
+  },
+  {
+   "t": 467,
+   "text": "Service\",\"weight\":\"sem"
+  },
+  {
+   "t": 505,
+   "text": "ibold\",\""
+  },
+  {
+   "t": 816,
+   "text": "size\":\"sm\"}},"
+  },
+  {
+   "t": 816,
+   "text": "{\"type\":\"each\",\"items"
+  },
+  {
+   "t": 868,
+   "text": "\":\"{state"
+  },
+  {
+   "t": 868,
+   "text": ".services}\",\"children"
+  },
+  {
+   "t": 868,
+   "text": "\":[{\"type\":\"button"
+  },
+  {
+   "t": 920,
+   "text": "\",\"props\":{\"label"
+  },
+  {
+   "t": 921,
+   "text": "\":\"{item"
+  },
+  {
+   "t": 921,
+   "text": ".name} · {item.min"
+  },
+  {
+   "t": 921,
+   "text": "utes} min · ${item"
+  },
+  {
+   "t": 921,
+   "text": ".price}\",\"variant\":\""
+  },
+  {
+   "t": 921,
+   "text": "{state.service == item.name"
+  },
+  {
+   "t": 921,
+   "text": " ? 'default' : "
+  },
+  {
+   "t": 935,
+   "text": "'outline'}\",\""
+  },
+  {
+   "t": 986,
+   "text": "size\":\"sm\"},"
+  },
+  {
+   "t": 1006,
+   "text": "\"on_click\":[{\""
+  },
+  {
+   "t": 1036,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 1069,
+   "text": "service\",\"value\":\"{item."
+  },
+  {
+   "t": 1103,
+   "text": "name}\"},{\"action\":"
+  },
+  {
+   "t": 1158,
+   "text": "\"set\",\"target\":\"price\",\""
+  },
+  {
+   "t": 1168,
+   "text": "value\":\"{item.price}"
+  },
+  {
+   "t": 1204,
+   "text": "\"},{\"action\":\"set"
+  },
+  {
+   "t": 1237,
+   "text": "\",\"target\":\"minutes\",\""
+  },
+  {
+   "t": 1269,
+   "text": "value\":\"{item.minut"
+  },
+  {
+   "t": 1305,
+   "text": "es}\"}]}"
+  },
+  {
+   "t": 1344,
+   "text": "]},{\"type\":\"seg"
+  },
+  {
+   "t": 1744,
+   "text": "mented\",\"props\":{\"label"
+  },
+  {
+   "t": 1744,
+   "text": "\":\"Barber\",\"options\":"
+  },
+  {
+   "t": 1795,
+   "text": "[{\"value\":\"S"
+  },
+  {
+   "t": 1796,
+   "text": "am\",\"label\":\"Sam"
+  },
+  {
+   "t": 1796,
+   "text": "\"},{\"value\":\""
+  },
+  {
+   "t": 1796,
+   "text": "Priya\",\"label\":\"Pri"
+  },
+  {
+   "t": 1796,
+   "text": "ya\"},{\"value\":\""
+  },
+  {
+   "t": 1796,
+   "text": "Anyone\",\"label\":\""
+  },
+  {
+   "t": 1796,
+   "text": "Anyone\"}]},"
+  },
+  {
+   "t": 1796,
+   "text": "\"bind\":\"{"
+  },
+  {
+   "t": 1796,
+   "text": "state.barber}\",\"on_"
+  },
+  {
+   "t": 1796,
+   "text": "change\":[{\"action\":\""
+  },
+  {
+   "t": 1796,
+   "text": "set\",\"target\":\"slot\",\""
+  },
+  {
+   "t": 1796,
+   "text": "value\":\"\"},{\"action\":"
+  },
+  {
+   "t": 1796,
+   "text": "\"set\",\"target\":\"slot"
+  },
+  {
+   "t": 1796,
+   "text": "Day\",\"value\":\"\"},{"
+  },
+  {
+   "t": 2196,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 2332,
+   "text": "\"slotTime\",\"value\":"
+  },
+  {
+   "t": 2333,
+   "text": "\"\"},{\"action\":\"set"
+  },
+  {
+   "t": 2333,
+   "text": "\",\"target\":\"slotBar"
+  },
+  {
+   "t": 2333,
+   "text": "ber\",\"value\":\"\"}]},"
+  },
+  {
+   "t": 2386,
+   "text": "{\"type\":\"text\",\"props"
+  },
+  {
+   "t": 2386,
+   "text": "\":{\"text\":\"Open"
+  },
+  {
+   "t": 2386,
+   "text": " times"
+  },
+  {
+   "t": 2386,
+   "text": "\",\"weight\":\"semibold"
+  },
+  {
+   "t": 2386,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 2386,
+   "text": "},{\"type\":\"each\",\""
+  },
+  {
+   "t": 2386,
+   "text": "items\":\"{state.slots"
+  },
+  {
+   "t": 2386,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 2386,
+   "text": "\":\"if\",\"condition\":\""
+  },
+  {
+   "t": 2386,
+   "text": "{state.barber == '"
+  },
+  {
+   "t": 2386,
+   "text": "Anyone' || state."
+  },
+  {
+   "t": 2387,
+   "text": "barber == item.barber}"
+  },
+  {
+   "t": 2387,
+   "text": "\",\"children\":[{\"type\":"
+  },
+  {
+   "t": 2387,
+   "text": "\"button\",\"props\":{\"label"
+  },
+  {
+   "t": 2387,
+   "text": "\":\"{item.day} ·"
+  },
+  {
+   "t": 2387,
+   "text": " {item.time} ·"
+  },
+  {
+   "t": 2387,
+   "text": " {"
+  },
+  {
+   "t": 2387,
+   "text": "item.barber}\",\"variant"
+  },
+  {
+   "t": 2439,
+   "text": "\":\"{state.slot =="
+  },
+  {
+   "t": 2440,
+   "text": " item.id ? 'default"
+  },
+  {
+   "t": 2452,
+   "text": "' : 'outline'}"
+  },
+  {
+   "t": 2488,
+   "text": "\",\"size\":\"sm\"},"
+  },
+  {
+   "t": 2521,
+   "text": "\"on_click\":[{\""
+  },
+  {
+   "t": 2556,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 2596,
+   "text": "slot\",\"value\":\"{item"
+  },
+  {
+   "t": 2626,
+   "text": ".id}\"},{\"action"
+  },
+  {
+   "t": 2656,
+   "text": "\":\"set\",\"target\":\"sl"
+  },
+  {
+   "t": 2690,
+   "text": "otDay\",\"value\":\"{"
+  },
+  {
+   "t": 2721,
+   "text": "item.day}\"},{\""
+  },
+  {
+   "t": 2758,
+   "text": "action\":\"set\",\"target\":\""
+  },
+  {
+   "t": 2788,
+   "text": "slotTime\",\"value\":\""
+  },
+  {
+   "t": 2821,
+   "text": "{item.time}\"},{"
+  },
+  {
+   "t": 2854,
+   "text": "\"action\":\"set\",\"target\":"
+  },
+  {
+   "t": 2892,
+   "text": "\"slotBarber\",\"value"
+  },
+  {
+   "t": 3087,
+   "text": "\":\"{item.barber}"
+  },
+  {
+   "t": 3089,
+   "text": "\"}]}]}"
+  },
+  {
+   "t": 3089,
+   "text": "]},{\"type\":\"input"
+  },
+  {
+   "t": 3089,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 3089,
+   "text": "Name"
+  },
+  {
+   "t": 3089,
+   "text": "\",\"placeholder\":\""
+  },
+  {
+   "t": 3121,
+   "text": "Your name\"},\"bind\":"
+  },
+  {
+   "t": 3155,
+   "text": "\"{state.name}\"},"
+  },
+  {
+   "t": 3190,
+   "text": "{\"type\":\"input\",\"props"
+  },
+  {
+   "t": 3224,
+   "text": "\":{\"label\":\"Ph"
+  },
+  {
+   "t": 3254,
+   "text": "one\",\"type\":\"tel\",\""
+  },
+  {
+   "t": 3289,
+   "text": "placeholder\":\""
+  },
+  {
+   "t": 3320,
+   "text": "Your phone number\"},\"b"
+  },
+  {
+   "t": 3358,
+   "text": "ind\":\"{state.phone"
+  },
+  {
+   "t": 3391,
+   "text": "}\"},{\"type\":\""
+  },
+  {
+   "t": 3421,
+   "text": "separator\",\""
+  },
+  {
+   "t": 3456,
+   "text": "props\":{}"
+  },
+  {
+   "t": 3489,
+   "text": "},{\"type\":\"if\",\""
+  },
+  {
+   "t": 3522,
+   "text": "condition\":\"{state.sl"
+  },
+  {
+   "t": 3564,
+   "text": "ot == ''}\",\"children\":"
+  },
+  {
+   "t": 3591,
+   "text": "[{\"type\":\"text\",\""
+  },
+  {
+   "t": 3623,
+   "text": "props\":{\"text\":\"{"
+  },
+  {
+   "t": 3659,
+   "text": "state.service} ({state."
+  },
+  {
+   "t": 3691,
+   "text": "minutes} min) with {"
+  },
+  {
+   "t": 3723,
+   "text": "state.barber}"
+  },
+  {
+   "t": 3755,
+   "text": " · "
+  },
+  {
+   "t": 3788,
+   "text": "${state.price}."
+  },
+  {
+   "t": 3822,
+   "text": " Pick a time to"
+  },
+  {
+   "t": 3855,
+   "text": " continue."
+  },
+  {
+   "t": 3891,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 3925,
+   "text": "}]},{\"type\":\""
+  },
+  {
+   "t": 3955,
+   "text": "if\",\"condition\":\"{state"
+  },
+  {
+   "t": 3991,
+   "text": ".slot != ''}\",\""
+  },
+  {
+   "t": 4022,
+   "text": "children\":[{\"type\":\""
+  },
+  {
+   "t": 4056,
+   "text": "text\",\"props\":{\"text\":"
+  },
+  {
+   "t": 4088,
+   "text": "\"{state.service} ({"
+  },
+  {
+   "t": 4122,
+   "text": "state.minutes} min)"
+  },
+  {
+   "t": 4156,
+   "text": " with {state.slotBar"
+  },
+  {
+   "t": 4196,
+   "text": "ber}, {state.slot"
+  },
+  {
+   "t": 4221,
+   "text": "Day} at {state.sl"
+  },
+  {
+   "t": 4265,
+   "text": "otTime} · ${state"
+  },
+  {
+   "t": 4289,
+   "text": ".price}\",\"weight\":\""
+  },
+  {
+   "t": 4324,
+   "text": "semibold\",\"size\":\"s"
+  },
+  {
+   "t": 4359,
+   "text": "m\"}}]},{\""
+  },
+  {
+   "t": 4391,
+   "text": "type\":\"if\",\"condition\":"
+  },
+  {
+   "t": 4424,
+   "text": "\"{state.name != ''"
+  },
+  {
+   "t": 4457,
+   "text": "}\",\"children\":[{\"type"
+  },
+  {
+   "t": 4539,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 4539,
+   "text": "text\":\"See you then, {"
+  },
+  {
+   "t": 4740,
+   "text": "state.name}\",\"size\":\""
+  },
+  {
+   "t": 4995,
+   "text": "sm\"}}]},{"
+  },
+  {
+   "t": 4995,
+   "text": "\"type\":\"button\",\"props\":"
+  },
+  {
+   "t": 4995,
+   "text": "{\"label\":\"Book\""
+  },
+  {
+   "t": 4995,
+   "text": "},\"on_click\":{\""
+  },
+  {
+   "t": 4995,
+   "text": "action\":\"flow\",\"steps"
+  },
+  {
+   "t": 4995,
+   "text": "\":[{\"action\":\"valid"
+  },
+  {
+   "t": 4995,
+   "text": "ate\",\"condition\":\"state."
+  },
+  {
+   "t": 4995,
+   "text": "slot != ''\",\"message\":"
+  },
+  {
+   "t": 4995,
+   "text": "\"Pick a time first"
+  },
+  {
+   "t": 4995,
+   "text": "\",\"variant\":\"warning\""
+  },
+  {
+   "t": 4995,
+   "text": "},{\"action\":\"validate"
+  },
+  {
+   "t": 4995,
+   "text": "\",\"condition\":\"state.name"
+  },
+  {
+   "t": 5048,
+   "text": " != ''\",\"message\":\""
+  },
+  {
+   "t": 5048,
+   "text": "Please enter your name\",\"variant"
+  },
+  {
+   "t": 5058,
+   "text": "\":\"warning\"},{\""
+  },
+  {
+   "t": 5090,
+   "text": "action\":\"validate\",\"condition"
+  },
+  {
+   "t": 5124,
+   "text": "\":\"state.phone != "
+  },
+  {
+   "t": 5159,
+   "text": "''\",\"message\":\"Please en"
+  },
+  {
+   "t": 5252,
+   "text": "ter your phone number"
+  },
+  {
+   "t": 5252,
+   "text": "\",\"variant\":\"warning\""
+  },
+  {
+   "t": 5294,
+   "text": "},{\"action\":\"emit"
+  },
+  {
+   "t": 5296,
+   "text": "\",\"target\":\"booking\",\"value"
+  },
+  {
+   "t": 5330,
+   "text": "\":{\"service\":\"{state"
+  },
+  {
+   "t": 5374,
+   "text": ".service}\",\"barber\":\""
+  },
+  {
+   "t": 5393,
+   "text": "{state.slotBarber"
+  },
+  {
+   "t": 5432,
+   "text": "}\",\"day\":\"{state."
+  },
+  {
+   "t": 5472,
+   "text": "slotDay}\",\"time\":"
+  },
+  {
+   "t": 5498,
+   "text": "\"{state.slotTime"
+  },
+  {
+   "t": 5534,
+   "text": "}\",\"price\":\"{state."
+  },
+  {
+   "t": 5559,
+   "text": "price}\",\"name\":\"{state"
+  },
+  {
+   "t": 5595,
+   "text": ".name}\",\"phone\":\""
+  },
+  {
+   "t": 5629,
+   "text": "{state.phone}\"}"
+  },
+  {
+   "t": 5667,
+   "text": "},{\"action\":\"toast"
+  },
+  {
+   "t": 5693,
+   "text": "\",\"message"
+  },
+  {
+   "t": 5736,
+   "text": "\":\"Booked:"
+  },
+  {
+   "t": 5767,
+   "text": " {state.service} with"
+  },
+  {
+   "t": 5803,
+   "text": " {state.slotBarber"
+  },
+  {
+   "t": 5824,
+   "text": "}, {state.slotD"
+  },
+  {
+   "t": 5860,
+   "text": "ay} at {state.slot"
+  },
+  {
+   "t": 5894,
+   "text": "Time}. See you then,"
+  },
+  {
+   "t": 5923,
+   "text": " {state.name}!\",\"vari"
+  },
+  {
+   "t": 5959,
+   "text": "ant\":\"success\"}]}"
+  },
+  {
+   "t": 5994,
+   "text": "}]}]},"
+  },
+  {
+   "t": 6024,
+   "text": "\"state\":{\"services\":["
+  },
+  {
+   "t": 6063,
+   "text": "{\"name\":\"Hairc"
+  },
+  {
+   "t": 6093,
+   "text": "ut\",\"minutes\":45,"
+  },
+  {
+   "t": 6124,
+   "text": "\"price\":38},{\"name"
+  },
+  {
+   "t": 6162,
+   "text": "\":\"Haircut and be"
+  },
+  {
+   "t": 6191,
+   "text": "ard\",\"minutes\":60,"
+  },
+  {
+   "t": 6226,
+   "text": "\"price\":52},{\"name"
+  },
+  {
+   "t": 6262,
+   "text": "\":\"Beard trim\",\""
+  },
+  {
+   "t": 6292,
+   "text": "minutes\":20,\"price"
+  },
+  {
+   "t": 6328,
+   "text": "\":20}],\"slots\":"
+  },
+  {
+   "t": 6358,
+   "text": "[{\"id\":\"a\",\""
+  },
+  {
+   "t": 6392,
+   "text": "day\":\"Mon 13"
+  },
+  {
+   "t": 6425,
+   "text": "\",\"time\":\"5:15 "
+  },
+  {
+   "t": 6460,
+   "text": "pm\",\"barber\":\""
+  },
+  {
+   "t": 6493,
+   "text": "Sam\"},{\"id\":"
+  },
+  {
+   "t": 6526,
+   "text": "\"b\",\"day\":\"M"
+  },
+  {
+   "t": 6560,
+   "text": "on 13\",\"time\":\"6"
+  },
+  {
+   "t": 6591,
+   "text": ":00 pm\",\"barber"
+  },
+  {
+   "t": 6624,
+   "text": "\":\"Priya\"},{"
+  },
+  {
+   "t": 6658,
+   "text": "\"id\":\"c\",\"day\":"
+  },
+  {
+   "t": 6693,
+   "text": "\"Wed 15\",\"time"
+  },
+  {
+   "t": 6725,
+   "text": "\":\"5:30 pm"
+  },
+  {
+   "t": 6760,
+   "text": "\",\"barber\":\"Sam"
+  },
+  {
+   "t": 6793,
+   "text": "\"},{\"id\":\"d"
+  },
+  {
+   "t": 6829,
+   "text": "\",\"day\":\"Wed "
+  },
+  {
+   "t": 6857,
+   "text": "15\",\"time\":\"6:15"
+  },
+  {
+   "t": 6896,
+   "text": " pm\",\"barber\":\""
+  },
+  {
+   "t": 6928,
+   "text": "Sam\"},{\"id"
+  },
+  {
+   "t": 6963,
+   "text": "\":\"e\",\"day\":\""
+  },
+  {
+   "t": 6991,
+   "text": "Wed 15\",\"time\":\""
+  },
+  {
+   "t": 7025,
+   "text": "6:45 pm\",\"bar"
+  },
+  {
+   "t": 7058,
+   "text": "ber\":\"Priya\"},"
+  },
+  {
+   "t": 7095,
+   "text": "{\"id\":\"f\",\"day"
+  },
+  {
+   "t": 7127,
+   "text": "\":\"Thu 16\",\""
+  },
+  {
+   "t": 7160,
+   "text": "time\":\"5:00 p"
+  },
+  {
+   "t": 7193,
+   "text": "m\",\"barber\":\"Pri"
+  },
+  {
+   "t": 7233,
+   "text": "ya\"},{\"id\":\""
+  },
+  {
+   "t": 7260,
+   "text": "g\",\"day\":\"Fri"
+  },
+  {
+   "t": 7294,
+   "text": " 17\",\"time\":\"5:"
+  },
+  {
+   "t": 7326,
+   "text": "45 pm\",\"barber\":"
+  },
+  {
+   "t": 7358,
+   "text": "\"Sam\"}],\""
+  },
+  {
+   "t": 7392,
+   "text": "service\":\"Haircut\",\""
+  },
+  {
+   "t": 7423,
+   "text": "price\":38,\"minutes"
+  },
+  {
+   "t": 7460,
+   "text": "\":45,\"barber\":\""
+  },
+  {
+   "t": 7491,
+   "text": "Sam\",\"slot\":\""
+  },
+  {
+   "t": 7891,
+   "text": "\",\"slotDay\":\"\",\""
+  },
+  {
+   "t": 7892,
+   "text": "slotTime\":\"\",\"sl"
+  },
+  {
+   "t": 7892,
+   "text": "otBarber\":\"\",\"name"
+  },
+  {
+   "t": 7892,
+   "text": "\":\"\",\"phone\":\"\"}"
+  },
+  {
+   "t": 7892,
+   "text": "}"
+  }
+ ]
+}

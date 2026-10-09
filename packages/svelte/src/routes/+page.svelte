@@ -32,7 +32,8 @@
 	import ScrubPlayer from '$lib/site/scrub/ScrubPlayer.svelte';
 	import { modelName } from '$lib/site/scrub/model-name.js';
 	import { BYOK_URL } from './pawbar/session.svelte.js';
-	import { scenarios } from './live/scenarios.js';
+	import { AUDIENCES, scenarios, type Scenario } from './live/scenarios.js';
+	import { BRANDS } from './live/brands.js';
 	import { SITE_URL, SLIM_MANIFEST_URL } from '$lib/site/docs/model.js';
 	import SpecEditor from '$lib/site/landing/SpecEditor.svelte';
 	import CodeTabs from '$lib/site/landing/CodeTabs.svelte';
@@ -41,12 +42,12 @@
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const INSTALL = 'bun add @ripple-ui/svelte';
 
-	// The bill splitter is fig. 1. The order demo stays on /live: its checkout
-	// posts to /api/checkout unless /live's store handler catches it.
-	const figures = [
-		...scenarios.filter((s) => s.id === 'bill-splitter'),
-		...scenarios.filter((s) => s.id !== 'bill-splitter' && !s.needsStore)
-	];
+	// One recording per audience, the agent-in-the-loop one first. The order
+	// demo stays on /live: its checkout posts to /api/checkout unless /live's
+	// store handler catches it.
+	const HERO = ['refund-approval', 'book-appointment', 'quote-builder', 'bill-splitter'];
+	const figures = HERO.map((id) => scenarios.find((s) => s.id === id)!);
+	const audienceLabel = (s: Scenario) => AUDIENCES.find((a) => a.id === s.audience)!.label;
 
 	let figureId = $state(figures[0].id);
 	let swapped = $state(false);
@@ -54,7 +55,8 @@
 	const caption = $derived.by(() => {
 		const n = figures.indexOf(figure) + 1;
 		const chars = figure.fixture.chunks.reduce((sum, c) => sum + c.text.length, 0).toLocaleString('en-US');
-		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${modelName(figure.fixture.model)}`;
+		const skin = BRANDS[figure.id] ? `, styled as ${BRANDS[figure.id].name}` : '';
+		return `fig. ${n}, ${figure.id.replaceAll('-', ' ')}, ${chars} chars, recorded from ${modelName(figure.fixture.model)}${skin}`;
 	});
 
 	function show(id: string) {
@@ -105,12 +107,12 @@ Follow the Install and Stream a spec pages, then render one spec to check that T
 		</div>
 
 		{#key figure.id}
-			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay holdSkeleton {caption} />
+			<ScrubPlayer fixture={figure.fixture} start={swapped ? 0 : 0.5} autoplay holdSkeleton brand={BRANDS[figure.id]} {caption} />
 		{/key}
 
 		<div class="figures" role="group" aria-label="Recorded streams">
 			{#each figures as s (s.id)}
-				<button type="button" aria-pressed={s.id === figureId} onclick={() => show(s.id)}>{s.title}</button>
+				<button type="button" aria-pressed={s.id === figureId} onclick={() => show(s.id)} title={s.title}>{audienceLabel(s)}</button>
 			{/each}
 		</div>
 

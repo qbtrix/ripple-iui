@@ -147,6 +147,19 @@ describe('ToolCall', () => {
     expect(container.textContent).toContain('Arguments');
   });
 
+  it('follows a status that arrives later (a streamed spec) until the user toggles', async () => {
+    const { container, rerender } = render(ToolCall, { props: { name: 't', status: 'running', args: { q: 1 } } });
+    const trigger = () => container.querySelector('button[aria-expanded]') as HTMLButtonElement;
+    expect(trigger().getAttribute('aria-expanded')).toBe('true');
+    await rerender({ name: 't', status: 'success', args: { q: 1 } });
+    expect(trigger().getAttribute('aria-expanded')).toBe('false');
+    // Once the user opens it, a later status change leaves their choice alone.
+    await fireEvent.click(trigger());
+    await rerender({ name: 't', status: 'running', args: { q: 1 } });
+    await rerender({ name: 't', status: 'success', args: { q: 1 } });
+    expect(trigger().getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('formats durationMs into a compact label', () => {
     const { container } = render(ToolCall, {
       props: { name: 't', status: 'success', durationMs: 1500 },

@@ -27,7 +27,8 @@
 	import type { RippleEvent } from '$lib/index.js';
 	import ScrubPlayer from '$lib/site/scrub/ScrubPlayer.svelte';
 	import { modelName } from '$lib/site/scrub/model-name.js';
-	import { scenarios, type Scenario } from './scenarios.js';
+	import { AUDIENCES, scenarios, type Scenario } from './scenarios.js';
+	import { BRANDS } from './brands.js';
 	import { checkout, isCheckoutEvent, ORDER_SUMMARY_KEY, readReturn, type OrderSummary } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
 
@@ -42,6 +43,9 @@
 	let run = $state(0);
 	let autoplay = $state(false);
 	let tab = $state<'render' | 'spec' | 'prompt'>('render');
+	// The host's brand for the active run, on until the visitor turns it off.
+	let branded = $state(true);
+	const brand = $derived(BRANDS[active.id]);
 	let list = $state<HTMLUListElement>();
 	const narrow = new MediaQuery('(max-width: 767px)', false);
 	const panes = $derived(!narrow.current ? 'both' : tab === 'prompt' ? 'none' : tab);
@@ -161,13 +165,16 @@
 
 	<div class="layout">
 		<ul class="runs" aria-label="Recorded runs" bind:this={list}>
-			{#each scenarios as s (s.id)}
+			{#each AUDIENCES as a (a.id)}
+				<li class="group">{a.label}</li>
+				{#each scenarios.filter((s) => s.audience === a.id) as s (s.id)}
 				<li>
 					<button type="button" class="run" aria-pressed={s.id === active.id} onclick={() => pick(s)}>
 						<span class="run-line"><span class="run-title">{s.title}</span><span class="run-len">{secs(s)}</span></span>
 						<span class="run-line run-sub"><span>{s.category}</span><span class="run-size">{chars(s)} chars</span></span>
 					</button>
 				</li>
+				{/each}
 			{/each}
 		</ul>
 
@@ -179,7 +186,7 @@
 			</div>
 
 			{#key run}
-				<ScrubPlayer fixture={active.fixture} start={1} {autoplay} autoplayFrom={0} holdSkeleton {panes} onEvent={onHostEvent} />
+				<ScrubPlayer fixture={active.fixture} start={1} {autoplay} autoplayFrom={0} holdSkeleton {panes} brand={branded ? brand : undefined} onEvent={onHostEvent} />
 			{/key}
 
 			{#if toast || (checkoutNote && active.needsStore) || events.length}
@@ -197,7 +204,20 @@
 			{/if}
 
 			<div class="about">
+				{#if brand}
+					<div class="skin" role="group" aria-label="Brand">
+						<span>Styled by the host:</span>
+						<button type="button" aria-pressed={branded} onclick={() => (branded = true)}>{brand.name}</button>
+						<button type="button" aria-pressed={!branded} onclick={() => (branded = false)}>Ripple default</button>
+					</div>
+				{/if}
 				<p class="prompt"><span class="who">Prompt</span>{active.fixture.prompt}</p>
+				{#if active.fixture.context}
+					<details class="context">
+						<summary>What the model already knew</summary>
+						<pre>{active.fixture.context}</pre>
+					</details>
+				{/if}
 				<p class="facts">
 					recorded from {modelName(active.fixture.model)} on {active.fixture.recordedAt.slice(0, 10)}, {chars(active)} chars, {secs(active)}
 				</p>
@@ -276,6 +296,17 @@
 		.runs {
 			grid-template-columns: minmax(0, 1fr);
 		}
+	}
+	.group {
+		grid-column: 1 / -1;
+		padding: 10px 12px 2px;
+		font: 600 11px/1.2 var(--font-mono);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--ink-soft);
+	}
+	.group:first-child {
+		padding-top: 4px;
 	}
 	.run {
 		width: 100%;
@@ -388,6 +419,55 @@
 		color: var(--ink-soft);
 		margin-bottom: 4px;
 	}
+	.skin {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+		color: var(--ink-soft);
+	}
+	.skin span {
+		margin-right: 4px;
+	}
+	.skin button {
+		font: inherit;
+		color: inherit;
+		padding: 4px 10px;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: transparent;
+		cursor: pointer;
+	}
+	.skin button[aria-pressed='true'] {
+		color: var(--live-accent-ink);
+		border-color: var(--live-accent);
+	}
+	.skin button:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.context {
+		max-width: 68ch;
+		font-size: 13px;
+		color: var(--ink-soft);
+	}
+	.context summary {
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.context pre {
+		margin: 8px 0 0;
+		padding: 10px 12px;
+		max-height: 18rem;
+		overflow: auto;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+		font: 12px/1.55 var(--font-mono);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-control);
+		background: var(--panel);
+	}
 	.facts {
 		margin: 0;
 		font: 12px/1.5 var(--font-mono);
@@ -422,6 +502,9 @@
 			margin-inline: calc(-1 * var(--site-gutter));
 			padding: 2px var(--site-gutter);
 			scroll-padding-inline: var(--site-gutter);
+		}
+		.runs .group {
+			display: none;
 		}
 		.runs li {
 			flex: none;

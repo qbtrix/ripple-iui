@@ -1,0 +1,922 @@
+{
+ "id": "quote-builder",
+ "title": "Draft a client quote",
+ "prompt": "Draft a quote for Fernhill Bakery: a five-page website, a logo refresh and a year of hosting, with 10% off if they pay upfront.",
+ "context": "You are the assistant inside a small design studio's invoicing app. The person typing works at the studio. The client is Fernhill Bakery, a fictional café. You already have the studio's rate card; do not ask for it.\r\n\r\n- rate_card() -> [{\"item\":\"Website page, design and build\",\"unit\":\"page\",\"price\":650},{\"item\":\"Logo refresh\",\"unit\":\"flat\",\"price\":900},{\"item\":\"Hosting and care plan\",\"unit\":\"month\",\"price\":35},{\"item\":\"Copywriting\",\"unit\":\"page\",\"price\":120}]\r\n- terms() -> {\"upfrontDiscountPercent\":10,\"salesTaxPercent\":8,\"validDays\":30}\r\n\r\nWhat to build: an editable quote, not a static invoice. Line items live in state as an array (name, unit, qty, price). Each row has a quantity number-input and shows its line total as an expression (item.qty * item.price), never a stored copy. The rows are fixed, so the subtotal, discount, tax and total are expressions over the rows themselves (state.lines[0].qty * state.lines[0].price + ...). No set action may have an expression in its \"target\". Include copywriting as an optional line at quantity 0 the user can raise. A switch turns the upfront discount on or off. Show subtotal, discount, tax and total as currency stats. A \"Send quote\" button runs a flow: validate the total is above 0, then an \"emit\" action named \"send_quote\" carrying the lines and total, then a toast. Do not use the \"confirm\" action: this host does not allow it.",
+ "model": "sonnet",
+ "recordedAt": "2026-10-09T18:46:23.768Z",
+ "chunks": [
+  {
+   "t": 0,
+   "text": "{"
+  },
+  {
+   "t": 1,
+   "text": "\"version"
+  },
+  {
+   "t": 1,
+   "text": "\":\"1.0\",\"ui"
+  },
+  {
+   "t": 1,
+   "text": "\":{\"type\":\"card\",\""
+  },
+  {
+   "t": 2,
+   "text": "props\":{\"title\":\""
+  },
+  {
+   "t": 2,
+   "text": "Quote for Fernhill"
+  },
+  {
+   "t": 3,
+   "text": " Bakery\",\"description\":\""
+  },
+  {
+   "t": 3,
+   "text": "Ed"
+  },
+  {
+   "t": 3,
+   "text": "it qu"
+  },
+  {
+   "t": 44,
+   "text": "antities to update"
+  },
+  {
+   "t": 45,
+   "text": " the quote\"},\"children\":"
+  },
+  {
+   "t": 77,
+   "text": "[{\"type\":\"flex"
+  },
+  {
+   "t": 110,
+   "text": "\",\"props\":{\"direction\":"
+  },
+  {
+   "t": 171,
+   "text": "\"column\",\"gap\":\"12"
+  },
+  {
+   "t": 178,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 209,
+   "text": "\"type\":\"each\",\"items"
+  },
+  {
+   "t": 252,
+   "text": "\":\"{state"
+  },
+  {
+   "t": 281,
+   "text": ".lines}\",\"children\":["
+  },
+  {
+   "t": 316,
+   "text": "{\"type\":\"flex\",\""
+  },
+  {
+   "t": 348,
+   "text": "props\":{\"direction\":\""
+  },
+  {
+   "t": 382,
+   "text": "column\",\"gap\":\"6"
+  },
+  {
+   "t": 432,
+   "text": "px\"},\"children\":[{"
+  },
+  {
+   "t": 446,
+   "text": "\"type\":\"text\",\"props\":"
+  },
+  {
+   "t": 481,
+   "text": "{\"text\":\"{item."
+  },
+  {
+   "t": 510,
+   "text": "name}"
+  },
+  {
+   "t": 546,
+   "text": " ({"
+  },
+  {
+   "t": 594,
+   "text": "item.price} per {item."
+  },
+  {
+   "t": 612,
+   "text": "unit})\",\"weight\":\""
+  },
+  {
+   "t": 643,
+   "text": "sem"
+  },
+  {
+   "t": 682,
+   "text": "ibold\",\""
+  },
+  {
+   "t": 758,
+   "text": "size\":\"sm\"}},"
+  },
+  {
+   "t": 836,
+   "text": "{\"type\":\"grid\",\""
+  },
+  {
+   "t": 836,
+   "text": "props\":{\"columns\":2"
+  },
+  {
+   "t": 836,
+   "text": ",\"gap\":\"8px"
+  },
+  {
+   "t": 843,
+   "text": "\"},\"children\":[{\""
+  },
+  {
+   "t": 882,
+   "text": "type\":\"number-input\",\"props"
+  },
+  {
+   "t": 933,
+   "text": "\":{\"label\":\"Q"
+  },
+  {
+   "t": 943,
+   "text": "ty\",\"min\":0,\"step"
+  },
+  {
+   "t": 1218,
+   "text": "\":1},\"bind\":\""
+  },
+  {
+   "t": 1218,
+   "text": "lines.{index}.q"
+  },
+  {
+   "t": 1218,
+   "text": "ty\"},{\"type\":\""
+  },
+  {
+   "t": 1218,
+   "text": "stat\",\"props\":{\"label"
+  },
+  {
+   "t": 1219,
+   "text": "\":\"Line total\",\"value\":"
+  },
+  {
+   "t": 1219,
+   "text": "\"{item.qty * item"
+  },
+  {
+   "t": 1219,
+   "text": ".price}\",\"format\":\"curr"
+  },
+  {
+   "t": 1223,
+   "text": "ency\",\"size\":\"sm\""
+  },
+  {
+   "t": 1253,
+   "text": "}}]}]}"
+  },
+  {
+   "t": 1278,
+   "text": "]},{\"type\":\"separ"
+  },
+  {
+   "t": 1314,
+   "text": "ator\",\""
+  },
+  {
+   "t": 1346,
+   "text": "props\":{}"
+  },
+  {
+   "t": 1376,
+   "text": "},{\"type\":\"switch"
+  },
+  {
+   "t": 1411,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 1455,
+   "text": "Pay upfront for"
+  },
+  {
+   "t": 1479,
+   "text": " a"
+  },
+  {
+   "t": 1521,
+   "text": " discount\"},\"bind\":"
+  },
+  {
+   "t": 1546,
+   "text": "\"{state.upfront}"
+  },
+  {
+   "t": 1610,
+   "text": "\"},{\"type\":\"sl"
+  },
+  {
+   "t": 1614,
+   "text": "ider\",\"props\":{\"label"
+  },
+  {
+   "t": 1645,
+   "text": "\":\"Upfront discount"
+  },
+  {
+   "t": 1832,
+   "text": " %\",\"min\":0,\"max"
+  },
+  {
+   "t": 1832,
+   "text": "\":30,\"step\":1,"
+  },
+  {
+   "t": 1832,
+   "text": "\"showValue\":true},\""
+  },
+  {
+   "t": 1832,
+   "text": "bind\":\"{state.disc"
+  },
+  {
+   "t": 1832,
+   "text": "ountPercent}\"},{"
+  },
+  {
+   "t": 1847,
+   "text": "\"type\":\"slider\",\"props"
+  },
+  {
+   "t": 1887,
+   "text": "\":{\"label\":\"S"
+  },
+  {
+   "t": 1910,
+   "text": "ales tax %\",\"min\":0"
+  },
+  {
+   "t": 1979,
+   "text": ",\"max\":20,\"step"
+  },
+  {
+   "t": 1979,
+   "text": "\":1,\"showValue\":"
+  },
+  {
+   "t": 2027,
+   "text": "true},\"bind\":\"{"
+  },
+  {
+   "t": 2057,
+   "text": "state.taxPercent}"
+  },
+  {
+   "t": 2087,
+   "text": "\"},{\"type\":\"separ"
+  },
+  {
+   "t": 2118,
+   "text": "ator\",\"props\":{}},{"
+  },
+  {
+   "t": 2153,
+   "text": "\"type\":\"grid\",\"props"
+  },
+  {
+   "t": 2179,
+   "text": "\":{\"columns\":2,"
+  },
+  {
+   "t": 2225,
+   "text": "\"gap\":\"8px\""
+  },
+  {
+   "t": 2243,
+   "text": "},\"children\":[{\"type"
+  },
+  {
+   "t": 2279,
+   "text": "\":\"stat\",\"props\":{"
+  },
+  {
+   "t": 2326,
+   "text": "\"label\":\"Subtot"
+  },
+  {
+   "t": 2357,
+   "text": "al\",\"value\":\"{state."
+  },
+  {
+   "t": 2386,
+   "text": "lines[0].qty *"
+  },
+  {
+   "t": 2410,
+   "text": " state.lines[0].price"
+  },
+  {
+   "t": 2444,
+   "text": " + state.lines[1]."
+  },
+  {
+   "t": 2480,
+   "text": "qty * state.lines["
+  },
+  {
+   "t": 2515,
+   "text": "1].price + state.lines"
+  },
+  {
+   "t": 2546,
+   "text": "[2].qty * state."
+  },
+  {
+   "t": 2579,
+   "text": "lines[2].price + state"
+  },
+  {
+   "t": 2612,
+   "text": ".lines[3].qty"
+  },
+  {
+   "t": 2644,
+   "text": " * state.lines[3]."
+  },
+  {
+   "t": 2679,
+   "text": "price}\",\"format\":\"currency"
+  },
+  {
+   "t": 2710,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 2753,
+   "text": "},{\"type\":\"stat"
+  },
+  {
+   "t": 2796,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 2836,
+   "text": "Upfront discount\",\"value"
+  },
+  {
+   "t": 2845,
+   "text": "\":\"{state.upfront"
+  },
+  {
+   "t": 2881,
+   "text": " * (state.lines[0"
+  },
+  {
+   "t": 2913,
+   "text": "].qty * state.lines"
+  },
+  {
+   "t": 2949,
+   "text": "[0].price + state.l"
+  },
+  {
+   "t": 2983,
+   "text": "ines[1].qty * state"
+  },
+  {
+   "t": 3013,
+   "text": ".lines[1].price +"
+  },
+  {
+   "t": 3046,
+   "text": " state.lines[2].q"
+  },
+  {
+   "t": 3081,
+   "text": "ty * state.lines[2"
+  },
+  {
+   "t": 3114,
+   "text": "].price + state.lines["
+  },
+  {
+   "t": 3144,
+   "text": "3].qty * state.l"
+  },
+  {
+   "t": 3179,
+   "text": "ines[3].price) * state"
+  },
+  {
+   "t": 3212,
+   "text": ".discountPercent / "
+  },
+  {
+   "t": 3249,
+   "text": "100}\",\"format\":\"currency"
+  },
+  {
+   "t": 3279,
+   "text": "\",\"size\":\"sm\"}"
+  },
+  {
+   "t": 3313,
+   "text": "},{\"type\":\"stat"
+  },
+  {
+   "t": 3347,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 3378,
+   "text": "S"
+  },
+  {
+   "t": 3413,
+   "text": "ales tax\",\"value\":\"{"
+  },
+  {
+   "t": 3451,
+   "text": "(state.lines[0]."
+  },
+  {
+   "t": 3478,
+   "text": "qty * state.lines["
+  },
+  {
+   "t": 3561,
+   "text": "0].price + state.lines"
+  },
+  {
+   "t": 3561,
+   "text": "[1].qty * state."
+  },
+  {
+   "t": 3578,
+   "text": "lines[1].price + state"
+  },
+  {
+   "t": 3613,
+   "text": ".lines[2].qty"
+  },
+  {
+   "t": 3653,
+   "text": " * state.lines[2]."
+  },
+  {
+   "t": 3699,
+   "text": "price + state.lines[3"
+  },
+  {
+   "t": 3729,
+   "text": "].qty * state.lines"
+  },
+  {
+   "t": 3760,
+   "text": "[3].price) * (1"
+  },
+  {
+   "t": 3795,
+   "text": " - state.upfront *"
+  },
+  {
+   "t": 3842,
+   "text": " state.discountPercent /"
+  },
+  {
+   "t": 3845,
+   "text": " 100) * state.tax"
+  },
+  {
+   "t": 3881,
+   "text": "Percent / 100}\",\""
+  },
+  {
+   "t": 3912,
+   "text": "format\":\"currency\",\"size\":"
+  },
+  {
+   "t": 3945,
+   "text": "\"sm\"}"
+  },
+  {
+   "t": 3977,
+   "text": "},{\"type\":\"stat"
+  },
+  {
+   "t": 4012,
+   "text": "\",\"props\":{\"label\":\""
+  },
+  {
+   "t": 4053,
+   "text": "Total\",\"value\":\"{("
+  },
+  {
+   "t": 4085,
+   "text": "state.lines[0].q"
+  },
+  {
+   "t": 4111,
+   "text": "ty * state.lines[0"
+  },
+  {
+   "t": 4154,
+   "text": "].price + state.lines["
+  },
+  {
+   "t": 4177,
+   "text": "1].qty * state.l"
+  },
+  {
+   "t": 4232,
+   "text": "ines[1].price + state."
+  },
+  {
+   "t": 4258,
+   "text": "lines[2].qty *"
+  },
+  {
+   "t": 4280,
+   "text": " state.lines[2].price"
+  },
+  {
+   "t": 4321,
+   "text": " + state.lines[3]."
+  },
+  {
+   "t": 4345,
+   "text": "qty * state.lines["
+  },
+  {
+   "t": 4382,
+   "text": "3].price) * (1 "
+  },
+  {
+   "t": 4412,
+   "text": "- state.upfront * state"
+  },
+  {
+   "t": 4446,
+   "text": ".discountPercent / "
+  },
+  {
+   "t": 4478,
+   "text": "100) * (1 + state"
+  },
+  {
+   "t": 4527,
+   "text": ".taxPercent / "
+  },
+  {
+   "t": 4547,
+   "text": "100)}\",\"format\":\"curr"
+  },
+  {
+   "t": 4581,
+   "text": "ency\",\"size\":\"md"
+  },
+  {
+   "t": 4617,
+   "text": "\"}}]},{\"type"
+  },
+  {
+   "t": 4681,
+   "text": "\":\"text\",\"props\":{\""
+  },
+  {
+   "t": 4700,
+   "text": "text\":\"Val"
+  },
+  {
+   "t": 4815,
+   "text": "id for {state.validDays"
+  },
+  {
+   "t": 4816,
+   "text": "} days."
+  },
+  {
+   "t": 4816,
+   "text": " Copywriting is optional"
+  },
+  {
+   "t": 4816,
+   "text": ": raise its quantity to"
+  },
+  {
+   "t": 4848,
+   "text": " add it.\",\"size\":\"x"
+  },
+  {
+   "t": 4886,
+   "text": "s\"}},{\"type\":"
+  },
+  {
+   "t": 4922,
+   "text": "\"button\",\"props\":{\"label"
+  },
+  {
+   "t": 4947,
+   "text": "\":\"Send quote\""
+  },
+  {
+   "t": 4981,
+   "text": "},\"on_click\":{\""
+  },
+  {
+   "t": 5013,
+   "text": "action\":\"flow\",\"steps"
+  },
+  {
+   "t": 5047,
+   "text": "\":[{\"action\":\"valid"
+  },
+  {
+   "t": 5080,
+   "text": "ate\",\"condition\":\"state."
+  },
+  {
+   "t": 5117,
+   "text": "lines[0].qty *"
+  },
+  {
+   "t": 5149,
+   "text": " state.lines[0].price"
+  },
+  {
+   "t": 5269,
+   "text": " + state.lines[1]."
+  },
+  {
+   "t": 5269,
+   "text": "qty * state.lines["
+  },
+  {
+   "t": 5269,
+   "text": "1].price + state.lines"
+  },
+  {
+   "t": 5295,
+   "text": "[2].qty * state."
+  },
+  {
+   "t": 5323,
+   "text": "lines[2].price + state"
+  },
+  {
+   "t": 5382,
+   "text": ".lines[3].qty"
+  },
+  {
+   "t": 5396,
+   "text": " * state.lines[3]."
+  },
+  {
+   "t": 5414,
+   "text": "price > 0\",\"message\":\""
+  },
+  {
+   "t": 5448,
+   "text": "Add"
+  },
+  {
+   "t": 5480,
+   "text": " at least one item"
+  },
+  {
+   "t": 5513,
+   "text": " before"
+  },
+  {
+   "t": 5550,
+   "text": " sending\",\"variant\":\"error"
+  },
+  {
+   "t": 5580,
+   "text": "\"},{\"action\":\"em"
+  },
+  {
+   "t": 5627,
+   "text": "it\",\"target\":\"send_qu"
+  },
+  {
+   "t": 5647,
+   "text": "ote\",\"value\":{\"client"
+  },
+  {
+   "t": 5686,
+   "text": "\":\"{"
+  },
+  {
+   "t": 5737,
+   "text": "state.client}\",\"lines\":"
+  },
+  {
+   "t": 5749,
+   "text": "\"{state.lines}\",\""
+  },
+  {
+   "t": 5781,
+   "text": "upfront"
+  },
+  {
+   "t": 5824,
+   "text": "\":\"{state.upfront"
+  },
+  {
+   "t": 5885,
+   "text": "}\",\"total\":\"{(state"
+  },
+  {
+   "t": 5891,
+   "text": ".lines[0].qty"
+  },
+  {
+   "t": 5984,
+   "text": " * state.lines[0]."
+  },
+  {
+   "t": 5984,
+   "text": "price + state.lines[1"
+  },
+  {
+   "t": 5984,
+   "text": "].qty * state.lines"
+  },
+  {
+   "t": 6018,
+   "text": "[1].price + state.l"
+  },
+  {
+   "t": 6052,
+   "text": "ines[2].qty * state"
+  },
+  {
+   "t": 6081,
+   "text": ".lines[2].price +"
+  },
+  {
+   "t": 6113,
+   "text": " state.lines[3].q"
+  },
+  {
+   "t": 6151,
+   "text": "ty * state.lines[3"
+  },
+  {
+   "t": 6193,
+   "text": "].price) * (1 -"
+  },
+  {
+   "t": 6229,
+   "text": " state.upfront * state."
+  },
+  {
+   "t": 6262,
+   "text": "discountPercent / 100"
+  },
+  {
+   "t": 6285,
+   "text": ") * (1 + state."
+  },
+  {
+   "t": 6313,
+   "text": "taxPercent / 100"
+  },
+  {
+   "t": 6353,
+   "text": ")}\"}},"
+  },
+  {
+   "t": 6381,
+   "text": "{\"action\":\"toast\",\""
+  },
+  {
+   "t": 6413,
+   "text": "message\":\"Quote sent"
+  },
+  {
+   "t": 6446,
+   "text": " to {state.client}\",\"vari"
+  },
+  {
+   "t": 6480,
+   "text": "ant\":\"success\"}]}"
+  },
+  {
+   "t": 6512,
+   "text": "}]}]},"
+  },
+  {
+   "t": 6547,
+   "text": "\"state\":{\"client\":\""
+  },
+  {
+   "t": 6582,
+   "text": "Fernhill Bak"
+  },
+  {
+   "t": 6620,
+   "text": "ery\",\"upfront\":true,"
+  },
+  {
+   "t": 6647,
+   "text": "\"discountPercent\":10"
+  },
+  {
+   "t": 6692,
+   "text": ",\"taxPercent\":"
+  },
+  {
+   "t": 6718,
+   "text": "8,\"validDays\":30"
+  },
+  {
+   "t": 6751,
+   "text": ",\"lines\":[{\""
+  },
+  {
+   "t": 6783,
+   "text": "name\":\"Website page, design"
+  },
+  {
+   "t": 6822,
+   "text": " and build\",\"unit\":\"page"
+  },
+  {
+   "t": 6848,
+   "text": "\",\"qty\":5,\"price"
+  },
+  {
+   "t": 6891,
+   "text": "\":650},{\"name\":\""
+  },
+  {
+   "t": 6919,
+   "text": "Logo refresh\",\"un"
+  },
+  {
+   "t": 6972,
+   "text": "it\":\"flat\",\"qty"
+  },
+  {
+   "t": 7012,
+   "text": "\":1,\"price\":900},"
+  },
+  {
+   "t": 7014,
+   "text": "{\"name\":\"Hos"
+  },
+  {
+   "t": 7061,
+   "text": "ting and care plan\",\"unit"
+  },
+  {
+   "t": 7100,
+   "text": "\":\"month\",\"qty\":12"
+  },
+  {
+   "t": 7114,
+   "text": ",\"price\":35},{\""
+  },
+  {
+   "t": 7151,
+   "text": "name\":\"Copywriting"
+  },
+  {
+   "t": 7184,
+   "text": "\",\""
+  },
+  {
+   "t": 7221,
+   "text": "unit\":\"page\",\"qty"
+  },
+  {
+   "t": 7283,
+   "text": "\":0,\"price\":120}"
+  },
+  {
+   "t": 7291,
+   "text": "]}}"
+  }
+ ]
+}

@@ -19,7 +19,9 @@
       folds under it in a <details>, open in the prerender. Wide: spec left,
       render right, the summary hidden while open.
     - A fixture change resets the clock and remounts Ripple (fresh app state).
-    - Optional host hooks: `onEvent` goes to Ripple as-is (its return value is
+    - Optional host hooks: `brand` goes to Ripple as-is (the host's skin, so
+      one recording can render in a shop's look) and also paints the render
+      pane, so the shop's ground surrounds the card; `onEvent` goes to Ripple as-is (its return value is
       the action result, so a spec's on_error runs); `panes` ('render',
       'spec' or 'none') overrides the fold and the split at every width, so
       a page can drive its own tabs, and 'both' (default) keeps them; `autoplayFrom`
@@ -37,6 +39,7 @@
 	import Ripple from '$lib/Ripple.svelte';
 	import type { StreamSpecStore } from '$lib/streaming/types.js';
 	import type { OnEventCallback } from '$lib/index.js';
+	import { brandToStyleString, type BrandPack } from '@ripple-ui/core';
 	import JsonLines from '../JsonLines.svelte';
 	import { createScrubModel, type Recording } from './scrub-model.js';
 
@@ -49,6 +52,8 @@
 		/** Figure caption, e.g. "fig. 1, bill splitter, 2,794 chars". */
 		caption?: string;
 		class?: string;
+		/** The host's brand pack, applied to the render. */
+		brand?: BrandPack;
 		/** Host handler for the render's events; its result goes back to Ripple. */
 		onEvent?: OnEventCallback;
 		/** Which panes to show. Default both (stacked when narrow). */
@@ -59,7 +64,7 @@
 		holdSkeleton?: boolean;
 	}
 
-	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '', onEvent, panes = 'both', autoplayFrom, holdSkeleton = false }: Props = $props();
+	let { fixture, start = 0.5, autoplay = false, speed = 1, caption, class: className = '', brand, onEvent, panes = 'both', autoplayFrom, holdSkeleton = false }: Props = $props();
 
 	const SPEEDS = [0.5, 1, 2];
 	const model = $derived(createScrubModel(fixture));
@@ -177,9 +182,9 @@
 
 <figure class="scrub {className}" class:playing>
 	<div class="panes" data-show={panes}>
-		<div class="render" data-pagefind-ignore="all">
+		<div class="render" data-pagefind-ignore="all" style={brand ? brandToStyleString(brand) : undefined}>
 			{#key model}
-				<Ripple streaming={store} skeleton="card" {onEvent} />
+				<Ripple streaming={store} skeleton="card" {brand} {onEvent} />
 			{/key}
 		</div>
 		<!-- Set only on a pane change, so a reader's fold survives; the Spec tab reopens it. -->
@@ -356,6 +361,8 @@
 		overflow: auto;
 		padding: 20px;
 		background: var(--background);
+		color: var(--foreground);
+		transition: background-color 0.2s;
 	}
 
 	@container (min-width: 760px) {
