@@ -69,7 +69,7 @@
 	const atEnd = $derived(count === model.total);
 	const shown = $derived.by(() => {
 		const s = model.spec(count);
-		return holdSkeleton && !atEnd && s && !s.ui && !s.intent ? null : s;
+		return holdSkeleton && !atEnd && s && !('ui' in s && s.ui) && !('intent' in s && s.intent) ? null : s;
 	});
 	const store: StreamSpecStore = $derived({ current: shown, done: atEnd, error: null, cancel() {} });
 	const pct = $derived(model.duration ? (ms / model.duration) * 100 : 0);
