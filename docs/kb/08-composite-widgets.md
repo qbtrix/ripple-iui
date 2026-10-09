@@ -2,7 +2,7 @@
 
 Composite widgets are full-pane typed layouts. Emit ONE node and the whole pattern (header + body + actions) renders — don't rebuild these out of `flex` + `card` + inputs. Two flavors:
 
-1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, `booking`, the dashboard variants) — pre-composed business surfaces.
+1. **Composite layouts** (`comparison-layout`, `entity-detail`, `form-layout`, `wizard-layout`, `checklist-layout`, `report-layout`, `invoice-layout`, `order-status`, `booking`, `recipe`, `meal-plan`, the dashboard variants) — pre-composed business surfaces.
 2. **Specialized canvases** (`terminal`, `workflow`, `c4`) — niche widgets for CLI output, flow diagrams, and architecture diagrams.
 
 Refer to `dist/manifest.json` (or `get_widget_spec` from an agent) for the exact prop schema of each — this page covers shape and intended use.
@@ -68,6 +68,25 @@ Day-by-day trip plan (aliases `trip-plan`, `travel-itinerary`). Answers "plan 5 
 A table or service booking inside a chat card, in four stages: what (service, party size), when (a 7-day strip, then that day's slots), details (name, email or phone, notes), review. One main button per stage.
 The server fills `services`, `days` and `tz` from the store and attaches `on_book`; the model writes only `party` and `preferred` (`"Friday evening"` is `{ date: "2026-10-16", after: "18:00" }`), which pre-selects the open slot nearest the ask. Slot times and day labels come from the store's own strings, so the browser never parses a date. Full slots stay visible and disabled.
 Book fires `on_book` with `{ service_id, start, party?, customer: { name, email?, phone? }, notes? }`, validated on the client the way the host re-validates it. The host answers through props: `confirmed` shows the confirmation (booking reference, date, time, party) with no more actions; `notice` shows a message, and a slot-taken notice (`code: "slot_taken"`, with the slot's `start`) returns to the times with that slot marked Full. `bind` holds `selection`, the request in progress. Aliases: `reservation`, `appointment`.
+
+### recipe
+
+One dish you can cook from (alias `recipe-card`). Answers "give me a recipe for X".
+
+- `name`, `serves` (the servings the quantities are written for), `minutes`, `kcal` and `protein_g` PER SERVING, `kind` (`breakfast | lunch | dinner | snack`, the icon when there is no photo), `difficulty`, `tags[]`.
+- `ingredients[]` `{ name, qty?, unit?, note?, aisle? }`: `qty` is a NUMBER (1.5, never "1 1/2") with a separate `unit`; the widget prints cook's fractions (1½, ¾, ⅓) and agrees counted units with the number (1 can, 2 cans). Omit `unit` for counted things ("2" eggs).
+- `steps[]` `{ text, minutes?, tip? }`: numbered and tickable, `minutes` shows a timer chip, `tip` sits under the step. Ingredients and steps stack below 720px and sit side by side above it; there are no tabs.
+- Bind `servings` (`bind: "{state.servings}"`): the stepper multiplies every numeric `qty` by `servings / serves`. Without a usable `serves` nothing scales. Nutrition does not scale. `goal.protein_g` shows a serving's share of the daily goal.
+
+### meal-plan
+
+A week of meals (aliases `meal-planner`, `weekly-meal-plan`). Answers "a high-protein meal plan for the week; let me swap meals, set how many people, keep a shopping list".
+
+- `recipes[]` is the library, each recipe written once (the `recipe` shape, with an `id`). `days[]` `{ day, meals[{ slot, recipe }] }` point into it by id (a name also matches); a day's `label` is read when `day` is missing.
+- `goal` `{ protein_g?, kcal? }` is per person per day: each day shows its protein (or calories) against it, and the header shows the daily averages and the week's per-person total.
+- Swap: a select per meal offers the recipes of that slot's kind (and kind-less ones). Tap a meal to open its recipe inline, scaled to `people`.
+- Shopping list: derived, never written. Every planned meal's ingredients, times `people / serves`, summed by name + unit, grouped by aisle, tickable.
+- Bind `people` (`bind: "{state.people}"`). Swaps and ticks stay in the widget (Svelte callers can `bind:days` and `bind:got`), and a host re-rendering the same spec does not undo them. A meal whose recipe has not arrived renders a skeleton row.
 
 ### Dashboard variants
 
