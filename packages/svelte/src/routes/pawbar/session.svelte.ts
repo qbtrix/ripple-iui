@@ -17,7 +17,11 @@
 // final card's `emit checkout` (menu-order's Cart) goes to live/checkout.ts, and
 // the payment link it returns becomes the card's `pay` (a PayCard under the
 // card, which polls the order and turns into tracking; retryCheckout() starts
-// a new one after a cancel). The page never navigates. `emit book` (booking's request) goes to
+// a new one after a cancel). The page never navigates. While a card's order is
+// pending or paid, another checkout from it opens no new session: it nudges
+// the pay card into view (payNudge); only `cancelled` frees it. The open order
+// is kept in sessionStorage (pay/resume.ts) and resume() brings it back as
+// `resumed`, for a pay link that navigated this tab away. `emit book` (booking's request) goes to
 // book.ts, and the answer is patched into the booking node's props (`notice`,
 // `confirmed`, fresh `days`) with a BookingReceipt under the card on 201. One
 // checkout or booking in flight per session. A final card's `emit ask` ({text})
@@ -32,6 +36,8 @@
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
 import { checkout, type Pay } from '../live/checkout.js';
+import { clearOrder, loadOrder, saveOrder, type Saved } from '../pay/resume.js';
+import type { Phase } from '../pay/watch.svelte.js';
 import { book, bookingProps, patchBooking, reloadDays, toBookingRequest, type Booked } from './book.js';
 import { ASK_MAX, refuseCard, textRefusal } from './card-policy.js';
 import { parseSSE, readText, segments, type SSEFrame } from './sse.js';
@@ -209,6 +215,10 @@ export class Card {
 	receipt = $state<{ booking: Booked; durationMin?: number; place?: string } | null>(null);
 	/** A checkout the store opened from this card, for the pay card under it. */
 	pay = $state.raw<Pay | null>(null);
+	/** Where that order is, as the pay card last saw it. */
+	payPhase = $state<Phase | null>(null);
+	/** Bumped when a second checkout should bring the pay card into view instead. */
+	payNudge = $state(0);
 	/** The Cart that opened it, so a cancelled payment can start a new checkout. */
 	cart: unknown = null;
 	readonly store: StreamSpecStore;
@@ -324,6 +334,8 @@ const MAX_RUN = 1_000_000;
 export class ChatSession {
 	turns = $state<Turn[]>([]);
 	busy = $state(false);
+	/** An order saved before this page loaded (resume()). */
+	resumed = $state.raw<Saved | null>(null);
 	#abort: AbortController | null = null;
 	/** A checkout or booking is on its way to the store. */
 	#hostBusy = false;
@@ -427,7 +439,25 @@ export class ChatSession {
 		else void this.send(text);
 	}
 
+	/** Brings back the order a same-tab payment left in sessionStorage, if it still validates. */
+	resume() {
+		if (!this.store) return;
+		this.resumed = loadOrder({ pageOrigin: this.store.pageOrigin ?? location.origin, storeUrl: this.store.storeUrl });
+	}
+
+	/** The pay card's phase: kept on the card (null for the resumed one) and in sessionStorage. */
+	notePhase(card: Card | null, pay: Pay, phase: Phase) {
+		if (card) card.payPhase = phase;
+		if (phase === 'pending') saveOrder(pay, 'pending');
+		else if (phase === 'tracking') saveOrder(pay, 'paid');
+		else clearOrder(pay.sessionId);
+	}
+
 	async #checkout(card: Card, store: StoreHost, cart: unknown) {
+		if (card.pay && card.payPhase !== 'cancelled') {
+			card.payNudge++;
+			return;
+		}
 		if (this.#hostBusy) return void (card.note = { kind: 'error', text: 'Another order or booking is still on its way. Try again in a moment.' });
 		this.#hostBusy = true;
 		card.note = { kind: 'busy', text: 'Opening the store checkout...' };
@@ -435,8 +465,10 @@ export class ChatSession {
 			const result = await checkout(cart, { storeUrl: store.storeUrl, fetch: store.fetch, pageOrigin: store.pageOrigin ?? location.origin });
 			if (result.ok) {
 				card.pay = result.data;
+				card.payPhase = 'pending';
 				card.cart = cart;
 				card.note = null;
+				saveOrder(result.data, 'pending');
 			} else card.note = { kind: 'error', text: result.error.message };
 		} finally {
 			this.#hostBusy = false;

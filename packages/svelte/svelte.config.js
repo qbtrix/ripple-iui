@@ -17,8 +17,8 @@ import { loadEnv } from 'vite';
 // localhost for the mock and Vite's HMR socket. img-src allows the two image
 // hosts the showcase uses (its news feed's favicon service stays blocked) and
 // the store's origin, which serves the menu photos in a menu-order card, and
-// CARTO's basemap tiles (a-d subdomains), which the tracking card's
-// `order-status` map loads (carto-dark, or carto-voyager in light mode).
+// OpenStreetMap's tile server, which the tracking card's `order-status` map
+// loads (its `osm` preset).
 // 'unsafe-hashes' plus one hash admits exactly the `this.__e=event` attribute
 // Svelte's SSR puts on <img> so hydration can replay a load event.
 // frame-ancestors cannot be set from a meta tag.
@@ -56,7 +56,7 @@ const config = {
 				'default-src': ['self'],
 				'script-src': ['self', 'unsafe-hashes', 'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='],
 				'style-src': ['self', 'unsafe-inline'],
-				'img-src': ['self', 'data:', 'https://images.unsplash.com', 'https://i.pravatar.cc', 'https://*.basemaps.cartocdn.com', ...(storeOrigin ? [storeOrigin] : [])],
+				'img-src': ['self', 'data:', 'https://images.unsplash.com', 'https://i.pravatar.cc', 'https://tile.openstreetmap.org', ...(storeOrigin ? [storeOrigin] : [])],
 				'font-src': ['self'],
 				'connect-src': connectSrc,
 				'frame-src': ['none'],

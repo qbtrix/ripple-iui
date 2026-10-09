@@ -7,17 +7,24 @@
     (pay/watch.svelte.ts) polls the store from mount until unmount; /pay/done's
     BroadcastChannel ping only makes it poll sooner. Pending shows "Waiting for
     payment", cancelled offers a new checkout (onretry), and paid swaps the
-    card for a TrackCard. The store's total and items win over the cart's once
+    card for a TrackCard. Every phase change goes to onphase (the session
+    keeps it on the card and in sessionStorage). The store's total and items win over the cart's once
     the store answers. All text is plain; nothing goes through {@html}.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Pay } from '../live/checkout.js';
-	import { OrderWatch, type WatchDeps } from '../pay/watch.svelte.js';
+	import { OrderWatch, type Phase, type WatchDeps } from '../pay/watch.svelte.js';
 	import TrackCard from './TrackCard.svelte';
 
-	let { pay, storeUrl, fetch, channel, onretry }: { pay: Pay; storeUrl: string; fetch?: typeof globalThis.fetch; channel?: WatchDeps['channel']; onretry?: () => void } =
-		$props();
+	let {
+		pay,
+		storeUrl,
+		fetch,
+		channel,
+		onretry,
+		onphase
+	}: { pay: Pay; storeUrl: string; fetch?: typeof globalThis.fetch; channel?: WatchDeps['channel']; onretry?: () => void; onphase?: (phase: Phase) => void } = $props();
 
 	// svelte-ignore state_referenced_locally
 	const watch = new OrderWatch(pay.sessionId, { storeUrl, fetch, channel });
@@ -25,6 +32,7 @@
 		watch.start();
 		return () => watch.stop();
 	});
+	$effect(() => onphase?.(watch.phase));
 
 	const money = (n: number) => `$${n.toFixed(2)}`;
 	const total = $derived(watch.order?.total ?? pay.summary.total);

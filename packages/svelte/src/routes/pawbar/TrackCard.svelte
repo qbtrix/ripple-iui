@@ -5,7 +5,9 @@
     courier, the activity list). The spec is fixed (pay/orders.ts trackSpec)
     and never comes from the model; each poll only changes the `state` prop,
     which Ripple syncs key by key, so the card and its map never remount and
-    keep the visitor's pan and zoom. Map tiles follow the site theme at mount.
+    keep the visitor's pan and zoom. Tiles are OpenStreetMap's (`osm` preset,
+    attribution kept); on the dark theme a filter scoped to this card's tile
+    pane darkens them, leaving markers and the route untouched.
 -->
 <script lang="ts">
 	import { Ripple } from '$lib/index.js';
@@ -13,8 +15,7 @@
 
 	let { orderId, tracking, fulfilment }: { orderId: string; tracking: Tracking; fulfilment: Order['fulfilment'] } = $props();
 
-	const dark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-	const spec = trackSpec(dark ? 'carto-dark' : 'carto-voyager');
+	const spec = trackSpec();
 	const state = $derived(trackState(orderId, tracking, fulfilment));
 </script>
 
@@ -29,5 +30,8 @@
 		border-radius: var(--radius-paw);
 		background: var(--site-panel, color-mix(in oklch, var(--background) 82%, transparent));
 		min-width: 0;
+	}
+	:global(.dark) .track :global(.leaflet-tile-pane) {
+		filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
 	}
 </style>

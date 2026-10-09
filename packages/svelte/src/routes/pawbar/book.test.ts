@@ -9,6 +9,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent } from '$lib/index.js';
 import { book, bookingIcs, patchBooking, reloadDays, SLOT_TAKEN, toBookingRequest } from './book.js';
 import { ChatSession, type Card, type Transport } from './session.svelte.js';
+import { ORDER_KEY } from '../pay/resume.js';
 
 const STORE = 'http://store.test/test-store';
 const START = '2026-10-16T19:00:00-04:00';
@@ -208,6 +209,27 @@ describe('ChatSession host events', () => {
 		expect(location.href).toBe(href);
 	});
 
+	test('while the order is pending or paid, a second checkout opens no session and nudges the pay card', async () => {
+		sessionStorage.clear();
+		const fetch = vi.fn(async () => new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_1', sessionId: 'cs_1' })));
+		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
+		await session.hostEvent(card, emit('checkout', cart));
+		expect(JSON.parse(sessionStorage.getItem(ORDER_KEY)!)).toMatchObject({ sessionId: 'cs_1', status: 'pending' });
+		await session.hostEvent(card, emit('checkout', cart));
+		expect(fetch).toHaveBeenCalledOnce();
+		expect(card.payNudge).toBe(1);
+		session.notePhase(card, card.pay!, 'tracking');
+		expect(JSON.parse(sessionStorage.getItem(ORDER_KEY)!).status).toBe('paid');
+		await session.hostEvent(card, emit('checkout', cart));
+		expect(fetch).toHaveBeenCalledOnce();
+		expect(card.payNudge).toBe(2);
+		expect(card.pay?.sessionId).toBe('cs_1');
+		session.notePhase(card, card.pay!, 'cancelled');
+		expect(sessionStorage.getItem(ORDER_KEY)).toBeNull();
+		await session.hostEvent(card, emit('checkout', cart));
+		expect(fetch).toHaveBeenCalledTimes(2);
+	});
+
 	test('a pay link off the allowlist never reaches the card', async () => {
 		const fetch = reply(200, { url: 'https://evil.example/pay', sessionId: 'cs_test_1' });
 		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
@@ -223,6 +245,7 @@ describe('ChatSession host events', () => {
 			.mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_2', sessionId: 'cs_2' })));
 		const { session, card } = await finalCard(menuSpec, { storeUrl: STORE, fetch, pageOrigin: 'https://ripple.example' });
 		await session.hostEvent(card, emit('checkout', cart));
+		session.notePhase(card, card.pay!, 'cancelled');
 		await session.retryCheckout(card);
 		expect(fetch.mock.calls[1][1].body).toBe(fetch.mock.calls[0][1].body);
 		expect(card.pay?.sessionId).toBe('cs_2');

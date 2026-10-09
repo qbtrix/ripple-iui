@@ -100,9 +100,9 @@ describe('fetchOrder / fetchTracking', () => {
 
 describe('trackSpec / trackState', () => {
 	test('the spec is a fixed order-status bound to state, never model input', () => {
-		const spec = trackSpec('carto-dark');
+		const spec = trackSpec();
 		expect(spec.ui.type).toBe('order-status');
-		expect(spec.ui.props).toMatchObject({ tracker: '{state.tracker}', route: '{state.route}', mapTiles: 'carto-dark', showMap: true });
+		expect(spec.ui.props).toMatchObject({ tracker: '{state.tracker}', route: '{state.route}', mapTiles: 'osm', showMap: true });
 	});
 
 	test('maps restaurant, drop-off, courier, route and steps onto order-status props', () => {

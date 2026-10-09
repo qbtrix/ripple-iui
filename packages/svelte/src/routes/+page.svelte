@@ -129,7 +129,11 @@
 		}
 	}
 
-	onMount(() => () => session.stop());
+	onMount(() => {
+		// A pay link that opened in this tab comes back here: bring its order back.
+		session.resume();
+		return () => session.stop();
+	});
 </script>
 
 <svelte:head>

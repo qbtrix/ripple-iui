@@ -159,7 +159,7 @@ const clock = (at: string) => {
 };
 
 /** The fixed tracking spec: every prop reads the host-filled state below. */
-export function trackSpec(tiles: 'carto-dark' | 'carto-voyager') {
+export function trackSpec() {
 	const bind = (k: string) => `{state.${k}}`;
 	const keys = ['orderId', 'title', 'steps', 'currentStep', 'eta', 'origin', 'destination', 'tracker', 'route', 'events'];
 	return {
@@ -167,7 +167,7 @@ export function trackSpec(tiles: 'carto-dark' | 'carto-voyager') {
 		ui: {
 			type: 'order-status',
 			id: 'order-track',
-			props: { ...Object.fromEntries(keys.map((k) => [k, bind(k)])), showMap: true, mapHeight: '260px', mapTiles: tiles }
+			props: { ...Object.fromEntries(keys.map((k) => [k, bind(k)])), showMap: true, mapHeight: '260px', mapTiles: 'osm' }
 		}
 	};
 }

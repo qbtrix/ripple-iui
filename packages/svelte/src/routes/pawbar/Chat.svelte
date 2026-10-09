@@ -8,8 +8,10 @@
     remount, so the validated spec is what the visitor keeps using). Host
     events go to session.hostEvent, which ignores them until the card is final;
     a checkout's progress or failure shows as the card's note, an opened one as
-    a PayCard under the card (keyed by session, so a retry starts fresh), and a
-    confirmed booking as a BookingReceipt under the card. A finished flow card hands its
+    a PayCard under the card (keyed by session, so a retry starts fresh; a
+    second checkout while it is open scrolls it into view), and a confirmed
+    booking as a BookingReceipt under the card. An order resumed from
+    sessionStorage (session.resumed) shows its PayCard above the log. A finished flow card hands its
     result to session.flowComplete; it and a card's `ask` arrive as the visitor's
     next message, and each new visitor message scrolls into view, however it was
     sent. A notice that offers a replay gets a button that plays the closest
@@ -73,6 +75,18 @@
 						: { kind: 't', v }
 			);
 
+	/** Scrolls the pay card into view and focuses its first control each time `nudge` grows. */
+	function reveal(node: HTMLElement, nudge: number) {
+		return {
+			update(next: number) {
+				if (next <= nudge) return;
+				nudge = next;
+				node.scrollIntoView?.({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				node.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });
+			}
+		};
+	}
+
 	const rejectedNote = (c: Card) =>
 		c.reason === 'truncated' || c.reason === 'server:truncated'
 			? 'The card was cut off before it finished, so it is left out.'
@@ -105,14 +119,30 @@
 		</div>
 		{#if card.receipt}<BookingReceipt {...card.receipt} />{/if}
 		{#if card.pay && session.store}
-			{#key card.pay.sessionId}
-				<PayCard pay={card.pay} storeUrl={session.store.storeUrl} fetch={session.store.fetch} onretry={() => session.retryCheckout(card)} />
-			{/key}
+			{@const pay = card.pay}
+			<div class="pay-slot" use:reveal={card.payNudge}>
+				{#key pay.sessionId}
+					<PayCard
+						{pay}
+						storeUrl={session.store.storeUrl}
+						fetch={session.store.fetch}
+						onretry={() => session.retryCheckout(card)}
+						onphase={(p) => session.notePhase(card, pay, p)}
+					/>
+				{/key}
+			</div>
 		{/if}
 	{/if}
 {/snippet}
 
 <div class="chat">
+	{#if session.resumed && session.store}
+		{@const pay = session.resumed}
+		<section class="resumed" aria-label="Your order">
+			<p class="say">Your order from before:</p>
+			<PayCard {pay} storeUrl={session.store.storeUrl} fetch={session.store.fetch} onphase={(p) => session.notePhase(null, pay, p)} />
+		</section>
+	{/if}
 	{#if session.turns.length}
 		<ol class="log" bind:this={log} aria-label="Conversation">
 			{#each session.turns as turn (turn.id)}
@@ -275,6 +305,11 @@
 	}
 	.card[data-status='streaming'] {
 		border-color: color-mix(in oklch, var(--primary) 55%, transparent);
+	}
+	.resumed {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 	.card-note,
 	.chat-note {

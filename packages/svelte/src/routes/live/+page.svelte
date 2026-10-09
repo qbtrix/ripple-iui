@@ -27,6 +27,7 @@
 	import { checkout, isCheckoutEvent, readReturn, type Pay } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
 	import PayCard from '../pawbar/PayCard.svelte';
+	import type { Phase } from '../pay/watch.svelte.js';
 
 	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
 
@@ -82,6 +83,7 @@
 	let checkoutNote = $state<{ busy: boolean; text: string } | null>(null);
 	let receipt = $state<{ order: string | null; mock: boolean; cancelled: boolean } | null>(null);
 	let pay = $state.raw<Pay | null>(null);
+	let payPhase = $state<Phase | null>(null);
 	let lastOrder: unknown = null;
 	let events = $state<{ id: number; text: string }[]>([]);
 	let toast = $state<{ id: number; message: string; variant: string } | null>(null);
@@ -104,6 +106,8 @@
 	async function placeOrder(body: unknown) {
 		// One checkout at a time: a double click would open two store sessions.
 		if (checkoutNote?.busy) return { ok: false, error: { message: 'Checkout is already opening.' } };
+		// An open order keeps its session: only a cancelled one may start another.
+		if (pay && payPhase !== 'cancelled') return { ok: false, error: { message: 'This order is already open below.' } };
 		checkoutNote = { busy: true, text: 'Opening the store checkout...' };
 		const result = await checkout(body, { storeUrl: STORE_URL, pageOrigin: location.origin });
 		if (result.ok) {
@@ -210,7 +214,7 @@
 					{/if}
 				</div>
 				{#if pay && active.needsStore}
-					{#key pay.sessionId}<PayCard {pay} storeUrl={STORE_URL} onretry={() => placeOrder(lastOrder)} />{/key}
+					{#key pay.sessionId}<PayCard {pay} storeUrl={STORE_URL} onretry={() => placeOrder(lastOrder)} onphase={(p) => (payPhase = p)} />{/key}
 				{/if}
 				{#if checkoutNote && active.needsStore}
 					<p class="checkout-note" role={checkoutNote.busy ? 'status' : 'alert'} data-busy={checkoutNote.busy}>
