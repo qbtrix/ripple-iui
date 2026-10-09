@@ -12,6 +12,7 @@ import Ripple from '$lib/Ripple.svelte';
 import { expectStreamParity } from '$lib/streaming/__fixtures__/stream-parity.js';
 import { getWidget, hasWidget } from '../index.js';
 import { _resetBindContractWarnings, getBindContract, warnUnregisteredBindContract } from '@ripple-ui/core';
+import type { ComponentProps } from 'svelte';
 import ExecDashboard from './ExecDashboard.svelte';
 
 afterEach(() => {
@@ -28,7 +29,7 @@ const orders = () => [
 	{ id: 'o6', date: '2026-09-27', region: 'West', channel: 'Social', amount: 140 }
 ];
 
-const salesProps = () => ({
+const salesProps = (): ComponentProps<typeof ExecDashboard> => ({
 	title: 'Q3 sales',
 	rows: orders(),
 	measures: [

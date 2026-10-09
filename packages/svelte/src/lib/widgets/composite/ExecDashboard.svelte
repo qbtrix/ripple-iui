@@ -151,10 +151,11 @@
     | Record<string, unknown>[]
     | { [key: string]: Record<string, unknown>[] | undefined };
 
+  /** KPI mode: `columns` and `rows` render as given. Rows mode: only `title` and `columns` are read. */
   interface TableConfig {
     title?: string;
-    columns: { key: string; label: string; align?: 'left' | 'right' | 'center' }[];
-    rows: TableRows;
+    columns?: { key: string; label: string; align?: 'left' | 'right' | 'center' }[];
+    rows?: TableRows;
   }
 
   interface EmptyState {
@@ -409,12 +410,12 @@
     return Array.isArray(first) ? first : [];
   }
 
-  function resolveTableRows(rows: TableRows | undefined, keys: string[]): Record<string, unknown>[] {
-    if (!rows) return [];
-    if (Array.isArray(rows)) return rows;
-    const match = pickKeyed(rows, keys);
+  function resolveTableRows(tableRows: TableRows | undefined, keys: string[]): Record<string, unknown>[] {
+    if (!tableRows) return [];
+    if (Array.isArray(tableRows)) return tableRows;
+    const match = pickKeyed(tableRows, keys);
     if (match) return match;
-    const first = firstDefined(rows);
+    const first = firstDefined(tableRows);
     return Array.isArray(first) ? first : [];
   }
 
@@ -843,7 +844,7 @@
         {#if table.title}<div class="rdash-card-title">{table.title}</div>{/if}
         {#if resolvedTableRows.length > 0}
           <div class="rdash-scroll-x rdash-table-wrap">
-            <Table columns={table.columns} rows={resolvedTableRows} />
+            <Table columns={table.columns ?? []} rows={resolvedTableRows} />
           </div>
         {:else}
           <div class="rdash-section-empty rdash-section-empty-flat">
