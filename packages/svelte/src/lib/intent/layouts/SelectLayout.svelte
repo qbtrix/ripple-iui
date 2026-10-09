@@ -1,6 +1,5 @@
 <!--
   SelectLayout.svelte — designed selection layout for intent='select' (Wave 3: layouts).
-  Created 2026-06-07.
 
   Two sub-modes unified here:
 
@@ -12,12 +11,18 @@
   on the step keeps the older one-column rows. Selecting a card re-dispatches the button's EXACT original
   on_click handler through the live EventDispatcher (same effect as pressing the pill
   button) — so the FlowRunner advance / chain_map branch works byte-for-byte
-  identically. Non-option nodes in the tree (headings, labels) still render via
-  NodeRenderer above the OptionList.
+  identically. The rest of the tree (headings, text, images) renders via
+  NodeRenderer above the OptionList, from pruneFlowOptions(): a copy of the tree
+  with those same option buttons removed at any depth and emptied containers
+  dropped, so no choice shows as both a button and a card.
+
+  STREAMING: while the step is still streaming in ('ui-streaming' context), every
+  button is held back, since a button whose on_click has not arrived yet may turn
+  out to be an option. Non-option buttons appear when the stream is done.
 
   RAW-UI FALLBACK: When the tree has no extractable options (step has a Continue
-  button but not selection buttons), fall through to plain NodeRenderer so the flow
-  never blocks.
+  button but not selection buttons), render the (pruned) tree via NodeRenderer so
+  the flow never blocks.
 
   DATA MODE: When the spec carries structured data (data.items), compose
   CardGridLayout/ListLayout + selection indicators — the classic browse-with-pick
@@ -32,7 +37,7 @@
 	import OptionList from '$lib/organisms/OptionList.svelte';
 	import CardGridLayout from './CardGridLayout.svelte';
 	import ListLayout from './ListLayout.svelte';
-	import { extractFlowOptions } from '../flow-options.js';
+	import { extractFlowOptions, pruneFlowOptions } from '../flow-options.js';
 	import type { LayoutInput } from '../layout-adapter.js';
 	import type { EventDispatcher } from '@ripple-ui/core';
 	import type { StateManager } from '$lib/core/state-manager.svelte.js';
@@ -60,23 +65,14 @@
 	);
 	const hasOptions = $derived(rawOptions.length > 0);
 
-	// Collect non-option children of the root container so we can render them
-	// (e.g. the step heading) above the OptionList without duplicating option buttons.
-	const nonOptionChildren = $derived.by(() => {
-		if (!hasOptions) return null;
-		const root = input.spec.ui;
-		if (!root || typeof root !== 'object') return null;
-		const r = root as Record<string, unknown>;
-		if (!Array.isArray(r.children)) return null;
-		const optionButtonIds = new Set(rawOptions.map((o) => o.onClick));
-		const rest = r.children.filter((child: unknown) => {
-			const c = child as Record<string, unknown>;
-			return !(c.type === 'button' && optionButtonIds.has(c.on_click));
-		});
-		return rest.length > 0
-			? { ...r, children: rest }
-			: null;
-	});
+	// The tree minus the promoted option buttons (any depth), rendered above the
+	// OptionList; the whole tree minus every button while the step streams in.
+	const isStreaming = getContext<(() => boolean) | undefined>('ui-streaming');
+	const restOfTree = $derived(
+		input.mode === 'raw-ui'
+			? pruneFlowOptions(input.spec.ui, { all: isStreaming?.() === true })
+			: undefined
+	);
 
 	// Tracks the selected option id for aria-checked reflection in OptionList.
 	let selectedOptionId = $state<string | string[]>('');
@@ -110,8 +106,8 @@
 {#if input.mode === 'raw-ui'}
 	{#if hasOptions}
 		<!-- Render any non-option nodes (heading, description text) above the list. -->
-		{#if nonOptionChildren}
-			<NodeRenderer node={nonOptionChildren as import('@ripple-ui/core').UINode} />
+		{#if restOfTree}
+			<NodeRenderer node={restOfTree} />
 		{/if}
 		<!-- Promoted option set: polished cards instead of raw pill buttons. -->
 		<OptionList
@@ -123,9 +119,9 @@
 			onSelect={handleOptionSelect}
 		/>
 	{:else}
-		<!-- Fallback: no extractable options — render raw tree unchanged. -->
-		{#if input.spec.ui}
-			<NodeRenderer node={input.spec.ui} />
+		<!-- Fallback: no extractable options. The tree as written once streamed in. -->
+		{#if restOfTree}
+			<NodeRenderer node={restOfTree} />
 		{/if}
 	{/if}
 {:else if dense}
