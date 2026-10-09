@@ -6,7 +6,7 @@ export const fillGridEntry: WidgetManifestEntry = {
   category: 'display',
   staticSafe: true,
   description:
-    'Discrete heap/segment meter — a row (or matrix) of M cells, the first N filled per value/max, the rest faint ghost cells. Pure CSS, SSR-safe.',
+    'Discrete heap/segment meter: a row (or matrix) of M cells, the first N filled per value/max, the rest faint ghost cells. Pure CSS, SSR-safe.',
   props: {
     value: { type: 'number', required: false, description: 'Current value. Filled cells = round(value/max * total).' },
     max: { type: 'number', required: false, description: 'Max value. Default 100.' },

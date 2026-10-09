@@ -9,7 +9,7 @@ export const formLayoutEntry: WidgetManifestEntry = {
     title: { type: 'string', required: false, description: 'Form title.' },
     description: { type: 'string', required: false, description: 'Form description.' },
     sections: { type: 'Array<{ id: string; title: string; description?: string; icon?: string }>', required: false, description: 'Side-nav anchor list. Each entry should match the `id` attribute of a section in `children`.' },
-    progress: { type: 'number', required: false, description: '0–100. Shown next to the title.' },
+    progress: { type: 'number', required: false, description: '0 to 100. Shown next to the title.' },
     valid: { type: 'boolean', required: false, description: 'When false, the submit button is disabled and an "Resolve errors" tag is shown. Default true.' },
     dirty: { type: 'boolean', required: false, description: 'Show "Unsaved changes" tag.' },
     saving: { type: 'boolean', required: false, description: 'Show "Saving…" tag and disable the submit button.' },

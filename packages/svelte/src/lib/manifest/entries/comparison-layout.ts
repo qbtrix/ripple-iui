@@ -4,7 +4,7 @@ export const comparisonLayoutEntry: WidgetManifestEntry = {
   type: 'comparison-layout',
   category: 'composite',
   description:
-    'Side-by-side comparison of 2–6 items with hero cards, section-tab feature grid, and Card/Table view toggle. Per-item `actions` and `learn_more` accept ripple event handlers.',
+    'Side-by-side comparison of 2 to 6 items with hero cards, section-tab feature grid, and Card/Table view toggle. Per-item `actions` and `learn_more` accept ripple event handlers.',
   props: {
     title: { type: 'string', required: false, description: 'Header title.' },
     description: { type: 'string', required: false, description: 'Subheader description.' },

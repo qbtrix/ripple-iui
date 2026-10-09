@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const definitionListEntry: WidgetManifestEntry = {
   type: 'definition-list',
   category: 'display',
-  description: 'Term/definition pairs — inline (term-on-left) or stacked. Use for glossaries and metadata.',
+  description: 'Term/definition pairs, inline (term on the left) or stacked. Use for glossaries and metadata.',
   props: {
     items: { type: 'Array<{ term: string; definition: string }>', required: true, description: 'Term/definition pairs.' },
     layout: { type: '"inline" | "stacked"', required: false, description: 'Layout mode.' },

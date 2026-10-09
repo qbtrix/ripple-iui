@@ -4,7 +4,7 @@ export const tabsEntry: WidgetManifestEntry = {
   type: 'tabs',
   category: 'layout',
   description:
-    'Tabbed panels. Tab labels go in the `tabs` prop; panel content goes in `children` — one child per tab, matched by index (children[0] renders for tabs[0]).',
+    'Tabbed panels. Tab labels go in the `tabs` prop; panel content goes in `children`, one child per tab, matched by index (children[0] renders for tabs[0]).',
   props: {
     tabs: {
       type: 'Array<{ value: string; label: string }>',
