@@ -129,7 +129,7 @@ describe('growth-projection: edits', () => {
 			}
 		});
 		expect(finalText(container)).toBe('$46,585');
-		const slider = screen.getByRole('slider', { name: 'Monthly deposit' }) as HTMLInputElement;
+		const slider = screen.getByRole('slider', { name: 'Monthly deposit' });
 		await fireEvent.input(slider, { target: { value: '500' } });
 		expect(onStateChange).not.toHaveBeenCalled(); // a drag only moves the draft
 		expect(finalText(container)).toBe(`$${Math.round(monthlyFV(0, 500, 5, 10)).toLocaleString('en-US')}`);
@@ -148,7 +148,7 @@ describe('growth-projection: edits', () => {
 				onStateChange
 			}
 		});
-		const box = screen.getByRole('spinbutton', { name: 'Interest rate' }) as HTMLInputElement;
+		const box = screen.getByRole('spinbutton', { name: 'Interest rate' });
 		await fireEvent.input(box, { target: { value: '250' } });
 		expect(screen.getByText(/Rate 250% → 100%/)).toBeTruthy();
 		await fireEvent.change(box);

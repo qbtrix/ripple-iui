@@ -245,7 +245,7 @@
 	const depLine = $derived(line(depPts));
 	const balLine = $derived(line(balPts));
 	const depArea = $derived(`${depLine}L100 100L0 100Z`);
-	const growArea = $derived(`${balLine}${line([...depPts].reverse()).replace(/^M/, 'L')}Z`);
+	const growArea = $derived(`${balLine}${line(depPts.map((_, i) => depPts[depPts.length - 1 - i])).replace(/^M/, 'L')}Z`);
 
 	const yTicks = $derived.by(() => {
 		const step = niceCeil(top / 4);
@@ -258,7 +258,7 @@
 	const tickLabels = $derived(yTicks.filter((t) => Y(t) >= 10 && (goalY === undefined || Math.abs(Y(t) - goalY) > 9)));
 
 	const xTicks = $derived.by(() => {
-		const s = [1, 2, 5, 10, 20, 25, 50].find((s) => span / s <= 5) ?? 50;
+		const s = [1, 2, 5, 10, 20, 25, 50].find((step) => span / step <= 5) ?? 50;
 		const out: number[] = [];
 		for (let t = 0; t <= span + 1e-9; t += s) out.push(t);
 		const last = out[out.length - 1];
