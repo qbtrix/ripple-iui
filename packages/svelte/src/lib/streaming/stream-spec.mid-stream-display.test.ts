@@ -72,6 +72,16 @@ describe('a child whose type has not arrived yet', () => {
 		expect(container.querySelector('[data-ripple-unknown-widget]')).toBeNull();
 	});
 
+	it('never paints the unknown-widget box for the root while its type is arriving', async () => {
+		const { store, push, container } = mount();
+		push.enqueue('{"version":"1.0","ui":{"ty');
+		await vi.waitFor(() => expect((store.current as { ui?: unknown } | null)?.ui).toEqual({}));
+		await tick();
+		expect(store.done).toBe(false);
+		expect(container.querySelector('[data-ripple-unknown-widget]')).toBeNull();
+		push.close();
+	});
+
 	it('control: a finished spec with a type the catalog lacks still shows the box', async () => {
 		const { store, push, container } = mount();
 		push.enqueue('{"version":"1.0","ui":{"type":"no-such-widget","id":"x"}}');
