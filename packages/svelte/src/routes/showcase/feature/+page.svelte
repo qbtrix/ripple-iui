@@ -38,7 +38,7 @@
   };
 </script>
 
-<main class="space-y-10 p-4 text-foreground sm:p-8">
+<main data-pagefind-body data-pagefind-meta="title:Feature pages" class="space-y-10 p-4 text-foreground sm:p-8">
   <section class="space-y-3">
     <label class="flex items-center gap-2 text-sm text-muted-foreground">
       <input type="checkbox" bind:checked={dense} /> Dense tool page (size="sm")

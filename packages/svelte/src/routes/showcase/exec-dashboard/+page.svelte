@@ -230,7 +230,7 @@
   }
 </script>
 
-<div class="page">
+<div data-pagefind-body data-pagefind-meta="title:Exec dashboard" class="page">
   <header class="page-header">
     <div class="page-header-top">
       <div>

@@ -384,7 +384,7 @@
   };
 </script>
 
-<div class="mc-page">
+<div data-pagefind-body data-pagefind-meta="title:Mission control" class="mc-page">
   <Ripple spec={missionSpec} onEvent={handleEvent} />
 </div>
 

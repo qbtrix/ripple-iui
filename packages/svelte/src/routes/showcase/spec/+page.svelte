@@ -142,7 +142,7 @@
   };
 </script>
 
-<div class="mx-auto max-w-5xl space-y-10 p-8">
+<div data-pagefind-body data-pagefind-meta="title:Spec" class="mx-auto max-w-5xl space-y-10 p-8">
   <header class="space-y-2">
     <h1 class="text-2xl font-semibold">JSON-spec composition</h1>
     <p class="text-muted-foreground">

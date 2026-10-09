@@ -68,7 +68,7 @@
   };
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Moving indicator" class="showcase">
   <header class="showcase-header">
     <h1>The moving indicator — one primitive, many widgets</h1>
     <p>

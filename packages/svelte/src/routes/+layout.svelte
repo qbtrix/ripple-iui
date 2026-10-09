@@ -8,8 +8,10 @@
     PUBLIC_GITHUB_STARS; it is empty when the fetch failed, so the page never
     asks GitHub for anything. Below 640px the nav links move into a disclosure
     menu; the logo, GitHub link and theme toggle stay in the bar. A skip link
-    (first focus) jumps to #main, the wrapper around every page. The bar is
-    the only glass on the site, with a solid fallback under
+    (first focus) jumps to #main, the wrapper around every page.
+    #main carries the Pagefind `kind` filter (Docs / Widgets / Showcase) from
+    the pathname; pages opt into the search index with data-pagefind-body.
+    The bar is the only glass on the site, with a solid fallback under
     prefers-reduced-transparency, and sits one layer above page-level sticky
     bars. Tokens and fonts come from ./site.css. Theme: static/theme-init.js
     sets `dark` on <html> before paint (the stored choice, else the OS); this
@@ -78,6 +80,16 @@
 			.filter((n) => page.url.pathname === n.href || page.url.pathname.startsWith(`${n.href}/`))
 			.reduce<string | undefined>((a, n) => (a && a.length >= n.href.length ? a : n.href), undefined)
 	);
+	const kind = $derived(
+		page.url.pathname.startsWith('/docs/widgets')
+			? 'Widgets'
+			: page.url.pathname.startsWith('/docs')
+				? 'Docs'
+				: page.url.pathname.startsWith('/showcase')
+					? 'Showcase'
+					: undefined
+	);
+
 	let dark = $state(true);
 	let menuOpen = $state(false);
 	onMount(() => {
@@ -163,7 +175,9 @@
 		<nav id="site-menu" class="menu" aria-label="Site menu" hidden={!menuOpen}>{@render links()}</nav>
 	</header>
 
-	<div id="main" class="main" tabindex="-1">{@render children()}</div>
+	<div id="main" class="main" tabindex="-1" data-pagefind-filter={kind ? `kind:${kind}` : undefined}>
+		{@render children()}
+	</div>
 
 	<footer class="foot">
 		<div class="cols">

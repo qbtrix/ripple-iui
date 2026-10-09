@@ -3,7 +3,7 @@
   import Card from '$lib/widgets/layout/Card.svelte';
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Stat" class="showcase">
   <header class="showcase-header">
     <h1>Stat — Visual QA</h1>
     <p>

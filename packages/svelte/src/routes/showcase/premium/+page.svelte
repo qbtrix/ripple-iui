@@ -151,7 +151,7 @@
   ];
 </script>
 
-<div class="showcase">
+<div data-pagefind-body data-pagefind-meta="title:Premium pack" class="showcase">
   <header class="showcase-header">
     <h1>Premium pack — 8 motion widgets</h1>
     <p>
