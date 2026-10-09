@@ -1,15 +1,10 @@
 // @file widgets/validate-catalog-bound.test.ts
-// @description Tests for the render-time catalog gate. Proves that nodes
-//   with an unregistered `type` are detected, that control-flow types and
-//   registered widgets pass, and that `extraWidgetTypes` widens the gate.
-// @created 2026-05-22 — Increment 5 (catalog-as-allowlist).
-// @changes
-//   - 2026-08-25: moved from core/ alongside the function it tests. These
-//     assertions depend on the real 189-widget catalog ("flex passes"), so
-//     they belong to the BOUND wrapper, not to the engine's catalog-agnostic
-//     core. The engine version is tested separately in core/.
+// @description Tests for the registry-bound catalog gate and specIssues.
+//   These assert against the real widget catalog ("flex passes"), so they
+//   belong to the bound wrappers; the engine versions, which know no
+//   widgets, are tested in packages/core.
 import { describe, it, expect } from 'vitest';
-import { validateCatalog } from './validate-catalog-bound.js';
+import { specIssues, validateCatalog } from './validate-catalog-bound.js';
 
 describe('validateCatalog', () => {
   it('detects an unknown widget type', () => {
@@ -112,5 +107,14 @@ describe('validateCatalog', () => {
   it('returns an empty array for null / undefined input', () => {
     expect(validateCatalog(null)).toEqual([]);
     expect(validateCatalog(undefined)).toEqual([]);
+  });
+});
+
+describe('specIssues (bound)', () => {
+  it('knows the built-in catalog without being given one', () => {
+    const spec = { ui: { type: 'flex', children: [{ type: 'text' }, { type: 'lsit' }] } };
+    expect(specIssues(spec)).toEqual([
+      { path: 'ui.children[1]', message: `widget type "lsit" isn't in the catalog` }
+    ]);
   });
 });

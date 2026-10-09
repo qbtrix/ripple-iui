@@ -111,6 +111,12 @@ export {
 	type UnknownNode,
 	type ValidateCatalogOptions
 } from './core/validate-catalog.js';
+/** Schema and catalog problems as model-actionable messages. Same catalog injection. */
+export {
+	specIssues,
+	formatSpecIssues,
+	type SpecIssue
+} from './core/spec-issues.js';
 
 // --------------------------------------------------------------- registry
 export {

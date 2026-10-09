@@ -1,9 +1,7 @@
 <!--
-  docs/kb/01-spec-format.md — UISpec v1.0 JSON format reference (KB entry).
-  Changes:
-    - 2026-07-01: synced to the Zod source of truth. Added the source-of-truth
-      banner; documented `sources` (RFC 04), node-level `motion` (RFC 12), the
-      `slot` field, and the `fonts` + `logo` groups on `theme`.
+  docs/kb/01-spec-format.md — UISpec v1.0 JSON format reference (KB entry):
+  the top-level fields, key order and size guidance, `sources` (RFC 04), and
+  the UINode fields including node-level `motion` (RFC 12) and `slot`.
 -->
 
 > **Source of truth:** the Zod schemas in `src/lib/schema/ui-spec.ts` and `src/lib/schema/universal-spec.ts` are canonical. This doc is a human-readable companion and may lag the code — when they disagree, the schema wins. Last verified against code: 2026-07-01.
@@ -37,8 +35,14 @@ Ripple renders interactive UIs from JSON specs. The top-level structure is UISpe
 ```
 
 **Required fields:** `version` (always "1.0"), `ui` (root UINode).
-**Optional fields:** `state` (initial state object), `theme`, `meta`, `data` (client-side data fetchers), `sources` (server-executed read bindings — see below).
+**Optional fields:** `state` (initial state object), `theme`, `meta`, `sources` (server-executed read bindings, see below).
 **Key order:** write `ui` before `state`. Specs often stream, and the renderer can draw the tree as soon as `ui` arrives; keep the seed `state` small.
+
+**Keep specs short.** Every character streams and is re-parsed, so a long spec paints late. The manifest envelope tells models the same three things:
+
+- Leave out any prop whose value equals the default the widget documents.
+- For repeated rows or cards, keep the records as an array in `state` and render them with one `each` node (`"items": "{state.rows}"`), not one node per record.
+- Bulk data (more than a few dozen records) should come from the host, through a `sources` binding or an `api` action (with `response_key`) where the host offers one, not be typed into the spec. The slim runtime does not run `api`.
 
 ### `sources` — server-executed read bindings (RFC 04)
 

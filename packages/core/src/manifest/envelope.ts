@@ -3,6 +3,10 @@
  * @description The top-level spec envelope contract (`ui`, `state`), shared by
  * the full and the slim manifest. The example leads with `ui` because models
  * copy its key order, and a streamed spec cannot paint until `ui` arrives.
+ * The description also keeps specs short (skip default props, one `each`
+ * over state rows, bulk data from the host): every model reads it, and a
+ * long streamed spec is slow to re-parse. `api` is hedged because slim
+ * hosts do not run it.
  */
 
 /**
@@ -41,7 +45,13 @@ export const specEnvelope: SpecEnvelope = {
     '`{state.*}`). The renderable tree field is named `ui` exactly — never ' +
     '`root`, `tree`, `view`, `body`, or `content`. Specs that use those ' +
     'aliases will not render. Write `ui` before `state` so the interface can ' +
-    'draw while the rest of the spec streams in, and keep the seed `state` small.',
+    'draw while the rest of the spec streams in, and keep the seed `state` small. ' +
+    'Leave out any prop whose value equals the default its widget documents. ' +
+    'For repeated rows or cards, keep the records as an array in `state` and ' +
+    'render them with one `each` node (`"items": "{state.rows}"`) instead of ' +
+    'writing a node per record. Bulk data (more than a few dozen records) ' +
+    'should come from the host, through a `sources` binding or an `api` ' +
+    'action where the host offers one, not be typed into the spec.',
   example: {
     version: '1.0',
     ui: {
