@@ -18,7 +18,8 @@ import { loadEnv } from 'vite';
 // hosts the showcase uses (its news feed's favicon service stays blocked).
 // 'unsafe-hashes' plus one hash admits exactly the `this.__e=event` attribute
 // Svelte's SSR puts on <img> so hydration can replay a load event.
-// frame-ancestors cannot be set from a meta tag.
+// 'wasm-unsafe-eval' lets the docs search compile Pagefind's same-origin wasm;
+// it does not allow eval() of JS. frame-ancestors cannot be set from a meta tag.
 const dev = process.env.NODE_ENV !== 'production';
 const env = loadEnv(dev ? 'development' : 'production', process.cwd(), 'PUBLIC_');
 const originOf = (url) => {
@@ -43,14 +44,20 @@ const config = {
 		// (/showcase/x/y), where relative ./_app paths would resolve wrongly.
 		paths: { relative: false },
 		prerender: {
-			handleHttpError: 'warn',
+			// Docs and llms files are generated from src/docs: an error there (a
+			// broken ```ripple block, a missing page) fails the build. Elsewhere a
+			// page that cannot prerender falls back to the SPA shell, so it warns.
+			handleHttpError: ({ path, message }) => {
+				if (/^\/(docs|llms)/.test(path)) throw new Error(message);
+				console.warn(message);
+			},
 			handleMissingId: 'warn'
 		},
 		csp: {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self', 'unsafe-hashes', 'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='],
+				'script-src': ['self', 'wasm-unsafe-eval', 'unsafe-hashes', 'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:', 'https://images.unsplash.com', 'https://i.pravatar.cc'],
 				'font-src': ['self'],
