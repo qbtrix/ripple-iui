@@ -24,6 +24,11 @@
     and "Done" per turn instead of reading tokens.
     DOM ids are positional, never Card.id: that counter can differ between the
     prerender and hydration. Reduced motion lives in CSS only.
+    The playground hosts it with two optional props, both off on the landing:
+    `chips` renders each card as a compact chip (title, status, size) that
+    picks it into the playground's own preview, and `onspec` adds an Open
+    button to the peek that hands the card to a fuller JSON view. `ask` and
+    `focus` are exported for its prompt cards and the `/` shortcut.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -38,7 +43,19 @@
 		prompt: string;
 	}
 
-	let { session, suggestions = [], note = '' }: { session: ChatSession; suggestions?: Suggestion[]; note?: string } = $props();
+	interface Chips {
+		/** The card the playground's panes are showing. */
+		viewing: string | null;
+		pick: (card: Card) => void;
+	}
+
+	let {
+		session,
+		suggestions = [],
+		note = '',
+		chips = null,
+		onspec
+	}: { session: ChatSession; suggestions?: Suggestion[]; note?: string; chips?: Chips | null; onspec?: (card: Card) => void } = $props();
 
 	let draft = $state('');
 	/** The visitor has engaged: from here on the composer is sticky. */
@@ -71,15 +88,30 @@
 		}
 	});
 
-	async function ask(text: string) {
+	export async function ask(text: string) {
 		if (session.busy || !text.trim()) return;
 		engaged = true;
 		draft = '';
 		const done = session.send(text);
 		await tick();
 		const mine = log?.children[log.children.length - 2];
-		mine?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+		if (mine instanceof HTMLElement) toTop(mine);
 		await done;
+	}
+
+	/** Puts the new request at the top of its own scroll box only: the page on the
+	    landing, the chat column in the playground (which must not move the page). */
+	function toTop(el: HTMLElement) {
+		const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+		let box = el.parentElement;
+		while (box && box !== document.body && !/auto|scroll/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+		if (!box || box === document.body) return el.scrollIntoView?.({ block: 'start', behavior });
+		box.scrollTo?.({ top: box.scrollTop + el.getBoundingClientRect().top - box.getBoundingClientRect().top - 12, behavior });
+	}
+
+	export function focus() {
+		engaged = true;
+		document.getElementById('ripple-ask')?.focus();
 	}
 
 	function onKey(e: KeyboardEvent) {
@@ -139,6 +171,15 @@
 		c.reason === 'truncated'
 			? 'The card was cut off before it finished, so it is left out.'
 			: 'The card did not pass its checks, so it is left out.';
+
+	const chipStatus = (c: Card) =>
+		c.status === 'streaming'
+			? `Building · ${bytes(c.text)}`
+			: c.status === 'final'
+				? `Ready · ${bytes(c.text)}`
+				: c.reason === 'truncated'
+					? 'Left out: cut off'
+					: 'Left out: failed its checks';
 </script>
 
 {#snippet prose(text: string, caret: boolean)}
@@ -164,6 +205,21 @@
 			<circle cx="8" cy="4.9" r="0.9" fill="currentColor" />
 		{/if}
 	</svg>
+{/snippet}
+
+{#snippet chip(card: Card, pick: Chips)}
+	{@const viewing = pick.viewing === card.id}
+	<button type="button" class="ui-chip" data-status={card.status} aria-pressed={viewing} onclick={() => pick.pick(card)}>
+		<svg class="ui-chip-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+			<rect x="2" y="2.5" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" />
+			<path d="M2 6h12M6 6v7.5" stroke="currentColor" stroke-width="1.3" />
+		</svg>
+		<span class="ui-chip-text">
+			<span class="ui-chip-title">{card.title || 'Card'}</span>
+			<span class="ui-chip-meta">{chipStatus(card)}</span>
+		</span>
+		{#if viewing}<span class="ui-chip-viewing">Viewing</span>{/if}
+	</button>
 {/snippet}
 
 {#snippet cardView(card: Card, pid: string)}
@@ -192,13 +248,17 @@
 					<div class="peek-inner" data-full={peekFull[card.id] || undefined}>
 						<p class="peek-meta">
 							<span>JSON spec</span><span class="bytes">{bytes(card.text)}</span>
-							<button
-								type="button"
-								class="expand"
-								aria-expanded={peekFull[card.id] ?? false}
-								aria-controls="{pid}-code"
-								onclick={() => (peekFull[card.id] = !peekFull[card.id])}>{peekFull[card.id] ? 'Collapse' : 'Expand'}</button
-							>
+							{#if onspec}
+								<button type="button" class="expand" aria-haspopup="dialog" onclick={() => onspec(card)}>Open</button>
+							{:else}
+								<button
+									type="button"
+									class="expand"
+									aria-expanded={peekFull[card.id] ?? false}
+									aria-controls="{pid}-code"
+									onclick={() => (peekFull[card.id] = !peekFull[card.id])}>{peekFull[card.id] ? 'Collapse' : 'Expand'}</button
+								>
+							{/if}
 						</p>
 						<pre id="{pid}-code" {@attach follow(card)}><JsonLines text={card.text} /></pre>
 					</div>
@@ -221,6 +281,8 @@
 						{#each turn.parts as part, i (part.kind === 'card' ? part.card.id : `t${i}`)}
 							{#if part.kind === 'text'}
 								{@render prose(part.text, turn.pending && i === turn.parts.length - 1)}
+							{:else if chips}
+								{@render chip(part.card, chips)}
 							{:else}
 								{@render cardView(part.card, `ripple-spec-${t}-${i}`)}
 							{/if}
@@ -557,6 +619,79 @@
 		}
 	}
 
+	/* The playground's card chip: a quiet row, the accent only on the one being viewed. */
+	.ui-chip {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		max-width: 360px;
+		min-height: 56px;
+		padding: 8px 12px;
+		border: 1px solid var(--site-line);
+		border-radius: var(--radius-card);
+		background: var(--site-ground);
+		color: var(--site-ink);
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
+	}
+	.ui-chip:hover {
+		background: var(--site-hover);
+	}
+	.ui-chip[aria-pressed='true'] {
+		border-color: var(--primary);
+	}
+	.ui-chip:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.ui-chip-icon {
+		flex: none;
+		color: var(--site-soft);
+	}
+	.ui-chip[aria-pressed='true'] .ui-chip-icon {
+		color: var(--primary-ink);
+	}
+	.ui-chip-text {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		flex: 1;
+	}
+	.ui-chip-title {
+		font-size: 14px;
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ui-chip-meta {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12.5px;
+		color: var(--site-soft);
+		font-variant-numeric: tabular-nums;
+	}
+	.ui-chip[data-status='streaming'] .ui-chip-meta::before {
+		content: '';
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--primary);
+		animation: pulse 1.4s ease-in-out infinite;
+	}
+	.ui-chip-viewing {
+		flex: none;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--primary-ink);
+	}
+
 	.card-note,
 	.chat-note {
 		margin: 0;
@@ -777,6 +912,7 @@
 		.turn:not([data-seeded]),
 		.thinking::before,
 		.building::before,
+		.ui-chip-meta::before,
 		.caret {
 			animation: none;
 		}
