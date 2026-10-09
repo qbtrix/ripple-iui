@@ -87,7 +87,7 @@ Registry in `src/lib/widgets/index.ts` — supports `registerWidget`/`unregister
 
 Widgets wrap **shadcn-svelte** components (`src/lib/components/ui/`) with Ripple-specific state binding and event handling.
 
-Building a master-detail (list + detail) layout? Read the "Layout gotchas" section in `docs/widgets.md` first — independent column scroll needs a fixed `height` + `overflow:hidden` (NOT `max-height`), and the `master-detail` widget can't take custom list cards.
+Building a master-detail (list + detail) layout? Read `packages/svelte/src/docs/guides/layout-gotchas.md` (live at `/docs/guides/layout-gotchas`) first — independent column scroll needs a fixed `height` + `overflow:hidden` (NOT `max-height`), and the `master-detail` widget can't take custom list cards.
 
 ### Intent System (`src/lib/intent/`)
 

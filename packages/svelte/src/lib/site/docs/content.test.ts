@@ -70,11 +70,12 @@ describe('llms files', () => {
 });
 
 describe('the real docs', () => {
-	it('has the three getting-started pages in order, all in llms.txt and llms-full.txt', () => {
+	it('has the getting-started and guides pages in order, all in llms.txt and llms-full.txt', () => {
 		expect(pages.map((p) => p.slug)).toEqual([
 			'getting-started/install',
 			'getting-started/render-a-spec',
-			'getting-started/stream-a-spec'
+			'getting-started/stream-a-spec',
+			'guides/layout-gotchas'
 		]);
 		const full = llmsFullTxt();
 		const index = llmsTxt();
