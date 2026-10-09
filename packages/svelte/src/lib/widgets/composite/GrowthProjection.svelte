@@ -413,7 +413,7 @@
 					{/if}
 				</div>
 
-				<figure class="m-0 flex min-w-0 flex-col gap-2 @min-[720px]:col-start-2 @min-[720px]:row-span-2 @min-[720px]:row-start-1" data-slot="chart">
+				<div class="flex min-w-0 flex-col gap-2 @min-[720px]:col-start-2 @min-[720px]:row-span-2 @min-[720px]:row-start-1" data-slot="chart">
 					<ul class="flex flex-wrap gap-x-4 gap-y-1 text-footnote" aria-label="Legend">
 						<li class="flex items-center gap-1.5">
 							<span class="size-2.5 rounded-[3px] bg-ripple-muted-foreground" aria-hidden="true"></span>
@@ -520,9 +520,9 @@
 						{/each}
 					</div>
 
-					<figcaption class="text-footnote text-ripple-muted-foreground">
+					<p class="text-footnote text-ripple-muted-foreground">
 						{num(inp.rate)}% a year, compounded {mode === 'yearly' ? 'yearly' : 'monthly'}; deposits at the end of each month.
-					</figcaption>
+					</p>
 
 					<details class="group rounded-ripple border border-ripple-border bg-ripple-surface" data-slot="table">
 						<summary class={['flex cursor-pointer list-none items-center gap-1.5 rounded-ripple px-3 py-2 text-callout font-medium [&::-webkit-details-marker]:hidden', focusRing]}>
@@ -553,7 +553,7 @@
 							</table>
 						</div>
 					</details>
-				</figure>
+				</div>
 
 				<section class="flex min-w-0 flex-col gap-3 rounded-ripple border border-ripple-border bg-ripple-surface p-3" aria-label="Try other numbers" data-slot="inputs">
 					<h3 class={caption}>Try other numbers</h3>
