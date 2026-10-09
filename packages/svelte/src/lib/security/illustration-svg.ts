@@ -49,6 +49,7 @@ const FONT_FAMILY = /^[A-Za-z0-9 ,'"-]*$/;
 const SYNC_REF = /(^|[\s;+(-])([A-Za-z_][\w-]*)\.(?=[A-Za-z])/g;
 
 /** Strip whitespace and control characters, lowercase: the form danger tokens are matched in. */
+// oxlint-disable-next-line no-control-regex -- matching control characters is the point
 const squash = (v: string) => v.replace(/[\s\u0000-\u001f\u007f]+/g, '').toLowerCase();
 const isDangerous = (v: string) => {
 	const s = squash(v);
@@ -95,16 +96,17 @@ function clockSeconds(raw: string): number {
 	return t[2] === 'h' ? n * 3600 : t[2] === 'min' ? n * 60 : t[2] === 'ms' ? n / 1000 : n;
 }
 
+function tooDeep(el: Element, depth: number): boolean {
+	if (depth > CAPS.maxDepth) return true;
+	for (const c of el.children) if (tooDeep(c, depth + 1)) return true;
+	return false;
+}
+
 /** The caps, on the parsed source before anything is dropped. Null when within. */
 export function measureCaps(root: Element): string | null {
 	const all = root.getElementsByTagName('*');
 	if (all.length + 1 > CAPS.maxElements) return `over ${CAPS.maxElements} elements`;
-	const deep = (el: Element, depth: number): boolean => {
-		if (depth > CAPS.maxDepth) return true;
-		for (const c of el.children) if (deep(c, depth + 1)) return true;
-		return false;
-	};
-	if (deep(root, 1)) return `deeper than ${CAPS.maxDepth}`;
+	if (tooDeep(root, 1)) return `deeper than ${CAPS.maxDepth}`;
 	let anims = 0;
 	for (const el of [root, ...all]) {
 		if (!ANIM_ELEMENTS.has(el.localName)) continue;

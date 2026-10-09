@@ -37,10 +37,11 @@ function residue(svg: Element): string[] {
 		if (/^(script|style|foreignObject|iframe|object|embed|a|image|feImage|audio|video|canvas)$/i.test(tag)) out.push(`<${tag}>`);
 		if (el.namespaceURI !== 'http://www.w3.org/2000/svg') out.push(`<${tag}> ns ${el.namespaceURI}`);
 		for (const a of el.attributes) {
+			// oxlint-disable-next-line no-control-regex -- matching control characters is the point
 			const v = a.value.replace(/[\s\u0000-\u001f]+/g, '').toLowerCase();
 			if (/^on/i.test(a.localName) || a.localName === 'style') out.push(`${tag}@${a.name}`);
 			if (/javascript:|data:|vbscript:|url\((?!#)/.test(v)) out.push(`${tag}@${a.name}=${a.value}`);
-			if (a.localName === 'href' && !/^#/.test(a.value)) out.push(`${tag}@href=${a.value}`);
+			if (a.localName === 'href' && !a.value.startsWith('#')) out.push(`${tag}@href=${a.value}`);
 			if (a.localName === 'attributeName' && /href|^on|style/i.test(a.value)) out.push(`${tag}@attributeName=${a.value}`);
 		}
 	}
@@ -116,7 +117,7 @@ describe('a good animated SVG', () => {
 		expect(svg.namespaceURI).toBe('http://www.w3.org/2000/svg');
 		expect(svg.getAttribute('viewBox')).toBe('0 0 200 120');
 		const ids = [...svg.querySelectorAll('[id]')].map((e) => e.id);
-		expect(ids.sort()).toEqual(['ill-x-frame', 'ill-x-rise', 'ill-x-route', 'ill-x-sky', 'ill-x-sun']);
+		expect(ids.toSorted()).toEqual(['ill-x-frame', 'ill-x-rise', 'ill-x-route', 'ill-x-sky', 'ill-x-sun']);
 		expect(svg.querySelector('g')!.getAttribute('clip-path')).toBe('url(#ill-x-frame)');
 		expect(svg.querySelector('rect[fill]')!.getAttribute('fill')).toBe('url(#ill-x-sky)');
 		expect(svg.querySelector('use')!.getAttribute('href')).toBe('#ill-x-sun');
