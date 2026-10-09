@@ -134,7 +134,7 @@
 	const listed = $derived(showAll ? shown : shown.slice(0, PAGE));
 
 	const pct = (v: number) => `${Math.max(0, Math.min(100, (v / top) * 100))}%`;
-	const money = (v: unknown, compact = false) => fmt(v, headline.format, currency, compact);
+	const money = (v: unknown, compact = false) => fmt(v, headline.format, currency, compact ? 'compact' : 'auto');
 	const slotClass = (k: string) => (k === OTHER ? 'bg-ripple-muted-foreground' : (SLOT[keys.indexOf(k)] ?? SLOT[0]));
 	const labelled = (i: number) => points.length <= 6 || i === maxAt || i === points.length - 1;
 	const tickShown = (i: number) => {
@@ -148,11 +148,11 @@
 	function cell(r: Row, c: Column): string {
 		if (c.key === xKey) return dateLabel(r[c.key]);
 		const m = measureFor(c.key, ms);
-		if (m) return fmt(r[c.key], m.format, currency);
+		if (m) return fmt(r[c.key], m.format, currency, 'exact');
 		const v = r[c.key];
 		return typeof v === 'string' || typeof v === 'number' ? plain(String(v)) : '';
 	}
-	const sumCell = (c: Column) => (c.key in sums ? fmt(sums[c.key], measureFor(c.key, ms)!.format, currency) : '');
+	const sumCell = (c: Column) => (c.key in sums ? fmt(sums[c.key], measureFor(c.key, ms)!.format, currency, 'exact') : '');
 	const right = (c: Column) => c.align === 'right' || (c.align === undefined && !!measureFor(c.key, ms));
 
 	function pick(key: string, value: string | undefined) {

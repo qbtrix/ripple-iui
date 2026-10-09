@@ -175,7 +175,7 @@ describe('exec-dashboard: rows mode', () => {
 	it('totals the table for the picked region', async () => {
 		const { container } = render(ExecDashboard, { props: salesProps() });
 		await fireEvent.click(screen.getByRole('button', { name: 'West' }));
-		expect(cells(container.querySelector('[data-slot="totals"]')!)).toEqual(['Total (West)', '', '', '$380']);
+		expect(cells(container.querySelector('[data-slot="totals"]')!)).toEqual(['Total (West)', '', '', '$380.00']);
 		expect(container.querySelectorAll('[data-slot="table"] tbody tr')).toHaveLength(3);
 	});
 
@@ -300,5 +300,73 @@ describe('exec-dashboard: KPI mode (existing specs)', () => {
 		expect(screen.getByRole('button', { name: 'Refresh' })).toBeTruthy();
 		await fireEvent.click(screen.getByRole('tab', { name: '30d' }));
 		expect(screen.getByText('$780k')).toBeTruthy();
+	});
+});
+
+describe('exec-dashboard: local choices survive a re-sent spec', () => {
+	// When the bound filter changes, the host re-sends the whole spec with the
+	// original values for every other prop. The visitor's other choices (chart
+	// or table view, show all, the KPI-mode chips) must not snap back.
+	const twelve = () =>
+		Array.from({ length: 12 }, (_, i) => ({ date: `2026-0${7 + (i % 3)}-1${i % 9}`, region: i % 2 ? 'North' : 'West', amount: 10 + i }));
+
+	it('rows mode keeps the Table view and Show all when the bound filter changes', async () => {
+		const spec = (pick: Record<string, string>) => ({
+			state: { pick },
+			ui: {
+				type: 'exec-dashboard',
+				bind: '{state.pick}',
+				props: { rows: twelve(), measures: [{ key: 'amount', label: 'Revenue', format: 'money' }], dimensions: [{ key: 'region', label: 'Region' }], x: 'date' }
+			}
+		});
+		const { rerender } = render(Ripple, { props: { spec: spec({}) } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Table' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Show all 12' }));
+
+		await rerender({ spec: spec({ region: 'North' }) });
+		expect(screen.getByRole('button', { name: 'North' }).getAttribute('aria-pressed')).toBe('true');
+		expect(screen.getByRole('button', { name: 'Table' }).getAttribute('aria-pressed')).toBe('true');
+		// North has 6 rows, so the toggle is gone, and the table lists all 6.
+		expect(document.querySelectorAll('[data-slot="table"] tbody tr')).toHaveLength(6);
+
+		await rerender({ spec: spec({}) });
+		expect(screen.getByRole('button', { name: 'Show fewer' })).toBeTruthy();
+		expect(document.querySelectorAll('[data-slot="table"] tbody tr')).toHaveLength(12);
+	});
+
+	it('KPI mode keeps the picked range, granularity and activity filter across a re-send of the same props', async () => {
+		const spec = (pick: Record<string, string>, activeDateRange = '7d') => ({
+			state: { pick },
+			ui: {
+				type: 'exec-dashboard',
+				bind: '{state.pick}',
+				props: {
+					dateRanges: ['7d', '30d', '90d'],
+					activeDateRange,
+					granularities: ['Day', 'Week'],
+					activity: [
+						{ id: 'a1', time: '1h', label: 'Deal closed', category: 'Sales' },
+						{ id: 'a2', time: '2h', label: 'SLA breach', category: 'Alerts' }
+					],
+					kpis: [{ id: 'rev', label: 'Revenue', value: '$0', byKey: { '7d': { value: '$7k' }, '30d': { value: '$30k' } } }]
+				}
+			}
+		});
+		const { rerender } = render(Ripple, { props: { spec: spec({}) } });
+		await fireEvent.click(screen.getByRole('tab', { name: '30d' }));
+		await fireEvent.click(screen.getByRole('tab', { name: 'Week' }));
+		await fireEvent.click(screen.getByRole('tab', { name: 'Alerts' }));
+
+		await rerender({ spec: spec({ region: 'North' }) });
+		expect(screen.getByRole('tab', { name: '30d' }).getAttribute('aria-selected')).toBe('true');
+		expect(screen.getByRole('tab', { name: 'Week' }).getAttribute('aria-selected')).toBe('true');
+		expect(screen.getByRole('tab', { name: 'Alerts' }).getAttribute('aria-selected')).toBe('true');
+		expect(screen.getByText('$30k')).toBeTruthy();
+		expect(screen.queryByText('Deal closed')).toBeNull();
+
+		// Genuinely new data from the spec still wins.
+		await rerender({ spec: spec({ region: 'North' }, '90d') });
+		expect(screen.getByRole('tab', { name: '90d' }).getAttribute('aria-selected')).toBe('true');
+		expect(screen.getByRole('tab', { name: 'Week' }).getAttribute('aria-selected')).toBe('true');
 	});
 });

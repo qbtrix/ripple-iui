@@ -110,6 +110,7 @@ describe('buckets', () => {
 
 describe('series and colour slots', () => {
 	it('splits each bucket by series fixed from the unfiltered rows', () => {
+		// Most rows first: Web 3, Social 2, Marketplace 1.
 		const keys = splitKeys(rows, 'channel');
 		expect(keys).toEqual(['Web', 'Social', 'Marketplace']);
 		const b = bucketer(rows, 'date');
@@ -119,11 +120,11 @@ describe('series and colour slots', () => {
 		expect(Object.keys(north[0].parts)).toEqual(keys);
 	});
 	it('folds the tail into Other past five values instead of cycling colours', () => {
-		const many = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((c) => ({ c }));
-		expect(splitKeys(many, 'c')).toEqual(['A', 'B', 'C', 'D', 'Other']);
+		const many = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'G', 'G'].map((c) => ({ c }));
+		expect(splitKeys(many, 'c')).toEqual(['G', 'A', 'B', 'C', 'Other']);
 		const b = bucketer([{ x: 'one', c: 'A' }, { x: 'one', c: 'G' }, { x: 'one', c: 'F' }], 'x');
 		const s = series([{ x: 'one', c: 'A' }, { x: 'one', c: 'G' }, { x: 'one', c: 'F' }], b, orders, { key: 'c', keys: splitKeys(many, 'c') });
-		expect(s[0].parts.Other).toBe(2);
+		expect(s[0].parts).toEqual({ G: 1, A: 1, B: 0, C: 0, Other: 1 });
 	});
 });
 
@@ -191,7 +192,10 @@ describe('columns, totals and formatting', () => {
 	it('formats money, numbers and percents without throwing', () => {
 		expect(fmt(38214.5, 'money')).toBe('$38,215');
 		expect(fmt(64.375, 'money')).toBe('$64.38');
-		expect(fmt(12000, 'money', 'USD', true)).toBe('$12K');
+		expect(fmt(12000, 'money', 'USD', 'compact')).toBe('$12K');
+		expect(fmt(751.7, 'money', 'USD', 'compact')).toBe('$752');
+		expect(fmt(2632.59, 'money', 'USD', 'compact')).toBe('$2.6K');
+		expect(fmt(133, 'money', 'USD', 'exact')).toBe('$133.00');
 		expect(fmt(1250, 'money', 'EUR')).toBe('€1,250');
 		expect(fmt(5, 'money', '$$')).toBe('$5.00');
 		expect(fmt(12.5, 'percent')).toBe('12.5%');

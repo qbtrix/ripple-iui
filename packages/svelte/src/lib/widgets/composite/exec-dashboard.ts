@@ -106,10 +106,19 @@ export function distinct(rows: Row[], key: string): string[] {
 export const MAX_SLOTS = 5;
 export const OTHER = 'Other';
 
-/** Series keys for a split column, fixed from the unfiltered rows. */
+/**
+ * Series keys for a split column, fixed from the unfiltered rows: most rows
+ * first (ties in first-seen order), so the biggest series takes slot 1 and the
+ * baseline, and the rarest fold into Other.
+ */
 export function splitKeys(allRows: Row[], key: string | undefined): string[] {
 	if (!key) return [];
-	const values = distinct(allRows, key);
+	const counts = new Map<string, number>();
+	for (const r of allRows) {
+		const v = text(r[key]);
+		if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+	}
+	const values = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!);
 	return values.length <= MAX_SLOTS ? values : [...values.slice(0, MAX_SLOTS - 1), OTHER];
 }
 
@@ -293,19 +302,21 @@ function intl(opts: Intl.NumberFormatOptions, currency?: string): Intl.NumberFor
 }
 
 /**
- * A value for display. Money drops cents at 100 and above; percent values are
- * 0 to 100 as written (12.5 is "12.5%"). `compact` is for axis ticks and cap
- * labels ("$12K"). Non-finite is "n/a".
+ * A value for display. Percent values are 0 to 100 as written (12.5 is
+ * "12.5%"). Modes: 'auto' (KPIs, readouts) drops cents at 100 and above;
+ * 'exact' (table cells, so a column lines up) always shows cents; 'compact'
+ * is for axis ticks and cap labels ("$12K"). Non-finite is "n/a".
  */
-export function fmt(v: unknown, format: Format, currency?: string, compact = false): string {
+export function fmt(v: unknown, format: Format, currency?: string, mode: 'auto' | 'exact' | 'compact' = 'auto'): string {
 	const n = finite(v);
 	if (n === undefined) return 'n/a';
 	if (format === 'percent') return `${intl({ maximumFractionDigits: 1 }).format(n)}%`;
+	const compact = mode === 'compact';
 	// Both fraction bounds are always set: a currency's default minimum (2) above
 	// a smaller maximum is a RangeError on older engines.
-	const cents = format === 'money' && !compact && Math.abs(n) < 100;
+	const cents = format === 'money' && (mode === 'exact' || (mode === 'auto' && Math.abs(n) < 100));
 	const opts: Intl.NumberFormatOptions = compact
-		? { notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 }
+		? { notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: Math.abs(n) < 1000 ? 0 : 1 }
 		: { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents || format === 'number' ? 2 : 0 };
 	return format === 'money' ? intl({ ...opts, style: 'currency' }, currency).format(n) : intl(opts).format(n);
 }

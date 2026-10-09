@@ -1,0 +1,100 @@
+// routes/showcase/exec-dashboard/sales.ts — fictional data for the rows-mode
+// previews: Fernleaf Ceramics, a small online shop, with 62 orders across
+// July to September 2026 in four regions and three channels (the landing's
+// "Quarterly sales" demo), and Kettle & Kiln, a two-location cafe, with ten
+// days of takings and the previous ten days' totals to trend against. The site
+// is public, so every name here is made up.
+
+export const fernleafOrders = [
+	{ id: 'FL-1041', date: '2026-07-01', region: 'West', channel: 'Marketplace', items: 3, amount: 133.38 },
+	{ id: 'FL-1042', date: '2026-07-02', region: 'West', channel: 'Marketplace', items: 1, amount: 46.63 },
+	{ id: 'FL-1043', date: '2026-07-07', region: 'West', channel: 'Social', items: 3, amount: 149.15 },
+	{ id: 'FL-1044', date: '2026-07-08', region: 'West', channel: 'Web', items: 2, amount: 76.2 },
+	{ id: 'FL-1045', date: '2026-07-09', region: 'South', channel: 'Web', items: 1, amount: 36.29 },
+	{ id: 'FL-1046', date: '2026-07-11', region: 'East', channel: 'Social', items: 3, amount: 146.26 },
+	{ id: 'FL-1047', date: '2026-07-12', region: 'East', channel: 'Web', items: 1, amount: 35.13 },
+	{ id: 'FL-1048', date: '2026-07-17', region: 'West', channel: 'Web', items: 2, amount: 62.52 },
+	{ id: 'FL-1049', date: '2026-07-17', region: 'East', channel: 'Social', items: 2, amount: 77.04 },
+	{ id: 'FL-1050', date: '2026-07-20', region: 'South', channel: 'Web', items: 2, amount: 59.89 },
+	{ id: 'FL-1051', date: '2026-07-22', region: 'South', channel: 'Web', items: 2, amount: 84.7 },
+	{ id: 'FL-1052', date: '2026-07-22', region: 'West', channel: 'Web', items: 2, amount: 66.39 },
+	{ id: 'FL-1053', date: '2026-07-22', region: 'East', channel: 'Web', items: 3, amount: 157.46 },
+	{ id: 'FL-1054', date: '2026-07-23', region: 'West', channel: 'Web', items: 2, amount: 110.14 },
+	{ id: 'FL-1055', date: '2026-07-24', region: 'East', channel: 'Web', items: 3, amount: 102.16 },
+	{ id: 'FL-1056', date: '2026-07-24', region: 'West', channel: 'Social', items: 2, amount: 81.58 },
+	{ id: 'FL-1057', date: '2026-07-26', region: 'North', channel: 'Web', items: 1, amount: 61.32 },
+	{ id: 'FL-1058', date: '2026-07-29', region: 'West', channel: 'Web', items: 1, amount: 25.74 },
+	{ id: 'FL-1059', date: '2026-08-01', region: 'West', channel: 'Web', items: 3, amount: 100.28 },
+	{ id: 'FL-1060', date: '2026-08-01', region: 'North', channel: 'Web', items: 2, amount: 129.85 },
+	{ id: 'FL-1061', date: '2026-08-03', region: 'East', channel: 'Social', items: 1, amount: 65.82 },
+	{ id: 'FL-1062', date: '2026-08-05', region: 'North', channel: 'Social', items: 1, amount: 65.2 },
+	{ id: 'FL-1063', date: '2026-08-05', region: 'North', channel: 'Web', items: 2, amount: 109.22 },
+	{ id: 'FL-1064', date: '2026-08-08', region: 'North', channel: 'Marketplace', items: 1, amount: 49.09 },
+	{ id: 'FL-1065', date: '2026-08-08', region: 'South', channel: 'Web', items: 3, amount: 168.83 },
+	{ id: 'FL-1066', date: '2026-08-09', region: 'North', channel: 'Marketplace', items: 1, amount: 66.11 },
+	{ id: 'FL-1067', date: '2026-08-15', region: 'West', channel: 'Social', items: 3, amount: 71.34 },
+	{ id: 'FL-1068', date: '2026-08-16', region: 'East', channel: 'Web', items: 4, amount: 271.22 },
+	{ id: 'FL-1069', date: '2026-08-19', region: 'West', channel: 'Web', items: 1, amount: 56.93 },
+	{ id: 'FL-1070', date: '2026-08-20', region: 'West', channel: 'Marketplace', items: 1, amount: 41.43 },
+	{ id: 'FL-1071', date: '2026-08-20', region: 'East', channel: 'Web', items: 2, amount: 103.67 },
+	{ id: 'FL-1072', date: '2026-08-23', region: 'North', channel: 'Web', items: 3, amount: 126.88 },
+	{ id: 'FL-1073', date: '2026-08-24', region: 'East', channel: 'Social', items: 4, amount: 278.88 },
+	{ id: 'FL-1074', date: '2026-08-28', region: 'East', channel: 'Web', items: 3, amount: 94.73 },
+	{ id: 'FL-1075', date: '2026-08-28', region: 'East', channel: 'Social', items: 2, amount: 97.51 },
+	{ id: 'FL-1076', date: '2026-08-28', region: 'South', channel: 'Web', items: 2, amount: 61.97 },
+	{ id: 'FL-1077', date: '2026-08-29', region: 'East', channel: 'Web', items: 3, amount: 141.13 },
+	{ id: 'FL-1078', date: '2026-08-29', region: 'East', channel: 'Web', items: 3, amount: 118.19 },
+	{ id: 'FL-1079', date: '2026-09-01', region: 'East', channel: 'Social', items: 1, amount: 22.46 },
+	{ id: 'FL-1080', date: '2026-09-02', region: 'North', channel: 'Marketplace', items: 1, amount: 28.42 },
+	{ id: 'FL-1081', date: '2026-09-03', region: 'West', channel: 'Web', items: 1, amount: 43.91 },
+	{ id: 'FL-1082', date: '2026-09-03', region: 'South', channel: 'Web', items: 3, amount: 177.51 },
+	{ id: 'FL-1083', date: '2026-09-04', region: 'West', channel: 'Social', items: 1, amount: 33.05 },
+	{ id: 'FL-1084', date: '2026-09-05', region: 'East', channel: 'Web', items: 1, amount: 66.43 },
+	{ id: 'FL-1085', date: '2026-09-07', region: 'North', channel: 'Web', items: 1, amount: 50.93 },
+	{ id: 'FL-1086', date: '2026-09-08', region: 'East', channel: 'Web', items: 1, amount: 53.03 },
+	{ id: 'FL-1087', date: '2026-09-09', region: 'South', channel: 'Web', items: 4, amount: 102.44 },
+	{ id: 'FL-1088', date: '2026-09-09', region: 'South', channel: 'Web', items: 1, amount: 22.3 },
+	{ id: 'FL-1089', date: '2026-09-13', region: 'East', channel: 'Marketplace', items: 1, amount: 66.36 },
+	{ id: 'FL-1090', date: '2026-09-17', region: 'West', channel: 'Marketplace', items: 2, amount: 126.07 },
+	{ id: 'FL-1091', date: '2026-09-19', region: 'South', channel: 'Web', items: 3, amount: 148.39 },
+	{ id: 'FL-1092', date: '2026-09-20', region: 'East', channel: 'Marketplace', items: 2, amount: 91.5 },
+	{ id: 'FL-1093', date: '2026-09-21', region: 'East', channel: 'Social', items: 3, amount: 157.13 },
+	{ id: 'FL-1094', date: '2026-09-22', region: 'South', channel: 'Web', items: 3, amount: 208.31 },
+	{ id: 'FL-1095', date: '2026-09-22', region: 'South', channel: 'Web', items: 4, amount: 275.22 },
+	{ id: 'FL-1096', date: '2026-09-23', region: 'East', channel: 'Marketplace', items: 2, amount: 128.73 },
+	{ id: 'FL-1097', date: '2026-09-24', region: 'North', channel: 'Web', items: 4, amount: 239.11 },
+	{ id: 'FL-1098', date: '2026-09-25', region: 'West', channel: 'Marketplace', items: 3, amount: 80.99 },
+	{ id: 'FL-1099', date: '2026-09-27', region: 'East', channel: 'Web', items: 3, amount: 168.45 },
+	{ id: 'FL-1100', date: '2026-09-28', region: 'West', channel: 'Web', items: 3, amount: 147.13 },
+	{ id: 'FL-1101', date: '2026-09-28', region: 'South', channel: 'Web', items: 3, amount: 128.5 },
+	{ id: 'FL-1102', date: '2026-09-29', region: 'West', channel: 'Marketplace', items: 2, amount: 66.22 }
+];
+
+export const kilnDays = [
+	{ date: '2026-09-21', location: 'Harbor St', revenue: 1233, covers: 99 },
+	{ date: '2026-09-21', location: 'Mill Rd', revenue: 925, covers: 80 },
+	{ date: '2026-09-22', location: 'Harbor St', revenue: 1607, covers: 130 },
+	{ date: '2026-09-22', location: 'Mill Rd', revenue: 985, covers: 79 },
+	{ date: '2026-09-23', location: 'Harbor St', revenue: 1438, covers: 119 },
+	{ date: '2026-09-23', location: 'Mill Rd', revenue: 897, covers: 69 },
+	{ date: '2026-09-24', location: 'Harbor St', revenue: 1294, covers: 106 },
+	{ date: '2026-09-24', location: 'Mill Rd', revenue: 1006, covers: 76 },
+	{ date: '2026-09-25', location: 'Harbor St', revenue: 1399, covers: 120 },
+	{ date: '2026-09-25', location: 'Mill Rd', revenue: 897, covers: 69 },
+	{ date: '2026-09-26', location: 'Harbor St', revenue: 2012, covers: 160 },
+	{ date: '2026-09-26', location: 'Mill Rd', revenue: 1315, covers: 110 },
+	{ date: '2026-09-27', location: 'Harbor St', revenue: 1845, covers: 141 },
+	{ date: '2026-09-27', location: 'Mill Rd', revenue: 1129, covers: 95 },
+	{ date: '2026-09-28', location: 'Harbor St', revenue: 1483, covers: 115 },
+	{ date: '2026-09-28', location: 'Mill Rd', revenue: 837, covers: 68 },
+	{ date: '2026-09-29', location: 'Harbor St', revenue: 1618, covers: 129 },
+	{ date: '2026-09-29', location: 'Mill Rd', revenue: 861, covers: 68 },
+	{ date: '2026-09-30', location: 'Harbor St', revenue: 1650, covers: 136 },
+	{ date: '2026-09-30', location: 'Mill Rd', revenue: 1098, covers: 95 }
+];
+
+/** The previous ten days, one total per location: enough for the trend. */
+export const kilnPrevious = [
+	{ location: 'Harbor St', revenue: 14210, covers: 1190 },
+	{ location: 'Mill Rd', revenue: 10340, covers: 842 }
+];

@@ -17,8 +17,10 @@
   Events: the date-range chip fires both `ondaterangechange` (what a spec's
   `on_date_range_change` becomes) and the camel-cased `ondateRangeChange`, which
   stays separate so a bind writer and a spec handler never replace each other.
-  Layout reads the widget's own width through container queries. The refresh
-  icon's spin stops under prefers-reduced-motion.
+  A visitor's chip picks (range, granularity, activity filter) hold across a
+  re-sent spec and give way only to a different value from the spec. Layout
+  reads the widget's own width through container queries. The refresh icon's
+  spin stops under prefers-reduced-motion.
 -->
 <script lang="ts">
   import { safeStyle } from '@ripple-ui/core';
@@ -361,8 +363,10 @@
       : t === 'down' ? 'text-rose-600 dark:text-rose-400'
       : 'text-muted-foreground';
   }
+  // Hex, not oklch: the echarts sparkline appends a hex alpha ('…30') to its
+  // colour, which turns an oklch() value into an unparsable gradient stop.
   function sparklineColor(t?: Trend): string {
-    return t === 'down' ? 'oklch(0.55 0.22 25)' : 'oklch(0.55 0.18 250)';
+    return t === 'down' ? '#d40924' : '#0072d5';
   }
   function clampProgress(p: number | undefined): number {
     if (typeof p !== 'number' || Number.isNaN(p)) return 0;
@@ -375,9 +379,9 @@
    */
   function buildKeys(): string[] {
     const keys: string[] = [];
-    if (activeDateRange && activeGranularity) keys.push(`${activeDateRange}|${activeGranularity}`);
-    if (activeGranularity) keys.push(activeGranularity);
-    if (activeDateRange) keys.push(activeDateRange);
+    if (range && gran) keys.push(`${range}|${gran}`);
+    if (gran) keys.push(gran);
+    if (range) keys.push(range);
     return keys;
   }
 
@@ -458,7 +462,21 @@
     onrefresh?.();
   }
 
+  // A visitor's chip pick wins until the spec sends a value other than the one
+  // it overrode. When the bound filter changes, the host re-sends the spec with
+  // its original props, and Svelte drops a local write to an unbound prop then,
+  // so without this every chip would snap back.
+  type Pick = { over: string | undefined; value: string } | null;
+  let rangePick = $state<Pick>(null);
+  let granPick = $state<Pick>(null);
+  let actPick = $state<Pick>(null);
+  const held = (p: Pick, incoming: string | undefined) => (p && p.over === incoming ? p.value : incoming);
+  const range = $derived(held(rangePick, activeDateRange));
+  const gran = $derived(held(granPick, activeGranularity));
+  const actFilter = $derived(held(actPick, activeActivityFilter));
+
   function pickDateRange(r: string) {
+    rangePick = { over: activeDateRange, value: r };
     activeDateRange = r;
     ondateRangeChange?.(r);
     ondaterangechange?.(r);
@@ -472,19 +490,21 @@
     onfilter?.({ key, value: value ?? null });
   }
   function pickGranularity(g: string) {
+    granPick = { over: activeGranularity, value: g };
     activeGranularity = g;
     ongranularitychange?.(g);
   }
   function pickActivityFilter(f: string) {
+    actPick = { over: activeActivityFilter, value: f };
     activeActivityFilter = f;
     onactivityfilterchange?.(f);
   }
 
   const visibleActivity = $derived.by(() => {
     const list = effectiveActivityFilters;
-    if (!list || !activeActivityFilter) return activity;
-    if (activeActivityFilter === list[0]) return activity; // first preset = "All"
-    const f = activeActivityFilter.toLowerCase();
+    if (!list || !actFilter) return activity;
+    if (actFilter === list[0]) return activity; // first preset = "All"
+    const f = actFilter.toLowerCase();
     if (f === 'alerts') {
       return activity.filter((a) => a.severity === 'warning' || a.severity === 'destructive');
     }
@@ -532,8 +552,8 @@
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeDateRange === r}
-                class={cn('rdash-seg-btn', activeDateRange === r && 'rdash-seg-btn-active')}
+                aria-selected={range === r}
+                class={cn('rdash-seg-btn', range === r && 'rdash-seg-btn-active')}
                 onclick={() => pickDateRange(r)}
               >
                 {r}
@@ -552,8 +572,8 @@
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeGranularity === g}
-                class={cn('rdash-seg-btn', activeGranularity === g && 'rdash-seg-btn-active')}
+                aria-selected={gran === g}
+                class={cn('rdash-seg-btn', gran === g && 'rdash-seg-btn-active')}
                 onclick={() => pickGranularity(g)}
               >
                 {g}
@@ -741,8 +761,8 @@
                     <button
                       type="button"
                       role="tab"
-                      aria-selected={activeActivityFilter === f}
-                      class={cn('rdash-pill', activeActivityFilter === f && 'rdash-pill-active')}
+                      aria-selected={actFilter === f}
+                      class={cn('rdash-pill', actFilter === f && 'rdash-pill-active')}
                       onclick={() => pickActivityFilter(f)}
                     >
                       {f}
