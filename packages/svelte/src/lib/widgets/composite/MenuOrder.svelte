@@ -22,7 +22,10 @@
   prop into $state: lines derive from `cart` (or `preset` until the first edit).
 -->
 <script lang="ts">
+	import { tick } from 'svelte';
+	import { prefersReducedMotion } from 'svelte/motion';
 	import type { HTMLInputAttributes } from 'svelte/elements';
+	import { safeUrl } from '@ripple-ui/core';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -117,6 +120,9 @@
 	const pick = $derived(featuredOf(menu, featured));
 	const categories = $derived([...new Set(menu.map((i) => i.category).filter(Boolean))]);
 	const itemOf = (pid: string) => menu.find((i) => i.product_id === pid);
+	// A menu with no photo at all reads as a list (small icon tiles), not a
+	// grid of empty photo boxes. One real photo switches the cards to photos.
+	const photos = $derived(menu.some((i) => safeUrl(i.image, { kind: 'resource' }) !== undefined));
 
 	const headline = $derived.by(() => {
 		const prices = menu.map((i) => i.price).filter((p): p is number => p !== undefined);
@@ -199,9 +205,14 @@
 	const customising = $derived(view === 'customise' || lines.some((l) => (itemOf(l.product_id)?.groups.length ?? 0) > 0));
 	const stages = $derived<Stage[]>(customising ? ORDER : ['menu', 'details', 'review']);
 
+	let anchor = $state<HTMLElement>();
+
 	function go(next: Stage) {
 		dir = ORDER.indexOf(next) >= ORDER.indexOf(view) ? 1 : -1;
 		stage = next;
+		// A stage change in a long card can leave the visitor mid-scroll: bring
+		// the rail back into view if it went above the fold (no-op if visible).
+		void tick().then(() => anchor?.scrollIntoView?.({ block: 'nearest', behavior: prefersReducedMotion.current ? 'auto' : 'smooth' }));
 	}
 
 	function railTo(i: number) {
@@ -239,9 +250,12 @@
 		draft = null;
 	}
 
+	let form = $state<HTMLFormElement>();
+
 	function toReview() {
 		tried = true;
-		if (ready) go('review');
+		if (ready) return go('review');
+		void tick().then(() => form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
 	}
 
 	async function place() {
@@ -312,11 +326,16 @@
 {#snippet card(item: Item)}
 	<article
 		class={[
-			'flex h-full gap-3 rounded-ripple border p-2 transition-colors @min-[560px]:flex-col @min-[560px]:gap-2',
+			'flex h-full gap-3 rounded-ripple border p-2 transition-colors',
+			photos && '@min-[560px]:flex-col @min-[560px]:gap-2',
 			qtyOf(item) > 0 ? 'border-ripple-accent bg-ripple-accent/8' : 'border-ripple-border bg-ripple-surface'
 		]}
 	>
-		<PhotoTile src={item.image} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-24 shrink-0 self-start @min-[560px]:w-full" />
+		{#if photos}
+			<PhotoTile src={item.image} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-24 shrink-0 self-start @min-[560px]:w-full" />
+		{:else}
+			<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, item.kind)} class="w-11 shrink-0 self-start" />
+		{/if}
 		<div class="flex min-w-0 flex-1 flex-col gap-1">
 			<div class="flex items-start gap-2">
 				{@render name(item, 'text-headline')}
@@ -369,6 +388,7 @@
 	{/if}
 
 	{#if orderable}
+		<span bind:this={anchor} class="-mb-3 block h-0 scroll-mt-16" aria-hidden="true"></span>
 		<StageRail stages={stages.map((s) => LABELS[s])} current={stages.indexOf(view)} onselect={railTo} disabled={placing} />
 	{/if}
 
@@ -401,11 +421,18 @@
 					{#if pick && !active}
 						{@const f = pick.item}
 						<article
-							class="grid gap-3 rounded-ripple border border-ripple-accent bg-ripple-accent/8 p-2 @min-[560px]:grid-cols-[2fr_3fr] @min-[560px]:p-3"
+							class={[
+								'gap-3 rounded-ripple border border-ripple-accent bg-ripple-accent/8 p-2 @min-[560px]:p-3',
+								photos ? 'grid @min-[560px]:grid-cols-[2fr_3fr]' : 'flex'
+							]}
 							aria-label="Best pick"
 						>
-							<PhotoTile src={f.image} ratio="16:9" icon={kindIcon(MENU_ICONS, f.kind)} iconSize={32} class="max-h-[200px] w-full self-center" />
-							<div class="flex min-w-0 flex-col gap-1.5">
+							{#if photos}
+								<PhotoTile src={f.image} ratio="16:9" icon={kindIcon(MENU_ICONS, f.kind)} iconSize={32} class="max-h-[200px] w-full self-center" />
+							{:else}
+								<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, f.kind)} iconSize={24} class="w-14 shrink-0 self-start" />
+							{/if}
+							<div class="flex min-w-0 flex-1 flex-col gap-1.5">
 								<p class="flex items-center gap-1 text-caption-1 font-medium tracking-[0.04em] uppercase">
 									<Sparkles size={12} strokeWidth={2} aria-hidden="true" />Best pick
 								</p>
@@ -436,8 +463,12 @@
 				{@const item = draftItem}
 				{@render back(draft.edit ? 'review' : 'menu', draft.edit ? 'Review' : 'Menu')}
 				<div class="flex flex-col gap-3 @min-[720px]:grid @min-[720px]:grid-cols-[2fr_3fr] @min-[720px]:items-start">
-					<div class="flex gap-3 @min-[720px]:flex-col">
-						<PhotoTile src={item.image} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={28} class="w-24 shrink-0 self-start @min-[720px]:w-full" />
+					<div class={['flex gap-3', photos && '@min-[720px]:flex-col']}>
+						{#if photos}
+							<PhotoTile src={item.image} ratio="4:3" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={28} class="w-24 shrink-0 self-start @min-[720px]:w-full" />
+						{:else}
+							<PhotoTile ratio="1:1" icon={kindIcon(MENU_ICONS, item.kind)} iconSize={24} class="w-14 shrink-0 self-start" />
+						{/if}
 						<div class="flex min-w-0 flex-col gap-1">
 							<h3 class="text-title-3 font-semibold text-pretty">{item.name}</h3>
 							{#if item.description}<p class="text-callout text-ripple-muted-foreground">{item.description}</p>{/if}
@@ -505,7 +536,7 @@
 				</div>
 			{:else if view === 'details'}
 				{@render back('menu', 'Menu')}
-				<form id="{uid}-details" class="flex flex-col gap-3" novalidate onsubmit={(e) => (e.preventDefault(), toReview())}>
+				<form bind:this={form} id="{uid}-details" class="flex flex-col gap-3" novalidate onsubmit={(e) => (e.preventDefault(), toReview())}>
 					{#if modes.length > 1}
 						<div class="grid grid-cols-2 gap-1 rounded-ripple bg-ripple-muted p-1" role="radiogroup" aria-label="Pickup or delivery">
 							{#each modes as m (m)}
@@ -598,9 +629,9 @@
 		<div class="sticky bottom-0 z-10 flex items-center gap-3 rounded-ripple border border-ripple-border bg-ripple-popover px-3 py-2 text-ripple-popover-foreground">
 			<p class="min-w-0 flex-1 truncate text-callout" aria-live="polite">
 				{#if count > 0}
-					<span class="font-medium tabular-nums">{count} {count === 1 ? 'item' : 'items'}</span><span class="text-ripple-muted-foreground"> · </span><span
-						class="tabular-nums">{fmt(total)}</span
-					>
+					<span class="font-medium tabular-nums">{count} {count === 1 ? 'item' : 'items'}</span><span class="text-ripple-muted-foreground"
+						>{' · '}</span
+					><span class="tabular-nums">{fmt(total)}</span>
 				{:else}
 					<span class="text-ripple-muted-foreground">Nothing added yet</span>
 				{/if}
