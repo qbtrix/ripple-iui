@@ -422,6 +422,7 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `meal-plan` | A week from one `recipes` library: `days` of meals by slot (cards below 720px, a days-by-slots grid above), swap per meal, protein and calories per day against `goal`, a shopping list summed per ingredient and scaled to `people`, grouped by aisle. Opening a meal shows its recipe. Bind `people` |
 | `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
 | `flashcard-deck` | Study deck of `cards` (front, back, hint, category): flip, mark Got it or Missed it, progress dots, then a score screen listing missed cards with Practise missed (re-deals only those) and Restart. Binds `score`; emits `on_complete` with `{ score, total }` |
+| `memory-match` | Card-flip pairs game: `pairs` (6 to 12 of `{ id, a, b }`; each side is text, one emoji or `icon:<key>`), `title`, `columns` (auto), `time_limit_s`. Seeded deal that survives a re-sent spec, a match stays up, a miss turns back after 800ms; moves, time, best this session, win screen with Play again; arrow keys and Enter play it. Binds `value` (`{ moves, matched, completed, seconds }`); emits `on_complete` once per win with `{ moves, seconds }` |
 | `exec-dashboard` | KPI dashboard from raw `rows` plus `measures` (sum, avg, count) and `dimensions`: it computes the KPIs with trends, a column chart along `x` (stacked by `split`), a breakdown and a filtered table with totals. A filter chip recomputes every number. Binds `filters`; `on_filter` gets `{key, value}`. Prebuilt `kpis`/`primaryChart`/`table` still work |
 | `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
@@ -505,6 +506,7 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `food-menu`, `order-menu` | `menu-order` |
 | `workout-timer`, `interval-timer`, `hiit-timer` | `interval-workout` |
 | `flashcards`, `study-deck`, `flip-cards` | `flashcard-deck` |
+| `memory-game`, `match-pairs` | `memory-match` |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |

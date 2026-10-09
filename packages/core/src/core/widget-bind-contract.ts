@@ -156,6 +156,9 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'sidebar', 'nav',
   // bill-split binds the bill as edited ({ subtotal, tip_percent, people })
   'bill-split', 'split-bill', 'bill-splitter',
+  // memory-match binds its game ({ moves, matched, completed, seconds }),
+  // written by the widget on each move, never on a timer tick
+  'memory-match', 'memory-game', 'match-pairs',
 ]);
 
 const warnedTypes = new Set<string>();
