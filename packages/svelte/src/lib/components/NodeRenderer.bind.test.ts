@@ -182,6 +182,41 @@ test('order-status uses currentStep/onstepchange bind contract', () => {
   });
 });
 
+test('exec-dashboard bind drives the active date range and writes picks back', async () => {
+  // Without a contract row the bind went to `value`, which exec-dashboard does
+  // not read, so the manifest example's `bind: 'activeDateRange'` did nothing.
+  const onStateChange = vi.fn();
+  render(Ripple, {
+    props: {
+      spec: {
+        state: { range: '30d' },
+        ui: {
+          type: 'exec-dashboard',
+          bind: '{state.range}',
+          props: {
+            dateRanges: ['7d', '30d', '90d'],
+            showRefresh: false,
+            kpis: [
+              { id: 'rev', label: 'Revenue', value: '$0', byKey: { '7d': { value: '$7k' }, '30d': { value: '$30k' } } },
+            ],
+          },
+        },
+      },
+      onStateChange,
+    },
+  });
+
+  expect(screen.getByRole('tab', { name: '30d' }).getAttribute('aria-selected')).toBe('true');
+  expect(screen.getByText('$30k')).toBeTruthy();
+
+  await userEvent.click(screen.getByRole('tab', { name: '7d' }));
+
+  expect(onStateChange).toHaveBeenLastCalledWith('range', '7d', expect.objectContaining({ range: '7d' }));
+  expect(screen.getByRole('tab', { name: '7d' }).getAttribute('aria-selected')).toBe('true');
+  expect(screen.getByText('$7k')).toBeTruthy();
+  expect(getBindContract('kpi-dashboard')).toEqual(getBindContract('exec-dashboard'));
+});
+
 test('warnUnregisteredBindContract fires once per unknown widget type', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

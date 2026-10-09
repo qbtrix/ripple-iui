@@ -44,6 +44,12 @@ const WIDGET_BIND_CONTRACTS: Readonly<Record<string, WidgetBindContract>> = {
   approval: { prop: 'decision', event: 'ondecision' },
   'approve-card': { prop: 'decision', event: 'ondecision' },
   'human-gate': { prop: 'decision', event: 'ondecision' },
+  // exec-dashboard binds its active date-range chip. One bind per node, so
+  // `activeGranularity` / `activeActivityFilter` stay Svelte-side `$bindable`s.
+  // The event prop really is camel-cased `ondateRangeChange`.
+  'exec-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
+  'kpi-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
+  'executive-dashboard': { prop: 'activeDateRange', event: 'ondateRangeChange' },
 };
 
 /**
