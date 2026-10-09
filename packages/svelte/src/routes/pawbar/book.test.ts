@@ -187,7 +187,7 @@ async function finalCard(card: unknown, store?: ConstructorParameters<typeof Cha
 	if (part?.kind !== 'card') throw new Error('no card');
 	return { session, card: part.card };
 }
-const bookingNode = (card: Card) => (card.spec?.ui as { props: Record<string, unknown> }).props;
+const bookingNode = (card: Card) => (card.spec!.ui as { props: Record<string, unknown> }).props;
 
 describe('ChatSession host events', () => {
 	test('checkout from a final menu-order card posts the Cart, remembers it, then navigates', async () => {

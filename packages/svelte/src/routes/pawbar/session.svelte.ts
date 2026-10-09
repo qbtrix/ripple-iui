@@ -341,7 +341,8 @@ export class ChatSession {
 
 	async #book(card: Card, store: StoreHost, payload: unknown) {
 		const request = toBookingRequest(payload);
-		const serviceId = 'error' in request ? String((payload as { service_id?: unknown })?.service_id ?? '') : request.service_id;
+		const asked = isRecord(payload) && typeof payload.service_id === 'string' ? payload.service_id : '';
+		const serviceId = 'error' in request ? asked : request.service_id;
 		const answer = (patch: Record<string, unknown>) => {
 			const next = card.spec && patchBooking(card.spec, serviceId, patch);
 			if (next) card.spec = next;

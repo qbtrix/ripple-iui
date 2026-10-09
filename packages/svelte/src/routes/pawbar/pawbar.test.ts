@@ -246,12 +246,12 @@ describe('ChatSession', () => {
 		await waitFor(() => expect(cardOf(session)).toBeDefined());
 		const card = cardOf(session);
 		const early: RippleEvent = { type: 'emit', target: 'early' };
-		session.hostEvent(card, early);
+		void session.hostEvent(card, early);
 		expect(card.sent).toBeNull();
 		release();
 		await sent;
 		const picked: RippleEvent = { type: 'emit', target: 'picked' };
-		session.hostEvent(card, picked);
+		void session.hostEvent(card, picked);
 		expect(card.sent).toBe('emit: picked');
 	});
 
