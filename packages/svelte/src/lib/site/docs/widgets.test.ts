@@ -2,15 +2,19 @@
 // entry's example, and every interactive pocket spec, renders through
 // SpecExample (the component the /docs/widgets pages use) without throwing,
 // without hitting a widget error boundary or the unknown-widget fallback, and
-// with at least one element inside Ripple's root. Text is not required: aurora,
-// image and canvas widgets render none. Then the pure builders.
+// with at least one element inside Ripple's root. The bare examples listed in
+// EMPTY_EXAMPLES are the exception, so every widget PAGE's first preview is
+// checked too. Text is not required: aurora, image and canvas widgets render
+// none. Then the pure builders.
 import { describe, expect, it } from 'vitest';
 import { cleanup, render } from '@testing-library/svelte';
 import SpecExample from '../SpecExample.svelte';
 import { manifestEntries, type WidgetManifestEntry } from '../../manifest/index.js';
 import {
+	EMPTY_EXAMPLES,
 	exampleSpec,
 	interactiveSpecs,
+	pageSpecs,
 	sourceUrl,
 	widgetCategories,
 	widgetMarkdown,
@@ -19,24 +23,8 @@ import {
 	widgetsLlmsTxt
 } from './widgets.js';
 
-/**
- * Specs that do not render cleanly in jsdom, by "<type>" (the example) or
- * "<type>:<pocket name>". Keep this list as short as possible, and each entry
- * explains why. The weak-example report lists the error each one hits.
- */
-const KNOWN_WEAK = new Set<string>([
-	// `each` reads its items from state, and a bare example node has no state to
-	// carry, so it renders nothing. Its pocket seeds the state and renders.
-	'each',
-	// Overlays: the example must be the widget itself (manifest.test.ts pins
-	// example.type), and it is shown closed because an open one would cover the
-	// docs page on load. Each has a pocket with a trigger button that renders.
-	'coachmark',
-	'command-palette',
-	'confirm-dialog',
-	'modal',
-	'sheet'
-]);
+/** Bare examples that render nothing on their own; their page previews a pocket instead. */
+const KNOWN_WEAK = EMPTY_EXAMPLES;
 
 const specs = manifestEntries.flatMap((e) => [
 	{ name: e.type, spec: exampleSpec(e) },
@@ -72,6 +60,11 @@ describe('widget reference examples', () => {
 
 	it.each(specs.filter((s) => !KNOWN_WEAK.has(s.name)))('$name renders', ({ spec }) => {
 		expect(renderProblem(spec)).toBeNull();
+	});
+
+	// No widget page opens on an empty Preview: its first preview always renders.
+	it.each(manifestEntries.map((e) => ({ type: e.type, entry: e })))('$type page previews something', ({ entry }) => {
+		expect(renderProblem(pageSpecs(entry).example)).toBeNull();
 	});
 
 	// An allowlisted spec that starts rendering must leave the list.
@@ -114,6 +107,15 @@ describe('widget reference builders', () => {
 		]);
 		expect(interactiveSpecs(fixture('a', 'input', { pockets: [{ name: 'Two', ui }] }))[0].spec).toEqual({ version: '1.0', ui });
 		expect(interactiveSpecs(fixture('a', 'input'))).toEqual([]);
+	});
+
+	it('previews the first pocket in place of an empty example, without repeating it', () => {
+		const ui = { type: 'modal' };
+		const page = pageSpecs(fixture('modal', 'layout', { pockets: [{ name: 'One', ui }, { name: 'Two', ui }] }));
+		expect(page.example).toEqual({ version: '1.0', ui });
+		expect(page.interactive.map((s) => s.name)).toEqual(['Two']);
+		const plain = fixture('alpha', 'input', { pocket: { ui } });
+		expect(pageSpecs(plain)).toEqual({ example: exampleSpec(plain), interactive: interactiveSpecs(plain) });
 	});
 
 	it('writes markdown with escaped table cells and only the tables that have rows', () => {
