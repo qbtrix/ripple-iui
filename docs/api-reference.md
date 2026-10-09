@@ -155,6 +155,27 @@ import { EventHandler, EventAction, EventHandlerOrArray } from '@ripple-ui/svelt
 import { WidgetType, WIDGET_CATEGORIES } from '@ripple-ui/svelte';
 ```
 
+### Spec issues
+
+```typescript
+import { specIssues, formatSpecIssues, validateCatalog, type SpecIssue } from '@ripple-ui/svelte';
+
+const issues = specIssues(spec);          // SpecIssue[]: { path, message }
+const feedback = formatSpecIssues(issues); // '' when there are none
+```
+
+`specIssues(spec, opts?)` checks a Gen-1 `UISpec` two ways and returns one plain-English message per problem: schema violations from `safeParseUISpec`, then nodes whose widget type is not in the catalog (`validateCatalog`). Paths use one notation for both, e.g. `ui.children[2].props`; a spec that is not an object at all reports the path `spec`. `[]` means the spec parses and every node renders.
+
+`formatSpecIssues(issues)` renders them as a short block to append to the model's next turn:
+
+```
+The last UI spec has 2 problems. Fix them in the next spec:
+- ui.props: Invalid input: expected record, received string
+- ui.children[1]: widget type "lsit" isn't in the catalog
+```
+
+The `@ripple-ui/svelte` exports check against this renderer's widget registry. The `@ripple-ui/core` versions know no widgets: pass `{ widgetTypes }` (and optionally `extraWidgetTypes`), exactly as for `validateCatalog`. A union field such as an event handler fails as a single `Invalid input` at the field's path.
+
 ---
 
 ## Types
