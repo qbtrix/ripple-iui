@@ -123,6 +123,7 @@
 		max-width: 70ch;
 		font-size: 17px;
 		color: var(--site-soft);
+		overflow-wrap: anywhere;
 	}
 	.badge {
 		display: inline-block;
@@ -203,8 +204,15 @@
 		font: 0.875em var(--font-mono);
 		font-variant-ligatures: none;
 	}
+	/* Long union types wrap; a bordered box would break into ragged pieces. */
 	code.type {
+		padding: 0;
+		border: 0;
+		background: none;
 		color: var(--site-soft);
+	}
+	td:nth-child(2) {
+		min-width: 140px;
 	}
 	.pager {
 		display: flex;
