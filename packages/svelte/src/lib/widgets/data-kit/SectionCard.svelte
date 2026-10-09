@@ -29,7 +29,7 @@
 	const heading = $derived(plain(title));
 </script>
 
-<section class={['min-w-0 rounded-ripple border border-ripple-border bg-ripple-surface p-3', className]} aria-busy={pending || undefined}>
+<section class={['h-full min-w-0 rounded-ripple border border-ripple-border bg-ripple-surface p-3', className]} aria-busy={pending || undefined}>
 	{#if heading || aside}
 		<header class="mb-2 flex min-h-5 items-center gap-1.5 text-ripple-muted-foreground">
 			{#if Icon}<Icon size={14} strokeWidth={1.75} aria-hidden="true" class="shrink-0" />{/if}
