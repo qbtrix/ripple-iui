@@ -21,7 +21,10 @@
 -->
 <script module lang="ts">
 	import type { ExerciseKind } from '../data-kit/icons.js';
-	import { finite } from '../data-kit/format.js';
+	import { clampSec, clock, finite } from '../data-kit/format.js';
+
+	// Shared with focus-timer; re-exported for this widget's callers and tests.
+	export { clampSec, clock };
 
 	export interface WorkoutExercise {
 		id?: string;
@@ -40,12 +43,6 @@
 	export const REST = { min: 0, max: 300, step: 5, fallback: 20 } as const;
 	export const MAX_ROUNDS = 20;
 
-	/** Whole seconds inside the range; junk falls back to the default. */
-	export function clampSec(v: unknown, r: { min: number; max: number; fallback: number }): number {
-		const n = finite(v);
-		return n === undefined ? r.fallback : Math.min(Math.max(Math.round(n), r.min), r.max);
-	}
-
 	/**
 	 * Work, rest, work, ... across rounds. A `rest`-kind exercise is itself a
 	 * rest, so no automatic rest is added next to it.
@@ -61,12 +58,6 @@
 			});
 		}
 		return plan;
-	}
-
-	/** "0:40", "12:05". */
-	export function clock(sec: number): string {
-		const s = Math.max(0, Math.ceil(sec));
-		return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 	}
 
 	function rec(v: unknown): Record<string, unknown> {

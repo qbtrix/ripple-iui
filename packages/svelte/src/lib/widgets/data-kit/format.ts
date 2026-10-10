@@ -99,3 +99,15 @@ export function dateLabel(v: unknown, locale?: string): string {
 		return new Intl.DateTimeFormat(undefined, opts).format(t);
 	}
 }
+
+/** A whole number inside the range; junk falls back to the default. Timers use it for seconds and minutes. */
+export function clampSec(v: unknown, r: { min: number; max: number; fallback: number }): number {
+	const n = finite(v);
+	return n === undefined ? r.fallback : Math.min(Math.max(Math.round(n), r.min), r.max);
+}
+
+/** A countdown in seconds as "0:40", "12:05", "25:00". */
+export function clock(sec: number): string {
+	const s = Math.max(0, Math.ceil(sec));
+	return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}

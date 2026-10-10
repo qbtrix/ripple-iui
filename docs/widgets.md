@@ -147,7 +147,7 @@ Image display with fit and rounding controls.
 
 ### `illustration`
 
-A small animated SVG drawing the model writes. The widget never renders the string: it parses it with `DOMParser` and rebuilds an allowlisted copy with `createElementNS`, dropping anything else silently. Display only: no bind, no events.
+A small animated SVG drawing the model writes. The widget never renders the string: it parses it with `DOMParser` and rebuilds an allowlisted copy with `createElementNS`, dropping anything else silently. No bind. Optional numbered notes (`annotations`) pin onto parts of the art, and `on_select` fires when one opens.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
@@ -155,6 +155,11 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 | `title` | `string` | (required) | Accessible name (the art is `role="img"`) |
 | `caption` | `string` | — | Line under the art |
 | `max_height` | `number` | `320` | Height cap in px, clamped to 80..640 |
+| `annotations` | `Array<{ id, label, note, target?, at? }>` | none | Up to 8 numbered notes. `label` ≤ 40 chars, `note` ≤ 280, plain text. Exactly one of `target` (an id in the svg) or `at` (`[x, y]` in viewBox units) |
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `on_select` | `{ id }` | A note was opened by a click on its pin or legend line (focus alone opens it without firing) |
 
 - Allowed elements: `svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set`. No filters, `<image>`, `<style>`, `<a>`, `<foreignObject>` or scripts.
 - References only as `url(#id)` and `href='#id'` on `use`/`mpath` (use plain `href`; `xlink:href` needs an `xmlns:xlink` declaration or the markup fails to parse). No `style` attribute, no `on*` handlers. Animations may only target presentation attributes (`fill`, `opacity`, `transform`, `cx`, `d`, ...).
@@ -162,10 +167,17 @@ A small animated SVG drawing the model writes. The widget never renders the stri
 - Ids are prefixed per instance (and so are their `url(#..)`, `href` and `begin`/`end` refs), so two cards never collide.
 - Under `prefers-reduced-motion` the art starts paused; animated art gets a small pause/play button.
 - Text is kept readable. Write label text with `fill='currentColor'`: it is the card's text colour, so it reads in light and dark. Any other `text`/`tspan` fill (or none, which SVG draws black) that falls under 3:1 contrast against what it sits on, a solid shape under it or else the card, is swapped for the card's text or background colour, whichever reads better. It runs again when the theme changes. `url(#..)` fills and `currentColor` are never changed.
-- Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.
+- Notes are host buttons over the art, never SVG, so the art stays non-interactive. A pin sits on the target's bounding-box centre (or on `at`), mapped through the svg's screen CTM and placed again on resize. Clicking or focusing a pin opens its note and makes the target glow; Esc closes it, and one note is open at a time. On a frame narrower than 420px the note opens as a sheet under the art. A numbered list under the art mirrors the pins for keyboard and screen-reader users. A note whose `target` is not an id the rebuild kept is dropped; so is one with both or neither of `target`/`at`, or a non-finite `at`.
+- Hosts that want to refuse a card instead of rendering a cleaned one call `checkIllustrationSvg(markup)` (and `checkIllustrationAnnotations({ svg, annotations })` for the notes) from `@ripple-ui/svelte`; the lists are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`). The contract is the illustration design doc of 2026-10-09.
 
 ```json
 { "type": "illustration", "props": { "title": "Sun rising over two hills", "svg": "<svg viewBox='0 0 200 120'><circle cx='100' cy='110' r='18' fill='#ffb703'><animate attributeName='cy' from='110' to='48' dur='3s' fill='freeze'/></circle></svg>" } }
+```
+
+With notes, and an `ask`-style hook on open:
+
+```json
+{ "type": "illustration", "on_select": { "action": "set", "target": "opened" }, "props": { "title": "Two gears", "svg": "<svg viewBox='0 0 200 100'><circle id='big' cx='70' cy='50' r='36' fill='#64748b'/><circle id='small' cx='140' cy='50' r='20' fill='#94a3b8'/></svg>", "annotations": [ { "id": "big", "label": "Chainring", "note": "The big gear the pedals turn.", "target": "big" }, { "id": "small", "label": "Cog", "note": "The small gear on the back wheel.", "target": "small" }, { "id": "ratio", "label": "Ratio", "note": "Big over small: one pedal turn spins the wheel more.", "at": [105, 90] } ] } }
 ```
 
 ### `badge`
@@ -421,7 +433,13 @@ Composite widgets are typed full-pane layouts — emit ONE node and the whole pa
 | `recipe` | One dish: photo or kind icon, meta chips, a servings stepper that rescales numeric `qty` (1.5 cups prints 1½), tickable `ingredients`, numbered `steps` with timers and tips, kcal and protein per serving. Bind `servings` |
 | `meal-plan` | A week from one `recipes` library: `days` of meals by slot (cards below 720px, a days-by-slots grid above), swap per meal, protein and calories per day against `goal`, a shopping list summed per ingredient and scaled to `people`, grouped by aisle. Opening a meal shows its recipe. Bind `people` |
 | `interval-workout` | Interval workout timer: `exercises` (name, cue, kind), `workSec`, `restSec`, `rounds`. Counts work and rest down in seconds on a ring, shows current and next exercise, back/pause/next, session progress by round; pauses on a hidden tab. Binds `workSec` (applies from the next interval) |
+| `habit-tracker` | Habit tracker app: 1 to 8 `habits` `{ id, name, icon?, target_per_week }` (`icon` a `HABIT_ICONS` key) on a habits-by-days week grid; tick or untick past days and today, a streak per habit, a ring toward the weekly target ("Done for the week"), today's completion and the best streak, "3 of 4 habits on track this week". Add (name, icon, target), rename inline, remove with confirm; `week_start` `mon`/`sun`, `weeks` 1 to 4 of history, demo `seed` offsets. Cards with 7 day dots below 560px. Local clock, no storage. Bind `value` `{ habits, ticks }` |
+| `focus-timer` | Pomodoro / focus sessions: `focus_min`, `short_break_min`, `long_break_min`, `rounds_before_long`, optional `goal_rounds`, editable `task`, `auto_start_next`. One ring per phase (Focus, Short break, Long break), start/pause/reset/skip, a long break every Nth round, rounds dots against the goal, a log of finished rounds, a durations drawer. Keeps time on a hidden tab. Binds `value` `{ phase, remaining_s, running, rounds_done, task, log }` |
+| `board-game` | Tic-tac-toe or connect-four against a built-in computer: `game`, `player` (X or O, red or yellow), `first` (player or computer), `difficulty` (easy random, medium wins or blocks, hard searches ahead and is unbeatable at tic-tac-toe), `best_of` (1, 3, 5; omit for open-ended). Detects wins and draws, strikes the winning line or glows the winning four, keeps the score; Rematch and New series; arrow keys and Enter play it. Binds `value` (`{ board, turn, result, series }`); emits `on_complete` once per finished series with `{ winner, series }` |
 | `flashcard-deck` | Study deck of `cards` (front, back, hint, category): flip, mark Got it or Missed it, progress dots, then a score screen listing missed cards with Practise missed (re-deals only those) and Restart. Binds `score`; emits `on_complete` with `{ score, total }` |
+| `word-guess` | Daily-word style guessing game from one `answer` (4 to 7 letters, A to Z, any case): a `max_guesses` by length board (default 6), physical and on-screen keyboard, per-letter feedback (correct spot, in word, not in word, count-limited for repeated letters) shown by colour, a corner glyph and a label, an optional `hint`, then a win or lose screen with the answer and a copyable share grid. Binds `value` `{ guesses, status, hint_used }`; emits `on_complete` once with `{ won, guesses }`. The answer is visible in the spec |
+| `quiz` | Trivia game from `questions` (prompt, 2 to 5 `choices`, `answer` index, `why`, optional `image`; 3 to 12): one question at a time, a progress rail, big choice tiles (keys 1 to 5), instant right or wrong with the answer marked and `why` shown, a streak, an optional `seconds_per_question` countdown (waits for Start; a timeout is a miss), `shuffle_choices`. Ends with the score, a verdict band, a review of misses and Retry. Binds `value` `{ index, answers, score, done }`; emits `on_complete` once per run with `{ score, total }` |
+| `memory-match` | Card-flip pairs game: `pairs` (6 to 12 of `{ id, a, b }`; each side is text, one emoji or `icon:<key>`), `title`, `columns` (auto), `time_limit_s`. Seeded deal that survives a re-sent spec, a match stays up, a miss turns back after 800ms; moves, time, best this session, win screen with Play again; arrow keys and Enter play it. Binds `value` (`{ moves, matched, completed, seconds }`); emits `on_complete` once per win with `{ moves, seconds }` |
 | `exec-dashboard` | KPI dashboard from raw `rows` plus `measures` (sum, avg, count) and `dimensions`: it computes the KPIs with trends, a column chart along `x` (stacked by `split`), a breakdown and a filtered table with totals. A filter chip recomputes every number. Binds `filters`; `on_filter` gets `{key, value}`. Prebuilt `kpis`/`primaryChart`/`table` still work |
 | `ops-dashboard` / `analytics-dashboard` / `pipeline-dashboard` / `project-dashboard` | Pre-composed dashboard variants for common business surfaces |
 
@@ -504,7 +522,13 @@ The widget registry accepts several common aliases — pick whichever reads bett
 | `reservation`, `appointment` | `booking` |
 | `food-menu`, `order-menu` | `menu-order` |
 | `workout-timer`, `interval-timer`, `hiit-timer` | `interval-workout` |
+| `habits`, `streak-tracker` | `habit-tracker` |
+| `pomodoro`, `pomodoro-timer` | `focus-timer` |
 | `flashcards`, `study-deck`, `flip-cards` | `flashcard-deck` |
+| `guess-the-word`, `word-game` | `word-guess` |
+| `trivia`, `trivia-quiz` | `quiz` |
+| `memory-game`, `match-pairs` | `memory-match` |
+| `tic-tac-toe`, `connect-four` | `board-game` (the alias picks `game` when it is missing) |
 | `wizard` | `wizard-layout` |
 | `checklist` | `checklist-layout` |
 | `trip-plan`, `travel-itinerary` | `itinerary` |

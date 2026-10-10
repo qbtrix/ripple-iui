@@ -129,6 +129,8 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   // interactive consumer widgets (value = full item array)
   'todo-list', 'todo', 'todos',
   'checklist-layout', 'checklist',
+  // quiz: value = { index, answers, score, done }
+  'quiz', 'trivia', 'trivia-quiz',
   // selectable data
   'tree', 'treeview', 'tree-table', 'treetable', 'nested-rows',
   'kanban', 'board',
@@ -156,6 +158,18 @@ const DEFAULT_BIND_WIDGETS: ReadonlySet<string> = new Set([
   'sidebar', 'nav',
   // bill-split binds the bill as edited ({ subtotal, tip_percent, people })
   'bill-split', 'split-bill', 'bill-splitter',
+  // word-guess binds its game ({ guesses, status, hint_used }), written by the widget
+  'word-guess', 'guess-the-word', 'word-game',
+  // memory-match binds its game ({ moves, matched, completed, seconds }),
+  // written by the widget on each move, never on a timer tick
+  'memory-match', 'memory-game', 'match-pairs',
+  // habit-tracker binds { habits, ticks: { [habitId]: ISO days } }
+  'habit-tracker', 'habits', 'streak-tracker',
+  // focus-timer binds its session ({ phase, remaining_s, running, rounds_done, task, log })
+  'focus-timer', 'pomodoro', 'pomodoro-timer',
+  // board-game binds the game ({ board, turn, result, series }), written by
+  // the widget on every move, Rematch and New series
+  'board-game', 'tic-tac-toe', 'connect-four',
 ]);
 
 const warnedTypes = new Set<string>();
