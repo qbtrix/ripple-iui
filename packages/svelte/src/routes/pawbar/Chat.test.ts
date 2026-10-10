@@ -328,7 +328,7 @@ test('the spec peek: seeded cards start closed, the first triggered card opens o
 });
 
 const leaked = (t: string | null) => /pawbar-card|```|\{"ui"/.test(t ?? '');
-const said = (view: ReturnType<typeof render>) => [...view.container.querySelectorAll('.say')].map((p) => p.textContent ?? '');
+const said = (root: HTMLElement) => [...root.querySelectorAll('.say')].map((p) => p.textContent ?? '');
 
 test('a restarted legacy fence shows no spec text and renders the second card', async () => {
 	const t = heartReply.text;
@@ -341,8 +341,8 @@ test('a restarted legacy fence shows no spec text and renders the second card', 
 	await waitFor(() => expect(view.container.querySelector('.card')?.getAttribute('data-status')).toBe('final'));
 	expect(view.container.querySelectorAll('.card')).toHaveLength(1);
 	expect(view.container.querySelector('.card-note')).toBeNull();
-	expect(said(view).filter(leaked)).toEqual([]);
-	expect(said(view).join(' ')).toContain('two pumps side by side');
+	expect(said(view.container).filter(leaked)).toEqual([]);
+	expect(said(view.container).join(' ')).toContain('two pumps side by side');
 });
 
 test('spec text the server leaked into chunks is never displayed', async () => {
@@ -371,7 +371,7 @@ test('a leak next to a card that rendered hides quietly, with no Card hidden not
 	const view = render(Chat, { session });
 	await session.send('x');
 	await waitFor(() => expect(view.getByText('After.')).toBeTruthy());
-	expect(said(view).filter(leaked)).toEqual([]);
+	expect(said(view.container).filter(leaked)).toEqual([]);
 	expect(view.queryByText(/Card hidden/)).toBeNull();
 });
 

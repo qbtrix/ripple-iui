@@ -113,8 +113,17 @@ describe('segments (legacy fence)', () => {
 	});
 });
 
+const leaked = (t: string) => /pawbar-card|```|\{"ui"/.test(t);
+// Chunk cuts: fixed sizes, plus cuts inside the restart marker and the close.
+const cuts = (text: string) => {
+	const second = text.lastIndexOf('```pawbar-card');
+	const close = text.lastIndexOf('\n```');
+	const at = (...ps: number[]) => [0, ...ps].map((p, k, all) => text.slice(p, all[k + 1]));
+	const sized = (n: number) => Array.from({ length: Math.ceil(text.length / n) }, (_, k) => text.slice(k * n, k * n + n));
+	return [sized(3), sized(17), sized(256), sized(4096), [text], at(second + 2, second + 6, close + 3)];
+};
+
 describe('a restarted card fence (real replies)', () => {
-	const leaked = (t: string) => /pawbar-card|```|\{"ui"/.test(t);
 	const heartCard = (() => {
 		const t = heartReply.text;
 		const open = t.lastIndexOf('```pawbar-card\n') + '```pawbar-card\n'.length;
@@ -150,21 +159,6 @@ describe('a restarted card fence (real replies)', () => {
 			{ kind: 'text', text: '\nB' }
 		]);
 	});
-
-	// Chunk cuts: fixed sizes, plus cuts inside the restart marker and the close.
-	const cuts = (text: string) => {
-		const second = text.lastIndexOf('```pawbar-card');
-		const close = text.lastIndexOf('\n```');
-		const at = (...ps: number[]) => {
-			const out: string[] = [];
-			let from = 0;
-			for (const p of ps) (out.push(text.slice(from, p)), (from = p));
-			out.push(text.slice(from));
-			return out;
-		};
-		const sized = (n: number) => Array.from({ length: Math.ceil(text.length / n) }, (_, k) => text.slice(k * n, k * n + n));
-		return [sized(3), sized(17), sized(256), sized(4096), [text], at(second + 2, second + 6, close + 3)];
-	};
 
 	async function play(text: string, chunks: string[]) {
 		const seen: string[] = [];

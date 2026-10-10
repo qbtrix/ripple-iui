@@ -6,7 +6,9 @@
 // Cards: `card.start` opens a Card whose `card.delta` text (`{"ui":…,"state":…}`)
 // is pushed, with `"version":"1.0",` spliced in after the first `{`, into a
 // streamSpec store; `card.final` swaps in the validated spec; `card.rejected`
-// (or a turn that ends first: "truncated") drops it for a short note. The
+// (or a turn that ends first: "truncated") drops it for a short note, except
+// reason `restarted` (the model started the card over), which drops it with no
+// note, like a restarted legacy fence. The
 // When the live answer is unavailable (limit, busy, unreachable) and the
 // session has a `fallback` transport, the notice carries `replay`, and
 // replayRecorded() plays the closest recorded answer into that same turn.
@@ -628,10 +630,19 @@ export class ChatSession {
 				st.cards.get(id)?.final(d.card);
 				st.cards.delete(id);
 				return false;
-			case 'card.rejected':
-				st.cards.get(id)?.reject(`server:${str(d.reason, 'rejected')}`);
+			case 'card.rejected': {
+				const card = st.cards.get(id);
 				st.cards.delete(id);
+				if (!card) return false;
+				card.reject(`server:${str(d.reason, 'rejected')}`);
+				if (d.reason === 'restarted') {
+					// The model started this card over and a new card.start follows: drop it quietly.
+					const at = turn.parts.findIndex((p) => p.kind === 'card' && p.card === card);
+					if (at >= 0) turn.parts.splice(at, 1);
+					if (at >= 0 && at < st.runStart) st.runStart--;
+				}
 				return false;
+			}
 			case 'unavailable':
 				turn.notice =
 					d.reason === 'limit'
@@ -671,6 +682,10 @@ export class ChatSession {
 			}
 			const card = (st.legacy[k] ??= new Card());
 			k++;
+			if (seg.restarted) {
+				card.reject('restarted'); // the model started this card over: drop it quietly, no part
+				continue;
+			}
 			card.feed(seg.text);
 			if (seg.closed && card.status === 'streaming') {
 				try {
