@@ -7,7 +7,15 @@
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so.
     No frame: the thread sits on the page ground and only the composer and the
-    rendered cards are surfaces. Assistant text renders as markdown-lite
+    rendered cards are surfaces. The look follows Paw OS (paw-enterprise):
+    the composer is ChatPill's liquid-glass pill (autosizing textarea, a round
+    send that turns into a round stop while a turn streams, a 3px ring on
+    focus), the visitor's message a right-aligned blue-tint bubble, and the
+    assistant has no bubble. Cards sit on --site-card, a darker shade of the
+    warm ground, with a hairline and no shadow. While a turn waits for its
+    first token it shows PE's typing dots and the thinking-indicator's
+    shimmering label, rotating; a card that is streaming shows shimmer bars
+    until its first widget draws and a spinner status line under it. Assistant text renders as markdown-lite
     (paragraphs, **bold**, `code`) built from Svelte nodes; model text never
     goes through {@html}. A card renders through <Ripple streaming> while it
     arrives and swaps to <Ripple spec> on final (a remount, so the validated
@@ -35,10 +43,13 @@
     and aria-busy while a turn streams; one polite region says "Building"
     and "Done" per turn instead of reading tokens.
     DOM ids are positional, never Card.id: that counter can differ between the
-    prerender and hydration. Reduced motion lives in CSS only.
+    prerender and hydration. Reduced motion lives in CSS, plus the label
+    rotation, which stays on "Thinking".
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
+	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import X from '@lucide/svelte/icons/x';
 	import { Ripple } from '$lib/index.js';
 	import { prettyPrefix } from '$lib/site/prettyPrefix.js';
 	import JsonLines from '$lib/site/JsonLines.svelte';
@@ -83,6 +94,34 @@
 	});
 
 	let draft = $state('');
+	let field = $state<HTMLTextAreaElement>();
+	/** The draft wraps past one line: the pill rounds out to 20px. */
+	let multiline = $state(false);
+
+	// PE's composer autosizes 38px to 180px, then scrolls.
+	$effect(() => {
+		void draft;
+		if (!field) return;
+		field.style.height = 'auto';
+		const h = field.scrollHeight;
+		field.style.height = `${Math.min(Math.max(h, 38), 180)}px`;
+		multiline = h > 44;
+	});
+
+	const THINKING = ['Thinking', 'Planning the card', 'Drawing it'];
+	let thinkingAt = $state(0);
+	const waiting = $derived.by(() => {
+		const last = session.turns.at(-1);
+		return Boolean(last?.pending && !last.parts.length);
+	});
+	// The label rotates while a turn waits for its first token; reduced motion keeps "Thinking".
+	$effect(() => {
+		if (!waiting) return;
+		thinkingAt = 0;
+		if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+		const timer = setInterval(() => (thinkingAt = (thinkingAt + 1) % THINKING.length), 2400);
+		return () => clearInterval(timer);
+	});
 	/** The visitor has engaged: from here on the composer is sticky. */
 	let engaged = $state(false);
 	let log = $state<HTMLOListElement>();
@@ -253,7 +292,6 @@
 		<figure class="card" data-status={card.status} data-bare={bare(card) || undefined}>
 			<figcaption class="card-head">
 				<span class="card-title">{card.title || 'Card'}</span>
-				{#if card.status === 'streaming'}<span class="building" aria-hidden="true">Building</span>{/if}
 				<span class="tools">
 					<button type="button" class="tool" aria-expanded={open} aria-controls={pid} onclick={() => (peek[card.id] = !open)}>Spec</button>
 					<button type="button" class="tool" onclick={() => copySpec(card)}>{copied === card.id ? 'Copied' : 'Copy spec'}</button>
@@ -264,7 +302,8 @@
 					{#if card.status === 'final' && card.spec}
 						<Ripple spec={card.spec} onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 					{:else}
-						<Ripple streaming={card.store} skeleton="card" onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
+						<div class="placeholder" aria-hidden="true"><span></span><span></span><span></span></div>
+						<Ripple streaming={card.store} skeleton="none" onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 					{/if}
 				</div>
 				<div class="peek" id={pid} inert={!open}>
@@ -283,6 +322,9 @@
 					</div>
 				</div>
 			</div>
+			{#if card.status === 'streaming'}
+				<p class="status-line" aria-hidden="true"><span class="spinner"></span>Building the card…</p>
+			{/if}
 			{#if card.sent}<p class="sent" role="status">The card sent <code>{card.sent}</code> to this page.</p>{/if}
 			{#if card.note}<p class="host-note" data-kind={card.note.kind} role="status">{card.note.text}</p>{/if}
 		</figure>
@@ -328,7 +370,15 @@
 								{@render cardView(part.card, `ripple-spec-${t}-${i}`)}
 							{/if}
 						{/each}
-						{#if turn.pending && !turn.parts.length}<p class="thinking">Thinking</p>{/if}
+						{#if turn.pending && !turn.parts.length}
+							<p class="thinking">
+								<span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+								<span class="label">
+									<span class="sizer" aria-hidden="true">Planning the card</span>
+									{#key thinkingAt}<span class="shimmer">{THINKING[thinkingAt]}</span>{/key}
+								</span>
+							</p>
+						{/if}
 						{#if turn.notice}
 							<p class="notice" data-kind={turn.notice.kind} role="status">
 								{@render icon(turn.notice.kind)}
@@ -353,6 +403,7 @@
 
 	<form
 		class="composer"
+		data-multiline={multiline || undefined}
 		onfocusin={() => (engaged = true)}
 		onsubmit={(e) => {
 			e.preventDefault();
@@ -362,18 +413,21 @@
 		<label class="sr-only" for="ripple-ask">{typedLocal ? 'Describe the tool you want' : 'Type a request to continue in Paw OS'}</label>
 		<textarea
 			id="ripple-ask"
-			rows="2"
+			rows="1"
 			maxlength="2000"
 			aria-describedby={typedLocal ? undefined : 'ripple-ask-hint'}
 			placeholder={typedLocal ? 'Ask for a tool, like a tip splitter' : 'Type your own request to continue in Paw OS'}
 			bind:value={draft}
+			bind:this={field}
 			onkeydown={onKey}
 		></textarea>
-		{#if session.busy}
-			<button type="button" class="send stop" onclick={() => session.stop()}>Stop</button>
-		{:else}
-			<button type="submit" class="send" disabled={!draft.trim()}>Send</button>
-		{/if}
+		<div class="controls">
+			{#if session.busy}
+				<button type="button" class="send stop" aria-label="Stop" title="Stop" onclick={() => session.stop()}><span class="disc"><X size={14} strokeWidth={2.25} aria-hidden="true" /></span></button>
+			{:else}
+				<button type="submit" class="send" aria-label="Send" title="Send" disabled={!draft.trim()}><span class="disc"><ArrowUp size={15} strokeWidth={2.25} aria-hidden="true" /></span></button>
+			{/if}
+		</div>
 	</form>
 	{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Try a suggestion here, or type your own and continue in Paw OS.</p>{/if}
 
@@ -398,9 +452,11 @@
 
 <style>
 	.chat {
+		--ease-pill: cubic-bezier(0.16, 1, 0.3, 1);
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
+		font-size: 15px;
 	}
 	.sr-only {
 		position: absolute;
@@ -416,24 +472,25 @@
 		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
+		gap: 14px;
 	}
 	.turn {
 		scroll-margin-top: calc(var(--site-topbar) + 24px);
 	}
 	.turn:not([data-seeded]) {
-		animation: rise var(--dur-mount) var(--ease-out-quart);
+		animation: rise 180ms var(--ease-out-quart);
 	}
 	.turn[data-role='user'] {
 		display: flex;
 		justify-content: flex-end;
 	}
+	/* PE's UserMessage: a blue-tint bubble, the corner by the edge tucked in. */
 	.ask {
 		margin: 0;
-		max-width: min(560px, 88%);
-		padding: 10px 14px;
-		border-radius: var(--radius-card);
-		background: var(--site-hover);
+		max-width: 85%;
+		padding: 10px 16px;
+		border-radius: 16px 16px 6px 16px;
+		background: color-mix(in oklch, var(--primary) 10%, transparent);
 		color: var(--site-ink);
 		line-height: 1.5;
 		overflow-wrap: anywhere;
@@ -444,10 +501,11 @@
 		flex-direction: column;
 		gap: 14px;
 	}
+	/* PE's AssistantMessage: no bubble, text-sm leading-relaxed. */
 	.say {
 		margin: 0;
 		max-width: 68ch;
-		line-height: 1.65;
+		line-height: 1.625;
 		white-space: pre-line;
 		overflow-wrap: anywhere;
 	}
@@ -468,35 +526,123 @@
 		background: var(--primary);
 		animation: blink 1s steps(1) infinite;
 	}
-	.thinking,
-	.building {
+	/* PE's typing dots, then thinking-indicator's shimmering label. */
+	.thinking {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
-		font-size: 13px;
-		color: var(--site-soft);
-	}
-	.thinking {
+		gap: 10px;
 		margin: 0;
+		padding: 4px 0;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.4;
 	}
-	.thinking::before,
-	.building::before {
-		content: '';
-		width: 6px;
-		height: 6px;
+	.dots {
+		display: inline-flex;
+		gap: 4px;
+	}
+	.dots > span {
+		width: 5px;
+		height: 5px;
 		border-radius: 50%;
-		background: var(--primary);
-		animation: pulse 1.4s ease-in-out infinite;
+		background: color-mix(in oklch, var(--site-ink-base) 35%, transparent);
+		animation: dot-bounce 1.2s ease-in-out infinite;
+	}
+	.dots > span:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+	.dots > span:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+	.label {
+		display: inline-grid;
+		overflow: hidden;
+	}
+	.sizer,
+	.shimmer {
+		grid-area: 1 / 1;
+	}
+	.sizer {
+		visibility: hidden;
+	}
+	.shimmer {
+		color: transparent;
+		background: linear-gradient(
+			90deg,
+			color-mix(in oklch, var(--site-ink-base) 38%, transparent) 0%,
+			color-mix(in oklch, var(--site-ink-base) 38%, transparent) 35%,
+			color-mix(in oklch, var(--site-ink-base) 88%, transparent) 50%,
+			color-mix(in oklch, var(--site-ink-base) 38%, transparent) 65%,
+			color-mix(in oklch, var(--site-ink-base) 38%, transparent) 100%
+		);
+		background-size: 300% 100%;
+		background-clip: text;
+		-webkit-background-clip: text;
+		animation:
+			ti-shimmer 1.6s ease-in-out infinite,
+			label-in 240ms cubic-bezier(0.33, 1, 0.68, 1);
 	}
 
-	/* The rendered card: the one elevated thing in the thread. */
+	/* A streaming card: shimmer bars until its first frame, a status line under it. */
+	/* Until the first widget renders: a partial spec can parse yet draw nothing. */
+	.card-ui:has(:global(.ripple-root [data-widget])) .placeholder {
+		display: none;
+	}
+	.placeholder {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 4px 0;
+	}
+	.placeholder > span {
+		height: 12px;
+		border-radius: 6px;
+		background: linear-gradient(
+			90deg,
+			color-mix(in oklch, var(--site-ink-base) 7%, transparent) 0%,
+			color-mix(in oklch, var(--site-ink-base) 15%, transparent) 50%,
+			color-mix(in oklch, var(--site-ink-base) 7%, transparent) 100%
+		);
+		background-size: 200% 100%;
+		animation: bar-shimmer 1.5s ease-in-out infinite;
+	}
+	.placeholder > span:nth-child(1) {
+		width: 42%;
+	}
+	.placeholder > span:nth-child(2) {
+		width: 86%;
+	}
+	.placeholder > span:nth-child(3) {
+		width: 64%;
+	}
+	.status-line {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0;
+		padding: 8px 16px 10px;
+		border-top: 1px solid var(--site-line);
+		font-size: 12px;
+		color: var(--site-soft);
+	}
+	.spinner {
+		flex: none;
+		width: 14px;
+		height: 14px;
+		box-sizing: border-box;
+		border: 1.75px solid color-mix(in oklch, var(--site-ink-base) 22%, transparent);
+		border-top-color: var(--site-soft);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	/* The rendered card: a darker shade of the ground, a hairline, no shadow. */
 	.card {
 		margin: 0;
 		min-width: 0;
 		border: 1px solid var(--site-line);
-		border-radius: var(--radius-card);
-		background: var(--site-panel, var(--card));
-		box-shadow: var(--shadow-card);
+		border-radius: 12px;
+		background: var(--site-card, var(--card));
 		overflow: hidden;
 	}
 	/* The spec's root is a card widget: it is the surface, ours steps back. */
@@ -504,7 +650,6 @@
 		border: 0;
 		border-radius: 0;
 		background: none;
-		box-shadow: none;
 	}
 	.card[data-bare] .card-head {
 		padding-left: 0;
@@ -764,68 +909,113 @@
 		cursor: default;
 	}
 
-	/* In the flow until the visitor engages, then sticky above the safe area. */
+	/* PE's ChatPill: a liquid-glass pill, in the flow until the visitor
+	   engages, then sticky above the safe area. */
 	.composer {
 		position: relative;
 		z-index: var(--z-sticky);
+		box-sizing: border-box;
 		display: flex;
-		align-items: flex-end;
-		gap: 10px;
-		padding: 8px 8px 8px 16px;
-		border: 1px solid var(--site-line);
-		border-radius: var(--radius-card);
-		background: var(--site-ground);
+		flex-direction: column;
+		gap: 4px;
+		width: min(720px, 100%);
+		padding: 6px 8px 8px 14px;
+		border: 1px solid var(--composer-line);
+		border-radius: 16px;
+		background: var(--composer-glass);
+		backdrop-filter: blur(8px) saturate(150%);
+		-webkit-backdrop-filter: blur(8px) saturate(150%);
+		box-shadow: inset 0 1px 0 0 var(--composer-reflex);
+		transition: all 250ms var(--ease-pill);
+	}
+	.composer[data-multiline] {
+		border-radius: 20px;
 	}
 	.chat[data-engaged] .composer {
 		position: sticky;
 		bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 	}
 	.composer:focus-within {
-		outline: 2px solid var(--ring);
-		outline-offset: 2px;
+		box-shadow:
+			inset 0 1px 0 0 var(--composer-reflex),
+			0 0 0 3px color-mix(in srgb, var(--primary) 50%, transparent);
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.composer {
+			background: var(--site-panel);
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+		}
 	}
 	textarea {
-		flex: 1;
-		min-width: 0;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 38px;
+		max-height: 180px;
 		resize: none;
 		border: 0;
 		outline: 0;
 		padding: 7px 0;
 		background: transparent;
-		color: var(--site-ink);
+		color: color-mix(in oklch, var(--site-ink-base) 88%, transparent);
+		caret-color: var(--primary);
 		font: inherit;
+		/* 16px, or iOS zooms the page on focus. */
 		font-size: 16px;
 		line-height: 1.5;
+		overflow-y: auto;
 	}
 	textarea::placeholder {
-		color: var(--site-soft);
+		color: color-mix(in oklch, var(--site-ink-base) 45%, transparent);
 	}
+	.controls {
+		display: flex;
+		justify-content: flex-end;
+	}
+	/* A 28px round disc inside a 44px hit area. */
 	.send {
 		flex: none;
-		min-height: 44px;
-		padding: 0 18px;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		margin: -8px;
+		padding: 0;
 		border: 0;
-		border-radius: var(--radius-control);
-		background: var(--primary);
-		color: var(--site-on-primary);
-		font: inherit;
-		font-weight: 600;
-		font-size: 14px;
+		background: none;
+		color: #fff;
 		cursor: pointer;
-		transition: background 0.15s;
 	}
-	.send:hover:not(:disabled) {
-		background: color-mix(in oklch, var(--primary) 88%, black);
+	.disc {
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		box-sizing: border-box;
+		border-radius: 50%;
+		background: var(--primary);
+		transition: all 250ms var(--ease-pill);
 	}
-	/* Disabled reads as ink on a 9% ink fill, not a faded blue. */
+	.send:hover:not(:disabled) .disc {
+		background: color-mix(in srgb, var(--primary) 90%, transparent);
+	}
 	.send:disabled {
-		background: var(--site-pressed);
-		color: var(--site-soft);
 		cursor: default;
 	}
-	.send.stop {
+	.send:disabled .disc {
 		background: var(--site-pressed);
+		color: var(--site-soft);
+	}
+	/* Streaming: an outline stop. */
+	.send.stop {
 		color: var(--site-ink);
+	}
+	.send.stop .disc {
+		border: 1px solid var(--composer-line);
+		background: none;
+	}
+	.send.stop:hover .disc {
+		background: var(--site-hover);
 	}
 	.hint {
 		margin: -6px 0 0;
@@ -901,11 +1091,17 @@
 		color: var(--site-soft);
 		cursor: default;
 	}
-	.send:focus-visible,
 	.chip:focus-visible,
 	.tool:focus-visible,
 	.replay:focus-visible,
 	.notice a:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.send:focus-visible {
+		outline: none;
+	}
+	.send:focus-visible .disc {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
@@ -946,12 +1142,46 @@
 	@keyframes rise {
 		from {
 			opacity: 0;
-			transform: translateY(8px);
+			transform: translateY(2px);
 		}
 	}
-	@keyframes pulse {
-		50% {
+	@keyframes dot-bounce {
+		0%,
+		60%,
+		100% {
+			transform: translateY(0);
 			opacity: 0.35;
+		}
+		40% {
+			transform: translateY(-3px);
+			opacity: 0.8;
+		}
+	}
+	@keyframes ti-shimmer {
+		0% {
+			background-position: 100% 0;
+		}
+		100% {
+			background-position: -100% 0;
+		}
+	}
+	@keyframes label-in {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+	}
+	@keyframes bar-shimmer {
+		0% {
+			background-position: 100% 0;
+		}
+		100% {
+			background-position: -100% 0;
+		}
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
 		}
 	}
 	@keyframes blink {
@@ -961,10 +1191,20 @@
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.turn:not([data-seeded]),
-		.thinking::before,
-		.building::before,
+		.dots > span,
+		.shimmer,
+		.placeholder > span,
+		.spinner,
 		.caret {
 			animation: none;
+		}
+		.shimmer {
+			color: var(--site-soft);
+			background: none;
+		}
+		.composer,
+		.disc {
+			transition: none;
 		}
 		.card-body,
 		.card-body[data-open='true'] {

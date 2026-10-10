@@ -41,9 +41,9 @@
 		flex-direction: column;
 		gap: 10px;
 		padding: 14px 16px;
-		border: 1px solid color-mix(in oklch, var(--primary) 45%, transparent);
+		border: 1px solid var(--site-line);
 		border-radius: var(--radius-paw);
-		background: color-mix(in oklch, var(--primary) 8%, transparent);
+		background: var(--site-card, var(--card));
 	}
 	.title {
 		margin: 0;

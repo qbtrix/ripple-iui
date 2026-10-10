@@ -28,7 +28,7 @@
 		padding: 14px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-paw);
-		background: var(--site-panel, color-mix(in oklch, var(--background) 82%, transparent));
+		background: var(--site-card, var(--card));
 		min-width: 0;
 	}
 	:global(.dark) .track :global(.leaflet-tile-pane) {

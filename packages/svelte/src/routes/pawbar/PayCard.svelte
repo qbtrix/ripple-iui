@@ -103,7 +103,7 @@
 		padding: 14px 16px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-paw);
-		background: var(--site-panel, var(--card));
+		background: var(--site-card, var(--card));
 		color: var(--site-ink);
 	}
 	.head {
