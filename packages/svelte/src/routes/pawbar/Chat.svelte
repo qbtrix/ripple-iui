@@ -15,7 +15,7 @@
     warm ground, with a hairline and no shadow. While a turn waits for its
     first token it shows PE's typing dots and the thinking-indicator's
     shimmering label, rotating; a card that is streaming shows shimmer bars
-    until its first frame and a spinner status line under it. Assistant text renders as markdown-lite
+    until its first widget draws and a spinner status line under it. Assistant text renders as markdown-lite
     (paragraphs, **bold**, `code`) built from Svelte nodes; model text never
     goes through {@html}. A card renders through <Ripple streaming> while it
     arrives and swaps to <Ripple spec> on final (a remount, so the validated
@@ -302,9 +302,7 @@
 					{#if card.status === 'final' && card.spec}
 						<Ripple spec={card.spec} onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 					{:else}
-						{#if card.store.current == null}
-							<div class="placeholder" aria-hidden="true"><span></span><span></span><span></span></div>
-						{/if}
+						<div class="placeholder" aria-hidden="true"><span></span><span></span><span></span></div>
 						<Ripple streaming={card.store} skeleton="none" onEvent={(e) => session.hostEvent(card, e)} onComplete={(r) => session.flowComplete(card, r)} />
 					{/if}
 				</div>
@@ -586,6 +584,10 @@
 	}
 
 	/* A streaming card: shimmer bars until its first frame, a status line under it. */
+	/* Until the first widget renders: a partial spec can parse yet draw nothing. */
+	.card-ui:has(:global(.ripple-root [data-widget])) .placeholder {
+		display: none;
+	}
 	.placeholder {
 		display: flex;
 		flex-direction: column;
@@ -597,9 +599,9 @@
 		border-radius: 6px;
 		background: linear-gradient(
 			90deg,
-			var(--site-hover) 0%,
-			var(--site-pressed) 50%,
-			var(--site-hover) 100%
+			color-mix(in oklch, var(--site-ink-base) 7%, transparent) 0%,
+			color-mix(in oklch, var(--site-ink-base) 15%, transparent) 50%,
+			color-mix(in oklch, var(--site-ink-base) 7%, transparent) 100%
 		);
 		background-size: 200% 100%;
 		animation: bar-shimmer 1.5s ease-in-out infinite;

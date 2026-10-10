@@ -1,9 +1,10 @@
 <!--
   @file routes/live/+page.svelte
-  @description /live, the runs gallery: every recorded model answer (real
-    output, recorded offline by scripts/record-scenario.ts) and every
-    hand-written answer (play-cards.ts) as a thumbnail card with its prompt as
-    the caption, tagged Recorded or Hand-written. A plain click on a card opens
+  @description /live, the runs gallery, laid out like Paw OS Discover: a
+    compact hero (lib/discover's DiscoverHeader), then two titled sections of
+    tiles (GalleryGrid), the recorded model answers (real output, recorded
+    offline by scripts/record-scenario.ts) and the hand-written answers
+    (play-cards.ts), each tile with its prompt as the caption. A plain click on a card opens
     the run in place (Player: it streams into <Ripple> and ends as a working
     card) with a "Back to gallery" button; the card's href `?s=<id>` is the
     deep link, read after mount since the page is prerendered, and browser
@@ -18,6 +19,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { pushState, replaceState } from '$app/navigation';
+	import DiscoverHeader from '$lib/discover/DiscoverHeader.svelte';
 	import GalleryGrid from '../showcase/GalleryGrid.svelte';
 	import { liveItems, liveRuns } from '../showcase/gallery.js';
 	import { readReturn } from './checkout.js';
@@ -30,6 +32,8 @@
 	let receipt = $state<{ order: string | null; mock: boolean; cancelled: boolean } | null>(null);
 	let back = $state<HTMLButtonElement>();
 	const open = $derived(liveRuns.find((s) => s.id === openId) ?? null);
+	const recorded = liveItems.filter((i) => i.tag === 'Recorded');
+	const written = liveItems.filter((i) => i.tag !== 'Recorded');
 	const openItem = $derived(liveItems.find((i) => i.id === `live-${openId}`));
 
 	const runId = (search: string) => {
@@ -114,14 +118,16 @@
 		</div>
 		{#key open.id}<Player run={open} storeUrl={STORE_URL} />{/key}
 	{:else}
-		<header class="head">
-			<h1>Live</h1>
+		<DiscoverHeader as="h1" title="Watch a model" accent="build it live" class="hero">
 			<p class="lede">
 				Watch a model build what it was asked for, then use it. Recorded runs are real model output on their original
 				timing. Hand-written runs are cards we wrote for the newer widgets.
 			</p>
-		</header>
-		<GalleryGrid items={liveItems} label="Runs" onopen={openRun} />
+		</DiscoverHeader>
+		<div class="sections">
+			<GalleryGrid items={recorded} label="Recorded runs" title="Recorded runs" blurb="Real model output, replayed on its original timing." onopen={openRun} />
+			<GalleryGrid items={written} label="Hand-written runs" title="Hand-written" blurb="Cards we wrote for the newer widgets, streamed the same way." onopen={openRun} />
+		</div>
 	{/if}
 </main>
 
@@ -139,8 +145,28 @@
 		color: var(--site-ink);
 		overflow-x: clip;
 	}
-	.head {
-		padding: clamp(28px, 5vw, 48px) 0 20px;
+	/* DiscoverHeader, sized for the site: compact, no 100vh. */
+	.live :global(.hero) {
+		max-width: none;
+		padding: clamp(28px, 5vw, 48px) 0 32px;
+	}
+	/* A grid item would grow to the chip row's width on a phone. */
+	.live :global(.hero > *) {
+		min-width: 0;
+	}
+	.live :global(.hero h1) {
+		margin: 0;
+		font-family: var(--font-display);
+		letter-spacing: -0.03em;
+		font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+		font-weight: 600;
+		line-height: 1.08;
+		text-wrap: balance;
+	}
+	.sections {
+		display: flex;
+		flex-direction: column;
+		gap: 48px;
 	}
 	h1 {
 		margin: 0;
@@ -151,7 +177,7 @@
 		letter-spacing: -0.03em;
 	}
 	.lede {
-		margin: 12px 0 0;
+		margin: 0;
 		max-width: 64ch;
 		font-size: 16px;
 		line-height: 1.55;
