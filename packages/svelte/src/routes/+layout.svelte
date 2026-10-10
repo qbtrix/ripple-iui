@@ -25,12 +25,13 @@
 
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const NPM_URL = 'https://www.npmjs.com/package/@ripple-ui/svelte';
-	const nav = [
+	// `short` is the bar's label between 640 and 960px, where the full one would wrap.
+	const nav: { href: string; label: string; short?: string }[] = [
 		{ href: '/', label: 'Chat' },
 		{ href: '/showcase', label: 'Showcase' },
 		{ href: '/live', label: 'Live' },
 		{ href: '/docs', label: 'Docs' },
-		{ href: '/ds', label: 'Design system' }
+		{ href: '/ds', label: 'Design system', short: 'DS' }
 	];
 	// '/' would prefix-match every page, so Chat is current only on the landing.
 	const current = (href: string) => (href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href));
@@ -65,7 +66,9 @@
 			href={item.href}
 			class="link"
 			aria-current={current(item.href) ? 'page' : undefined}
-			onclick={() => (menuOpen = false)}>{item.label}</a
+			onclick={() => (menuOpen = false)}
+			>{#if item.short}<span class="long">{item.label}</span><span class="short" aria-hidden="true">{item.short}</span
+				>{:else}{item.label}{/if}</a
 		>
 	{/each}
 {/snippet}
@@ -239,6 +242,24 @@
 		transition:
 			color 0.15s,
 			background 0.15s;
+	}
+	.link {
+		white-space: nowrap;
+	}
+	.short {
+		display: none;
+	}
+	@media (min-width: 640px) and (max-width: 959.98px) {
+		.links .long {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+		}
+		.links .short {
+			display: inline;
+		}
 	}
 	.link:hover {
 		color: var(--site-ink);
