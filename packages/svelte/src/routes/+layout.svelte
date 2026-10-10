@@ -1,8 +1,9 @@
 <!--
   @file routes/+layout.svelte
   @description The site chrome every route shares. A 56px sticky top bar (Paw
-    mark + "Ripple", Docs / Live / Playground / Showcase, a search slot, the
-    GitHub icon, the theme toggle) and a one-row footer. Below 640px the nav
+    mark + "Ripple", Chat / Showcase / Live / Docs / Design system, a search slot, the
+    GitHub icon, the theme toggle) and a one-row footer (which also links the
+    Playground). Below 640px the nav
     links move into a disclosure menu; the logo, GitHub icon and theme toggle
     stay in the bar. A skip link (first focus) jumps to #main, the wrapper
     around every page. The bar is the only glass on the site, with a solid
@@ -25,11 +26,14 @@
 	const GITHUB_URL = 'https://github.com/qbtrix/ripple-iui';
 	const NPM_URL = 'https://www.npmjs.com/package/@ripple-ui/svelte';
 	const nav = [
-		{ href: '/docs', label: 'Docs' },
+		{ href: '/', label: 'Chat' },
+		{ href: '/showcase', label: 'Showcase' },
 		{ href: '/live', label: 'Live' },
-		{ href: '/playground', label: 'Playground' },
-		{ href: '/showcase', label: 'Showcase' }
+		{ href: '/docs', label: 'Docs' },
+		{ href: '/ds', label: 'Design system' }
 	];
+	// '/' would prefix-match every page, so Chat is current only on the landing.
+	const current = (href: string) => (href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href));
 
 	let dark = $state(true);
 	let menuOpen = $state(false);
@@ -60,7 +64,7 @@
 		<a
 			href={item.href}
 			class="link"
-			aria-current={page.url.pathname.startsWith(item.href) ? 'page' : undefined}
+			aria-current={current(item.href) ? 'page' : undefined}
 			onclick={() => (menuOpen = false)}>{item.label}</a
 		>
 	{/each}
@@ -118,7 +122,7 @@
 		<p>
 			<span>MIT</span><span aria-hidden="true">·</span><a href={NPM_URL}>npm</a><span aria-hidden="true">·</span><a
 				href={GITHUB_URL}>GitHub</a
-			><span aria-hidden="true">·</span><span>Paw OS by PocketPaw</span>
+			><span aria-hidden="true">·</span><a href="/playground">Playground</a><span aria-hidden="true">·</span><span>Paw OS by PocketPaw</span>
 		</p>
 	</footer>
 </div>
