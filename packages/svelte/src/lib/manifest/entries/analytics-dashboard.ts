@@ -8,7 +8,7 @@ export const analyticsDashboardEntry: WidgetManifestEntry = {
     title: { type: 'string', required: false, description: 'Page title.' },
     subtitle: { type: 'string', required: false, description: 'Subheading.' },
     dateRange: { type: 'string', required: false, description: 'Date-range chip.' },
-    headline: { type: '{ label: string; value: string | number; delta?: string; trend?: "up" | "down" | "flat"; comparison?: string; sparkline?: number[] }', required: false, description: 'The "big number" hero — center stage with sparkline + period comparison.' },
+    headline: { type: '{ label: string; value: string | number; delta?: string; trend?: "up" | "down" | "flat"; comparison?: string; sparkline?: number[] }', required: false, description: 'The "big number" hero: center stage, with sparkline and period comparison.' },
     secondaryMetrics: { type: 'Array<{ label: string; value: string | number; delta?: string; trend?: "up" | "down" | "flat"; sublabel?: string }>', required: false, description: 'Smaller cards next to the headline.' },
     primaryChart: { type: '{ title?: string; subtitle?: string; type?: "bar" | "line" | "area" | "pie" | "donut" | "radar" | "heatmap"; data: DataPoint[]; height?: number; colors?: string[] }', required: false, description: 'Dominant time-series chart.' },
     breakdowns: { type: 'Array<ChartConfig>', required: false, description: 'Small charts in a responsive row (e.g. by source / device / region).' },

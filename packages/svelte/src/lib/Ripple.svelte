@@ -9,9 +9,11 @@
     slides, ...) go to IntentRenderer, dashboards to DashboardRenderer, and
     `custom` / unmapped intents to NodeRenderer.
   - Streaming: a Skeleton shows until the first valid parse; a stream error with
-    no parse renders only the error line. 'ui-streaming' is a getter that is true
-    while this Ripple's stream, or an enclosing one, is still arriving (a flow
-    step's inner Ripple inherits it), so layouts can hold back half-read nodes.
+    no parse renders only the error line. The 'ui-streaming' context getter
+    reports 'active' / 'done' (undefined for a plain spec). A nested Ripple (a
+    flow step's) inherits its parent's phase, and reads 'active' while either
+    stream is still arriving. NodeRenderer holds a throwing node as a
+    placeholder until the stream ends; SelectLayout holds back half-read buttons.
   - State: seeded once from spec.state + the `state` prop. Later spec.state
     changes sync key by key against a private copy of what the spec last said.
     A flow spec seeds this store the same way and hands it to FlowRunner, and
@@ -320,8 +322,15 @@
   // svelte-ignore state_referenced_locally
   setContext('ui-host-event', onEvent);
   setContext('ui-toasts', toastBus);
-  const parentStreaming = getContext<(() => boolean) | undefined>('ui-streaming');
-  setContext('ui-streaming', () => (streaming ? !streaming.done : false) || parentStreaming?.() === true);
+  // 'active' while this or an enclosing streamed spec is still arriving,
+  // 'done' after; undefined for a plain spec. NodeRenderer's per-node boundary
+  // and SelectLayout's button hold-back read it.
+  const parentPhase = getContext<(() => 'active' | 'done' | undefined) | undefined>('ui-streaming');
+  const ownPhase = $derived(streaming ? (streaming.done ? 'done' : 'active') : undefined);
+  setContext('ui-streaming', () => {
+    const parent = parentPhase?.();
+    return ownPhase === 'active' || parent === 'active' ? 'active' : (ownPhase ?? parent);
+  });
 
   $effect(() => {
     if (!onStateChange) return;
@@ -420,7 +429,7 @@
   style={[style, brandStyle, themeStyle].filter(Boolean).join('; ')}
   data-ripple-version={spec.version}
   data-ripple-intent={spec.intent}
-  data-ripple-streaming={streaming ? (streaming.done ? 'done' : 'active') : undefined}
+  data-ripple-streaming={ownPhase}
 >
   {#if renderMode === 'skeleton'}
     <Skeleton variant={skeleton} />

@@ -42,7 +42,7 @@ bun add @ripple-ui/svelte
 
 Ripple shows a skeleton until the first chunk parses, then grows the UI as
 more tokens arrive. `onEvent` gets every side effect the spec asks your app
-to perform. [`docs/streaming.md`](docs/streaming.md) covers the options and
+to perform. [Streaming](https://ripple.pocketpaw.xyz/docs/concepts/streaming) covers the options and
 error handling.
 
 Widgets use Tailwind CSS v4 classes, so your app needs Tailwind v4 and an
