@@ -271,3 +271,79 @@ describe('comparison-layout: logic', () => {
 		expect(labels).toEqual(['Seats', 'Sso']);
 	});
 });
+
+// A live Haiku turn ("Help me pick a laptop") put each feature's definition AND
+// its value inside every item instead of top-level `features` + keyed values.
+const drifted = () => {
+	const f = (gpu: string, ram: number, storage: number, hz: number, kg: number) => [
+		{ key: 'gpu', label: 'Graphics', kind: 'text', value: gpu },
+		{ key: 'ram', label: 'Memory', kind: 'number', value: ram, unit: 'GB', better: 'higher' },
+		{ key: 'storage', label: 'Storage', kind: 'number', value: storage, unit: 'GB', better: 'higher' },
+		{ key: 'refresh', label: 'Display refresh', kind: 'number', value: hz, unit: 'Hz', better: 'higher' },
+		{ key: 'weight', label: 'Weight', kind: 'number', value: kg, unit: 'kg', better: 'lower' }
+	];
+	return {
+		title: 'Help me pick a laptop',
+		winner: { id: 'c', reason: 'Fastest graphics and the best screen.' },
+		items: [
+			{ id: 'a', name: 'Laptop A', price: 949, features: f('Integrated graphics', 8, 256, 60, 1.4) },
+			{ id: 'b', name: 'Laptop B', price: 1199, features: f('RTX 4050 class', 16, 512, 120, 1.8) },
+			{ id: 'c', name: 'Laptop C', price: 1449, features: f('RTX 4060 class', 16, 1024, 165, 2.1) }
+		]
+	};
+};
+
+describe('comparison-layout: per-item feature definitions (shape drift)', () => {
+	const cells = (c: HTMLElement, label: string) =>
+		[...row(c, label).querySelectorAll('td')].map((td) => td.textContent?.replace('Best:', '').trim());
+
+	it('lifts item `features` [{key,label,value}] into rows and never prints raw JSON', () => {
+		const c = render(ComparisonLayout, { props: drifted() as never }).container;
+		expect(c.textContent).not.toContain('{"key"');
+		expect(c.innerHTML).not.toContain('&quot;key&quot;');
+		const labels = [...table(c).querySelectorAll('tbody th')].map((th) => th.textContent?.trim());
+		expect(labels).toEqual(['Graphics', 'Memory', 'Storage', 'Display refresh', 'Weight']);
+		expect(cells(c, 'Graphics')).toEqual(['Integrated graphics', 'RTX 4050 class', 'RTX 4060 class']);
+		expect(cells(c, 'Memory')).toEqual(['8 GB', '16 GB', '16 GB']);
+		expect(cells(c, 'Storage')).toEqual(['256 GB', '512 GB', '1,024 GB']);
+		expect(cells(c, 'Display refresh')).toEqual(['60 Hz', '120 Hz', '165 Hz']);
+		expect(cells(c, 'Weight')).toEqual(['1.4 kg', '1.8 kg', '2.1 kg']);
+		expect(bestCols(row(c, 'Weight'))).toEqual([0]);
+		// All three present: C as the best pick, A and B as the other cards, three table columns.
+		expect(c.querySelector('[data-slot="winner"]')?.textContent).toContain('Laptop C');
+		expect(c.querySelector('[data-slot="winner"]')?.textContent).toContain('$1,449.00');
+		const others = [...c.querySelectorAll('[data-slot="item"]')].map((li) => li.textContent);
+		expect(others).toHaveLength(2);
+		expect(others[0]).toContain('$949.00');
+		expect(others[1]).toContain('$1,199.00');
+		expect(table(c).querySelectorAll('thead th')).toHaveLength(4);
+	});
+
+	it('accepts an item `specs` object map and keeps explicit top-level features first', () => {
+		const items = [
+			{ id: 'a', name: 'A', specs: { gpu: 'RTX 4050', ram: 16 } },
+			{ id: 'b', name: 'B', specs: { gpu: 'RTX 4060', ram: 32 } }
+		];
+		const c = render(ComparisonLayout, { props: { items, features: [{ key: 'ram', label: 'Memory', kind: 'number', unit: 'GB' }] } }).container;
+		expect(cells(c, 'Memory')).toEqual(['16 GB', '32 GB']);
+		expect(c.textContent).not.toContain('{"');
+	});
+
+	it('never prints a stringified object or array in a cell or card row', () => {
+		const items = [
+			{ id: 'a', name: 'A', gpu: { model: 'RTX' }, ports: ['USB-C', 'HDMI'], misc: [{ x: 1 }] },
+			{ id: 'b', name: 'B', gpu: 'RTX 4060', ports: ['USB-C'], misc: 'ok' }
+		];
+		const c = render(ComparisonLayout, { props: { items } }).container;
+		expect(c.textContent).not.toMatch(/[{[]"/);
+		expect(cells(c, 'Gpu')).toEqual(['—', 'RTX 4060']);
+		expect(cells(c, 'Ports')).toEqual(['USB-C, HDMI', 'USB-C']);
+		expect(cells(c, 'Misc')).toEqual(['—', 'ok']);
+	});
+
+	it('streams the drifted shape to the same render as the whole spec', async () => {
+		const { whole } = await expectStreamParity({ ui: { type: 'comparison-layout', props: { ...drifted(), defaultView: 'table' } } });
+		expect(whole.textContent).not.toContain('{"key"');
+		expect(whole.textContent).toContain('Display refresh');
+	});
+});
