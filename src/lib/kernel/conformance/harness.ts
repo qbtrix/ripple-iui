@@ -1,0 +1,463 @@
+// harness.ts — executes the language-neutral conformance fixtures against the
+//   TypeScript kernel.
+// Created: 2026-08-24 — Implements the harness contract in
+//   conformance/README.md: build a fresh root context per fixture, turn each
+//   declarative plugin entry into a real plugin, run the steps in order, record
+//   the trace, and compare it to `expect_trace` exactly. Unknown ops and
+//   unknown fields fail loudly — a fixture the harness does not understand is a
+//   failure, never a skip.
+// Updated: 2026-08-25 — Spec 006d1df: `expect_raises` on any step (the only
+//   assertion that sees what the CALLER was told, not what the runtime
+//   observed internally), the `<owner>:provide:<svc>:rejected` token, and
+//   `apply:throw` emitted for ANY error out of apply rather than only a
+//   declared one — a rejected duplicate publish fails apply without
+//   `apply_throws` being set.
+// Updated: 2026-08-24 — Spec 730e593: `disposer_throws`, the
+//   `<plugin>:effect:<id>:dispose:error` token, and both halves of the
+//   observability check (onError aggregate + a rejecting awaited dispose).
+// Updated: 2026-08-24 — Fixture amendment 88a2730 (13 -> 16 fixtures): added
+//   `effects_after_delay` (created after `apply_delay_ms`, which is what makes
+//   dispose-during-load able to fail at all), the `observe` / `absent` /
+//   `value` listener actions and listener `delay_ms` for the three new
+//   dispatch-mode fixtures, and the `regression_note` fixture field.
+
+import { Context, EffectRejectedError, type Plugin } from '../index.js';
+
+/* ------------------------------------------------------------------ types */
+
+export interface ListenerDecl {
+  event: string;
+  mode: 'emit' | 'waterfall' | 'parallel' | 'serial';
+  id: string;
+  action: 'delegate' | 'shortcircuit' | 'wrap' | 'observe' | 'absent' | 'value';
+  wrap?: string;
+  value?: unknown;
+  delay_ms?: number;
+}
+
+export interface PluginDecl {
+  provides?: string[];
+  inject?: { required?: string[]; optional?: string[] };
+  effects?: string[];
+  effects_after_delay?: string[];
+  disposer_throws?: string;
+  listeners?: ListenerDecl[];
+  children?: string[];
+  apply_throws?: boolean;
+  apply_delay_ms?: number;
+  dispose_delay_ms?: number;
+  effect_during_dispose?: string;
+  record_resolved?: string[];
+}
+
+export interface StepDecl {
+  op?: string;
+  plugin?: string;
+  under?: string;
+  scope?: string;
+  service?: string;
+  value?: unknown;
+  event?: string;
+  mode?: 'emit' | 'waterfall' | 'parallel' | 'serial';
+  nowait?: boolean;
+  expect_state?: Record<string, string>;
+  expect_result?: unknown;
+  expect_raises?: boolean;
+}
+
+export interface Fixture {
+  id: string;
+  asserts: string;
+  semantics: string;
+  plugins: Record<string, PluginDecl>;
+  steps: StepDecl[];
+  expect_trace?: string[];
+  expect_trace_unordered?: string[];
+  regression_note?: string;
+}
+
+const FIXTURE_FIELDS = new Set([
+  'id',
+  'asserts',
+  'semantics',
+  'plugins',
+  'steps',
+  'expect_trace',
+  'expect_trace_unordered',
+  'regression_note',
+]);
+const PLUGIN_FIELDS = new Set([
+  'provides',
+  'inject',
+  'effects',
+  'effects_after_delay',
+  'disposer_throws',
+  'listeners',
+  'children',
+  'apply_throws',
+  'apply_delay_ms',
+  'dispose_delay_ms',
+  'effect_during_dispose',
+  'record_resolved',
+]);
+const INJECT_FIELDS = new Set(['required', 'optional']);
+const LISTENER_FIELDS = new Set([
+  'event',
+  'mode',
+  'id',
+  'action',
+  'wrap',
+  'value',
+  'delay_ms',
+]);
+const LISTENER_ACTIONS = new Set([
+  'delegate',
+  'shortcircuit',
+  'wrap',
+  'observe',
+  'absent',
+  'value',
+]);
+const STEP_FIELDS = new Set([
+  'op',
+  'plugin',
+  'under',
+  'scope',
+  'service',
+  'value',
+  'event',
+  'mode',
+  'nowait',
+  'expect_state',
+  'expect_result',
+  'expect_raises',
+]);
+const OPS = new Set([
+  'mount',
+  'dispose',
+  'dispose_nowait',
+  'provide',
+  'withdraw',
+  'dispatch',
+  'settle',
+  'isolate',
+]);
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+function checkFields(where: string, obj: object, allowed: Set<string>): void {
+  for (const key of Object.keys(obj)) {
+    if (!allowed.has(key)) throw new Error(`conformance: unknown field "${key}" in ${where}`);
+  }
+}
+
+/** Validate a fixture's shape before running it. Unknown anything is a failure. */
+export function validateFixture(fixture: Fixture): void {
+  checkFields(`fixture ${fixture.id}`, fixture, FIXTURE_FIELDS);
+  if (!fixture.expect_trace && !fixture.expect_trace_unordered) {
+    throw new Error(`conformance: fixture ${fixture.id} declares no expected trace`);
+  }
+  for (const [name, decl] of Object.entries(fixture.plugins ?? {})) {
+    checkFields(`plugin ${name}`, decl, PLUGIN_FIELDS);
+    if (decl.inject) checkFields(`plugin ${name}.inject`, decl.inject, INJECT_FIELDS);
+    for (const listener of decl.listeners ?? []) {
+      checkFields(`plugin ${name} listener ${listener.id}`, listener, LISTENER_FIELDS);
+      if (!LISTENER_ACTIONS.has(listener.action)) {
+        throw new Error(
+          `conformance: unknown listener action "${listener.action}" in plugin ${name}`,
+        );
+      }
+    }
+  }
+  for (const [i, step] of (fixture.steps ?? []).entries()) {
+    checkFields(`step ${i}`, step, STEP_FIELDS);
+    if (step.op !== undefined && !OPS.has(step.op)) {
+      throw new Error(`conformance: unknown op "${step.op}" in step ${i}`);
+    }
+    if (step.op === undefined && step.expect_state === undefined) {
+      throw new Error(`conformance: step ${i} has neither an op nor an assertion`);
+    }
+  }
+}
+
+/* --------------------------------------------------------------- execution */
+
+export interface RunResult {
+  trace: string[];
+  /** Assertion failures collected while running, empty when conformant. */
+  failures: string[];
+}
+
+export async function runFixture(fixture: Fixture): Promise<RunResult> {
+  validateFixture(fixture);
+
+  const trace: string[] = [];
+  const failures: string[] = [];
+  const root = Context.root();
+  const runtime = root.runtime;
+  runtime.onTrace = (token) => trace.push(token);
+
+  // §3: a disposer error is reported, not swallowed. The kernel hands it back
+  // as it happens — mid-chain, with unwinding still in progress — and the tag
+  // the plugin body attached says which effect it came from.
+  runtime.onDisposerError = (err) => {
+    const tagged = err as { pawPlugin?: string; pawEffect?: string };
+    if (!tagged?.pawPlugin || !tagged?.pawEffect) {
+      failures.push(`unattributable disposer error: ${String(err)}`);
+      return;
+    }
+    trace.push(`${tagged.pawPlugin}:effect:${tagged.pawEffect}:dispose:error`);
+  };
+  // Aggregates are expected in the fixture that provokes them; keep them off
+  // the console but assert they were actually produced.
+  const reported: unknown[] = [];
+  runtime.onError = (err) => reported.push(err);
+
+  const scopes = new Map<string, Context>([['root', root]]);
+  const fibers = new Map<string, ReturnType<Context['plugin']>>();
+  const detached: Promise<unknown>[] = [];
+
+  const buildPlugin = (name: string): Plugin => {
+    const decl = fixture.plugins[name];
+    if (!decl) throw new Error(`conformance: fixture ${fixture.id} has no plugin "${name}"`);
+    const applyBody = buildApplyBody(name, decl);
+    return {
+      name,
+      inject: decl.inject,
+      apply: async (ctx: Context) => {
+        try {
+          await applyBody(ctx);
+        } catch (err) {
+          // The token means "apply raised", whatever the cause — a declared
+          // throw, or a publish the kernel refused.
+          trace.push(`${name}:apply:throw`);
+          throw err;
+        }
+      },
+    };
+  };
+
+  const buildApplyBody = (name: string, decl: PluginDecl) => {
+    return async (ctx: Context) => {
+        for (const service of decl.provides ?? []) ctx.provide(service, name);
+
+        for (const service of decl.record_resolved ?? []) {
+          trace.push(`${name}:resolved:${service}:${String(ctx.get(service))}`);
+        }
+
+        const declareEffect = (id: string, isFirst: boolean) => {
+          ctx.effect(() => {
+            trace.push(`${name}:effect:${id}:setup`);
+            return async () => {
+              if (decl.dispose_delay_ms) await sleep(decl.dispose_delay_ms);
+              trace.push(`${name}:effect:${id}:dispose`);
+              // Dragon: a registration attempted from inside cleanup must be
+              // refused, or it escapes the unload snapshot and leaks. Attached
+              // to the first-registered effect, which disposes last.
+              if (isFirst && decl.effect_during_dispose) {
+                const late = decl.effect_during_dispose;
+                try {
+                  ctx.effect(() => {
+                    trace.push(`${name}:effect:${late}:setup`);
+                  });
+                } catch (err) {
+                  if (!(err instanceof EffectRejectedError)) throw err;
+                  trace.push(`${name}:effect:${late}:rejected`);
+                }
+              }
+              if (decl.disposer_throws === id) {
+                // Deliberately unguarded: the KERNEL must contain this, keep
+                // unwinding, and report it. The harness only tags the error so
+                // the report can be attributed back to this effect.
+                throw Object.assign(new Error(`${name}: disposer ${id} failed`), {
+                  pawPlugin: name,
+                  pawEffect: id,
+                });
+              }
+            };
+          });
+        };
+
+        (decl.effects ?? []).forEach((id, index) => declareEffect(id, index === 0));
+
+        for (const listener of decl.listeners ?? []) {
+          // What the listener returns, per its declared action.
+          const compute = (value: unknown, next?: () => unknown): unknown => {
+            switch (listener.action) {
+              case 'shortcircuit':
+                // Deliberately does NOT call next(): the chain stops here.
+                return listener.value;
+              case 'value':
+                return listener.value;
+              case 'observe':
+              case 'absent':
+                return undefined;
+              case 'wrap':
+                return `${listener.wrap}(${String(next ? next() : value)})`;
+              case 'delegate':
+              default:
+                return next ? next() : value;
+            }
+          };
+
+          const body = listener.delay_ms
+            ? async (value: unknown) => {
+                trace.push(`${name}:listener:${listener.id}:enter`);
+                await sleep(listener.delay_ms!);
+                const result = compute(value);
+                trace.push(`${name}:listener:${listener.id}:exit`);
+                return result;
+              }
+            : (value: unknown, next?: () => unknown) => {
+                trace.push(`${name}:listener:${listener.id}:enter`);
+                const result = compute(value, next);
+                trace.push(`${name}:listener:${listener.id}:exit`);
+                return result;
+              };
+
+          ctx.on(listener.event, listener.mode, body as never);
+        }
+
+        for (const childName of decl.children ?? []) {
+          const child = ctx.plugin(buildPlugin(childName));
+          fibers.set(childName, child);
+          await child.ready();
+        }
+
+        if (decl.apply_delay_ms) await sleep(decl.apply_delay_ms);
+
+        // Created after the yield: a runtime that tears down concurrently with
+        // the rest of apply either misses these or refuses them as UNLOADING.
+        const firstEffect = (decl.effects ?? []).length === 0;
+        (decl.effects_after_delay ?? []).forEach((id, index) =>
+          declareEffect(id, firstEffect && index === 0),
+        );
+
+        if (decl.apply_throws) {
+          throw new Error(`${name}: apply failed`);
+        }
+    };
+  };
+
+  const contextFor = (step: StepDecl): Context => {
+    if (step.under) {
+      const parent = fibers.get(step.under);
+      if (!parent) throw new Error(`conformance: no mounted plugin "${step.under}"`);
+      return parent.ctx;
+    }
+    const scope = scopes.get(step.scope ?? 'root');
+    if (!scope) throw new Error(`conformance: no scope "${step.scope}"`);
+    return scope;
+  };
+
+  const settle = async () => {
+    await runtime.settle();
+    await Promise.all(detached);
+    await runtime.settle();
+  };
+
+  for (const [i, step] of fixture.steps.entries()) {
+    // `expect_raises` is the only assertion that sees what the CALLER was
+    // told, as opposed to what the runtime observed internally. A trace token
+    // proves an error was contained; this proves it was propagated.
+    let raised = false;
+    try {
+      await runStep(i, step);
+    } catch (err) {
+      raised = true;
+      if (!step.expect_raises) throw err;
+    }
+    if (step.expect_raises && !raised) {
+      failures.push(`step ${i}: expected op "${step.op}" to raise, but it did not`);
+    }
+
+    if (step.expect_state) {
+      for (const [name, expected] of Object.entries(step.expect_state)) {
+        const actual = fibers.get(name)?.state;
+        if (actual !== expected) {
+          failures.push(`step ${i}: expected ${name} to be ${expected}, got ${actual ?? 'absent'}`);
+        }
+      }
+    }
+  }
+
+  async function runStep(i: number, step: StepDecl): Promise<void> {
+    switch (step.op) {
+      case undefined:
+        break;
+      case 'mount': {
+        const name = step.plugin!;
+        const fiber = contextFor(step).plugin(buildPlugin(name));
+        fibers.set(name, fiber);
+        if (step.nowait) {
+          detached.push(fiber.ready());
+        } else {
+          await fiber.ready();
+          await runtime.flush();
+        }
+        break;
+      }
+      case 'dispose': {
+        const fiber = fibers.get(step.plugin!);
+        if (!fiber) throw new Error(`conformance: no mounted plugin "${step.plugin}"`);
+        await fiber.dispose();
+        break;
+      }
+      case 'dispose_nowait': {
+        const fiber = fibers.get(step.plugin!);
+        if (!fiber) throw new Error(`conformance: no mounted plugin "${step.plugin}"`);
+        detached.push(fiber.dispose().catch(() => {}));
+        break;
+      }
+      case 'provide': {
+        contextFor(step).provide(step.service!, step.value ?? true);
+        await runtime.flush();
+        break;
+      }
+      case 'withdraw': {
+        contextFor(step).withdraw(step.service!);
+        await runtime.flush();
+        break;
+      }
+      case 'isolate': {
+        const name = step.scope!;
+        scopes.set(name, root.isolate(step.service!, name));
+        break;
+      }
+      case 'dispatch': {
+        const bus = root.bus;
+        let result: unknown;
+        if (step.mode === 'waterfall') result = bus.waterfall(step.event!, step.value);
+        else if (step.mode === 'serial') result = await bus.serial(step.event!, step.value);
+        else if (step.mode === 'parallel') await bus.parallel(step.event!, step.value);
+        else bus.emit(step.event!, step.value);
+        if ('expect_result' in step && result !== step.expect_result) {
+          failures.push(
+            `step ${i}: expected result ${JSON.stringify(step.expect_result)}, got ${JSON.stringify(result)}`,
+          );
+        }
+        break;
+      }
+      case 'settle':
+        await settle();
+        break;
+      default:
+        throw new Error(`conformance: unknown op "${step.op}"`);
+    }
+  }
+
+  await settle();
+
+  // §3 requires a disposer error be observable, not merely contained. The
+  // trace token alone would pass a runtime that reports and then swallows, so
+  // check both channels: the aggregate reached onError, and the awaited
+  // dispose() rejected.
+  const throwsDeclared = Object.values(fixture.plugins ?? {}).some((p) => p.disposer_throws);
+  if (throwsDeclared) {
+    if (!reported.length) failures.push('a disposer threw but no error was reported to onError');
+  } else if (reported.length) {
+    failures.push(`unexpected teardown error(s) reported: ${reported.map(String).join('; ')}`);
+  }
+
+  return { trace, failures };
+}
