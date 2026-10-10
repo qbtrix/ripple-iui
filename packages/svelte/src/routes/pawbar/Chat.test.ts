@@ -7,7 +7,8 @@
 // including a live model card the server accepted (fixtures/trip-flow-card.json).
 // Then the spec peek: a seeded card starts closed, the first card the visitor
 // triggers opens once per session.
-// Chips render in labelled groups.
+// Chips render in labelled groups. A card's raw spec never shows as chat text:
+// not from a restarted fence, not from a leak the server let through.
 
 import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
@@ -15,6 +16,7 @@ import Chat from './Chat.svelte';
 import { ChatSession } from './session.svelte.js';
 import { laptopFlowCard, tripFlowCard } from './flow-cards.js';
 import liveTripCard from './fixtures/trip-flow-card.json';
+import heartReply from './fixtures/restart-fence-heart.json';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
 vi.setConfig({ testTimeout: 20_000 });
@@ -323,4 +325,72 @@ test('the spec peek: seeded cards start closed, the first triggered card opens o
 	expect(buttons()[2].getAttribute('aria-expanded')).toBe('false');
 	await fireEvent.click(buttons()[2]);
 	expect(buttons()[2].getAttribute('aria-expanded')).toBe('true');
+});
+
+const leaked = (t: string | null) => /pawbar-card|```|\{"ui"/.test(t ?? '');
+const said = (view: ReturnType<typeof render>) => [...view.container.querySelectorAll('.say')].map((p) => p.textContent ?? '');
+
+test('a restarted legacy fence shows no spec text and renders the second card', async () => {
+	const t = heartReply.text;
+	const session = new ChatSession(async function* () {
+		for (let i = 0; i < t.length; i += 200) yield { event: 'chunk', data: { content: t.slice(i, i + 200) } };
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, { session });
+	await session.send('How does the heart pump blood?');
+	await waitFor(() => expect(view.container.querySelector('.card')?.getAttribute('data-status')).toBe('final'));
+	expect(view.container.querySelectorAll('.card')).toHaveLength(1);
+	expect(view.container.querySelector('.card-note')).toBeNull();
+	expect(said(view).filter(leaked)).toEqual([]);
+	expect(said(view).join(' ')).toContain('two pumps side by side');
+});
+
+test('spec text the server leaked into chunks is never displayed', async () => {
+	const leak = ['Here is your plan.\n\n', 'pawbar-', 'card\n', '{"ui":{"type":"text","props":{"text":"x"}}', ',"state":{}}\n', '``', '`\n', '\nEnjoy.'];
+	const session = new ChatSession(async function* () {
+		for (const content of leak) yield { event: 'chunk', data: { content } };
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, { session });
+	await session.send('plan');
+	await waitFor(() => expect(view.getByText('Enjoy.')).toBeTruthy());
+	const log = view.container.querySelector('.log')?.textContent ?? '';
+	expect(leaked(log)).toBe(false);
+	expect(log).toContain('Here is your plan.');
+	expect(view.getByText(/Card hidden/)).toBeTruthy();
+});
+
+test('a leak next to a card that rendered hides quietly, with no Card hidden note', async () => {
+	const ui = { type: 'text', props: { text: 'Shown card' } };
+	const session = new ChatSession(async function* () {
+		yield { event: 'card.start', data: { card_id: 'c' } };
+		yield { event: 'card.final', data: { card_id: 'c', card: { ui } } };
+		yield { event: 'chunk', data: { content: 'pawbar-card\n{"ui":{"type":"text"}}\n```\nAfter.' } };
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, { session });
+	await session.send('x');
+	await waitFor(() => expect(view.getByText('After.')).toBeTruthy());
+	expect(said(view).filter(leaked)).toEqual([]);
+	expect(view.queryByText(/Card hidden/)).toBeNull();
+});
+
+test('card.rejected "restarted" drops the partial card with no note; the new card renders', async () => {
+	const ui = { type: 'text', props: { text: 'Second try' } };
+	const session = new ChatSession(async function* () {
+		yield { event: 'card.start', data: { card_id: 'a' } };
+		yield { event: 'card.delta', data: { card_id: 'a', text: '{"ui":{"type":"text","props":{"text":"Fir' } };
+		yield { event: 'card.rejected', data: { card_id: 'a', reason: 'restarted' } };
+		yield { event: 'card.start', data: { card_id: 'b' } };
+		yield { event: 'card.delta', data: { card_id: 'b', text: JSON.stringify({ ui }) } };
+		yield { event: 'card.final', data: { card_id: 'b', card: { ui } } };
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, { session });
+	await session.send('x');
+	await waitFor(() => expect(view.container.querySelector('.card')?.getAttribute('data-status')).toBe('final'));
+	expect(view.getByText('Second try')).toBeTruthy();
+	expect(view.container.querySelectorAll('.card')).toHaveLength(1);
+	expect(view.container.querySelector('.card-note')).toBeNull();
+	expect(view.queryByText(/did not come out right/)).toBeNull();
 });
