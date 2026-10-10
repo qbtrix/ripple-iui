@@ -85,4 +85,4 @@ Interactive widgets (buttons, inputs, follow-up fields) emit `RippleEvent` objec
 
 ## Known Gaps
 
-The showcase renders widgets in isolation. Composite patterns — for example, a button inside a card inside a tab panel — are not covered here; those patterns appear in the individual widget showcase routes (`/showcase/button`, `/showcase/card`). There is no visual diff tooling wired to the showcase, so regressions require manual inspection.
+The showcase renders widgets in isolation. Composite patterns — for example, a button inside a card inside a tab panel — are not covered here; those patterns appear in the individual widget showcase routes (`/ds/button`, `/ds/card`). There is no visual diff tooling wired to the showcase, so regressions require manual inspection.

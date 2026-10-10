@@ -9,7 +9,7 @@
 // @changes
 //   - 2026-05-30 (PR #45 motion degrade-to-visible fix): motion ALWAYS degrades to
 //     VISIBLE, never invisible. ROOT CAUSE: a spring-preset `enter` (e.g. the
-//     /showcase/marketing hero, `{opacity:0,y:24}` + `snappy`) was routed to Tier 1
+//     /ds/marketing hero, `{opacity:0,y:24}` + `snappy`) was routed to Tier 1
 //     and asked motion.dev to spring toward `{opacity:1, transform:'none'}`.
 //     motion.dev cannot spring-interpolate the `transform:'none'` keyword: it
 //     collapsed the box to `matrix(0,0,0,0,0,0)` (opacity reached 1 but the element

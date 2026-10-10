@@ -1,7 +1,7 @@
 // e2e/ai-widgets.smoke.spec.ts
 // @file e2e/ai-widgets.smoke.spec.ts
 // @description Created 2026-06-28. Real-browser smoke for the AI-native widget
-//   tier on /showcase/ai — the live counterpart to the jsdom ai.test.ts unit
+//   tier on /ds/ai — the live counterpart to the jsdom ai.test.ts unit
 //   suite. jsdom has repeatedly stayed green while the rendered page stayed
 //   broken (no layout, no real click-driven reactivity through the dispatcher),
 //   so this drives a real Chromium against the production build + `vite preview`
@@ -19,9 +19,9 @@
 //   itself is asserted precisely in the jsdom unit suite (ai.test.ts).
 import { test, expect } from '@playwright/test';
 
-test.describe('AI-native widgets — real Chromium smoke (/showcase/ai)', () => {
+test.describe('AI-native widgets — real Chromium smoke (/ds/ai)', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/showcase/ai');
+		await page.goto('/ds/ai');
 		// Wait for hydration: the first widget root is rendered by Ripple/NodeRenderer
 		// only after the client module graph mounts.
 		await page.waitForSelector('.ripple-stream-text');
