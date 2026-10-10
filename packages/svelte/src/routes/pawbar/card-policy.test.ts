@@ -12,7 +12,8 @@
 // The `illustration` cases follow card_spec.py's _check_illustration and the
 // widget contract's hostile set and caps; its notes follow checkIllustrationAnnotations,
 // and a node-level on_select may ask. The play cards (play-cards.ts) all pass, and a
-// game's on_complete may never ask.
+// game's on_complete may never ask. fixtures/headphones-comparison-card.json is a live
+// model card (2026-10-10, "Shop headphones") whose comparison Choose click asks.
 
 import { describe, expect, test } from 'vitest';
 import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
@@ -22,6 +23,7 @@ import { checkIllustrationAnnotations, checkIllustrationSvg } from '$lib/securit
 import { parsePartialSpec } from '$lib/streaming/json-parse.js';
 import { pickScenario } from './recorded.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
+import liveHeadphonesCard from './fixtures/headphones-comparison-card.json';
 import liveTripCard from './fixtures/trip-flow-card.json';
 import { scenarios } from '../live/scenarios.js';
 import manifest from '../../../static/manifest.json';
@@ -639,6 +641,15 @@ describe('ask', () => {
 		expect(refuseCard({ ui: { type: 'comparison-layout', props: { items: [{ id: 'a', name: 'A', actions: ask() }, { id: 'b', name: 'B' }] } } })).toBeNull();
 		expect(refuseCard({ ui: { type: 'entity-detail', props: { actions: [{ id: 'more', label: 'More', actions: [ask()] }] } } })).toBeNull();
 		expect(refuseCard(button({ action: 'branch', condition: '{state.a}', then: [ask()] }))).toBeNull();
+	});
+
+	test("a comparison's Choose click may ask (the live headphones card), held to plain {text}", () => {
+		expect(refuseCard(liveHeadphonesCard)).toBeNull();
+		const withChoose = (on_choose: unknown) => ({ ui: { ...liveHeadphonesCard.ui, props: { ...liveHeadphonesCard.ui.props, on_choose } } });
+		expect(refuseCard(withChoose(ask({ text: 'hi', to: 'sales' })))).toBe('ask_value');
+		expect(refuseCard(withChoose(ask({ text: 'x'.repeat(501) })))).toBe('ask_value');
+		const { on_choose, ...rest } = liveHeadphonesCard.ui.props;
+		expect(refuseCard({ ui: { ...liveHeadphonesCard.ui, props: { ...rest, on_change: on_choose } } })).toBe('ask_handler');
 	});
 
 	test.each([

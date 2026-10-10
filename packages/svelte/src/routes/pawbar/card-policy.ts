@@ -29,7 +29,8 @@
 //      flow card.
 //  10. `emit ask` (value exactly `{text}`, plain, at most ASK_MAX) and `emit
 //      flow.submit` fire only under an ASK_HANDLERS key when that is the outermost
-//      handler key; never in state or from a node inside a handler.
+//      handler key; never in state or from a node inside a handler. A comparison's
+//      `on_choose` is one: it fires only on a Choose click.
 //  11. An `illustration` node takes no `bind` and one handler only: a node-level
 //      `on_select` (fired when a note opens; it may `emit ask` under rule 10). Its `svg`
 //      skips rule 5 and is held to the widget contract instead: a string with no `{`
@@ -63,8 +64,8 @@ const FOLLOW_UP_EVENTS = ['follow-up', 'checkout', 'add_to_cart', 'book'];
 const FLOW_FIELDS = ['chain', 'chain_map', 'flowId', 'onComplete'];
 export const FLOW_STEP_KEYS: readonly string[] = ['version', 'id', 'flowId', 'intent', 'title', 'description', 'ui', 'chain', 'chain_map', 'onComplete', 'form_fields'];
 export const FLOW_EVENTS: readonly string[] = ['flow.next', 'flow.back', 'flow.forward', 'flow.submit'];
-/** The handler keys an `ask` or `flow.submit` may fire from: a click, a submit, a pick, a composite's button list. Never `on_complete` (rule 12). */
-const ASK_HANDLERS = new Set(['on_click', 'on_submit', 'on_select', 'actions']);
+/** The handler keys an `ask` or `flow.submit` may fire from: a click, a submit, a pick, a comparison's Choose click, a composite's button list. Never `on_complete` (rule 12). Same set as card_spec.py's ASK_HANDLERS. */
+const ASK_HANDLERS = new Set(['on_click', 'on_submit', 'on_select', 'on_choose', 'actions']);
 export const ASK_MAX = 500;
 export const MAX_FLOW_STEPS = 8;
 export const MAX_CARD_NODES = 400;

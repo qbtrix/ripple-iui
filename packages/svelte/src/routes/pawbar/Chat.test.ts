@@ -394,3 +394,34 @@ test('card.rejected "restarted" drops the partial card with no note; the new car
 	expect(view.container.querySelector('.card-note')).toBeNull();
 	expect(view.queryByText(/did not come out right/)).toBeNull();
 });
+
+test('past one row the panel collapses: the toggle flips aria-expanded, and a chip sends its prompt', async () => {
+	const sent: string[] = [];
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const suggestions = ['Do', 'Learn', 'Play'].flatMap((group) =>
+		Array.from({ length: 4 }, (_, i) => ({ id: `${group}-${i}`, title: `${group} ${i}`, prompt: `Make ${group} ${i}`, group, icon: 'timer' }))
+	);
+	const view = render(Chat, { session, suggestions });
+	const toggle = view.getByRole('button', { name: 'Show all suggestions' });
+	const panel = view.container.querySelector('#ripple-suggestions')!;
+	expect(toggle.getAttribute('aria-controls')).toBe('ripple-suggestions');
+	expect(toggle.getAttribute('aria-expanded')).toBe('false');
+	// Collapsed: one row's worth, round-robin across groups, no labels.
+	expect([...panel.querySelectorAll('.chip')].map((b) => b.textContent)).toEqual(['Do 0', 'Learn 0', 'Play 0', 'Do 1', 'Learn 1', 'Play 1', 'Do 2', 'Learn 2']);
+	expect(panel.querySelector('.chip-label')).toBeNull();
+	expect(panel.querySelector('svg')).toBeTruthy();
+
+	await fireEvent.click(toggle);
+	expect(toggle.getAttribute('aria-expanded')).toBe('true');
+	expect(toggle.getAttribute('aria-label')).toBe('Show fewer');
+	expect(panel.querySelectorAll('.chip')).toHaveLength(12);
+	expect([...panel.querySelectorAll('.chip-label')].map((l) => l.textContent)).toEqual(['Do', 'Learn', 'Play']);
+
+	await fireEvent.click(view.getByRole('button', { name: 'Play 3' }));
+	await waitFor(() => expect(sent).toEqual(['Make Play 3']));
+	// Tapping a chip folds the panel back to its row.
+	expect(toggle.getAttribute('aria-expanded')).toBe('false');
+});
