@@ -1,8 +1,14 @@
 <!--
   @file routes/pawbar/Chat.svelte
   @description The landing's chat: the conversation log, a composer that stays
-    in reach while a long card is read, and the suggestion chips in labelled
-    groups (one sideways-scrolling row with inline group labels). A chip runs
+    in reach while a long card is read, and the suggestion panel above it.
+    The panel starts collapsed: one sideways-scrolling row (round-robin, the
+    first chip of each group, up to ROW chips) and a round toggle centred
+    under it (aria-expanded, aria-controls the panel). Expanded, it is the
+    full grid: an uppercase label per group over wrapping pill chips (lucide
+    icon from chip-icons.ts, then the title, then "step by step" on steps
+    chips), scrolling inside itself past 55vh. A set that fits in ROW shows
+    the grid with no toggle. Tapping a chip collapses the panel. A chip runs
     here (session.send); text the visitor types goes to Paw OS
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so.
@@ -53,6 +59,9 @@
 	import { tick, untrack, type Snippet } from 'svelte';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import X from '@lucide/svelte/icons/x';
+	import ChevronsDownUp from '@lucide/svelte/icons/chevrons-down-up';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
+	import { chipIcons } from './chip-icons.js';
 	import { Ripple } from '$lib/index.js';
 	import { prettyPrefix } from '$lib/site/prettyPrefix.js';
 	import JsonLines from '$lib/site/JsonLines.svelte';
@@ -69,6 +78,8 @@
 		steps?: boolean;
 		/** The labelled row the chip sits in; chips with none share one unlabelled row. */
 		group?: string;
+		/** A lucide icon name from chip-icons.ts, shown before the title. */
+		icon?: string;
 	}
 
 	let {
@@ -105,6 +116,16 @@
 		for (const s of suggestions) rows.set(s.group ?? '', [...(rows.get(s.group ?? '') ?? []), s]);
 		return [...rows];
 	});
+	// The collapsed row: the first chip of each group, then the second, up to ROW.
+	const ROW = 8;
+	const row = $derived.by(() => {
+		const out: Suggestion[] = [];
+		for (let i = 0; out.length < ROW && out.length < suggestions.length; i++)
+			for (const [, chips] of groups) if (chips[i] && out.length < ROW) out.push(chips[i]);
+		return out;
+	});
+	let showAll = $state(false);
+	const expanded = $derived(showAll || suggestions.length <= ROW);
 
 	let draft = $state('');
 	let field = $state<HTMLTextAreaElement>();
@@ -469,21 +490,53 @@
 	</div>
 
 	<div class="dock">
+		{#snippet chip(s: Suggestion)}
+			{@const Icon = s.icon ? chipIcons[s.icon] : undefined}
+			<li>
+				<button
+					type="button"
+					class="chip"
+					disabled={session.busy}
+					title={s.prompt}
+					onclick={() => {
+						showAll = false;
+						void ask(s.prompt);
+					}}
+					>{#if Icon}<Icon class="chip-icon" size={15} aria-hidden="true" />{/if}{s.title}{#if s.steps}{' '}<span class="chip-steps"
+							>step by step</span
+						>{/if}</button
+				>
+			</li>
+		{/snippet}
 		{#if suggestions.length}
-			<div class="chip-groups">
-				{#each groups as [name, chips] (name)}
-					<div class="chip-group">
-						{#if name}<span class="chip-label" aria-hidden="true">{name}</span>{/if}
-						<ul class="chips" aria-label={name || 'Try one of these'}>
-							{#each chips as s (s.id)}
-								<li>
-									<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
-								</li>
-							{/each}
-						</ul>
-					</div>
-				{/each}
+			<div id="ripple-suggestions" class="chip-groups" data-expanded={expanded}>
+				{#if expanded}
+					{#each groups as [name, chips] (name)}
+						<div class="chip-group">
+							{#if name}<span class="chip-label" aria-hidden="true">{name}</span>{/if}
+							<ul class="chips" aria-label={name || 'Try one of these'}>
+								{#each chips as s (s.id)}{@render chip(s)}{/each}
+							</ul>
+						</div>
+					{/each}
+				{:else}
+					<ul class="chips" aria-label="Try one of these">
+						{#each row as s (s.id)}{@render chip(s)}{/each}
+					</ul>
+				{/if}
 			</div>
+			{#if suggestions.length > ROW}
+				<button
+					type="button"
+					class="chips-toggle"
+					aria-expanded={showAll}
+					aria-controls="ripple-suggestions"
+					aria-label={showAll ? 'Show fewer' : 'Show all suggestions'}
+					onclick={() => (showAll = !showAll)}
+				>
+					{#if showAll}<ChevronsDownUp size={16} aria-hidden="true" />{:else}<ChevronsUpDown size={16} aria-hidden="true" />{/if}
+				</button>
+			{/if}
 		{/if}
 		<div class="composer-row">
 			<form
@@ -1178,11 +1231,12 @@
 		color: var(--site-soft);
 	}
 
-	/* In the dock every chip sits on ONE row that scrolls sideways at every
+	/* Collapsed, the chips sit on ONE row that scrolls sideways at every
 	   width, snapping per chip, no scrollbar, faded at both edges. The 24px
 	   fades sit just outside the chat column (negative margin, equal padding),
-	   so the first chip lines up with the composer. Group labels are small
-	   inline dividers (the group and list boxes drop out of layout). */
+	   so the first chip lines up with the composer. Expanded, it is a grid:
+	   each group's uppercase label over its wrapping pills, scrolling inside
+	   itself past 55vh (the page never moves). */
 	.chip-groups {
 		display: flex;
 		flex-wrap: nowrap;
@@ -1199,44 +1253,57 @@
 	.chip-groups::-webkit-scrollbar {
 		display: none;
 	}
-	.chip-group,
-	.chips {
+	.chip-groups[data-expanded='true'] {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 14px;
+		max-height: 55vh;
+		overflow: hidden auto;
+		scroll-snap-type: none;
+		scrollbar-width: thin;
+		margin: 0 -4px;
+		padding: 4px;
+		mask-image: none;
+		animation: rise 0.2s ease-out;
+	}
+	.chip-groups:not([data-expanded='true']) .chips {
 		display: contents;
 	}
+	.chip-group {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
 	.chip-label {
-		flex: none;
-		scroll-snap-align: start;
-		padding-left: 10px;
-		border-left: 1px solid var(--site-line);
-		line-height: 20px;
-		font-family: var(--font-mono);
-		font-size: 10.5px;
-		letter-spacing: 0.04em;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--site-soft);
 	}
 	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
 		list-style: none;
 		margin: 0;
 		padding: 0;
 	}
 	.chips li {
 		flex: none;
+		max-width: 100%;
 		scroll-snap-align: start;
 	}
-	.chip-group:first-child .chip-label {
-		padding-left: 0;
-		border-left: 0;
-	}
-	.chip-group:not(:first-child) .chip-label {
-		margin-left: 4px;
-	}
 	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		max-width: 100%;
 		min-height: 34px;
-		padding: 0 12px;
+		padding: 0 14px 0 12px;
 		border: 1px solid var(--site-line);
-		border-radius: var(--radius-chip);
-		background: transparent;
+		border-radius: 999px;
+		background: color-mix(in oklch, var(--site-ink) 4%, transparent);
 		color: var(--site-ink);
 		font: inherit;
 		font-size: 14px;
@@ -1245,6 +1312,27 @@
 		transition:
 			background 0.15s,
 			transform 0.1s;
+	}
+	.chip :global(.chip-icon) {
+		flex: none;
+		color: var(--site-soft);
+	}
+	.chips-toggle {
+		display: grid;
+		place-items: center;
+		width: 30px;
+		height: 30px;
+		margin: -2px auto 0;
+		padding: 0;
+		border: 1px solid var(--site-line);
+		border-radius: 50%;
+		background: color-mix(in oklch, var(--site-ink) 4%, transparent);
+		color: var(--site-soft);
+		cursor: pointer;
+	}
+	.chips-toggle:hover {
+		background: var(--site-hover);
+		color: var(--site-ink);
 	}
 	.chip-steps {
 		margin-left: 3px;
@@ -1270,6 +1358,7 @@
 		cursor: default;
 	}
 	.chip:focus-visible,
+	.chips-toggle:focus-visible,
 	.tool:focus-visible,
 	.replay:focus-visible,
 	.notice a:focus-visible {
@@ -1287,6 +1376,10 @@
 	@media (pointer: coarse) {
 		.chip {
 			min-height: 44px;
+		}
+		.chips-toggle {
+			width: 44px;
+			height: 44px;
 		}
 	}
 	@media (max-width: 420px) {
@@ -1345,6 +1438,9 @@
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
+		.chip-groups[data-expanded='true'] {
+			animation: none;
+		}
 		.turn:not([data-seeded]),
 		.dots > span,
 		.shimmer,

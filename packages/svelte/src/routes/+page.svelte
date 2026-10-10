@@ -16,11 +16,13 @@
     <Ripple> while it arrives. The chat opens on one finished recorded exchange
     (the bill splitter, seeded synchronously so it is in the prerendered HTML
     and hydrates without a re-render), so the fold shows a working card before
-    any tap and with JavaScript off. Live, the step-by-step chips come first
-    (order, book, plan a trip, pick a laptop: the cards walk the visitor through
-    steps), then the recorded scenarios and the hand-written play cards, the
-    chips grouped as Do, Learn, Play and Track; offline, only the recorded and
-    hand-written answers (minus the store one). The chat calls the Paw Bar API only when PUBLIC_PAWBAR_LIVE=1
+    any tap and with JavaScript off. The chips above the composer are the
+    grouped suggestion panel (live/scenarios.ts suggestionGroups: Browse and
+    discover, Create and build, Organize, Learn and explore, Work and
+    productivity, Lifestyle, Planning, Play), collapsed to one row until the
+    visitor expands it. Live, every chip shows (the store ones only with a
+    store); offline, only the recorded and hand-written answers (minus the
+    store one), and a group with none of those is hidden. The chat calls the Paw Bar API only when PUBLIC_PAWBAR_LIVE=1
     with PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY (lib/site/pawbar-env.ts,
     read in vite.config.ts); otherwise it replays the recorded answers locally
     and says so. Live, a card's `checkout` and `book` host events go to the test
@@ -51,7 +53,7 @@
 	import Chat from './pawbar/Chat.svelte';
 	import { BYOK_URL, ChatSession, pawbarTransport, pawosBase, typedStaysLocal, type Transport } from './pawbar/session.svelte.js';
 	import { answerPool, findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
-	import { chatPrompts, scenarios } from './live/scenarios.js';
+	import { chatPrompts, groupedSuggestions, scenarios } from './live/scenarios.js';
 
 	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
 	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
@@ -94,20 +96,12 @@
 		: new ChatSession(recorded());
 	const bill = chatScenarios.find((s) => s.id === 'bill-splitter');
 	if (bill) session.seed(bill.fixture.prompt, recordedExchange(bill, intro(bill.fixture.prompt)));
-	// Chips in groups (Do, Learn, Play, Track). In Do the step-by-step chips come
-	// first (live only: offline they would replay the wrong recording), then the
-	// recordings; "Plan a trip with me" stands in for Tokyo. The sort is stable.
-	const GROUPS = ['Do', 'Learn', 'Play', 'Track'];
+	// The suggestion panel's chips, grouped and ordered by suggestionGroups. Live:
+	// the store chips (with a store), the chat-only prompts and the recordings;
+	// offline only the recordings answer, so the chat-only chips (and any group
+	// left empty) drop out.
 	const liveChips = LIVE ? [...scenarios.filter((s) => s.needsStore), ...chatPrompts].filter((c) => !c.needsStore || STORE_URL) : [];
-	const suggestions = [...liveChips, ...chatScenarios.filter((s) => !(LIVE && s.id === 'tokyo-trip'))]
-		.map((c) => ({
-			id: c.id,
-			title: c.title,
-			prompt: c.prompt ?? ('fixture' in c ? c.fixture.prompt : ''),
-			steps: c.steps,
-			group: c.group
-		}))
-		.sort((a, b) => GROUPS.indexOf(a.group ?? '') - GROUPS.indexOf(b.group ?? ''));
+	const suggestions = groupedSuggestions([...liveChips, ...chatScenarios]);
 
 	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
