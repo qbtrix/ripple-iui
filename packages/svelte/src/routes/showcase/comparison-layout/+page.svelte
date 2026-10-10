@@ -5,11 +5,12 @@
   360px frame (each frame its own Ripple, with Choose bound to `state.pick`
   and echoed below), e-bikes with no winner and an item still waiting on its
   product_id, and a legacy spec (feature `type`, string prices, item actions)
-  that must keep rendering. URL-only (not linked from the showcase index).
+  that must keep rendering. Linked from the /showcase gallery.
   Fictional data only: the site is public. Photos are the SVGs under
   static/photos/.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Ripple from '$lib/Ripple.svelte';
 
 	const laptops = {
@@ -107,15 +108,12 @@
 <svelte:head><title>Ripple · Comparison layout</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>comparison-layout</h1>
-		<p>Winner first, best cells marked, every price against the winner. Drag a frame's corner to cross 360 / 560 / 720. Toggle the theme in the top bar to check dark.</p>
-	</header>
+	<DetailHeader id="comparison-layout">Winner first, best cells marked, every price against the winner. Drag a frame's corner to cross 360 / 560 / 720.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Laptops, 760px</h2>
 		<p class="section-caption">The table view with a sticky label column; Choose writes <code>state.pick</code>.</p>
-		<div class="pane frame" style:width="calc(760px + 2rem)"><Ripple spec={laptopSpec} /></div>
+		<div data-thumb class="pane frame" style:width="calc(760px + 2rem)"><Ripple spec={laptopSpec} /></div>
 	</section>
 
 	<section class="showcase-section">
@@ -143,12 +141,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

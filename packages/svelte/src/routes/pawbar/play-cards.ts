@@ -5,8 +5,8 @@
 // the `{state, ui}` wire shape and must pass card-policy.ts (card-policy.test.ts
 // holds them to it). `playScenarios` wraps each card as a Scenario whose fixture
 // is the card's JSON cut into small timed chunks, so it streams like a recording;
-// `fixture.model` is 'hand-written', and these stay off /live and the landing's
-// "Recorded runs", which promise real model output. A chip's prompt equals its
+// `fixture.model` is 'hand-written': /live lists them tagged Hand-written, and
+// the landing's "Recorded runs", which promise real model output, leave them out. A chip's prompt equals its
 // fixture prompt, so pickScenario's exact match routes it. The games carry no
 // `on_complete` ask (card-policy.ts refuses it); a "harder round" button shows
 // once the bound game is done and asks from a click instead.

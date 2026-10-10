@@ -87,7 +87,7 @@ Registry in `src/lib/widgets/index.ts` — supports `registerWidget`/`unregister
 
 Widgets wrap **shadcn-svelte** components (`src/lib/components/ui/`) with Ripple-specific state binding and event handling.
 
-Building a master-detail (list + detail) layout? Read the "Layout gotchas" section in `docs/widgets.md` first — independent column scroll needs a fixed `height` + `overflow:hidden` (NOT `max-height`), and the `master-detail` widget can't take custom list cards.
+Building a master-detail (list + detail) layout? Read `packages/svelte/src/docs/guides/layout-gotchas.md` (live at `/docs/guides/layout-gotchas`) first — independent column scroll needs a fixed `height` + `overflow:hidden` (NOT `max-height`), and the `master-detail` widget can't take custom list cards.
 
 ### Intent System (`src/lib/intent/`)
 
@@ -97,7 +97,7 @@ Building a master-detail (list + detail) layout? Read the "Layout gotchas" secti
 
 ### Key Context Keys
 
-Widgets receive context via Svelte's `setContext`: `ui-state` (StateManager), `ui-events` (EventDispatcher), `ui-data` (data fetcher results), `ui-widget-resolver` (custom widget lookup).
+Widgets receive context via Svelte's `setContext`: `ui-state` (StateManager), `ui-events` (EventDispatcher), `ui-data` (data fetcher results), `ui-widget-resolver` (custom widget lookup), `ui-streaming` (getter: `'active'` / `'done'` for a streamed spec, `undefined` for a plain one; NodeRenderer's per-node boundary shows a quiet placeholder while it is `'active'` and retries on each new frame).
 
 ## Conventions
 

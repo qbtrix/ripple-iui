@@ -12,8 +12,9 @@ import { loadEnv } from 'vite';
 // prerendered page (mode 'hash' adds the hash of its own inline bootstrap). No
 // 'unsafe-inline' script: a javascript: URL a card might smuggle in cannot run.
 // Styles keep 'unsafe-inline' because Svelte and the widgets set style
-// attributes and transitions inject <style>. connect-src lists the Paw Bar API
-// and /live's test store, read at build time like vite.config.ts does; dev adds
+// attributes and transitions inject <style>. connect-src lists /live's test
+// store and, only when PUBLIC_PAWBAR_LIVE=1, the Paw Bar API, read at build time
+// like vite.config.ts does (which also fails a build with a half-set env); dev adds
 // localhost for the mock and Vite's HMR socket. img-src allows the two image
 // hosts the showcase uses (its news feed's favicon service stays blocked) and
 // the store's origin, which serves the menu photos in a menu-order card, and
@@ -21,7 +22,8 @@ import { loadEnv } from 'vite';
 // loads (its `osm` preset).
 // 'unsafe-hashes' plus one hash admits exactly the `this.__e=event` attribute
 // Svelte's SSR puts on <img> so hydration can replay a load event.
-// frame-ancestors cannot be set from a meta tag.
+// 'wasm-unsafe-eval' lets the docs search compile Pagefind's same-origin wasm;
+// it does not allow eval() of JS. frame-ancestors cannot be set from a meta tag.
 const dev = process.env.NODE_ENV !== 'production';
 const env = loadEnv(dev ? 'development' : 'production', process.cwd(), 'PUBLIC_');
 const originOf = (url) => {
@@ -34,7 +36,7 @@ const originOf = (url) => {
 const storeOrigin = originOf(env.PUBLIC_STORE_URL || 'https://lab.pocketpaw.xyz/test-store');
 const connectSrc = [
 	'self',
-	originOf(env.PUBLIC_PAWBAR_ENDPOINT),
+	env.PUBLIC_PAWBAR_LIVE === '1' ? originOf(env.PUBLIC_PAWBAR_ENDPOINT) : null,
 	storeOrigin,
 	...(dev ? ['http://localhost:*', 'ws://localhost:*'] : [])
 ].filter((v) => v != null);
@@ -47,14 +49,20 @@ const config = {
 		// (/showcase/x/y), where relative ./_app paths would resolve wrongly.
 		paths: { relative: false },
 		prerender: {
-			handleHttpError: 'warn',
+			// Docs and llms files are generated from src/docs: an error there (a
+			// broken ```ripple block, a missing page) fails the build. Elsewhere a
+			// page that cannot prerender falls back to the SPA shell, so it warns.
+			handleHttpError: ({ path, message }) => {
+				if (/^\/(docs|llms)/.test(path)) throw new Error(message);
+				console.warn(message);
+			},
 			handleMissingId: 'warn'
 		},
 		csp: {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self', 'unsafe-hashes', 'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='],
+				'script-src': ['self', 'wasm-unsafe-eval', 'unsafe-hashes', 'sha256-7dQwUgLau1NFCCGjfn9FsYptB6ZtWxJin6VohGIu20I='],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:', 'https://images.unsplash.com', 'https://i.pravatar.cc', 'https://tile.openstreetmap.org', ...(storeOrigin ? [storeOrigin] : [])],
 				'font-src': ['self'],

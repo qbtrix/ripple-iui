@@ -5,6 +5,8 @@
 // interactive and its emit reaches the page. A flow card walks its steps with no
 // call to the chat, then its last step sends the answers as the visitor's message,
 // including a live model card the server accepted (fixtures/trip-flow-card.json).
+// Then the spec peek: a seeded card starts closed, the first card the visitor
+// triggers opens once per session.
 // Chips render in labelled groups.
 
 import { fireEvent, render } from '@testing-library/svelte';
@@ -286,4 +288,39 @@ test('typedLocal keeps typed text on the Paw Bar (mock and dev)', async () => {
 	await typeAndSend(view, 'A tip splitter');
 	await waitFor(() => expect(sent).toEqual(['A tip splitter']));
 	expect(open).not.toHaveBeenCalled();
+});
+
+const quick = (title: string) =>
+	async function* () {
+		yield { event: 'card.start', data: { card_id: 'c', title } };
+		yield { event: 'card.delta', data: { card_id: 'c', text: JSON.stringify(card) } };
+		yield { event: 'card.final', data: { card_id: 'c', card } };
+		yield { event: 'stream_end', data: { cancelled: false } };
+	};
+
+test('the spec peek: seeded cards start closed, the first triggered card opens once per session', async () => {
+	sessionStorage.clear();
+	const seeded = new ChatSession(quick('Lamp'));
+	seeded.seed('Seeded ask', [
+		{ event: 'card.start', data: { card_id: 's', title: 'Seeded' } },
+		{ event: 'card.delta', data: { card_id: 's', text: JSON.stringify(card) } },
+		{ event: 'card.final', data: { card_id: 's', card } }
+	]);
+	const v = render(Chat, { session: seeded });
+	const buttons = () => v.getAllByRole('button', { name: 'Spec' });
+	expect(buttons()[0].getAttribute('aria-expanded')).toBe('false');
+	expect(v.getByText('Seeded')).toBeTruthy();
+
+	await seeded.send('Make me a lamp');
+	await waitFor(() => expect(buttons()).toHaveLength(2));
+	await waitFor(() => expect(buttons()[1].getAttribute('aria-expanded')).toBe('true'));
+	const wire = JSON.stringify(card);
+	expect(v.getAllByText(`${new TextEncoder().encode(wire).length} B`)).toHaveLength(2);
+
+	// The second triggered card stays closed; Spec toggles it.
+	await seeded.send('Another lamp');
+	await waitFor(() => expect(buttons()).toHaveLength(3));
+	expect(buttons()[2].getAttribute('aria-expanded')).toBe('false');
+	await fireEvent.click(buttons()[2]);
+	expect(buttons()[2].getAttribute('aria-expanded')).toBe('true');
 });

@@ -4,10 +4,10 @@
   written the way the model is told to write them (single-quoted attributes,
   animate/animateTransform/animateMotion, every dur 0.5s or more), a heart
   diagram with four numbered notes (three on svg ids, one on a viewBox point),
-  plus a truncated string showing the streaming placeholder. URL-only (not linked
-  from the showcase index).
+  plus a truncated string showing the streaming placeholder. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Illustration from '$lib/widgets/display/Illustration.svelte';
 
 	const sunrise =
@@ -70,13 +70,7 @@
 <svelte:head><title>Ripple · Illustration</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Illustration</h1>
-		<p>
-			Model-written animated SVG, rebuilt from an allowlist before it reaches the page. Ids are prefixed per card, so the
-			three drawings below never collide. Animated art gets a pause button; with reduced motion on, it starts paused.
-		</p>
-	</header>
+	<DetailHeader id="illustration">Model-written animated SVG, rebuilt from an allowlist before it reaches the page. Ids are prefixed per card, so the three drawings below never collide. Animated art gets a pause button; with reduced motion on, it starts paused.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Sun rising over two hills</h2>
@@ -105,7 +99,7 @@
 			Four numbered pins over the art: tap or tab to one and its note opens while its part glows. Esc closes it. On a
 			narrow card the note opens as a sheet under the art; the list below mirrors the pins.
 		</p>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<Illustration
 				title="A simplified human heart"
 				caption="Not to scale. Chambers drawn as the viewer sees them."
@@ -134,12 +128,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

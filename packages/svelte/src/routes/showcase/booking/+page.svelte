@@ -1,6 +1,6 @@
 <!--
   routes/showcase/booking/+page.svelte — dev preview of the `booking` widget
-  for screenshots and visual QA, URL-only like showcase/data-kit. A fictional
+  for screenshots and visual QA, linked from the /showcase gallery. A fictional
   restaurant with one table service and 7 days of slots (some full, one day
   closed), shown three ways: the whole flow against a simulated host (the
   first booking comes back "slot taken", the next one confirms), a 360px frame
@@ -8,6 +8,7 @@
   Fictional data only: the site is public.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Booking from '$lib/widgets/composite/Booking.svelte';
 	import type { BookingRequest, Confirmed, Notice, Selection } from '$lib/widgets/composite/booking.js';
 
@@ -76,14 +77,11 @@
 <svelte:head><title>Ripple · Booking</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>booking — visual QA</h1>
-		<p>Table booking for a fictional restaurant. The live example's host answers the first booking with "slot taken" and confirms the next. Toggle the theme in the top bar to check dark.</p>
-	</header>
+	<DetailHeader id="booking">Table booking for a fictional restaurant. The live example's host answers the first booking with "slot taken" and confirms the next.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Live flow, wide (drag the corner)</h2>
-		<div class="pane frame" style:width="760px">
+		<div data-thumb class="pane frame" style:width="760px">
 			{#key run}
 				<Booking {...base} bind:selection {notice} {confirmed} {onbook} />
 			{/key}
@@ -124,12 +122,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

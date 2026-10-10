@@ -5,7 +5,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { streamSpec } from './stream-spec.svelte.js';
-import { parsePartialSpec } from './json-parse.js';
+import { parse } from 'partial-json';
+import { DEFAULT_ALLOW, parsePartialSpec } from './json-parse.js';
 import type { StreamSpec } from '$lib/streaming/index.js';
 
 // ---------- helpers ----------
@@ -276,6 +277,50 @@ describe('streamSpec — truncated enum-key safety', () => {
   it('keeps closed empty strings at the very end of the buffer', () => {
     expect(parsePartialSpec('{"a":""}').value).toEqual({ a: '' });
     expect(parsePartialSpec('{"ui":{"type":""').value).toEqual({ ui: { type: '' } });
+  });
+});
+
+const textProp = (buffer: string) =>
+  (parsePartialSpec(buffer).value as { ui: { props: { text?: unknown } } }).ui.props.text;
+
+describe('streamSpec — truncated expression safety', () => {
+  const OPEN = '{"ui":{"type":"text","props":{"text":"';
+
+  it('drops an unclosed expression at the end of a string value', () => {
+    expect(textProp(`${OPEN}{item.drinks * st`)).toBe('');
+    expect(textProp(`${OPEN}{`)).toBe('');
+  });
+
+  // partial-json trims the buffer, so a trailing space in an open string goes too.
+  it('keeps the text before an unclosed expression', () => {
+    expect(textProp(`${OPEN}Card 1 of {state.cards`)).toBe('Card 1 of');
+    expect(textProp(`${OPEN}{state.bill} {state.un`)).toBe('{state.bill}');
+  });
+
+  it('leaves a closed expression at the end of the buffer alone', () => {
+    expect(textProp(`${OPEN}Total {state.bill}`)).toBe('Total {state.bill}');
+    expect(textProp(`${OPEN}Total {state.bill} and mo`)).toBe('Total {state.bill} and mo');
+  });
+
+  it('never touches braces in an earlier closed string', () => {
+    const { value } = parsePartialSpec('{"ui":{"type":"text","props":{"label":"a { b","text":"Hello wor');
+    expect((value as { ui: { props: unknown } }).ui.props).toEqual({ label: 'a { b', text: 'Hello wor' });
+  });
+
+  it('honours escaped quotes inside the trailing string', () => {
+    expect(textProp(`${OPEN}say \\"hi\\" {state.na`)).toBe('say "hi"');
+    expect(textProp(`${OPEN}say \\"{\\" `)).toBe('say "');
+  });
+
+  it('cuts an unclosed expression in an array element too', () => {
+    expect(parsePartialSpec('{"options":["a","b {state.x').value).toEqual({ options: ['a', 'b'] });
+  });
+
+  it('does not mangle a truncated property name', () => {
+    const buffer = '{"ui":{"type":"text","props":{"te{x';
+    expect(parsePartialSpec(buffer).value).toEqual(parse(buffer, DEFAULT_ALLOW));
+    const afterComma = '{"ui":{"type":"text","props":{"a":"x","b{c';
+    expect(parsePartialSpec(afterComma).value).toEqual(parse(afterComma, DEFAULT_ALLOW));
   });
 });
 

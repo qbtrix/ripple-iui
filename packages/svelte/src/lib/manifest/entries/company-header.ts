@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const companyHeaderEntry: WidgetManifestEntry = {
   type: 'company-header',
   category: 'research',
-  description: 'Company profile header — logo, name, ticker, exchange, price, description, sector tags, market cap.',
+  description: 'Company profile header: logo, name, ticker, exchange, price, description, sector tags, market cap.',
   props: {
     name: { type: 'string', required: true, description: 'Company name.' },
     ticker: { type: 'string', required: false, description: 'Stock ticker.' },

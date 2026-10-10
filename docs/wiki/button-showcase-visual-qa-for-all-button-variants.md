@@ -37,7 +37,7 @@
 
 ## Overview
 
-`routes/showcase/button/+page.svelte` is a purpose-built quality assurance harness for the `Button` widget. It imports `Button` and `Card` directly (not via the Ripple spec renderer) to test the component API at the Svelte layer, separate from the spec-to-component rendering path.
+`routes/ds/button/+page.svelte` is a purpose-built quality assurance harness for the `Button` widget. It imports `Button` and `Card` directly (not via the Ripple spec renderer) to test the component API at the Svelte layer, separate from the spec-to-component rendering path.
 
 ## Sections Covered
 

@@ -4,9 +4,10 @@
   week with two weeks of history at full width (the bound value in the
   readout), a fresh Sunday-start tracker, and the seeded tracker again in a
   360px frame where rows become cards (drag the corner to resize). Dates come
-  from the browser's clock. URL-only (not linked from the showcase index).
+  from the browser's clock. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import HabitTracker from '$lib/widgets/composite/HabitTracker.svelte';
 	import type { HabitValue } from '$lib/widgets/composite/habit-tracker.js';
 
@@ -24,17 +25,11 @@
 <svelte:head><title>Ripple · Habit tracker</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Habit tracker</h1>
-		<p>
-			"Set me up a habit tracker for reading, running, water and meditation." Tick a day, arrow around the grid, add a habit with
-			an icon, rename one, remove one. Nothing is stored: a reload starts from the spec.
-		</p>
-	</header>
+	<DetailHeader id="habit-tracker">"Set me up a habit tracker for reading, running, water and meditation." Tick a day, arrow around the grid, add a habit with an icon, rename one, remove one. Nothing is stored: a reload starts from the spec.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Seeded week, two weeks of history</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<HabitTracker title="My week" {habits} {seed} weeks={2} bind:value />
 		</div>
 		<p class="section-caption">Bound <code>value</code>: {value ? `${value.habits.length} habits, ${ticked} ticks` : 'untouched'}</p>
@@ -70,12 +65,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

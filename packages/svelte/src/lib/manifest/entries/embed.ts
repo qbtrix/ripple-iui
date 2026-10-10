@@ -7,7 +7,7 @@ export const embedEntry: WidgetManifestEntry = {
   type: 'embed',
   category: 'media',
   description:
-    'Sandboxed iframe escape hatch — embeds a remote https URL or an inline srcdoc document. The iframe sandbox is renderer-controlled; the spec cannot widen it. Frame runs at an opaque origin.',
+    'Sandboxed iframe escape hatch: embeds a remote https URL or an inline srcdoc document. The iframe sandbox is renderer-controlled; the spec cannot widen it. Frame runs at an opaque origin.',
   props: {
     mode: {
       type: '"url" | "srcdoc"',
@@ -17,12 +17,12 @@ export const embedEntry: WidgetManifestEntry = {
     url: {
       type: 'string',
       required: false,
-      description: 'Remote page URL — used when mode=url. Must be https://.',
+      description: 'Remote page URL, used when mode=url. Must be https://.',
     },
     srcdoc: {
       type: 'string',
       required: false,
-      description: 'Inline HTML document — used when mode=srcdoc. Capped at 64KB.',
+      description: 'Inline HTML document, used when mode=srcdoc. Capped at 64KB.',
     },
     title: {
       type: 'string',

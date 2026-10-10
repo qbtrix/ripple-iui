@@ -38,7 +38,7 @@
 
 ## Overview
 
-`routes/showcase/spec/+page.svelte` demonstrates the most common real-world Ripple composition pattern: a `card` with a `stat` in its header slot and a `chart` as the main body. This is the canonical "metric card" pattern used in dashboards, and this page exists to verify it renders correctly across multiple chart types.
+`routes/ds/spec/+page.svelte` demonstrates the most common real-world Ripple composition pattern: a `card` with a `stat` in its header slot and a `chart` as the main body. This is the canonical "metric card" pattern used in dashboards, and this page exists to verify it renders correctly across multiple chart types.
 
 ## Four Card Specs
 

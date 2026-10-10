@@ -1,10 +1,11 @@
 <!--
-  Created: 2026-04-21 — Flow actions showcase. Renders the form-submit
-  example from docs/flow-actions.md so the captain can visually verify
-  flow, branch, confirm, validate, delay, invoke and async api chaining
-  against a mocked host.
+  routes/showcase/flow/+page.svelte: the form-submit example from
+  docs/flow-actions.md against a mocked host, so flow, branch, confirm,
+  validate, delay, invoke and async api chaining can be watched in the event
+  log beside it. Linked from the /showcase gallery (group Flows).
 -->
 <script lang="ts">
+  import DetailHeader from '../DetailHeader.svelte';
   import Ripple from '$lib/Ripple.svelte';
   import type { RippleEvent, RippleEventResult } from '@ripple-ui/core';
 
@@ -158,16 +159,12 @@
 </script>
 
 <div class="p-4 sm:p-8">
-  <header class="mx-auto max-w-3xl pb-4">
-    <h1 class="text-2xl font-semibold">Flow actions — showcase</h1>
-    <p class="mt-1 text-sm text-muted-foreground">
-      Exercises flow, branch, confirm, validate, delay, invoke and async api chaining
-      against a mocked host. Watch the event log on the right.
-    </p>
-  </header>
+  <div class="mx-auto max-w-4xl">
+    <DetailHeader id="flow">Validate, confirm, delay and submit, chained in one spec against a mocked host. Submit the form and watch the event log.</DetailHeader>
+  </div>
 
   <div class="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_22rem]">
-    <Ripple {spec} onEvent={handleEvent} />
+    <div data-thumb><Ripple {spec} onEvent={handleEvent} /></div>
 
     <aside class="space-y-2">
       <h2 class="text-sm font-medium text-muted-foreground">Event log</h2>

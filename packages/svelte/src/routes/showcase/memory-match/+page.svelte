@@ -4,9 +4,10 @@
   emoji, long words autoscaled) at full width with the bound value and
   on_complete in the readout, an emoji-only deck with a time limit in a 360px
   frame (drag the corner), and a word-to-word deck with icon keys.
-  URL-only (not linked from the showcase index).
+  Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import MemoryMatch from '$lib/widgets/composite/MemoryMatch.svelte';
 	import type { MatchPair, MemoryMatchValue } from '$lib/widgets/composite/MemoryMatch.svelte';
 
@@ -45,17 +46,11 @@
 <svelte:head><title>Ripple · Memory match</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Memory match</h1>
-		<p>
-			"Make me a memory game to learn Spanish animal names." Flip two cards at a time; a match stays up, a miss turns
-			back. Arrow keys move between cards and Enter flips.
-		</p>
-	</header>
+	<DetailHeader id="memory-match">"Make me a memory game to learn Spanish animal names." Flip two cards at a time; a match stays up, a miss turns back. Arrow keys move between cards and Enter flips.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Spanish animals, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<MemoryMatch title="Spanish animals" pairs={animals} bind:value={game} oncomplete={(r) => (lastWin = `${r.moves} moves, ${r.seconds}s`)} />
 		</div>
 		<p class="section-caption">
@@ -86,12 +81,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

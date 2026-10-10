@@ -164,7 +164,6 @@ Toggle switch with label. Similar to checkbox but different visual style. Use fo
 ```json
 {
   "version": "1.0",
-  "state": { "name": "", "email": "", "role": "", "newsletter": false },
   "ui": {
     "type": "card",
     "props": { "title": "Create Account" },
@@ -200,6 +199,7 @@ Toggle switch with label. Similar to checkbox but different visual style. Use fo
         ]
       }
     ]
-  }
+  },
+  "state": { "name": "", "email": "", "role": "", "newsletter": false }
 }
 ```

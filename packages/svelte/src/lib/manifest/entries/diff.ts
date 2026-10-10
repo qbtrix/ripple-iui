@@ -3,7 +3,7 @@ import type { WidgetManifestEntry } from '../index.js';
 export const diffEntry: WidgetManifestEntry = {
   type: 'diff',
   category: 'display',
-  description: 'Text diff viewer — unified or split, with line/word/char granularity.',
+  description: 'Text diff viewer, unified or split, with line/word/char granularity.',
   props: {
     before: { type: 'string', required: false, description: '"Before" text.' },
     after: { type: 'string', required: false, description: '"After" text.' },

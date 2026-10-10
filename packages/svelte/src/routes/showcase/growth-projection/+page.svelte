@@ -4,10 +4,10 @@
   prompt ($300 a month at 5% for 10 years, with a goal) at full width, a lump
   sum with no deposits (yearly compounding, inflation) in a 360px frame (drag
   the corner to resize), and clamped model input. The first binds `deposit`,
-  so slider edits show in the readout. URL-only (not linked from the showcase
-  index).
+  so slider edits show in the readout. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import GrowthProjection from '$lib/widgets/composite/GrowthProjection.svelte';
 
 	let deposit = $state(300);
@@ -16,15 +16,12 @@
 </script>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>growth-projection</h1>
-		<p>Four numbers in; the widget computes the schedule, the chart, the yearly table and the totals.</p>
-	</header>
+	<DetailHeader id="growth-projection">Four numbers in; the widget computes the schedule, the chart, the yearly table and the totals.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Save $300 a month at 5% for 10 years</h2>
 		<p class="section-caption">The landing prompt. Hover or arrow through the chart; drag a slider and the bound values update below.</p>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<GrowthProjection
 				title="Savings growth"
 				verdict={{ text: 'Steady $300 a month gets you to about $46,600; the $50,000 goal lands in year 11.', status: 'info' }}
@@ -71,12 +68,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

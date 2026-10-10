@@ -7,7 +7,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
-import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
+import { cardChunks, findScenario, pickScenario, recordedEvents, recordedExchange } from './recorded.js';
 import { playScenarios } from './play-cards.js';
 import {
 	BYOK_URL,
@@ -123,6 +123,9 @@ describe('recorded scenarios', () => {
 		expect(pickScenario('plan my trip to Tokyo').id).toBe('tokyo-trip');
 		expect(pickScenario('spanish flashcards please').id).toBe('flashcards');
 		expect(pickScenario('hello there').id).toBe('bill-splitter');
+		// findScenario says when the default was a fallback, so the intro can be honest.
+		expect(findScenario('hello there')).toBeNull();
+		expect(findScenario('plan my trip to Tokyo')?.id).toBe('tokyo-trip');
 	});
 
 	// The mock (scripts/mock-pawbar.ts) and the offline landing answer with pickScenario
@@ -572,5 +575,22 @@ describe('Paw OS handoff config', () => {
 		expect(decodeURIComponent(u.hash.slice('#prompt='.length))).toHaveLength(HANDOFF_MAX);
 		expect(trimmed).toBe(true);
 		expect(pawosHandoffUrl('short').trimmed).toBe(false);
+	});
+});
+
+describe('ChatSession.seed', () => {
+	test('folds a recorded exchange in synchronously: a final card with its title and text', () => {
+		const session = new ChatSession(frames());
+		session.seed(bill.fixture.prompt, recordedExchange(bill, 'Replaying a recorded answer that matches.'));
+		expect(session.turns.map((t) => [t.role, t.pending])).toEqual([
+			['user', false],
+			['assistant', false]
+		]);
+		expect(session.busy).toBe(false);
+		const card = cardOf(session);
+		expect(card.status).toBe('final');
+		expect(card.title).toBe(bill.title);
+		expect(JSON.parse(card.text)).toEqual({ state: billSpec.state, ui: billSpec.ui });
+		expect(lastTurn(session).parts.map((p) => p.kind)).toEqual(['text', 'card', 'text']);
 	});
 });

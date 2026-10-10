@@ -36,6 +36,8 @@
 // flow submits still go through send(); Chat.svelte makes that split.
 // Local state actions never reach the host, so they work while streaming.
 // Model text is stored as plain strings; the component never uses {@html}.
+// seed() folds a frame list in synchronously, so the landing can prerender a
+// finished exchange through the same path (card policy included).
 
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { streamSpec, type StreamSpecStore } from '$lib/streaming/index.js';
@@ -257,16 +259,18 @@ export class Card {
 	payNudge = $state(0);
 	/** The Cart that opened it, so a cancelled payment can start a new checkout. */
 	cart: unknown = null;
+	/** The card's JSON text as received so far (the spec peek shows it). */
+	text = $state('');
 	readonly store: StreamSpecStore;
 	#push!: ReadableStreamDefaultController<string>;
-	#fed = '';
 	#open = true;
 
-	constructor() {
+	/** `title`: a label from `card.start` (the recordings send the scenario title). */
+	constructor(readonly title = '') {
 		const source = new ReadableStream<string>({ start: (c) => void (this.#push = c) });
-		// throttleMs 0: streamSpec's throttle has no trailing parse, so a pause in
-		// the stream would leave the card behind the text it has already received.
-		// Every partial spec passes the card policy before <Ripple> renders it.
+		// throttleMs 0: every delta is parsed, so every partial spec passes the
+		// card policy before <Ripple> renders it, with no throttle window between
+		// a delta arriving and the card showing it.
 		this.store = streamSpec(source, {
 			throttleMs: 0,
 			onUpdate: (spec) => {
@@ -279,8 +283,8 @@ export class Card {
 	/** Appends raw card JSON text. */
 	delta(text: string) {
 		if (!this.#open || !text) return;
-		const first = this.#fed.trim() === '';
-		this.#fed += text;
+		const first = this.text.trim() === '';
+		this.text += text;
 		if (first) {
 			const i = text.search(/\S/);
 			if (i < 0) return;
@@ -291,7 +295,7 @@ export class Card {
 
 	/** For the legacy fence: `body` is the whole card text so far; pushes only the growth. */
 	feed(body: string) {
-		if (body.length > this.#fed.length) this.delta(body.slice(this.#fed.length));
+		if (body.length > this.text.length) this.delta(body.slice(this.text.length));
 	}
 
 	final(card: unknown) {
@@ -423,6 +427,17 @@ export class ChatSession {
 				link: opened ? { href: url, label: 'Open it again' } : { href: url, label: 'No new tab? Continue in Paw OS', prominent: true }
 			}
 		});
+	}
+
+	/** Shows a finished exchange at once, no transport (the landing's prerendered fold). */
+	seed(message: string, frames: Iterable<SSEFrame>) {
+		this.turns.push({ id: ++turnSeq, role: 'user', parts: [{ kind: 'text', text: message }], notice: null, pending: false });
+		this.turns.push({ id: ++turnSeq, role: 'assistant', parts: [], notice: null, pending: false });
+		const turn = this.turns[this.turns.length - 1];
+		const st: TurnState = { cards: new Map(), run: '', runStart: 0, legacy: [], replay: false };
+		for (const frame of frames) if (this.#apply(turn, st, frame)) break;
+		this.#flushRun(turn, st, true);
+		for (const card of st.cards.values()) card.reject('truncated');
 	}
 
 	/** Plays the recorded answer into a turn whose notice offered it, in place. */
@@ -598,7 +613,7 @@ export class ChatSession {
 				this.#flushRun(turn, st, true);
 				for (const open of st.legacy) open.reject('truncated');
 				st.cards.get(id)?.reject('truncated');
-				const card = new Card();
+				const card = new Card(str(d.title));
 				st.cards.set(id, card);
 				turn.parts.push({ kind: 'card', card });
 				st.run = '';

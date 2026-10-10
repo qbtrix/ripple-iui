@@ -36,7 +36,7 @@
 
 ## Overview
 
-`routes/showcase/card/+page.svelte` tests the `Card` layout widget in isolation, using direct Svelte imports rather than the Ripple spec renderer. The page is structured to verify every configurable dimension of the card, matching a design spec referenced internally as "treatment A (hairline)."
+`routes/ds/card/+page.svelte` tests the `Card` layout widget in isolation, using direct Svelte imports rather than the Ripple spec renderer. The page is structured to verify every configurable dimension of the card, matching a design spec referenced internally as "treatment A (hairline)."
 
 ## Sections Covered
 

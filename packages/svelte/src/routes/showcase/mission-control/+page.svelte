@@ -1,15 +1,15 @@
 <!--
-  Created 2026-06-13 (feat/console-telemetry-widgets): Nerve Mission Control —
-  a nullframe-style instrument-panel bento rendered from ONE rippleSpec with the
-  console theme. Exercises the new console telemetry widgets (led-clock,
-  seismograph, glyph-grid, fill-grid, streak-bars) alongside reskinned existing
-  widgets (progress-ring, stat, status-dot, calendar-heatmap, audit-log). The
-  theme.colors block sets a near-black instrument palette with Nerve tri-color
-  semantics (green = healthy, blue = live, amber = your gate); the theme-applier
-  emits these as CSS vars onto the ripple-root so token-driven widgets flip with
-  zero per-widget CSS. Dev-only — NOT part of the published package.
+  routes/showcase/mission-control/+page.svelte: an instrument-panel bento
+  rendered from ONE rippleSpec with a console theme. It exercises the telemetry
+  widgets (led-clock, seismograph, glyph-grid, fill-grid, streak-bars) next to
+  progress-ring, stat, status-dot, calendar-heatmap and audit-log. The spec's
+  theme.colors sets a near-black palette (green healthy, blue live, amber your
+  gate); the theme-applier emits it as CSS vars on the ripple-root, so
+  token-driven widgets follow with no per-widget CSS. The panel paints its own
+  ground edge to edge (.mc-page). Linked from the /showcase gallery.
 -->
 <script lang="ts">
+  import DetailHeader from '../DetailHeader.svelte';
   import { Ripple } from '$lib/index.js';
   import type { RippleEvent } from '@ripple-ui/core';
 
@@ -384,11 +384,19 @@
   };
 </script>
 
-<div class="mc-page">
+<div class="mc-head">
+  <DetailHeader id="mission-control">One spec with a console theme: the theme block sets the colours, and every widget that reads tokens follows them with no CSS of its own.</DetailHeader>
+</div>
+<div class="mc-page" data-thumb>
   <Ripple spec={missionSpec} onEvent={handleEvent} />
 </div>
 
 <style>
+  .mc-head {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 20px 0;
+  }
   /* The console paints its own near-black panel edge to edge; the site's top
      bar and footer keep the shared ground, so nothing leaks onto <body>. */
   .mc-page {

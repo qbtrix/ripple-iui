@@ -8,10 +8,10 @@
   the chosen line and the no-photo tile. Photos
   are empty on purpose, so the icon fallback is what you see. The wide frame
   scrolls like a transcript so the total bar sticks. The emitted
-  checkout cart and the bound cart print under the wide frame. URL-only (not
-  linked from the showcase index); fictional data only, the site is public.
+  checkout cart and the bound cart print under the wide frame. Linked from the /showcase gallery.; fictional data only, the site is public.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import { onMount } from 'svelte';
 	import MenuOrder from '$lib/widgets/composite/MenuOrder.svelte';
 	import type { Cart, CartDraft, MenuItem } from '$lib/widgets/composite/menu-order.js';
@@ -112,15 +112,12 @@
 <svelte:head><title>Ripple · menu-order</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>menu-order — visual QA</h1>
-		<p>Copper Griddle is fictional. Photos are empty on purpose: the icon tiles are the fallback a missing or failed photo gets. Toggle the theme in the top bar to check dark.</p>
-	</header>
+	<DetailHeader id="menu-order">Copper Griddle is fictional. Photos are empty on purpose: the icon tiles are the fallback a missing or failed photo gets.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Wide card (760px), orderable</h2>
 		<p class="section-caption">Pickup or delivery with a fee, the model's best pick, a preset of one fries. Drag the frame's corner to cross 720 and 560.</p>
-		<div class="pane frame chat" style:width="760px">
+		<div data-thumb class="pane frame chat" style:width="760px">
 			<MenuOrder
 				title="Copper Griddle"
 				subtitle="Smash burgers on Harbour Street · open until 10 PM"
@@ -187,12 +184,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

@@ -3,9 +3,10 @@
   widget for screenshots and visual QA: a five-letter game with a hint at full
   width (bound value and on_complete in the readout), a seven-letter game in a
   360px frame (drag the corner), a four-letter game with three guesses, and the
-  inline error a bad answer gets. URL-only (not linked from the showcase index).
+  inline error a bad answer gets. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import WordGuess, { type WordGuessValue } from '$lib/widgets/composite/WordGuess.svelte';
 
 	let game = $state<WordGuessValue>();
@@ -15,17 +16,11 @@
 <svelte:head><title>Ripple · Word guess</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Word guess</h1>
-		<p>
-			"Give me a five-letter word game about the kitchen, with a hint if I get stuck."
-			Click the board (or Tab to it) and type, or use the on-screen keys. The answer here is WHISK.
-		</p>
-	</header>
+	<DetailHeader id="word-guess">"Give me a five-letter word game about the kitchen, with a hint if I get stuck." Click the board (or Tab to it) and type, or use the on-screen keys. The answer here is WHISK.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Five letters with a hint, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<WordGuess
 				title="Kitchen words"
 				answer="whisk"
@@ -69,12 +64,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

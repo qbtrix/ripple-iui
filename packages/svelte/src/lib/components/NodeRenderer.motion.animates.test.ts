@@ -17,7 +17,7 @@
 // @created 2026-05-30 — PR #45 motion-wrapper box fix.
 // @changes
 //   - 2026-05-30 (PR #45 motion runtime close-out): added the staggered-card
-//     proof — renders the EXACT /showcase/motion staggerSpec shape (inView
+//     proof — renders the EXACT /ds/motion staggerSpec shape (inView
 //     {opacity:0,y:28} + transition.delay in seconds) through Ripple and asserts
 //     a card wrapper carries BOTH the initial translateY AND a per-card
 //     transition-delay. This is the DOM-level proof that the cascade works.
@@ -70,7 +70,7 @@ describe('NodeRenderer motion — actually animates (end-to-end)', () => {
   });
 
   // The showcase staggered-card proof: a card authored EXACTLY like
-  // /showcase/motion (inView fade+rise + a per-card delay in seconds) must mount
+  // /ds/motion (inView fade+rise + a per-card delay in seconds) must mount
   // with BOTH the initial translateY (it rises, not just fades) AND a non-zero
   // transition-delay (the cascade). This is the DOM-level proof for FIX 1+2.
   it('a staggered card mounts with the initial translateY AND a per-card transition-delay', () => {

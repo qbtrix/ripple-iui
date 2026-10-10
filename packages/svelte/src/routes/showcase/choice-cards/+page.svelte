@@ -9,6 +9,7 @@
   Fictional data only, the site is public.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Ripple from '$lib/Ripple.svelte';
 	import OptionList from '$lib/organisms/OptionList.svelte';
 
@@ -89,19 +90,16 @@
 </script>
 
 <div class="min-h-screen bg-background p-6">
-	<header class="mx-auto max-w-5xl pb-6">
-		<h1 class="text-2xl font-semibold">Choice cards</h1>
-		<p class="mt-1 text-sm text-muted-foreground">
-			Flow select steps render their option buttons as cards. Click, or use the arrow keys to move and Enter to pick.
-		</p>
-	</header>
+	<div class="mx-auto max-w-5xl">
+		<DetailHeader id="choice-cards">Flow select steps render their option buttons as cards. Click, or use the arrow keys to move and Enter to pick.</DetailHeader>
+	</div>
 
 	<div class="mx-auto max-w-5xl space-y-10">
 		{#each sections as s (s.name)}
 			<section class="space-y-3">
 				<h2 class="text-sm font-medium text-muted-foreground">{s.name}</h2>
 				<div class="flex flex-wrap items-start gap-6">
-					<div class="w-[720px] max-w-full"><Ripple spec={s.spec} onEvent={(e) => push(`${s.spec.flowId}: ${e.type} ${e.name ?? ''}`)} onComplete={(r) => push(`${s.spec.flowId}: ${JSON.stringify(r.payload)}`)} /></div>
+					<div data-thumb class="w-[720px] max-w-full"><Ripple spec={s.spec} onEvent={(e) => push(`${s.spec.flowId}: ${e.type} ${e.name ?? ''}`)} onComplete={(r) => push(`${s.spec.flowId}: ${JSON.stringify(r.payload)}`)} /></div>
 					<div class="w-[360px] max-w-full"><Ripple spec={s.spec} onComplete={(r) => push(`${s.spec.flowId} (narrow): ${JSON.stringify(r.payload)}`)} /></div>
 				</div>
 			</section>

@@ -67,10 +67,10 @@
 
 	// The tree minus the promoted option buttons (any depth), rendered above the
 	// OptionList; the whole tree minus every button while the step streams in.
-	const isStreaming = getContext<(() => boolean) | undefined>('ui-streaming');
+	const streamPhase = getContext<(() => 'active' | 'done' | undefined) | undefined>('ui-streaming');
 	const restOfTree = $derived(
 		input.mode === 'raw-ui'
-			? pruneFlowOptions(input.spec.ui, { all: isStreaming?.() === true })
+			? pruneFlowOptions(input.spec.ui, { all: streamPhase?.() === 'active' })
 			: undefined
 	);
 

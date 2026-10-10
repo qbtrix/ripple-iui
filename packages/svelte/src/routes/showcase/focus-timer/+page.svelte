@@ -3,9 +3,10 @@
   data widget for screenshots and visual QA. The live ask at full width with
   the bound value in the readout, a one-minute demo cycle with auto start to
   watch the phases turn over, and a 360px frame (drag the corner to resize).
-  URL-only (not linked from the showcase index).
+  Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import FocusTimer from '$lib/widgets/composite/FocusTimer.svelte';
 	import type { FocusValue } from '$lib/widgets/composite/FocusTimer.svelte';
 
@@ -15,17 +16,11 @@
 <svelte:head><title>Ripple · Focus timer</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Focus timer</h1>
-		<p>
-			"A pomodoro timer with work and break sessions and a count of finished rounds." Press Start or Space. When a phase
-			ends it waits with a call to action; hide the tab and the time stays right.
-		</p>
-	</header>
+	<DetailHeader id="focus-timer">"A pomodoro timer with work and break sessions and a count of finished rounds." Press Start or Space. When a phase ends it waits with a call to action; hide the tab and the time stays right.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Pomodoro, goal of eight rounds</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<FocusTimer title="Deep work" goal_rounds={8} task="Draft the quarterly update" bind:value={session} />
 		</div>
 		<p class="section-caption">
@@ -56,12 +51,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

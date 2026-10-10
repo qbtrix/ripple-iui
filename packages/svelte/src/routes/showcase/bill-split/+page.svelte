@@ -3,9 +3,10 @@
   widget for screenshots and visual QA: the landing's dinner for 4 at full
   width (bound, so edits show in the readout), the same bill in a 360px frame
   (drag the corner to resize), and a 5-person bill with tax so the grid shows
-  how it avoids a lone last card. URL-only (not linked from the showcase index).
+  how it avoids a lone last card. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import BillSplit from '$lib/widgets/composite/BillSplit.svelte';
 	import type { BillValue } from '$lib/widgets/composite/bill-split.js';
 
@@ -19,15 +20,12 @@
 </script>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>bill-split</h1>
-		<p>The bill, the tip and the people in; the widget does the cents-exact split and the layout.</p>
-	</header>
+	<DetailHeader id="bill-split">The bill, the tip and the people in; the widget does the cents-exact split and the layout.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Dinner for 4 came to $186.40</h2>
 		<p class="section-caption">The landing prompt. Change the tip, someone's drinks, or add a person; the bound value updates below.</p>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<BillSplit title="Dinner for 4" subtotal={186.4} tip_percent={18} people={dinner} bind:value />
 		</div>
 		<p class="readout">Bound: {value ? JSON.stringify(value) : 'nothing edited yet'}</p>
@@ -73,12 +71,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

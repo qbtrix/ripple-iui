@@ -17,7 +17,7 @@
       inert CSS animation-timeline: view() path was removed).
     - 2026-05-30 (PR #45 degrade-to-visible fix): documented the core guarantee —
       "motion degrades to visible, never hidden" — and the spring-preset enter
-      that exposed it (the invisible-hero bug on /showcase/marketing). Added the
+      that exposed it (the invisible-hero bug on /ds/marketing). Added the
       Playwright hero-visibility assertion and the jsdom degrade tests to the
       tripwire lists.
 -->
@@ -44,7 +44,7 @@ the element is stranded hidden forever — SSR painted it, hydrate hid it, the
 reveal never came. That is the worst failure this primitive can have: not "no
 animation" but "no content."
 
-This bit us once. The `/showcase/marketing` hero declares
+This bit us once. The `/ds/marketing` hero declares
 `enter: { opacity: 0, y: 24 }` with the **`snappy` spring preset**. A spring
 preset used to route the `enter` to Tier 1 (motion.dev), which was asked to
 spring toward `{ opacity: 1, transform: 'none' }`. **motion.dev cannot
@@ -101,7 +101,7 @@ What it asserts, per motion (these are the regression tripwires):
    across scroll positions** (it must drift, not sit at `transform: none`).
 3. **`animate`** — clicking "Fire animate action" **changes the target element's
    computed transform** (the pulse moves pixels).
-4. **Marketing hero degrades to visible** — on `/showcase/marketing`, the hero
+4. **Marketing hero degrades to visible** — on `/ds/marketing`, the hero
    (a `snappy` spring-preset `enter`) **ends computed `opacity` ~1 with its
    transform back at rest** and its title text visible. This is the
    invisible-hero tripwire: a stuck hero reports a collapsed transform / opacity
@@ -136,11 +136,11 @@ Open each and watch:
 
 | Route | What must visibly happen |
 |-------|--------------------------|
-| `/showcase/motion` | The "Describe → Generate → Refine → Ship" cards **fade AND rise in sequence** (each card both drops its opacity-0 and slides up from +28px) as they scroll into view, **cascading** one after another (~120ms apart). The CTA button **scales/springs on hover and tap**. The `reveal` panels slide in on scroll; the `parallax` panel **drifts vertically as you scroll**. Clicking **"Fire animate action"** makes the target card **pop (scale + lift, bouncy)** — the `animate` runtime pulses it by id with no host code. |
-| `/showcase/marketing` | Section/hero blocks **animate in on scroll**; hover states on cards/buttons respond. |
-| `/showcase/premium` | Premium widgets (bento, text effects) **animate**, not snap. |
+| `/ds/motion` | The "Describe → Generate → Refine → Ship" cards **fade AND rise in sequence** (each card both drops its opacity-0 and slides up from +28px) as they scroll into view, **cascading** one after another (~120ms apart). The CTA button **scales/springs on hover and tap**. The `reveal` panels slide in on scroll; the `parallax` panel **drifts vertically as you scroll**. Clicking **"Fire animate action"** makes the target card **pop (scale + lift, bouncy)** — the `animate` runtime pulses it by id with no host code. |
+| `/ds/marketing` | Section/hero blocks **animate in on scroll**; hover states on cards/buttons respond. |
+| `/ds/premium` | Premium widgets (bento, text effects) **animate**, not snap. |
 
-### What "working" looks like on `/showcase/motion` (the runtime close-out)
+### What "working" looks like on `/ds/motion` (the runtime close-out)
 
 These three were deferred in the first cut of `withMotion` and are now live. If
 any of them does NOT happen, motion regressed:
@@ -252,7 +252,7 @@ offset across its children, ordered `first` / `last` / `center`). The runtime
 does **not** implement it yet — applying it cleanly needs cross-action
 coordination (the parent injecting an ordered offset into each child's reveal,
 which each child applies through its own `withMotion`). It is **not** on the
-critical path: the `/showcase/motion` cascade is built from per-card
+critical path: the `/ds/motion` cascade is built from per-card
 `transition.delay` (see the cascade behavior above), not the `stagger` field. If
 you author `motion.stagger` today it is silently ignored — use per-child
 `transition.delay` instead. Implementing parent stagger is a follow-up.
@@ -270,7 +270,7 @@ is necessary, not sufficient. The strongest jsdom proofs live in
   inline `transform` actually mutates to the hover frame — catching the
   wrapper-box bug.
 - The **staggered-card proof** renders a card authored exactly like the
-  `/showcase/motion` row (inView `{opacity:0, y:28}` + `transition.delay: 0.24`)
+  `/ds/motion` row (inView `{opacity:0, y:28}` + `transition.delay: 0.24`)
   and asserts the wrapper carries BOTH the initial `translateY(28px)` AND a
   `transition-delay` of `240ms` on reveal — the DOM-level proof that the fade +
   rise + cascade all wire through.

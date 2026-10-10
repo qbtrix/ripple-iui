@@ -2,11 +2,11 @@
   routes/showcase/itinerary/+page.svelte — dev preview of the itinerary data
   widget for screenshots and visual QA: a 5-day Tokyo trip at full width and a
   3-day Lisbon trip in a 360px frame (drag the corner to resize). Both bind
-  `days`, so ticks and added stops show in the JSON readout. URL-only (not
-  linked from the showcase index). Fictional airlines and hotels: the site is
+  `days`, so ticks and added stops show in the JSON readout. Linked from the /showcase gallery. Fictional airlines and hotels: the site is
   public.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Itinerary from '$lib/widgets/composite/Itinerary.svelte';
 	import type { ItineraryDay, ItineraryLeg, PackingGroup } from '$lib/widgets/composite/Itinerary.svelte';
 
@@ -139,14 +139,11 @@
 <svelte:head><title>Ripple · Itinerary</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Itinerary</h1>
-		<p>Tick a stop with its rail dot, add one under any open day. Both examples bind <code>days</code>; the readout shows the emitted array. Toggle the theme in the top bar to check dark.</p>
-	</header>
+	<DetailHeader id="itinerary">Tick a stop with its rail dot, add one under any open day. Both examples bind <code>days</code>; the readout shows the emitted array.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">5 days in Tokyo, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<Itinerary
 				title="5 days in Tokyo"
 				subtitle="Fri 16 to Tue 20 Oct · 2 travellers"
@@ -191,12 +188,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

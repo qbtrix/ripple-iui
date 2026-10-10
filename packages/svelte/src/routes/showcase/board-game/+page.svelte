@@ -3,9 +3,10 @@
   widget for screenshots and visual QA: tic-tac-toe at medium with the bound
   value and on_complete in the readout, hard tic-tac-toe with the computer
   opening in a 360px frame (drag the corner), and a best-of-3 connect-four.
-  URL-only (not linked from the showcase index).
+  Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import BoardGame from '$lib/widgets/composite/BoardGame.svelte';
 	import type { BoardGameValue } from '$lib/widgets/composite/BoardGame.svelte';
 
@@ -17,17 +18,11 @@
 <svelte:head><title>Ripple · Board game</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Board game</h1>
-		<p>
-			"Let's play tic-tac-toe, I'm X." The model picks the game and the settings; the widget plays the computer, spots the
-			win and keeps score. Arrow keys move, Enter plays.
-		</p>
-	</header>
+	<DetailHeader id="board-game">"Let's play tic-tac-toe, I'm X." The model picks the game and the settings; the widget plays the computer, spots the win and keeps score. Arrow keys move, Enter plays.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Tic-tac-toe, medium</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<BoardGame game="tic-tac-toe" player="X" bind:value={game} oncomplete={(r) => (lastSeries = `${r.winner}, ${JSON.stringify(r.series)}`)} />
 		</div>
 		<p class="section-caption">
@@ -59,12 +54,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

@@ -1,6 +1,6 @@
 <!--
   routes/showcase/exec-dashboard/+page.svelte — dev preview of exec-dashboard
-  (URL-only). Top: rows mode, the landing's "Quarterly sales" demo for
+  (linked from the /showcase gallery). Top: rows mode, the landing's "Quarterly sales" demo for
   Fernleaf Ceramics (62 fictional orders, region filter bound to
   `state.salesFilter` and echoed below) at 760px and in a 360px frame, then a
   cafe's ten days by day with compare totals and no split (one series colour).
@@ -9,6 +9,7 @@
   passes it in through bindable props and per-key data maps.
 -->
 <script lang="ts">
+  import DetailHeader from '../DetailHeader.svelte';
   import ExecDashboard from '$lib/widgets/composite/ExecDashboard.svelte';
   import Ripple from '$lib/Ripple.svelte';
   import { fernleafOrders, kilnDays, kilnPrevious } from './sales.js';
@@ -286,9 +287,8 @@
 
 <div class="page">
   <section class="rows-demo">
-    <h1>exec-dashboard, rows mode</h1>
-    <p class="caption">"Show me last quarter's sales for a small online shop: the headline numbers, revenue by month on a chart, and a table of orders I can filter by region, with totals for the region I pick." Pick a region: every number recomputes.</p>
-    <div class="pane frame" style:width="calc(760px + 2rem)">
+    <DetailHeader id="exec-dashboard">"Show me last quarter's sales for a small online shop: the headline numbers, revenue by month on a chart, and a table of orders I can filter by region, with totals for the region I pick." Pick a region: every number recomputes.</DetailHeader>
+    <div data-thumb class="pane frame" style:width="calc(760px + 2rem)">
       <Ripple spec={salesSpec} onStateChange={(_path, value) => (salesFilter = value as Record<string, string>)} />
     </div>
     <p class="caption">Bound <code>state.salesFilter</code> = <code>{JSON.stringify(salesFilter)}</code></p>
@@ -304,10 +304,10 @@
   <header class="page-header">
     <div class="page-header-top">
       <div>
-        <h1>ExecDashboard — live state demo</h1>
+        <h2>Live state demo</h2>
         <p>
           Every switch below mutates state on <em>this page</em>. The dashboard component
-          receives it via bindable props and per-key data maps — proving the package contract
+          receives it via bindable props and per-key data maps, which proves the package contract
           that all state and data come from outside.
         </p>
       </div>
@@ -366,7 +366,6 @@
 
 <style>
   .rows-demo { margin-bottom: 48px; }
-  .rows-demo h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
   .rows-demo h2, .legacy-title { margin: 28px 0 10px; font-size: 16px; font-weight: 600; }
   .caption { margin: 0 0 12px; max-width: 760px; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; }
   .pane {
@@ -395,14 +394,14 @@
     justify-content: space-between;
     gap: 12px;
   }
-  .page-header h1 {
+  .page-header h2 {
     margin: 0 0 4px;
     font-size: 18px;
     font-weight: 600;
     line-height: 1.25;
   }
   @media (min-width: 640px) {
-    .page-header h1 { font-size: 20px; }
+    .page-header h2 { font-size: 20px; }
   }
   .page-header p {
     margin: 0;

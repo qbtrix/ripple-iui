@@ -37,7 +37,7 @@
 
 ## Overview
 
-`routes/showcase/stat/+page.svelte` is a thorough quality assurance harness for the `Stat` display widget. It imports `Stat` and `Card` directly and renders every configuration axis independently, making it the reference page for verifying that the widget's number formatting, delta coloring, and layout props all work as documented.
+`routes/ds/stat/+page.svelte` is a thorough quality assurance harness for the `Stat` display widget. It imports `Stat` and `Card` directly and renders every configuration axis independently, making it the reference page for verifying that the widget's number formatting, delta coloring, and layout props all work as documented.
 
 ## Sections
 

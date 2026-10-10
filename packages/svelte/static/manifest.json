@@ -1,7 +1,7 @@
 {
   "schema": "ripple.manifest/v1",
   "version": "0.8.0",
-  "generatedAt": "2026-10-09T21:02:37.082Z",
+  "generatedAt": "2026-10-10T02:27:18.937Z",
   "spec": {
     "uiField": "ui",
     "stateField": "state",
@@ -13,13 +13,9 @@
       "body",
       "content"
     ],
-    "description": "A Ripple spec is a JSON object with two top-level fields that matter for rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` (the StateManager seed — required when any node uses `bind` or reads `{state.*}`). The renderable tree field is named `ui` exactly — never `root`, `tree`, `view`, `body`, or `content`. Specs that use those aliases will not render.",
+    "description": "A Ripple spec is a JSON object with two top-level fields that matter for rendering: `ui` (the node tree the renderer mounts — REQUIRED) and `state` (the StateManager seed — required when any node uses `bind` or reads `{state.*}`). The renderable tree field is named `ui` exactly — never `root`, `tree`, `view`, `body`, or `content`. Specs that use those aliases will not render. Write `ui` before `state` so the interface can draw while the rest of the spec streams in, and keep the seed `state` small. Leave out any prop whose value equals the default its widget documents. For repeated rows or cards, keep the records as an array in `state` and render them with one `each` node (`\"items\": \"{state.rows}\"`) instead of writing a node per record. Bulk data (more than a few dozen records) should come from the host, through a `sources` binding or an `api` action where the host offers one, not be typed into the spec.",
     "example": {
       "version": "1.0",
-      "state": {
-        "draft": "",
-        "items": []
-      },
       "ui": {
         "type": "flex",
         "props": {
@@ -35,6 +31,10 @@
             }
           }
         ]
+      },
+      "state": {
+        "draft": "",
+        "items": []
       }
     }
   },
@@ -651,7 +651,7 @@
     {
       "type": "analyst-bar",
       "category": "research",
-      "description": "Analyst recommendation bar — Buy/Hold/Sell distribution with consensus label and target price.",
+      "description": "Analyst recommendation bar: Buy/Hold/Sell distribution with consensus label and target price.",
       "props": {
         "buy": {
           "type": "number",
@@ -799,7 +799,7 @@
         "completeActions": {
           "type": "EventAction | EventAction[]",
           "required": false,
-          "description": "Dispatched when the final question is answered. The formatted answer summary is passed as the event value — pair with `{ action: \"emit\", target: \"chat.send\" }` to send it as the next chat message (no explicit value needed)."
+          "description": "Dispatched when the final question is answered. The formatted answer summary is passed as the event value. Pair it with `{ action: \"emit\", target: \"chat.send\" }` to send it as the next chat message (no explicit value needed)."
         },
         "skipActions": {
           "type": "EventAction | EventAction[]",
@@ -1037,7 +1037,7 @@
     {
       "type": "article-meta",
       "category": "display",
-      "description": "Article byline — author, avatar, publish date, read time.",
+      "description": "Article byline: author, avatar, publish date, read time.",
       "props": {
         "author": {
           "type": "string",
@@ -2085,7 +2085,7 @@
     {
       "type": "citation",
       "category": "research",
-      "description": "Citation pill — inline reference to a source with optional superscript number.",
+      "description": "Citation pill: an inline reference to a source with optional superscript number.",
       "props": {
         "source": {
           "type": "string",
@@ -2164,6 +2164,64 @@
               "title": "Search",
               "description": "Find documents quickly.",
               "side": "bottom"
+            }
+          ]
+        }
+      },
+      "pocket": {
+        "state": {
+          "tourOpen": false
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "button",
+              "props": {
+                "label": "Start tour"
+              },
+              "on_click": {
+                "action": "open",
+                "target": "tourOpen"
+              }
+            },
+            {
+              "type": "input",
+              "class": "coachmark-demo-search",
+              "props": {
+                "placeholder": "Search documents"
+              }
+            },
+            {
+              "type": "text",
+              "class": "coachmark-demo-recent",
+              "props": {
+                "text": "Recent: Q3 plan, Launch notes"
+              }
+            },
+            {
+              "type": "coachmark",
+              "props": {
+                "steps": [
+                  {
+                    "target": ".coachmark-demo-search",
+                    "title": "Search",
+                    "description": "Find any document by name.",
+                    "side": "bottom"
+                  },
+                  {
+                    "target": ".coachmark-demo-recent",
+                    "title": "Recent",
+                    "description": "Pick up where you left off.",
+                    "side": "bottom"
+                  }
+                ]
+              },
+              "bind": "state.tourOpen"
             }
           ]
         }
@@ -2784,7 +2842,7 @@
     {
       "type": "company-header",
       "category": "research",
-      "description": "Company profile header — logo, name, ticker, exchange, price, description, sector tags, market cap.",
+      "description": "Company profile header: logo, name, ticker, exchange, price, description, sector tags, market cap.",
       "props": {
         "name": {
           "type": "string",
@@ -2884,7 +2942,7 @@
         "headline": {
           "type": "{ label: string; value: string | number; delta?: string; trend?: \"up\" | \"down\" | \"flat\"; comparison?: string; sparkline?: number[] }",
           "required": false,
-          "description": "The \"big number\" hero — center stage with sparkline + period comparison."
+          "description": "The \"big number\" hero: center stage, with sparkline and period comparison."
         },
         "secondaryMetrics": {
           "type": "Array<{ label: string; value: string | number; delta?: string; trend?: \"up\" | \"down\" | \"flat\"; sublabel?: string }>",
@@ -3324,7 +3382,7 @@
         "items": {
           "type": "Array<{ id: string; label: string; description?: string; state?: \"pending\" | \"in-progress\" | \"done\" | \"blocked\" | \"skipped\"; owner?: { id?: string; name: string; avatar?: string }; due?: string; overdue?: boolean; blockedBy?: string[]; attachments?: { name: string; url?: string }[]; actions?: EventAction | EventAction[]; toggleActions?: EventAction | EventAction[] }>",
           "required": true,
-          "description": "Checklist items. Click row → `actions`; click checkbox → `toggleActions`. Two-way bind the array with `bind: \"state.checklist\"` (default `value`/`onchange` surface) so toggles persist reactively through state — toggling flips the item state optimistically and `toggleActions` still fires as a side-effect hook (API / audit). Blocked items (state `blocked` or non-empty `blockedBy`) cannot be marked done."
+          "description": "Checklist items. Click row → `actions`; click checkbox → `toggleActions`. Two-way bind the array with `bind: \"state.checklist\"` (default `value`/`onchange` surface) so toggles persist reactively through state. Toggling flips the item state optimistically and `toggleActions` still fires as a side-effect hook (API / audit). Blocked items (state `blocked` or non-empty `blockedBy`) cannot be marked done."
         },
         "groupBy": {
           "type": "\"none\" | \"state\" | \"owner\"",
@@ -3339,7 +3397,7 @@
         "progress": {
           "type": "number",
           "required": false,
-          "description": "Override the auto-computed progress (0–100)."
+          "description": "Override the auto-computed progress (0 to 100)."
         },
         "emptyText": {
           "type": "string",
@@ -4342,7 +4400,7 @@
     {
       "type": "definition-list",
       "category": "display",
-      "description": "Term/definition pairs — inline (term-on-left) or stacked. Use for glossaries and metadata.",
+      "description": "Term/definition pairs, inline (term on the left) or stacked. Use for glossaries and metadata.",
       "props": {
         "items": {
           "type": "Array<{ term: string; definition: string }>",
@@ -4375,7 +4433,7 @@
     {
       "type": "diff",
       "category": "display",
-      "description": "Text diff viewer — unified or split, with line/word/char granularity.",
+      "description": "Text diff viewer, unified or split, with line/word/char granularity.",
       "props": {
         "before": {
           "type": "string",
@@ -4557,12 +4615,48 @@
             }
           }
         ]
+      },
+      "pocket": {
+        "state": {
+          "users": [
+            {
+              "name": "Ada Lovelace"
+            },
+            {
+              "name": "Grace Hopper"
+            },
+            {
+              "name": "Alan Turing"
+            }
+          ]
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "8px"
+          },
+          "children": [
+            {
+              "type": "each",
+              "items": "{state.users}",
+              "children": [
+                {
+                  "type": "text",
+                  "props": {
+                    "text": "{item.name}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
       "type": "embed",
       "category": "media",
-      "description": "Sandboxed iframe escape hatch — embeds a remote https URL or an inline srcdoc document. The iframe sandbox is renderer-controlled; the spec cannot widen it. Frame runs at an opaque origin.",
+      "description": "Sandboxed iframe escape hatch: embeds a remote https URL or an inline srcdoc document. The iframe sandbox is renderer-controlled; the spec cannot widen it. Frame runs at an opaque origin.",
       "props": {
         "mode": {
           "type": "\"url\" | \"srcdoc\"",
@@ -4572,12 +4666,12 @@
         "url": {
           "type": "string",
           "required": false,
-          "description": "Remote page URL — used when mode=url. Must be https://."
+          "description": "Remote page URL, used when mode=url. Must be https://."
         },
         "srcdoc": {
           "type": "string",
           "required": false,
-          "description": "Inline HTML document — used when mode=srcdoc. Capped at 64KB."
+          "description": "Inline HTML document, used when mode=srcdoc. Capped at 64KB."
         },
         "title": {
           "type": "string",
@@ -4974,12 +5068,12 @@
         "kpis": {
           "type": "Array<{ id?: string; label: string; value: string | number; unit?: string; delta?: string; trend?: \"up\" | \"down\" | \"flat\"; compareLabel?: string; sparkline?: number[]; color?: string; icon?: string; sublabel?: string; status?: \"normal\" | \"success\" | \"warning\" | \"critical\"; target?: string | number; progress?: number; byKey?: Record<string, KpiOverride>; actions?: EventAction | EventAction[] }>",
           "required": false,
-          "description": "KPI tiles. `status` paints a left-edge band; `progress` (0-100) renders a thin progress bar (optionally with `target`). `byKey` swaps fields (value/delta/trend/sparkline/...) when activeDateRange / activeGranularity changes — keys may be the range, the granularity, or \"<range>|<granularity>\" (most specific wins). When `actions` (or `id` + a host `onkpiclick`) is set, the tile becomes clickable for drill-through."
+          "description": "KPI tiles. `status` paints a left-edge band; `progress` (0-100) renders a thin progress bar (optionally with `target`). `byKey` swaps fields (value/delta/trend/sparkline/...) when activeDateRange / activeGranularity changes. Keys may be the range, the granularity, or \"<range>|<granularity>\" (most specific wins). When `actions` (or `id` + a host `onkpiclick`) is set, the tile becomes clickable for drill-through."
         },
         "primaryChart": {
           "type": "{ title?: string; type?: \"bar\" | \"line\" | \"area\" | \"pie\" | \"donut\" | \"radar\" | \"heatmap\"; data: DataPoint[] | Record<string, DataPoint[]>; height?: number; colors?: string[] }",
           "required": false,
-          "description": "Hero chart (left, 2/3 width when activity rail is present). `data` may be a flat array, or a record keyed by range/granularity/\"<range>|<granularity>\" — the component picks the most specific match for the active state."
+          "description": "Hero chart (left, 2/3 width when activity rail is present). `data` may be a flat array, or a record keyed by range/granularity/\"<range>|<granularity>\"; the component picks the most specific match for the active state."
         },
         "activity": {
           "type": "Array<{ id?: string; time: string; label: string; actor?: string; icon?: string; severity?: \"info\" | \"success\" | \"warning\" | \"destructive\"; category?: string; unread?: boolean; actions?: EventAction | EventAction[] }>",
@@ -5659,7 +5753,7 @@
         "action": {
           "type": "string",
           "required": false,
-          "description": "Native submit URL. When set, the form does a real browser POST/GET so it works with NO client JS — for static / prerendered hosts. When omitted, the form stays client-side (validate then on_submit)."
+          "description": "Native submit URL. When set, the form does a real browser POST/GET so it works with NO client JS (for static / prerendered hosts). When omitted, the form stays client-side (validate then on_submit)."
         },
         "method": {
           "type": "\"post\" | \"get\"",
@@ -5723,7 +5817,7 @@
       "pockets": [
         {
           "name": "native-post-static",
-          "description": "Native browser POST — works with no client JS. For static / prerendered hosts (paw-sites). The form submits straight to `action`; inputs serialize by their `name`.",
+          "description": "Native browser POST that works with no client JS. For static / prerendered hosts (paw-sites). The form submits straight to `action`; inputs serialize by their `name`.",
           "state": {},
           "ui": {
             "type": "form",
@@ -5943,7 +6037,7 @@
         "progress": {
           "type": "number",
           "required": false,
-          "description": "0–100. Shown next to the title."
+          "description": "0 to 100. Shown next to the title."
         },
         "valid": {
           "type": "boolean",
@@ -6580,6 +6674,11 @@
           "type": "string",
           "required": true,
           "description": "Expression evaluated for truthiness, e.g. \"{state.isAdmin}\"."
+        },
+        "else_children": {
+          "type": "UINode[]",
+          "required": false,
+          "description": "Rendered instead of `children` when `condition` is falsy."
         }
       },
       "example": {
@@ -6590,6 +6689,14 @@
             "type": "text",
             "props": {
               "text": "Admin section"
+            }
+          }
+        ],
+        "else_children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "Ask an admin for access."
             }
           }
         ]
@@ -7846,7 +7953,7 @@
         "zoom": {
           "type": "number",
           "required": false,
-          "description": "Initial zoom level (0–20). Default 2."
+          "description": "Initial zoom level (0 to 20). Default 2."
         },
         "minZoom": {
           "type": "number",
@@ -7901,7 +8008,7 @@
         "trackers": {
           "type": "Array<{ id: string; lat: number; lng: number; heading?: number; label?: string; color?: string; icon?: string; trail?: [number, number][]; follow?: boolean }>",
           "required": false,
-          "description": "Live moving targets — vehicle, courier, ship, person. Position changes interpolate smoothly. `heading` rotates the directional arrow. `trail` draws recent positions. `follow: true` keeps the camera on the target."
+          "description": "Live moving targets: vehicle, courier, ship, person. Position changes interpolate smoothly. `heading` rotates the directional arrow. `trail` draws recent positions. `follow: true` keeps the camera on the target."
         },
         "interactive": {
           "type": "boolean",
@@ -8184,7 +8291,7 @@
     {
       "type": "master-detail",
       "category": "layout",
-      "description": "List left, detail right; selected item flows into the detail spec. Master items support only valueKey/labelKey/descriptionKey/badgeKey — for bespoke list cards, hand-roll a grid.",
+      "description": "List left, detail right; selected item flows into the detail spec. Master items support only valueKey/labelKey/descriptionKey/badgeKey. For bespoke list cards, hand-roll a grid.",
       "props": {
         "items": {
           "type": "Array<Record<string, unknown>>",
@@ -8721,7 +8828,7 @@
     {
       "type": "model-viewer",
       "category": "media",
-      "description": "Declarative 3D model viewer for GLB/GLTF assets — orbit controls, AR, and environment lighting, all driven by props. The viewer module is lazy-loaded on first use.",
+      "description": "Declarative 3D model viewer for GLB/GLTF assets: orbit controls, AR, and environment lighting, all driven by props. The viewer module is lazy-loaded on first use.",
       "props": {
         "src": {
           "type": "string",
@@ -8766,7 +8873,7 @@
         "shadowIntensity": {
           "type": "number",
           "required": false,
-          "description": "Strength of the contact shadow under the model (0–1)."
+          "description": "Strength of the contact shadow under the model (0 to 1)."
         }
       },
       "example": {
@@ -9844,7 +9951,7 @@
         "eta": {
           "type": "string",
           "required": false,
-          "description": "ETA string (e.g. \"Today, 4 – 6 PM\")."
+          "description": "ETA string (e.g. \"Today, 4 to 6 PM\")."
         },
         "tracking": {
           "type": "{ carrier: string; number: string; url?: string }",
@@ -11250,7 +11357,7 @@
         "conversion": {
           "type": "Array<{ from: string; to: string; rate: number }>",
           "required": false,
-          "description": "Stage-to-stage conversion percentages (0–100)."
+          "description": "Stage-to-stage conversion percentages (0 to 100)."
         },
         "leaderboard": {
           "type": "{ title?: string; items: Array<{ name: string; avatar?: string; value: string | number; delta?: string; sublabel?: string; position?: number }> }",
@@ -11886,7 +11993,7 @@
         "progress": {
           "type": "number",
           "required": false,
-          "description": "0–100 overall progress percentage."
+          "description": "Overall progress percentage, 0 to 100."
         },
         "dueDate": {
           "type": "string",
@@ -11916,7 +12023,7 @@
         "team": {
           "type": "Array<{ name: string; avatar?: string; role?: string; load?: number; status?: \"available\" | \"busy\" | \"overloaded\" | \"off\" }>",
           "required": false,
-          "description": "Team members. `load` is 0–100 (>100 highlights overload)."
+          "description": "Team members. `load` is 0 to 100 (over 100 highlights overload)."
         },
         "updates": {
           "type": "Array<{ time: string; actor?: string; label: string; icon?: string; type?: string }>",
@@ -13700,6 +13807,61 @@
             }
           }
         ]
+      },
+      "pocket": {
+        "state": {
+          "filtersOpen": false,
+          "inStock": true
+        },
+        "ui": {
+          "type": "flex",
+          "props": {
+            "direction": "column",
+            "gap": "12px"
+          },
+          "children": [
+            {
+              "type": "button",
+              "props": {
+                "label": "Open filters",
+                "variant": "secondary"
+              },
+              "on_click": {
+                "action": "open",
+                "target": "filtersOpen"
+              }
+            },
+            {
+              "type": "sheet",
+              "props": {
+                "side": "right",
+                "title": "Filters",
+                "description": "Narrow the product list."
+              },
+              "bind": "state.filtersOpen",
+              "children": [
+                {
+                  "type": "switch",
+                  "props": {
+                    "label": "In stock only"
+                  },
+                  "bind": "state.inStock"
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Apply"
+                  },
+                  "on_click": {
+                    "action": "set",
+                    "target": "filtersOpen",
+                    "value": false
+                  }
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
@@ -13894,7 +14056,7 @@
     {
       "type": "soul-status",
       "category": "display",
-      "description": "Agent soul state — avatar, name, energy, mood, status. Compact pill or expanded card.",
+      "description": "Agent soul state: avatar, name, energy, mood, status. Compact pill or expanded card.",
       "props": {
         "name": {
           "type": "string",
@@ -13979,7 +14141,7 @@
         "color": {
           "type": "string",
           "required": false,
-          "description": "Accent color (CSS) — used if favicon fails."
+          "description": "Accent color (CSS), used if the favicon fails."
         },
         "favicon": {
           "type": "string",
@@ -14190,7 +14352,7 @@
     {
       "type": "stat",
       "category": "display",
-      "description": "Labeled metric with delta, direction, and sentiment colors. Richer than `metric` — supports formatting.",
+      "description": "Labeled metric with delta, direction, and sentiment colors. Richer than `metric`: supports formatting.",
       "props": {
         "label": {
           "type": "string",
@@ -14293,7 +14455,7 @@
     {
       "type": "steps",
       "category": "display",
-      "description": "Numbered process steps — vertical (default) or horizontal — with optional descriptions.",
+      "description": "Numbered process steps, vertical (default) or horizontal, with optional descriptions.",
       "props": {
         "steps": {
           "type": "Array<{ title: string; description?: string; number?: number | string }>",
@@ -14489,7 +14651,7 @@
     {
       "type": "tabs",
       "category": "layout",
-      "description": "Tabbed panels. Tab labels go in the `tabs` prop; panel content goes in `children` — one child per tab, matched by index (children[0] renders for tabs[0]).",
+      "description": "Tabbed panels. Tab labels go in the `tabs` prop; panel content goes in `children`, one child per tab, matched by index (children[0] renders for tabs[0]).",
       "props": {
         "tabs": {
           "type": "Array<{ value: string; label: string }>",
@@ -14867,7 +15029,7 @@
         "density": {
           "type": "\"comfortable\" | \"compact\"",
           "required": false,
-          "description": "Visual density. \"comfortable\" (default) shows a connecting rail and roomy spacing — milestones/roadmap. \"compact\" hides the rail and tightens rows — activity streams (\"Deploy succeeded · 2m ago\")."
+          "description": "Visual density. \"comfortable\" (default) shows a connecting rail and roomy spacing (milestones, roadmap). \"compact\" hides the rail and tightens rows, for activity streams (\"Deploy succeeded · 2m ago\")."
         }
       },
       "example": {
@@ -16064,7 +16226,7 @@
         "dot": {
           "type": "number",
           "required": false,
-          "description": "Dot diameter in px — drives overall size. Default 6."
+          "description": "Dot diameter in px; drives the overall size. Default 6."
         }
       },
       "example": {
@@ -16152,7 +16314,7 @@
       "type": "glyph-grid",
       "category": "display",
       "staticSafe": true,
-      "description": "N×N matrix of cells lit per a bitmap pattern — a 2D brightness array or a named glyph. Lit cells take the accent color with a subtle pulse (frozen under reduced-motion). Pure CSS, SSR-safe.",
+      "description": "N×N matrix of cells lit per a bitmap pattern: a 2D brightness array or a named glyph. Lit cells take the accent color with a subtle pulse (frozen under reduced-motion). Pure CSS, SSR-safe.",
       "props": {
         "pattern": {
           "type": "number[][]",
@@ -16203,7 +16365,7 @@
       "type": "fill-grid",
       "category": "display",
       "staticSafe": true,
-      "description": "Discrete heap/segment meter — a row (or matrix) of M cells, the first N filled per value/max, the rest faint ghost cells. Pure CSS, SSR-safe.",
+      "description": "Discrete heap/segment meter: a row (or matrix) of M cells, the first N filled per value/max, the rest faint ghost cells. Pure CSS, SSR-safe.",
       "props": {
         "value": {
           "type": "number",
@@ -16325,7 +16487,7 @@
         "done": {
           "type": "boolean",
           "required": false,
-          "description": "Streaming finished — clears busy/caret even if streaming was left true."
+          "description": "Streaming finished. Clears busy/caret even if streaming was left true."
         },
         "size": {
           "type": "string",
@@ -16359,7 +16521,7 @@
         "args": {
           "type": "object",
           "required": false,
-          "description": "Invocation arguments — rendered as formatted JSON."
+          "description": "Invocation arguments, rendered as formatted JSON."
         },
         "result": {
           "type": "any",
@@ -16374,7 +16536,7 @@
         "durationMs": {
           "type": "number",
           "required": false,
-          "description": "Call duration in ms — shown as a compact label."
+          "description": "Call duration in ms, shown as a compact label."
         },
         "time": {
           "type": "string",
@@ -16384,7 +16546,7 @@
         "error": {
           "type": "string",
           "required": false,
-          "description": "Error message — shown when status is \"error\"."
+          "description": "Error message, shown when status is \"error\"."
         },
         "open": {
           "type": "boolean",
@@ -16418,7 +16580,7 @@
         "streaming": {
           "type": "boolean",
           "required": false,
-          "description": "Agent is still reasoning — collapsed, the summary names the last thinking step, else \"Reasoning…\"."
+          "description": "Agent is still reasoning. Collapsed, the summary names the last thinking step, else \"Reasoning…\"."
         },
         "collapsed": {
           "type": "boolean",
@@ -16487,7 +16649,7 @@
         "toolCalls": {
           "type": "array",
           "required": false,
-          "description": "Proposed tool calls — each rendered with the ToolCall widget."
+          "description": "Proposed tool calls, each rendered with the ToolCall widget."
         },
         "body": {
           "type": "string",
@@ -16497,7 +16659,7 @@
         "decidedBy": {
           "type": "string",
           "required": false,
-          "description": "Who decided — shown in the resolved stamp (\"Approved by Ada\")."
+          "description": "Who decided, shown in the resolved stamp (\"Approved by Ada\")."
         },
         "disabled": {
           "type": "boolean",

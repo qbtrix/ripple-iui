@@ -14,6 +14,8 @@ dist
 # imports the teardown drain from test-setup.ts, which drags a stray .d.ts next
 # to it on every build.
 packages/svelte/src/test-setup.d.ts
+# Same for the docs nav, which lib/site/docs imports from src/docs.
+packages/svelte/src/docs/_nav.d.ts
 
 # OS
 .DS_Store
