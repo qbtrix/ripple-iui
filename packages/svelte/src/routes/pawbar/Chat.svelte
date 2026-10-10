@@ -29,7 +29,7 @@
     shows its PayCard above the log. A finished flow card hands its result to
     session.flowComplete; it and a card's `ask` arrive as the visitor's next
     message, and each new visitor message scrolls into view, however it was
-    sent. A notice that offers a replay gets a button that plays the closest
+    sent (a seeded one does not, so the page opens at its top). A notice that offers a replay gets a button that plays the closest
     recorded answer into the same turn (session.replayRecorded).
     Each card has a spec peek (its JSON, pretty-printed as it streams, soft
     wrapped with a hanging indent so deep lines never leave the pane; under
@@ -179,6 +179,8 @@
 		const id = session.turns[i]?.id;
 		if (!id || id === shownAsk) return;
 		shownAsk = id;
+		// A turn already there at mount stays put: the page opens at the top.
+		if (seeded.has(id)) return;
 		void tick().then(() =>
 			log?.children[i]?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
 		);
