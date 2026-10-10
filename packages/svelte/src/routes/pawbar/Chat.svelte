@@ -7,17 +7,14 @@
     under it (aria-expanded, aria-controls the panel). Expanded, it is the
     full grid: an uppercase label per group over wrapping pill chips (lucide
     icon from chip-icons.ts, then the title, then "step by step" on steps
-    chips), scrolling inside itself past 55vh. A set that fits in ROW shows
-    the grid with no toggle. Tapping a chip collapses the panel. A chip runs
+    chips), scrolling inside itself past 55vh. A chip tap collapses it and runs
     here (session.send); text the visitor types goes to Paw OS
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so.
-    The look follows Paw OS (paw-enterprise): no frame, the composer is
-    ChatPill's liquid-glass pill (autosizing, a round send that turns into a
-    stop while a turn streams), the visitor's message a blue-tint bubble, the
-    assistant bubble-less, cards on --site-card with a hairline. A waiting turn
-    shows typing dots and a rotating shimmer label; a streaming card shows
-    shimmer bars, then a spinner status line.
+    The look follows Paw OS: the composer is ChatPill's glass pill (a round
+    send that turns into a stop while a turn streams), the visitor's message
+    a blue-tint bubble, cards on --site-card with a hairline. A waiting turn
+    shows typing dots and a shimmer label, a streaming card shimmer bars.
     Assistant text is markdown-lite (paragraphs, **bold**, `code`) built from
     Svelte nodes, never {@html}, and never a card's raw spec (hideSpecText;
     "Card hidden." when no card shows). A card renders through <Ripple
@@ -25,8 +22,7 @@
     spec is what the visitor keeps using). Host events go to session.hostEvent,
     which ignores them until the card is final; a checkout's progress or
     failure shows as the card's note, an opened one as a PayCard under the card
-    (keyed by session, so a retry starts fresh; a second checkout while it is
-    open scrolls it into view inside the chat), and a confirmed booking as a
+    (keyed by session, so a retry starts fresh), and a confirmed booking as a
     BookingReceipt under the card. An order resumed from sessionStorage
     (session.resumed) shows its PayCard above the log. A finished flow card
     hands its result to session.flowComplete; it and a card's `ask` arrive as
@@ -43,12 +39,10 @@
     scrolls the page (no scrollIntoView anywhere). It follows new content only
     while the visitor is at its bottom; a visitor's own message (chip, typed
     or sent by a card) always jumps there; scrolled up, growth while a turn
-    streams shows a "New" pill instead. At mount it stays at its top. The
-    container keeps the default overscroll, so a touch scroll that hits its
-    bottom carries on into the page. Below it the dock: chips, the composer
-    with the optional `more` snippet to its right, and a foot row with the
-    optional `foot` snippet then the hint (hidden when the row is narrow; it
-    stays in the DOM as the textarea's description). The log is role="log"
+    streams shows a "New" pill instead. At mount it stays at its top. Below
+    it the dock: the panel, the composer with the `more` snippet to its
+    right, and a foot row (the `foot` snippet, then the hint, which hides
+    when narrow but stays as the textarea's description). The log is role="log"
     and aria-busy while a turn streams; one polite region says "Building"
     and "Done" per turn instead of reading tokens.
     DOM ids are positional, never Card.id: that counter can differ between the
