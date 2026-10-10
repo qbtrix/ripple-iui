@@ -58,7 +58,7 @@ test('a streamed card renders, stays inert to the host until final, then works',
 	expect(view.queryByText(/sent/i)).toBeNull();
 
 	release();
-	await waitFor(() => expect(view.queryByText('Building')).toBeNull());
+	await waitFor(() => expect(view.queryByText(/Building/)).toBeNull());
 	await waitFor(() => expect(view.getByRole('button', { name: 'Pick' })).toBeTruthy());
 
 	// After final: the validated card mounts fresh from its own state, is live,

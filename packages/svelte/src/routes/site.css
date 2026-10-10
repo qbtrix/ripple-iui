@@ -1,24 +1,29 @@
 /* routes/site.css — The Ripple site's tokens and fonts. Site-only: it lives
    under routes/, so svelte-package never ships it (src/lib/styles.css is the
    package's). Loaded after $lib/styles.css so these tokens win at equal
-   specificity.
-   - Fonts: Inter (body/UI), JetBrains Mono (code, spec and install lines only),
-     Bricolage Grotesque (h1/h2 only). Self-hosted OFL woff2 in static/fonts.
+   specificity. /ds parses the literal values out of the first `:root {` and
+   `.dark {` blocks, so colour tokens stay literal there.
+   - Fonts, as in Paw OS: Inter (body/UI), JetBrains Mono (code, spec and
+     install lines only), Bricolage Grotesque (h1/h2 only). Self-hosted OFL
+     woff2 in static/fonts, with the plain family names as fallbacks.
    - Ground + ink ladder: the --site-* tokens. Text colours are ink at an alpha
      (100 / 64 / 44 light, 100 / 56 / 36 dark); --site-faint fails 4.5:1 in both
-     themes, so it is for icons and rules, never text. Measured in the C1 status.
+     themes, so it is for icons and rules, never text.
    - One accent: Paw blue #1877F2 (--primary, --ring) means interactive or live,
      never decoration. --primary-ink is the blue as TEXT, a tint (darker on light,
      lifted on dark); --site-on-primary is text on the blue. --paw-crimson is
      for error and limit states only.
-   - Dark ground is the Paw OS pane grey #262621. Chat cards (--site-panel
-     #222326) and widget panels (--card #2c2d31) are neutral greys, not tinted
-     by the warm ground.
+   - One warm family, as in Paw OS. Dark: the pane grey #262621 is the ground,
+     and the surfaces are darker shades of the same hue: --site-panel (chat
+     column, panels) #21211d, --site-card (a response's Ripple card, and the
+     widgets' --card) #1d1d1a, --site-inset (code wells, inset fields) #191916,
+     --site-lift (hover) #2a2a25. Light mirrors it on a warm off-white.
    - Widget tokens: --primary/--background/--card/--accent/--border etc. are the
-     shadcn tokens the rendered Ripple UI reads. Only the existing re-tints live
-     here; site chrome reads --site-*, never a widget token it does not own.
-   - Glass (backdrop blur) is the top bar's alone. Theme: app.html starts dark,
-     static/theme-init.js follows the OS unless the visitor chose. */
+     shadcn tokens the rendered Ripple UI reads. Site chrome reads --site-*,
+     never a widget token it does not own.
+   - Glass: the top bar and the landing composer (--composer-glass, PE's
+     liquid glass pill). Theme: app.html starts dark, static/theme-init.js
+     follows the OS unless the visitor chose. */
 
 @font-face {
 	font-family: 'Inter Variable';
@@ -43,9 +48,9 @@
 }
 
 :root {
-	--font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-	--font-mono: 'JetBrains Mono Variable', 'SF Mono', ui-monospace, Menlo, monospace;
-	--font-display: 'Bricolage Grotesque Variable', 'Inter Variable', system-ui, sans-serif;
+	--font-sans: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+	--font-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', 'Inter Variable', system-ui, sans-serif;
 
 	--primary: #1877f2;
 	--primary-foreground: oklch(1 0 0);
@@ -54,21 +59,29 @@
 	--paw-crimson: oklch(0.55 0.2 18);
 	--paw-crimson-hover: oklch(0.48 0.2 18);
 
-	--background: oklch(0.982 0.003 262);
-	--foreground: oklch(0.18 0.015 262);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.18 0.015 262);
-	--muted-foreground: oklch(0.42 0.015 262);
-	--border: oklch(0.18 0.015 262 / 12%);
+	/* Warm off-white, mirroring the Paw OS warm grey. */
+	--background: #f7f6f2;
+	--foreground: oklch(0.2 0.01 95);
+	--card: #efeee8;
+	--card-foreground: oklch(0.2 0.01 95);
+	--muted-foreground: oklch(0.43 0.01 95);
+	--border: oklch(0.2 0.01 95 / 12%);
 
-	/* Ground and the ink ladder. */
-	--site-ground: oklch(0.985 0.006 262);
-	--site-ink-base: oklch(0.18 0.015 262);
+	/* Ground, the warm surface ladder and the ink ladder. */
+	--site-ground: #f7f6f2;
+	--site-panel: #f2f1ec;
+	--site-card: #efeee8;
+	--site-inset: #e9e8e1;
+	--site-lift: #fbfaf7;
+	--site-ink-base: oklch(0.2 0.01 95);
 	--site-ink-soft: 64%;
 	--site-ink-faint: 44%;
 	--site-ink-hover: 5%;
 	--site-ink-pressed: 9%;
 	--site-glass: 78%;
+	--composer-glass: color-mix(in srgb, #fff 62%, transparent);
+	--composer-line: oklch(0.2 0.01 95 / 12%);
+	--composer-reflex: oklch(1 0 0 / 70%);
 
 	/* Shape and depth: a 1px line, or this one shadow on rendered Ripple cards. */
 	--radius-control: 8px;
@@ -102,9 +115,8 @@
 	/* PE's --feature-glass-tint, the warm grey every Paw OS pane shows. */
 	--background: #262621;
 	--foreground: oklch(0.95 0.005 260);
-	/* Neutral panels: a translucent white over the warm pane grey read as brown. */
-	--card: #2c2d31;
-	--site-panel: #222326;
+	/* Response surfaces are darker shades of the same warm hue. */
+	--card: #1d1d1a;
 	--card-foreground: oklch(0.95 0.005 260);
 	--popover: color-mix(in srgb, #262621 95%, transparent);
 	--popover-foreground: oklch(0.95 0.005 260);
@@ -118,12 +130,19 @@
 	--input: oklch(1 0 0 / 8%);
 
 	--site-ground: #262621;
+	--site-panel: #21211d;
+	--site-card: #1d1d1a;
+	--site-inset: #191916;
+	--site-lift: #2a2a25;
 	--site-ink-base: oklch(0.96 0.005 262);
 	--site-ink-soft: 56%;
 	--site-ink-faint: 36%;
 	--site-ink-hover: 9%;
 	--site-ink-pressed: 14%;
 	--site-glass: 72%;
+	--composer-glass: color-mix(in srgb, #000 38%, transparent);
+	--composer-line: rgba(255, 255, 255, 0.12);
+	--composer-reflex: rgba(255, 255, 255, 0.08);
 	color-scheme: dark;
 }
 
@@ -142,7 +161,7 @@
 	--shadow-card: 0 16px 32px -20px color-mix(in oklch, var(--site-ink-base) 18%, transparent);
 
 	/* Code blocks (docs, samples, the install line). */
-	--code-bg: color-mix(in oklch, var(--site-ink-base) 4%, var(--site-ground));
+	--code-bg: var(--site-inset);
 	--code-line: var(--site-line);
 	--code-ink: var(--site-ink);
 }
