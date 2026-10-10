@@ -2,13 +2,15 @@
   @file routes/+page.svelte
   @description Ripple's landing, chat-first, laid out like a Paw OS chat: under
     the site bar sits PE's thin context row (the name and a short sub-line),
-    then the chat fills the first screen (100dvh less the bar) with its dock of
-    chips and composer stuck to the bottom. The hero (the h1, a lede and the
-    install chip with Copy) sits at the top of the chat's column, above the
-    first message, and scrolls away as the conversation grows; Copy falls back
-    to selecting the command when the clipboard is blocked. Scrolling past the
-    chat releases
-    the dock, and the dock's "More" link jumps to the sections below. The
+    then the chat fills exactly the first screen (100dvh less the bar), so
+    the page never scrolls on its own: the chat's own container scrolls, with
+    the hero (the h1, a lede and the install chip with Copy) at its top,
+    above the first message, and the chips and composer pinned below it.
+    "More", a ghost button right of the composer, is what moves the page to
+    the sections below. Under the composer a one-line strip: the install
+    command with a copy button, Docs and Gallery, then the Paw OS hint while
+    it fits. Copy falls back to selecting the command when the clipboard is
+    blocked. The
     context row has no "New chat" action: ChatSession has no reset. A visitor types
     a request or taps a chip, the answer streams in and its card renders through
     <Ripple> while it arrives. The chat opens on one finished recorded exchange
@@ -43,6 +45,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Copy from '@lucide/svelte/icons/copy';
 	import { Ripple } from '$lib/index.js';
 	import JsonLines from '$lib/site/JsonLines.svelte';
 	import Chat from './pawbar/Chat.svelte';
@@ -143,18 +146,19 @@
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
 
-	// The hero chip and the band each copy the install command; only the one tapped says so.
-	let copied = $state<'hero' | 'code' | null>(null);
+	// The hero chip, the dock's strip and the band each copy the install command; only the one tapped says so.
+	let copied = $state<'hero' | 'code' | 'strip' | null>(null);
 	let heroCmd = $state<HTMLElement>();
 	let bandCmd = $state<HTMLElement>();
-	async function copyInstall(where: 'hero' | 'code') {
+	let stripCmd = $state<HTMLElement>();
+	async function copyInstall(where: 'hero' | 'code' | 'strip') {
 		try {
 			await navigator.clipboard.writeText(INSTALL);
 			copied = where;
 			setTimeout(() => (copied = null), 1600);
 		} catch {
 			// Clipboard missing or blocked: select the command so the visitor can copy it.
-			const el = where === 'hero' ? heroCmd : bandCmd;
+			const el = { hero: heroCmd, code: bandCmd, strip: stripCmd }[where];
 			const range = document.createRange();
 			if (el) range.selectNodeContents(el);
 			window.getSelection()?.removeAllRanges();
@@ -186,23 +190,35 @@
 				<p>Paw OS by PocketPaw <span aria-hidden="true">·</span> {LIVE ? 'live demo' : 'recorded demo'}</p>
 			</div>
 		</div>
-		<!-- The hero: top of the chat's column, above the first message. -->
-		<header class="hero">
-			<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
-			<p class="lede">
-				Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
-				working interface as the spec streams in. Ask for something below.
-			</p>
-			<p class="get">
-				<code bind:this={heroCmd}><span aria-hidden="true">$</span> {INSTALL}</code>
-				<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
-					{copied === 'hero' ? 'Copied' : 'Copy'}
-				</button>
-			</p>
-		</header>
 		<Chat {session} {suggestions} pawosUrl={PAWOS_URL} typedLocal={TYPED_LOCAL}>
+			{#snippet top()}
+				<!-- The hero: top of the chat's scroll container, above the first message. -->
+				<header class="hero">
+					<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
+					<p class="lede">
+						Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
+						working interface as the spec streams in. Ask for something below.
+					</p>
+					<p class="get">
+						<code bind:this={heroCmd}><span aria-hidden="true">$</span> {INSTALL}</code>
+						<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
+							{copied === 'hero' ? 'Copied' : 'Copy'}
+						</button>
+					</p>
+				</header>
+			{/snippet}
 			{#snippet more()}
 				<a class="more" href="#how">More <ChevronDown size={14} strokeWidth={2} aria-hidden="true" /></a>
+			{/snippet}
+			{#snippet foot()}
+				<p class="strip">
+					<code bind:this={stripCmd}>{INSTALL}</code>
+					<button type="button" class="strip-copy" onclick={() => copyInstall('strip')} aria-label="Copy install command">
+						{#if copied === 'strip'}Copied{:else}<Copy size={12} strokeWidth={2} aria-hidden="true" />{/if}
+					</button>
+					<a href="/docs">Docs</a>
+					<a href="/live">Gallery</a>
+				</p>
 			{/snippet}
 		</Chat>
 	</section>
@@ -323,28 +339,26 @@
 		color: var(--primary-ink);
 	}
 
-	/* The app view: the context row, then the chat filling the rest of the
-	   first screen, its dock stuck to the bottom until the section ends. */
+	/* The app view: exactly the first screen under the bar (dvh, less the
+	   top safe area), so the page itself sits still at the top. The context
+	   row, then the chat, whose own container scrolls; its dock is pinned
+	   at the bottom. Only "More" moves the page. */
 	.app {
 		max-width: 880px !important;
 		box-sizing: border-box;
-		min-height: calc(100dvh - var(--site-topbar) - env(safe-area-inset-top, 0px));
+		height: calc(100dvh - var(--site-topbar) - env(safe-area-inset-top, 0px));
+		min-height: 420px;
 		display: flex;
 		flex-direction: column;
-		padding-bottom: 8px;
 	}
 	.app :global(.chat) {
 		flex: 1;
-		padding-top: 16px;
+		min-height: 0;
 	}
 	/* PE's room header: 44px, 6px 12px, a bottom hairline; name 13px/500,
-	   topic 12px muted. Full bleed, sticky under the bar for as long as the
-	   chat is on screen. */
+	   topic 12px muted. Full bleed. */
 	.context {
-		position: sticky;
-		top: calc(var(--site-topbar) + env(safe-area-inset-top, 0px));
-		/* Above the dock, so the dock slides under it as the chat scrolls away. */
-		z-index: calc(var(--z-sticky) + 1);
+		flex: none;
 		box-sizing: border-box;
 		min-height: var(--site-context);
 		margin-inline: calc(50% - 50vw);
@@ -451,19 +465,24 @@
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
-	/* "More": a quiet link at the dock's edge to the sections below. */
+	/* "More": a compact ghost button right of the composer; the one thing
+	   that moves the page (smooth, or a jump under reduced motion: the
+	   layout's scroll-behavior). */
 	.more {
+		flex: none;
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		min-height: 28px;
-		margin-left: auto;
-		padding: 0 10px;
-		border-radius: 100px;
+		min-height: 44px;
+		margin-bottom: 4px;
+		padding: 0 12px 0 14px;
+		border: 1px solid var(--site-line);
+		border-radius: 999px;
 		color: var(--site-soft);
 		font-size: 13px;
 		font-weight: 500;
 		text-decoration: none;
+		white-space: nowrap;
 		transition:
 			color 0.15s ease,
 			background 0.15s ease;
@@ -471,6 +490,61 @@
 	.more:hover {
 		color: var(--site-ink);
 		background: var(--site-hover);
+	}
+	.more:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	/* The dock's install strip: one small muted line. */
+	.strip {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		margin: 0;
+		font-size: 12.5px;
+		line-height: 1;
+		color: var(--site-soft);
+		white-space: nowrap;
+	}
+	.strip code {
+		padding: 0;
+		background: none;
+		font-size: 12px;
+		color: var(--site-soft);
+	}
+	.strip-copy {
+		display: inline-grid;
+		place-items: center;
+		min-width: 28px;
+		height: 28px;
+		margin-left: -6px;
+		padding: 0 4px;
+		border: 0;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--site-soft);
+		font: inherit;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	.strip-copy:hover {
+		background: var(--site-hover);
+		color: var(--site-ink);
+	}
+	.strip a {
+		color: var(--site-soft);
+		text-decoration: none;
+	}
+	.strip a:hover {
+		color: var(--site-ink);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.strip-copy:focus-visible,
+	.strip a:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
 	}
 	@media (prefers-reduced-transparency: reduce) {
 		.context {
