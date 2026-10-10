@@ -119,14 +119,11 @@
 		{#key open.id}<Player run={open} storeUrl={STORE_URL} />{/key}
 	{:else}
 		<DiscoverHeader as="h1" title="Watch a model" accent="build it live" class="hero">
-			<p class="lede">
-				Watch a model build what it was asked for, then use it. Recorded runs are real model output on their original
-				timing. Hand-written runs are cards we wrote for the newer widgets.
-			</p>
+			<p class="lede">Model output replayed on its original timing, then yours to use.</p>
 		</DiscoverHeader>
 		<div class="sections">
-			<GalleryGrid items={recorded} label="Recorded runs" title="Recorded runs" blurb="Real model output, replayed on its original timing." onopen={openRun} />
-			<GalleryGrid items={written} label="Hand-written runs" title="Hand-written" blurb="Cards we wrote for the newer widgets, streamed the same way." onopen={openRun} />
+			<GalleryGrid items={recorded} label="Recorded runs" title="Recorded runs" blurb="Real model output." onopen={openRun} />
+			<GalleryGrid items={written} label="Hand-written runs" title="Hand-written" blurb="Cards we wrote, streamed the same way." onopen={openRun} />
 		</div>
 	{/if}
 </main>

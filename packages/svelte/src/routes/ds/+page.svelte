@@ -77,10 +77,7 @@
 <main class="ds">
 	<header class="head">
 		<h1>Design system</h1>
-		<p class="lede">
-			The pieces Ripple builds with: tokens, then every atom rendered live from a small spec. For the finished
-			interfaces a model asks for, see the <a href="/showcase">showcase</a>.
-		</p>
+		<p class="lede">Tokens and every atom, rendered live from a small spec.</p>
 		<nav class="toc" aria-label="On this page">
 			<a href="#tokens">Tokens</a>
 			<a href="#atoms">Atoms</a>

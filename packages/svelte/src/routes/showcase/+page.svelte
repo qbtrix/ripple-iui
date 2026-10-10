@@ -56,11 +56,7 @@
 
 <main class="gallery">
 	<DiscoverHeader as="h1" title="What a model can" accent="build with Ripple" class="hero">
-		<p class="lede">
-			Each tile opens a live page you can use. Want to watch one get built?
-			<a href="/live">See the recorded runs</a>. Looking for buttons and tokens? They are in the
-			<a href="/ds">design system</a>.
-		</p>
+		<p class="lede">Each tile opens a live page you can use.</p>
 		<div class="filters" role="group" aria-label="Filter by group">
 			{#each groups as g (g)}
 				<button type="button" class="chip" aria-pressed={group === g} onclick={() => choose(g)}>
@@ -111,15 +107,6 @@
 		font-size: 16px;
 		line-height: 1.55;
 		color: var(--site-soft);
-	}
-	.lede a {
-		color: var(--primary-ink);
-		text-underline-offset: 3px;
-	}
-	.lede a:focus-visible {
-		outline: 2px solid var(--ring);
-		outline-offset: 2px;
-		border-radius: 2px;
 	}
 	.sections {
 		display: flex;

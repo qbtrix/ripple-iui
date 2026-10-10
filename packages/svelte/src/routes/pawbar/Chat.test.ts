@@ -221,7 +221,7 @@ test('typed text opens Paw OS with the prompt in the fragment, never the Paw Bar
 	});
 	const view = render(Chat, { session, open, pawosUrl: 'https://os.example.test' });
 	expect(view.getByRole('textbox').getAttribute('placeholder')).toContain('Paw OS');
-	expect(view.getByText(/type your own and continue in Paw OS/)).toBeTruthy();
+	expect(view.getByText(/Typed requests open in Paw OS/)).toBeTruthy();
 
 	await typeAndSend(view, 'Build me a habit tracker & more?');
 	expect(open).toHaveBeenCalledOnce();
