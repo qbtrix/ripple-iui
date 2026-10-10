@@ -30,20 +30,24 @@
 //  10. `emit ask` (value exactly `{text}`, plain, at most ASK_MAX) and `emit
 //      flow.submit` fire only under an ASK_HANDLERS key when that is the outermost
 //      handler key; never in state or from a node inside a handler.
-//  11. An `illustration` node takes no handler and no `bind`. Its `svg` skips rule 5
-//      and is held to the widget contract instead: a string with no `{` anywhere (the
-//      engine resolves templates inside strings), no backslash in an attribute value,
-//      and passing checkIllustrationSvg. `title` is non-empty text, `caption` text or
-//      null, `max_height` a number in ILLUSTRATION_MAX_HEIGHT. All of it at final:
-//      while streaming, only the handler and `bind` rule applies, and no `svg`
-//      string is checked (its props may stream before its `type`).
+//  11. An `illustration` node takes no `bind` and one handler only: a node-level
+//      `on_select` (fired when a note opens; it may `emit ask` under rule 10). Its `svg`
+//      skips rule 5 and is held to the widget contract instead: a string with no `{`
+//      anywhere (the engine resolves templates inside strings), no backslash in an
+//      attribute value, and passing checkIllustrationSvg; its `annotations` pass
+//      checkIllustrationAnnotations against that svg. `title` is non-empty text,
+//      `caption` text or null, `max_height` a number in ILLUSTRATION_MAX_HEIGHT. All
+//      of it at final: while streaming, only the handler and `bind` rule applies, and
+//      no `svg` string is checked (its props may stream before its `type`).
+//  12. A game's `on_complete` is no ASK_HANDLERS key: it fires with no click (a quiz
+//      countdown can end a run unattended), so it never sends the visitor's turn.
 // Rules 4 and 5 read strings after one pass of HTML character-reference decoding.
 // `partial` is for specs still streaming: a prefix of an allowed name is not
 // refused yet, flow verbs wait for the flow fields, and shapes are checked at final.
 // /live's recorded replays never pass through this.
 
 import { ILLUSTRATION_MAX_HEIGHT } from '@ripple-ui/core/manifest';
-import { checkIllustrationSvg } from '$lib/security/illustration-svg.js';
+import { checkIllustrationAnnotations, checkIllustrationSvg } from '$lib/security/illustration-svg.js';
 import { getWidget } from '$lib/widgets/index.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 
@@ -59,7 +63,7 @@ const FOLLOW_UP_EVENTS = ['follow-up', 'checkout', 'add_to_cart', 'book'];
 const FLOW_FIELDS = ['chain', 'chain_map', 'flowId', 'onComplete'];
 export const FLOW_STEP_KEYS: readonly string[] = ['version', 'id', 'flowId', 'intent', 'title', 'description', 'ui', 'chain', 'chain_map', 'onComplete', 'form_fields'];
 export const FLOW_EVENTS: readonly string[] = ['flow.next', 'flow.back', 'flow.forward', 'flow.submit'];
-/** The handler keys an `ask` or `flow.submit` may fire from: a click, a submit, a pick, a composite's button list. */
+/** The handler keys an `ask` or `flow.submit` may fire from: a click, a submit, a pick, a composite's button list. Never `on_complete` (rule 12). */
 const ASK_HANDLERS = new Set(['on_click', 'on_submit', 'on_select', 'actions']);
 export const ASK_MAX = 500;
 export const MAX_FLOW_STEPS = 8;
@@ -173,7 +177,8 @@ function backslashAttr(svg: string): boolean {
 
 /** Rule 11 on an `illustration` node: why it is refused, or null. */
 function illustrationRefusal(node: Record<string, unknown>, props: Record<string, unknown>, partial: boolean): string | null {
-	if ('bind' in node || [...Object.keys(node), ...Object.keys(props)].some((k) => HANDLER_KEY.test(k))) return 'illustration:handler';
+	const handlers = [...Object.keys(node).filter((k) => k !== 'on_select'), ...Object.keys(props)];
+	if ('bind' in node || handlers.some((k) => HANDLER_KEY.test(k))) return 'illustration:handler';
 	if (partial) return null;
 	const { svg, title, caption, max_height: height } = props;
 	if (typeof svg !== 'string') return 'illustration:svg';
@@ -183,7 +188,9 @@ function illustrationRefusal(node: Record<string, unknown>, props: Record<string
 	if (svg.includes('{')) return 'illustration:expression';
 	const check = checkIllustrationSvg(svg);
 	if (!check.ok) return `illustration:${check.reason}`;
-	return backslashAttr(svg) ? 'illustration:backslash' : null;
+	if (backslashAttr(svg)) return 'illustration:backslash';
+	const notes = checkIllustrationAnnotations({ svg, annotations: props.annotations });
+	return notes.ok ? null : `illustration:${notes.reason}`;
 }
 
 function emitRefusal(node: Record<string, unknown>, flow: boolean, ask: boolean | null, partial: boolean): string | null {

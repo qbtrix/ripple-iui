@@ -8,6 +8,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
 import { parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, pickScenario, recordedEvents } from './recorded.js';
+import { playScenarios } from './play-cards.js';
 import {
 	BYOK_URL,
 	FLOW_MESSAGE_MAX,
@@ -122,6 +123,24 @@ describe('recorded scenarios', () => {
 		expect(pickScenario('plan my trip to Tokyo').id).toBe('tokyo-trip');
 		expect(pickScenario('spanish flashcards please').id).toBe('flashcards');
 		expect(pickScenario('hello there').id).toBe('bill-splitter');
+	});
+
+	// The mock (scripts/mock-pawbar.ts) and the offline landing answer with pickScenario
+	// once no earlier route claims the message; these prompts must reach their own card.
+	test.each([
+		['Make me a memory match game pairing Spanish animal words with their emoji', 'memory-match'],
+		['Make me a 5-letter word guessing game about space, with a hint', 'word-guess'],
+		['Quiz me with 6 space trivia questions, and explain each answer', 'space-trivia'],
+		["Let's play tic-tac-toe against you, I'm X, medium difficulty", 'tic-tac-toe'],
+		['Play connect four against me, best of 3', 'connect-four'],
+		['Track my habits this week: reading, running, water and sleep, each with a weekly target', 'habit-tracker'],
+		['Make me a pomodoro focus timer: 25 minutes focus, 5 minute breaks, 4 rounds, goal of 6 today', 'focus-timer'],
+		['How does the heart pump blood? Draw an animated picture with numbered notes on the chambers and valves.', 'heart']
+	])('the chip "%s" routes to %s, past the mock\'s earlier routes', (prompt, id) => {
+		expect(pickScenario(prompt).id).toBe(id);
+		expect(playScenarios.find((s) => s.id === id)!.fixture.prompt).toBe(prompt);
+		// modeOf, storeCardKind and inlineCard in mock-pawbar.ts run first.
+		expect(prompt).not.toMatch(/\b(429|limit|busy|legacy|unsafe|book|table|order|burgers?|laptops?|trip|bike|bicycle)\b|reject|truncat|reserv/i);
 	});
 });
 

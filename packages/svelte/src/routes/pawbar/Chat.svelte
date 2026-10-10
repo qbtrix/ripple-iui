@@ -1,7 +1,8 @@
 <!--
   @file routes/pawbar/Chat.svelte
   @description The landing's chat: the conversation log, a composer that stays
-    in reach while a long card is read, and the suggestion chips. A chip runs
+    in reach while a long card is read, and the suggestion chips in labelled
+    groups (wrapping rows; one sideways-scrolling row per group on a phone). A chip runs
     here (session.send); text the visitor types goes to Paw OS
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so. Assistant text
@@ -33,6 +34,8 @@
 		prompt: string;
 		/** The answer walks the visitor through steps: the chip says so. */
 		steps?: boolean;
+		/** The labelled row the chip sits in; chips with none share one unlabelled row. */
+		group?: string;
 	}
 
 	let {
@@ -53,6 +56,13 @@
 		/** window.open stand-in for tests. */
 		open?: (url: string) => unknown;
 	} = $props();
+
+	// Chip rows in the order their groups first appear.
+	const groups = $derived.by(() => {
+		const rows = new Map<string, Suggestion[]>();
+		for (const s of suggestions) rows.set(s.group ?? '', [...(rows.get(s.group ?? '') ?? []), s]);
+		return [...rows];
+	});
 
 	let draft = $state('');
 	let log = $state<HTMLOListElement>();
@@ -197,7 +207,7 @@
 								{:else if turn.notice.link}<a href={turn.notice.link.href}>{turn.notice.link.label}</a>{/if}
 								{#if turn.notice.replay}
 									<button type="button" class="replay" disabled={session.busy} onclick={() => session.replayRecorded(turn.id)}>
-										Play the closest recorded answer here
+										Play the closest saved answer here
 									</button>
 								{/if}
 							</p>
@@ -234,13 +244,20 @@
 	{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Try a suggestion here, or type your own and continue in Paw OS.</p>{/if}
 
 	{#if suggestions.length}
-		<ul class="chips" aria-label="Try one of these">
-			{#each suggestions as s (s.id)}
-				<li>
-					<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
-				</li>
+		<div class="chip-groups">
+			{#each groups as [name, chips] (name)}
+				<div class="chip-group">
+					{#if name}<span class="chip-label" aria-hidden="true">{name}</span>{/if}
+					<ul class="chips" aria-label={name || 'Try one of these'}>
+						{#each chips as s (s.id)}
+							<li>
+								<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
 			{/each}
-		</ul>
+		</div>
 	{/if}
 	{#if note}<p class="chat-note">{note}</p>{/if}
 </div>
@@ -491,6 +508,26 @@
 		font-size: 13px;
 		color: var(--site-soft);
 	}
+	.chip-groups {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.chip-group {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		min-width: 0;
+	}
+	.chip-label {
+		flex: none;
+		width: 44px;
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--site-soft);
+	}
 	.chips {
 		list-style: none;
 		margin: 0;
@@ -498,8 +535,10 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 8px;
+		min-width: 0;
 	}
 	.chip {
+		white-space: nowrap;
 		padding: 7px 13px;
 		border: 1px solid var(--site-line);
 		border-radius: 999px;
@@ -536,6 +575,25 @@
 	.notice a:focus-visible {
 		outline: 2px solid var(--primary);
 		outline-offset: 2px;
+	}
+	/* On a phone each group is one row that scrolls sideways, faded at the edge. */
+	@media (max-width: 560px) {
+		.chip-group {
+			align-items: center;
+		}
+		.chips {
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scrollbar-width: none;
+			padding: 2px 24px 2px 2px;
+			mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+		}
+		.chips::-webkit-scrollbar {
+			display: none;
+		}
+		.chips li {
+			flex: none;
+		}
 	}
 	@media (max-width: 420px) {
 		.card {

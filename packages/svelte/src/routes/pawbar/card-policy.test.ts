@@ -10,12 +10,16 @@
 // vendored manifest. fixtures/trip-flow-card.json is a live model card (2026-10-09,
 // "Help me plan a trip step by step") that pocketpaw's card_spec.py accepted.
 // The `illustration` cases follow card_spec.py's _check_illustration and the
-// widget contract's hostile set and caps.
+// widget contract's hostile set and caps; its notes follow checkIllustrationAnnotations,
+// and a node-level on_select may ask. The play cards (play-cards.ts) all pass, and a
+// game's on_complete may never ask.
 
 import { describe, expect, test } from 'vitest';
 import { HOST_EVENTS, MAX_CARD_NODES, MAX_DEPTH, PATH_TARGET_ACTIONS, decodeEntities, refuseCard } from './card-policy.js';
 import { gearsCard, gearsSvg, laptopAnswerCard, laptopFlowCard, tripFlowCard } from './flow-cards.js';
-import { checkIllustrationSvg } from '$lib/security/illustration-svg.js';
+import { connectFourCard, focusTimerCard, habitCard, heartCard, heartSvg, memoryMatchCard, playScenarios, quizCard, ticTacToeCard, wordGuessCard } from './play-cards.js';
+import { checkIllustrationAnnotations, checkIllustrationSvg } from '$lib/security/illustration-svg.js';
+import { parsePartialSpec } from '$lib/streaming/json-parse.js';
 import { pickScenario } from './recorded.js';
 import { CHAT_WIDGET_TYPES } from './widget-types.js';
 import liveTripCard from './fixtures/trip-flow-card.json';
@@ -753,5 +757,122 @@ describe('illustration', () => {
 		expect(refuseCard({ ui: { props: { svg: "<svg viewBox='0 0 10 10'><rec" } } }, { partial: true })).toBeNull();
 		expect(refuseCard({ ui: { props: { svg: "<svg viewBox='0 0 10 10'/>", title: 'x' }, type: 'illustration' } })).toBeNull();
 		expect(refuseCard({ ui: { type: 'text', props: { svg: "<svg viewBox='0 0 10 10'/>" } } })).toBe('markup');
+	});
+});
+
+describe('illustration notes and on_select', () => {
+	const markup = "<svg viewBox='0 0 100 100'><title>t</title><circle id='valve' cx='50' cy='50' r='20' fill='#1877F2'/></svg>";
+	const note = (extra: Record<string, unknown> = {}) => ({ id: 'n1', label: 'Valve', note: 'Opens and shuts.', target: 'valve', ...extra });
+	const art = (annotations: unknown, extra: Record<string, unknown> = {}) => ({ ui: { type: 'illustration', props: { svg: markup, title: 'A valve', annotations }, ...extra } });
+
+	test('good notes pass, on an id or on a point', () => {
+		expect(refuseCard(art([note(), note({ id: 'n2', target: undefined, at: [10, 90] })]))).toBeNull();
+	});
+
+	test.each([
+		['a note on a missing id', [note({ target: 'ghost' })]],
+		['more than 8 notes', Array.from({ length: 9 }, (_, i) => note({ id: `n${i}` }))],
+		['both target and at', [note({ at: [1, 2] })]],
+		['neither target nor at', [note({ target: undefined })]],
+		['a label over 40 characters', [note({ label: 'x'.repeat(41) })]],
+		['a note over 280 characters', [note({ note: 'x'.repeat(281) })]],
+		['a duplicate id', [note(), note()]],
+		['a point that is not two numbers', [note({ target: undefined, at: [1] })]],
+		['notes that are not a list', { a: note() }]
+	])('refuses %s with the checker reason', (_name, annotations) => {
+		const check = checkIllustrationAnnotations({ svg: markup, annotations });
+		expect(check.ok).toBe(false);
+		expect(refuseCard(art(annotations))).toBe(`illustration:${check.ok ? '' : check.reason}`);
+	});
+
+	test('notes are checked at final only; their text still gets the text rules', () => {
+		expect(refuseCard(art([note({ target: 'ghost' })]), { partial: true })).toBeNull();
+		expect(refuseCard(art([note({ note: '<img src=x onerror=alert(1)>' })]))).toBe('markup');
+	});
+
+	test('a node-level on_select may ask; on_select in props, other handlers and bind may not', () => {
+		expect(refuseCard(art([note()], { on_select: ask({ text: 'Tell me more about the valve.' }) }))).toBeNull();
+		expect(refuseCard(art([note()], { on_select: { action: 'set', target: 'opened', value: 'valve' } }))).toBeNull();
+		expect(refuseCard(art([note()], { on_select: ask({ text: 'More about {state.x}' }) }))).toBe('ask_value');
+		expect(refuseCard({ ui: { type: 'illustration', props: { svg: markup, title: 'A valve', on_select: ask() } } })).toBe('illustration:handler');
+		expect(refuseCard(art([note()], { on_click: ask() }))).toBe('illustration:handler');
+		expect(refuseCard(art([note()], { on_select: ask(), bind: '{state.x}' }))).toBe('illustration:handler');
+	});
+});
+
+describe('game on_complete', () => {
+	const game = (on_complete: unknown) => ({ ui: { type: 'quiz', bind: '{state.quiz}', props: { questions: [] }, on_complete } });
+
+	test('may set state or toast, but never ask or submit a flow', () => {
+		expect(refuseCard(game({ action: 'set', target: 'finished', value: true }))).toBeNull();
+		expect(refuseCard(game({ action: 'toast', target: 'Nice round' }))).toBeNull();
+		expect(refuseCard(game(ask({ text: 'Give me a harder round.' })))).toBe('ask_handler');
+		expect(refuseCard(game([ask({ text: 'Give me a harder round.' })]))).toBe('ask_handler');
+		expect(refuseCard(game(ask({ text: 'Give me a harder round.' })), { partial: true })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'memory-match', props: { pairs: [] }, on_complete: ask() } })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'word-guess', props: { answer: 'comet' }, on_complete: ask() } })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'board-game', props: { game: 'tic-tac-toe' }, on_complete: ask() } })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'board-game', props: { game: 'connect-four', best_of: 3 }, on_complete: ask() } }, { partial: true })).toBe('ask_handler');
+		expect(refuseCard({ ui: { type: 'board-game', props: { game: 'connect-four' }, on_complete: { action: 'toast', target: 'Good game' } } })).toBeNull();
+	});
+});
+
+describe('play cards', () => {
+	test.each([
+		['memory match', memoryMatchCard],
+		['guess the word', wordGuessCard],
+		['space trivia', quizCard],
+		['tic-tac-toe', ticTacToeCard],
+		['connect four', connectFourCard],
+		['habit tracker', habitCard],
+		['focus timer', focusTimerCard],
+		['how a heart pumps', heartCard]
+	])('%s passes, at final and at every streamed prefix', (_name, card) => {
+		expect(refuseCard(card)).toBeNull();
+		const wire = JSON.stringify(card);
+		for (let i = 1; i < wire.length; i += 97) {
+			const { value } = parsePartialSpec(wire.slice(0, i));
+			if (value) expect(refuseCard(value, { partial: true }), wire.slice(0, i)).toBeNull();
+		}
+	});
+
+	test('every play scenario passes at each streamed chunk, as the chat receives it', () => {
+		for (const s of playScenarios) {
+			let wire = '';
+			for (const c of s.fixture.chunks) {
+				wire += c.text;
+				const { value } = parsePartialSpec(wire);
+				if (value) expect(refuseCard(value, { partial: true }), `${s.id}: ${wire}`).toBeNull();
+			}
+			expect(refuseCard(JSON.parse(wire)), s.id).toBeNull();
+		}
+	});
+
+	test('the board games use the canonical board-game type with game set, never an alias', () => {
+		for (const [card, name] of [[ticTacToeCard, 'tic-tac-toe'], [connectFourCard, 'connect-four']] as const) {
+			const game = card.ui.children[0];
+			expect(game.type).toBe('board-game');
+			expect(game.props).toHaveProperty('game', name);
+			expect(game).not.toHaveProperty('on_complete');
+		}
+	});
+
+	test('the heart is drawn to the contract: single quotes, currentColor text, ids on parts, 4 to 6 notes', () => {
+		expect(checkIllustrationSvg(heartSvg)).toEqual({ ok: true });
+		expect(heartSvg).not.toMatch(/[{\\"]|url\((?!#)/);
+		expect(heartSvg).toContain("fill='currentColor'");
+		const notes = heartCard.ui.children[0].props.annotations!;
+		expect(notes.length).toBeGreaterThanOrEqual(4);
+		expect(notes.length).toBeLessThanOrEqual(6);
+		for (const n of notes) expect(heartSvg).toContain(`id='${n.target}'`);
+		expect(checkIllustrationAnnotations({ svg: heartSvg, annotations: notes })).toEqual({ ok: true });
+	});
+
+	test('every play scenario replays to its card', () => {
+		const cards = [memoryMatchCard, wordGuessCard, quizCard, ticTacToeCard, connectFourCard, habitCard, focusTimerCard, heartCard];
+		for (const [i, s] of playScenarios.entries()) {
+			expect(s.fixture.model).toBe('hand-written');
+			expect(JSON.parse(s.fixture.chunks.map((c) => c.text).join(''))).toEqual({ version: '1.0', ...cards[i] });
+		}
 	});
 });

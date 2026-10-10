@@ -4,8 +4,9 @@
     a request or taps a chip, the answer streams in and its card renders through
     <Ripple> while it arrives. Live, the step-by-step chips come first (order,
     book, plan a trip, pick a laptop: the cards walk the visitor through steps),
-    then the recorded scenarios; offline, only the recordings (minus the store
-    one). With the Paw Bar config set at build time (PUBLIC_PAWBAR_ENDPOINT /
+    then the recorded scenarios and the hand-written play cards, the chips
+    grouped as Do, Learn, Play and Track; offline, only the recorded and
+    hand-written answers (minus the store one). With the Paw Bar config set at build time (PUBLIC_PAWBAR_ENDPOINT /
     _WIDGET_ID / _SITE_KEY, defined in vite.config.ts like PUBLIC_STORE_URL) the
     chat calls the Paw Bar API; without it the same chat replays the recorded
     answers locally and says so. Live, a card's `checkout` and `book` host events
@@ -32,7 +33,7 @@
 	import { Ripple } from '$lib/index.js';
 	import Chat from './pawbar/Chat.svelte';
 	import { BYOK_URL, ChatSession, pawbarTransport, pawosBase, typedStaysLocal, type Transport } from './pawbar/session.svelte.js';
-	import { pickScenario, recordedEvents } from './pawbar/recorded.js';
+	import { answerPool, pickScenario, recordedEvents } from './pawbar/recorded.js';
 	import { chatPrompts, scenarios } from './live/scenarios.js';
 
 	const ENDPOINT: string = import.meta.env.PUBLIC_PAWBAR_ENDPOINT ?? '';
@@ -49,7 +50,7 @@
 	// The recorded order demo checks out with an `api` action, which the chat's card
 	// policy refuses, so the recorded answers exclude it; live, its chip asks the
 	// model, whose menu card checks out through the store host event.
-	const chatScenarios = scenarios.filter((s) => !s.needsStore);
+	const chatScenarios = answerPool.filter((s) => !s.needsStore);
 	const recorded =
 		(intro: string): Transport =>
 		(message, signal) =>
@@ -62,19 +63,24 @@
 	const session = LIVE
 		? new ChatSession(
 				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
-				recorded('Here is a recorded answer that fits, on its original timing.'),
+				recorded('Here is a saved answer that fits.'),
 				store
 			)
-		: new ChatSession(recorded('The live model is not connected on this build, so here is a recorded answer that fits.'));
-	// Step-by-step chips first (live only: offline they would replay the wrong
-	// recording), then the recordings; "Plan a trip with me" stands in for Tokyo.
+		: new ChatSession(recorded('The live model is not connected on this build, so here is a saved answer that fits.'));
+	// Chips in groups (Do, Learn, Play, Track). In Do the step-by-step chips come
+	// first (live only: offline they would replay the wrong recording), then the
+	// recordings; "Plan a trip with me" stands in for Tokyo. The sort is stable.
+	const GROUPS = ['Do', 'Learn', 'Play', 'Track'];
 	const liveChips = LIVE ? [...scenarios.filter((s) => s.needsStore), ...chatPrompts].filter((c) => !c.needsStore || STORE_URL) : [];
-	const suggestions = [...liveChips, ...chatScenarios.filter((s) => !(LIVE && s.id === 'tokyo-trip'))].map((c) => ({
-		id: c.id,
-		title: c.title,
-		prompt: c.prompt ?? ('fixture' in c ? c.fixture.prompt : ''),
-		steps: c.steps
-	}));
+	const suggestions = [...liveChips, ...chatScenarios.filter((s) => !(LIVE && s.id === 'tokyo-trip'))]
+		.map((c) => ({
+			id: c.id,
+			title: c.title,
+			prompt: c.prompt ?? ('fixture' in c ? c.fixture.prompt : ''),
+			steps: c.steps,
+			group: c.group
+		}))
+		.sort((a, b) => GROUPS.indexOf(a.group ?? '') - GROUPS.indexOf(b.group ?? ''));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
@@ -161,7 +167,7 @@
 				{suggestions}
 				pawosUrl={PAWOS_URL}
 				typedLocal={TYPED_LOCAL}
-				note={LIVE ? '' : 'The live model is off in this build. Each request replays the closest recorded answer.'}
+				note={LIVE ? '' : 'The live model is off in this build. Each request replays the closest saved answer.'}
 			/>
 		</div>
 		<p class="byok">

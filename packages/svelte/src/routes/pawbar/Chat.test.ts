@@ -5,6 +5,7 @@
 // interactive and its emit reaches the page. A flow card walks its steps with no
 // call to the chat, then its last step sends the answers as the visitor's message,
 // including a live model card the server accepted (fixtures/trip-flow-card.json).
+// Chips render in labelled groups.
 
 import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
@@ -170,6 +171,39 @@ test('a step-by-step chip says so, and sends its prompt', async () => {
 	expect(view.getByRole('button', { name: 'Split the bill' })).toBeTruthy();
 	await fireEvent.click(view.getByRole('button', { name: 'Plan a trip with me step by step' }));
 	await waitFor(() => expect(sent).toEqual(['Help me plan a trip step by step']));
+});
+
+test('chips render in labelled groups, in the order the groups first appear', async () => {
+	const sent: string[] = [];
+	const session = new ChatSession(async function* (message) {
+		sent.push(message);
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, {
+		session,
+		suggestions: [
+			{ id: 'bill', title: 'Split the bill', prompt: 'Split it', group: 'Do' },
+			{ id: 'heart', title: 'How a heart pumps', prompt: 'How does the heart pump blood?', group: 'Learn' },
+			{ id: 'trivia', title: 'Space trivia', prompt: 'Quiz me on space', group: 'Play' },
+			{ id: 'memory', title: 'Memory match', prompt: 'Make me a memory match', group: 'Play' },
+			{ id: 'habits', title: 'Habit tracker', prompt: 'Track my habits', group: 'Track' }
+		]
+	});
+	const lists = view.getAllByRole('list').filter((l) => l.classList.contains('chips'));
+	expect(lists.map((l) => l.getAttribute('aria-label'))).toEqual(['Do', 'Learn', 'Play', 'Track']);
+	expect([...lists[2].querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Space trivia', 'Memory match']);
+	expect([...view.container.querySelectorAll('.chip-label')].map((l) => l.textContent)).toEqual(['Do', 'Learn', 'Play', 'Track']);
+	await fireEvent.click(view.getByRole('button', { name: 'Memory match' }));
+	await waitFor(() => expect(sent).toEqual(['Make me a memory match']));
+});
+
+test('chips with no group share one unlabelled row', () => {
+	const session = new ChatSession(async function* () {
+		yield { event: 'stream_end', data: { cancelled: false } };
+	});
+	const view = render(Chat, { session, suggestions: [{ id: 'a', title: 'A', prompt: 'a' }, { id: 'b', title: 'B', prompt: 'b' }] });
+	expect(view.getByRole('list', { name: 'Try one of these' }).querySelectorAll('button')).toHaveLength(2);
+	expect(view.container.querySelector('.chip-label')).toBeNull();
 });
 
 const typeAndSend = async (view: { getByRole: (role: string, o?: { name: string }) => HTMLElement }, text: string) => {
