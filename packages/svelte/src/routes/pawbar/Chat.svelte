@@ -2,7 +2,7 @@
   @file routes/pawbar/Chat.svelte
   @description The landing's chat: the conversation log, a composer that stays
     in reach while a long card is read, and the suggestion chips in labelled
-    groups (wrapping rows; one sideways-scrolling row per group on a phone). A chip runs
+    groups (one sideways-scrolling row with inline group labels). A chip runs
     here (session.send); text the visitor types goes to Paw OS
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so.
@@ -448,7 +448,7 @@
 			</div>
 		</form>
 		<div class="dock-foot">
-			{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Chips run here. Typed requests open in Paw OS.</p>{/if}
+			{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Typed requests open in Paw OS.</p>{/if}
 			{#if note}<p class="chat-note">{note}</p>{/if}
 			{@render more?.()}
 		</div>
@@ -932,7 +932,7 @@
 	}
 	.dock-foot {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: 4px 12px;
@@ -947,7 +947,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		width: min(720px, 100%);
+		width: 100%;
 		padding: 6px 8px 8px 14px;
 		border: 1px solid var(--composer-line);
 		border-radius: 16px;
@@ -1043,19 +1043,37 @@
 		background: var(--site-hover);
 	}
 	.hint {
+		flex: 1;
+		min-width: 0;
 		margin: 0;
-		padding: 0 4px;
+		padding: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		font-size: 13px;
 		color: var(--site-soft);
 	}
 
-	/* In the dock every chip flows in one wrapping row, each group's label
-	   inline before its chips (the group and list boxes drop out of layout). */
+	/* In the dock every chip sits on ONE row that scrolls sideways at every
+	   width, snapping per chip, no scrollbar, faded at both edges. The 24px
+	   fades sit just outside the chat column (negative margin, equal padding),
+	   so the first chip lines up with the composer. Group labels are small
+	   inline dividers (the group and list boxes drop out of layout). */
 	.chip-groups {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		align-items: center;
 		gap: 8px;
+		overflow-x: auto;
+		scroll-snap-type: x proximity;
+		scroll-padding-inline: 24px;
+		scrollbar-width: none;
+		margin: -4px -24px;
+		padding: 4px 24px;
+		mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+	}
+	.chip-groups::-webkit-scrollbar {
+		display: none;
 	}
 	.chip-group,
 	.chips {
@@ -1063,8 +1081,12 @@
 	}
 	.chip-label {
 		flex: none;
+		scroll-snap-align: start;
+		padding-left: 10px;
+		border-left: 1px solid var(--site-line);
+		line-height: 20px;
 		font-family: var(--font-mono);
-		font-size: 11.5px;
+		font-size: 10.5px;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: var(--site-soft);
@@ -1074,8 +1096,16 @@
 		margin: 0;
 		padding: 0;
 	}
+	.chips li {
+		flex: none;
+		scroll-snap-align: start;
+	}
+	.chip-group:first-child .chip-label {
+		padding-left: 0;
+		border-left: 0;
+	}
 	.chip-group:not(:first-child) .chip-label {
-		margin-left: 8px;
+		margin-left: 4px;
 	}
 	.chip {
 		min-height: 34px;
@@ -1133,36 +1163,6 @@
 	@media (pointer: coarse) {
 		.chip {
 			min-height: 44px;
-		}
-	}
-	/* Phones: every chip on one row that scrolls sideways, snapping per chip
-	   and faded at the edge; the group labels stay for screen readers only
-	   through each list's aria-label. */
-	@media (max-width: 639px) {
-		.chip-groups {
-			flex-wrap: nowrap;
-			gap: 8px;
-			overflow-x: auto;
-			scroll-snap-type: x proximity;
-			scroll-padding-inline: 4px;
-			scrollbar-width: none;
-			/* Room for the focus ring, which overflow would otherwise clip. */
-			padding: 4px 24px 4px 4px;
-			margin: -4px;
-			mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-		}
-		.chip-groups::-webkit-scrollbar {
-			display: none;
-		}
-		.chips li {
-			flex: none;
-		}
-		.chip-label {
-			display: none;
-		}
-		.chips li {
-			flex: none;
-			scroll-snap-align: start;
 		}
 	}
 	@media (max-width: 420px) {
