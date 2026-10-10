@@ -98,7 +98,9 @@
 	--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 	--dur-mount: 140ms;
 
-	--site-topbar: 56px;
+	/* Paw OS TopBar geometry: 8px top pad + 38px row (40px at <=768px). */
+	--site-topbar: 46px;
+	--site-context: 44px;
 	--site-max: 1200px;
 	--site-gutter: 24px;
 	color-scheme: light;
@@ -144,6 +146,12 @@
 	--composer-line: rgba(255, 255, 255, 0.12);
 	--composer-reflex: rgba(255, 255, 255, 0.08);
 	color-scheme: dark;
+}
+
+@media (max-width: 768px) {
+	:root {
+		--site-topbar: 48px;
+	}
 }
 
 /* Derived on both, so a .dark subtree recomputes them from its own base. */

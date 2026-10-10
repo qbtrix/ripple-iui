@@ -1,6 +1,11 @@
 <!--
   @file routes/+page.svelte
-  @description Ripple's landing, chat-first. The hero IS a chat: a visitor types
+  @description Ripple's landing, chat-first, laid out like a Paw OS chat: under
+    the site bar sits PE's thin context row (the "Ripple" h1 and a sub-line),
+    then the chat fills the first screen (100dvh less the bar) with its dock of
+    chips and composer stuck to the bottom; scrolling past the chat releases
+    the dock, and the dock's "More" link jumps to the sections below. The
+    context row has no "New chat" action: ChatSession has no reset. A visitor types
     a request or taps a chip, the answer streams in and its card renders through
     <Ripple> while it arrives. The chat opens on one finished recorded exchange
     (the bill splitter, seeded synchronously so it is in the prerendered HTML
@@ -16,9 +21,10 @@
     store (PUBLIC_STORE_URL) through the chat session, and a flow card's last
     step or an `ask` sends the visitor's next message. Typed text opens Paw OS
     instead (PUBLIC_PAWOS_URL), unless PUBLIC_TYPED_LOCAL=1 with a localhost
-    endpoint keeps it on the Paw Bar. Below: how it works (spec, engine, UI,
-    with a live card), install and the streaming code sample, the recorded
-    examples linking /live, and the bring-your-own-key link.
+    endpoint keeps it on the Paw Bar. Below, one short line each: how it works
+    (spec, engine, UI, with a live card), install and the streaming code
+    sample, the recorded examples linking /live, and the bring-your-own-key
+    closer.
 
   Creative Direction Declaration
     Scene: a developer at night, comparing generative UI tools with a terminal
@@ -32,6 +38,7 @@
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { Ripple } from '$lib/index.js';
 	import JsonLines from '$lib/site/JsonLines.svelte';
 	import Chat from './pawbar/Chat.svelte';
@@ -132,12 +139,12 @@
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
 
-	let copied = $state<'hero' | 'code' | null>(null);
-	async function copyInstall(where: 'hero' | 'code') {
+	let copied = $state(false);
+	async function copyInstall() {
 		try {
 			await navigator.clipboard.writeText(INSTALL);
-			copied = where;
-			setTimeout(() => (copied = null), 1600);
+			copied = true;
+			setTimeout(() => (copied = false), 1600);
 		} catch {
 			/* clipboard blocked: the command is on screen to copy by hand */
 		}
@@ -159,57 +166,36 @@
 </svelte:head>
 
 <main class="landing">
-	<section class="hero" aria-labelledby="hero-title">
-		<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
-		<p class="lede">
-			Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
-			working interface as the spec streams in. Ask for something below.
-		</p>
-		<p class="get">
-			<code><span aria-hidden="true">$</span> {INSTALL}</code>
-			<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
-				{copied === 'hero' ? 'Copied' : 'Copy'}
-			</button>
-		</p>
-		<Chat
-			{session}
-			{suggestions}
-			pawosUrl={PAWOS_URL}
-			typedLocal={TYPED_LOCAL}
-			note={LIVE ? '' : 'This demo replays recorded model answers. Each request plays the closest match.'}
-		/>
-		<p class="byok">
-			{#if LIVE}
-				The live demo has a daily limit. <a href={BYOK_URL}>Bring your own key for unlimited use</a>
-			{:else}
-				Want answers to your own requests? <a href={BYOK_URL}>Build your own in PocketPaw</a>
-			{/if}
-		</p>
+	<section class="app" aria-labelledby="hero-title">
+		<!-- PE's chat room header: name, topic, actions on the right (none here). -->
+		<div class="context">
+			<div class="context-info">
+				<h1 id="hero-title">Ripple</h1>
+				<p>Generative UI from Paw OS by PocketPaw <span aria-hidden="true">·</span> {LIVE ? 'live demo' : 'recorded demo'}</p>
+			</div>
+		</div>
+		<Chat {session} {suggestions} pawosUrl={PAWOS_URL} typedLocal={TYPED_LOCAL}>
+			{#snippet more()}
+				<a class="more" href="#how">More <ChevronDown size={14} strokeWidth={2} aria-hidden="true" /></a>
+			{/snippet}
+		</Chat>
 	</section>
 
-	<section class="how" aria-labelledby="how-title">
+	<section class="how" id="how" aria-labelledby="how-title">
 		<h2 id="how-title">How it works</h2>
 		<ol class="steps">
 			<li class="step">
 				<h3>The model writes a spec</h3>
-				<p>A tree of widgets, the starting state, and what each control does. Plain JSON, small enough to stream.</p>
+				<p>Plain JSON: widgets, state and actions.</p>
 				<pre class="snippet" aria-label="Example spec"><JsonLines text={specSnippet} /></pre>
 			</li>
 			<li class="step">
 				<h3>The engine runs it</h3>
-				<p>
-					<code>@ripple-ui/core</code> holds the state, resolves <code>{'{state.name}'}</code> expressions, keeps
-					two-way binds in sync and dispatches events. It has no framework dependency.
-				</p>
-				<ul class="facts">
-					<li>Local actions: <code>set</code>, <code>toggle</code>, <code>push</code>, <code>remove</code></li>
-					<li>Host actions your app handles: <code>emit</code>, <code>navigate</code>, <code>api</code></li>
-					<li>Partial JSON parses as it arrives, so the UI grows token by token</li>
-				</ul>
+				<p><code>@ripple-ui/core</code> keeps state, binds and events. No framework.</p>
 			</li>
 			<li class="step">
 				<h3>You get a working UI</h3>
-				<p>That spec, rendered by <code>@ripple-ui/svelte</code>. Type in it.</p>
+				<p>Rendered by <code>@ripple-ui/svelte</code>. Type in it.</p>
 				<div class="demo"><Ripple spec={demoSpec} /></div>
 			</li>
 		</ol>
@@ -219,11 +205,7 @@
 		<div class="code-grid">
 			<div class="code-copy">
 				<h2 id="code-title">Stream a spec in a dozen lines</h2>
-				<p>
-					<code>streamSpec</code> reads any stream or async iterable and parses the partial JSON as it lands. Hand
-					the store to <code>&lt;Ripple&gt;</code> and the interface fills in, then stays interactive when the stream
-					ends.
-				</p>
+				<p><code>streamSpec</code> parses partial JSON as it lands.</p>
 			</div>
 			<pre class="sample"><code>{codeSample}</code></pre>
 		</div>
@@ -232,12 +214,9 @@
 			<div class="band-inner">
 				<div class="install">
 					<code><span aria-hidden="true">$</span> {INSTALL}</code>
-					<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
+					<button type="button" onclick={copyInstall} aria-label="Copy install command">{copied ? 'Copied' : 'Copy'}</button>
 				</div>
-				<p class="small">
-					Widgets are styled with Tailwind v4, so your app needs Tailwind set up.
-					<a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a>
-				</p>
+				<p class="small">Needs Tailwind v4. <a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a></p>
 			</div>
 		</div>
 	</section>
@@ -245,7 +224,7 @@
 	<section class="examples" aria-labelledby="examples-title">
 		<div class="examples-head">
 			<h2 id="examples-title">Recorded runs</h2>
-			<p>Real model output, replayed on its original timing. Open one to watch the spec and the UI side by side.</p>
+			<p>Real model output on its original timing.</p>
 		</div>
 		<ul class="runs">
 			{#each scenarios as s (s.id)}
@@ -261,7 +240,7 @@
 
 	<section class="closer" aria-labelledby="closer-title">
 		<h2 id="closer-title">Keep asking in Paw OS</h2>
-		<p>Add your own model key in Paw OS and ask for as many tools as you like.</p>
+		<p>Add your own key and ask for anything.</p>
 		<div class="closer-actions">
 			<a class="btn primary" href={BYOK_URL}>Bring your own key</a>
 			<a class="link" href={GITHUB_URL}>Read the source</a>
@@ -287,14 +266,12 @@
 		max-width: var(--site-max);
 		margin-inline: auto;
 	}
-	h1,
 	h2,
 	h3 {
 		font-family: var(--font-display);
 		text-wrap: balance;
 		margin: 0;
 	}
-	h1,
 	h2 {
 		font-weight: 650;
 		letter-spacing: -0.03em;
@@ -318,74 +295,91 @@
 		color: var(--primary-ink);
 	}
 
-	/* Hero: the chat. */
-	.hero {
+	/* The app view: the context row, then the chat filling the rest of the
+	   first screen, its dock stuck to the bottom until the section ends. */
+	.app {
 		max-width: 880px !important;
-		padding: clamp(48px, 9vw, 104px) 0 72px;
+		box-sizing: border-box;
+		min-height: calc(100dvh - var(--site-topbar) - env(safe-area-inset-top, 0px));
+		display: flex;
+		flex-direction: column;
+		padding-bottom: 8px;
 	}
-	h1 {
-		font-size: clamp(2.2rem, 4.2vw, 3.4rem);
-		line-height: 1.04;
+	.app :global(.chat) {
+		flex: 1;
+		padding-top: 16px;
 	}
-	h1 span {
-		display: block;
-		margin-top: 0.12em;
-	}
-	.lede {
-		margin: 22px 0 18px;
-		max-width: 62ch;
-		color: var(--site-soft);
-		text-wrap: pretty;
-	}
-	/* The install line, as a quiet mono chip. */
-	.get {
-		display: inline-flex;
+	/* PE's room header: 44px, 6px 12px, a bottom hairline; name 13px/500,
+	   topic 12px muted. Full bleed, sticky under the bar for as long as the
+	   chat is on screen. */
+	.context {
+		position: sticky;
+		top: calc(var(--site-topbar) + env(safe-area-inset-top, 0px));
+		/* Above the dock, so the dock slides under it as the chat scrolls away. */
+		z-index: calc(var(--z-sticky) + 1);
+		box-sizing: border-box;
+		min-height: var(--site-context);
+		margin-inline: calc(50% - 50vw);
+		padding: 6px max(12px, calc(50vw - 440px));
+		display: flex;
 		align-items: center;
-		gap: 10px;
-		max-width: 100%;
-		margin: 0 0 36px;
-		padding: 0 0 0 12px;
-		border: 1px solid var(--code-line);
-		border-radius: var(--radius-control);
-		background: var(--code-bg);
-		font-size: 14px;
+		justify-content: space-between;
+		gap: 8px;
+		border-bottom: 1px solid var(--site-line);
+		background: var(--glass);
+		backdrop-filter: blur(12px) saturate(150%);
+		-webkit-backdrop-filter: blur(12px) saturate(150%);
 	}
-	.get code {
-		overflow-x: auto;
-		white-space: nowrap;
-		padding: 0;
-		background: none;
-		font-size: inherit;
-		color: var(--code-ink);
+	.context-info {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		min-width: 0;
 	}
-	.get code span {
-		color: var(--site-soft);
-		margin-right: 6px;
-	}
-	.get button {
-		flex: none;
-		min-height: 44px;
-		padding: 0 12px;
-		border: 0;
-		border-radius: calc(var(--radius-control) - 1px);
-		background: transparent;
-		color: var(--site-soft);
-		font: inherit;
+	.context h1 {
+		font-family: var(--font-sans);
 		font-size: 13px;
-		cursor: pointer;
-	}
-	.get button:hover {
-		background: var(--site-hover);
+		font-weight: 500;
+		letter-spacing: 0;
+		line-height: 1.25;
 		color: var(--site-ink);
 	}
-	.byok {
-		margin: 14px 0 0;
-		font-size: 13.5px;
+	.context p {
+		margin: 0;
+		font-size: 12px;
+		line-height: 1.25;
 		color: var(--site-soft);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
-	.byok a {
-		font-weight: 600;
-		text-underline-offset: 3px;
+	/* "More": a quiet link at the dock's edge to the sections below. */
+	.more {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-height: 28px;
+		margin-left: auto;
+		padding: 0 10px;
+		border-radius: 100px;
+		color: var(--site-soft);
+		font-size: 13px;
+		font-weight: 500;
+		text-decoration: none;
+		transition:
+			color 0.15s ease,
+			background 0.15s ease;
+	}
+	.more:hover {
+		color: var(--site-ink);
+		background: var(--site-hover);
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.context {
+			background: var(--site-ground);
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+		}
 	}
 
 	/* How it works: spec, engine, UI joined by one 1px line (across the three
@@ -467,15 +461,6 @@
 		padding-inline: 14px;
 		font-size: 12.5px;
 		line-height: 1.55;
-	}
-	.facts {
-		margin: 4px 0 0;
-		padding: 0 0 0 18px;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		line-height: 1.5;
-		color: var(--site-soft);
 	}
 	/* A rendered card: the one tinted shadow. */
 	.demo {
@@ -684,8 +669,7 @@
 	}
 	.btn:focus-visible,
 	.link:focus-visible,
-	.get button:focus-visible,
-	.byok a:focus-visible {
+	.more:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
@@ -701,28 +685,12 @@
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
-	/* Phones: a tighter hero, so the prerendered card's header and the top of
-	   its UI are in the first screen. */
 	@media (max-width: 639px) {
 		.landing {
 			padding-inline: 16px;
 		}
 		.band-inner {
 			padding-inline: 16px;
-		}
-		.hero {
-			padding: 24px 0 56px;
-		}
-		h1 {
-			font-size: 1.95rem;
-		}
-		.lede {
-			margin: 12px 0;
-			font-size: 16px;
-			line-height: 1.5;
-		}
-		.get {
-			margin-bottom: 20px;
 		}
 	}
 </style>

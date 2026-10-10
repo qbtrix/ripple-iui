@@ -4,7 +4,7 @@
     out like Paw OS Discover (lib/discover: GRID_CLASS from layout.ts, the
     DiscoverTile look). A section header (title and a muted blurb, when given),
     then an auto-fill grid of tiles: a 16:9 picture with a 10px radius and a
-    hairline, and the title, caption and tag BELOW it, with no card chrome.
+    hairline, and the title, a one-line caption and tag BELOW it, no card chrome.
     Hover or focus lifts the picture 1px and brightens its border; reduced
     motion keeps it still. Each tile is one link (a real href, so it opens in
     a new tab and works without JavaScript), named by its h3 title and
@@ -165,8 +165,8 @@
 		line-height: 1.45;
 		color: var(--site-soft);
 		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}

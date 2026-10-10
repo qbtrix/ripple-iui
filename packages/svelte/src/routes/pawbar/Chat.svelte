@@ -2,7 +2,7 @@
   @file routes/pawbar/Chat.svelte
   @description The landing's chat: the conversation log, a composer that stays
     in reach while a long card is read, and the suggestion chips in labelled
-    groups (wrapping rows; one sideways-scrolling row per group on a phone). A chip runs
+    groups (one sideways-scrolling row with inline group labels). A chip runs
     here (session.send); text the visitor types goes to Paw OS
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so.
@@ -38,9 +38,10 @@
     Turns already in the session at mount (the prerendered exchange) neither
     animate in nor auto-open their peek. A card whose spec root is a `card`
     widget gets a bare frame (no border, shadow or fill), so the widget's own
-    card is the surface. The composer is in the flow until the visitor
-    engages (focus, a chip, a send), then sticks to the bottom; before that
-    it would cover the prerendered card on a phone. The log is role="log"
+    card is the surface. Chips, composer, hint and an optional `more` snippet
+    form one dock, sticky at the chat's bottom above the safe area (it lets go
+    once the page scrolls past the chat); its height is the scroll-margin-bottom
+    that lands scrolled-to turns and pay cards above it. The log is role="log"
     and aria-busy while a turn streams; one polite region says "Building"
     and "Done" per turn instead of reading tokens.
     DOM ids are positional, never Card.id: that counter can differ between the
@@ -48,7 +49,7 @@
     rotation, which stays on "Thinking".
 -->
 <script lang="ts">
-	import { tick, untrack } from 'svelte';
+	import { tick, untrack, type Snippet } from 'svelte';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import X from '@lucide/svelte/icons/x';
 	import { Ripple } from '$lib/index.js';
@@ -75,7 +76,8 @@
 		note = '',
 		pawosUrl = PAWOS_URL,
 		typedLocal = false,
-		open
+		open,
+		more
 	}: {
 		session: ChatSession;
 		suggestions?: Suggestion[];
@@ -86,6 +88,8 @@
 		typedLocal?: boolean;
 		/** window.open stand-in for tests. */
 		open?: (url: string) => unknown;
+		/** Rendered at the end of the dock's last row (the landing's "More"). */
+		more?: Snippet;
 	} = $props();
 
 	// Chip rows in the order their groups first appear.
@@ -124,8 +128,8 @@
 		const timer = setInterval(() => (thinkingAt = (thinkingAt + 1) % THINKING.length), 2400);
 		return () => clearInterval(timer);
 	});
-	/** The visitor has engaged: from here on the composer is sticky. */
-	let engaged = $state(false);
+	/** The dock's height: turns and pay cards scroll to just above it. */
+	let dockH = $state(0);
 	let log = $state<HTMLOListElement>();
 
 	const cardsIn = (s: ChatSession) => s.turns.flatMap((t) => t.parts.flatMap((p) => (p.kind === 'card' ? [p.card] : [])));
@@ -156,7 +160,6 @@
 
 	async function ask(text: string) {
 		if (session.busy || !text.trim()) return;
-		engaged = true;
 		await session.send(text);
 	}
 
@@ -164,7 +167,6 @@
 	function submit() {
 		const text = draft;
 		if (session.busy || !text.trim()) return;
-		engaged = true;
 		draft = '';
 		if (typedLocal) void session.send(text);
 		else session.handoff(text, pawosUrl, open);
@@ -349,7 +351,7 @@
 	{/if}
 {/snippet}
 
-<div class="chat" data-engaged={engaged || undefined}>
+<div class="chat" style:--dock-h="{dockH}px">
 	<p class="sr-only" aria-live="polite">{announce}</p>
 	{#if session.resumed && session.store}
 		{@const pay = session.resumed}
@@ -408,53 +410,56 @@
 		</ol>
 	{/if}
 
-	<form
-		class="composer"
-		data-multiline={multiline || undefined}
-		onfocusin={() => (engaged = true)}
-		onsubmit={(e) => {
-			e.preventDefault();
-			submit();
-		}}
-	>
-		<label class="sr-only" for="ripple-ask">{typedLocal ? 'Describe the tool you want' : 'Type a request to continue in Paw OS'}</label>
-		<textarea
-			id="ripple-ask"
-			rows="1"
-			maxlength="2000"
-			aria-describedby={typedLocal ? undefined : 'ripple-ask-hint'}
-			placeholder={typedLocal ? 'Ask for a tool, like a tip splitter' : 'Type your own request to continue in Paw OS'}
-			bind:value={draft}
-			bind:this={field}
-			onkeydown={onKey}
-		></textarea>
-		<div class="controls">
-			{#if session.busy}
-				<button type="button" class="send stop" aria-label="Stop" title="Stop" onclick={() => session.stop()}><span class="disc"><X size={14} strokeWidth={2.25} aria-hidden="true" /></span></button>
-			{:else}
-				<button type="submit" class="send" aria-label="Send" title="Send" disabled={!draft.trim()}><span class="disc"><ArrowUp size={15} strokeWidth={2.25} aria-hidden="true" /></span></button>
-			{/if}
+	<div class="dock" bind:clientHeight={dockH}>
+		{#if suggestions.length}
+			<div class="chip-groups">
+				{#each groups as [name, chips] (name)}
+					<div class="chip-group">
+						{#if name}<span class="chip-label" aria-hidden="true">{name}</span>{/if}
+						<ul class="chips" aria-label={name || 'Try one of these'}>
+							{#each chips as s (s.id)}
+								<li>
+									<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/each}
+			</div>
+		{/if}
+		<form
+			class="composer"
+			data-multiline={multiline || undefined}
+			onsubmit={(e) => {
+				e.preventDefault();
+				submit();
+			}}
+		>
+			<label class="sr-only" for="ripple-ask">{typedLocal ? 'Describe the tool you want' : 'Type a request to continue in Paw OS'}</label>
+			<textarea
+				id="ripple-ask"
+				rows="1"
+				maxlength="2000"
+				aria-describedby={typedLocal ? undefined : 'ripple-ask-hint'}
+				placeholder={typedLocal ? 'Ask for a tool, like a tip splitter' : 'Type a request for Paw OS'}
+				bind:value={draft}
+				bind:this={field}
+				onkeydown={onKey}
+			></textarea>
+			<div class="controls">
+				{#if session.busy}
+					<button type="button" class="send stop" aria-label="Stop" title="Stop" onclick={() => session.stop()}><span class="disc"><X size={14} strokeWidth={2.25} aria-hidden="true" /></span></button>
+				{:else}
+					<button type="submit" class="send" aria-label="Send" title="Send" disabled={!draft.trim()}><span class="disc"><ArrowUp size={15} strokeWidth={2.25} aria-hidden="true" /></span></button>
+				{/if}
+			</div>
+		</form>
+		<div class="dock-foot">
+			{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Typed requests open in Paw OS.</p>{/if}
+			{#if note}<p class="chat-note">{note}</p>{/if}
+			{@render more?.()}
 		</div>
-	</form>
-	{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Try a suggestion here, or type your own and continue in Paw OS.</p>{/if}
-
-	{#if suggestions.length}
-		<div class="chip-groups">
-			{#each groups as [name, chips] (name)}
-				<div class="chip-group">
-					{#if name}<span class="chip-label" aria-hidden="true">{name}</span>{/if}
-					<ul class="chips" aria-label={name || 'Try one of these'}>
-						{#each chips as s (s.id)}
-							<li>
-								<button type="button" class="chip" disabled={session.busy} title={s.prompt} onclick={() => ask(s.prompt)}>{s.title}{#if s.steps}{' '}<span class="chip-steps">step by step</span>{/if}</button>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/each}
-		</div>
-	{/if}
-	{#if note}<p class="chat-note">{note}</p>{/if}
+	</div>
 </div>
 
 <style>
@@ -481,8 +486,10 @@
 		flex-direction: column;
 		gap: 14px;
 	}
-	.turn {
-		scroll-margin-top: calc(var(--site-topbar) + 24px);
+	.turn,
+	.pay-slot {
+		scroll-margin-top: calc(var(--site-topbar) + var(--site-context, 0px) + 24px);
+		scroll-margin-bottom: calc(var(--dock-h, 0px) + 12px);
 	}
 	.turn:not([data-seeded]) {
 		animation: rise 180ms var(--ease-out-quart);
@@ -916,8 +923,30 @@
 		cursor: default;
 	}
 
-	/* PE's ChatPill: a liquid-glass pill, in the flow until the visitor
-	   engages, then sticky above the safe area. */
+	/* The dock: chips, composer and the hint row, sticky at the bottom of the
+	   chat above the safe area. It fades the log out under itself on the
+	   ground, so a card scrolling behind it never collides with the chips. */
+	.dock {
+		position: sticky;
+		bottom: 0;
+		z-index: var(--z-sticky);
+		margin-top: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 20px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+		background: linear-gradient(to bottom, transparent, var(--site-ground) 20px);
+	}
+	.dock-foot {
+		display: flex;
+		flex-wrap: nowrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 4px 12px;
+		min-height: 28px;
+	}
+
+	/* PE's ChatPill: a liquid-glass pill. */
 	.composer {
 		position: relative;
 		z-index: var(--z-sticky);
@@ -925,7 +954,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		width: min(720px, 100%);
+		width: 100%;
 		padding: 6px 8px 8px 14px;
 		border: 1px solid var(--composer-line);
 		border-radius: 16px;
@@ -937,10 +966,6 @@
 	}
 	.composer[data-multiline] {
 		border-radius: 20px;
-	}
-	.chat[data-engaged] .composer {
-		position: sticky;
-		bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 	}
 	.composer:focus-within {
 		box-shadow:
@@ -1025,28 +1050,50 @@
 		background: var(--site-hover);
 	}
 	.hint {
-		margin: -6px 0 0;
-		padding: 0 4px;
+		flex: 1;
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		font-size: 13px;
 		color: var(--site-soft);
 	}
 
+	/* In the dock every chip sits on ONE row that scrolls sideways at every
+	   width, snapping per chip, no scrollbar, faded at both edges. The 24px
+	   fades sit just outside the chat column (negative margin, equal padding),
+	   so the first chip lines up with the composer. Group labels are small
+	   inline dividers (the group and list boxes drop out of layout). */
 	.chip-groups {
 		display: flex;
-		flex-direction: column;
-		gap: 10px;
+		flex-wrap: nowrap;
+		align-items: center;
+		gap: 8px;
+		overflow-x: auto;
+		scroll-snap-type: x proximity;
+		scroll-padding-inline: 24px;
+		scrollbar-width: none;
+		margin: -4px -24px;
+		padding: 4px 24px;
+		mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
 	}
-	.chip-group {
-		display: flex;
-		align-items: baseline;
-		gap: 10px;
-		min-width: 0;
+	.chip-groups::-webkit-scrollbar {
+		display: none;
+	}
+	.chip-group,
+	.chips {
+		display: contents;
 	}
 	.chip-label {
 		flex: none;
-		width: 44px;
+		scroll-snap-align: start;
+		padding-left: 10px;
+		border-left: 1px solid var(--site-line);
+		line-height: 20px;
 		font-family: var(--font-mono);
-		font-size: 11.5px;
+		font-size: 10.5px;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: var(--site-soft);
@@ -1055,14 +1102,21 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		min-width: 0;
+	}
+	.chips li {
+		flex: none;
+		scroll-snap-align: start;
+	}
+	.chip-group:first-child .chip-label {
+		padding-left: 0;
+		border-left: 0;
+	}
+	.chip-group:not(:first-child) .chip-label {
+		margin-left: 4px;
 	}
 	.chip {
-		min-height: 44px;
-		padding: 0 14px;
+		min-height: 34px;
+		padding: 0 12px;
 		border: 1px solid var(--site-line);
 		border-radius: var(--radius-chip);
 		background: transparent;
@@ -1112,38 +1166,15 @@
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
-	/* Phones: each group is one row that scrolls sideways, snapping per chip
-	   and faded at the edge. */
-	@media (max-width: 639px) {
-		.chip-group {
-			align-items: center;
-		}
-		.chips {
-			flex-wrap: nowrap;
-			overflow-x: auto;
-			scroll-snap-type: x proximity;
-			scroll-padding-inline: 4px;
-			scrollbar-width: none;
-			/* Room for the focus ring, which overflow would otherwise clip. */
-			padding: 4px 24px 4px 4px;
-			margin: -4px;
-			mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-		}
-		.chips::-webkit-scrollbar {
-			display: none;
-		}
-		.chips li {
-			flex: none;
-			scroll-snap-align: start;
+	/* Touch: the 44px target. */
+	@media (pointer: coarse) {
+		.chip {
+			min-height: 44px;
 		}
 	}
 	@media (max-width: 420px) {
 		.card-ui {
 			padding: 10px;
-		}
-		/* Room for the sticky composer, so the end of a card can scroll above it. */
-		.chat[data-engaged] .log {
-			padding-bottom: 72px;
 		}
 	}
 	@keyframes rise {
