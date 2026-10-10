@@ -18,6 +18,11 @@
   as written, a feature `icon` outside FEATURE_ICONS renders by Lucide name,
   and `defaultView` is followed until the visitor picks a view (a streamed
   spec can deliver it after mount).
+  Shape drift: an item's `features` / `specs` / `attributes`, as a
+  [{key,label,kind,unit,value}] list or a {key: value} map, lift into the
+  feature rows (first definition by key wins) and the item's values. A cell
+  or card row never prints an object as JSON: `{value}` unwraps, lists of
+  primitives join, anything else shows the empty marker.
   Streaming: every list keys by `${id ?? ''}:${index}`, everything is
   $derived, and the winner card appears only once its id matches an item.
 -->
@@ -152,7 +157,51 @@
 	const eventDispatcher = getContext<EventDispatcher | undefined>('ui-events');
 	const stateManager = getContext<StateManager | undefined>('ui-state');
 
-	const list = $derived((Array.isArray(items) ? items.filter(isObj) : []) as CompareItem[]);
+	// Shape drift: a model sometimes puts each feature's definition AND value in
+	// every item (`features: [{key,label,kind,unit,value}]`) or a value map
+	// (`specs: {gpu: "RTX"}`). Lift both into the item's own keys, and the
+	// definitions into `normalized.defs` (first by key wins, in order).
+	const NESTED = ['features', 'specs', 'attributes'];
+	const defKey = (e: Record<string, unknown>) =>
+		[e.key, e.label, e.name].find((k): k is string => typeof k === 'string' && k.trim() !== '');
+	const normalized = $derived.by(() => {
+		const defs = new Map<string, CompareFeature>();
+		const out = (Array.isArray(items) ? items.filter(isObj) : []).map((item) => {
+			let next = item as CompareItem;
+			for (const k of NESTED) {
+				const src = item[k];
+				let vals: Record<string, unknown> | undefined;
+				if (Array.isArray(src) && src.some((e) => isObj(e) && defKey(e))) {
+					vals = {};
+					for (const e of src) {
+						const key = isObj(e) ? defKey(e) : undefined;
+						if (!isObj(e) || !key) continue;
+						const { value, ...def } = e;
+						vals[key] = value;
+						if (!defs.has(key)) defs.set(key, { ...def, key } as CompareFeature);
+					}
+				} else if (isObj(src)) vals = src;
+				if (!vals) continue;
+				const { [k]: _nested, ...rest } = next;
+				// The item's own top-level keys win over lifted ones.
+				next = { ...vals, ...rest } as CompareItem;
+			}
+			return next;
+		});
+		return { list: out, defs: [...defs.values()] };
+	});
+	const list = $derived(normalized.list);
+
+	const isPrim = (v: unknown) => ['string', 'number', 'boolean'].includes(typeof v);
+	/** A feature value safe to show: `{value}` unwrapped; objects and mixed arrays read as missing. */
+	function val(item: CompareItem, key: string): unknown {
+		let v = item[key];
+		if (isObj(v) && 'value' in v) v = v.value;
+		if (Array.isArray(v)) return v.every(isPrim) ? v : undefined;
+		return isObj(v) ? undefined : v;
+	}
+	/** Plain text for a primitive or a list of them, never JSON. */
+	const txt = (v: unknown) => (Array.isArray(v) ? v.map(plain).filter(Boolean).join(', ') : plain(v));
 
 	const nameOf = (item: CompareItem) => plain(item.name ?? item.title);
 	const itemId = (item: CompareItem) => (typeof item.id === 'string' ? item.id : '');
@@ -200,16 +249,19 @@
 		'kind', 'actions', 'learn_more', 'url', 'href', 'icon'
 	]);
 
-	/** Explicit `features` when any are usable, else inferred from item keys. */
+	/** Explicit `features` plus any lifted from items (first by key wins), else inferred from item keys. */
 	const allFeatures = $derived.by<CompareFeature[]>(() => {
 		const given = Array.isArray(features)
 			? (features.filter((f) => isObj(f) && typeof f.key === 'string' && f.key) as CompareFeature[])
 			: [];
-		if (given.length > 0) return given;
+		const seen = new Set(given.map((f) => f.key));
+		const merged = [...given, ...normalized.defs.filter((f) => !seen.has(f.key))];
+		if (merged.length > 0) return merged;
 		const keys = new Set<string>();
 		for (const item of list) for (const k of Object.keys(item)) if (!NOT_FEATURES.has(k)) keys.add(k);
 		return [...keys].map((key) => {
-			const first = list.find((i) => !missing(i[key]))?.[key];
+			const found = list.find((i) => !missing(val(i, key)));
+			const first = found ? val(found, key) : undefined;
 			const kind: FeatureKind =
 				key === 'rating' ? 'rating' : typeof first === 'boolean' ? 'boolean' : typeof first === 'number' ? 'number' : 'text';
 			return { key, label: humanize(key), section: 'Features', kind };
@@ -236,8 +288,8 @@
 
 	function isDifferent(f: CompareFeature): boolean {
 		if (list.length < 2) return true;
-		const first = JSON.stringify(list[0][f.key]);
-		return list.some((item) => JSON.stringify(item[f.key]) !== first);
+		const first = JSON.stringify(val(list[0], f.key));
+		return list.some((item) => JSON.stringify(val(item, f.key)) !== first);
 	}
 
 	const shownFeatures = $derived(
@@ -254,7 +306,7 @@
 		const out = new Map<string, Set<number>>();
 		for (const f of allFeatures) {
 			if (f.better !== 'higher' && f.better !== 'lower') continue;
-			const vals = list.map((i) => finite(i[f.key]));
+			const vals = list.map((i) => finite(val(i, f.key)));
 			const nums = vals.filter((v): v is number => v !== undefined);
 			if (nums.length < 2) continue;
 			const top = f.better === 'higher' ? Math.max(...nums) : Math.min(...nums);
@@ -280,7 +332,7 @@
 			case 'boolean':
 				return yes(v) ? 'Yes' : 'No';
 			case 'price':
-				return finite(v) !== undefined ? money(v, currency) : plain(v);
+				return finite(v) !== undefined ? money(v, currency) : txt(v);
 			case 'number':
 				return `${num(v)}${unit && finite(v) !== undefined ? ` ${unit}` : ''}`;
 			case 'rating':
@@ -288,7 +340,7 @@
 			case 'icon':
 				return kinds(v).map(humanize).join(', ');
 			default:
-				return `${plain(v)}${unit && finite(v) !== undefined ? ` ${unit}` : ''}`;
+				return `${txt(v)}${unit && finite(v) !== undefined ? ` ${unit}` : ''}`;
 		}
 	}
 
@@ -407,7 +459,7 @@
 {/snippet}
 
 {#snippet cell(f: CompareFeature, item: CompareItem, idx: number)}
-	{@const v = item[f.key]}
+	{@const v = val(item, f.key)}
 	{@const k = kindOf(f)}
 	{@const top = isBest(f, idx)}
 	<span class={['inline-flex items-center gap-1.5 tabular-nums', top && 'font-semibold']} data-best={top || undefined}>
@@ -436,7 +488,7 @@
 				<span>{num(n, { digits: 1 })}<span class="sr-only"> out of 5</span></span>
 			{/if}
 		{:else if k === 'color'}
-			{@const c = plain(v)}
+			{@const c = txt(v)}
 			<span class="size-3.5 shrink-0 rounded-full border border-ripple-border" style={safeStyle(`background-color: ${c}`)}></span>
 			<span class={CSS_COLOR.test(c) ? 'sr-only' : ''}>{c}</span>
 		{:else if k === 'icon'}
@@ -454,7 +506,7 @@
 	</span>
 {/snippet}
 
-<div {id} class={['@container w-full text-ripple-surface-foreground', className]} style={styleString}>
+<div {id} class={['@container w-full min-w-0 text-ripple-surface-foreground', className]} style={styleString}>
 	<div class="flex flex-col gap-4">
 		{#if heading || sub}
 			<header class="min-w-0">
@@ -540,11 +592,12 @@
 						{#if highlightFeatures.length > 0}
 							<div class="flex flex-wrap gap-1">
 								{#each highlightFeatures as f, fi (`${f.key}:${fi}`)}
-									{#if !missing(item[f.key])}
+									{@const hv = val(item, f.key)}
+									{#if !missing(hv)}
 										<span class="inline-flex max-w-full items-center gap-1 rounded-md bg-ripple-muted px-1.5 py-0.5 text-footnote">
 											{@render featureIcon(f)}
 											<span class="text-ripple-muted-foreground">{labelOf(f)}</span>
-											<span class="truncate font-medium tabular-nums">{textOf(f, item[f.key])}</span>
+											<span class="truncate font-medium tabular-nums">{textOf(f, hv)}</span>
 										</span>
 									{/if}
 								{/each}
@@ -627,7 +680,7 @@
 												<dt class="flex min-w-0 items-center gap-1.5 text-ripple-muted-foreground">
 													{@render featureIcon(f)}<span class="truncate">{labelOf(f)}</span>
 												</dt>
-												<dd class="shrink-0 text-right">{@render cell(f, item, idx)}</dd>
+												<dd class="min-w-0 text-right [overflow-wrap:anywhere]">{@render cell(f, item, idx)}</dd>
 											</div>
 										{/each}
 									</dl>
@@ -670,7 +723,7 @@
 												<span class="flex items-center gap-1.5">{@render featureIcon(f)}<span class="cmp-clamp-2">{labelOf(f)}</span></span>
 											</th>
 											{#each list as item, idx (`${item.id ?? ''}:${idx}`)}
-												<td class="border-l border-ripple-border px-3 py-2 text-center">{@render cell(f, item, idx)}</td>
+												<td class="border-l border-ripple-border px-3 py-2 text-center [overflow-wrap:anywhere]">{@render cell(f, item, idx)}</td>
 											{/each}
 										</tr>
 									{/each}
