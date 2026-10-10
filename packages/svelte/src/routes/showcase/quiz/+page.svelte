@@ -2,10 +2,10 @@
   routes/showcase/quiz/+page.svelte — dev preview of the quiz data widget for
   screenshots and visual QA: space trivia at full width (bound value and
   on_complete in the readout), a timed and shuffled round in a 360px frame
-  (drag the corner), and a quiz with photos. URL-only (not linked from the
-  showcase index).
+  (drag the corner), and a quiz with photos. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Quiz from '$lib/widgets/composite/Quiz.svelte';
 	import type { QuizItem, QuizValue } from '$lib/widgets/composite/quiz.js';
 
@@ -50,17 +50,11 @@
 <svelte:head><title>Ripple · Quiz</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Quiz</h1>
-		<p>
-			"Quiz me on space. Eight questions, tell me why after each one, and give me a score at the end."
-			Press 1 to 5 to answer and Enter for the next question.
-		</p>
-	</header>
+	<DetailHeader id="quiz">"Quiz me on space. Eight questions, tell me why after each one, and give me a score at the end." Press 1 to 5 to answer and Enter for the next question.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Space trivia, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<Quiz
 				title="Space trivia"
 				topic="Astronomy"
@@ -97,12 +91,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

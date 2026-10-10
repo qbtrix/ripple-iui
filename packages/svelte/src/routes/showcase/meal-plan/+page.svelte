@@ -5,10 +5,10 @@
   I'm cooking for, and keep a shopping list"): a 7-day week for 2 at full
   width (the days-by-slots grid at 720px+) and a 3-day plan in a 360px frame
   (drag the corner). Both bind `people`, `days` and `got`, so swaps, the
-  people count and shopping ticks show in the readouts. URL-only (not linked
-  from the showcase index). Fictional dishes only: the site is public.
+  people count and shopping ticks show in the readouts. Linked from the /showcase gallery. Fictional dishes only: the site is public.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import MealPlan from '$lib/widgets/composite/MealPlan.svelte';
 	import type { PlanDay, RecipeData } from '$lib/widgets/composite/recipe.js';
 
@@ -243,14 +243,11 @@
 <svelte:head><title>Ripple · Meal plan</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Meal plan</h1>
-		<p>Swap a meal with the arrows, change the people count, tap a meal to open its recipe, tick the shopping list. All three are bound, so the readouts show what the widget emits. Toggle the theme in the top bar to check dark.</p>
-	</header>
+	<DetailHeader id="meal-plan">Swap a meal with the arrows, change the people count, tap a meal to open its recipe, tick the shopping list. All three are bound, so the readouts show what the widget emits.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">High-protein week for 2, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<MealPlan
 				title="High-protein week"
 				subtitle="4 meals a day, 140 g protein each"
@@ -285,12 +282,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

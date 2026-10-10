@@ -4,10 +4,11 @@
   (1½ cups, ¾ cup, ⅓ cup) at full width, and an ingredients-only dish in a
   360px frame (drag the corner to resize). Both bind `servings`, so the
   stepper rescales every numeric quantity and the readout shows the value.
-  URL-only (not linked from the showcase index). Fictional dishes only: the
+  Linked from the /showcase gallery. Fictional dishes only: the
   site is public.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import Recipe from '$lib/widgets/composite/Recipe.svelte';
 	import type { Ingredient, RecipeStep } from '$lib/widgets/composite/recipe.js';
 
@@ -38,14 +39,11 @@
 <svelte:head><title>Ripple · Recipe</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Recipe</h1>
-		<p>Step the servings and every numeric quantity rescales (1½ cups for 4 is 2¼ for 6). Tick ingredients as you gather them and steps as you cook. Toggle the theme in the top bar to check dark.</p>
-	</header>
+	<DetailHeader id="recipe">Step the servings and every numeric quantity rescales (1½ cups for 4 is 2¼ for 6). Tick ingredients as you gather them and steps as you cook.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Lemon ricotta rigatoni, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<Recipe
 				name="Lemon ricotta rigatoni"
 				subtitle="Bright, creamy and on the table in 20 minutes"
@@ -98,12 +96,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

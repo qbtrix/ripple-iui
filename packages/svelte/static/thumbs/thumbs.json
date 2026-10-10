@@ -1,0 +1,402 @@
+[
+	{
+		"id": "itinerary",
+		"title": "Trip itinerary",
+		"caption": "Day by day stops on a rail. Tick one off or add another.",
+		"group": "Do",
+		"tag": "itinerary",
+		"href": "/showcase/itinerary",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "booking",
+		"title": "Table booking",
+		"caption": "Pick a party size, a day and a time, then book.",
+		"group": "Do",
+		"tag": "booking",
+		"href": "/showcase/booking",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "menu-order",
+		"title": "Menu order",
+		"caption": "A cafe menu with a cart, options and a running total.",
+		"group": "Do",
+		"tag": "menu-order",
+		"href": "/showcase/menu-order",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "bill-split",
+		"title": "Bill splitter",
+		"caption": "Items, tip and people in. Everyone gets a share to the cent.",
+		"group": "Do",
+		"tag": "bill-split",
+		"href": "/showcase/bill-split",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "comparison-layout",
+		"title": "Side by side",
+		"caption": "Laptops compared, the winner first and the best cells marked.",
+		"group": "Do",
+		"tag": "comparison-layout",
+		"href": "/showcase/comparison-layout",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "recipe",
+		"title": "Recipe",
+		"caption": "Change the servings and every quantity rescales.",
+		"group": "Do",
+		"tag": "recipe",
+		"href": "/showcase/recipe",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "growth-projection",
+		"title": "Savings growth",
+		"caption": "Four numbers in, a chart and a yearly table out.",
+		"group": "Learn",
+		"tag": "growth-projection",
+		"href": "/showcase/growth-projection",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "flashcard-deck",
+		"title": "Flashcards",
+		"caption": "Flip a card, say if you knew it, practise the misses.",
+		"group": "Learn",
+		"tag": "flashcard-deck",
+		"href": "/showcase/flashcard-deck",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "memory-match",
+		"title": "Memory match",
+		"caption": "Flip two cards at a time and find every pair.",
+		"group": "Play",
+		"tag": "memory-match",
+		"href": "/showcase/memory-match",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "word-guess",
+		"title": "Word guess",
+		"caption": "Guess the five-letter word in six tries.",
+		"group": "Play",
+		"tag": "word-guess",
+		"href": "/showcase/word-guess",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "quiz",
+		"title": "Quiz",
+		"caption": "One question at a time, with the reason after each answer.",
+		"group": "Play",
+		"tag": "quiz",
+		"href": "/showcase/quiz",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "board-game",
+		"title": "Board games",
+		"caption": "Tic-tac-toe and connect four against the computer.",
+		"group": "Play",
+		"tag": "board-game",
+		"href": "/showcase/board-game",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "exec-dashboard",
+		"title": "Sales dashboard",
+		"caption": "KPIs, a trend and a table that follow one region filter.",
+		"group": "Track",
+		"tag": "exec-dashboard",
+		"href": "/showcase/exec-dashboard",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "meal-plan",
+		"title": "Meal plan",
+		"caption": "A week of meals with a shopping list that follows the swaps.",
+		"group": "Track",
+		"tag": "meal-plan",
+		"href": "/showcase/meal-plan",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "interval-workout",
+		"title": "Interval workout",
+		"caption": "A HIIT session that walks you through each round.",
+		"group": "Track",
+		"tag": "interval-workout",
+		"href": "/showcase/interval-workout",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "habit-tracker",
+		"title": "Habit tracker",
+		"caption": "A week grid of habits with streaks and weekly targets.",
+		"group": "Track",
+		"tag": "habit-tracker",
+		"href": "/showcase/habit-tracker",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "focus-timer",
+		"title": "Focus timer",
+		"caption": "Pomodoro rounds with breaks and a goal for the day.",
+		"group": "Track",
+		"tag": "focus-timer",
+		"href": "/showcase/focus-timer",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "order-status",
+		"title": "Order tracking",
+		"caption": "Where the order is, when it lands, and what happened so far.",
+		"group": "Track",
+		"tag": "order-status",
+		"href": "/showcase/order-status",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "mission-control",
+		"title": "Mission control",
+		"caption": "An instrument panel of clocks, gauges and logs from one spec.",
+		"group": "Track",
+		"tag": "theme",
+		"href": "/showcase/mission-control",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "classic",
+		"title": "Pocket boards",
+		"caption": "A company snapshot built from cards that open into detail.",
+		"group": "Track",
+		"tag": "pockets",
+		"href": "/showcase/classic",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "choice-cards",
+		"title": "Choice cards",
+		"caption": "A flow step that asks with cards instead of a dropdown.",
+		"group": "Flows",
+		"tag": "flow",
+		"href": "/showcase/choice-cards",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "flow",
+		"title": "Form flow",
+		"caption": "Validate, confirm, then submit, chained in the spec.",
+		"group": "Flows",
+		"tag": "actions",
+		"href": "/showcase/flow",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "illustration",
+		"title": "Drawings with notes",
+		"caption": "Animated SVG the model draws, with numbered notes on the parts.",
+		"group": "Drawings",
+		"tag": "illustration",
+		"href": "/showcase/illustration",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-order-burger",
+		"title": "Order a burger",
+		"caption": "Order dinner from Tasty Bites: two Classic Cheeseburgers and a Fresh Lemonade to start. Show me the burgers plus a couple of sides and drinks so I can change quantities, keep a running total, and let me pick pickup or delivery and check out.",
+		"group": "Do",
+		"tag": "Recorded",
+		"href": "/live?s=order-burger",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-bill-splitter",
+		"title": "Split the bill",
+		"caption": "Dinner for 4 came to $186.40. Help me split it with tip, and let me adjust who had drinks.",
+		"group": "Do",
+		"tag": "Recorded",
+		"href": "/live?s=bill-splitter",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-savings-calculator",
+		"title": "Watch savings grow",
+		"caption": "I can save $300 a month. Show me how that grows over 10 years at 5% interest, with a chart, and let me change the deposit, the rate and the number of years.",
+		"group": "Learn",
+		"tag": "Recorded",
+		"href": "/live?s=savings-calculator",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-tokyo-trip",
+		"title": "Plan 5 days in Tokyo",
+		"caption": "Plan a 5-day trip to Tokyo for me. Lay it out day by day so I can tick things off as I go, let me add my own stops, and keep a running total of what I've spent.",
+		"group": "Do",
+		"tag": "Recorded",
+		"href": "/live?s=tokyo-trip",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-sales-dashboard",
+		"title": "Quarterly sales",
+		"caption": "Show me last quarter's sales for a small online shop: the headline numbers, revenue by month on a chart, and a table of orders I can filter by region, with totals for the region I pick.",
+		"group": "Track",
+		"tag": "Recorded",
+		"href": "/live?s=sales-dashboard",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-flashcards",
+		"title": "Spanish flashcards",
+		"caption": "Make me a short deck of beginner Spanish flip cards. Let me flip each one, mark whether I knew it, and keep score of how many I got right.",
+		"group": "Learn",
+		"tag": "Recorded",
+		"href": "/live?s=flashcards",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-hiit-workout",
+		"title": "20-minute HIIT",
+		"caption": "Give me a 20-minute HIIT workout I can do at home. Walk me through it one exercise at a time, show how far along I am, and let me set how long each work interval is.",
+		"group": "Track",
+		"tag": "Recorded",
+		"href": "/live?s=hiit-workout",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-meal-plan",
+		"title": "High-protein week",
+		"caption": "Create a high-protein meal plan for the week. Let me swap meals in and out, set how many people I'm cooking for, and keep a shopping list that updates with the plan.",
+		"group": "Track",
+		"tag": "Recorded",
+		"href": "/live?s=meal-plan",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-explainer",
+		"title": "How bike gears work",
+		"caption": "Explain how a bicycle's gears work. Show the drivetrain as a diagram where I can pick a part to see what it does, and let me change the chainring and cog teeth to see the gear ratio and how far one pedal turn takes me.",
+		"group": "Learn",
+		"tag": "Recorded",
+		"href": "/live?s=explainer",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-memory-match",
+		"title": "Memory match",
+		"caption": "Make me a memory match game pairing Spanish animal words with their emoji",
+		"group": "Play",
+		"tag": "Hand-written",
+		"href": "/live?s=memory-match",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-word-guess",
+		"title": "Guess the word",
+		"caption": "Make me a 5-letter word guessing game about space, with a hint",
+		"group": "Play",
+		"tag": "Hand-written",
+		"href": "/live?s=word-guess",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-space-trivia",
+		"title": "Space trivia",
+		"caption": "Quiz me with 6 space trivia questions, and explain each answer",
+		"group": "Play",
+		"tag": "Hand-written",
+		"href": "/live?s=space-trivia",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-tic-tac-toe",
+		"title": "Tic-tac-toe",
+		"caption": "Let's play tic-tac-toe against you, I'm X, medium difficulty",
+		"group": "Play",
+		"tag": "Hand-written",
+		"href": "/live?s=tic-tac-toe",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-connect-four",
+		"title": "Connect four",
+		"caption": "Play connect four against me, best of 3",
+		"group": "Play",
+		"tag": "Hand-written",
+		"href": "/live?s=connect-four",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-habit-tracker",
+		"title": "Habit tracker",
+		"caption": "Track my habits this week: reading, running, water and sleep, each with a weekly target",
+		"group": "Track",
+		"tag": "Hand-written",
+		"href": "/live?s=habit-tracker",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-focus-timer",
+		"title": "Focus timer",
+		"caption": "Make me a pomodoro focus timer: 25 minutes focus, 5 minute breaks, 4 rounds, goal of 6 today",
+		"group": "Track",
+		"tag": "Hand-written",
+		"href": "/live?s=focus-timer",
+		"w": 800,
+		"h": 600
+	},
+	{
+		"id": "live-heart",
+		"title": "How a heart pumps",
+		"caption": "How does the heart pump blood? Draw an animated picture with numbered notes on the chambers and valves.",
+		"group": "Learn",
+		"tag": "Hand-written",
+		"href": "/live?s=heart",
+		"w": 800,
+		"h": 600
+	}
+]

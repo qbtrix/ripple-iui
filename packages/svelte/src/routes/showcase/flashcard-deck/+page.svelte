@@ -3,9 +3,10 @@
   flashcard-deck data widget for screenshots and visual QA: the landing's
   beginner Spanish deck at full width (bound score and on_complete in the
   readout), shuffled capitals with hints in a 360px frame (drag the corner),
-  and long-answer biology cards. URL-only (not linked from the showcase index).
+  and long-answer biology cards. Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import FlashcardDeck from '$lib/widgets/composite/FlashcardDeck.svelte';
 	import type { DeckCard } from '$lib/widgets/composite/FlashcardDeck.svelte';
 
@@ -41,17 +42,11 @@
 <svelte:head><title>Ripple · Flashcard deck</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Flashcard deck</h1>
-		<p>
-			"Make me a short deck of beginner Spanish flip cards. Let me flip each one, mark if I knew it, and see my score."
-			Finish a pass to see the score screen, then try Practise missed.
-		</p>
-	</header>
+	<DetailHeader id="flashcard-deck">"Make me a short deck of beginner Spanish flip cards. Let me flip each one, mark if I knew it, and see my score." Finish a pass to see the score screen, then try Practise missed.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">Beginner Spanish, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<FlashcardDeck
 				title="Beginner Spanish"
 				subtitle="Flip, then mark whether you knew it"
@@ -90,12 +85,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);

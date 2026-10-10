@@ -3,9 +3,10 @@
   interval-workout data widget for screenshots and visual QA: the landing's
   20-minute home HIIT at full width (bound workSec in the readout), a Tabata
   block with four round bars, and a desk-break mobility set in a 360px frame
-  (drag the corner to resize). URL-only (not linked from the showcase index).
+  (drag the corner to resize). Linked from the /showcase gallery.
 -->
 <script lang="ts">
+	import DetailHeader from '../DetailHeader.svelte';
 	import IntervalWorkout from '$lib/widgets/composite/IntervalWorkout.svelte';
 	import type { WorkoutExercise } from '$lib/widgets/composite/IntervalWorkout.svelte';
 
@@ -43,17 +44,11 @@
 <svelte:head><title>Ripple · Interval workout</title></svelte:head>
 
 <div class="showcase">
-	<header class="showcase-header">
-		<h1>Interval workout</h1>
-		<p>
-			"Give me a 20-minute HIIT workout I can do at home. Walk me through it one exercise at a time and let me set the work interval."
-			Press Start; change Work mid-interval and it waits for the next one. Hide the tab and it pauses.
-		</p>
-	</header>
+	<DetailHeader id="interval-workout">"Give me a 20-minute HIIT workout I can do at home. Walk me through it one exercise at a time and let me set the work interval." Press Start; change Work mid-interval and it waits for the next one. Hide the tab and it pauses.</DetailHeader>
 
 	<section class="showcase-section">
 		<h2 class="showcase-section-title">20-minute home HIIT, full width</h2>
-		<div class="pane">
+		<div data-thumb class="pane">
 			<IntervalWorkout
 				title="20-minute home HIIT"
 				subtitle="No equipment · 2 rounds"
@@ -91,12 +86,6 @@
 		padding: 2rem 1.5rem 4rem;
 		color: var(--foreground);
 	}
-	.showcase-header h1 {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem;
-	}
-	.showcase-header p,
 	.section-caption {
 		font-size: 0.8125rem;
 		color: var(--muted-foreground);
