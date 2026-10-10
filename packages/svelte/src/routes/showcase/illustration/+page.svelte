@@ -2,8 +2,9 @@
   routes/showcase/illustration/+page.svelte — dev preview of the illustration
   widget for screenshots and visual QA: three fictional animated drawings
   written the way the model is told to write them (single-quoted attributes,
-  animate/animateTransform/animateMotion, every dur 0.5s or more), plus a
-  truncated string showing the streaming placeholder. URL-only (not linked
+  animate/animateTransform/animateMotion, every dur 0.5s or more), a heart
+  diagram with four numbered notes (three on svg ids, one on a viewBox point),
+  plus a truncated string showing the streaming placeholder. URL-only (not linked
   from the showcase index).
 -->
 <script lang="ts">
@@ -44,6 +45,25 @@
 		"<circle cx='14' cy='100' r='3' fill='#64748b'/><circle cx='232' cy='30' r='3' fill='#64748b'/>" +
 		'</svg>';
 
+	const heart =
+		"<svg viewBox='0 0 240 180'>" +
+		"<path d='M120 166 C64 126 28 96 28 62 C28 36 48 20 72 20 C92 20 108 30 120 46 C132 30 148 20 168 20 C192 20 212 36 212 62 C212 96 176 126 120 166 Z' fill='#e5484d'>" +
+		"<animate attributeName='opacity' values='1;0.82;1' dur='1s' repeatCount='indefinite'/></path>" +
+		"<path id='aorta' d='M112 44 C108 14 150 4 164 26' fill='none' stroke='#b42318' stroke-width='10' stroke-linecap='round'/>" +
+		"<ellipse id='right-atrium' cx='78' cy='62' rx='26' ry='18' fill='#f4a3a6'/>" +
+		"<ellipse cx='162' cy='62' rx='26' ry='18' fill='#f4a3a6'/>" +
+		"<ellipse cx='98' cy='108' rx='24' ry='28' fill='#c9363b'/>" +
+		"<ellipse id='left-ventricle' cx='144' cy='108' rx='26' ry='30' fill='#a3262b'/>" +
+		"<line x1='120' y1='80' x2='120' y2='146' stroke='#7a1d21' stroke-width='3' stroke-linecap='round'/>" +
+		'</svg>';
+	const heartNotes = [
+		{ id: 'aorta', label: 'Aorta', note: 'The largest artery. It carries oxygen-rich blood from the left ventricle out to the body.', target: 'aorta' },
+		{ id: 'left-ventricle', label: 'Left ventricle', note: 'The strongest chamber, with the thickest wall: it pumps blood to the whole body.', target: 'left-ventricle' },
+		{ id: 'right-atrium', label: 'Right atrium', note: 'Takes in blood coming back from the body, low on oxygen, and passes it down to the right ventricle.', target: 'right-atrium' },
+		{ id: 'apex', label: 'Apex', note: 'The lower tip of the heart, pointing down and to the left. This note sits on a viewBox point, not an svg id.', at: [120, 156] as [number, number] }
+	];
+	let lastNote = $state('');
+
 	const partial = sunrise.slice(0, 400);
 </script>
 
@@ -76,6 +96,25 @@
 		<h2 class="showcase-section-title">Paper plane on a dashed path</h2>
 		<div class="pane">
 			<Illustration title="Paper plane flying along a dashed route" svg={plane} max_height={200} />
+		</div>
+	</section>
+
+	<section class="showcase-section">
+		<h2 class="showcase-section-title">Heart with notes</h2>
+		<p class="section-caption">
+			Four numbered pins over the art: tap or tab to one and its note opens while its part glows. Esc closes it. On a
+			narrow card the note opens as a sheet under the art; the list below mirrors the pins.
+		</p>
+		<div class="pane">
+			<Illustration
+				title="A simplified human heart"
+				caption="Not to scale. Chambers drawn as the viewer sees them."
+				svg={heart}
+				annotations={heartNotes}
+				max_height={300}
+				onselect={(d) => (lastNote = d.id)}
+			/>
+			<p class="section-caption">on_select: {lastNote || 'nothing opened yet'}</p>
 		</div>
 	</section>
 

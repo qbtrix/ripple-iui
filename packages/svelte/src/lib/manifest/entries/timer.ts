@@ -7,7 +7,7 @@ export const timerEntry: WidgetManifestEntry = {
   type: 'timer',
   category: 'interactive',
   description:
-    'Pomodoro-style countdown timer with start, pause, reset, a progress bar, and duration presets. Fires on_complete when it reaches zero.',
+    'One countdown with start, pause, reset, a progress bar, and duration presets. Fires on_complete when it reaches zero. For a pomodoro or focus session with breaks and rounds, use focus-timer.',
   props: {
     duration: { type: 'number', required: false, description: 'Duration in minutes. Default 25.' },
     label: { type: 'string', required: false, description: 'Label above the countdown.' },

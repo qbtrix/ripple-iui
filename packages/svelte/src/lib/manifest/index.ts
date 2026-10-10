@@ -129,7 +129,13 @@ import { itineraryEntry } from './entries/itinerary.js';
 import { growthProjectionEntry } from './entries/growth-projection.js';
 import { billSplitEntry } from './entries/bill-split.js';
 import { intervalWorkoutEntry } from './entries/interval-workout.js';
+import { habitTrackerEntry } from './entries/habit-tracker.js';
+import { focusTimerEntry } from './entries/focus-timer.js';
 import { flashcardDeckEntry } from './entries/flashcard-deck.js';
+import { wordGuessEntry } from './entries/word-guess.js';
+import { quizEntry } from './entries/quiz.js';
+import { memoryMatchEntry } from './entries/memory-match.js';
+import { boardGameEntry } from './entries/board-game.js';
 import { kanbanEntry } from './entries/kanban.js';
 import { kbdEntry } from './entries/kbd.js';
 import { kvTableEntry } from './entries/kv-table.js';
@@ -455,7 +461,13 @@ export const manifestEntries: WidgetManifestEntry[] = [
   bookingEntry,
   menuOrderEntry,
   intervalWorkoutEntry,
+  habitTrackerEntry,
+  focusTimerEntry,
   flashcardDeckEntry,
+  wordGuessEntry,
+  quizEntry,
+  memoryMatchEntry,
+  boardGameEntry,
   orgChartEntry,
   otpInputEntry,
   pageHeaderEntry,

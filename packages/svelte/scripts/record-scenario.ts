@@ -41,6 +41,7 @@ const CATEGORIES = new Set(['layout', 'display', 'input', 'data', 'control', 'ov
 // the data widgets and the summary pieces the SYSTEM rules point at.
 const DATA_WIDGETS = new Set([
 	'itinerary', 'booking', 'menu-order', 'growth-projection', 'bill-split', 'recipe', 'meal-plan', 'interval-workout', 'flashcard-deck',
+	'word-guess', 'quiz', 'memory-match', 'habit-tracker', 'focus-timer', 'board-game',
 	'comparison-layout', 'exec-dashboard', 'entity-detail', 'timeline', 'kv-table'
 ]);
 
@@ -106,7 +107,13 @@ CARD SHAPE (pick this first)
   - a trip or a day-by-day plan: itinerary
   - a week of meals: meal-plan; one dish: recipe
   - an interval, circuit or HIIT workout: interval-workout
+  - tracking habits or streaks through the week: habit-tracker
+  - a pomodoro or focus session with breaks and rounds: focus-timer
   - a study or flip-card deck: flashcard-deck
+  - a word guessing game: word-guess
+  - a trivia quiz or multiple-choice test: quiz
+  - a memory or matching pairs game: memory-match
+  - tic-tac-toe or connect-four against the computer: board-game (set "game")
   - a menu or food order: menu-order; a reservation or appointment: booking
   - sales, KPIs or a dashboard over records: exec-dashboard with "rows", "measures", "dimensions" (bind "filters")
   - choosing between options: comparison-layout

@@ -1,7 +1,9 @@
 // manifest/entries/illustration.ts — the LLM-facing entry for `illustration`,
 // model-written animated SVG (design doc 2026-10-09-ripple-illustration-svg.md).
 // The model writes the markup; the widget rebuilds it from an allowlist. No
-// bind, no events. staticSafe is false: the art is built client-side.
+// bind. Optional `annotations` pin numbered notes on it; `on_select` fires
+// with { id } when one is clicked. staticSafe is false: the art is built
+// client-side.
 import type { WidgetManifestEntry } from '../index.js';
 
 export const illustrationEntry: WidgetManifestEntry = {
@@ -9,7 +11,7 @@ export const illustrationEntry: WidgetManifestEntry = {
   category: 'display',
   staticSafe: false,
   description:
-    'A small animated SVG drawing you write: <svg viewBox> with shapes, gradients and animate/animateTransform. No scripts, styles, links, images or filters. Display only.',
+    'A small animated SVG drawing you write: <svg viewBox> with shapes, gradients and animate/animateTransform. No scripts, styles, links, images or filters. Optional numbered notes pinned on parts of it.',
   props: {
     svg: {
       type: 'string',
@@ -20,6 +22,19 @@ export const illustrationEntry: WidgetManifestEntry = {
     title: { type: 'string', required: true, description: 'Accessible name, e.g. "Sun rising over two hills".' },
     caption: { type: 'string', required: false, description: 'Optional line under the art.' },
     max_height: { type: 'number', required: false, description: 'Height cap in px, 80 to 640. Default 320.' },
+    annotations: {
+      type: 'Array<{ id: string; label: string; note: string; target?: string; at?: [number, number] }>',
+      required: false,
+      description:
+        "At most 8 numbered notes the reader taps to open. Plain text: label up to 40 chars, note up to 280. Exactly one of `target` (an id in your svg, e.g. 'valve') or `at` ([x, y] in viewBox units). A target id that is not in the svg drops the note.",
+    },
+  },
+  events: {
+    on_select: {
+      type: 'EventAction | EventAction[]',
+      required: false,
+      description: 'Fires with { id } when the reader opens a note by clicking its pin or legend line.',
+    },
   },
   example: {
     type: 'illustration',

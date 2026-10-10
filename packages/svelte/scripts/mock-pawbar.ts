@@ -27,6 +27,9 @@
 // follow-ups land on the Tokyo itinerary recording and, for "laptop", an inline
 // comparison-layout card with a winner. "bike" (or "bicycle") + "gears" answers with
 // an animated `illustration` of the chain drive and a short text (gearsCard).
+// The play chips (memory match, guess the word, space trivia, tic-tac-toe, connect
+// four, habit tracker, focus timer, how a heart pumps) fall through to pickScenario, which answers them with their
+// hand-written cards (routes/pawbar/play-cards.ts) streamed like a recording.
 // Point the site at it: PUBLIC_PAWBAR_LIVE=1 PUBLIC_PAWBAR_ENDPOINT=http://localhost:5288
 // PUBLIC_PAWBAR_WIDGET_ID=demo PUBLIC_PAWBAR_SITE_KEY=demo bun run dev
 

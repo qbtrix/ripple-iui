@@ -7,8 +7,9 @@
     and hydrates without a re-render), so the fold shows a working card before
     any tap and with JavaScript off. Live, the step-by-step chips come first
     (order, book, plan a trip, pick a laptop: the cards walk the visitor through
-    steps), then the recorded scenarios; offline, only the recordings (minus the
-    store one). The chat calls the Paw Bar API only when PUBLIC_PAWBAR_LIVE=1
+    steps), then the recorded scenarios and the hand-written play cards, the
+    chips grouped as Do, Learn, Play and Track; offline, only the recorded and
+    hand-written answers (minus the store one). The chat calls the Paw Bar API only when PUBLIC_PAWBAR_LIVE=1
     with PUBLIC_PAWBAR_ENDPOINT / _WIDGET_ID / _SITE_KEY (lib/site/pawbar-env.ts,
     read in vite.config.ts); otherwise it replays the recorded answers locally
     and says so. Live, a card's `checkout` and `book` host events go to the test
@@ -35,7 +36,7 @@
 	import JsonLines from '$lib/site/JsonLines.svelte';
 	import Chat from './pawbar/Chat.svelte';
 	import { BYOK_URL, ChatSession, pawbarTransport, pawosBase, typedStaysLocal, type Transport } from './pawbar/session.svelte.js';
-	import { findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
+	import { answerPool, findScenario, pickScenario, recordedEvents, recordedExchange } from './pawbar/recorded.js';
 	import { chatPrompts, scenarios } from './live/scenarios.js';
 
 	// Opt-in: vite.config.ts defines these only when PUBLIC_PAWBAR_LIVE=1.
@@ -53,10 +54,10 @@
 	// The recorded order demo checks out with an `api` action, which the chat's card
 	// policy refuses, so the recorded answers exclude it; live, its chip asks the
 	// model, whose menu card checks out through the store host event.
-	const chatScenarios = scenarios.filter((s) => !s.needsStore);
+	const chatScenarios = answerPool.filter((s) => !s.needsStore);
 	// The intro says what is replaying: a matching recording, or (when no
 	// recording overlaps the request) the bill splitter, said plainly. Live, the
-	// fallback says it is a recording on its original timing instead.
+	// fallback says it is a saved answer instead.
 	const intro = (message: string) =>
 		findScenario(message, chatScenarios)
 			? 'Replaying a recorded answer that matches.'
@@ -73,21 +74,26 @@
 	const session = LIVE
 		? new ChatSession(
 				pawbarTransport({ endpoint: ENDPOINT, widgetId: WIDGET_ID, siteKey: SITE_KEY }).send,
-				recorded('Here is a recorded answer that fits, on its original timing.'),
+				recorded('Here is a saved answer that fits.'),
 				store
 			)
 		: new ChatSession(recorded());
 	const bill = chatScenarios.find((s) => s.id === 'bill-splitter');
 	if (bill) session.seed(bill.fixture.prompt, recordedExchange(bill, intro(bill.fixture.prompt)));
-	// Step-by-step chips first (live only: offline they would replay the wrong
-	// recording), then the recordings; "Plan a trip with me" stands in for Tokyo.
+	// Chips in groups (Do, Learn, Play, Track). In Do the step-by-step chips come
+	// first (live only: offline they would replay the wrong recording), then the
+	// recordings; "Plan a trip with me" stands in for Tokyo. The sort is stable.
+	const GROUPS = ['Do', 'Learn', 'Play', 'Track'];
 	const liveChips = LIVE ? [...scenarios.filter((s) => s.needsStore), ...chatPrompts].filter((c) => !c.needsStore || STORE_URL) : [];
-	const suggestions = [...liveChips, ...chatScenarios.filter((s) => !(LIVE && s.id === 'tokyo-trip'))].map((c) => ({
-		id: c.id,
-		title: c.title,
-		prompt: c.prompt ?? ('fixture' in c ? c.fixture.prompt : ''),
-		steps: c.steps
-	}));
+	const suggestions = [...liveChips, ...chatScenarios.filter((s) => !(LIVE && s.id === 'tokyo-trip'))]
+		.map((c) => ({
+			id: c.id,
+			title: c.title,
+			prompt: c.prompt ?? ('fixture' in c ? c.fixture.prompt : ''),
+			steps: c.steps,
+			group: c.group
+		}))
+		.sort((a, b) => GROUPS.indexOf(a.group ?? '') - GROUPS.indexOf(b.group ?? ''));
 
 	// Step 3 of "how it works": a small spec, rendered for real.
 	const demoSpec = {
