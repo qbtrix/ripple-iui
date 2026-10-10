@@ -49,6 +49,18 @@ A node's `style` record goes through `safeStyle` after its expressions resolve. 
 
 The `embed` widget shows a remote page or an inline document in a sandboxed iframe. The renderer sets the sandbox and a spec can't widen it. `allow-same-origin` is never granted, so the frame runs at an opaque origin and can't read your cookies, storage or backend. Remote URLs must be `https`. The `allow` list accepts only `fullscreen`, `autoplay`, `encrypted-media` and `picture-in-picture`.
 
+## Model-drawn SVG
+
+The `illustration` widget takes SVG markup the model writes, and never renders that string. It parses it with `DOMParser` and rebuilds a copy with `createElementNS`, keeping only what an allowlist names and silently dropping the rest.
+
+- **Elements:** `svg g defs title desc path rect circle ellipse line polyline polygon text tspan linearGradient radialGradient stop clipPath mask symbol use animate animateTransform animateMotion mpath set`. No filters, `<image>`, `<style>`, `<a>`, `<foreignObject>` or scripts.
+- **References:** only `url(#id)`, and `href='#id'` on `use` and `mpath`. No `style` attribute and no `on*` handlers. Animations may only target presentation attributes such as `fill`, `opacity`, `transform`, `cx` and `d`.
+- **Caps:** 24,000 characters, 400 elements, depth 24, 40 animation elements, every `dur` at least 0.5s, `repeatCount` at most 1000 or `indefinite`, at most 40 `use` elements, and no `use` that points at another `use` or at a group holding one. Past a cap, or while the markup is still streaming in, the widget shows a quiet placeholder.
+- **Ids** are prefixed per instance, along with every `url(#..)`, `href` and `begin`/`end` that points at them, so two cards on one page never collide.
+- **Text stays readable.** A `text` or `tspan` fill under 3:1 contrast against what it sits on is swapped for the card's text or background colour. `currentColor` and `url(#..)` fills are never changed.
+
+To refuse a card instead of rendering a cleaned copy, call `checkIllustrationSvg(markup)` from `@ripple-ui/svelte`. The lists it checks against are data in `@ripple-ui/core/manifest` (`ILLUSTRATION_*`).
+
 ## Your own widgets and renderers
 
 The checks above cover the built-in widgets. If you write a [custom widget](/docs/guides/custom-widgets), pass every URL prop through `safeUrl` where you use it, and any style string you build through `safeStyle`. If you render the [headless tree](/docs/concepts/headless) with another framework, resolved props reach you unfiltered, so do the same there.

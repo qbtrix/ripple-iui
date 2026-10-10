@@ -104,6 +104,10 @@ A flow ships every step in one spec. Each step is a UniversalSpec, and its next 
 />
 ```
 
+The payload holds every step's `<flowId>_selection` and `<flowId>_formData`, plus `state`: the current value of each plain `bind` path on the steps walked that no step already sent as a `formData` field.
+
+A flow's top-level `state` seeds its steps the same way it seeds a plain spec, and all steps share one store, so a value bound in one step reads as `{state.key}` in the next. A step's own `state` only fills keys that are not set yet.
+
 Ripple never runs the final action itself. The kinds a spec can ask for:
 
 | `kind` | Fields | Meaning |
@@ -118,6 +122,36 @@ Ripple never runs the final action itself. The kinds a spec can ask for:
 The three write kinds take an optional `then`, another flow action to run after the write succeeds, typically a `navigate`. For those, return a promise from `onComplete`; Ripple shows the success view once it resolves.
 
 `onComplete` on a step (a flow action) is not the same as the older free-form `on_complete` field, and neither is the `flow` action, which sequences actions inside a single step (see [Flow actions](/docs/concepts/flow-actions)).
+
+### Choice cards
+
+When every button in a `select` step emits `flow.next` or `flow.submit` with `value.selection`, the step renders them as choice cards: a tile per option with an icon, the label, and the button's `description` as a one-line hint. Each tile wraps a real radio input (a checkbox when the step has `selection: 'multiple'`). Click, Enter or Space picks and advances once; the arrow keys move the selection without advancing. The grid is sized by its container: one column, two from 480px, three when there are 3 or 6 short options. While the step is still streaming in, its buttons are held back, since a button whose `on_click` has not arrived yet could turn out to be an option.
+
+A button's `icon` must be one of these keys, and anything else is ignored: work, school, creative, gaming, everyday, travel, light, home, budget, mid, premium, power, food, veg, meat, fish, sweet, coffee, drinks, culture, outdoors, relax, shopping, morning, afternoon, evening, night, solo, couple, family, group, days, quick. Without a valid key the icon is guessed from the label, then the hint. Set `display: { layout: 'list' }` on the step to keep one-column rows.
+
+```json
+{
+  "flowId": "main_use",
+  "intent": "select",
+  "title": "What will you use it for most?",
+  "ui": {
+    "type": "flex",
+    "props": { "direction": "column" },
+    "children": [
+      {
+        "type": "button",
+        "props": { "label": "Work and study", "icon": "work", "description": "Docs, email, video calls" },
+        "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "work", "label": "Work and study" } } }
+      },
+      {
+        "type": "button",
+        "props": { "label": "Gaming", "icon": "gaming", "description": "Recent games at good frame rates" },
+        "on_click": { "action": "emit", "target": "flow.next", "value": { "selection": { "id": "gaming", "label": "Gaming" } } }
+      }
+    ]
+  }
+}
+```
 
 ## Driving a flow yourself
 
