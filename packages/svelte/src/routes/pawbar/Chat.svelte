@@ -152,9 +152,15 @@
 		scroller.scrollTo?.({ top: scroller.scrollHeight, behavior });
 	}
 
+	// Only a move up lets go: a scroll event can land after content grew past
+	// a programmatic jump to the bottom, and that must not count as leaving it.
+	let lastTop = 0;
 	function onScroll() {
 		if (!scroller) return;
-		stuck = nearBottom(scroller);
+		const top = scroller.scrollTop;
+		if (nearBottom(scroller)) stuck = true;
+		else if (top < lastTop - 1) stuck = false;
+		lastTop = top;
 		if (stuck) unseen = false;
 	}
 

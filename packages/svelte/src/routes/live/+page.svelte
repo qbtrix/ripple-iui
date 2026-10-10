@@ -266,8 +266,10 @@
 		font-size: 11.5px;
 		color: var(--site-soft);
 	}
-	/* A demo brings its own padded column; drop its outer padding here. */
+	/* A demo brings its own centred, padded column; align it under the head. */
 	.demo :global(> :first-child) {
+		max-width: none;
+		margin-inline: 0;
 		padding-top: 0;
 		padding-inline: 0;
 	}
