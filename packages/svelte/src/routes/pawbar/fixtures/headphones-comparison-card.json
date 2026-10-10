@@ -1,0 +1,113 @@
+{
+	"ui": {
+		"type": "comparison-layout",
+		"props": {
+			"title": "Wireless headphones under $200",
+			"subtitle": "Sample products, not real listings",
+			"verdict": {
+				"text": "Commute Earbuds give the most features for $129.",
+				"status": "good"
+			},
+			"currency": "USD",
+			"items": [
+				{
+					"id": "h1",
+					"name": "ANC Over-Ear",
+					"subtitle": "Over-ear",
+					"price": 179,
+					"rating": 4.6,
+					"anc": true,
+					"battery": 30,
+					"weight": 265,
+					"multipoint": true
+				},
+				{
+					"id": "h2",
+					"name": "Sport In-Ear",
+					"subtitle": "In-ear",
+					"price": 89,
+					"rating": 4.1,
+					"anc": false,
+					"battery": 8,
+					"weight": 6,
+					"multipoint": false
+				},
+				{
+					"id": "h3",
+					"name": "Studio Over-Ear",
+					"subtitle": "Over-ear",
+					"price": 139,
+					"rating": 4.4,
+					"anc": false,
+					"battery": 45,
+					"weight": 240,
+					"multipoint": true
+				},
+				{
+					"id": "h4",
+					"name": "Commute Earbuds",
+					"subtitle": "True wireless",
+					"price": 129,
+					"rating": 4.3,
+					"anc": true,
+					"battery": 6,
+					"weight": 5,
+					"multipoint": true
+				}
+			],
+			"features": [
+				{
+					"key": "anc",
+					"label": "Noise cancelling",
+					"kind": "boolean",
+					"better": "higher"
+				},
+				{
+					"key": "battery",
+					"label": "Battery",
+					"kind": "number",
+					"better": "higher",
+					"unit": "h"
+				},
+				{
+					"key": "weight",
+					"label": "Weight",
+					"kind": "number",
+					"better": "low",
+					"unit": "g"
+				},
+				{
+					"key": "multipoint",
+					"label": "Multipoint",
+					"kind": "boolean",
+					"better": "higher"
+				}
+			],
+			"winner": {
+				"id": "h4",
+				"reason": "Noise cancelling and multipoint for $129."
+			},
+			"picks": [
+				{
+					"id": "h3",
+					"label": "Longest battery"
+				},
+				{
+					"id": "h2",
+					"label": "Lowest price"
+				}
+			],
+			"defaultView": "card",
+			"showDiffToggle": true,
+			"primaryLabel": "Choose",
+			"on_choose": {
+				"action": "emit",
+				"target": "ask",
+				"value": {
+					"text": "Tell me more about the Commute Earbuds"
+				}
+			}
+		}
+	},
+	"state": {}
+}
