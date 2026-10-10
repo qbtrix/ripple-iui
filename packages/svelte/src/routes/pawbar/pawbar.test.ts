@@ -2,11 +2,12 @@
 // parseSSE (chunk boundaries, CRLF, comments, malformed frames), the legacy
 // fence splitter, the recorded-scenario re-cut, customer_ref storage, the
 // ChatSession turn model across both card paths and every failure event, and the
-// messages a card sends (ask, a finished flow).
+// messages a card sends (ask, a finished flow). A card fence the model abandons
+// and restarts (fixtures/restart-fence-*.json, real replies) never leaks as text.
 
 import { describe, expect, test, vi } from 'vitest';
 import type { RippleEvent, TerminalResult } from '$lib/index.js';
-import { parseSSE, segments, type SSEFrame } from './sse.js';
+import { hideSpecText, parseSSE, segments, type SSEFrame } from './sse.js';
 import { cardChunks, findScenario, pickScenario, recordedEvents, recordedExchange } from './recorded.js';
 import { playScenarios } from './play-cards.js';
 import {
@@ -27,6 +28,8 @@ import {
 import { scenarios } from '../live/scenarios.js';
 import { refuseCard, textRefusal } from './card-policy.js';
 import { laptopFlowCard, tripFlowCard } from './flow-cards.js';
+import heartReply from './fixtures/restart-fence-heart.json';
+import mealReply from './fixtures/restart-fence-mealplan.json';
 
 const waitFor = <T>(fn: () => T | Promise<T>) => vi.waitFor(fn, { timeout: 5000 });
 vi.setConfig({ testTimeout: 20_000 });
@@ -107,6 +110,117 @@ describe('segments (legacy fence)', () => {
 			}
 		}
 		expect(body).toBe('{"ui":{"type":"text"}}');
+	});
+});
+
+const leaked = (t: string) => /pawbar-card|```|\{"ui"/.test(t);
+// Chunk cuts: fixed sizes, plus cuts inside the restart marker and the close.
+const cuts = (text: string) => {
+	const second = text.lastIndexOf('```pawbar-card');
+	const close = text.lastIndexOf('\n```');
+	const at = (...ps: number[]) => [0, ...ps].map((p, k, all) => text.slice(p, all[k + 1]));
+	const sized = (n: number) => Array.from({ length: Math.ceil(text.length / n) }, (_, k) => text.slice(k * n, k * n + n));
+	return [sized(3), sized(17), sized(256), sized(4096), [text], at(second + 2, second + 6, close + 3)];
+};
+
+describe('a restarted card fence (real replies)', () => {
+	const heartCard = (() => {
+		const t = heartReply.text;
+		const open = t.lastIndexOf('```pawbar-card\n') + '```pawbar-card\n'.length;
+		return JSON.parse(t.slice(open, t.indexOf('\n```', open)));
+	})();
+
+	test('segments: no prefix shows fence text, card text only grows, and the restart is marked', () => {
+		for (const { text } of [heartReply, mealReply]) {
+			let prev: string[] = [];
+			for (let i = 1; i <= text.length; i++) {
+				const segs = segments(text.slice(0, i));
+				for (const s of segs) if (s.kind === 'text') expect(leaked(s.text), `prefix ${i}`).toBe(false);
+				const cards = segs.flatMap((s) => (s.kind === 'card' ? [s.text] : []));
+				cards.forEach((c, j) => expect(c.startsWith(prev[j] ?? ''), `prefix ${i} card ${j}`).toBe(true));
+				prev = cards;
+			}
+			const done = segments(text, true);
+			expect(done.filter((s) => s.kind === 'card').map((s) => s.kind === 'card' && [s.closed, !!s.restarted])).toEqual([
+				[false, true],
+				[true, false]
+			]);
+			for (const s of done) if (s.kind === 'text') expect(leaked(s.text)).toBe(false);
+		}
+		const last = segments(heartReply.text, true).filter((s) => s.kind === 'card').pop();
+		expect(last?.kind === 'card' && JSON.parse(last.text)).toEqual(heartCard);
+	});
+
+	test('only a bare ``` line closes a card fence', () => {
+		const src = 'A\n```pawbar-card\n{"ui":{"type":"text"}}\n```js\n{"x":1}\n  ```  \nB';
+		expect(segments(src, true)).toEqual([
+			{ kind: 'text', text: 'A\n' },
+			{ kind: 'card', text: '{"ui":{"type":"text"}}\n```js\n{"x":1}', closed: true },
+			{ kind: 'text', text: '\nB' }
+		]);
+	});
+
+	async function play(text: string, chunks: string[]) {
+		const seen: string[] = [];
+		const session: ChatSession = new ChatSession(async function* () {
+			for (const content of chunks) {
+				yield { event: 'chunk', data: { content } };
+				for (const p of lastTurn(session).parts) if (p.kind === 'text') seen.push(p.text);
+			}
+			yield { event: 'stream_end', data: { cancelled: false } };
+		});
+		await session.send('x');
+		for (const p of lastTurn(session).parts) if (p.kind === 'text') seen.push(p.text);
+		expect(chunks.join('')).toBe(text);
+		expect(seen.filter(leaked)).toEqual([]);
+		return session;
+	}
+
+	test('the heart reply: the abandoned card is dropped quietly and the second card renders', async () => {
+		for (const chunks of cuts(heartReply.text)) {
+			const session = await play(heartReply.text, chunks);
+			const cards = cardsOf(session);
+			expect(cards.map((c) => c.status)).toEqual(['final']);
+			expect(cards[0].spec).toEqual({ version: '1.0', ...heartCard });
+		}
+	});
+
+	test('the meal plan reply: nothing leaks; its broken second card is left out with the usual note', async () => {
+		for (const chunks of cuts(mealReply.text)) {
+			const session = await play(mealReply.text, chunks);
+			expect(cardsOf(session).map((c) => [c.status, c.reason])).toEqual([['rejected', 'invalid']]);
+		}
+	});
+
+	test('a server card.rejected "restarted" drops the partial card quietly; the new card renders', async () => {
+		const session = new ChatSession(
+			frames(
+				{ event: 'chunk', data: { content: 'Here it is.' } },
+				{ event: 'card.start', data: { card_id: 'a' } },
+				{ event: 'card.delta', data: { card_id: 'a', text: '{"ui":{"type":"text","props":{"te' } },
+				{ event: 'card.rejected', data: { card_id: 'a', reason: 'restarted' } },
+				{ event: 'card.start', data: { card_id: 'b' } },
+				{ event: 'card.delta', data: { card_id: 'b', text: '{"ui":{"type":"text","props":{"text":"ok"}}}' } },
+				{ event: 'card.final', data: { card_id: 'b', card: { ui: { type: 'text', props: { text: 'ok' } } } } },
+				{ event: 'chunk', data: { content: 'Done.' } },
+				{ event: 'stream_end', data: { cancelled: false } }
+			)
+		);
+		await session.send('x');
+		expect(lastTurn(session).parts.map((p) => (p.kind === 'card' ? p.card.status : p.text))).toEqual(['Here it is.', 'final', 'Done.']);
+	});
+
+	test('hideSpecText hides a leaked spec from its marker line to the fence close, and a half-arrived marker while streaming', () => {
+		const leak = 'Here is the plan.\n\npawbar-card\n{"ui":{"type":"text"}}\n```\n\nEnjoy.';
+		const out = hideSpecText(leak, false);
+		expect(out.hidden).toBe(true);
+		expect(leaked(out.text)).toBe(false);
+		expect(out.text).toContain('Here is the plan.');
+		expect(out.text).toContain('Enjoy.');
+		expect(hideSpecText('Hi\n  {"ui":{"type":"te', false)).toEqual({ text: 'Hi\n', hidden: true });
+		expect(hideSpecText('Hi\npawbar-c', true).text).toBe('Hi\n');
+		expect(hideSpecText('Hi\n{"u', true).text).toBe('Hi\n');
+		expect(hideSpecText('Plain text, {"ui": inside a line} is fine.', false)).toEqual({ text: 'Plain text, {"ui": inside a line} is fine.', hidden: false });
 	});
 });
 

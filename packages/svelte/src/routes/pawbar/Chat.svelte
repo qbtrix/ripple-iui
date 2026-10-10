@@ -17,7 +17,8 @@
     shimmering label, rotating; a card that is streaming shows shimmer bars
     until its first widget draws and a spinner status line under it. Assistant text renders as markdown-lite
     (paragraphs, **bold**, `code`) built from Svelte nodes; model text never
-    goes through {@html}. A card renders through <Ripple streaming> while it
+    goes through {@html}. Text never shows a card's raw spec: hideSpecText
+    drops it (a small "Card hidden." note when the turn has no card to show). A card renders through <Ripple streaming> while it
     arrives and swaps to <Ripple spec> on final (a remount, so the validated
     spec is what the visitor keeps using). Host events go to session.hostEvent,
     which ignores them until the card is final; a checkout's progress or
@@ -56,6 +57,7 @@
 	import BookingReceipt from './BookingReceipt.svelte';
 	import PayCard from './PayCard.svelte';
 	import { PAWOS_URL, type Card, type ChatSession, type Notice } from './session.svelte.js';
+	import { hideSpecText } from './sse.js';
 
 	interface Suggestion {
 		id: string;
@@ -365,7 +367,12 @@
 					{:else}
 						{#each turn.parts as part, i (part.kind === 'card' ? part.card.id : `t${i}`)}
 							{#if part.kind === 'text'}
-								{@render prose(part.text, turn.pending && i === turn.parts.length - 1)}
+								{@const caret = turn.pending && i === turn.parts.length - 1}
+								{@const shown = hideSpecText(part.text, caret)}
+								{@render prose(shown.text, caret)}
+								{#if shown.hidden && !turn.parts.some((p) => p.kind === 'card' && p.card.status !== 'rejected')}
+									<p class="card-note">Card hidden.</p>
+								{/if}
 							{:else}
 								{@render cardView(part.card, `ripple-spec-${t}-${i}`)}
 							{/if}
