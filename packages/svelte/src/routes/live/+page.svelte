@@ -4,8 +4,8 @@
     like Paw OS Discover: a compact hero (lib/discover's DiscoverHeader) with
     filter chips (All, Do, Learn, Play, Track, Flows, Drawings; the choice kept
     in `?group=`), then one titled section of tiles (GalleryGrid) per group.
-    Items come from gallery.ts: recorded and hand-written runs first, then the
-    widget demos. A plain click opens the item in place with a "Back to
+    Items come from gallery.ts, one card per widget type: the runs, then the
+    widget demos no run covers. A plain click opens the item in place with a "Back to
     gallery" button: a run replays in Player (it streams into <Ripple> and
     ends as a working card), a demo's component from ./demos renders live
     (lazy-loaded, so the grid's bundle stays small). The card's href
@@ -24,7 +24,7 @@
 	import { pushState, replaceState } from '$app/navigation';
 	import DiscoverHeader from '$lib/discover/DiscoverHeader.svelte';
 	import GalleryGrid from './GalleryGrid.svelte';
-	import { galleryItems, GROUPS, itemByKey, liveRuns } from './gallery.js';
+	import { galleryItems, GROUPS, itemByKey, liveRuns, resolveKey } from './gallery.js';
 	import { readReturn } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
 	import Player from './Player.svelte';
@@ -54,9 +54,10 @@
 	const run = $derived(open?.kind === 'run' ? liveRuns.find((s) => s.id === open.key) : undefined);
 	const demo = $derived(open?.kind === 'demo' ? demoModules[`./demos/${open.id}.svelte`]?.() : undefined);
 
+	/** The open item's key from the URL; a pruned demo's key gives way to its run's. */
 	const keyIn = (search: string) => {
 		const key = new URLSearchParams(search).get('s');
-		return itemByKey(key) ? key : null;
+		return key && itemByKey(key) ? resolveKey(key) : null;
 	};
 	const groupIn = (search: string) => {
 		const g = new URLSearchParams(search).get('group');

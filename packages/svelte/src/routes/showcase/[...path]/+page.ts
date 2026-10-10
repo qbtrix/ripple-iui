@@ -1,10 +1,11 @@
 // routes/showcase/[...path]/+page.ts — Every old /showcase URL, now a redirect.
 // /showcase goes to /live (the one gallery), /showcase/<id> to the item it
-// showed, opened in place (/live?s=demo-<id>), and the names that moved to the
+// showed, opened in place (the run that replaced it in the gallery when one
+// did, else /live?s=demo-<id>), and the names that moved to the
 // design system to /ds/<name>. Anything else is a 404. Prerendered (entries),
 // so the static build writes one small redirect page per old URL.
 import { error } from '@sveltejs/kit';
-import { demoItems } from '../../live/gallery.js';
+import { demoItems, itemByKey } from '../../live/gallery.js';
 
 const MOVED_TO_DS = [
 	'ai',
@@ -26,7 +27,8 @@ const MOVED_TO_DS = [
 const target = (path: string) => {
 	if (path === '') return '/live';
 	if (MOVED_TO_DS.includes(path)) return `/ds/${path}`;
-	return demoItems.find((i) => i.id === path)?.href;
+	const demo = demoItems.find((i) => i.id === path);
+	return demo && itemByKey(demo.key)?.href;
 };
 
 export const entries = () => ['', ...MOVED_TO_DS, ...demoItems.map((i) => i.id)].map((path) => ({ path }));

@@ -1,14 +1,17 @@
 // routes/live/gallery.ts — The one registry behind the /live gallery and the
-// thumbnail capture (scripts/capture-thumbs.ts). Two kinds of item share one
-// grid: a run (a recorded or hand-written answer, replayed by Player) and a
-// widget demo (a component in ./demos, rendered live in the same place). Both
-// open in place at /live?s=<key>: a run's key is its scenario id, a demo's is
-// `demo-<id>` (run and demo ids overlap: memory-match, meal-plan). `capture`
-// is the page path and element the capture script screenshots (both kinds
-// mark theirs with data-thumb). Thumbs are static/thumbs/<id>.webp at
-// THUMB_W x THUMB_H, so item ids are unique across both kinds (runs carry a
-// `live-` prefix). gallery.test.ts holds every demo to a file in ./demos and
-// every id to a committed thumb. Old /showcase URLs redirect here
+// thumbnail capture (scripts/capture-thumbs.ts). Two kinds of item: a run (a
+// recorded or hand-written answer, replayed by Player) and a widget demo (a
+// component in ./demos, rendered live in the same place). Both open in place
+// at /live?s=<key>: a run's key is its scenario id, a demo's `demo-<id>` (run
+// and demo ids overlap). The grid (galleryItems) shows ONE card per widget
+// type: a run wins (it is the latest and has a real prompt), the first run per
+// widget in liveRuns order, and a demo shows only when no run uses its widget.
+// A demo's widget is its id; a run's is the first demo widget its spec uses,
+// else its own id. A run that replaces a demo takes the demo's group, so
+// Drawings keeps its card. Pruned items still open: a pruned run by its key,
+// a pruned demo's key resolves to the run that replaced it (resolveKey). Thumbs
+// are static/thumbs/<id>.webp for grid items only, at THUMB_W x THUMB_H.
+// gallery.test.ts holds all of this. Old /showcase URLs redirect here
 // (routes/showcase/[...path]).
 
 import { scenarios } from './scenarios.js';
@@ -32,6 +35,8 @@ export interface GalleryItem {
 	kind: 'run' | 'demo';
 	/** The `?s=` value that opens it in place. */
 	key: string;
+	/** The widget type the card stands for; the grid has one card per type. */
+	widget: string;
 }
 
 const demoKey = (id: string) => `demo-${id}`;
@@ -45,7 +50,8 @@ const show = (id: string, title: string, group: Group, caption: string): Gallery
 	href: `/live?s=${demoKey(id)}`,
 	capture: { path: `/live?s=${demoKey(id)}`, selector: '[data-thumb]' },
 	kind: 'demo',
-	key: demoKey(id)
+	key: demoKey(id),
+	widget: id
 });
 
 export const demoItems: GalleryItem[] = [
@@ -77,22 +83,51 @@ export const demoItems: GalleryItem[] = [
 /** Every /live run: the model recordings, then the hand-written answers. */
 export const liveRuns = [...scenarios, ...playScenarios];
 
-export const liveItems: GalleryItem[] = liveRuns.map((s) => ({
-	id: `live-${s.id}`,
-	title: s.title,
-	caption: s.fixture.prompt,
-	group: s.group ?? 'Do',
-	tag: s.fixture.model === 'hand-written' ? 'Hand-written' : 'Recorded',
-	href: `/live?s=${s.id}`,
-	capture: { path: `/live?s=${s.id}`, selector: '[data-thumb]' },
-	kind: 'run' as const,
-	key: s.id
-}));
+const demoWidgets = new Set(demoItems.map((d) => d.widget));
+/** The first demo widget a run's spec names, else the run's own id. */
+const widgetOf = (s: (typeof liveRuns)[number]) => {
+	const text = s.fixture.chunks.map((c) => c.text).join('');
+	for (const m of text.matchAll(/\\?"type\\?"\s*:\s*\\?"([a-z0-9-]+)/g)) if (demoWidgets.has(m[1])) return m[1];
+	return s.id;
+};
 
-/** The grid's order: by group, runs (the latest) before demos within each. */
-export const galleryItems: GalleryItem[] = GROUPS.flatMap((g) => [...liveItems, ...demoItems].filter((i) => i.group === g));
+/** Every run as an item, pruned or not. */
+export const liveItems: GalleryItem[] = liveRuns.map((s) => {
+	const widget = widgetOf(s);
+	return {
+		id: `live-${s.id}`,
+		title: s.title,
+		caption: s.fixture.prompt,
+		group: demoItems.find((d) => d.widget === widget)?.group ?? s.group ?? 'Do',
+		tag: s.fixture.model === 'hand-written' ? 'Hand-written' : 'Recorded',
+		href: `/live?s=${s.id}`,
+		capture: { path: `/live?s=${s.id}`, selector: '[data-thumb]' },
+		kind: 'run' as const,
+		key: s.id,
+		widget
+	};
+});
 
-/** The item a `?s=` value opens, if any. */
-export const itemByKey = (key: string | null) => (key ? galleryItems.find((i) => i.key === key) : undefined);
+/** The grid's runs: the first per widget type. */
+const shownRuns = liveItems.filter((r, i) => liveItems.findIndex((o) => o.widget === r.widget) === i);
+const runFor = (widget: string) => shownRuns.find((r) => r.widget === widget);
+
+/** The grid: one card per widget type, by group, runs before demos within each. */
+export const galleryItems: GalleryItem[] = GROUPS.flatMap((g) =>
+	[...shownRuns, ...demoItems.filter((d) => !runFor(d.widget))].filter((i) => i.group === g)
+);
+
+/** A pruned demo's key gives way to the run that replaced it; any other key is itself. */
+export const resolveKey = (key: string) => {
+	const demo = demoItems.find((d) => d.key === key);
+	return (demo && runFor(demo.widget)?.key) ?? key;
+};
+
+/** The item a `?s=` value opens, if any (pruned demos resolve to their run). */
+export const itemByKey = (key: string | null) => {
+	if (!key) return undefined;
+	const k = resolveKey(key);
+	return liveItems.find((i) => i.key === k) ?? demoItems.find((i) => i.key === k);
+};
 
 export const thumbSrc = (id: string) => `/thumbs/${id}.webp`;
