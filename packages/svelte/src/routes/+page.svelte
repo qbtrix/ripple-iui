@@ -1,9 +1,13 @@
 <!--
   @file routes/+page.svelte
   @description Ripple's landing, chat-first, laid out like a Paw OS chat: under
-    the site bar sits PE's thin context row (the "Ripple" h1 and a sub-line),
+    the site bar sits PE's thin context row (the name and a short sub-line),
     then the chat fills the first screen (100dvh less the bar) with its dock of
-    chips and composer stuck to the bottom; scrolling past the chat releases
+    chips and composer stuck to the bottom. The hero (the h1, a lede and the
+    install chip with Copy) sits at the top of the chat's column, above the
+    first message, and scrolls away as the conversation grows; Copy falls back
+    to selecting the command when the clipboard is blocked. Scrolling past the
+    chat releases
     the dock, and the dock's "More" link jumps to the sections below. The
     context row has no "New chat" action: ChatSession has no reset. A visitor types
     a request or taps a chip, the answer streams in and its card renders through
@@ -139,14 +143,22 @@
 
 {#if store}<Ripple streaming={store} skeleton="card" />{/if}`;
 
-	let copied = $state(false);
-	async function copyInstall() {
+	// The hero chip and the band each copy the install command; only the one tapped says so.
+	let copied = $state<'hero' | 'code' | null>(null);
+	let heroCmd = $state<HTMLElement>();
+	let bandCmd = $state<HTMLElement>();
+	async function copyInstall(where: 'hero' | 'code') {
 		try {
 			await navigator.clipboard.writeText(INSTALL);
-			copied = true;
-			setTimeout(() => (copied = false), 1600);
+			copied = where;
+			setTimeout(() => (copied = null), 1600);
 		} catch {
-			/* clipboard blocked: the command is on screen to copy by hand */
+			// Clipboard missing or blocked: select the command so the visitor can copy it.
+			const el = where === 'hero' ? heroCmd : bandCmd;
+			const range = document.createRange();
+			if (el) range.selectNodeContents(el);
+			window.getSelection()?.removeAllRanges();
+			window.getSelection()?.addRange(range);
 		}
 	}
 
@@ -170,10 +182,24 @@
 		<!-- PE's chat room header: name, topic, actions on the right (none here). -->
 		<div class="context">
 			<div class="context-info">
-				<h1 id="hero-title">Ripple</h1>
-				<p>Generative UI from Paw OS by PocketPaw <span aria-hidden="true">·</span> {LIVE ? 'live demo' : 'recorded demo'}</p>
+				<p class="name">Ripple</p>
+				<p>Paw OS by PocketPaw <span aria-hidden="true">·</span> {LIVE ? 'live demo' : 'recorded demo'}</p>
 			</div>
 		</div>
+		<!-- The hero: top of the chat's column, above the first message. -->
+		<header class="hero">
+			<h1 id="hero-title">Ask for a tool. <span>Ripple builds it while the model is still typing.</span></h1>
+			<p class="lede">
+				Ripple is the open-source generative UI engine. A model writes a small JSON spec, and Ripple turns it into a
+				working interface as the spec streams in. Ask for something below.
+			</p>
+			<p class="get">
+				<code bind:this={heroCmd}><span aria-hidden="true">$</span> {INSTALL}</code>
+				<button type="button" onclick={() => copyInstall('hero')} aria-label="Copy install command">
+					{copied === 'hero' ? 'Copied' : 'Copy'}
+				</button>
+			</p>
+		</header>
 		<Chat {session} {suggestions} pawosUrl={PAWOS_URL} typedLocal={TYPED_LOCAL}>
 			{#snippet more()}
 				<a class="more" href="#how">More <ChevronDown size={14} strokeWidth={2} aria-hidden="true" /></a>
@@ -213,8 +239,8 @@
 		<div class="band">
 			<div class="band-inner">
 				<div class="install">
-					<code><span aria-hidden="true">$</span> {INSTALL}</code>
-					<button type="button" onclick={copyInstall} aria-label="Copy install command">{copied ? 'Copied' : 'Copy'}</button>
+					<code bind:this={bandCmd}><span aria-hidden="true">$</span> {INSTALL}</code>
+					<button type="button" onclick={() => copyInstall('code')} aria-label="Copy install command">{copied === 'code' ? 'Copied' : 'Copy'}</button>
 				</div>
 				<p class="small">Needs Tailwind v4. <a href="{GITHUB_URL}/tree/main/packages/svelte#styling">Styling setup</a></p>
 			</div>
@@ -266,12 +292,14 @@
 		max-width: var(--site-max);
 		margin-inline: auto;
 	}
+	h1,
 	h2,
 	h3 {
 		font-family: var(--font-display);
 		text-wrap: balance;
 		margin: 0;
 	}
+	h1,
 	h2 {
 		font-weight: 650;
 		letter-spacing: -0.03em;
@@ -336,7 +364,7 @@
 		justify-content: center;
 		min-width: 0;
 	}
-	.context h1 {
+	.context .name {
 		font-family: var(--font-sans);
 		font-size: 13px;
 		font-weight: 500;
@@ -352,6 +380,76 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	/* The hero, at the top of the chat column. Short top padding: the context
+	   row is the chrome, and the recorded card should start in the first screen. */
+	.hero {
+		padding: clamp(24px, 5vw, 56px) 0 8px;
+	}
+	h1 {
+		font-size: clamp(1.75rem, 1rem + 3vw, 3.4rem);
+		line-height: 1.04;
+		overflow-wrap: break-word;
+	}
+	h1 span {
+		display: block;
+		margin-top: 0.12em;
+	}
+	.lede {
+		margin: clamp(12px, 2vw, 22px) 0 18px;
+		max-width: 62ch;
+		color: var(--site-soft);
+		text-wrap: pretty;
+	}
+	/* The install line, as a quiet mono chip. */
+	.get {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		max-width: 100%;
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0 0 0 12px;
+		border: 1px solid var(--code-line);
+		border-radius: var(--radius-control);
+		background: var(--code-bg);
+		font-size: 14px;
+	}
+	.get code {
+		min-width: 0;
+		overflow-x: auto;
+		white-space: nowrap;
+		padding: 0;
+		background: none;
+		font-size: inherit;
+		color: var(--code-ink);
+	}
+	.get code span {
+		color: var(--site-soft);
+		margin-right: 6px;
+	}
+	.get button {
+		flex: none;
+		min-height: 44px;
+		padding: 0 12px;
+		border: 0;
+		border-radius: calc(var(--radius-control) - 1px);
+		background: transparent;
+		color: var(--site-soft);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+		transition:
+			color 0.15s ease,
+			background 0.15s ease;
+	}
+	.get button:hover {
+		background: var(--site-hover);
+		color: var(--site-ink);
+	}
+	.get button:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
 	}
 	/* "More": a quiet link at the dock's edge to the sections below. */
 	.more {
@@ -691,6 +789,16 @@
 		}
 		.band-inner {
 			padding-inline: 16px;
+		}
+		.lede {
+			font-size: 16px;
+			line-height: 1.5;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.get button,
+		.more {
+			transition: none;
 		}
 	}
 </style>
