@@ -1,102 +1,134 @@
 <!--
   @file routes/live/+page.svelte
-  @description /live, the runs gallery, laid out like Paw OS Discover: a
-    compact hero (lib/discover's DiscoverHeader), then two titled sections of
-    tiles (GalleryGrid), the recorded model answers (real output, recorded
-    offline by scripts/record-scenario.ts) and the hand-written answers
-    (play-cards.ts), each tile with its prompt as the caption. A plain click on a card opens
-    the run in place (Player: it streams into <Ripple> and ends as a working
-    card) with a "Back to gallery" button; the card's href `?s=<id>` is the
-    deep link, read after mount since the page is prerendered, and browser
-    Back returns to the grid (shallow pushState). No model is called at
-    runtime. A return from the store's checkout (`?order=` or `?cancelled=1`,
-    checkout.readReturn) shows OrderReceipt above and opens the order run.
+  @description /live, the site's one gallery ("Gallery" in the nav), laid out
+    like Paw OS Discover: a compact hero (lib/discover's DiscoverHeader) with
+    filter chips (All, Do, Learn, Play, Track, Flows, Drawings; the choice kept
+    in `?group=`), then one titled section of tiles (GalleryGrid) per group.
+    Items come from gallery.ts, one card per widget type: the runs, then the
+    widget demos no run covers. A plain click opens the item in place with a "Back to
+    gallery" button: a run replays in Player (it streams into <Ripple> and
+    ends as a working card), a demo's component from ./demos renders live
+    (lazy-loaded, so the grid's bundle stays small). The card's href
+    `?s=<key>` is the deep link, read after mount since the page is
+    prerendered, and browser Back returns to the grid (shallow pushState). No
+    model is called at runtime. A return from the store's checkout (`?order=`
+    or `?cancelled=1`, checkout.readReturn) shows OrderReceipt above and opens
+    the order run. Old /showcase URLs redirect here (routes/showcase).
 
   Look: the site's tokens and fonts under the shared top bar and footer from
     +layout.svelte. The local --line, --panel and --ink-soft are read by
     OrderReceipt.
 -->
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, type Component } from 'svelte';
 	import { pushState, replaceState } from '$app/navigation';
 	import DiscoverHeader from '$lib/discover/DiscoverHeader.svelte';
-	import GalleryGrid from '../showcase/GalleryGrid.svelte';
-	import { liveItems, liveRuns } from '../showcase/gallery.js';
+	import GalleryGrid from './GalleryGrid.svelte';
+	import { galleryItems, GROUPS, itemByKey, liveRuns, resolveKey } from './gallery.js';
 	import { readReturn } from './checkout.js';
 	import OrderReceipt from './OrderReceipt.svelte';
 	import Player from './Player.svelte';
 
 	const STORE_URL: string = import.meta.env.PUBLIC_STORE_URL;
+	const demoModules = import.meta.glob<{ default: Component }>('./demos/*.svelte');
 
-	let openId = $state<string | null>(null);
+	const BLURBS: Record<string, string> = {
+		Do: 'Plans, bookings and orders that get something done.',
+		Learn: 'Numbers to play with and cards to practise.',
+		Play: 'Small games, built from the same spec.',
+		Track: 'Dashboards, timers and trackers that keep state.',
+		Flows: 'Step by step forms chained in the spec.',
+		Drawings: 'Animated drawings with notes on the parts.'
+	};
+	const groups = ['All', ...GROUPS];
+	const count = (g: string) => (g === 'All' ? galleryItems.length : galleryItems.filter((i) => i.group === g).length);
+
+	let group = $state('All');
+	const sections = $derived(GROUPS.filter((g) => group === 'All' || g === group).map((g) => ({ g, items: galleryItems.filter((i) => i.group === g) })));
+	const gridUrl = () => (group === 'All' ? '/live' : `/live?group=${encodeURIComponent(group)}`);
+
+	let openKey = $state<string | null>(null);
 	let receipt = $state<{ order: string | null; mock: boolean; cancelled: boolean } | null>(null);
 	let back = $state<HTMLButtonElement>();
-	const open = $derived(liveRuns.find((s) => s.id === openId) ?? null);
-	const recorded = liveItems.filter((i) => i.tag === 'Recorded');
-	const written = liveItems.filter((i) => i.tag !== 'Recorded');
-	const openItem = $derived(liveItems.find((i) => i.id === `live-${openId}`));
+	const open = $derived(itemByKey(openKey));
+	const run = $derived(open?.kind === 'run' ? liveRuns.find((s) => s.id === open.key) : undefined);
+	const demo = $derived(open?.kind === 'demo' ? demoModules[`./demos/${open.id}.svelte`]?.() : undefined);
 
-	const runId = (search: string) => {
-		const id = new URLSearchParams(search).get('s');
-		return id && liveRuns.some((s) => s.id === id) ? id : null;
+	/** The open item's key from the URL; a pruned demo's key gives way to its run's. */
+	const keyIn = (search: string) => {
+		const key = new URLSearchParams(search).get('s');
+		return key && itemByKey(key) ? resolveKey(key) : null;
+	};
+	const groupIn = (search: string) => {
+		const g = new URLSearchParams(search).get('group');
+		return g && groups.includes(g) ? g : 'All';
 	};
 
-	async function show(id: string | null) {
-		openId = id;
-		if (id) {
+	async function show(key: string | null) {
+		openKey = key;
+		if (key) {
 			window.scrollTo({ top: 0 });
 			await tick();
 			back?.focus({ preventScroll: true });
 		}
 	}
 
-	/** True while the open run came from a card click, so Back can pop that entry. */
+	function choose(g: string) {
+		group = g;
+		replaceState(gridUrl(), {});
+	}
+
+	/** True while the open item came from a card click, so Back can pop that entry. */
 	let pushed = false;
 
-	function openRun(item: { id: string; href: string }) {
-		pushState(item.href, {});
+	function openItem(item: { href: string; id: string }) {
+		const it = galleryItems.find((i) => i.id === item.id);
+		if (!it) return;
+		pushState(it.href, {});
 		pushed = true;
-		show(item.id.replace(/^live-/, ''));
+		show(it.key);
 	}
 
 	/** Back to the grid, with focus on the card that was open. */
 	function toGrid() {
-		const id = openId;
-		openId = null;
+		const id = open?.id;
+		openKey = null;
 		pushed = false;
-		tick().then(() => document.getElementById(`g-live-${id}`)?.closest('a')?.focus());
+		tick().then(() => id && document.getElementById(`g-${id}`)?.closest('a')?.focus());
 	}
 
-	function closeRun() {
+	function closeItem() {
 		if (pushed) return history.back();
-		replaceState('/live', {});
+		replaceState(gridUrl(), {});
 		toGrid();
 	}
 
 	function onPop() {
-		const id = runId(location.search);
-		if (id) show(id);
-		else if (openId) toGrid();
+		group = groupIn(location.search);
+		const key = keyIn(location.search);
+		if (key) show(key);
+		else if (openKey) toGrid();
 	}
 
 	function dismissReceipt() {
 		receipt = null;
-		replaceState(openId ? `?s=${openId}` : '/live', {});
+		replaceState(openKey ? `?s=${openKey}` : gridUrl(), {});
 	}
 
 	onMount(() => {
+		group = groupIn(location.search);
 		receipt = readReturn(location.search);
-		show(runId(location.search) ?? (receipt ? 'order-burger' : null));
+		show(keyIn(location.search) ?? (receipt ? 'order-burger' : null));
 	});
 </script>
 
 <svelte:window onpopstate={onPop} />
 
 <svelte:head>
-	<title>Live: watch a model build a UI with Ripple</title>
+	<title>Gallery · Ripple</title>
 	<meta
 		name="description"
-		content="Replays of model output streaming into Ripple. The interface builds itself as the JSON arrives, then works: change the inputs and the numbers follow."
+		content="What a model can build with Ripple: recorded model output replayed as it streams, and live widgets, from trip plans and bookings to games, trackers, step-by-step flows and annotated drawings."
 	/>
 </svelte:head>
 
@@ -107,23 +139,37 @@
 
 	{#if open}
 		<div class="run-head">
-			<button type="button" class="back" bind:this={back} onclick={closeRun}>
+			<button type="button" class="back" bind:this={back} onclick={closeItem}>
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
 					><path d="M15 18l-6-6 6-6" /></svg
 				>
 				Back to gallery
 			</button>
 			<h1>{open.title}</h1>
-			{#if openItem}<span class="tag">{openItem.tag}</span>{/if}
+			<span class="tag">{open.tag}</span>
 		</div>
-		{#key open.id}<Player run={open} storeUrl={STORE_URL} />{/key}
+		{#if run}
+			{#key run.id}<Player {run} storeUrl={STORE_URL} />{/key}
+		{:else if demo}
+			{#await demo then mod}
+				<div class="demo"><mod.default /></div>
+			{/await}
+		{/if}
 	{:else}
-		<DiscoverHeader as="h1" title="Watch a model" accent="build it live" class="hero">
-			<p class="lede">Model output replayed on its original timing, then yours to use.</p>
+		<DiscoverHeader as="h1" title="What a model can" accent="build with Ripple" class="hero">
+			<p class="lede">Recorded runs and live widgets. Each one opens here.</p>
+			<div class="filters" role="group" aria-label="Filter by group">
+				{#each groups as g (g)}
+					<button type="button" class="chip" aria-pressed={group === g} onclick={() => choose(g)}>
+						{g}<span class="n">{count(g)}</span>
+					</button>
+				{/each}
+			</div>
 		</DiscoverHeader>
 		<div class="sections">
-			<GalleryGrid items={recorded} label="Recorded runs" title="Recorded runs" blurb="Real model output." onopen={openRun} />
-			<GalleryGrid items={written} label="Hand-written runs" title="Hand-written" blurb="Cards we wrote, streamed the same way." onopen={openRun} />
+			{#each sections as { g, items } (g)}
+				<GalleryGrid {items} label="{g} gallery" title={g} blurb={BLURBS[g]} onopen={openItem} />
+			{/each}
 		</div>
 	{/if}
 </main>
@@ -180,6 +226,54 @@
 		line-height: 1.55;
 		color: var(--site-soft);
 	}
+	/* Discover's filter chips: small pills, the selected one filled. */
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 32px;
+		padding: 0 12px;
+		border: 1px solid var(--site-line);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--site-ink);
+		font: inherit;
+		font-size: 13px;
+		font-weight: 500;
+		white-space: nowrap;
+		cursor: pointer;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
+	}
+	.chip:hover {
+		background: var(--site-hover);
+	}
+	.chip[aria-pressed='true'] {
+		border-color: transparent;
+		background: var(--site-pressed);
+	}
+	.chip:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+	.n {
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		color: var(--site-soft);
+	}
+	/* A demo brings its own centred, padded column; align it under the head. */
+	.demo :global(> :first-child) {
+		max-width: none;
+		margin-inline: 0;
+		padding-top: 0;
+		padding-inline: 0;
+	}
 	.run-head {
 		display: flex;
 		flex-wrap: wrap;
@@ -228,6 +322,20 @@
 		.run-head {
 			flex-direction: column;
 			align-items: flex-start;
+		}
+		.filters {
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scrollbar-width: none;
+			padding: 4px;
+			margin: -4px;
+		}
+		.filters::-webkit-scrollbar {
+			display: none;
+		}
+		.chip {
+			flex: none;
+			min-height: 44px;
 		}
 	}
 </style>

@@ -6,42 +6,43 @@
     here (session.send); text the visitor types goes to Paw OS
     (session.handoff, opened from the send gesture) unless `typedLocal` keeps
     it on the Paw Bar (mock and dev only); the hint under the composer says so.
-    No frame: the thread sits on the page ground and only the composer and the
-    rendered cards are surfaces. The look follows Paw OS (paw-enterprise):
-    the composer is ChatPill's liquid-glass pill (autosizing textarea, a round
-    send that turns into a round stop while a turn streams, a 3px ring on
-    focus), the visitor's message a right-aligned blue-tint bubble, and the
-    assistant has no bubble. Cards sit on --site-card, a darker shade of the
-    warm ground, with a hairline and no shadow. While a turn waits for its
-    first token it shows PE's typing dots and the thinking-indicator's
-    shimmering label, rotating; a card that is streaming shows shimmer bars
-    until its first widget draws and a spinner status line under it. Assistant text renders as markdown-lite
-    (paragraphs, **bold**, `code`) built from Svelte nodes; model text never
-    goes through {@html}. Text never shows a card's raw spec: hideSpecText
-    drops it (a small "Card hidden." note when the turn has no card to show). A card renders through <Ripple streaming> while it
-    arrives and swaps to <Ripple spec> on final (a remount, so the validated
+    The look follows Paw OS (paw-enterprise): no frame, the composer is
+    ChatPill's liquid-glass pill (autosizing, a round send that turns into a
+    stop while a turn streams), the visitor's message a blue-tint bubble, the
+    assistant bubble-less, cards on --site-card with a hairline. A waiting turn
+    shows typing dots and a rotating shimmer label; a streaming card shows
+    shimmer bars, then a spinner status line.
+    Assistant text is markdown-lite (paragraphs, **bold**, `code`) built from
+    Svelte nodes, never {@html}, and never a card's raw spec (hideSpecText;
+    "Card hidden." when no card shows). A card renders through <Ripple
+    streaming> while it arrives and swaps to <Ripple spec> on final (a remount, so the validated
     spec is what the visitor keeps using). Host events go to session.hostEvent,
     which ignores them until the card is final; a checkout's progress or
     failure shows as the card's note, an opened one as a PayCard under the card
     (keyed by session, so a retry starts fresh; a second checkout while it is
-    open scrolls it into view), and a confirmed booking as a BookingReceipt
-    under the card. An order resumed from sessionStorage (session.resumed)
-    shows its PayCard above the log. A finished flow card hands its result to
-    session.flowComplete; it and a card's `ask` arrive as the visitor's next
-    message, and each new visitor message scrolls into view, however it was
-    sent (a seeded one does not, so the page opens at its top). A notice that offers a replay gets a button that plays the closest
-    recorded answer into the same turn (session.replayRecorded).
+    open scrolls it into view inside the chat), and a confirmed booking as a
+    BookingReceipt under the card. An order resumed from sessionStorage
+    (session.resumed) shows its PayCard above the log. A finished flow card
+    hands its result to session.flowComplete; it and a card's `ask` arrive as
+    the visitor's next message. A notice that offers a replay gets a button
+    that plays the closest recorded answer into the same turn
+    (session.replayRecorded).
     Each card has a spec peek (its JSON, pretty-printed as it streams, soft
-    wrapped with a hanging indent so deep lines never leave the pane; under
-    1024px it shows 8 lines until Expand). Peeks start closed, except the
-    first card the visitor triggers in a browser session (sessionStorage).
-    Turns already in the session at mount (the prerendered exchange) neither
-    animate in nor auto-open their peek. A card whose spec root is a `card`
-    widget gets a bare frame (no border, shadow or fill), so the widget's own
-    card is the surface. Chips, composer, hint and an optional `more` snippet
-    form one dock, sticky at the chat's bottom above the safe area (it lets go
-    once the page scrolls past the chat); its height is the scroll-margin-bottom
-    that lands scrolled-to turns and pay cards above it. The log is role="log"
+    wrapped; under 1024px 8 lines until Expand), closed except on the first
+    card the visitor triggers per browser session. Turns already there at
+    mount (the prerendered exchange) neither animate in nor open a peek. A
+    card whose spec root is a `card` widget gets a bare frame.
+    Scrolling: the log (with the optional `top` snippet above it, the
+    landing's hero) is the chat's own scroll container; the chat never
+    scrolls the page (no scrollIntoView anywhere). It follows new content only
+    while the visitor is at its bottom; a visitor's own message (chip, typed
+    or sent by a card) always jumps there; scrolled up, growth while a turn
+    streams shows a "New" pill instead. At mount it stays at its top. The
+    container keeps the default overscroll, so a touch scroll that hits its
+    bottom carries on into the page. Below it the dock: chips, the composer
+    with the optional `more` snippet to its right, and a foot row with the
+    optional `foot` snippet then the hint (hidden when the row is narrow; it
+    stays in the DOM as the textarea's description). The log is role="log"
     and aria-busy while a turn streams; one polite region says "Building"
     and "Done" per turn instead of reading tokens.
     DOM ids are positional, never Card.id: that counter can differ between the
@@ -77,7 +78,9 @@
 		pawosUrl = PAWOS_URL,
 		typedLocal = false,
 		open,
-		more
+		top,
+		more,
+		foot
 	}: {
 		session: ChatSession;
 		suggestions?: Suggestion[];
@@ -88,8 +91,12 @@
 		typedLocal?: boolean;
 		/** window.open stand-in for tests. */
 		open?: (url: string) => unknown;
-		/** Rendered at the end of the dock's last row (the landing's "More"). */
+		/** Rendered at the top of the scroll container, above the log (the landing's hero). */
+		top?: Snippet;
+		/** Rendered to the right of the composer (the landing's "More"). */
 		more?: Snippet;
+		/** Rendered at the left of the dock's foot row, before the hint (the landing's install strip). */
+		foot?: Snippet;
 	} = $props();
 
 	// Chip rows in the order their groups first appear.
@@ -128,9 +135,46 @@
 		const timer = setInterval(() => (thinkingAt = (thinkingAt + 1) % THINKING.length), 2400);
 		return () => clearInterval(timer);
 	});
-	/** The dock's height: turns and pay cards scroll to just above it. */
-	let dockH = $state(0);
-	let log = $state<HTMLOListElement>();
+	let scroller = $state<HTMLDivElement>();
+	let inner = $state<HTMLDivElement>();
+	/** The visitor is at the scroller's bottom, so new content is followed. */
+	let stuck = false;
+	/** Content arrived while the visitor was scrolled up: the "New" pill shows. */
+	let unseen = $state(false);
+	const motion = (): ScrollBehavior => (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+	const nearBottom = (el: HTMLElement) => el.scrollHeight - el.scrollTop - el.clientHeight < 16;
+
+	/** Scrolls only the chat's own container, never the page. */
+	function toBottom(behavior: ScrollBehavior = 'auto') {
+		if (!scroller) return;
+		stuck = true;
+		unseen = false;
+		scroller.scrollTo?.({ top: scroller.scrollHeight, behavior });
+	}
+
+	// Only a move up lets go: a scroll event can land after content grew past
+	// a programmatic jump to the bottom, and that must not count as leaving it.
+	let lastTop = 0;
+	function onScroll() {
+		if (!scroller) return;
+		const top = scroller.scrollTop;
+		if (nearBottom(scroller)) stuck = true;
+		else if (top < lastTop - 1) stuck = false;
+		lastTop = top;
+		if (stuck) unseen = false;
+	}
+
+	// Growth (a turn arriving, a card streaming and drawing) follows only while stuck.
+	$effect(() => {
+		if (!scroller || !inner || typeof ResizeObserver === 'undefined') return;
+		stuck = nearBottom(scroller);
+		const ro = new ResizeObserver(() => {
+			if (stuck) toBottom();
+			else if (session.busy) unseen = true;
+		});
+		ro.observe(inner);
+		return () => ro.disconnect();
+	});
 
 	const cardsIn = (s: ChatSession) => s.turns.flatMap((t) => t.parts.flatMap((p) => (p.kind === 'card' ? [p.card] : [])));
 	// What is on screen at mount is the prerendered fold: no entry animation, peeks closed.
@@ -172,18 +216,16 @@
 		else session.handoff(text, pawosUrl, open);
 	}
 
-	// The newest visitor message scrolls to the top: typed, a chip, or sent by a card.
+	// The visitor's own new message (typed, a chip, or sent by a card) jumps the chat to its bottom.
 	let shownAsk = 0;
 	$effect(() => {
 		const i = session.turns.findLastIndex((t) => t.role === 'user');
 		const id = session.turns[i]?.id;
 		if (!id || id === shownAsk) return;
 		shownAsk = id;
-		// A turn already there at mount stays put: the page opens at the top.
+		// A turn already there at mount stays put: the chat opens at its top.
 		if (seeded.has(id)) return;
-		void tick().then(() =>
-			log?.children[i]?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
-		);
+		void tick().then(() => toBottom());
 	});
 
 	function onKey(e: KeyboardEvent) {
@@ -239,13 +281,17 @@
 						: { kind: 't', v }
 			);
 
-	/** Scrolls the pay card into view and focuses its first control each time `nudge` grows. */
+	/** Scrolls the pay card into view inside the chat and focuses its first control each time `nudge` grows. */
 	function reveal(node: HTMLElement, nudge: number) {
 		return {
 			update(next: number) {
 				if (next <= nudge) return;
 				nudge = next;
-				node.scrollIntoView?.({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				if (scroller) {
+					const r = node.getBoundingClientRect();
+					const box = scroller.getBoundingClientRect();
+					if (r.top < box.top || r.bottom > box.bottom) scroller.scrollTo?.({ top: scroller.scrollTop + r.top - box.top - 12, behavior: motion() });
+				}
 				node.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });
 			}
 		};
@@ -353,66 +399,76 @@
 	{/if}
 {/snippet}
 
-<div class="chat" style:--dock-h="{dockH}px">
+<div class="chat">
 	<p class="sr-only" aria-live="polite">{announce}</p>
-	{#if session.resumed && session.store}
-		{@const pay = session.resumed}
-		<section class="resumed" aria-label="Your order">
-			<p class="say">Your order from before:</p>
-			<PayCard {pay} storeUrl={session.store.storeUrl} fetch={session.store.fetch} onphase={(p) => session.notePhase(null, pay, p)} />
-		</section>
-	{/if}
-	{#if session.turns.length}
-		<ol class="log" bind:this={log} role="log" aria-label="Conversation" aria-busy={session.busy}>
-			{#each session.turns as turn, t (turn.id)}
-				<li class="turn" data-role={turn.role} data-seeded={seeded.has(turn.id) || undefined}>
-					{#if turn.role === 'user'}
-						<p class="ask">{turn.parts[0]?.kind === 'text' ? turn.parts[0].text : ''}</p>
-					{:else}
-						{#each turn.parts as part, i (part.kind === 'card' ? part.card.id : `t${i}`)}
-							{#if part.kind === 'text'}
-								{@const caret = turn.pending && i === turn.parts.length - 1}
-								{@const shown = hideSpecText(part.text, caret)}
-								{@render prose(shown.text, caret)}
-								{#if shown.hidden && !turn.parts.some((p) => p.kind === 'card' && p.card.status !== 'rejected')}
-									<p class="card-note">Card hidden.</p>
+	<div class="scroll-wrap">
+		<div class="scroller" bind:this={scroller} onscroll={onScroll}>
+			<div class="scroll-inner" bind:this={inner}>
+				{@render top?.()}
+				{#if session.resumed && session.store}
+					{@const pay = session.resumed}
+					<section class="resumed" aria-label="Your order">
+						<p class="say">Your order from before:</p>
+						<PayCard {pay} storeUrl={session.store.storeUrl} fetch={session.store.fetch} onphase={(p) => session.notePhase(null, pay, p)} />
+					</section>
+				{/if}
+				{#if session.turns.length}
+					<ol class="log" role="log" aria-label="Conversation" aria-busy={session.busy}>
+						{#each session.turns as turn, t (turn.id)}
+							<li class="turn" data-role={turn.role} data-seeded={seeded.has(turn.id) || undefined}>
+								{#if turn.role === 'user'}
+									<p class="ask">{turn.parts[0]?.kind === 'text' ? turn.parts[0].text : ''}</p>
+								{:else}
+									{#each turn.parts as part, i (part.kind === 'card' ? part.card.id : `t${i}`)}
+										{#if part.kind === 'text'}
+											{@const caret = turn.pending && i === turn.parts.length - 1}
+											{@const shown = hideSpecText(part.text, caret)}
+											{@render prose(shown.text, caret)}
+											{#if shown.hidden && !turn.parts.some((p) => p.kind === 'card' && p.card.status !== 'rejected')}
+												<p class="card-note">Card hidden.</p>
+											{/if}
+										{:else}
+											{@render cardView(part.card, `ripple-spec-${t}-${i}`)}
+										{/if}
+									{/each}
+									{#if turn.pending && !turn.parts.length}
+										<p class="thinking">
+											<span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+											<span class="label">
+												<span class="sizer" aria-hidden="true">Planning the card</span>
+												{#key thinkingAt}<span class="shimmer">{THINKING[thinkingAt]}</span>{/key}
+											</span>
+										</p>
+									{/if}
+									{#if turn.notice}
+										<p class="notice" data-kind={turn.notice.kind} role="status">
+											{@render icon(turn.notice.kind)}
+											<span>
+												{turn.notice.text}
+												{#if turn.notice.link && turn.notice.kind === 'handoff'}
+													<a class:prominent={turn.notice.link.prominent} href={turn.notice.link.href} target="_blank" rel="noopener">{turn.notice.link.label}</a>
+												{:else if turn.notice.link}<a href={turn.notice.link.href}>{turn.notice.link.label}</a>{/if}
+											</span>
+											{#if turn.notice.replay}
+												<button type="button" class="replay" disabled={session.busy} onclick={() => session.replayRecorded(turn.id)}>
+													Play the closest saved answer here
+												</button>
+											{/if}
+										</p>
+									{/if}
 								{/if}
-							{:else}
-								{@render cardView(part.card, `ripple-spec-${t}-${i}`)}
-							{/if}
+							</li>
 						{/each}
-						{#if turn.pending && !turn.parts.length}
-							<p class="thinking">
-								<span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
-								<span class="label">
-									<span class="sizer" aria-hidden="true">Planning the card</span>
-									{#key thinkingAt}<span class="shimmer">{THINKING[thinkingAt]}</span>{/key}
-								</span>
-							</p>
-						{/if}
-						{#if turn.notice}
-							<p class="notice" data-kind={turn.notice.kind} role="status">
-								{@render icon(turn.notice.kind)}
-								<span>
-									{turn.notice.text}
-									{#if turn.notice.link && turn.notice.kind === 'handoff'}
-										<a class:prominent={turn.notice.link.prominent} href={turn.notice.link.href} target="_blank" rel="noopener">{turn.notice.link.label}</a>
-									{:else if turn.notice.link}<a href={turn.notice.link.href}>{turn.notice.link.label}</a>{/if}
-								</span>
-								{#if turn.notice.replay}
-									<button type="button" class="replay" disabled={session.busy} onclick={() => session.replayRecorded(turn.id)}>
-										Play the closest saved answer here
-									</button>
-								{/if}
-							</p>
-						{/if}
-					{/if}
-				</li>
-			{/each}
-		</ol>
-	{/if}
+					</ol>
+				{/if}
+			</div>
+		</div>
+		{#if unseen}
+			<button type="button" class="new-pill" onclick={() => toBottom(motion())}>New <span aria-hidden="true">↓</span></button>
+		{/if}
+	</div>
 
-	<div class="dock" bind:clientHeight={dockH}>
+	<div class="dock">
 		{#if suggestions.length}
 			<div class="chip-groups">
 				{#each groups as [name, chips] (name)}
@@ -429,37 +485,40 @@
 				{/each}
 			</div>
 		{/if}
-		<form
-			class="composer"
-			data-multiline={multiline || undefined}
-			onsubmit={(e) => {
-				e.preventDefault();
-				submit();
-			}}
-		>
-			<label class="sr-only" for="ripple-ask">{typedLocal ? 'Describe the tool you want' : 'Type a request to continue in Paw OS'}</label>
-			<textarea
-				id="ripple-ask"
-				rows="1"
-				maxlength="2000"
-				aria-describedby={typedLocal ? undefined : 'ripple-ask-hint'}
-				placeholder={typedLocal ? 'Ask for a tool, like a tip splitter' : 'Type a request for Paw OS'}
-				bind:value={draft}
-				bind:this={field}
-				onkeydown={onKey}
-			></textarea>
-			<div class="controls">
-				{#if session.busy}
-					<button type="button" class="send stop" aria-label="Stop" title="Stop" onclick={() => session.stop()}><span class="disc"><X size={14} strokeWidth={2.25} aria-hidden="true" /></span></button>
-				{:else}
-					<button type="submit" class="send" aria-label="Send" title="Send" disabled={!draft.trim()}><span class="disc"><ArrowUp size={15} strokeWidth={2.25} aria-hidden="true" /></span></button>
-				{/if}
-			</div>
-		</form>
+		<div class="composer-row">
+			<form
+				class="composer"
+				data-multiline={multiline || undefined}
+				onsubmit={(e) => {
+					e.preventDefault();
+					submit();
+				}}
+			>
+				<label class="sr-only" for="ripple-ask">{typedLocal ? 'Describe the tool you want' : 'Type a request to continue in Paw OS'}</label>
+				<textarea
+					id="ripple-ask"
+					rows="1"
+					maxlength="2000"
+					aria-describedby={typedLocal ? undefined : 'ripple-ask-hint'}
+					placeholder={typedLocal ? 'Ask for a tool, like a tip splitter' : 'Type a request for Paw OS'}
+					bind:value={draft}
+					bind:this={field}
+					onkeydown={onKey}
+				></textarea>
+				<div class="controls">
+					{#if session.busy}
+						<button type="button" class="send stop" aria-label="Stop" title="Stop" onclick={() => session.stop()}><span class="disc"><X size={14} strokeWidth={2.25} aria-hidden="true" /></span></button>
+					{:else}
+						<button type="submit" class="send" aria-label="Send" title="Send" disabled={!draft.trim()}><span class="disc"><ArrowUp size={15} strokeWidth={2.25} aria-hidden="true" /></span></button>
+					{/if}
+				</div>
+			</form>
+			{@render more?.()}
+		</div>
 		<div class="dock-foot">
+			{@render foot?.()}
 			{#if !typedLocal}<p class="hint" id="ripple-ask-hint">Typed requests open in Paw OS.</p>{/if}
 			{#if note}<p class="chat-note">{note}</p>{/if}
-			{@render more?.()}
 		</div>
 	</div>
 </div>
@@ -469,8 +528,58 @@
 		--ease-pill: cubic-bezier(0.16, 1, 0.3, 1);
 		display: flex;
 		flex-direction: column;
-		gap: 14px;
+		min-height: 0;
 		font-size: 15px;
+	}
+	/* The chat's own scroll container. min-height 0 lets it shrink inside a
+	   fixed-height parent instead of growing the page. Default overscroll, so
+	   a scroll that hits its bottom chains on into the page. */
+	.scroll-wrap {
+		position: relative;
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.scroller {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		scrollbar-width: thin;
+	}
+	.scroll-inner {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		padding-bottom: 12px;
+	}
+	/* Content arrived below while the visitor was scrolled up. */
+	.new-pill {
+		position: absolute;
+		bottom: 10px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-height: 32px;
+		padding: 0 14px;
+		border: 1px solid var(--site-line);
+		border-radius: 999px;
+		background: var(--site-panel);
+		color: var(--site-ink);
+		font: inherit;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+	}
+	.new-pill:hover {
+		background: var(--site-hover);
+	}
+	.new-pill:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
 	}
 	.sr-only {
 		position: absolute;
@@ -487,11 +596,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
-	}
-	.turn,
-	.pay-slot {
-		scroll-margin-top: calc(var(--site-topbar) + var(--site-context, 0px) + 24px);
-		scroll-margin-bottom: calc(var(--dock-h, 0px) + 12px);
 	}
 	.turn:not([data-seeded]) {
 		animation: rise 180ms var(--ease-out-quart);
@@ -925,27 +1029,38 @@
 		cursor: default;
 	}
 
-	/* The dock: chips, composer and the hint row, sticky at the bottom of the
-	   chat above the safe area. It fades the log out under itself on the
-	   ground, so a card scrolling behind it never collides with the chips. */
+	/* The dock: chips, the composer row and the foot row, pinned under the
+	   scroll container above the safe area. */
 	.dock {
-		position: sticky;
-		bottom: 0;
-		z-index: var(--z-sticky);
-		margin-top: auto;
+		flex: none;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		padding: 20px 0 calc(10px + env(safe-area-inset-bottom, 0px));
-		background: linear-gradient(to bottom, transparent, var(--site-ground) 20px);
+		padding: 10px 0 calc(8px + env(safe-area-inset-bottom, 0px));
 	}
+	.composer-row {
+		display: flex;
+		align-items: flex-end;
+		gap: 8px;
+	}
+	.composer-row > .composer {
+		flex: 1;
+		min-width: 0;
+	}
+	/* One line: the foot snippet, then the hint while it fits. */
 	.dock-foot {
+		container-type: inline-size;
 		display: flex;
 		flex-wrap: nowrap;
 		align-items: center;
-		justify-content: space-between;
 		gap: 4px 12px;
 		min-height: 28px;
+		min-width: 0;
+	}
+	@container (max-width: 640px) {
+		.hint {
+			display: none;
+		}
 	}
 
 	/* PE's ChatPill: a liquid-glass pill. */

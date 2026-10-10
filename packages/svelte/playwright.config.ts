@@ -42,7 +42,7 @@ export default defineConfig({
 	// behaves closest to a deployed site. The build adds ~25s to cold start.
 	webServer: {
 		command: `bunx vite build && bunx vite preview --port ${PORT} --strictPort`,
-		url: `http://localhost:${PORT}/showcase/motion`,
+		url: `http://localhost:${PORT}/ds/motion`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 180_000,
 	},

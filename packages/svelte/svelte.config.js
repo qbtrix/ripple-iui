@@ -1,7 +1,7 @@
 // svelte.config.js: one config for two builds. `bun run build` packages the
 // library with svelte-package (the adapter is not involved). `bun run
 // build:site` runs vite build, and adapter-static writes the public site
-// (landing, playground, showcase) to build/ for the Workers static-assets
+// (landing, playground, gallery) to build/ for the Workers static-assets
 // deploy in wrangler.jsonc. Routes are prerendered where they can be; a page
 // that fails to prerender is warned about and served by the 404.html SPA shell,
 // which boots the client router on that URL.
@@ -16,7 +16,7 @@ import { loadEnv } from 'vite';
 // store and, only when PUBLIC_PAWBAR_LIVE=1, the Paw Bar API, read at build time
 // like vite.config.ts does (which also fails a build with a half-set env); dev adds
 // localhost for the mock and Vite's HMR socket. img-src allows the two image
-// hosts the showcase uses (its news feed's favicon service stays blocked) and
+// hosts the gallery demos use (its news feed's favicon service stays blocked) and
 // the store's origin, which serves the menu photos in a menu-order card, and
 // OpenStreetMap's tile server, which the tracking card's `order-status` map
 // loads (its `osm` preset).
@@ -46,7 +46,7 @@ const config = {
 	kit: {
 		adapter: adapter({ fallback: '404.html' }),
 		// Absolute asset paths: the 404.html shell is served at arbitrary depths
-		// (/showcase/x/y), where relative ./_app paths would resolve wrongly.
+		// (/docs/x/y), where relative ./_app paths would resolve wrongly.
 		paths: { relative: false },
 		prerender: {
 			// Docs and llms files are generated from src/docs: an error there (a

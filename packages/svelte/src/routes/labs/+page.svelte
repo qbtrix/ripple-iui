@@ -32,7 +32,7 @@
   ];
 
   const more = [
-    { href: '/showcase', name: 'Showcase' },
+    { href: '/live', name: 'Gallery' },
     { href: '/playground', name: 'Playground' }
   ];
 </script>

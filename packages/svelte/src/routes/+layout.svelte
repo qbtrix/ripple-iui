@@ -3,15 +3,15 @@
   @description The site chrome every route shares, following Paw OS's TopBar
     (paw-enterprise components/os/TopBar.svelte, PlanBadge.svelte and the
     .liquid-glass pill in routes/+layout.svelte). One sticky strip: the Ripple
-    mark on the left; a centred icon nav (Chat, Showcase, Live, Docs, Design
-    system) where every item is an icon with an aria-label and a tooltip and the
+    mark on the left; a centred icon nav (Chat, Gallery, Docs, Design system)
+    where every item is an icon with an aria-label and a tooltip and the
     current one is PE's liquid-glass pill carrying its icon and label; on the
     right the docs search as a ⌘K chip, the GitHub and theme icon buttons, and a
     blue "Try Paw OS" pill in PlanBadge's paid style. The strip is PE's frosted
     shade over the warm ground with its faint cool tint, mirrored in light.
     Below 640px the nav sits between the mark and the tools, GitHub and Try Paw
     OS leave the bar (the footer carries both), and on small phones a long
-    active label (Showcase) drops to its icon so 375px never scrolls sideways.
+    active label (Design system) shows its short form so 375px never scrolls sideways.
     A skip link (first focus) jumps to #main, the wrapper around every page.
     Glass falls back to solid under prefers-reduced-transparency. Tokens and
     fonts come from ./site.css. Theme: static/theme-init.js sets `dark` on
@@ -25,7 +25,6 @@
 	import { page } from '$app/state';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
-	import CirclePlay from '@lucide/svelte/icons/circle-play';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Palette from '@lucide/svelte/icons/palette';
 	import Sun from '@lucide/svelte/icons/sun';
@@ -43,8 +42,7 @@
 	// `short` is the active pill's label on phones; null means icon only there.
 	const nav = [
 		{ href: '/', label: 'Chat', short: 'Chat', icon: MessageSquare },
-		{ href: '/showcase', label: 'Showcase', short: null, icon: LayoutGrid },
-		{ href: '/live', label: 'Live', short: 'Live', icon: CirclePlay },
+		{ href: '/live', label: 'Gallery', short: 'Gallery', icon: LayoutGrid },
 		{ href: '/docs', label: 'Docs', short: 'Docs', icon: BookOpen },
 		{ href: '/ds', label: 'Design system', short: 'DS', icon: Palette }
 	];

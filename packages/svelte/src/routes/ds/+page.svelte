@@ -1,7 +1,7 @@
 <!--
   @file routes/ds/+page.svelte
   @description /ds, the design system: Ripple's building blocks, as opposed to
-    the gen UI on /showcase. Three parts: tokens (colour swatches with their
+    the gen UI in the /live gallery. Three parts: tokens (colour swatches with their
     light and dark values parsed from site.css, the type scale, spacing and
     radius), the atoms by manifest category, each rendered LIVE from the spec
     its /docs/widgets/<type> page previews, and a search box over the names.

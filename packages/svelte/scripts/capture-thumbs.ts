@@ -1,7 +1,7 @@
-// scripts/capture-thumbs.ts — Captures the gallery thumbnails for /showcase
-// and /live. Builds the site (vite build; pass --no-build to reuse the last
+// scripts/capture-thumbs.ts — Captures the thumbnails for the /live gallery
+// (runs and widget demos). Builds the site (vite build; pass --no-build to reuse the last
 // one), serves it with `vite preview` on PORT, then for every item in
-// src/routes/showcase/gallery.ts opens its capture path in headless Chromium
+// src/routes/live/gallery.ts opens its capture path in headless Chromium
 // (dark theme, reduced motion so cards render finished, 2x DPR), crops the
 // item's element plus PAD px of ground to 4:3 from its top, downscales to
 // THUMB_W x THUMB_H and encodes WebP in the browser (no image dependency).
@@ -18,7 +18,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type Page } from '@playwright/test';
-import { galleryItems, THUMB_H, THUMB_W } from '../src/routes/showcase/gallery.ts';
+import { galleryItems, THUMB_H, THUMB_W } from '../src/routes/live/gallery.ts';
 
 const PORT = 4317;
 const BASE = `http://localhost:${PORT}`;
