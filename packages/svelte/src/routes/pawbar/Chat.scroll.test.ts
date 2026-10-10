@@ -15,8 +15,10 @@ test('a chip send scrolls the chat container, never the page', async () => {
 	const intoView = vi.fn();
 	Element.prototype.scrollIntoView = intoView;
 	const pageScroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-	const inner = vi.fn();
-	Element.prototype.scrollTo = inner as unknown as Element['scrollTo'];
+	const scrolled: Element[] = [];
+	Element.prototype.scrollTo = function (this: Element) {
+		scrolled.push(this);
+	};
 
 	const session = new ChatSession(async function* () {
 		yield { event: 'chunk', data: { content: 'Here you go.', type: 'text' } };
@@ -26,8 +28,8 @@ test('a chip send scrolls the chat container, never the page', async () => {
 	await fireEvent.click(view.getByRole('button', { name: 'Try it' }));
 	await vi.waitFor(() => expect(view.getByText('Here you go.')).toBeTruthy());
 
-	await vi.waitFor(() => expect(inner).toHaveBeenCalled());
-	expect(inner.mock.contexts.every((el) => (el as Element).classList.contains('scroller'))).toBe(true);
+	await vi.waitFor(() => expect(scrolled.length).toBeGreaterThan(0));
+	expect(scrolled.every((el) => el.classList.contains('scroller'))).toBe(true);
 	expect(intoView).not.toHaveBeenCalled();
 	expect(pageScroll).not.toHaveBeenCalled();
 });

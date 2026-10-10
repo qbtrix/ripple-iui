@@ -1,6 +1,6 @@
 // routes/ds/+page.server.ts — Data for the /ds design system page, built at
 // prerender. Atoms: every manifest widget outside the `composite` category (the
-// gen UI widgets live on /showcase), in the docs' category order, with its
+// gen UI widgets live in the /live gallery), in the docs' category order, with its
 // first sentence and the spec its docs page previews. Tokens: the colour
 // declarations parsed out of ../site.css for both themes, so the swatches and
 // their values can't drift from the stylesheet.
