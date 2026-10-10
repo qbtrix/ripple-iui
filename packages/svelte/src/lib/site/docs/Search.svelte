@@ -1,6 +1,7 @@
 <!--
   @file site/docs/Search.svelte
-  @description The top bar's docs search: a button (and Cmd/Ctrl+K) that opens
+  @description The top bar's docs search: a ⌘K chip in PE's TopBar style (and
+    Cmd/Ctrl+K anywhere) that opens
     a modal <dialog> over Pagefind. /pagefind/pagefind.js is written into
     build/ by the post-build step in build:site and imported only on first
     open, so nothing loads until someone searches; there is no index under
@@ -83,12 +84,16 @@
 
 <svelte:window onkeydown={onKey} />
 
-<button type="button" class="trigger" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K" onclick={open}>
-	<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"
-		><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg
-	>
-	<span class="label">Search docs</span>
-	<kbd aria-hidden="true">{shortcut}</kbd>
+<button
+	type="button"
+	class="trigger"
+	aria-haspopup="dialog"
+	aria-keyshortcuts="Control+K Meta+K"
+	aria-label="Search docs"
+	data-tip="Search docs"
+	onclick={open}
+>
+	<span aria-hidden="true">{shortcut}</span>
 </button>
 
 <dialog bind:this={dialog} class="modal" aria-label="Search docs" onclick={(e) => e.target === dialog && dialog.close()}>
@@ -126,49 +131,46 @@
 </dialog>
 
 <style>
+	/* PE's TopBar ⌘K chip (.cmdk-btn): 22px tall, 11px/600, on --input with a
+	   hairline; it stays in the bar at every width. */
 	.trigger {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
-		height: 34px;
-		padding: 0 8px 0 10px;
-		margin-right: 4px;
+		justify-content: center;
+		height: 22px;
+		padding: 0 7px;
 		border: 1px solid var(--site-line);
-		border-radius: var(--radius-control);
-		background: transparent;
+		border-radius: 6px;
+		background: var(--site-hover);
 		color: var(--site-soft);
-		font: 400 13px var(--font-sans);
+		font: 600 11px/1 var(--font-sans);
+		letter-spacing: -0.01em;
+		white-space: nowrap;
+		user-select: none;
 		cursor: pointer;
+		position: relative;
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		transition:
-			color 0.15s,
-			background 0.15s;
+			color 0.15s ease,
+			background 0.15s ease,
+			border-color 0.15s ease;
+	}
+	/* A 40px hit area around the 22px chip. */
+	.trigger::before {
+		content: '';
+		position: absolute;
+		inset: -9px -4px;
 	}
 	.trigger:hover {
 		color: var(--site-ink);
-		background: var(--site-hover);
+		background: var(--site-pressed);
+		border-color: var(--site-faint);
 	}
 	.trigger:focus-visible,
 	a:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
-	}
-	kbd {
-		padding: 1px 5px;
-		border: 1px solid var(--site-line);
-		border-radius: 4px;
-		font: 11px var(--font-sans);
-	}
-	@media (max-width: 639.98px) {
-		.trigger {
-			width: 36px;
-			padding: 0;
-			justify-content: center;
-			border: 0;
-		}
-		.label,
-		kbd {
-			display: none;
-		}
 	}
 	.modal {
 		z-index: var(--z-modal);
